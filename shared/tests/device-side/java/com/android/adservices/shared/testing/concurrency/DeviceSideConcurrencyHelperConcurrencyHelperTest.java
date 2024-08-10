@@ -73,4 +73,13 @@ public final class DeviceSideConcurrencyHelperConcurrencyHelperTest
         verify(mMockConcurrencyHelper)
                 .sleep(108, "Numbers: %s %s %s %s %s %s", 4, 8, 15, 16, 23, 42);
     }
+
+    @Test
+    public void testSleepOnly() throws Exception {
+        DeviceSideConcurrencyHelper.sleepOnly(
+                108, "Numbers: %s %s %s %s %s %s", 4, 8, 15, 16, 23, 42);
+
+        verify(mMockConcurrencyHelper)
+                .sleepOnly(108, "Numbers: %s %s %s %s %s %s", 4, 8, 15, 16, 23, 42);
+    }
 }

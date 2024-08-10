@@ -34,9 +34,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public abstract class SidelessTestCase implements TestNamer {
 
-    // TODO(b/358120731): temporary false to avoid breaking the build as we need to fix existing
-    // occurrences first. Once fixed, set to true;
-    private static final boolean FAIL_ON_PROHIBITED_FIELDS = false;
+    private static final boolean FAIL_ON_PROHIBITED_FIELDS = true;
 
     private static final AtomicInteger sNextInvocationId = new AtomicInteger();
 

@@ -46,7 +46,7 @@ import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
 import android.content.ComponentName;
 
-import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.AdServicesJobServiceTestCase;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.service.FakeFlagsFactory;
@@ -79,7 +79,7 @@ import org.mockito.Spy;
 @SpyStatic(TopicsWorker.class)
 @RequiresSdkLevelAtLeastS
 @SetErrorLogUtilDefaultParams(ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS)
-public class EpochJobServiceTest extends AdServicesExtendedMockitoTestCase {
+public class EpochJobServiceTest extends AdServicesJobServiceTestCase {
     private static final int TOPICS_EPOCH_JOB_ID = TOPICS_EPOCH_JOB.getJobId();
     // Set a minimum delay of 1 hour so scheduled jobs don't run immediately
     private static final long MINIMUM_SCHEDULING_DELAY_MS = 60L * 60L * 1000L;

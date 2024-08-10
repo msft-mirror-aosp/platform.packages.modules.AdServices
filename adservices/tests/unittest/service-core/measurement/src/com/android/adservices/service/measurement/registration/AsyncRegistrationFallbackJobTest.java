@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.measurement.registration;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockJobSchedulingLogger;
 import static com.android.adservices.service.Flags.ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS;
 import static com.android.adservices.shared.proto.JobPolicy.BatteryType.BATTERY_TYPE_REQUIRE_NOT_LOW;
 import static com.android.adservices.shared.proto.JobPolicy.NetworkType.NETWORK_TYPE_ANY;
@@ -36,7 +35,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.AdServicesJobTestCase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.shared.proto.JobPolicy;
@@ -62,7 +61,7 @@ import org.mockito.Spy;
 @MockStatic(AdServicesJobServiceFactory.class)
 @MockStatic(AsyncRegistrationFallbackJobService.class)
 @MockStatic(FlagsFactory.class)
-public final class AsyncRegistrationFallbackJobTest extends AdServicesExtendedMockitoTestCase {
+public final class AsyncRegistrationFallbackJobTest extends AdServicesJobTestCase {
     @Spy AsyncRegistrationFallbackJob mSpyAsyncRegistrationFallbackJob;
     @Mock private Flags mMockFlags;
     @Mock private ExecutionRuntimeParameters mMockParams;

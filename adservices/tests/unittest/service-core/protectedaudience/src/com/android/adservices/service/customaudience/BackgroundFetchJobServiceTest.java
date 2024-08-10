@@ -248,19 +248,6 @@ public final class BackgroundFetchJobServiceTest extends AdServicesExtendedMocki
     }
 
     @Test
-    public void testOnStartJobCustomAudienceKillSwitchOff_speDisabled() throws Exception {
-        testOnStartJobCustomAudienceKillSwitchOff(mFlagsWithCustomAudienceServiceKillSwitchOff);
-    }
-
-    @Test
-    public void testOnStartJobCustomAudienceKillSwitchOff_speEnabled() throws Exception {
-        Flags flags = new FlagsWithKillSwitchOffSpeEnabled();
-        testOnStartJobCustomAudienceKillSwitchOff(flags);
-
-        verify(() -> BackgroundFetchJob.schedule(flags));
-    }
-
-    @Test
     public void testOnStartJobUpdateSuccess_withoutLogging()
             throws InterruptedException, ExecutionException, TimeoutException {
         Flags flagsWithEnabledBgFGaUxDisabledWithoutLogging =
@@ -508,10 +495,10 @@ public final class BackgroundFetchJobServiceTest extends AdServicesExtendedMocki
         verifyLoggingNotHappened(logger);
     }
 
-    @SuppressWarnings("unused")
-    private void testOnStartJobCustomAudienceKillSwitchOff(Flags flags) throws Exception {
-        doReturn(flags).when(FlagsFactory::getFlags);
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
+    @Test
+    public void testOnStartJobCustomAudienceKillSwitchOff() throws Exception {
+        doReturn(mFlagsWithCustomAudienceServiceKillSwitchOff).when(FlagsFactory::getFlags);
+        doReturn(mConsentManagerMock).when(ConsentManager::getInstance);
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);

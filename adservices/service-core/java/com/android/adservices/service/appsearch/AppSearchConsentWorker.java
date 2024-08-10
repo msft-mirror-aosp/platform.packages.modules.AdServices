@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -73,6 +73,8 @@ class AppSearchConsentWorker {
     private static final String INTERACTIONS_DATABASE_NAME = "adservices_interactions";
     private static final String TOPICS_DATABASE_NAME = "adservices-topics";
     private static final String UX_STATES_DATABASE_NAME = "adservices-ux-states";
+    private static final String MODULE_ENROLLMENT_STATE_DATABASE_NAME =
+            "adservices-module-enrollment-state";
 
     // Required for allowing AdServices apk access to read consent written by ExtServices module.
     private final String mAdservicesPackageName;
@@ -83,6 +85,7 @@ class AppSearchConsentWorker {
     private final ListenableFuture<AppSearchSession> mInteractionsSearchSession;
     private final ListenableFuture<AppSearchSession> mTopicsSearchSession;
     private final ListenableFuture<AppSearchSession> mUxStatesSearchSession;
+    private final ListenableFuture<AppSearchSession> mModuleEnrollmentStateSearchSession;
 
     // When reading across APKs, a GlobalSearchSession is needed, hence we use it when reading.
     private final ListenableFuture<GlobalSearchSession> mGlobalSearchSession;
@@ -124,6 +127,11 @@ class AppSearchConsentWorker {
         mUxStatesSearchSession =
                 PlatformStorage.createSearchSessionAsync(
                         new PlatformStorage.SearchContext.Builder(context, UX_STATES_DATABASE_NAME)
+                                .build());
+        mModuleEnrollmentStateSearchSession =
+                PlatformStorage.createSearchSessionAsync(
+                        new PlatformStorage.SearchContext.Builder(
+                                        context, MODULE_ENROLLMENT_STATE_DATABASE_NAME)
                                 .build());
 
         // We use global session for reads since we may perform read on T+ AdServices package to
@@ -859,6 +867,39 @@ class AppSearchConsentWorker {
             dao.setPaDataReset(isPaDataReset);
             dao.writeData(mUxStatesSearchSession, mPackageIdentifiers, mExecutor);
             LogUtil.d("Wrote the isPaDataReset bit to AppSearch: " + dao);
+        } finally {
+            READ_WRITE_LOCK.writeLock().unlock();
+        }
+    }
+
+    /** Returns module enrollment state. */
+    String getModuleEnrollmentState() {
+        READ_WRITE_LOCK.readLock().lock();
+        try {
+            return AppSearchModuleEnrollmentStateDao.readModuleEnrollmentState(
+                    mGlobalSearchSession, mExecutor, mUid, mAdservicesPackageName);
+        } finally {
+            READ_WRITE_LOCK.readLock().unlock();
+        }
+    }
+
+    /** Saves the current module enrollment state. */
+    void setModuleEnrollmentState(String data) {
+        READ_WRITE_LOCK.writeLock().lock();
+        try {
+            AppSearchModuleEnrollmentStateDao dao =
+                    AppSearchModuleEnrollmentStateDao.readData(
+                            mGlobalSearchSession, mExecutor, mUid, mAdservicesPackageName);
+            if (dao == null) {
+                dao =
+                        new AppSearchModuleEnrollmentStateDao(
+                                AppSearchModuleEnrollmentStateDao.getRowId(mUid),
+                                mUid,
+                                AppSearchModuleEnrollmentStateDao.NAMESPACE);
+            }
+            dao.setModuleEnrollmentState(data);
+            dao.writeData(mModuleEnrollmentStateSearchSession, mPackageIdentifiers, mExecutor);
+            LogUtil.d("Wrote module enrollment state to AppSearch: " + dao);
         } finally {
             READ_WRITE_LOCK.writeLock().unlock();
         }

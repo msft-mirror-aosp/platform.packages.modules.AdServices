@@ -33,44 +33,99 @@ import java.util.List;
 
 @RunWith(JUnit4.class)
 public final class ProjectTest {
-    private static final int CUSTOMER_ID = 1;
-    private static final int PROJECT_ID = 2;
     private static final int METRIC_ID = 3;
 
     @Test
-    public void create_populatesIdsAndMetrics_withEmptyMetrics() throws Exception {
-        ProjectConfig projectConfig = ProjectConfig.newBuilder().setProjectId(PROJECT_ID).build();
+    public void testCreate_populatesIdsAndMetrics_withEmptyMetrics() throws Exception {
+        ProjectConfig projectConfig =
+                ProjectConfig.newBuilder().setProjectId(Project.PROJECT_ID).build();
         CustomerConfig customerConfig =
                 CustomerConfig.newBuilder()
-                        .setCustomerId(CUSTOMER_ID)
+                        .setCustomerId(Project.CUSTOMER_ID)
                         .addProjects(projectConfig)
                         .build();
         CobaltRegistry protoRegistry =
                 CobaltRegistry.newBuilder().addCustomers(customerConfig).build();
 
         Project project = Project.create(protoRegistry);
-        assertThat(project).isEqualTo(Project.create(CUSTOMER_ID, PROJECT_ID, List.of()));
+        assertThat(project)
+                .isEqualTo(Project.create(Project.CUSTOMER_ID, Project.PROJECT_ID, List.of()));
     }
 
     @Test
-    public void create_populatesIdsAndMetrics_withNonEmptyMetrics() throws Exception {
+    public void testCreate_populatesIdsAndMetrics_withNonEmptyMetrics() throws Exception {
         MetricDefinition metric = MetricDefinition.newBuilder().setId(METRIC_ID).build();
         ProjectConfig projectConfig =
-                ProjectConfig.newBuilder().setProjectId(PROJECT_ID).addMetrics(metric).build();
+                ProjectConfig.newBuilder()
+                        .setProjectId(Project.PROJECT_ID)
+                        .addMetrics(metric)
+                        .build();
         CustomerConfig customerConfig =
                 CustomerConfig.newBuilder()
-                        .setCustomerId(CUSTOMER_ID)
+                        .setCustomerId(Project.CUSTOMER_ID)
                         .addProjects(projectConfig)
                         .build();
         CobaltRegistry protoRegistry =
                 CobaltRegistry.newBuilder().addCustomers(customerConfig).build();
 
         Project project = Project.create(protoRegistry);
-        assertThat(project).isEqualTo(Project.create(CUSTOMER_ID, PROJECT_ID, List.of(metric)));
+        assertThat(project)
+                .isEqualTo(
+                        Project.create(Project.CUSTOMER_ID, Project.PROJECT_ID, List.of(metric)));
     }
 
     @Test
-    public void create_nullProto_throwsNullPointerException() throws Exception {
+    public void testCreate_moreThanOneCustomer_adServicesSelected() throws Exception {
+        MetricDefinition metric = MetricDefinition.newBuilder().setId(METRIC_ID).build();
+        ProjectConfig projectConfig =
+                ProjectConfig.newBuilder()
+                        .setProjectId(Project.PROJECT_ID)
+                        .addMetrics(metric)
+                        .build();
+        CobaltRegistry protoRegistry =
+                CobaltRegistry.newBuilder()
+                        .addCustomers(
+                                CustomerConfig.newBuilder()
+                                        .setCustomerId(Project.CUSTOMER_ID)
+                                        .addProjects(projectConfig))
+                        .addCustomers(
+                                CustomerConfig.newBuilder()
+                                        .setCustomerId(Project.CUSTOMER_ID + 1)
+                                        .addProjects(projectConfig))
+                        .build();
+
+        Project project = Project.create(protoRegistry);
+        assertThat(project)
+                .isEqualTo(
+                        Project.create(Project.CUSTOMER_ID, Project.PROJECT_ID, List.of(metric)));
+    }
+
+    @Test
+    public void testCreate_moreThanOneProject_adServicesSelected() throws Exception {
+        MetricDefinition metric = MetricDefinition.newBuilder().setId(METRIC_ID).build();
+        CustomerConfig customerConfig =
+                CustomerConfig.newBuilder()
+                        .setCustomerId(Project.CUSTOMER_ID)
+                        .addProjects(
+                                ProjectConfig.newBuilder()
+                                        .setProjectId(Project.PROJECT_ID)
+                                        .addMetrics(metric))
+                        .addProjects(
+                                ProjectConfig.newBuilder()
+                                        .setProjectId(Project.PROJECT_ID + 1)
+                                        .addMetrics(metric))
+                        .build();
+        CobaltRegistry protoRegistry =
+                CobaltRegistry.newBuilder().addCustomers(customerConfig).build();
+
+        Project project = Project.create(protoRegistry);
+        assertThat(project)
+                .isEqualTo(
+                        Project.create(Project.CUSTOMER_ID, Project.PROJECT_ID, List.of(metric)));
+    }
+
+    @Test
+    public void testCreate_nullProto_throwsNullPointerException() throws Exception {
         assertThrows(
                 NullPointerException.class,
                 () -> {
@@ -79,29 +134,29 @@ public final class ProjectTest {
     }
 
     @Test
-    public void create_nullMetrics_throwsNullPointerException() throws Exception {
+    public void testCreate_nullMetrics_throwsNullPointerException() throws Exception {
         assertThrows(
                 NullPointerException.class,
                 () -> {
-                    Project.create(CUSTOMER_ID, PROJECT_ID, null);
+                    Project.create(Project.CUSTOMER_ID, Project.PROJECT_ID, null);
                 });
     }
 
     @Test
-    public void create_moreThanOneCustomer_throwsIllegalArgumentException() throws Exception {
+    public void testCreate_noAdServicesCustomer_throwsIllegalArgumentException() throws Exception {
         MetricDefinition metric = MetricDefinition.newBuilder().setId(METRIC_ID).build();
         ProjectConfig projectConfig =
-                ProjectConfig.newBuilder().setProjectId(PROJECT_ID).addMetrics(metric).build();
+                ProjectConfig.newBuilder()
+                        .setProjectId(Project.PROJECT_ID)
+                        .addMetrics(metric)
+                        .build();
         CustomerConfig customerConfig =
                 CustomerConfig.newBuilder()
-                        .setCustomerId(CUSTOMER_ID)
+                        .setCustomerId(Project.CUSTOMER_ID + 1)
                         .addProjects(projectConfig)
                         .build();
         CobaltRegistry protoRegistry =
-                CobaltRegistry.newBuilder()
-                        .addCustomers(customerConfig)
-                        .addCustomers(customerConfig)
-                        .build();
+                CobaltRegistry.newBuilder().addCustomers(customerConfig).build();
         assertThrows(
                 IllegalArgumentException.class,
                 () -> {
@@ -110,14 +165,16 @@ public final class ProjectTest {
     }
 
     @Test
-    public void create_moreThanOneProject_throwsIllegalArgumentException() throws Exception {
+    public void testCreate_noAdServicesProject_throwsIllegalArgumentException() throws Exception {
         MetricDefinition metric = MetricDefinition.newBuilder().setId(METRIC_ID).build();
         ProjectConfig projectConfig =
-                ProjectConfig.newBuilder().setProjectId(PROJECT_ID).addMetrics(metric).build();
+                ProjectConfig.newBuilder()
+                        .setProjectId(Project.PROJECT_ID + 1)
+                        .addMetrics(metric)
+                        .build();
         CustomerConfig customerConfig =
                 CustomerConfig.newBuilder()
-                        .setCustomerId(CUSTOMER_ID)
-                        .addProjects(projectConfig)
+                        .setCustomerId(Project.CUSTOMER_ID)
                         .addProjects(projectConfig)
                         .build();
         CobaltRegistry protoRegistry =

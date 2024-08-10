@@ -99,6 +99,33 @@ public final class Tracing {
     public static final String CREATE_AND_SERIALIZE_REQUEST =
             "ObliviousHttpEncryptorImpl#createAndSerializeRequest";
     public static final String OHTTP_ENCRYPT_BYTES = "ObliviousHttpEncryptorImpl#encryptBytes";
+    public static final String RUN_ENCODING_PER_BUYER =
+            "PeriodicEncodingJobWorker#runEncodingPerBuyer";
+    public static final String VALIDATE_AND_PERSIST_PAYLOAD =
+            "PeriodicEncodingJobWorker#validateAndPersistPayload";
+    public static final String UPDATE_ENCODERS_FOR_BUYERS =
+            "PeriodicEncodingJobWorker#doUpdateEncodersForBuyers";
+    public static final String DO_ENCODING_FOR_REGISTERED_BUYERS =
+            "PeriodicEncodingJobWorker#doEncodingForRegisteredBuyers";
+    public static final String RUN_WORKER = "PeriodicEncodingJobWorker#doRun";
+    public static final String START_JOB = "PeriodicEncodingJobService#onStartJob";
+    public static final String MARSHAL_TO_JSON = "ProtectedSignalsArgumentUtil#marshalToJson";
+    public static final String SERIALIZE_TO_JSON =
+            "ProtectedSignalsArgumentUtil#serializeEntryToJson";
+    public static final String SERIALIZE_BASE_64 =
+            "ProtectedSignalsArgumentUtil#validateAndSerializeBase64";
+    public static final String GET_BUYER_SIGNALS = "SignalsProviderImpl#getSignals";
+    public static final String ENCODE_SIGNALS = "SignalsScriptEngine#encodeSignals";
+    public static final String CONVERT_JS_OUTPUT_TO_BINARY =
+            "SignalsScriptEngine#handleEncodingOutput";
+    public static final String JS_ARRAY_ARG = "JSScriptArgument#jsonArrayArg";
+    public static final String GET_ALL_ENCODERS = "EncoderLogicHandler#getAllRegisteredEncoders";
+    public static final String GET_ENCODER_FOR_BUYER = "EncoderLogicHandler#getEncoder";
+    public static final String UPDATE_FAILED_ENCODING =
+            "EncoderLogicHandler#updateEncoderFailedCount";
+    public static final String SAVE_BUYERS_ENCODER = "EncoderLogicHandler#extractAndPersistEncoder";
+    public static final String DOWNLOAD_AND_UPDATE_ENCODER =
+            "EncoderLogicHandler#downloadAndUpdate";
 
     private static final String PERFETTO_TRIGGER_COMMAND = "/system/bin/trigger_perfetto";
 

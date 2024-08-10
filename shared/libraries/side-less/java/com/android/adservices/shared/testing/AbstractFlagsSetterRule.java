@@ -156,6 +156,9 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         // TODO(b/294423183): ideally should be "setupErrors", but it's not used yet (other
         // than logging), so it doesn't matter
         runSafely(cleanUpErrors, () -> mPreTestFlags.addAll(mDeviceConfig.getAll()));
+        // Log flags set on the device prior to test execution. Useful for verifying if flag state
+        // is correct for flag-ramp / AOAO testing.
+        log(mPreTestFlags, "pre-test flags");
         runSafely(
                 cleanUpErrors,
                 () ->
@@ -218,8 +221,7 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
             dump.append("NOTE: test explicitly cleared all flags.\n");
         }
 
-        logAllAndDumpDiff(
-                "flags", dump, mChangedFlags, mPreTestFlags, mOnTestFailureSystemProperties);
+        logAllAndDumpDiff("flags", dump, mChangedFlags, mPreTestFlags, mOnTestFailureFlags);
         logAllAndDumpDiff(
                 "system properties",
                 dump,

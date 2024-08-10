@@ -39,6 +39,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -102,6 +103,7 @@ public class PeriodicEncodingJobService extends JobService {
                     /* doRecord=*/ true);
         }
 
+        int traceCookie = Tracing.beginAsyncSection(Tracing.START_JOB);
         PeriodicEncodingJobWorker encodingWorker = PeriodicEncodingJobWorker.getInstance();
         encodingWorker
                 .encodeProtectedSignals()
@@ -119,6 +121,7 @@ public class PeriodicEncodingJobService extends JobService {
                                                 /* isSuccessful= */ true,
                                                 shouldRetry);
 
+                                Tracing.endAsyncSection(Tracing.START_JOB, traceCookie);
                                 jobFinished(params, shouldRetry);
                             }
 
@@ -131,6 +134,7 @@ public class PeriodicEncodingJobService extends JobService {
                                                 /* isSuccessful= */ false,
                                                 shouldRetry);
 
+                                Tracing.endAsyncSection(Tracing.START_JOB, traceCookie);
                                 jobFinished(params, shouldRetry);
                             }
                         },

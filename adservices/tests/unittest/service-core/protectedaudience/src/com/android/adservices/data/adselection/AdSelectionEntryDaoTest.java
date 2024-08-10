@@ -832,8 +832,7 @@ public class AdSelectionEntryDaoTest {
 
         DBAdSelectionEntry adSelectionEntry =
                 mAdSelectionEntryDao.getAdSelectionEntityById(AD_SELECTION_ID_1);
-        DBAdSelectionEntry expected =
-                toAdSelectionEntry(DB_AD_SELECTION_1, secondEntry);
+        DBAdSelectionEntry expected = toAdSelectionEntry(DB_AD_SELECTION_1, secondEntry);
 
         assertEquals(adSelectionEntry, expected);
     }
@@ -1922,7 +1921,7 @@ public class AdSelectionEntryDaoTest {
 
         ReportingData actualResult =
                 mAdSelectionEntryDao.getReportingDataForId(
-                        AD_SELECTION_ID_1, /* shouldUseUnifiedTables = */ false);
+                        AD_SELECTION_ID_1, /* shouldUseUnifiedTables= */ false);
 
         assertEquals(DataHandlersFixture.REPORTING_DATA_WITH_URIS, actualResult);
     }
@@ -1938,7 +1937,7 @@ public class AdSelectionEntryDaoTest {
 
         ReportingData actualResult =
                 mAdSelectionEntryDao.getReportingDataForId(
-                        AD_SELECTION_ID_1, /* shouldUseUnifiedTables = */ true);
+                        AD_SELECTION_ID_1, /* shouldUseUnifiedTables= */ true);
 
         assertEquals(DataHandlersFixture.REPORTING_DATA_WITH_URIS, actualResult);
     }
@@ -1951,7 +1950,7 @@ public class AdSelectionEntryDaoTest {
 
         ReportingData actualResult =
                 mAdSelectionEntryDao.getReportingDataForId(
-                        AD_SELECTION_ID_1, /* shouldUseUnifiedTables = */ false);
+                        AD_SELECTION_ID_1, /* shouldUseUnifiedTables= */ false);
 
         assertNull(actualResult.getBuyerWinReportingUri());
         assertNull(actualResult.getSellerWinReportingUri());
@@ -1985,7 +1984,7 @@ public class AdSelectionEntryDaoTest {
 
         ReportingData actualResult =
                 mAdSelectionEntryDao.getReportingDataForId(
-                        AD_SELECTION_ID_1, /* shouldUseUnifiedTables = */ true);
+                        AD_SELECTION_ID_1, /* shouldUseUnifiedTables= */ true);
 
         assertNull(actualResult.getBuyerWinReportingUri());
         assertNull(actualResult.getSellerWinReportingUri());
@@ -2014,14 +2013,14 @@ public class AdSelectionEntryDaoTest {
             test_getReportingDataForId_idNotPresent_returnsNullShouldUseUnifiedTablesDisabled() {
         assertNull(
                 mAdSelectionEntryDao.getReportingDataForId(
-                        AD_SELECTION_ID_1, /* shouldUseUnifiedTables = */ false));
+                        AD_SELECTION_ID_1, /* shouldUseUnifiedTables= */ false));
     }
 
     @Test
     public void test_getReportingDataForId_idNotPresent_returnsNullShouldUseUnifiedTablesEnabled() {
         assertNull(
                 mAdSelectionEntryDao.getReportingDataForId(
-                        AD_SELECTION_ID_1, /* shouldUseUnifiedTables = */ true));
+                        AD_SELECTION_ID_1, /* shouldUseUnifiedTables= */ true));
     }
 
     @Test
@@ -2274,7 +2273,7 @@ public class AdSelectionEntryDaoTest {
         assertNull(mAdSelectionEntryDao.getDBAdSelectionResultForId(adSelectionId));
         assertNull(
                 mAdSelectionEntryDao.getReportingDataForId(
-                        adSelectionId, /* shouldUseUnifiedTables = */ true));
+                        adSelectionId, /* shouldUseUnifiedTables= */ true));
         assertFalse(
                 mAdSelectionEntryDao.doesAdSelectionIdExistInInitializationTable(adSelectionId));
     }
@@ -2298,7 +2297,7 @@ public class AdSelectionEntryDaoTest {
         assertNull(mAdSelectionEntryDao.getDBAdSelectionResultForId(adSelectionId));
         assertNull(
                 mAdSelectionEntryDao.getReportingDataForId(
-                        adSelectionId, /* shouldUseUnifiedTables = */ false));
+                        adSelectionId, /* shouldUseUnifiedTables= */ false));
         assertFalse(
                 mAdSelectionEntryDao.doesAdSelectionIdExistInInitializationTable(adSelectionId));
     }

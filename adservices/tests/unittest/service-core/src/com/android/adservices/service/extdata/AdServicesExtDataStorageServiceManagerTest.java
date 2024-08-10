@@ -31,12 +31,15 @@ import static android.adservices.extdata.AdServicesExtDataStorageService.FIELD_I
 import static android.adservices.extdata.AdServicesExtDataStorageService.FIELD_MANUAL_INTERACTION_WITH_CONSENT_STATUS;
 import static android.adservices.extdata.AdServicesExtDataStorageService.FIELD_MEASUREMENT_ROLLBACK_APEX_VERSION;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
+import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
 import static com.android.adservices.service.extdata.AdServicesExtDataStorageServiceManager.UNKNOWN_PACKAGE_NAME;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__ADEXT_DATA_SERVICE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_AD_SERVICES_EXT_DATA;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__PUT_AD_SERVICES_EXT_DATA;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_ADEXT_DATA_SERVICE_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PUT_ADEXT_DATA_SERVICE_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__ADEXT_DATA_SERVICE;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
 import static org.mockito.Mockito.any;
@@ -49,7 +52,8 @@ import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.extdata.AdServicesExtDataParams;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -65,8 +69,10 @@ import org.mockito.Mock;
 
 @SpyStatic(AdServicesExtDataStorageServiceWorker.class)
 @SpyStatic(AdServicesLoggerImpl.class)
-@SpyStatic(ErrorLogUtil.class)
 @SpyStatic(FlagsFactory.class)
+@SetErrorLogUtilDefaultParams(
+        throwable = Any.class,
+        ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__ADEXT_DATA_SERVICE)
 public final class AdServicesExtDataStorageServiceManagerTest
         extends AdServicesExtendedMockitoTestCase {
 
@@ -97,9 +103,6 @@ public final class AdServicesExtDataStorageServiceManagerTest
 
     @Before
     public void setup() {
-        // mock ErrorLogUtil for logging in the callbacks
-        doNothingOnErrorLogUtilError();
-
         // mock the device config read for checking debug proxy
         doReturn(false).when(mFlags).getEnableAdExtServiceDebugProxy();
 
@@ -133,6 +136,8 @@ public final class AdServicesExtDataStorageServiceManagerTest
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_ADEXT_DATA_SERVICE_ERROR)
     public void testGetAdServicesExtData_onErrorSet_returnsDefaultParams() {
         doAnswer(
                         (invocation) -> {
@@ -194,6 +199,8 @@ public final class AdServicesExtDataStorageServiceManagerTest
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PUT_ADEXT_DATA_SERVICE_ERROR)
     public void testSetAdServicesExtData_onErrorSet_returnsFalse() {
         doAnswer(
                         (invocation) -> {

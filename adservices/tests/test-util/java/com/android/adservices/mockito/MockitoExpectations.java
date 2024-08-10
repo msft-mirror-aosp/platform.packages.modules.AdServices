@@ -233,6 +233,7 @@ public final class MockitoExpectations {
      * @deprecated use {@code mocker.getSpiedAdServicesJobServiceLogger()} instead.
      */
     @Deprecated
+    @SuppressWarnings("InlineMeSuggester")
     public static AdServicesJobServiceLogger getSpiedAdServicesJobServiceLogger(
             Context context, Flags flags) {
         return jobMocker.getSpiedAdServicesJobServiceLogger(context, flags);

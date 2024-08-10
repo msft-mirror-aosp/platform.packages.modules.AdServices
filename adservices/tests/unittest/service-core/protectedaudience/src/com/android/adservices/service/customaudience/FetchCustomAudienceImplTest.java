@@ -1068,7 +1068,7 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                 .insertOrOverwriteCustomAudience(
                         FetchCustomAudienceFixture.getFullSuccessfulDBCustomAudience(),
                         getValidDailyUpdateUriByBuyer(BUYER),
-                        /*debuggable=*/ true);
+                        /* debuggable= */ true);
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_SUCCESS), anyInt());

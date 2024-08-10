@@ -28,7 +28,6 @@ import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import org.junit.Rule;
 import org.junit.Test;
 
-
 public class DBBuyerDecisionLogicTest {
 
     private static final String BUYER_DECISION_LOGIC_JS =

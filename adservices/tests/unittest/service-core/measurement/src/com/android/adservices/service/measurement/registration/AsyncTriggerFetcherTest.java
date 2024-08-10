@@ -245,6 +245,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                                 Enrollment.getValidEnrollmentId(
                                         any(), anyString(), any(), any(), any()));
         when(mFlags.getMeasurementEnableXNA()).thenReturn(false);
+        when(mFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(false);
         when(mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist())
                 .thenReturn(SourceFixture.ValidSourceParams.ENROLLMENT_ID);
         when(mFlags.getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist()).thenReturn("");
@@ -2031,6 +2032,8 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
     }
 
     @Test
@@ -2142,6 +2145,330 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         assertFalse(fetch.isPresent());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void testTriggerRequest_aggregateValueFiltersMissingDefaultToNull_success()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of("{\"event_trigger_data\":" + EVENT_TRIGGERS_1 + "}")));
+        when(mFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertTrue(fetch.isPresent());
+        Trigger result = fetch.get();
+        assertEquals(null, result.getAggregateValues());
+    }
+
+    @Test
+    public void testTriggerRequest_aggregateValueFiltersJsonObject_success() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String validAggregatableValues = "{\"campaignCounts\":32768}";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{\"aggregatable_values\":"
+                                                + validAggregatableValues
+                                                + "}")));
+        when(mFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertTrue(fetch.isPresent());
+        assertEquals(AsyncFetchStatus.EntityStatus.SUCCESS, asyncFetchStatus.getEntityStatus());
+        Trigger result = fetch.get();
+        assertEquals(
+                new JSONObject(validAggregatableValues).toString(), result.getAggregateValues());
+    }
+
+    @Test
+    public void testTriggerRequest_aggregateValueFiltersJsonArrayEmptyValues_success()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String validAggregatableValuesArr = "[{\"values\": {}}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{\"aggregatable_values\":"
+                                                + validAggregatableValuesArr
+                                                + "}")));
+        when(mFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertTrue(fetch.isPresent());
+        assertEquals(AsyncFetchStatus.EntityStatus.SUCCESS, asyncFetchStatus.getEntityStatus());
+        Trigger result = fetch.get();
+        assertEquals(
+                new JSONArray(validAggregatableValuesArr).toString(), result.getAggregateValues());
+    }
+
+    @Test
+    public void testTriggerRequest_aggregateValueFiltersInvalidType_fails() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        String invalidAggregatableValues = "{" + "\"aggregatable_values\":\"12.0\"" + "}";
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(invalidAggregatableValues)));
+        when(mFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertFalse(fetch.isPresent());
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
+    }
+
+    @Test
+    public void testTriggerRequest_aggregateValueFiltersJsonArray_success() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String validAggregatableValuesArr =
+                "["
+                        + "{"
+                        + "\"values\": {\"campaignCounts\": 32768, \"geoValue\": 1664}, "
+                        + "\"filters\":"
+                        + " {\"category\": [\"filter_1\", \"filter_2\"]}"
+                        + "},"
+                        + "{"
+                        + "\"values\": {\"campaignCounts\": 65535},"
+                        + "\"filters\": {"
+                        + " \"category\": [\"filter_1\"]},"
+                        + "\"not_filters\": {"
+                        + " \"category\": [\"filter_2\"]}"
+                        + "}"
+                        + "]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{\"aggregatable_values\":"
+                                                + validAggregatableValuesArr
+                                                + "}")));
+        when(mFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertTrue(fetch.isPresent());
+        assertEquals(AsyncFetchStatus.EntityStatus.SUCCESS, asyncFetchStatus.getEntityStatus());
+        Trigger result = fetch.get();
+        assertEquals(
+                new JSONArray(validAggregatableValuesArr).toString(), result.getAggregateValues());
+    }
+
+    @Test
+    public void testTriggerRequest_aggregateValueFiltersJsonArrayMissingValues_fail()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String invalidAggregatableValuesArr = "[{}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{\"aggregatable_values\":"
+                                                + invalidAggregatableValuesArr
+                                                + "}")));
+        when(mFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertFalse(fetch.isPresent());
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
+    }
+
+    @Test
+    public void testTriggerRequest_aggregateValueFiltersJsonArrayValuesTooLarge_fail()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String invalidAggregatableValuesArr =
+                "[{\"values\": {\"campaignCounts\": 65537, \"geoValue\": 1664}}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{\"aggregatable_values\":"
+                                                + invalidAggregatableValuesArr
+                                                + "}")));
+        when(mFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertFalse(fetch.isPresent());
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
+    }
+
+    @Test
+    public void testTriggerRequest_aggregateValueFiltersJsonArrayFiltersInvalidJson_fail()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String invalidFilters = "{\"product\":[\"1234\",\"2345\"], \"\"\":[\"id\"]}";
+        String invalidAggregatableValuesArr =
+                "[{\"values\": {\"campaignCounts\": 32768, \"geoValue\": 1664}, \"filters\":"
+                        + invalidFilters
+                        + "}]";
+
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{\"aggregatable_values\":"
+                                                + invalidAggregatableValuesArr
+                                                + "}")));
+        when(mFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertFalse(fetch.isPresent());
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.PARSING_ERROR, asyncFetchStatus.getEntityStatus());
+    }
+
+    @Test
+    public void testTriggerRequest_aggregateValueFiltersJsonArrayTooManyFilterMaps_fail()
+            throws Exception {
+        Assume.assumeFalse(mEnableUpdateTriggerHeaderSizeLimit);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        StringBuilder filters =
+                new StringBuilder(
+                        "{"
+                                + "\"filter-string-1\": [\"filter-value-1\"],"
+                                + "\"filter-string-2\": [");
+        filters.append(
+                IntStream.range(0, Flags.DEFAULT_MEASUREMENT_MAX_VALUES_PER_ATTRIBUTION_FILTER + 1)
+                        .mapToObj(i -> "\"filter-value-" + i + "\"")
+                        .collect(Collectors.joining(",")));
+        filters.append("]}");
+        String invalidAggregatableValuesArr =
+                "[{\"values\": {\"campaignCounts\": 32768, \"geoValue\": 1664}, \"filters\":"
+                        + filters
+                        + "}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{\"aggregatable_values\":"
+                                                + invalidAggregatableValuesArr
+                                                + "}")));
+        when(mFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertFalse(fetch.isPresent());
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
+    }
+
+    @Test
+    public void testTriggerRequest_aggregateValueFiltersJsonArrayTooManyNotFilterMaps_fail()
+            throws Exception {
+        Assume.assumeFalse(mEnableUpdateTriggerHeaderSizeLimit);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        StringBuilder invalidNotFilters =
+                new StringBuilder(
+                        "{"
+                                + "\"filter-string-1\": [\"filter-value-1\"],"
+                                + "\"filter-string-2\": [");
+        invalidNotFilters.append(
+                IntStream.range(0, Flags.DEFAULT_MEASUREMENT_MAX_VALUES_PER_ATTRIBUTION_FILTER + 1)
+                        .mapToObj(i -> "\"filter-value-" + i + "\"")
+                        .collect(Collectors.joining(",")));
+        invalidNotFilters.append("]}");
+        String invalidAggregatableValuesArr =
+                "[{\"values\": {\"campaignCounts\": 32768, \"geoValue\": 1664}, \"not_filters\":"
+                        + invalidNotFilters
+                        + "}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{\"aggregatable_values\":"
+                                                + invalidAggregatableValuesArr
+                                                + "}")));
+        when(mFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertFalse(fetch.isPresent());
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
     }
 
     @Test

@@ -91,7 +91,6 @@ import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
-import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
@@ -104,7 +103,6 @@ import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
 import com.android.adservices.data.customaudience.DBPartialCustomAudience;
 import com.android.adservices.data.customaudience.DBScheduledCustomAudienceUpdate;
 import com.android.adservices.data.enrollment.EnrollmentDao;
-import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
@@ -140,7 +138,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoSession;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -225,8 +222,6 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
 
     private ScheduledUpdatesHandler mScheduledUpdatesHandler;
 
-    private MockitoSession mStaticMockSession = null;
-
     @Mock private ConsentManager mConsentManagerMock;
     @Mock private FledgeConsentFilter mFledgeConsentFilterMock;
     @Mock private CustomAudienceQuantityChecker mCustomAudienceQuantityCheckerMock;
@@ -244,7 +239,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     private CustomAudienceValidator mCustomAudienceValidator;
 
     private static final Flags COMMON_FLAGS_WITH_FILTERS_ENABLED =
-            new FakeFlagsFactory.TestFlags() {
+            new CustomAudienceServiceE2ETestFlags() {
                 @Override
                 public boolean getFledgeFrequencyCapFilteringEnabled() {
                     return true;
@@ -258,7 +253,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
 
     @Before
     public void setup() {
-        doReturn(FakeFlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        doReturn(new CustomAudienceServiceE2ETestFlags()).when(FlagsFactory::getFlags);
 
         mFetchUri = mMockWebServerRule.uriForPath("/fetch");
 
@@ -272,8 +267,6 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                 Room.inMemoryDatabaseBuilder(mContext, SharedStorageDatabase.class).build();
         mAppInstallDao = sharedDb.appInstallDao();
         mFrequencyCapDao = sharedDb.frequencyCapDao();
-        AdSelectionServerDatabase serverDb =
-                Room.inMemoryDatabaseBuilder(mContext, AdSelectionServerDatabase.class).build();
 
         mCustomAudienceQuantityChecker =
                 new CustomAudienceQuantityChecker(
@@ -492,7 +485,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     @Test
     public void testJoinCustomAudienceAppInstallDisabled() {
         Flags flagsWithAppInstallDisabled =
-                new FakeFlagsFactory.TestFlags() {
+                new CustomAudienceServiceE2ETestFlags() {
                     @Override
                     public boolean getFledgeFrequencyCapFilteringEnabled() {
                         return true;
@@ -526,7 +519,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     @Test
     public void testJoinCustomAudienceFrequencyCapDisabled() {
         Flags flagsWithFCapDisabled =
-                new FakeFlagsFactory.TestFlags() {
+                new CustomAudienceServiceE2ETestFlags() {
                     @Override
                     public boolean getFledgeFrequencyCapFilteringEnabled() {
                         return false;
@@ -678,7 +671,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     @Test
     public void testFetchAndJoinCustomAudienceAppInstallDisabled() throws Exception {
         Flags flagsWithAppInstallDisabled =
-                new FakeFlagsFactory.TestFlags() {
+                new CustomAudienceServiceE2ETestFlags() {
                     @Override
                     public boolean getFledgeFrequencyCapFilteringEnabled() {
                         return true;
@@ -728,7 +721,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     @Test
     public void testFetchAndJoinCustomAudienceFrequencyCapDisabled() throws Exception {
         Flags flagsWithFrequencyCapDisabled =
-                new FakeFlagsFactory.TestFlags() {
+                new CustomAudienceServiceE2ETestFlags() {
                     @Override
                     public boolean getFledgeFrequencyCapFilteringEnabled() {
                         return false;
@@ -1363,8 +1356,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         Dispatcher dispatcher =
                 new Dispatcher() {
                     @Override
-                    public MockResponse dispatch(RecordedRequest request)
-                            throws InterruptedException {
+                    public MockResponse dispatch(RecordedRequest request) {
                         // We can validate the request within server
                         List<CustomAudienceBlob> caBlobs =
                                 extractPartialCustomAudiencesFromRequest(request.getBody());
@@ -1525,8 +1517,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         Dispatcher dispatcher =
                 new Dispatcher() {
                     @Override
-                    public MockResponse dispatch(RecordedRequest request)
-                            throws InterruptedException {
+                    public MockResponse dispatch(RecordedRequest request) {
                         // We can validate the request within server
                         List<CustomAudienceBlob> caBlobs =
                                 extractPartialCustomAudiencesFromRequest(request.getBody());
@@ -1653,8 +1644,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         Dispatcher dispatcher =
                 new Dispatcher() {
                     @Override
-                    public MockResponse dispatch(RecordedRequest request)
-                            throws InterruptedException {
+                    public MockResponse dispatch(RecordedRequest request) {
                         // We can validate the request within server
                         if (request.getPath().equals(UPDATE_URI_PATH)) {
                             List<CustomAudienceBlob> caBlobs =
@@ -1769,7 +1759,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     @Test
     public void testScheduleCustomAudienceUpdate_AppInstallDisabled() throws Exception {
         Flags flagsWithAppInstallDisabled =
-                new FakeFlagsFactory.TestFlags() {
+                new CustomAudienceServiceE2ETestFlags() {
                     @Override
                     public boolean getFledgeFrequencyCapFilteringEnabled() {
                         return true;
@@ -1796,8 +1786,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         Dispatcher dispatcher =
                 new Dispatcher() {
                     @Override
-                    public MockResponse dispatch(RecordedRequest request)
-                            throws InterruptedException {
+                    public MockResponse dispatch(RecordedRequest request) {
                         // We can validate the request within server
                         if (request.getPath().equals(UPDATE_URI_PATH)) {
                             List<CustomAudienceBlob> caBlobs =
@@ -1879,7 +1868,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     public void testScheduleCustomAudienceUpdate_CAQuantityCheckerFail_shouldNotJoinCustomAudience()
             throws Exception {
         Flags flagsWithCAQuantityCheckerFlags =
-                new FakeFlagsFactory.TestFlags() {
+                new CustomAudienceServiceE2ETestFlags() {
                     @Override
                     public long getFledgeCustomAudienceMaxOwnerCount() {
                         return 0;
@@ -1930,8 +1919,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         Dispatcher dispatcher =
                 new Dispatcher() {
                     @Override
-                    public MockResponse dispatch(RecordedRequest request)
-                            throws InterruptedException {
+                    public MockResponse dispatch(RecordedRequest request) {
                         // We can validate the request within server
                         if (request.getPath().equals(UPDATE_URI_PATH)) {
                             List<CustomAudienceBlob> caBlobs =
@@ -2006,7 +1994,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     public void testScheduleCAUpdate_TwoCAToJoin_CAQuantityCheckerFailForOne_shouldOnlyJoinOneCA()
             throws Exception {
         Flags flagsWithCAQuantityCheckerFlags =
-                new FakeFlagsFactory.TestFlags() {
+                new CustomAudienceServiceE2ETestFlags() {
                     @Override
                     public long getFledgeCustomAudienceMaxOwnerCount() {
                         return 1;
@@ -2063,8 +2051,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         Dispatcher dispatcher =
                 new Dispatcher() {
                     @Override
-                    public MockResponse dispatch(RecordedRequest request)
-                            throws InterruptedException {
+                    public MockResponse dispatch(RecordedRequest request) {
                         // We can validate the request within server
                         List<CustomAudienceBlob> caBlobs =
                                 extractPartialCustomAudiencesFromRequest(request.getBody());
@@ -2142,7 +2129,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     @Test
     public void testScheduleCustomAudienceUpdate_FrequencyCapDisabled() throws Exception {
         Flags flagsWithFrequencyCapDisabled =
-                new FakeFlagsFactory.TestFlags() {
+                new CustomAudienceServiceE2ETestFlags() {
                     @Override
                     public boolean getFledgeFrequencyCapFilteringEnabled() {
                         return false;
@@ -2169,8 +2156,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         Dispatcher dispatcher =
                 new Dispatcher() {
                     @Override
-                    public MockResponse dispatch(RecordedRequest request)
-                            throws InterruptedException {
+                    public MockResponse dispatch(RecordedRequest request) {
                         // We can validate the request within server
                         if (request.getPath().equals(UPDATE_URI_PATH)) {
                             List<CustomAudienceBlob> caBlobs =
@@ -2255,8 +2241,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         Dispatcher dispatcher =
                 new Dispatcher() {
                     @Override
-                    public MockResponse dispatch(RecordedRequest request)
-                            throws InterruptedException {
+                    public MockResponse dispatch(RecordedRequest request) {
                         // Both update requests do not have valid updates
                         if (request.getPath().equals(UPDATE_URI_PATH)) {
                             new MockResponse().setResponseCode(400);
@@ -2331,8 +2316,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         Dispatcher dispatcher =
                 new Dispatcher() {
                     @Override
-                    public MockResponse dispatch(RecordedRequest request)
-                            throws InterruptedException {
+                    public MockResponse dispatch(RecordedRequest request) {
                         // We can validate the request within server
                         List<CustomAudienceBlob> caBlobs =
                                 extractPartialCustomAudiencesFromRequest(request.getBody());
@@ -2434,8 +2418,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         Dispatcher dispatcher =
                 new Dispatcher() {
                     @Override
-                    public MockResponse dispatch(RecordedRequest request)
-                            throws InterruptedException {
+                    public MockResponse dispatch(RecordedRequest request) {
                         // We can validate the request within server
                         List<CustomAudienceBlob> caBlobs =
                                 extractPartialCustomAudiencesFromRequest(request.getBody());
@@ -2525,8 +2508,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         Dispatcher dispatcher =
                 new Dispatcher() {
                     @Override
-                    public MockResponse dispatch(RecordedRequest request)
-                            throws InterruptedException {
+                    public MockResponse dispatch(RecordedRequest request) {
                         // We can validate the request within server
                         List<CustomAudienceBlob> caBlobs =
                                 extractPartialCustomAudiencesFromRequest(request.getBody());
@@ -2832,7 +2814,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     }
 
     @Test
-    public void testOverrideCustomAudienceRemoteInfoFailsWithDevOptionsDisabled() throws Exception {
+    public void testOverrideCustomAudienceRemoteInfoFailsWithDevOptionsDisabled() {
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
@@ -2967,8 +2949,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     }
 
     @Test
-    public void testRemoveCustomAudienceRemoteInfoOverrideFailsWithDevOptionsDisabled()
-            throws Exception {
+    public void testRemoveCustomAudienceRemoteInfoOverrideFailsWithDevOptionsDisabled() {
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
@@ -3226,6 +3207,11 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
             @Override
             public float getSdkRequestPermitsPerSecond() {
                 return 1f;
+            }
+
+            @Override
+            public String getPpapiAppAllowList() {
+                return MY_APP_PACKAGE_NAME;
             }
         }
 
@@ -3542,6 +3528,17 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         }
 
         @Override
+        public boolean getFledgeScheduleCustomAudienceUpdateEnabled() {
+            return true;
+        }
+
+        @Override
+        public int getFledgeScheduleCustomAudienceMinDelayMinsOverride() {
+            // Lets the delay be set in past for easier testing
+            return -100;
+        }
+
+        @Override
         public boolean getMeasurementFlexibleEventReportingApiEnabled() {
             return true;
         }
@@ -3564,6 +3561,31 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         @Override
         public boolean getFledgeEventLevelDebugReportingEnabled() {
             return true;
+        }
+
+        @Override
+        public boolean getFledgeBeaconReportingMetricsEnabled() {
+            return true;
+        }
+
+        @Override
+        public boolean getFledgeAppPackageNameLoggingEnabled() {
+            return true;
+        }
+
+        @Override
+        public boolean getFledgeAuctionServerKeyFetchMetricsEnabled() {
+            return true;
+        }
+
+        @Override
+        public boolean getPasExtendedMetricsEnabled() {
+            return true;
+        }
+
+        @Override
+        public String getPpapiAppAllowList() {
+            return MY_APP_PACKAGE_NAME;
         }
     }
 

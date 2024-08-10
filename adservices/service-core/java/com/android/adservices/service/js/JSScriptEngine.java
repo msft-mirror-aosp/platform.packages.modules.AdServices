@@ -21,6 +21,7 @@ import static com.android.adservices.service.js.JSScriptEngineCommonConstants.WA
 import android.annotation.Nullable;
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.os.Trace;
 
 import androidx.javascriptengine.IsolateStartupParameters;
 import androidx.javascriptengine.JavaScriptIsolate;
@@ -697,7 +698,10 @@ public class JSScriptEngine {
      */
     private JavaScriptIsolate createIsolate(
             JavaScriptSandbox jsSandbox, IsolateSettings isolateSettings) {
-        int traceCookie = Tracing.beginAsyncSection(Tracing.JSSCRIPTENGINE_CREATE_ISOLATE);
+        Trace.beginSection(Tracing.JSSCRIPTENGINE_CREATE_ISOLATE);
+
+        // TODO (b/321237839): Clean up exception handling after upgrading javascriptengine
+        //  dependency to beta1
         StopWatch isolateStopWatch =
                 mProfiler.start(JSScriptEngineLogConstants.ISOLATE_CREATE_TIME);
         try {
@@ -723,7 +727,7 @@ public class JSScriptEngine {
                     JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_MSG, jsSandboxPossiblyDisconnected);
         } finally {
             isolateStopWatch.stop();
-            Tracing.endAsyncSection(Tracing.JSSCRIPTENGINE_CREATE_ISOLATE, traceCookie);
+            Trace.endSection();
         }
     }
 
@@ -758,16 +762,15 @@ public class JSScriptEngine {
 
         @Override
         public void close() {
-            int traceCookie = Tracing.beginAsyncSection(Tracing.JSSCRIPTENGINE_CLOSE_ISOLATE);
+            Trace.beginSection(Tracing.JSSCRIPTENGINE_CLOSE_ISOLATE);
             mLogger.d("Closing JavaScriptSandbox isolate");
-            // Closing the isolate will also cause the thread in JavaScriptSandbox to be terminated
-            // if
-            // still running.
-            // There is no need to verify if ISOLATE_TERMINATION is supported by JavaScriptSandbox
-            // because there is no new API but just new capability on the JavaScriptSandbox side for
-            // existing API.
+            // Closing the isolate will also cause the thread in JavaScriptSandbox to be
+            // terminated if it's still running.
+            // There is no need to verify if ISOLATE_TERMINATION is supported by
+            // JavaScriptSandbox because there is no new API but just new capability on
+            // the JavaScriptSandbox side for the existing API.
             mIsolate.close();
-            Tracing.endAsyncSection(Tracing.JSSCRIPTENGINE_CLOSE_ISOLATE, traceCookie);
+            Trace.endSection();
         }
     }
 }
