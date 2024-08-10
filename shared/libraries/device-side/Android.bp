@@ -287,6 +287,10 @@ java_library {
         "java/com/android/adservices/mockito/AbstractStaticMocker.java",
         "java/com/android/adservices/mockito/StaticClassChecker.java",
 
+        // AndroidMocker
+        "java/com/android/adservices/mockito/AndroidMocker.java",
+        "java/com/android/adservices/mockito/AndroidMockitoMocker.java",
+
         // AndroidStaticMocker
         "java/com/android/adservices/mockito/AndroidStaticMocker.java",
         "java/com/android/adservices/mockito/AndroidExtendedMockitoMocker.java",
@@ -390,4 +394,17 @@ java_library {
     lint: {
         extra_check_modules: ["AdServicesProdLintChecker"],
     },
+}
+
+// Shared test classes used to test shared test classes - Malkovich!
+filegroup {
+    name: "adservices-shared-device-side-meta-testing-sources",
+    srcs: [
+        "java/com/android/adservices/shared/meta_testing/**/*.java",
+    ],
+    visibility: [
+        "//packages/modules/AdServices/shared/tests:__subpackages__",
+        // Explicitly add each package below - don't use __subpackages__
+        "//packages/modules/AdServices/adservices/tests/unittest/adservices-test-utility",
+    ],
 }

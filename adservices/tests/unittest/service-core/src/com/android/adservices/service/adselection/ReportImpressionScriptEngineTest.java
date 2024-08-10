@@ -30,13 +30,10 @@ import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.common.AdData;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
-import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
 
-import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.FlakyTest;
-import androidx.test.filters.SmallTest;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.common.WebViewSupportUtil;
@@ -52,8 +49,8 @@ import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
 import com.android.adservices.service.stats.ReportImpressionExecutionLogger;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -71,9 +68,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 
-@SmallTest
-public class ReportImpressionScriptEngineTest extends AdServicesMockitoTestCase {
-    protected static final Context sContext = ApplicationProvider.getApplicationContext();
+@RequiresSdkLevelAtLeastS
+public final class ReportImpressionScriptEngineTest extends AdServicesMockitoTestCase {
     private static final String TAG = "ReportImpressionScriptEngineTest";
     private static final boolean ISOLATE_CONSOLE_MESSAGE_IN_LOGS_ENABLED =
             true; // Enabling console messages for tests.
@@ -140,9 +136,6 @@ public class ReportImpressionScriptEngineTest extends AdServicesMockitoTestCase 
     // Only used for setup, so no need to use the real impl for now
     private static final AdDataArgumentUtil AD_DATA_ARGUMENT_UTIL =
             new AdDataArgumentUtil(new AdCounterKeyCopierNoOpImpl());
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     // Every test in this class requires that the JS Sandbox be available. The JS Sandbox
     // availability depends on an external component (the system webview) being higher than a
@@ -1340,6 +1333,6 @@ public class ReportImpressionScriptEngineTest extends AdServicesMockitoTestCase 
                 mIsolateSettings::getMaxHeapSizeBytes,
                 registerAdBeaconScriptEngineHelper,
                 new NoOpRetryStrategyImpl(),
-                DevContext.builder().setDevOptionsEnabled(true).build());
+                DevContext.builder(mPackageName).setDevOptionsEnabled(true).build());
     }
 }

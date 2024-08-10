@@ -28,10 +28,11 @@ import com.google.auto.service.AutoService
 @Suppress("UnstableApiUsage")
 class AdServicesTestLintCheckerIssueRegistry : IssueRegistry() {
     override val issues =
-            listOf(
-                DeviceConfigUsageDetector.ISSUE,
-                PreconditionsCheckStateDetector.ISSUE,
-            )
+        listOf(
+            DeviceConfigUsageDetector.ISSUE,
+            PreconditionsCheckStateDetector.ISSUE,
+            ErrorLogUtilStaticMockSpyUsageDetector.ISSUE
+        )
 
     override val api: Int
         get() = CURRENT_API
@@ -43,9 +44,9 @@ class AdServicesTestLintCheckerIssueRegistry : IssueRegistry() {
         get() = 11
 
     override val vendor =
-            Vendor(
-                    vendorName = "Android",
-                    feedbackUrl = "http://b/issues/new?component=1451456",
-                    contact = "gehuang@google.com"
-            )
+        Vendor(
+            vendorName = "Android",
+            feedbackUrl = "http://b/issues/new?component=1451456",
+            contact = "gehuang@google.com"
+        )
 }

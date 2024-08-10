@@ -21,11 +21,8 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 
-import android.content.Context;
 import android.content.pm.PackageManager;
 import android.telephony.TelephonyManager;
-
-import androidx.test.filters.SmallTest;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.Flags;
@@ -39,10 +36,8 @@ import org.mockito.Mock;
 import java.util.Locale;
 
 @SpyStatic(FlagsFactory.class)
-@SmallTest
-public class DeviceRegionProviderTest extends AdServicesExtendedMockitoTestCase {
+public final class DeviceRegionProviderTest extends AdServicesExtendedMockitoTestCase {
 
-    @Mock private Context mContext;
     @Mock private TelephonyManager mTelephonyManager;
     @Mock private PackageManager mPackageManager;
     @Mock private Flags mMockFlags;
@@ -63,10 +58,10 @@ public class DeviceRegionProviderTest extends AdServicesExtendedMockitoTestCase 
 
         doReturn("gb").when(mTelephonyManager).getSimCountryIso();
         doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
-        doReturn(mPackageManager).when(mContext).getPackageManager();
-        doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
+        doReturn(mPackageManager).when(mMockContext).getPackageManager();
+        doReturn(mTelephonyManager).when(mMockContext).getSystemService(TelephonyManager.class);
 
-        assertThat(DeviceRegionProvider.isEuDevice(mContext)).isFalse();
+        assertThat(DeviceRegionProvider.isEuDevice(mMockContext)).isFalse();
     }
 
     @Test
@@ -76,10 +71,10 @@ public class DeviceRegionProviderTest extends AdServicesExtendedMockitoTestCase 
 
         doReturn("ch").when(mTelephonyManager).getSimCountryIso();
         doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
-        doReturn(mPackageManager).when(mContext).getPackageManager();
-        doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
+        doReturn(mPackageManager).when(mMockContext).getPackageManager();
+        doReturn(mTelephonyManager).when(mMockContext).getSystemService(TelephonyManager.class);
 
-        assertThat(DeviceRegionProvider.isEuDevice(mContext)).isFalse();
+        assertThat(DeviceRegionProvider.isEuDevice(mMockContext)).isFalse();
     }
 
     @Test
@@ -89,10 +84,10 @@ public class DeviceRegionProviderTest extends AdServicesExtendedMockitoTestCase 
 
         doReturn("us").when(mTelephonyManager).getSimCountryIso();
         doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
-        doReturn(mPackageManager).when(mContext).getPackageManager();
-        doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
+        doReturn(mPackageManager).when(mMockContext).getPackageManager();
+        doReturn(mTelephonyManager).when(mMockContext).getSystemService(TelephonyManager.class);
 
-        assertThat(DeviceRegionProvider.isEuDevice(mContext)).isFalse();
+        assertThat(DeviceRegionProvider.isEuDevice(mMockContext)).isFalse();
     }
 
     @Test
@@ -100,10 +95,10 @@ public class DeviceRegionProviderTest extends AdServicesExtendedMockitoTestCase 
         doReturn(Flags.IS_EEA_DEVICE).when(mMockFlags).isEeaDevice();
         doReturn("gb").when(mTelephonyManager).getSimCountryIso();
         doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
-        doReturn(mPackageManager).when(mContext).getPackageManager();
-        doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
+        doReturn(mPackageManager).when(mMockContext).getPackageManager();
+        doReturn(mTelephonyManager).when(mMockContext).getSystemService(TelephonyManager.class);
 
-        assertThat(DeviceRegionProvider.isEuDevice(mContext)).isTrue();
+        assertThat(DeviceRegionProvider.isEuDevice(mMockContext)).isTrue();
     }
 
     @Test
@@ -111,10 +106,10 @@ public class DeviceRegionProviderTest extends AdServicesExtendedMockitoTestCase 
         doReturn(Flags.IS_EEA_DEVICE).when(mMockFlags).isEeaDevice();
         doReturn("ch").when(mTelephonyManager).getSimCountryIso();
         doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
-        doReturn(mPackageManager).when(mContext).getPackageManager();
-        doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
+        doReturn(mPackageManager).when(mMockContext).getPackageManager();
+        doReturn(mTelephonyManager).when(mMockContext).getSystemService(TelephonyManager.class);
 
-        assertThat(DeviceRegionProvider.isEuDevice(mContext)).isTrue();
+        assertThat(DeviceRegionProvider.isEuDevice(mMockContext)).isTrue();
     }
 
     @Test
@@ -122,10 +117,10 @@ public class DeviceRegionProviderTest extends AdServicesExtendedMockitoTestCase 
         doReturn(Flags.IS_EEA_DEVICE).when(mMockFlags).isEeaDevice();
         doReturn("pl").when(mTelephonyManager).getSimCountryIso();
         doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
-        doReturn(mPackageManager).when(mContext).getPackageManager();
-        doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
+        doReturn(mPackageManager).when(mMockContext).getPackageManager();
+        doReturn(mTelephonyManager).when(mMockContext).getSystemService(TelephonyManager.class);
 
-        assertThat(DeviceRegionProvider.isEuDevice(mContext)).isTrue();
+        assertThat(DeviceRegionProvider.isEuDevice(mMockContext)).isTrue();
     }
 
     @Test
@@ -133,10 +128,10 @@ public class DeviceRegionProviderTest extends AdServicesExtendedMockitoTestCase 
         doReturn(Flags.IS_EEA_DEVICE).when(mMockFlags).isEeaDevice();
         doReturn("us").when(mTelephonyManager).getSimCountryIso();
         doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
-        doReturn(mPackageManager).when(mContext).getPackageManager();
-        doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
+        doReturn(mPackageManager).when(mMockContext).getPackageManager();
+        doReturn(mTelephonyManager).when(mMockContext).getSystemService(TelephonyManager.class);
 
-        assertThat(DeviceRegionProvider.isEuDevice(mContext)).isFalse();
+        assertThat(DeviceRegionProvider.isEuDevice(mMockContext)).isFalse();
     }
 
     @Test
@@ -144,27 +139,27 @@ public class DeviceRegionProviderTest extends AdServicesExtendedMockitoTestCase 
         doReturn(Flags.IS_EEA_DEVICE).when(mMockFlags).isEeaDevice();
         doReturn("").when(mTelephonyManager).getSimCountryIso();
         doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
-        doReturn(mPackageManager).when(mContext).getPackageManager();
-        doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
+        doReturn(mPackageManager).when(mMockContext).getPackageManager();
+        doReturn(mTelephonyManager).when(mMockContext).getSystemService(TelephonyManager.class);
 
-        assertThat(DeviceRegionProvider.isEuDevice(mContext)).isTrue();
+        assertThat(DeviceRegionProvider.isEuDevice(mMockContext)).isTrue();
     }
 
     @Test
     public void telephonyManagerDoesntExistTest() {
         doReturn(false).when(mPackageManager).hasSystemFeature(anyString());
-        doReturn(mPackageManager).when(mContext).getPackageManager();
+        doReturn(mPackageManager).when(mMockContext).getPackageManager();
 
-        assertThat(DeviceRegionProvider.isEuDevice(mContext)).isTrue();
+        assertThat(DeviceRegionProvider.isEuDevice(mMockContext)).isTrue();
     }
 
     @Test
     public void telephonyManagerNotAccessibleTest() {
         doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
-        doReturn(mPackageManager).when(mContext).getPackageManager();
-        doReturn(null).when(mContext).getSystemService(TelephonyManager.class);
+        doReturn(mPackageManager).when(mMockContext).getPackageManager();
+        doReturn(null).when(mMockContext).getSystemService(TelephonyManager.class);
 
-        assertThat(DeviceRegionProvider.isEuDevice(mContext)).isTrue();
+        assertThat(DeviceRegionProvider.isEuDevice(mMockContext)).isTrue();
     }
 
     @Test
@@ -174,10 +169,10 @@ public class DeviceRegionProviderTest extends AdServicesExtendedMockitoTestCase 
 
         doReturn("").when(mTelephonyManager).getSimCountryIso();
         doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
-        doReturn(mPackageManager).when(mContext).getPackageManager();
-        doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
+        doReturn(mPackageManager).when(mMockContext).getPackageManager();
+        doReturn(mTelephonyManager).when(mMockContext).getSystemService(TelephonyManager.class);
 
-        assertThat(DeviceRegionProvider.isEuDevice(mContext)).isTrue();
+        assertThat(DeviceRegionProvider.isEuDevice(mMockContext)).isTrue();
     }
 
     @Test
@@ -187,10 +182,10 @@ public class DeviceRegionProviderTest extends AdServicesExtendedMockitoTestCase 
 
         doReturn("us").when(mTelephonyManager).getSimCountryIso();
         doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
-        doReturn(mPackageManager).when(mContext).getPackageManager();
-        doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
+        doReturn(mPackageManager).when(mMockContext).getPackageManager();
+        doReturn(mTelephonyManager).when(mMockContext).getSystemService(TelephonyManager.class);
 
-        assertThat(DeviceRegionProvider.isEuDevice(mContext)).isTrue();
+        assertThat(DeviceRegionProvider.isEuDevice(mMockContext)).isTrue();
     }
 
     @Test
@@ -200,10 +195,10 @@ public class DeviceRegionProviderTest extends AdServicesExtendedMockitoTestCase 
 
         doReturn("us").when(mTelephonyManager).getSimCountryIso();
         doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
-        doReturn(mPackageManager).when(mContext).getPackageManager();
-        doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
+        doReturn(mPackageManager).when(mMockContext).getPackageManager();
+        doReturn(mTelephonyManager).when(mMockContext).getSystemService(TelephonyManager.class);
 
-        assertThat(DeviceRegionProvider.isEuDevice(mContext)).isTrue();
+        assertThat(DeviceRegionProvider.isEuDevice(mMockContext)).isTrue();
     }
 
     @Test
@@ -213,10 +208,10 @@ public class DeviceRegionProviderTest extends AdServicesExtendedMockitoTestCase 
 
         doReturn("us").when(mTelephonyManager).getSimCountryIso();
         doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
-        doReturn(mPackageManager).when(mContext).getPackageManager();
-        doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
+        doReturn(mPackageManager).when(mMockContext).getPackageManager();
+        doReturn(mTelephonyManager).when(mMockContext).getSystemService(TelephonyManager.class);
 
-        assertThat(DeviceRegionProvider.isEuDevice(mContext)).isFalse();
+        assertThat(DeviceRegionProvider.isEuDevice(mMockContext)).isFalse();
     }
 
     @Test
@@ -226,10 +221,10 @@ public class DeviceRegionProviderTest extends AdServicesExtendedMockitoTestCase 
 
         doReturn("ch").when(mTelephonyManager).getSimCountryIso();
         doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
-        doReturn(mPackageManager).when(mContext).getPackageManager();
-        doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
+        doReturn(mPackageManager).when(mMockContext).getPackageManager();
+        doReturn(mTelephonyManager).when(mMockContext).getSystemService(TelephonyManager.class);
 
-        assertThat(DeviceRegionProvider.isEuDevice(mContext)).isFalse();
+        assertThat(DeviceRegionProvider.isEuDevice(mMockContext)).isFalse();
     }
 
     @Test
@@ -239,10 +234,10 @@ public class DeviceRegionProviderTest extends AdServicesExtendedMockitoTestCase 
 
         doReturn("").when(mTelephonyManager).getSimCountryIso();
         doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
-        doReturn(mPackageManager).when(mContext).getPackageManager();
-        doReturn(mTelephonyManager).when(mContext).getSystemService(TelephonyManager.class);
+        doReturn(mPackageManager).when(mMockContext).getPackageManager();
+        doReturn(mTelephonyManager).when(mMockContext).getSystemService(TelephonyManager.class);
 
-        assertThat(DeviceRegionProvider.isEuDevice(mContext)).isTrue();
+        assertThat(DeviceRegionProvider.isEuDevice(mMockContext)).isTrue();
     }
 
     @Test
@@ -251,7 +246,7 @@ public class DeviceRegionProviderTest extends AdServicesExtendedMockitoTestCase 
         doReturn(true).when(mMockFlags).isEeaDevice();
         doReturn(true).when(mMockFlags).getEnableTabletRegionFix();
 
-        assertThat(DeviceRegionProvider.isEuDevice(mContext)).isTrue();
+        assertThat(DeviceRegionProvider.isEuDevice(mMockContext)).isTrue();
     }
 
     @Test

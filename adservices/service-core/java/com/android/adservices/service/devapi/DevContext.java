@@ -20,6 +20,8 @@ import android.annotation.Nullable;
 
 import com.google.auto.value.AutoValue;
 
+import java.util.Objects;
+
 /**
  * Instances of this class are used to hold information required by the developer features supported
  * by the AdSelection and CustomAudience API. An instance of this class is created while serving
@@ -28,11 +30,20 @@ import com.google.auto.value.AutoValue;
  */
 @AutoValue
 public abstract class DevContext {
+
     /**
-     * @return true if the developer options are enabled for this service call.
+     * Bogus package name used on test cases that emulate cases where the developer options is
+     * disabled.
+     */
+    public static final String UNKNOWN_APP_BECAUSE_DEV_OPTIONS_IS_DISABLED =
+            "unknown.app.because.dev.options.is.disabled";
+
+    /**
+     * @return {@code true} if the developer options are enabled for this service call.
      */
     public abstract boolean getDevOptionsEnabled();
 
+    // TODO(b/356709022): remove @Nullable
     /**
      * @return The package name for the calling app or NULL if the dev options are not enabled.
      */
@@ -40,17 +51,24 @@ public abstract class DevContext {
     public abstract String getCallingAppPackageName();
 
     /**
-     * @return Generic builder
+     * @deprecated use {@link #builder(String)} instead.
      */
     public static DevContext.Builder builder() {
         return new AutoValue_DevContext.Builder();
     }
 
-    /**
-     * @return An instance of {@link DevContext} with developer options disabled.
-     */
+    // TODO(b/356709022): remove once all callers were refactored
+    /** Returns a new generic builder */
+    public static DevContext.Builder builder(String callingAppPackageName) {
+        Objects.requireNonNull(callingAppPackageName, "callingAppPackageName cannot be null");
+        return new AutoValue_DevContext.Builder().setCallingAppPackageName(callingAppPackageName);
+    }
+
+    /** Returns a new instance of {@link DevContext} with developer options disabled. */
     public static DevContext createForDevOptionsDisabled() {
-        return DevContext.builder().setDevOptionsEnabled(false).build();
+        return DevContext.builder(UNKNOWN_APP_BECAUSE_DEV_OPTIONS_IS_DISABLED)
+                .setDevOptionsEnabled(false)
+                .build();
     }
 
     /** The Builder for {@link DevContext} */
@@ -59,10 +77,11 @@ public abstract class DevContext {
         /** Sets the value for the dev options enabled flag */
         public abstract DevContext.Builder setDevOptionsEnabled(boolean flag);
 
+        // TODO(b/356709022): remove @Nullable
         /** Sets the value for the calling app package */
         public abstract DevContext.Builder setCallingAppPackageName(@Nullable String value);
 
-        /** Build an AdBiddingOutcome object. */
+        /** Builds it!. */
         public abstract DevContext build();
     }
 }

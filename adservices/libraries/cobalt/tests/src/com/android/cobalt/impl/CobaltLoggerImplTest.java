@@ -35,7 +35,9 @@ import com.android.cobalt.data.StringHashEntity;
 import com.android.cobalt.data.TestOnlyDao;
 import com.android.cobalt.data.TestOnlyDao.AggregateStoreTableRow;
 import com.android.cobalt.domain.Project;
+import com.android.cobalt.logging.CobaltOperationLogger;
 import com.android.cobalt.system.SystemData;
+import com.android.cobalt.testing.logging.NoOpCobaltOperationLogger;
 import com.android.cobalt.testing.system.FakeSystemClock;
 
 import com.google.cobalt.AggregateValue;
@@ -169,6 +171,7 @@ public class CobaltLoggerImplTest {
     private DataService mDataService;
     private SystemData mSystemData;
     private FakeSystemClock mClock;
+    private CobaltOperationLogger mOperationLogger;
     private CobaltLogger mLogger;
 
     @Before
@@ -179,6 +182,7 @@ public class CobaltLoggerImplTest {
         mSystemData = new SystemData(APP_VERSION);
         mClock = new FakeSystemClock();
         mClock.set(WORKER_TIME);
+        mOperationLogger = new NoOpCobaltOperationLogger();
         mLogger =
                 new CobaltLoggerImpl(
                         COBALT_REGISTRY,
@@ -187,6 +191,7 @@ public class CobaltLoggerImplTest {
                         mSystemData,
                         sExecutor,
                         mClock,
+                        mOperationLogger,
                         /* enabled= */ true);
     }
 
@@ -376,23 +381,12 @@ public class CobaltLoggerImplTest {
     }
 
     @Test
-    public void logOccurrence_missingMetric_notStoredWithError() throws Exception {
-        // Log data for a metric that doesn't exist, and check it completed with the expected error.
-        ExecutionException exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () ->
-                                mLogger.logOccurrence(
-                                                /* metricId= */ 333,
-                                                /* count= */ 1,
-                                                /* eventCodes= */ ImmutableList.of(1, 2))
-                                        .get());
-        assertThat(exception)
-                .hasCauseThat()
-                .hasMessageThat()
-                .contains("failed to find metric with ID: 333");
-
-        // Check that no report data was added to the DB.
+    public void logOccurrence_metricNotInRegistry_skipped() throws Exception {
+        mLogger.logOccurrence(
+                        /* metricId= */ 9999,
+                        /* count= */ 100,
+                        /* eventCodes= */ ImmutableList.of(1, 2))
+                .get();
         assertThat(mTestOnlyDao.getAllAggregates()).isEmpty();
     }
 
@@ -448,6 +442,7 @@ public class CobaltLoggerImplTest {
                         mSystemData,
                         sExecutor,
                         mClock,
+                        mOperationLogger,
                         /* enabled= */ false);
 
         // Log some data.
@@ -490,6 +485,7 @@ public class CobaltLoggerImplTest {
                         mSystemData,
                         sExecutor,
                         mClock,
+                        mOperationLogger,
                         /* enabled= */ true);
 
         // Log some data.
@@ -531,6 +527,7 @@ public class CobaltLoggerImplTest {
                         mSystemData,
                         sExecutor,
                         mClock,
+                        mOperationLogger,
                         /* enabled= */ true);
 
         // Log some data.
@@ -757,23 +754,12 @@ public class CobaltLoggerImplTest {
     }
 
     @Test
-    public void logString_missingMetric_notStoredWithError() throws Exception {
-        // Log data for a metric that doesn't exist, and check it completed with the expected error.
-        ExecutionException exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () ->
-                                mLogger.logString(
-                                                /* metricId= */ 333,
-                                                /* stringValue= */ "STRING",
-                                                /* eventCodes= */ ImmutableList.of(1, 2))
-                                        .get());
-        assertThat(exception)
-                .hasCauseThat()
-                .hasMessageThat()
-                .contains("failed to find metric with ID: 333");
-
-        // Check that no report data was added to the DB.
+    public void logString_metricNotInRegistry_skipped() throws Exception {
+        mLogger.logString(
+                        /* metricId= */ 9999,
+                        /* stringValue= */ "STRING",
+                        /* eventCodes= */ ImmutableList.of(1, 2))
+                .get();
         assertThat(mTestOnlyDao.getAllAggregates()).isEmpty();
     }
 
@@ -808,6 +794,7 @@ public class CobaltLoggerImplTest {
                         mSystemData,
                         sExecutor,
                         mClock,
+                        mOperationLogger,
                         /* enabled= */ false);
 
         // Log some data.
@@ -850,6 +837,7 @@ public class CobaltLoggerImplTest {
                         mSystemData,
                         sExecutor,
                         mClock,
+                        mOperationLogger,
                         /* enabled= */ true);
 
         // Log some data.
@@ -892,6 +880,7 @@ public class CobaltLoggerImplTest {
                         mSystemData,
                         sExecutor,
                         mClock,
+                        mOperationLogger,
                         /* enabled= */ true);
 
         // Log some data.

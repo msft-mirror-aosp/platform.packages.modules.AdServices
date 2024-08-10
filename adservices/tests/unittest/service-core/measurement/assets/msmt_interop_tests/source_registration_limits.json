@@ -1,7 +1,7 @@
 {
   "description": "Order of various limits checked for source registrations",
   "api_config": {
-    "max_navigation_info_gain": "12",
+    "max_event_level_channel_capacity_navigation": "12",
     "max_sources_per_origin": "3",
     "max_destinations_per_source_site_reporting_site": "3",
     "rate_limit_max_reporting_origins_per_source_reporting_site": "1",
@@ -95,7 +95,8 @@
                   "https://destination5.test"
                 ],
                 "source_event_id": "334",
-                "debug_reporting": true
+                "debug_reporting": true,
+                "destination_limit_priority": "-1"
               }
             }
           }
@@ -123,7 +124,8 @@
                   "https://destination5.test"
                 ],
                 "source_event_id": "444",
-                "debug_reporting": true
+                "debug_reporting": true,
+                "destination_limit_priority": "-1"
               }
             }
           }
@@ -149,7 +151,8 @@
                   "https://destination5.test"
                 ],
                 "source_event_id": "555",
-                "debug_reporting": true
+                "debug_reporting": true,
+                "destination_limit_priority": "-1"
               }
             }
           }
@@ -176,7 +179,8 @@
                   "https://destination5.test"
                 ],
                 "source_event_id": "666",
-                "debug_reporting": true
+                "debug_reporting": true,
+                "destination_limit_priority": "-1"
               }
             }
           }
@@ -203,7 +207,8 @@
                   "https://destination5.test"
                 ],
                 "source_event_id": "777",
-                "debug_reporting": true
+                "debug_reporting": true,
+                "destination_limit_priority": "-1"
               }
             }
           }

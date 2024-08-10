@@ -285,7 +285,7 @@ public class TriggerSpecsTest {
                                 TimeUnit.DAYS.toMillis(2),
                                 TimeUnit.DAYS.toMillis(7),
                                 TimeUnit.DAYS.toMillis(30))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [2, 4, 6, 8, 10]}]";
         TriggerSpecs testTriggerSpecs = new TriggerSpecs(
                 TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString), 5, null);

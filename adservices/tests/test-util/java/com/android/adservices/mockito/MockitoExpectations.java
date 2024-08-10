@@ -24,11 +24,8 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import android.app.job.JobParameters;
 import android.app.job.JobService;
@@ -38,21 +35,24 @@ import android.util.Log;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ApiCallStats;
-import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
 import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
-import com.android.adservices.shared.util.Clock;
-import com.android.adservices.spe.AdServicesJobInfo;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
-import com.android.adservices.spe.AdServicesStatsdJobServiceLogger;
-
-import java.util.concurrent.Executors;
 
 /** Provides Mockito expectation for common calls. */
 public final class MockitoExpectations {
 
     private static final String TAG = MockitoExpectations.class.getSimpleName();
+
+    // NOTE: not really "Generated code", but we're using mocker (instead of sMocker or MOCKER) as
+    // that's the name of the reference provided by the superclasses - once tests are refactored
+    // to use the superclasses, they wouldn't need to change the variable name.
+
+    // CHECKSTYLE:OFF Generated code
+    public static final AdServicesMockitoJobMocker jobMocker = new AdServicesMockitoJobMocker();
+
+    // CHECKSTYLE:ON
 
     /**
      * Mocks a call to {@link AdServicesLogger#logApiCallStats(ApiCallStats)} and returns a callback
@@ -132,62 +132,13 @@ public final class MockitoExpectations {
     }
 
     /**
-     * Mocks a call to {@link Flags#getBackgroundJobsLoggingKillSwitch()}, returning overrideValue.
+     * Mocks a call to {@link Flags#getBackgroundJobsLoggingKillSwitch()}, returning {@code value}.
+     *
+     * @deprecated use {@code mocker.mockGetBackgroundJobsLoggingKillSwitch()} instead.
      */
-    public static void mockBackgroundJobsLoggingKillSwitch(Flags flag, boolean overrideValue) {
-        when(flag.getBackgroundJobsLoggingKillSwitch()).thenReturn(overrideValue);
-    }
-
-    /** Mocks a call to {@link Flags#getCobaltLoggingEnabled()}, returning overrideValue. */
-    public static void mockCobaltLoggingEnabled(Flags flags, boolean enabled) {
-        when(flags.getCobaltLoggingEnabled()).thenReturn(enabled);
-    }
-
-    /**
-     * Mocks a call to {@link Flags#getAppNameApiErrorCobaltLoggingEnabled()}, returning
-     * overrideValue.
-     */
-    public static void mockAppNameApiErrorCobaltLoggingEnabled(Flags flags, boolean enabled) {
-        when(flags.getAppNameApiErrorCobaltLoggingEnabled()).thenReturn(enabled);
-    }
-
-    /**
-     * Mocks a call to {@link Flags#getMsmtRegistrationCobaltLoggingEnabled()} ()}, returning
-     * overrideValue.
-     */
-    public static void mockMsmtRegistrationCobaltLoggingEnabled(Flags flags, boolean enabled) {
-        when(flags.getMsmtRegistrationCobaltLoggingEnabled()).thenReturn(enabled);
-    }
-
-    /**
-     * Mocks a call to {@link Flags#getMsmtRegistrationCobaltLoggingEnabled()} ()}, returning
-     * overrideValue.
-     */
-    public static void mockMsmtAttributionCobaltLoggingEnabled(Flags flags, boolean enabled) {
-        when(flags.getMsmtAttributionCobaltLoggingEnabled()).thenReturn(enabled);
-    }
-
-    /**
-     * Mocks a call to {@link Flags#getMsmtRegistrationCobaltLoggingEnabled()} ()}, returning
-     * overrideValue.
-     */
-    public static void mockMsmtReportingCobaltLoggingEnabled(Flags flags, boolean enabled) {
-        when(flags.getMsmtReportingCobaltLoggingEnabled()).thenReturn(enabled);
-    }
-
-    /**
-     * Mocks a call to {@link Flags#getAdservicesReleaseStageForCobalt()}, returning {@code DEBUG}
-     * as the testing release stage.
-     */
-    public static void mockAdservicesReleaseStageForCobalt(Flags flags) {
-        when(flags.getAdservicesReleaseStageForCobalt()).thenReturn("DEBUG");
-    }
-
-    /** Mocks calls to override Cobalt app name api error logging related flags. */
-    public static void mockCobaltLoggingFlags(Flags flags, boolean override) {
-        mockCobaltLoggingEnabled(flags, override);
-        mockAppNameApiErrorCobaltLoggingEnabled(flags, override);
-        mockAdservicesReleaseStageForCobalt(flags);
+    @Deprecated
+    public static void mockBackgroundJobsLoggingKillSwitch(Flags flag, boolean value) {
+        ExtendedMockitoExpectations.mocker.mockGetBackgroundJobsLoggingKillSwitch(flag, value);
     }
 
     /**
@@ -199,6 +150,7 @@ public final class MockitoExpectations {
         JobServiceLoggingCallback callback = new JobServiceLoggingCallback();
         doAnswer(
                         invocation -> {
+                            Log.v(TAG, invocation.toString());
                             invocation.callRealMethod();
                             callback.onLoggingMethodCalled();
                             return null;
@@ -275,18 +227,16 @@ public final class MockitoExpectations {
         verify(logger).recordJobFinished(anyInt(), anyBoolean(), anyBoolean());
     }
 
-    /** Get a spied instance of {@link AdServicesJobServiceLogger}. */
+    /**
+     * Gets a spied instance of {@link AdServicesJobServiceLogger}.
+     *
+     * @deprecated use {@code mocker.getSpiedAdServicesJobServiceLogger()} instead.
+     */
+    @Deprecated
+    @SuppressWarnings("InlineMeSuggester")
     public static AdServicesJobServiceLogger getSpiedAdServicesJobServiceLogger(
             Context context, Flags flags) {
-        return spy(
-                new AdServicesJobServiceLogger(
-                        context,
-                        Clock.getInstance(),
-                        mock(AdServicesStatsdJobServiceLogger.class),
-                        mock(AdServicesErrorLogger.class),
-                        Executors.newCachedThreadPool(),
-                        AdServicesJobInfo.getJobIdToJobNameMap(),
-                        flags));
+        return jobMocker.getSpiedAdServicesJobServiceLogger(context, flags);
     }
 
     private MockitoExpectations() {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -641,5 +641,15 @@ public class AppSearchConsentManager {
     /** Returns whether the isPaDataReset bit is true. */
     public Boolean isPaDataReset() {
         return mAppSearchConsentWorker.isPaDataReset();
+    }
+
+    /** Save module enrollment state. */
+    public void setModuleEnrollmentState(String data) {
+        mAppSearchConsentWorker.setModuleEnrollmentState(data);
+    }
+
+    /** Returns module enrollment state. */
+    public String getModuleEnrollmentState() {
+        return mAppSearchConsentWorker.getModuleEnrollmentState();
     }
 }

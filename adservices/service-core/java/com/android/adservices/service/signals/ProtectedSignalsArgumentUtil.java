@@ -18,9 +18,12 @@ package com.android.adservices.service.signals;
 
 import static com.android.adservices.service.js.JSScriptArgument.numericArg;
 
+import android.os.Trace;
+
 import androidx.annotation.VisibleForTesting;
 
 import com.android.adservices.service.js.JSScriptArgument;
+import com.android.adservices.service.profiling.Tracing;
 
 import com.google.common.collect.ImmutableList;
 
@@ -53,6 +56,7 @@ public class ProtectedSignalsArgumentUtil {
 
     @VisibleForTesting
     static String marshalToJson(Map<String, List<ProtectedSignal>> rawSignals) {
+        Trace.beginSection(Tracing.MARSHAL_TO_JSON);
         /**
          * We analyzed various JSON building approaches, turns out using StringBuilder is orders of
          * magnitude faster. Also, given the signals have base64 encoded strings initially fetched
@@ -68,15 +72,20 @@ public class ProtectedSignalsArgumentUtil {
             // Remove extra ','
             sb.deleteCharAt(sb.length() - 1);
         }
-        sb.append("]");
 
-        return sb.toString();
+        String result = sb.append("]").toString();
+        Trace.endSection();
+
+        return result;
     }
 
     private static void serializeEntryToJson(
             StringBuilder jsonBuilder, Map.Entry<String, List<ProtectedSignal>> entry) {
+        Trace.beginSection(Tracing.SERIALIZE_TO_JSON);
+
+        String hexKey = validateAndSerializeBase64(entry.getKey());
         jsonBuilder.append("{");
-        jsonBuilder.append("\"").append(validateAndSerializeBase64(entry.getKey())).append("\":[");
+        jsonBuilder.append("\"").append(hexKey).append("\":[");
 
         List<ProtectedSignal> protectedSignals = entry.getValue();
         for (int i = 0; i < protectedSignals.size(); i++) {
@@ -100,14 +109,15 @@ public class ProtectedSignalsArgumentUtil {
             }
         }
 
-        jsonBuilder.append("]");
-        jsonBuilder.append("}");
+        jsonBuilder.append("]}");
+        Trace.endSection();
     }
 
     // TODO(b/294900378) Avoid second serialization
     @VisibleForTesting
     public static String validateAndSerializeBase64(String base64String) {
         try {
+            Trace.beginSection(Tracing.SERIALIZE_BASE_64);
             byte[] bytes = Base64.getDecoder().decode(base64String);
             StringBuilder sb = new StringBuilder(bytes.length * 2);
             for (byte b : bytes) {
@@ -116,6 +126,8 @@ public class ProtectedSignalsArgumentUtil {
             return sb.toString();
         } catch (IllegalArgumentException e) {
             throw new IllegalStateException(INVALID_BASE64_SIGNAL);
+        } finally {
+            Trace.endSection();
         }
     }
 

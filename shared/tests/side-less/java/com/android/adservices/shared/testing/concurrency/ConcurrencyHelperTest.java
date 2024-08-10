@@ -30,6 +30,7 @@ import com.android.adservices.shared.testing.SidelessTestCase;
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
+import org.junit.function.ThrowingRunnable;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CountDownLatch;
@@ -123,16 +124,28 @@ public final class ConcurrencyHelperTest extends SidelessTestCase {
 
     @SuppressWarnings("FormatStringAnnotation")
     @Test
-    public void testSleep_nullMessage() {
-        assertThrows(NullPointerException.class, () -> mHelper.sleep(SLEEP_TIMEOUT_MS, null));
+    public void testSleepOnly_nullMessage() {
+        assertThrows(NullPointerException.class, () -> mHelper.sleepOnly(SLEEP_TIMEOUT_MS, null));
     }
 
     @Test
-    public void testSleep_noArgsMessage() {
+    public void testSleep_noArgsMessage() throws Throwable {
+        testSleepNoArgsMessage(
+                () -> mHelper.sleep(SLEEP_TIMEOUT_MS, "Sweet Dreams!"), "Sweet Dreams!");
+    }
+
+    @Test
+    public void testSleepOnly_noArgsMessage() throws Throwable {
+        testSleepNoArgsMessage(
+                () -> mHelper.sleepOnly(SLEEP_TIMEOUT_MS, "Sweet Dreams!"), "Sweet Dreams!");
+    }
+
+    private void testSleepNoArgsMessage(ThrowingRunnable testCommand, String reason)
+            throws Throwable {
         long timeBefore = System.currentTimeMillis();
         String threadName = Thread.currentThread().toString();
 
-        mHelper.sleep(SLEEP_TIMEOUT_MS, "Sweet Dreams!");
+        testCommand.run();
 
         long delta = System.currentTimeMillis() - timeBefore;
         expect.withMessage("sleep time").that(delta).isAtLeast(SLEEP_TIMEOUT_MS);
@@ -148,18 +161,33 @@ public final class ConcurrencyHelperTest extends SidelessTestCase {
                                 + SLEEP_TIMEOUT_MS
                                 + "ms on thread "
                                 + threadName
-                                + ". Reason: Sweet Dreams!");
+                                + ". Reason: "
+                                + reason);
         LogEntry logAfter = logEntries.get(1);
         expect.withMessage("log after.level").that(logAfter.level).isEqualTo(LogLevel.INFO);
         expect.withMessage("log after").that(logAfter.message).isEqualTo("Little Suzie woke up!");
     }
 
     @Test
-    public void testSleep_formattedMessage() {
+    public void testSleep_formattedMessage() throws Throwable {
+        testSleepFormattedMessage(
+                () -> mHelper.sleep(SLEEP_TIMEOUT_MS, "Sweet Dreams %s!", "are made of this"),
+                "Sweet Dreams are made of this!");
+    }
+
+    @Test
+    public void testSleepOnly_formattedMessage() throws Throwable {
+        testSleepFormattedMessage(
+                () -> mHelper.sleepOnly(SLEEP_TIMEOUT_MS, "Sweet Dreams %s!", "are made of this"),
+                "Sweet Dreams are made of this!");
+    }
+
+    private void testSleepFormattedMessage(ThrowingRunnable testCommand, String reason)
+            throws Throwable {
         long timeBefore = System.currentTimeMillis();
         String threadName = Thread.currentThread().toString();
 
-        mHelper.sleep(SLEEP_TIMEOUT_MS, "Sweet Dreams %s!", "are made of this");
+        testCommand.run();
 
         long delta = System.currentTimeMillis() - timeBefore;
         expect.withMessage("sleep time").that(delta).isAtLeast(SLEEP_TIMEOUT_MS);
@@ -175,7 +203,8 @@ public final class ConcurrencyHelperTest extends SidelessTestCase {
                                 + SLEEP_TIMEOUT_MS
                                 + "ms on thread "
                                 + threadName
-                                + ". Reason: Sweet Dreams are made of this!");
+                                + ". Reason: "
+                                + reason);
         LogEntry logAfter = logEntries.get(1);
         expect.withMessage("log after").that(logAfter.level).isEqualTo(LogLevel.INFO);
         expect.withMessage("log after").that(logAfter.message).isEqualTo("Little Suzie woke up!");
