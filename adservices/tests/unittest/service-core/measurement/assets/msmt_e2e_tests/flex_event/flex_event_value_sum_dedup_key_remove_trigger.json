@@ -32,7 +32,7 @@
                         604800
                       ]
                     },
-                    "summary_window_operator": "value_sum",
+                    "summary_operator": "value_sum",
                     "summary_buckets": [
                       10,
                       100

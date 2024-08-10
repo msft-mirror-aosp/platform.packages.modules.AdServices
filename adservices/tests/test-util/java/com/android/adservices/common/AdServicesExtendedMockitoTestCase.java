@@ -17,7 +17,10 @@ package com.android.adservices.common;
 
 import static com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.Mode.CLEAR_AFTER_TEST_CLASS;
 
+import android.annotation.Nullable;
 import android.content.Context;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 
 import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
@@ -26,27 +29,36 @@ import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultP
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.mockito.AdServicesExtendedMockitoMocker;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
-import com.android.adservices.mockito.AdServicesStaticMockitoMocker;
+import com.android.adservices.mockito.AdServicesMockitoMocker;
+import com.android.adservices.mockito.AdServicesPragmaticMocker;
+import com.android.adservices.mockito.AdServicesStaticMocker;
 import com.android.adservices.mockito.AndroidExtendedMockitoMocker;
+import com.android.adservices.mockito.AndroidMocker;
+import com.android.adservices.mockito.AndroidMockitoMocker;
 import com.android.adservices.mockito.AndroidStaticMocker;
 import com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule;
 import com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.ClearInlineMocksMode;
 import com.android.adservices.mockito.LogInterceptor;
 import com.android.adservices.mockito.SharedMocker;
 import com.android.adservices.mockito.SharedMockitoMocker;
+import com.android.adservices.mockito.StaticClassChecker;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.shared.spe.logging.JobServiceLogger;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
+import com.android.adservices.shared.testing.SidelessTestCase;
 import com.android.adservices.spe.AdServicesJobScheduler;
 import com.android.adservices.spe.AdServicesJobServiceFactory;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.ClassRule;
 import org.junit.Rule;
+import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.quality.Strictness;
+
+import java.util.Objects;
 
 /**
  * Base class for all unit tests that use {@code ExtendedMockito} - for "regular Mockito" use {@link
@@ -68,8 +80,8 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
 
     @Mock protected Context mMockContext;
 
-    /** Spy the {@link AdServicesUnitTestCase#sContext} */
-    @Spy protected final Context mSpyContext = sContext;
+    /** Spy the {@link AdServicesUnitTestCase#mContext} */
+    @Spy protected final Context mSpyContext = mContext;
 
     // NOTE: must use CLEAR_AFTER_TEST_CLASS by default (defined as a class annotation, so it's used
     // by both ExtendedMockitoInlineCleanerRule and AdServicesExtendedMockitoRule), as some tests
@@ -127,96 +139,201 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
         return new AdServicesExtendedMockitoRule.Builder(this).setStrictness(Strictness.LENIENT);
     }
 
+    @Test
+    public final void testAdServicesExtendedMockitoTestCaseFixtures() throws Exception {
+        checkProhibitedMockitoFields(AdServicesExtendedMockitoTestCase.class, this);
+    }
+
+    private static final String REASON_SESSION_MANAGED_BY_RULE =
+            "mockito session is automatically managed by a @Rule";
+
+    // Make it static so it can be used by AdServicesMockitoTestCase, as often test cases are
+    // converted to use AdServicesMockitoTestCase and still defined the ExtendedMockito session -
+    // they should migrate to AdServicesExtendedMockitoTestCase instead.
+    static <T extends SidelessTestCase> void checkProhibitedMockitoFields(
+            Class<T> superclass, T testInstance) throws Exception {
+        testInstance.assertTestClassHasNoFieldsFromSuperclass(
+                superclass,
+                "mMockContext",
+                "mSpyContext",
+                "extendedMockito",
+                "errorLogUtilUsageRule",
+                "mocker",
+                "sInlineCleaner",
+                "sSpyContext");
+        testInstance.assertTestClassHasNoSuchField(
+                "mContextMock", "should use existing mMockContext instead");
+        testInstance.assertTestClassHasNoSuchField(
+                "mContextSpy", "should use existing mSpyContext instead");
+        testInstance.assertTestClassHasNoSuchField("mockito", "already taken care by @Rule");
+        // Listed below are existing names for the extended mockito session on test classes that
+        // don't use the rule / superclass:
+        testInstance.assertTestClassHasNoSuchField(
+                "mStaticMockSession", REASON_SESSION_MANAGED_BY_RULE);
+        testInstance.assertTestClassHasNoSuchField(
+                "mMockitoSession", REASON_SESSION_MANAGED_BY_RULE);
+        testInstance.assertTestClassHasNoSuchField(
+                "mockitoSession", REASON_SESSION_MANAGED_BY_RULE);
+        testInstance.assertTestClassHasNoSuchField("session", REASON_SESSION_MANAGED_BY_RULE);
+        testInstance.assertTestClassHasNoSuchField(
+                "sStaticMockitoSession", REASON_SESSION_MANAGED_BY_RULE);
+        testInstance.assertTestClassHasNoSuchField(
+                "staticMockitoSession", REASON_SESSION_MANAGED_BY_RULE);
+        testInstance.assertTestClassHasNoSuchField(
+                "staticMockSession", REASON_SESSION_MANAGED_BY_RULE);
+    }
+
     public static final class Mocker
-            implements AndroidStaticMocker, AdServicesStaticMockitoMocker, SharedMocker {
+            implements AndroidMocker,
+                    AndroidStaticMocker,
+                    AdServicesPragmaticMocker,
+                    AdServicesStaticMocker,
+                    SharedMocker {
 
-        private final AndroidStaticMocker mAndroidMocker;
-        private final AdServicesStaticMockitoMocker mAdServicesMocker;
+        private final AndroidMocker mAndroidMocker = new AndroidMockitoMocker();
         private final SharedMocker mSharedMocker = new SharedMockitoMocker();
+        private final AdServicesPragmaticMocker mAdServicesMocker = new AdServicesMockitoMocker();
+        @Nullable private final AndroidStaticMocker mAndroidStaticMocker;
+        @Nullable private final AdServicesStaticMocker mAdServicesStaticMocker;
+        @Nullable private final StaticClassChecker mChecker;
 
-        private Mocker(AdServicesExtendedMockitoRule rule) {
-            mAndroidMocker = new AndroidExtendedMockitoMocker(rule);
-            mAdServicesMocker = new AdServicesExtendedMockitoMocker(rule);
+        // TODO(b/314969513): make it package protected once ExtendedMockitoExpectations.mocker is
+        // gone.
+        // NOTE: should only be used by unit tests of the Mocker interfaces themselves (there's no
+        // point of annotation with @VisibleForTesting because this is already a test!
+        public Mocker(StaticClassChecker checker) {
+            mChecker = Objects.requireNonNull(checker, "StaticClassChecker cannot be null");
+            mAndroidStaticMocker = new AndroidExtendedMockitoMocker(checker);
+            mAdServicesStaticMocker = new AdServicesExtendedMockitoMocker(checker);
+        }
+
+        // NOTE: should only be used by unit tests of the Mocker interfaces themselves (there's no
+        // point of annotation with @VisibleForTesting because this is already a test!
+        Mocker() {
+            // Static mockers are null because its only used to test non-static methods
+            mChecker = null;
+            mAndroidStaticMocker = null;
+            mAdServicesStaticMocker = null;
+        }
+
+        // AndroidMocker methods
+
+        @Override
+        public void mockQueryIntentService(PackageManager pm, ResolveInfo... resolveInfos) {
+            mAndroidMocker.mockQueryIntentService(pm, resolveInfos);
         }
 
         // AndroidStaticMocker methods
 
         @Override
         public void mockGetCallingUidOrThrow(int uid) {
-            mAndroidMocker.mockGetCallingUidOrThrow(uid);
+            mAndroidStaticMocker.mockGetCallingUidOrThrow(uid);
         }
 
         @Override
         public void mockGetCallingUidOrThrow() {
-            mAndroidMocker.mockGetCallingUidOrThrow();
+            mAndroidStaticMocker.mockGetCallingUidOrThrow();
         }
 
         @Override
         public void mockIsAtLeastR(boolean isIt) {
-            mAndroidMocker.mockIsAtLeastR(isIt);
+            mAndroidStaticMocker.mockIsAtLeastR(isIt);
         }
 
         @Override
         public void mockIsAtLeastS(boolean isIt) {
-            mAndroidMocker.mockIsAtLeastS(isIt);
+            mAndroidStaticMocker.mockIsAtLeastS(isIt);
         }
 
         @Override
         public void mockIsAtLeastT(boolean isIt) {
-            mAndroidMocker.mockIsAtLeastT(isIt);
+            mAndroidStaticMocker.mockIsAtLeastT(isIt);
         }
 
         @Override
         public void mockSdkLevelR() {
-            mAndroidMocker.mockSdkLevelR();
+            mAndroidStaticMocker.mockSdkLevelR();
         }
 
         @Override
         public void mockGetCurrentUser(int user) {
-            mAndroidMocker.mockGetCurrentUser(user);
+            mAndroidStaticMocker.mockGetCurrentUser(user);
         }
 
         @Override
         public LogInterceptor interceptLogD(String tag) {
-            return mAndroidMocker.interceptLogD(tag);
+            return mAndroidStaticMocker.interceptLogD(tag);
         }
 
         @Override
         public LogInterceptor interceptLogV(String tag) {
-            return mAndroidMocker.interceptLogV(tag);
+            return mAndroidStaticMocker.interceptLogV(tag);
         }
 
         @Override
         public LogInterceptor interceptLogE(String tag) {
-            return mAndroidMocker.interceptLogE(tag);
+            return mAndroidStaticMocker.interceptLogE(tag);
         }
 
-        // AdServicesExtendedMockitoMocker methods
+        // AdServicesPragmaticMocker methods
+
+        @Override
+        public void mockGetBackgroundJobsLoggingKillSwitch(Flags flags, boolean value) {
+            mAdServicesMocker.mockGetBackgroundJobsLoggingKillSwitch(flags, value);
+        }
+
+        @Override
+        public void mockGetCobaltLoggingEnabled(Flags flags, boolean value) {
+            mAdServicesMocker.mockGetCobaltLoggingEnabled(flags, value);
+        }
+
+        @Override
+        public void mockGetAppNameApiErrorCobaltLoggingEnabled(Flags flags, boolean value) {
+            mAdServicesMocker.mockGetAppNameApiErrorCobaltLoggingEnabled(flags, value);
+        }
+
+        @Override
+        public void mockGetAdservicesReleaseStageForCobalt(Flags flags, String stage) {
+            mAdServicesMocker.mockGetAdservicesReleaseStageForCobalt(flags, stage);
+        }
+
+        @Override
+        public void mockAllCobaltLoggingFlags(Flags flags, boolean enabled) {
+            mAdServicesMocker.mockAllCobaltLoggingFlags(flags, enabled);
+        }
+
+        // AdServicesStaticMocker methods
 
         @Override
         public void mockGetFlags(Flags mockedFlags) {
-            mAdServicesMocker.mockGetFlags(mockedFlags);
+            mAdServicesStaticMocker.mockGetFlags(mockedFlags);
         }
 
         @Override
         public void mockGetFlagsForTesting() {
-            mAdServicesMocker.mockGetFlagsForTesting();
+            mAdServicesStaticMocker.mockGetFlagsForTesting();
         }
 
         @Override
         public void mockSpeJobScheduler(AdServicesJobScheduler mockedAdServicesJobScheduler) {
-            mAdServicesMocker.mockSpeJobScheduler(mockedAdServicesJobScheduler);
+            mAdServicesStaticMocker.mockSpeJobScheduler(mockedAdServicesJobScheduler);
         }
 
         @Override
         public void mockAdServicesJobServiceFactory(
                 AdServicesJobServiceFactory mockedAdServicesJobServiceFactory) {
-            mAdServicesMocker.mockAdServicesJobServiceFactory(mockedAdServicesJobServiceFactory);
+            mAdServicesStaticMocker.mockAdServicesJobServiceFactory(
+                    mockedAdServicesJobServiceFactory);
         }
 
         @Override
         public void mockAdServicesLoggerImpl(AdServicesLoggerImpl mockedAdServicesLoggerImpl) {
-            mAdServicesMocker.mockAdServicesLoggerImpl(mockedAdServicesLoggerImpl);
+            mAdServicesStaticMocker.mockAdServicesLoggerImpl(mockedAdServicesLoggerImpl);
+        }
+
+        @Override
+        public StaticClassChecker getStaticClassChecker() {
+            return mChecker;
         }
 
         // SharedMocker methods

@@ -43,13 +43,11 @@ import android.adservices.common.FledgeErrorResponse;
 import android.adservices.http.MockWebServerRule;
 import android.adservices.signals.UpdateSignalsCallback;
 import android.adservices.signals.UpdateSignalsInput;
-import android.content.Context;
 import android.net.Uri;
 import android.os.IBinder;
 import android.os.RemoteException;
 
 import androidx.room.Room;
-import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesMockitoTestCase;
@@ -128,8 +126,6 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
     @Mock private AdServicesHttpsClient mAdServicesHttpsClientMock;
     @Mock private DevContextFilter mDevContextFilterMock;
 
-    @Spy private final Context mContextSpy = ApplicationProvider.getApplicationContext();
-
     @Spy
     FledgeAllowListsFilter mFledgeAllowListsFilterSpy =
             new FledgeAllowListsFilter(FakeFlagsFactory.getFlagsForTest(), mAdServicesLoggerMock);
@@ -157,20 +153,20 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
     @Before
     public void setup() {
         mSignalsDao =
-                Room.inMemoryDatabaseBuilder(mContextSpy, ProtectedSignalsDatabase.class)
+                Room.inMemoryDatabaseBuilder(mSpyContext, ProtectedSignalsDatabase.class)
                         .build()
                         .protectedSignalsDao();
         mEncoderEndpointsDao =
-                Room.inMemoryDatabaseBuilder(mContextSpy, ProtectedSignalsDatabase.class)
+                Room.inMemoryDatabaseBuilder(mSpyContext, ProtectedSignalsDatabase.class)
                         .build()
                         .getEncoderEndpointsDao();
         mEncoderLogicMetadataDao =
-                Room.inMemoryDatabaseBuilder(mContextSpy, ProtectedSignalsDatabase.class)
+                Room.inMemoryDatabaseBuilder(mSpyContext, ProtectedSignalsDatabase.class)
                         .build()
                         .getEncoderLogicMetadataDao();
         mEnrollmentDao =
                 new EnrollmentDao(
-                        mContextSpy,
+                        mSpyContext,
                         DbTestUtil.getSharedDbHelperForTest(),
                         FakeFlagsFactory.getFlagsForTest());
         mEnrollmentDao.insert(
@@ -181,7 +177,7 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mUpdateProcessorSelector = new UpdateProcessorSelector();
-        mEncoderPersistenceDao = EncoderPersistenceDao.getInstance(mContextSpy);
+        mEncoderPersistenceDao = EncoderPersistenceDao.getInstance(mSpyContext);
         mFlags = FakeFlagsFactory.getFlagsForTest();
         mEncoderLogicHandler =
                 new EncoderLogicHandler(
@@ -214,12 +210,12 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
         mFledgeAuthorizationFilter =
                 ExtendedMockito.spy(
                         new FledgeAuthorizationFilter(
-                                mContextSpy.getPackageManager(),
+                                mSpyContext.getPackageManager(),
                                 mEnrollmentDao,
                                 mAdServicesLoggerMock));
         mProtectedSignalsServiceFilter =
                 new ProtectedSignalsServiceFilter(
-                        mContextSpy,
+                        mSpyContext,
                         mFledgeConsentFilterMock,
                         FakeFlagsFactory.getFlagsForTest(),
                         mAppImportanceFilterMock,
@@ -253,7 +249,7 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
                         CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI);
         mService =
                 new ProtectedSignalsServiceImpl(
-                        mContextSpy,
+                        mSpyContext,
                         mUpdateSignalsOrchestrator,
                         mFledgeAuthorizationFilter,
                         mConsentManagerMock,
