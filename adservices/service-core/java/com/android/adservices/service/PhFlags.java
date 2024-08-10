@@ -4357,7 +4357,11 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_ENABLE_EVENT_LEVEL_EPSILON_IN_SOURCE
                         + " = "
                         + getMeasurementEnableEventLevelEpsilonInSource());
-
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATE_VALUE_FILTERS
+                        + " = "
+                        + getMeasurementEnableAggregateValueFilters());
         writer.println(
                 "\t"
                         + FlagsConstants
@@ -6479,6 +6483,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getMeasurementEnableAggregateValueFilters() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATE_VALUE_FILTERS,
+                MEASUREMENT_ENABLE_AGGREGATE_VALUE_FILTERS);
+    }
+
+    @Override
     public String getMeasurementAppPackageNameLoggingAllowlist() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST, "");
@@ -6991,5 +7002,11 @@ public final class PhFlags implements Flags {
     @VisibleForTesting
     static String getSystemPropertyName(String key) {
         return AdServicesCommon.SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + key;
+    }
+
+    @Override
+    public long getAdIdCacheTtlMs() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_AD_ID_CACHE_TTL_MS, DEFAULT_ADID_CACHE_TTL_MS);
     }
 }

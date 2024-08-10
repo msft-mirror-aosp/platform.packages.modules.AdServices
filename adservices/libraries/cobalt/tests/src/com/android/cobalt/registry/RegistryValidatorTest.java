@@ -68,6 +68,73 @@ import java.util.function.BiPredicate;
 public final class RegistryValidatorTest extends AdServicesUnitTestCase {
 
     @Test
+    public void testDimensionsAreEquivalent_emptyDimensions() {
+        assertThat(RegistryValidator.dimensionsAreEquivalent(List.of(), List.of())).isTrue();
+    }
+
+    @Test
+    public void testDimensionsAreEquivalent_sameMaxEventCodes() {
+        assertThat(
+                        RegistryValidator.dimensionsAreEquivalent(
+                                List.of(getMetricDimension(1), getMetricDimension(2)),
+                                List.of(getMetricDimension(1), getMetricDimension(2))))
+                .isTrue();
+    }
+
+    @Test
+    public void testDimensionsAreEquivalent_differentMaxEventCodes() {
+        assertThat(
+                        RegistryValidator.dimensionsAreEquivalent(
+                                List.of(getMetricDimension(1), getMetricDimension(2)),
+                                List.of(getMetricDimension(2), getMetricDimension(1))))
+                .isFalse();
+    }
+
+    @Test
+    public void testDimensionsAreEquivalent_differentMaxEventCodesSize() {
+        assertThat(
+                        RegistryValidator.dimensionsAreEquivalent(
+                                List.of(getMetricDimension(1), getMetricDimension(2)),
+                                List.of(getMetricDimension(1))))
+                .isFalse();
+    }
+
+    @Test
+    public void testDimensionsAreEquivalent_sameEnumeratedDimensions() {
+        assertThat(
+                        RegistryValidator.dimensionsAreEquivalent(
+                                List.of(getMetricDimension(List.of(1, 2))),
+                                List.of(getMetricDimension(List.of(1, 2)))))
+                .isTrue();
+    }
+
+    @Test
+    public void testDimensionsAreEquivalent_sameEnumeratedDimensions_differentEventCodeOrder() {
+        assertThat(
+                        RegistryValidator.dimensionsAreEquivalent(
+                                List.of(getMetricDimension(List.of(1, 2))),
+                                List.of(getMetricDimension(List.of(2, 1)))))
+                .isTrue();
+    }
+
+    @Test
+    public void testDimensionsAreEquivalent_differentEnumeratedDimensionsSize() {
+        assertThat(
+                        RegistryValidator.dimensionsAreEquivalent(
+                                List.of(getMetricDimension(List.of(1, 2))), List.of()))
+                .isFalse();
+    }
+
+    @Test
+    public void testDimensionsAreEquivalent_enumeratedDimensions_oneIsSubset() {
+        assertThat(
+                        RegistryValidator.dimensionsAreEquivalent(
+                                List.of(getMetricDimension(List.of(1, 2, 3))),
+                                List.of(getMetricDimension(List.of(1, 2)))))
+                .isFalse();
+    }
+
+    @Test
     public void testValidateReportType_occurrenceMetric_onlySupportsFleetwideOccurrenceCounts() {
         for (ReportType reportType : ReportType.values()) {
             switch (reportType) {
@@ -1184,5 +1251,13 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
 
     private static MetricDimension getMetricDimension(int maxEventCode) {
         return MetricDimension.newBuilder().setMaxEventCode(maxEventCode).build();
+    }
+
+    private static MetricDimension getMetricDimension(Iterable<Integer> eventCodes) {
+        MetricDimension.Builder dimension = MetricDimension.newBuilder();
+        for (Integer eventCode : eventCodes) {
+            dimension.putEventCodes(eventCode, "UNUSED");
+        }
+        return dimension.build();
     }
 }
