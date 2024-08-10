@@ -673,7 +673,9 @@ public final class ScheduledUpdatesHandlerTest {
     @Test
     public void
             testPerformScheduledUpdates_SuccessWithAuctionServerRequestFlagsEnabledButNoFlagsInResponse()
-                    throws JSONException, ExecutionException, InterruptedException,
+                    throws JSONException,
+                            ExecutionException,
+                            InterruptedException,
                             TimeoutException {
         enableAuctionServerRequestFlags();
 

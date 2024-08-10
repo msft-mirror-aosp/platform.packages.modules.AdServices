@@ -676,7 +676,7 @@ public class BackgroundFetchRunnerTest {
                                 CommonFixture.FIXED_NOW,
                                 CommonFixture.VALID_BUYER_1,
                                 mFetchUri,
-                                /*debuggable=*/ true)
+                                /* debuggable= */ true)
                         .get();
 
         assertEquals(expectedUpdatableData, updatableData);
