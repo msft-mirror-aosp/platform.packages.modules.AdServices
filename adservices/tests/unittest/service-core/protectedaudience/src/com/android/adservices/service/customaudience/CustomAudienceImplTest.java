@@ -373,7 +373,7 @@ public final class CustomAudienceImplTest extends AdServicesMockitoTestCase {
                 .insertOrOverwriteCustomAudience(
                         eq(expectedDbCustomAudience),
                         eq(customAudienceWithValidSubdomains.getDailyUpdateUri()),
-                        /*debuggable=*/ eq(false));
+                        /* debuggable= */ eq(false));
         verify(mCustomAudienceDaoMock)
                 .getCustomAudienceStats(eq(CustomAudienceFixture.VALID_OWNER));
 

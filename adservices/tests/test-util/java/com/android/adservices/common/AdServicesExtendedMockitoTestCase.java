@@ -46,9 +46,9 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.shared.spe.logging.JobServiceLogger;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
+import com.android.adservices.shared.testing.SidelessTestCase;
 import com.android.adservices.spe.AdServicesJobScheduler;
 import com.android.adservices.spe.AdServicesJobServiceFactory;
-import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.ClassRule;
@@ -141,25 +141,46 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
 
     @Test
     public final void testAdServicesExtendedMockitoTestCaseFixtures() throws Exception {
-        checkProhibitedFields(
+        checkProhibitedMockitoFields(AdServicesExtendedMockitoTestCase.class, this);
+    }
+
+    private static final String REASON_SESSION_MANAGED_BY_RULE =
+            "mockito session is automatically managed by a @Rule";
+
+    // Make it static so it can be used by AdServicesMockitoTestCase, as often test cases are
+    // converted to use AdServicesMockitoTestCase and still defined the ExtendedMockito session -
+    // they should migrate to AdServicesExtendedMockitoTestCase instead.
+    static <T extends SidelessTestCase> void checkProhibitedMockitoFields(
+            Class<T> superclass, T testInstance) throws Exception {
+        testInstance.assertTestClassHasNoFieldsFromSuperclass(
+                superclass,
                 "mMockContext",
-                "mContextMock",
                 "mSpyContext",
-                "mContextSpy",
-                "mStaticMockSession",
-                "mMockitoSession",
-                "mockitoSession",
-                "session",
                 "extendedMockito",
                 "errorLogUtilUsageRule",
-                "mockito",
-                "mocker");
-        checkProhibitedStaticFields(
+                "mocker",
                 "sInlineCleaner",
-                "sSpyContext",
-                "sStaticMockitoSession",
-                "staticMockitoSession",
-                "staticMockSession");
+                "sSpyContext");
+        testInstance.assertTestClassHasNoSuchField(
+                "mContextMock", "should use existing mMockContext instead");
+        testInstance.assertTestClassHasNoSuchField(
+                "mContextSpy", "should use existing mSpyContext instead");
+        testInstance.assertTestClassHasNoSuchField("mockito", "already taken care by @Rule");
+        // Listed below are existing names for the extended mockito session on test classes that
+        // don't use the rule / superclass:
+        testInstance.assertTestClassHasNoSuchField(
+                "mStaticMockSession", REASON_SESSION_MANAGED_BY_RULE);
+        testInstance.assertTestClassHasNoSuchField(
+                "mMockitoSession", REASON_SESSION_MANAGED_BY_RULE);
+        testInstance.assertTestClassHasNoSuchField(
+                "mockitoSession", REASON_SESSION_MANAGED_BY_RULE);
+        testInstance.assertTestClassHasNoSuchField("session", REASON_SESSION_MANAGED_BY_RULE);
+        testInstance.assertTestClassHasNoSuchField(
+                "sStaticMockitoSession", REASON_SESSION_MANAGED_BY_RULE);
+        testInstance.assertTestClassHasNoSuchField(
+                "staticMockitoSession", REASON_SESSION_MANAGED_BY_RULE);
+        testInstance.assertTestClassHasNoSuchField(
+                "staticMockSession", REASON_SESSION_MANAGED_BY_RULE);
     }
 
     public static final class Mocker
@@ -279,12 +300,6 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
         @Override
         public void mockAllCobaltLoggingFlags(Flags flags, boolean enabled) {
             mAdServicesMocker.mockAllCobaltLoggingFlags(flags, enabled);
-        }
-
-        @Override
-        public AdServicesJobServiceLogger getSpiedAdServicesJobServiceLogger(
-                Context context, Flags flags) {
-            return mAdServicesMocker.getSpiedAdServicesJobServiceLogger(context, flags);
         }
 
         // AdServicesStaticMocker methods

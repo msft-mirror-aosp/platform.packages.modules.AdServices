@@ -26,7 +26,6 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import android.app.job.JobParameters;
 import android.app.job.JobService;
@@ -45,6 +44,15 @@ import com.android.adservices.spe.AdServicesJobServiceLogger;
 public final class MockitoExpectations {
 
     private static final String TAG = MockitoExpectations.class.getSimpleName();
+
+    // NOTE: not really "Generated code", but we're using mocker (instead of sMocker or MOCKER) as
+    // that's the name of the reference provided by the superclasses - once tests are refactored
+    // to use the superclasses, they wouldn't need to change the variable name.
+
+    // CHECKSTYLE:OFF Generated code
+    public static final AdServicesMockitoJobMocker jobMocker = new AdServicesMockitoJobMocker();
+
+    // CHECKSTYLE:ON
 
     /**
      * Mocks a call to {@link AdServicesLogger#logApiCallStats(ApiCallStats)} and returns a callback
@@ -225,10 +233,10 @@ public final class MockitoExpectations {
      * @deprecated use {@code mocker.getSpiedAdServicesJobServiceLogger()} instead.
      */
     @Deprecated
+    @SuppressWarnings("InlineMeSuggester")
     public static AdServicesJobServiceLogger getSpiedAdServicesJobServiceLogger(
             Context context, Flags flags) {
-        return ExtendedMockitoExpectations.mocker.getSpiedAdServicesJobServiceLogger(
-                context, flags);
+        return jobMocker.getSpiedAdServicesJobServiceLogger(context, flags);
     }
 
     private MockitoExpectations() {

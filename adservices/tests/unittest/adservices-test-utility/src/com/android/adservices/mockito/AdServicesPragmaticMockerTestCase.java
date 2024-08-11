@@ -18,13 +18,10 @@ package com.android.adservices.mockito;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
-import static org.mockito.Mockito.verify;
 
-import android.content.Context;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.service.Flags;
-import com.android.adservices.spe.AdServicesJobServiceLogger;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -46,7 +43,6 @@ import org.mockito.quality.Strictness;
 public abstract class AdServicesPragmaticMockerTestCase<T extends AdServicesPragmaticMocker>
         extends AdServicesUnitTestCase {
 
-    @Mock private Context mMockContext;
     @Mock private Flags mMockFlags;
 
     @Rule public final MockitoRule mockito = MockitoJUnit.rule().strictness(Strictness.LENIENT);
@@ -147,26 +143,5 @@ public abstract class AdServicesPragmaticMockerTestCase<T extends AdServicesPrag
         expect.withMessage("flags.getAdservicesReleaseStageForCobalt()")
                 .that(mMockFlags.getAdservicesReleaseStageForCobalt())
                 .isEqualTo("DEBUG");
-    }
-
-    @Test
-    public final void testGetSpiedAdServicesJobServiceLogger_null() {
-        T mocker = getMocker();
-        assertThrows(
-                NullPointerException.class,
-                () -> mocker.getSpiedAdServicesJobServiceLogger(/* context= */ null, mMockFlags));
-        assertThrows(
-                NullPointerException.class,
-                () -> mocker.getSpiedAdServicesJobServiceLogger(mMockContext, /* flags= */ null));
-    }
-
-    @Test
-    public final void testGetSpiedAdServicesJobServiceLogger() {
-        AdServicesJobServiceLogger spy =
-                getMocker().getSpiedAdServicesJobServiceLogger(mMockContext, mMockFlags);
-        expect.withMessage("getSpiedAdServicesJobServiceLogger()").that(spy).isNotNull();
-
-        spy.recordOnStartJob(42);
-        verify(spy).recordOnStartJob(42);
     }
 }

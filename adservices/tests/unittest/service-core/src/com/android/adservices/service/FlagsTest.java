@@ -20,6 +20,7 @@ import static com.android.adservices.service.Flags.AD_SERVICES_MODULE_JOB_POLICY
 import static com.android.adservices.service.Flags.APPSEARCH_ONLY;
 import static com.android.adservices.service.Flags.DEFAULT_ADEXT_READ_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_ADEXT_WRITE_TIMEOUT_MS;
+import static com.android.adservices.service.Flags.DEFAULT_ADID_CACHE_TTL_MS;
 import static com.android.adservices.service.Flags.DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.Flags.DEFAULT_CONSENT_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.Flags.DEFAULT_JOB_SCHEDULING_LOGGING_SAMPLING_RATE;
@@ -525,6 +526,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetMeasurementEnableAggregateValueFilters() {
+        testFeatureFlag(
+                "MEASUREMENT_ENABLE_AGGREGATE_VALUE_FILTERS",
+                Flags::getMeasurementEnableAggregateValueFilters);
+    }
+
+    @Test
     public void testGetMeasurementEnableV1SourceTriggerData() {
         testFeatureFlag(
                 "MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA",
@@ -913,6 +921,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 Flags::getFledgeGetAdSelectionDataMaxNumEntirePayloadCompressions);
     }
 
+    @Test
+    public void testGetPasEncodingJobImprovementsEnabled() {
+        testFeatureFlag(
+                "PAS_ENCODING_JOB_IMPROVEMENTS_ENABLED",
+                Flags::getPasEncodingJobImprovementsEnabled);
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Internal helpers and tests - do not add new tests for flags following this point.          //
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -940,6 +955,11 @@ public final class FlagsTest extends AdServicesUnitTestCase {
         expect.withMessage("fields missing @FeatureFlag or @ConfigFlag annotation")
                 .that(fieldsMissingAnnotation)
                 .isEmpty();
+    }
+
+    @Test
+    public void testGetAdIdCacheTtl() {
+        testFlag("getAdIdCacheTtl()", DEFAULT_ADID_CACHE_TTL_MS, Flags::getAdIdCacheTtlMs);
     }
 
     private boolean hasAnnotation(Field field, Class<? extends Annotation> annotationClass) {

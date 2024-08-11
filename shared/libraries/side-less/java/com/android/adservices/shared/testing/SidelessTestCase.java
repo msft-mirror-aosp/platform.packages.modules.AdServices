@@ -19,11 +19,12 @@ import com.android.adservices.shared.testing.Logger.RealLogger;
 
 import com.google.common.truth.Expect;
 
-import org.junit.AssumptionViolatedException;
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -34,9 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public abstract class SidelessTestCase implements TestNamer {
 
-    // TODO(b/358120731): temporary false to avoid breaking the build as we need to fix existing
-    // occurrences first. Once fixed, set to true;
-    private static final boolean FAIL_ON_PROHIBITED_FIELDS = false;
+    private static final boolean FAIL_ON_PROHIBITED_FIELDS = true;
 
     private static final AtomicInteger sNextInvocationId = new AtomicInteger();
 
@@ -73,7 +72,8 @@ public abstract class SidelessTestCase implements TestNamer {
 
     @Test
     public final void testSidelessTestCaseFixtures() throws Exception {
-        checkProhibitedFields("mLog", "mRealLogger", "expect");
+        assertTestClassHasNoFieldsFromSuperclass(
+                SidelessTestCase.class, "mLog", "mRealLogger", "expect");
     }
 
     /**
@@ -82,71 +82,81 @@ public abstract class SidelessTestCase implements TestNamer {
      * <p>"Base" superclasses should use this method to passing all protected and public fields they
      * define.
      */
-    protected final void checkProhibitedFields(String... names) throws Exception {
-        checkProhibitedFields(/* isStatic= */ false, names);
+    public final void assertTestClassHasNoSuchField(String name, String reason) throws Exception {
+        Objects.requireNonNull(name, "name cannot be nul");
+        Objects.requireNonNull(reason, "reason cannot be nul");
+
+        if (!iHaveThisField(name)) {
+            return;
+        }
+        if (!FAIL_ON_PROHIBITED_FIELDS) {
+            mLog.e(
+                    "Class %s should not define field %s (reason: %s) but test is not failing"
+                            + " because FAIL_ON_PROHIBITED_FIELDS is false",
+                    getClass().getSimpleName(), name, reason);
+            return;
+        }
+        expect.withMessage(
+                        "Class %s should not define field %s. Reason: %s",
+                        getClass().getSimpleName(), name, reason)
+                .fail();
     }
 
     /**
-     * Asserts that the test class doesn't declare any static field with the given names.
+     * Asserts that the test class doesn't declare any field with the given names.
      *
-     * <p>"Base" superclasses should use this method to passing all protected and public static
-     * fields they define.
+     * <p>"Base" superclasses should use this method to passing all protected and public fields they
+     * define.
      */
-    protected final void checkProhibitedStaticFields(String... names) throws Exception {
-        checkProhibitedFields(/* isStatic= */ true, names);
-    }
-
-    private void checkProhibitedFields(boolean isStatic, String... names) throws Exception {
+    public final void assertTestClassHasNoFieldsFromSuperclass(Class<?> superclass, String... names)
+            throws Exception {
+        Objects.requireNonNull(superclass, "superclass cannot be null");
         if (names == null || names.length == 0) {
             throw new IllegalArgumentException("names cannot be empty or null");
         }
         Class<?> myClass = getClass();
         String myClassName = myClass.getSimpleName();
+        if (myClass.equals(superclass)) {
+            mLog.v(
+                    "assertTestClassHasNoFieldsFromSuperclass(%s, %s): skipping on self",
+                    myClassName, Arrays.toString(names));
+            return;
+        }
 
         StringBuilder violationsBuilder = new StringBuilder();
-        try {
             for (String name : names) {
-                Object from = isStatic ? null : this;
-                Object field = getField(myClass, from, name);
-                if (field != null) {
+            if (iHaveThisField(name)) {
                     violationsBuilder.append(' ').append(name);
                 }
             }
-        } catch (Exception | Error e) {
-            if (FAIL_ON_PROHIBITED_FIELDS) {
-                throw e;
-            }
-            throw new AssumptionViolatedException(
-                    "checkProhibitedFields() failed, but ignoring:" + e);
-        }
         String violations = violationsBuilder.toString();
         if (violations.isEmpty()) {
             return;
         }
-        if (FAIL_ON_PROHIBITED_FIELDS) {
-            throw new AssertionError(
-                    myClassName + " should not define the following fields:" + violations);
+        if (!FAIL_ON_PROHIBITED_FIELDS) {
+            mLog.e(
+                    "Class %s should not define the following fields (as they're defined by %s),"
+                        + " but test is not failing because FAIL_ON_PROHIBITED_FIELDS is false:%s",
+                    getClass().getSimpleName(), superclass.getSimpleName(), violations);
+            return;
         }
-        throw new AssumptionViolatedException(
-                myClassName
-                        + " should not define the following fields, but ignoring the failure:"
-                        + violations);
+        expect.withMessage(
+                        "%s should not define the following fields, as they're defined by %s:%s",
+                        myClassName, superclass.getSimpleName(), violations)
+                .fail();
     }
 
     @Nullable
-    private static Object getField(Class<?> clazz, Object object, String name) throws Exception {
-        Field field = null;
+    private boolean iHaveThisField(String name) {
         try {
-            field = clazz.getDeclaredField(name);
+            Field field = getClass().getDeclaredField(name);
+            // Logging as error as class is not expected to have it
+            mLog.e(
+                    "Found field with name (%s) that shouldn't exist on class %s: %s",
+                    name, getClass().getSimpleName(), field);
+            return true;
         } catch (NoSuchFieldException e) {
-            return null;
-        }
-        boolean before = field.isAccessible();
-        try {
-            field.setAccessible(true);
-            return field.get(object);
-        } finally {
-            field.setAccessible(before);
+            return false;
         }
     }
 
