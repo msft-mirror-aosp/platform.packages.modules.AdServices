@@ -30,6 +30,14 @@ import java.util.Objects;
  */
 @AutoValue
 public abstract class DevContext {
+
+    /**
+     * Bogus package name used on test cases that emulate cases where the developer options is
+     * disabled.
+     */
+    public static final String UNKNOWN_APP_BECAUSE_DEV_OPTIONS_IS_DISABLED =
+            "unknown.app.because.dev.options.is.disabled";
+
     /**
      * @return {@code true} if the developer options are enabled for this service call.
      */
@@ -58,8 +66,9 @@ public abstract class DevContext {
 
     /** Returns a new instance of {@link DevContext} with developer options disabled. */
     public static DevContext createForDevOptionsDisabled() {
-        // TODO(b/356709022): use default builder with "unknown.app.because.dev.options.is.disabled"
-        return DevContext.builder().setDevOptionsEnabled(false).build();
+        return DevContext.builder(UNKNOWN_APP_BECAUSE_DEV_OPTIONS_IS_DISABLED)
+                .setDevOptionsEnabled(false)
+                .build();
     }
 
     /** The Builder for {@link DevContext} */

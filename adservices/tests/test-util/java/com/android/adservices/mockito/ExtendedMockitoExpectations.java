@@ -29,9 +29,7 @@ import static org.mockito.ArgumentMatchers.anyFloat;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.when;
 
 import android.content.Context;
 import android.os.SystemProperties;
@@ -40,14 +38,13 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
-import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
 import com.android.adservices.shared.testing.concurrency.FailableResultSyncCallback;
-import com.android.adservices.spe.AdServicesJobServiceFactory;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 
 import com.google.common.truth.Expect;
@@ -79,8 +76,8 @@ public final class ExtendedMockitoExpectations {
     // to use the superclasses, they wouldn't need to change the variable name.
 
     // CHECKSTYLE:OFF Generated code
-    public static final AdServicesStaticMockitoMocker mocker =
-            new AdServicesExtendedMockitoMocker(new StaticClassChecker() {});
+    public static final AdServicesExtendedMockitoTestCase.Mocker mocker =
+            new AdServicesExtendedMockitoTestCase.Mocker(new StaticClassChecker() {});
 
     // CHECKSTYLE:ON
 
@@ -367,20 +364,6 @@ public final class ExtendedMockitoExpectations {
     public static void verifyErrorLogUtilError(
             int errorCode, int ppapiName, VerificationMode mode) {
         verify(() -> ErrorLogUtil.e(errorCode, ppapiName), mode);
-    }
-
-    /**
-     * Mocks a call to {@link AdServicesJobServiceFactory#getJobSchedulingLogger()}.
-     *
-     * @return a mocked instance of {@link JobSchedulingLogger}.
-     */
-    public static JobSchedulingLogger mockJobSchedulingLogger(AdServicesJobServiceFactory factory) {
-        logV("mockJobSchedulingLogger()");
-
-        JobSchedulingLogger loggerMock = mock(JobSchedulingLogger.class);
-        when(factory.getJobSchedulingLogger()).thenReturn(loggerMock);
-
-        return loggerMock;
     }
 
     /**
