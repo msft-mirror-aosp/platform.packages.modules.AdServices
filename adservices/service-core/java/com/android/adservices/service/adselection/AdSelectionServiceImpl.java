@@ -332,8 +332,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 MultiCloudSupportStrategyFactory.getStrategy(
                         FlagsFactory.getFlags().getFledgeAuctionServerMultiCloudEnabled(),
                         FlagsFactory.getFlags().getFledgeAuctionServerCoordinatorUrlAllowlist()),
-                AdSelectionDebugReportingDatabase.getInstance(context)
-                        .getAdSelectionDebugReportDao(),
+                AdSelectionDebugReportingDatabase.getInstance().getAdSelectionDebugReportDao(),
                 new AdIdFetcher(
                         context,
                         AdIdWorker.getInstance(),

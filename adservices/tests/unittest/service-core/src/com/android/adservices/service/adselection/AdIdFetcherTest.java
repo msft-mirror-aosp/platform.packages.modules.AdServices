@@ -24,20 +24,16 @@ import static org.junit.Assert.assertThrows;
 
 import android.adservices.adid.AdId;
 import android.adservices.common.CommonFixture;
-import android.content.Context;
 import android.os.Process;
-
-import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.adid.AdIdCacheManager;
 import com.android.adservices.service.common.PermissionHelper;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -46,22 +42,18 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 @MockStatic(PermissionHelper.class)
-public class AdIdFetcherTest extends AdServicesExtendedMockitoTestCase {
+@RequiresSdkLevelAtLeastS
+public final class AdIdFetcherTest extends AdServicesExtendedMockitoTestCase {
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     private static final int CALLER_UID = Process.myUid();
     private static final long AD_ID_FETCHER_TIMEOUT_MS = 50;
-    private Context mContext;
     private MockAdIdWorker mMockAdIdWorker;
     private ExecutorService mLightweightExecutorService;
     private ScheduledThreadPoolExecutor mScheduledExecutor;
     private AdIdFetcher mAdIdFetcher;
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Before
     public void setup() {
-        mContext = ApplicationProvider.getApplicationContext();
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mScheduledExecutor = AdServicesExecutors.getScheduler();
         mMockAdIdWorker = new MockAdIdWorker(new AdIdCacheManager(mContext));

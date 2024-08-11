@@ -45,7 +45,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import android.content.Context;
 import android.util.Log;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
@@ -86,7 +85,6 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
     private static final String KEY_PKG_NAME_API =
             String.format(Locale.US, PREFS_KEY_TEMPLATE, PKG_NAME, API);
 
-    @Mock private Context mMockContext;
     @Mock private Flags mMockFlags;
     @Mock private StatsdAdServicesLogger mStatsdLogger;
 
