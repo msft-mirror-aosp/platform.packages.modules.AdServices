@@ -449,18 +449,35 @@ public class AsyncTriggerFetcher {
             builder.setAggregateTriggerData(validAggregateTriggerData.get());
         }
         if (!json.isNull(TriggerHeaderContract.AGGREGATABLE_VALUES)) {
-            if (!isValidAggregateValues(
-                    json.getJSONObject(TriggerHeaderContract.AGGREGATABLE_VALUES))) {
-                LoggerFactory.getMeasurementLogger()
-                        .e(
-                                String.format(
-                                        "AsyncTriggerFetcher: Invalid aggregate values in %s"
-                                                + " header",
-                                        TriggerHeaderContract
-                                                .HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER));
-                return false;
+            if (mFlags.getMeasurementEnableAggregateValueFilters()) {
+                Object aggregatableValues = json.get(TriggerHeaderContract.AGGREGATABLE_VALUES);
+                if (!isValidAggregatableValues(aggregatableValues)) {
+                    LoggerFactory.getMeasurementLogger()
+                            .e(
+                                    String.format(
+                                            "AsyncTriggerFetcher: Invalid aggregate values"
+                                                    + " in %s header",
+                                            TriggerHeaderContract
+                                                    .HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER));
+                    return false;
+                }
+                builder.setAggregateValues(
+                        json.getString(TriggerHeaderContract.AGGREGATABLE_VALUES));
+            } else {
+                if (!isValidAggregateValues(
+                        json.getJSONObject(TriggerHeaderContract.AGGREGATABLE_VALUES))) {
+                    LoggerFactory.getMeasurementLogger()
+                            .e(
+                                    String.format(
+                                            "AsyncTriggerFetcher: Invalid aggregate values in %s"
+                                                    + " header",
+                                            TriggerHeaderContract
+                                                    .HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER));
+                    return false;
+                }
+                builder.setAggregateValues(
+                        json.getString(TriggerHeaderContract.AGGREGATABLE_VALUES));
             }
-            builder.setAggregateValues(json.getString(TriggerHeaderContract.AGGREGATABLE_VALUES));
         }
         if (!json.isNull(TriggerHeaderContract.AGGREGATABLE_DEDUPLICATION_KEYS)) {
             Optional<String> validAggregateDeduplicationKeysString =
@@ -750,6 +767,60 @@ public class AsyncTriggerFetcher {
             }
         }
         return Optional.of(validEventTriggerData.toString());
+    }
+
+    private boolean isValidAggregatableValues(Object aggregatableValues) throws JSONException {
+        boolean shouldCheckFilterSize = !mFlags.getMeasurementEnableUpdateTriggerHeaderLimit();
+        boolean isJSONObject = (aggregatableValues instanceof JSONObject);
+        boolean isJSONArray = (aggregatableValues instanceof JSONArray);
+        if (!isJSONObject && !isJSONArray) {
+            return false;
+        }
+        if (isJSONObject) {
+            return isValidAggregateValues((JSONObject) aggregatableValues);
+        } else {
+            JSONArray aggregatableValuesArr = (JSONArray) aggregatableValues;
+            for (int i = 0; i < aggregatableValuesArr.length(); i++) {
+                JSONObject aggregateValuesObj = aggregatableValuesArr.getJSONObject(i);
+                // validate values
+                if (aggregateValuesObj.isNull("values")) {
+                    LoggerFactory.getMeasurementLogger().d("Aggregate value values do not exist.");
+                    return false;
+                }
+                if (!isValidAggregateValues(aggregateValuesObj.getJSONObject("values"))) {
+                    LoggerFactory.getMeasurementLogger().d("Aggregate value values are invalid.");
+                    return false;
+                }
+                // validate filters
+                if (!aggregateValuesObj.isNull("filters")) {
+                    JSONArray filters = Filter.maybeWrapFilters(aggregateValuesObj, "filters");
+                    if (!FetcherUtil.areValidAttributionFilters(
+                            filters,
+                            mFlags,
+                            /* canIncludeLookbackWindow= */ true,
+                            shouldCheckFilterSize)) {
+                        LoggerFactory.getMeasurementLogger()
+                                .d("Aggregate value filters are invalid.");
+                        return false;
+                    }
+                }
+                // validate not_filters
+                if (!aggregateValuesObj.isNull("not_filters")) {
+                    JSONArray not_filters =
+                            Filter.maybeWrapFilters(aggregateValuesObj, "not_filters");
+                    if (!FetcherUtil.areValidAttributionFilters(
+                            not_filters,
+                            mFlags,
+                            /* canIncludeLookbackWindow= */ true,
+                            shouldCheckFilterSize)) {
+                        LoggerFactory.getMeasurementLogger()
+                                .d("Aggregate value not_filters are invalid.");
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
     }
 
     private Optional<String> getValidAggregateTriggerData(JSONArray aggregateTriggerDataArr)

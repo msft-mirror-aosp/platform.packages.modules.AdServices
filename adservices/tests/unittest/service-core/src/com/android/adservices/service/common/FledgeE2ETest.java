@@ -24,7 +24,6 @@ import static com.android.adservices.data.adselection.AdSelectionDatabase.DATABA
 import static com.android.adservices.service.adselection.AdSelectionScriptEngine.NUM_BITS_STOCHASTIC_ROUNDING;
 import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_KEY;
 import static com.android.adservices.service.adselection.ImpressionReporterLegacy.CALLER_PACKAGE_NAME_MISMATCH;
-import static com.android.adservices.service.customaudience.FetchCustomAudienceImplTest.FetchCustomAudienceTestCallback;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.DB_AD_SELECTION_FILE_SIZE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION;
@@ -88,6 +87,7 @@ import android.adservices.common.KeyedFrequencyCapFixture;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.CustomAudienceOverrideCallback;
+import android.adservices.customaudience.FetchAndJoinCustomAudienceCallback;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceInput;
 import android.adservices.customaudience.ICustomAudienceCallback;
 import android.adservices.customaudience.TrustedBiddingData;
@@ -104,6 +104,7 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.FlakyTest;
 
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.WebViewSupportUtil;
@@ -471,9 +472,8 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
 
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
-                        DevContext.builder()
+                        DevContext.builder(CommonFixture.TEST_PACKAGE_NAME)
                                 .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(CommonFixture.TEST_PACKAGE_NAME)
                                 .build());
 
         CustomAudience customAudience1 =
@@ -530,9 +530,8 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
 
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
-                        DevContext.builder()
+                        DevContext.builder(CommonFixture.TEST_PACKAGE_NAME)
                                 .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(CommonFixture.TEST_PACKAGE_NAME)
                                 .build());
 
         CustomAudience customAudience1 =
@@ -595,9 +594,8 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
 
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
-                        DevContext.builder()
+                        DevContext.builder(CommonFixture.TEST_PACKAGE_NAME)
                                 .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(CommonFixture.TEST_PACKAGE_NAME)
                                 .build());
 
         CustomAudience customAudience1 =
@@ -938,9 +936,8 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
 
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
-                        DevContext.builder()
+                        DevContext.builder(CommonFixture.TEST_PACKAGE_NAME)
                                 .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(CommonFixture.TEST_PACKAGE_NAME)
                                 .build());
 
         CustomAudience customAudience1 =
@@ -1002,9 +999,8 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
 
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
-                        DevContext.builder()
+                        DevContext.builder(CommonFixture.TEST_PACKAGE_NAME)
                                 .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(CommonFixture.TEST_PACKAGE_NAME)
                                 .build());
 
         CustomAudience customAudience1 =
@@ -1073,9 +1069,8 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
 
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
-                        DevContext.builder()
+                        DevContext.builder(CommonFixture.TEST_PACKAGE_NAME)
                                 .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(CommonFixture.TEST_PACKAGE_NAME)
                                 .build());
 
         CustomAudience customAudience1 =
@@ -1140,9 +1135,8 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
 
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
-                        DevContext.builder()
+                        DevContext.builder(CommonFixture.TEST_PACKAGE_NAME)
                                 .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(CommonFixture.TEST_PACKAGE_NAME)
                                 .build());
 
         CustomAudience customAudience1 =
@@ -1293,9 +1287,8 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
 
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
-                        DevContext.builder()
+                        DevContext.builder(CommonFixture.TEST_PACKAGE_NAME)
                                 .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(CommonFixture.TEST_PACKAGE_NAME)
                                 .build());
 
         CustomAudience customAudience1 = createCustomAudience(BUYER_DOMAIN_1, BIDS_FOR_BUYER_1);
@@ -1416,9 +1409,8 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
 
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
-                        DevContext.builder()
+                        DevContext.builder(CommonFixture.TEST_PACKAGE_NAME)
                                 .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(CommonFixture.TEST_PACKAGE_NAME)
                                 .build());
 
         CustomAudience customAudience1 = createCustomAudience(BUYER_DOMAIN_1, BIDS_FOR_BUYER_1);
@@ -1487,9 +1479,8 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
 
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
-                        DevContext.builder()
+                        DevContext.builder(CommonFixture.TEST_PACKAGE_NAME)
                                 .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(CommonFixture.TEST_PACKAGE_NAME)
                                 .build());
 
         CustomAudience customAudience1 =
@@ -1570,9 +1561,8 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
 
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
-                        DevContext.builder()
+                        DevContext.builder(CommonFixture.TEST_PACKAGE_NAME)
                                 .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(CommonFixture.TEST_PACKAGE_NAME)
                                 .build());
 
         CustomAudience customAudience1 =
@@ -1700,9 +1690,8 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
 
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
-                        DevContext.builder()
+                        DevContext.builder(CommonFixture.TEST_PACKAGE_NAME)
                                 .setDevOptionsEnabled(true)
-                                .setCallingAppPackageName(CommonFixture.TEST_PACKAGE_NAME)
                                 .build());
 
         CustomAudience customAudience1 = createCustomAudience(BUYER_DOMAIN_1, INVALID_BIDS);
@@ -5714,6 +5703,40 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
         @Override
         public boolean getFledgeAuctionServerEnabledForReportImpression() {
             return mAuctionServerEnabledReportImpression;
+        }
+    }
+
+    // TODO(b/358594078): This class is identical to the one in FetchCustomAudienceImplTest.java,
+    // it's copied here because that class was moved to the ProtectedAudience unit test package.
+    // This is a temporary fix until this test is also moved to that package.
+    public static class FetchCustomAudienceTestCallback
+            extends FetchAndJoinCustomAudienceCallback.Stub {
+        protected final CountDownLatch mCountDownLatch;
+        boolean mIsSuccess = false;
+        FledgeErrorResponse mFledgeErrorResponse;
+
+        public FetchCustomAudienceTestCallback(CountDownLatch countDownLatch) {
+            mCountDownLatch = countDownLatch;
+        }
+
+        public boolean isSuccess() {
+            return mIsSuccess;
+        }
+
+        @Override
+        public void onSuccess() throws RemoteException {
+            LoggerFactory.getFledgeLogger()
+                    .v("Reporting success to FetchCustomAudienceTestCallback.");
+            mIsSuccess = true;
+            mCountDownLatch.countDown();
+        }
+
+        @Override
+        public void onFailure(FledgeErrorResponse fledgeErrorResponse) throws RemoteException {
+            LoggerFactory.getFledgeLogger()
+                    .v("Reporting failure to FetchCustomAudienceTestCallback.");
+            mFledgeErrorResponse = fledgeErrorResponse;
+            mCountDownLatch.countDown();
         }
     }
 }

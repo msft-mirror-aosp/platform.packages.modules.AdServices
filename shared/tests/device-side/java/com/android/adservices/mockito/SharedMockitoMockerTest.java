@@ -15,36 +15,12 @@
  */
 package com.android.adservices.mockito;
 
-import static com.google.common.truth.Truth.assertWithMessage;
+import com.android.adservices.shared.meta_testing.SharedMockerTestCase;
 
-import android.content.Context;
+public final class SharedMockitoMockerTest extends SharedMockerTestCase<SharedMockitoMocker> {
 
-import com.android.adservices.shared.SharedUnitTestCase;
-import com.android.adservices.shared.common.ApplicationContextSingleton;
-
-import org.junit.Test;
-
-// NOTE: not extending SharedMockitoTestCase on purpose, so it has full control of mockito state
-public final class SharedMockitoMockerTest extends SharedUnitTestCase {
-
-    private final SharedMockitoMocker mMocker = new SharedMockitoMocker();
-
-    @Test
-    public void testSetApplicationContextSingleton() {
-        Context contextBefore = ApplicationContextSingleton.getForTests();
-        try {
-            Context context = mMocker.setApplicationContextSingleton();
-
-            assertWithMessage("context").that(context).isNotNull();
-            expect.withMessage("context").that(context).isNotSameInstanceAs(contextBefore);
-            expect.withMessage("context.getApplicationContext()")
-                    .that(context.getApplicationContext())
-                    .isSameInstanceAs(context);
-            expect.withMessage("ApplicationContextSingleton.getForTests()")
-                    .that(ApplicationContextSingleton.get())
-                    .isSameInstanceAs(context);
-        } finally {
-            ApplicationContextSingleton.setForTests(contextBefore);
-        }
+    @Override
+    protected SharedMockitoMocker getMocker() {
+        return new SharedMockitoMocker();
     }
 }

@@ -4934,6 +4934,15 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_ENABLE_DESTINATION_LIMIT_ALGORITHM_FIELD;
     }
 
+    @FeatureFlag boolean MEASUREMENT_ENABLE_AGGREGATE_VALUE_FILTERS = false;
+
+    /*
+     * Returns whether filtering in Trigger's AGGREGATABLE_VALUES is allowed.
+     */
+    default boolean getMeasurementEnableAggregateValueFilters() {
+        return MEASUREMENT_ENABLE_AGGREGATE_VALUE_FILTERS;
+    }
+
     /**
      * Default whether to limit logging for enrollment metrics to avoid performance issues. This
      * includes not logging data that requires database queries and downloading MDD files.
@@ -5035,29 +5044,6 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns whether the U18 supervised account is enabled. */
     default boolean isU18SupervisedAccountEnabled() {
         return IS_U18_SUPERVISED_ACCOUNT_ENABLED_DEFAULT;
-    }
-
-    /**
-     * Default value to determine whether {@link
-     * com.android.adservices.service.adid.AdIdCacheManager} is enabled to read AdId from and for
-     * AdIdProvider to update AdId to.
-     */
-    boolean DEFAULT_ADID_CACHE_ENABLED = false;
-
-    /**
-     * Returns if {@link com.android.adservices.service.adid.AdIdCacheManager} is enabled to read
-     * AdId from and for AdIdProvider to update AdId to.
-     *
-     * <ul>
-     *   <li>When enabled, AdIdCacheManager will read AdId from the cache and AdIdProvider will
-     *       update the cache if AdId changes.
-     *   <li>When disabled, AdIdCacheManager will call AdIdProvider to get the AdId.
-     * </ul>
-     *
-     * Returns if {@link com.android.adservices.service.adid.AdIdCacheManager} is enabled.
-     */
-    default boolean getAdIdCacheEnabled() {
-        return DEFAULT_ADID_CACHE_ENABLED;
     }
 
     long DEFAULT_AD_ID_FETCHER_TIMEOUT_MS = 50;
@@ -5745,6 +5731,36 @@ public interface Flags extends ModuleSharedFlags {
      */
     default boolean getEnrollmentProtoFileEnabled() {
         return DEFAULT_ENROLLMENT_PROTO_FILE_ENABLED;
+    }
+
+    /** Protected app signals encoding job performance improvements flag. */
+    @FeatureFlag boolean PAS_ENCODING_JOB_IMPROVEMENTS_ENABLED = false;
+
+    /** Returns whether the PAS encoding job performance improvements are enabled. */
+    default boolean getPasEncodingJobImprovementsEnabled() {
+        return PAS_ENCODING_JOB_IMPROVEMENTS_ENABLED;
+    }
+
+    /**
+     * Default value to determine whether {@link
+     * com.android.adservices.service.adid.AdIdCacheManager} cache is timeout.
+     */
+    @ConfigFlag long DEFAULT_ADID_CACHE_TTL_MS = 0;
+
+    /**
+     * Returns {@link com.android.adservices.service.adid.AdIdCacheManager} ttl(time to live) time.
+     * It will be used to expire the cached adid.
+     *
+     * <ul>
+     *   <li>if value is 0, the cache has no ttl.
+     *   <li>otherwise, check the stored time and current time inverval, if larger than the ttl,
+     *       refetch the adid.
+     * </ul>
+     *
+     * Returns ttl of {@link com.android.adservices.service.adid.AdIdCacheManager}.
+     */
+    default long getAdIdCacheTtlMs() {
+        return DEFAULT_ADID_CACHE_TTL_MS;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
