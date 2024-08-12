@@ -98,6 +98,32 @@ public class EnrollmentData {
                 mEncryptionKeyUrl);
     }
 
+    @Override
+    public String toString() {
+        return "EnrollmentData{"
+                + "mEnrollmentId='"
+                + mEnrollmentId
+                + "', mEnrolledSite='"
+                + mEnrolledSite
+                + "', mEnrolledAPIsString='"
+                + mEnrolledAPIsString
+                + "', mEnrolledAPIs="
+                + mEnrolledAPIs
+                + ", mSdkNames="
+                + mSdkNames
+                + ", mAttributionSourceRegistrationUrl="
+                + mAttributionSourceRegistrationUrl
+                + ", mAttributionTriggerRegistrationUrl="
+                + mAttributionTriggerRegistrationUrl
+                + ", mAttributionReportingUrl="
+                + mAttributionReportingUrl
+                + ", mRemarketingResponseBasedRegistrationUrl="
+                + mRemarketingResponseBasedRegistrationUrl
+                + ", mEncryptionKeyUrl='"
+                + mEncryptionKeyUrl
+                + "'}";
+    }
+
     /** Returns ID provided to the Adtech at the end of the enrollment process. */
     public String getEnrollmentId() {
         return mEnrollmentId;

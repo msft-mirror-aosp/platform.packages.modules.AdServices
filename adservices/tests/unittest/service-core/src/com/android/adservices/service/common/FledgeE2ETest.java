@@ -24,6 +24,7 @@ import static com.android.adservices.data.adselection.AdSelectionDatabase.DATABA
 import static com.android.adservices.service.adselection.AdSelectionScriptEngine.NUM_BITS_STOCHASTIC_ROUNDING;
 import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_KEY;
 import static com.android.adservices.service.adselection.ImpressionReporterLegacy.CALLER_PACKAGE_NAME_MISMATCH;
+import static com.android.adservices.service.common.AppManifestConfigCall.API_AD_SELECTION;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.DB_AD_SELECTION_FILE_SIZE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION;
@@ -2202,17 +2203,17 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
         // Make buyer impression reporting fail enrollment check
         doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
                 .when(mFledgeAuthorizationFilterMock)
-                .assertAdTechEnrolled(
-                        AdTechIdentifier.fromString(
-                                mockWebServerRule.uriForPath(BUYER_REPORTING_PATH).getHost()),
-                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION);
+                .assertAdTechFromUriEnrolled(
+                        mockWebServerRule.uriForPath(BUYER_REPORTING_PATH),
+                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                        API_AD_SELECTION);
 
         doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
                 .when(mFledgeAuthorizationFilterMock)
-                .assertAdTechEnrolled(
-                        AdTechIdentifier.fromString(
-                                mockWebServerRule.uriForPath(BUYER_REPORTING_PATH).getHost()),
-                        AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION);
+                .assertAdTechFromUriEnrolled(
+                        mockWebServerRule.uriForPath(BUYER_REPORTING_PATH),
+                        AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION,
+                        API_AD_SELECTION);
 
         joinCustomAudienceAndAssertSuccess(customAudience1);
         joinCustomAudienceAndAssertSuccess(customAudience2);

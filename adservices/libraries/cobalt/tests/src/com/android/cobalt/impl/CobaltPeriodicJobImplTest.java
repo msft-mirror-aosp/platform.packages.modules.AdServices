@@ -322,7 +322,7 @@ public class CobaltPeriodicJobImplTest {
     }
 
     @Test
-    public void generateAggregatedObservations_dayWasAlreadyGenerated_nothingUploaded()
+    public void testGenerateAggregatedObservations_dayWasAlreadyGenerated_nothingUploaded()
             throws Exception {
         // Setup the classes.
         manualSetUp();
@@ -338,7 +338,7 @@ public class CobaltPeriodicJobImplTest {
     }
 
     @Test
-    public void generateAggregatedObservations_noLoggedData_nothingUploaded() throws Exception {
+    public void testGenerateAggregatedObservations_noLoggedData_nothingUploaded() throws Exception {
         // Setup the classes.
         manualSetUp();
 
@@ -360,7 +360,8 @@ public class CobaltPeriodicJobImplTest {
     }
 
     @Test
-    public void generateAggregatedObservations_oneLoggedReport_observationSent() throws Exception {
+    public void testGenerateAggregatedObservations_oneLoggedReport_observationSent()
+            throws Exception {
         // Setup the classes.
         manualSetUp();
 
@@ -406,7 +407,66 @@ public class CobaltPeriodicJobImplTest {
     }
 
     @Test
-    public void generateAggregatedObservations_threeLoggedReports_oneEnvelopeSent()
+    public void
+            testGenerateAggregatedObservations_oneLoggedReportTooManyEventCodes_observationSent()
+                    throws Exception {
+        // Setup the classes.
+        manualSetUp();
+
+        EventVector eventVector =
+                EventVector.create(
+                        ImmutableList.<Integer>builder()
+                                .addAll(EVENT_VECTOR_1.eventCodes())
+                                .add(13)
+                                .build());
+
+        // Mark a Count report as having occurred on the previous day.
+        mDataService
+                .aggregateCount(
+                        REPORT_1,
+                        LOG_TIME_DAY,
+                        SYSTEM_PROFILE_1,
+                        eventVector,
+                        /* eventVectorBufferMax= */ 0,
+                        /* count= */ EVENT_COUNT_1)
+                .get();
+
+        // Trigger the CobaltPeriodicJob for the current day.
+        mClock.set(UPLOAD_TIME);
+        mPeriodicJob.generateAggregatedObservations().get();
+
+        // Verify the observations were all removed and the last sent day index updated.
+        assertThat(mTestOnlyDao.queryLastSentDayIndex(REPORT_1))
+                .isEqualTo(Optional.of(LOG_TIME_DAY));
+        assertThat(mTestOnlyDao.queryLastSentDayIndex(REPORT_2))
+                .isEqualTo(Optional.of(LOG_TIME_DAY));
+        assertThat(mTestOnlyDao.queryLastSentDayIndex(REPORT_3))
+                .isEqualTo(Optional.of(LOG_TIME_DAY));
+        assertThat(mTestOnlyDao.queryLastSentDayIndex(REPORT_4))
+                .isEqualTo(Optional.of(LOG_TIME_DAY));
+        assertThat(mTestOnlyDao.getObservationBatches()).isEmpty();
+
+        Observation observation =
+                ObservationFactory.createIntegerObservation(
+                        eventVector, EVENT_COUNT_1, RANDOM_BYTES);
+
+        // Verify the envelope containing the generated observation was passed to Clearcut.
+        ImmutableList<Envelope> sentEnvelopes = mUploader.getSentEnvelopes();
+        assertThat(sentEnvelopes).hasSize(1);
+        assertThat(apiKeysOf(sentEnvelopes)).containsExactly(API_KEY);
+        assertThat(getObservationsIn(sentEnvelopes.get(0)))
+                .containsExactly(
+                        REPORT_1_METADATA,
+                        ImmutableList.of(
+                                ObservationToEncrypt.newBuilder()
+                                        .setObservation(observation)
+                                        .setContributionId(RANDOM_BYTES)
+                                        .build()));
+        assertThat(mUploader.getUploadDoneCount()).isEqualTo(1);
+    }
+
+    @Test
+    public void testGenerateAggregatedObservations_threeLoggedReports_oneEnvelopeSent()
             throws Exception {
         // Setup the classes.
         manualSetUp();
@@ -629,7 +689,7 @@ public class CobaltPeriodicJobImplTest {
     }
 
     @Test
-    public void generateAggregatedObservations_eventVectorBufferMax_olderEventVectorsDropped()
+    public void testGenerateAggregatedObservations_eventVectorBufferMax_olderEventVectorsDropped()
             throws Exception {
         // 7-day report with event_vector_buffer_max set to 1.
         MetricDefinition metric =
@@ -704,8 +764,9 @@ public class CobaltPeriodicJobImplTest {
     }
 
     @Test
-    public void generateAggregatedObservations_oneFabricatedObservation_usesCurrentSystemProfile()
-            throws Exception {
+    public void
+            testGenerateAggregatedObservations_oneFabricatedObservation_usesCurrentSystemProfile()
+                    throws Exception {
         // Registry containing a single privacy-enabled report that will trigger a fabricated and
         // report participation observations.
         MetricDefinition metric =
@@ -781,7 +842,7 @@ public class CobaltPeriodicJobImplTest {
     }
 
     @Test
-    public void generateAggregatedObservations_loggerDisabled_loggedDataNotUploaded()
+    public void testGenerateAggregatedObservations_loggerDisabled_loggedDataNotUploaded()
             throws Exception {
         mEnabled = false;
 
@@ -829,7 +890,7 @@ public class CobaltPeriodicJobImplTest {
     }
 
     @Test
-    public void generateAggregatedObservations_afterMaxAggregationWindowPasses_oldDataRemoved()
+    public void testGenerateAggregatedObservations_afterMaxAggregationWindowPasses_oldDataRemoved()
             throws Exception {
         // Setup the classes.
         manualSetUp();
@@ -977,7 +1038,8 @@ public class CobaltPeriodicJobImplTest {
     }
 
     @Test
-    public void generateAggregatedObservations_stringCounts_observationsSent() throws Exception {
+    public void testGenerateAggregatedObservations_stringCounts_observationsSent()
+            throws Exception {
         // Create a registry with a STRING metric with 2 STRING_COUNTS reports: one with no system
         // profile fields and the other with the app version.
         ReportDefinition simpleReport =
@@ -1197,7 +1259,7 @@ public class CobaltPeriodicJobImplTest {
     }
 
     @Test
-    public void generateAggregatedObservations_multipleMetricTypes_observationsSent()
+    public void testGenerateAggregatedObservations_multipleMetricTypes_observationsSent()
             throws Exception {
         // Create a registry with an OCCURRENCE metric and a STRING metric. The OCCURRENCE metric
         // has a privacy enabled FLEETWIDE_OCCCURRENCE_COUNTS report and the string metric has a

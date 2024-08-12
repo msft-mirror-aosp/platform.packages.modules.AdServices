@@ -440,6 +440,71 @@ public class FledgeAuthorizationFilter {
     }
 
     /**
+     * Asserts that an {@link AdTechIdentifier} extracted from the given {@link Uri} is enrolled.
+     *
+     * <p>This method does not check for any app-specific authorization.
+     *
+     * <p>This method does not log general API called stats, since URL checks are generally done
+     * after initial API enrollment validation.
+     *
+     * @param uriForAdTech a {@link Uri} matching the ad tech to check against
+     * @param apiNameLoggingId the logging ID of the API being called
+     * @throws AdTechNotAllowedException if the ad tech is not authorized to perform the operation
+     */
+    @NonNull
+    public void assertAdTechFromUriEnrolled(
+            @NonNull Uri uriForAdTech,
+            int apiNameLoggingId,
+            @AppManifestConfigCall.ApiType int apiType)
+            throws AdTechNotAllowedException {
+        Objects.requireNonNull(uriForAdTech);
+
+        int buildId = -1;
+        int dataFileGroupStatus = 0;
+        if (mEnrollmentUtil != null) {
+            buildId = mEnrollmentUtil.getBuildId();
+            dataFileGroupStatus = mEnrollmentUtil.getFileGroupStatus();
+        }
+        int enrollmentRecordsCount = mEnrollmentDao.getEnrollmentRecordCountForLogging();
+
+        Pair<AdTechIdentifier, EnrollmentData> enrollmentResult =
+                getAdTechIdentifierEnrollmentDataPair(uriForAdTech, apiType);
+
+        if (enrollmentResult == null) {
+            sLogger.v(
+                    "Enrollment data match not found for URI \"%s\" while calling API %d",
+                    uriForAdTech, apiNameLoggingId);
+            mEnrollmentUtil.logEnrollmentFailedStats(
+                    mAdServicesLogger,
+                    buildId,
+                    dataFileGroupStatus,
+                    enrollmentRecordsCount,
+                    uriForAdTech.toString(),
+                    EnrollmentStatus.ErrorCause.ENROLLMENT_NOT_FOUND_ERROR_CAUSE.getValue());
+            throw new AdTechNotAllowedException();
+        }
+
+        AdTechIdentifier adTechIdentifier = enrollmentResult.first;
+        EnrollmentData enrollmentData = enrollmentResult.second;
+
+        if (FlagsFactory.getFlags().isEnrollmentBlocklisted(enrollmentData.getEnrollmentId())) {
+            sLogger.v(
+                    "Enrollment for ad tech identifier \"%s\" from URI \"%s\" blocklisted while"
+                            + " calling API %d",
+                    adTechIdentifier, uriForAdTech, apiNameLoggingId);
+
+            mEnrollmentUtil.logEnrollmentFailedStats(
+                    mAdServicesLogger,
+                    buildId,
+                    dataFileGroupStatus,
+                    enrollmentRecordsCount,
+                    uriForAdTech.toString(),
+                    EnrollmentStatus.ErrorCause.ENROLLMENT_BLOCKLISTED_ERROR_CAUSE.getValue());
+            throw new AdTechNotAllowedException();
+        }
+    }
+
+    /**
      * Check if a certain ad tech is enrolled for FLEDGE.
      *
      * @param adTechIdentifier the ad tech to check against
@@ -451,31 +516,52 @@ public class FledgeAuthorizationFilter {
             throws AdTechNotAllowedException {
         Objects.requireNonNull(adTechIdentifier);
 
+        int buildId = -1;
+        int dataFileGroupStatus = 0;
+        if (mEnrollmentUtil != null) {
+            buildId = mEnrollmentUtil.getBuildId();
+            dataFileGroupStatus = mEnrollmentUtil.getFileGroupStatus();
+        }
+        int enrollmentRecordsCount = mEnrollmentDao.getEnrollmentRecordCountForLogging();
+
         EnrollmentData enrollmentData =
                 mEnrollmentDao.getEnrollmentDataForFledgeByAdTechIdentifier(adTechIdentifier);
 
         if (enrollmentData == null) {
             sLogger.v(
                     "Enrollment data match not found for ad tech \"%s\" while calling API %d",
-                    adTechIdentifier.toString(), apiNameLoggingId);
+                    adTechIdentifier, apiNameLoggingId);
             mAdServicesLogger.logFledgeApiCallStats(
                     apiNameLoggingId,
                     STATUS_CALLER_NOT_ALLOWED_ENROLLMENT_MATCH_NOT_FOUND,
                     /*latencyMs=*/ 0);
 
-            int buildId = -1;
-            int dataFileGroupStatus = 0;
-            if (mEnrollmentUtil != null) {
-                buildId = mEnrollmentUtil.getBuildId();
-                dataFileGroupStatus = mEnrollmentUtil.getFileGroupStatus();
-            }
             mEnrollmentUtil.logEnrollmentFailedStats(
                     mAdServicesLogger,
                     buildId,
                     dataFileGroupStatus,
-                    mEnrollmentDao.getEnrollmentRecordCountForLogging(),
+                    enrollmentRecordsCount,
                     adTechIdentifier.toString(),
                     EnrollmentStatus.ErrorCause.ENROLLMENT_NOT_FOUND_ERROR_CAUSE.getValue());
+            throw new AdTechNotAllowedException();
+        }
+
+        if (FlagsFactory.getFlags().isEnrollmentBlocklisted(enrollmentData.getEnrollmentId())) {
+            sLogger.v(
+                    "Enrollment for ad tech identifier \"%s\" blocklisted while calling API %d",
+                    adTechIdentifier, apiNameLoggingId);
+            mAdServicesLogger.logFledgeApiCallStats(
+                    apiNameLoggingId,
+                    STATUS_CALLER_NOT_ALLOWED_ENROLLMENT_BLOCKLISTED,
+                    /* latencyMs= */ 0);
+
+            mEnrollmentUtil.logEnrollmentFailedStats(
+                    mAdServicesLogger,
+                    buildId,
+                    dataFileGroupStatus,
+                    enrollmentRecordsCount,
+                    adTechIdentifier.toString(),
+                    EnrollmentStatus.ErrorCause.ENROLLMENT_BLOCKLISTED_ERROR_CAUSE.getValue());
             throw new AdTechNotAllowedException();
         }
     }

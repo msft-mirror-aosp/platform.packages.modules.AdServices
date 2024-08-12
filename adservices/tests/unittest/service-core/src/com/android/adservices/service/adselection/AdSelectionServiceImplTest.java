@@ -40,6 +40,7 @@ import static com.android.adservices.service.adselection.AdSelectionScriptEngine
 import static com.android.adservices.service.adselection.ImpressionReporterLegacy.CALLER_PACKAGE_NAME_MISMATCH;
 import static com.android.adservices.service.adselection.ImpressionReporterLegacy.UNABLE_TO_FIND_AD_SELECTION_WITH_GIVEN_ID;
 import static com.android.adservices.service.adselection.ReportEventDisabledImpl.API_DISABLED_MESSAGE;
+import static com.android.adservices.service.common.AppManifestConfigCall.API_AD_SELECTION;
 import static com.android.adservices.service.devapi.DevContext.UNKNOWN_APP_BECAUSE_DEV_OPTIONS_IS_DISABLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO;
@@ -8352,9 +8353,10 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
         doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
                 .when(mFledgeAuthorizationFilterMock)
-                .assertAdTechEnrolled(
-                        AdTechIdentifier.fromString(buyerReportingUri.getHost()),
-                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION);
+                .assertAdTechFromUriEnrolled(
+                        buyerReportingUri,
+                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                        API_AD_SELECTION);
 
         Uri biddingLogicUri = (mMockWebServerRule.uriForPath(mFetchJavaScriptPathBuyer));
 
@@ -8481,7 +8483,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
         // enrollment flag
         doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
                 .when(mFledgeAuthorizationFilterMock)
-                .assertAdTechEnrolled(any(AdTechIdentifier.class), anyInt());
+                .assertAdTechFromUriEnrolled(any(Uri.class), anyInt(), anyInt());
 
         Uri biddingLogicUri = (mMockWebServerRule.uriForPath(mFetchJavaScriptPathBuyer));
 

@@ -17,7 +17,8 @@
 package com.android.adservices.service;
 
 import static com.android.adservices.common.DeviceConfigUtil.setAdservicesFlag;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdServicesFlag;
+import static com.android.adservices.service.DeviceConfigAndSystemPropertiesExpectations.mockGetAdServicesFlag;
+import static com.android.adservices.service.DeviceConfigAndSystemPropertiesExpectations.verifyGetBooleanDeviceConfigFlagNotCalled;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_BACK_COMPAT;
 import static com.android.adservices.service.FlagsConstants.KEY_GLOBAL_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH;
@@ -30,7 +31,6 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
-import com.android.adservices.mockito.ExtendedMockitoExpectations;
 import com.android.adservices.service.fixture.TestableSystemProperties;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -573,12 +573,12 @@ public final class PhFlagsTestHelper {
     }
 
     private static void verifyGetBooleanSystemPropertyNotCalled(String name) {
-        ExtendedMockitoExpectations.verifyGetBooleanSystemPropertyNotCalled(
+        DeviceConfigAndSystemPropertiesExpectations.verifyGetBooleanSystemPropertyNotCalled(
                 PhFlags.getSystemPropertyName(name));
     }
 
     private static void verifyGetBooleanDeviceConfigFlagNotCalled(String name) {
-        ExtendedMockitoExpectations.verifyGetBooleanDeviceConfigFlagNotCalled(
+        DeviceConfigAndSystemPropertiesExpectations.verifyGetBooleanDeviceConfigFlagNotCalled(
                 NAMESPACE_ADSERVICES, name);
     }
 

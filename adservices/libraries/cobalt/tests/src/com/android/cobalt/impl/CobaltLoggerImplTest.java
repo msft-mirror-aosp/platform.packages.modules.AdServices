@@ -201,7 +201,7 @@ public class CobaltLoggerImplTest {
     }
 
     @Test
-    public void logOccurrence_oneLog_storedInDb() throws Exception {
+    public void testLogOccurrence_oneLog_storedInDb() throws Exception {
         // Log some data.
         mLogger.logOccurrence(
                         ONE_REPORT.metricId(),
@@ -223,7 +223,7 @@ public class CobaltLoggerImplTest {
     }
 
     @Test
-    public void logOccurrence_multipleLogCalls_aggregatedInDb() throws Exception {
+    public void testLogOccurrence_multipleLogCalls_aggregatedInDb() throws Exception {
         // Log three independent calls for 2 different event vectors.
         mLogger.logOccurrence(
                         ONE_REPORT.metricId(),
@@ -263,7 +263,7 @@ public class CobaltLoggerImplTest {
     }
 
     @Test
-    public void logOccurrence_multipleReports_storedInDb() throws Exception {
+    public void testLogOccurrence_multipleReports_storedInDb() throws Exception {
         // Log some data for a metric that has multiple reports.
         mLogger.logOccurrence(
                         MULTIPLE_REPORTS_1.metricId(),
@@ -297,7 +297,7 @@ public class CobaltLoggerImplTest {
     }
 
     @Test
-    public void logOccurrence_emptyEventVector_storedInDb() throws Exception {
+    public void testLogOccurrence_emptyEventVector_storedInDb() throws Exception {
         // Log some data.
         mLogger.logOccurrence(
                         ONE_REPORT.metricId(),
@@ -319,7 +319,29 @@ public class CobaltLoggerImplTest {
     }
 
     @Test
-    public void logOccurrence_reportAllMultipleSystemProfiles_storedInDb() throws Exception {
+    public void testLogOccurrence_moreEventCodes_storedInDb() throws Exception {
+        // Log some data.
+        mLogger.logOccurrence(
+                        ONE_REPORT.metricId(),
+                        /* count= */ 100,
+                        /* eventCodes= */ ImmutableList.of(1, 2, 3))
+                .get();
+
+        // Check that only the one report has data in the DB.
+        assertThat(mTestOnlyDao.getAllAggregates())
+                .containsExactly(
+                        AggregateStoreTableRow.builder()
+                                .setReportKey(ONE_REPORT)
+                                .setDayIndex(DAY_INDEX)
+                                .setEventVector(EventVector.create(1, 2, 3))
+                                .setSystemProfile(SYSTEM_PROFILE)
+                                .setAggregateValue(
+                                        AggregateValue.newBuilder().setIntegerValue(100).build())
+                                .build());
+    }
+
+    @Test
+    public void testLogOccurrence_reportAllMultipleSystemProfiles_storedInDb() throws Exception {
         // Create an aggregate for a different system profile.
         mTestOnlyDao.insertAggregateValue(
                 AggregateStoreTableRow.builder()
@@ -363,7 +385,7 @@ public class CobaltLoggerImplTest {
     }
 
     @Test
-    public void logOccurrence_unsupportedMetricType_notStoredWithError() throws Exception {
+    public void testLogOccurrence_unsupportedMetricType_notStoredWithError() throws Exception {
         // Log data for an INTEGER metric, and check it completed with the expected error.
         ExecutionException exception =
                 assertThrows(
@@ -383,15 +405,17 @@ public class CobaltLoggerImplTest {
     @Test
     public void logOccurrence_metricNotInRegistry_skipped() throws Exception {
         mLogger.logOccurrence(
-                        /* metricId= */ 9999,
-                        /* count= */ 100,
+                        /* metricId= */ 333,
+                        /* count= */ 1,
                         /* eventCodes= */ ImmutableList.of(1, 2))
                 .get();
+
+        // Check that no report data was added to the DB.
         assertThat(mTestOnlyDao.getAllAggregates()).isEmpty();
     }
 
     @Test
-    public void logOccurrence_negativeCount_notStoredWithError() throws Exception {
+    public void testLogOccurrence_negativeCount_notStoredWithError() throws Exception {
         // Log a negative count, and check it completed with the expected error.
         ExecutionException exception =
                 assertThrows(
@@ -412,7 +436,7 @@ public class CobaltLoggerImplTest {
     }
 
     @Test
-    public void logOccurrence_negativeEventCode_notStoredWithError() throws Exception {
+    public void testLogOccurrence_negativeEventCode_notStoredWithError() throws Exception {
         // Log a negative event code, and check it completed with the expected error.
         ExecutionException exception =
                 assertThrows(
@@ -433,7 +457,7 @@ public class CobaltLoggerImplTest {
     }
 
     @Test
-    public void logOccurrence_loggerDisabled_loggedDataNotStoredInDb() throws Exception {
+    public void testLogOccurrence_loggerDisabled_loggedDataNotStoredInDb() throws Exception {
         CobaltLogger logger =
                 new CobaltLoggerImpl(
                         COBALT_REGISTRY,
@@ -458,7 +482,7 @@ public class CobaltLoggerImplTest {
     }
 
     @Test
-    public void logOccurrence_oneLogForMetricInLaterReleaseStage_dropped() throws Exception {
+    public void testLogOccurrence_oneLogForMetricInLaterReleaseStage_dropped() throws Exception {
         // Create a metric for FISHFOOD, and current release is DOGFOOD.
         MetricDefinition metric =
                 MetricDefinition.newBuilder()
@@ -500,7 +524,7 @@ public class CobaltLoggerImplTest {
     }
 
     @Test
-    public void logOccurrence_oneLogForReportInLaterReleaseStage_dropped() throws Exception {
+    public void testLogOccurrence_oneLogForReportInLaterReleaseStage_dropped() throws Exception {
         // Create a report for FISHFOOD, and current release is DOGFOOD.
         MetricDefinition metric =
                 MetricDefinition.newBuilder()
@@ -542,7 +566,7 @@ public class CobaltLoggerImplTest {
     }
 
     @Test
-    public void logString_oneLog_storedInDb() throws Exception {
+    public void testLogString_oneLog_storedInDb() throws Exception {
         // Log some data.
         mLogger.logString(
                         STRING_REPORT.metricId(),
@@ -576,7 +600,7 @@ public class CobaltLoggerImplTest {
     }
 
     @Test
-    public void logString_multipleLogCalls_aggregatedInDb() throws Exception {
+    public void testLogString_multipleLogCalls_aggregatedInDb() throws Exception {
         mLogger.logString(
                         STRING_REPORT.metricId(),
                         /* stringValue= */ "STRING_A",
@@ -647,7 +671,7 @@ public class CobaltLoggerImplTest {
     }
 
     @Test
-    public void logString_multipleReports_storedInDb() throws Exception {
+    public void testLogString_multipleReports_storedInDb() throws Exception {
         // Log some data for a metric that has multiple reports.
         mLogger.logString(
                         MULTIPLE_STRING_REPORTS_METRIC.getId(),
@@ -702,7 +726,7 @@ public class CobaltLoggerImplTest {
     }
 
     @Test
-    public void logString_emptyEventVector_storedInDb() throws Exception {
+    public void testLogString_emptyEventVector_storedInDb() throws Exception {
         // Log some data.
         mLogger.logString(
                         STRING_REPORT.metricId(),
@@ -736,7 +760,41 @@ public class CobaltLoggerImplTest {
     }
 
     @Test
-    public void logString_unsupportedMetricType_notStoredWithError() throws Exception {
+    public void testLogString_oneLogWrongNumberOfEventCodes_storedInDb() throws Exception {
+        // Log some data.
+        mLogger.logString(
+                        STRING_REPORT.metricId(),
+                        /* stringValue= */ "STRING",
+                        /* eventCodes= */ ImmutableList.of(1, 2, 3))
+                .get();
+
+        // Check the string hash appears in the string hash list for the report.
+        assertThat(mTestOnlyDao.getStringHashes())
+                .containsExactly(StringHashEntity.create(STRING_REPORT, DAY_INDEX, 0, "STRING"));
+
+        // Check that only the one report has data in the DB.
+        assertThat(mTestOnlyDao.getAllAggregates())
+                .containsExactly(
+                        AggregateStoreTableRow.builder()
+                                .setReportKey(STRING_REPORT)
+                                .setDayIndex(DAY_INDEX)
+                                .setEventVector(EventVector.create(1, 2, 3))
+                                .setSystemProfile(SYSTEM_PROFILE)
+                                .setAggregateValue(
+                                        AggregateValue.newBuilder()
+                                                .setIndexHistogram(
+                                                        LocalIndexHistogram.newBuilder()
+                                                                .addBuckets(
+                                                                        LocalIndexHistogram.Bucket
+                                                                                .newBuilder()
+                                                                                .setIndex(0)
+                                                                                .setCount(1)))
+                                                .build())
+                                .build());
+    }
+
+    @Test
+    public void testLogString_unsupportedMetricType_notStoredWithError() throws Exception {
         // Log data for an INTEGER metric, and check it completed with the expected error.
         ExecutionException exception =
                 assertThrows(
@@ -756,15 +814,17 @@ public class CobaltLoggerImplTest {
     @Test
     public void logString_metricNotInRegistry_skipped() throws Exception {
         mLogger.logString(
-                        /* metricId= */ 9999,
+                        /* metricId= */ 333,
                         /* stringValue= */ "STRING",
                         /* eventCodes= */ ImmutableList.of(1, 2))
                 .get();
+
+        // Check that no report data was added to the DB.
         assertThat(mTestOnlyDao.getAllAggregates()).isEmpty();
     }
 
     @Test
-    public void logString_negativeEventCode_notStoredWithError() throws Exception {
+    public void testLogString_negativeEventCode_notStoredWithError() throws Exception {
         // Log a negative event code, and check it completed with the expected error.
         ExecutionException exception =
                 assertThrows(
@@ -785,7 +845,7 @@ public class CobaltLoggerImplTest {
     }
 
     @Test
-    public void logString_loggerDisabled_loggedDataNotStoredInDb() throws Exception {
+    public void testLogString_loggerDisabled_loggedDataNotStoredInDb() throws Exception {
         CobaltLogger logger =
                 new CobaltLoggerImpl(
                         COBALT_REGISTRY,
@@ -810,7 +870,7 @@ public class CobaltLoggerImplTest {
     }
 
     @Test
-    public void logString_oneLogForMetricInLaterReleaseStage_dropped() throws Exception {
+    public void testLogString_oneLogForMetricInLaterReleaseStage_dropped() throws Exception {
         // Create a metric for FISHFOOD, and current release is DOGFOOD.
         MetricDefinition metric =
                 MetricDefinition.newBuilder()
@@ -853,7 +913,7 @@ public class CobaltLoggerImplTest {
     }
 
     @Test
-    public void logString_oneLogForReportInLaterReleaseStage_dropped() throws Exception {
+    public void testLogString_oneLogForReportInLaterReleaseStage_dropped() throws Exception {
         // Create a report for FISHFOOD, and current release is DOGFOOD.
         MetricDefinition metric =
                 MetricDefinition.newBuilder()

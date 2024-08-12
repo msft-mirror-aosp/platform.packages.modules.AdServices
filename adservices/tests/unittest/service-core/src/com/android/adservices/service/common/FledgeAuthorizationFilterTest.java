@@ -837,7 +837,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
     }
 
     @Test
-    public void testAdTechNotEnrolled_throwSecurityException() {
+    public void testAssertAdTechEnrolled_notEnrolled_throwsNotAllowedException() {
         when(mEnrollmentUtilMock.getBuildId()).thenReturn(-1);
         when(mEnrollmentUtilMock.getFileGroupStatus()).thenReturn(0);
         when(mEnrollmentDaoMock.getEnrollmentRecordCountForLogging()).thenReturn(3);
@@ -846,7 +846,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                 .thenReturn(null);
 
         assertThrows(
-                SecurityException.class,
+                FledgeAuthorizationFilter.AdTechNotAllowedException.class,
                 () ->
                         mChecker.assertAdTechEnrolled(
                                 CommonFixture.VALID_BUYER_1, API_NAME_LOGGING_ID));
@@ -870,16 +870,51 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
     }
 
     @Test
-    public void testAdTechEnrolled_isEnrolled() {
+    public void testAssertAdTechEnrolled_isEnrolled_success() {
         when(mEnrollmentDaoMock.getEnrollmentDataForFledgeByAdTechIdentifier(
                         CommonFixture.VALID_BUYER_1))
                 .thenReturn(ENROLLMENT_DATA);
 
         mChecker.assertAdTechEnrolled(CommonFixture.VALID_BUYER_1, API_NAME_LOGGING_ID);
 
+        verify(mEnrollmentDaoMock).getEnrollmentRecordCountForLogging();
         verify(mEnrollmentDaoMock)
                 .getEnrollmentDataForFledgeByAdTechIdentifier(CommonFixture.VALID_BUYER_1);
         verifyNoMoreInteractions(mEnrollmentDaoMock);
+    }
+
+    @Test
+    public void testAssertAdTechEnrolled_blocklisted_throwsNotAllowedException() {
+        when(mEnrollmentUtilMock.getBuildId()).thenReturn(-1);
+        when(mEnrollmentUtilMock.getFileGroupStatus()).thenReturn(0);
+        when(mEnrollmentDaoMock.getEnrollmentRecordCountForLogging()).thenReturn(3);
+        when(mEnrollmentDaoMock.getEnrollmentDataForFledgeByAdTechIdentifier(
+                        CommonFixture.VALID_BUYER_1))
+                .thenReturn(ENROLLMENT_DATA);
+        when(mFlags.isEnrollmentBlocklisted(ENROLLMENT_ID)).thenReturn(true);
+
+        assertThrows(
+                FledgeAuthorizationFilter.AdTechNotAllowedException.class,
+                () ->
+                        mChecker.assertAdTechEnrolled(
+                                CommonFixture.VALID_BUYER_1, API_NAME_LOGGING_ID));
+
+        verify(mEnrollmentDaoMock).getEnrollmentRecordCountForLogging();
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(API_NAME_LOGGING_ID),
+                        eq(STATUS_CALLER_NOT_ALLOWED_ENROLLMENT_BLOCKLISTED),
+                        anyInt());
+        verify(mEnrollmentUtilMock)
+                .logEnrollmentFailedStats(
+                        eq(mAdServicesLoggerMock),
+                        eq(-1),
+                        eq(0),
+                        eq(3),
+                        eq(CommonFixture.VALID_BUYER_1.toString()),
+                        eq(
+                                EnrollmentStatus.ErrorCause.ENROLLMENT_BLOCKLISTED_ERROR_CAUSE
+                                        .getValue()));
     }
 
     @Test
@@ -1167,5 +1202,133 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
         assertEquals(
                 String.format(Locale.ENGLISH, INVALID_API_TYPE, INVALID_API),
                 exception.getMessage());
+    }
+
+    @Test
+    public void testAssertAdTechFromUriEnrolled_nullUri_throwsNullPointerException() {
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        mChecker.assertAdTechFromUriEnrolled(
+                                /* uriForAdTech= */ null,
+                                API_NAME_LOGGING_ID,
+                                API_CUSTOM_AUDIENCES));
+
+        verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
+    }
+
+    @Test
+    public void testAssertAdTechFromUriEnrolled_success() {
+        when(mEnrollmentDaoMock.getEnrollmentDataForFledgeByMatchingAdTechIdentifier(
+                        URI_FOR_AD_TECH))
+                .thenReturn(new Pair<>(CommonFixture.VALID_BUYER_1, ENROLLMENT_DATA));
+
+        mChecker.assertAdTechFromUriEnrolled(
+                URI_FOR_AD_TECH, API_NAME_LOGGING_ID, API_CUSTOM_AUDIENCES);
+
+        verify(mEnrollmentDaoMock).getEnrollmentRecordCountForLogging();
+        verify(mEnrollmentDaoMock)
+                .getEnrollmentDataForFledgeByMatchingAdTechIdentifier(URI_FOR_AD_TECH);
+        verifyNoMoreInteractions(mEnrollmentDaoMock);
+    }
+
+    @Test
+    public void testAssertAdTechFromUriEnrolled_notEnrolled_throwsNotAllowedException() {
+        when(mEnrollmentDaoMock.getEnrollmentDataForFledgeByMatchingAdTechIdentifier(
+                        URI_FOR_AD_TECH))
+                .thenReturn(null);
+
+        assertThrows(
+                FledgeAuthorizationFilter.AdTechNotAllowedException.class,
+                () ->
+                        mChecker.assertAdTechFromUriEnrolled(
+                                URI_FOR_AD_TECH, API_NAME_LOGGING_ID, API_CUSTOM_AUDIENCES));
+
+        verify(mEnrollmentDaoMock).getEnrollmentRecordCountForLogging();
+        verify(mEnrollmentDaoMock)
+                .getEnrollmentDataForFledgeByMatchingAdTechIdentifier(URI_FOR_AD_TECH);
+        verifyNoMoreInteractions(mEnrollmentDaoMock);
+    }
+
+    @Test
+    public void testAssertAdTechFromUriEnrolled_notEnrolled_logsEnrollmentFailedStats() {
+        when(mEnrollmentUtilMock.getBuildId()).thenReturn(2);
+        when(mEnrollmentUtilMock.getFileGroupStatus()).thenReturn(1);
+        when(mEnrollmentDaoMock.getEnrollmentRecordCountForLogging()).thenReturn(3);
+        when(mEnrollmentDaoMock.getEnrollmentDataForFledgeByMatchingAdTechIdentifier(
+                        URI_FOR_AD_TECH))
+                .thenReturn(null);
+
+        assertThrows(
+                FledgeAuthorizationFilter.AdTechNotAllowedException.class,
+                () ->
+                        mChecker.assertAdTechFromUriEnrolled(
+                                URI_FOR_AD_TECH, API_NAME_LOGGING_ID, API_CUSTOM_AUDIENCES));
+
+        verify(mEnrollmentDaoMock).getEnrollmentRecordCountForLogging();
+        verify(mEnrollmentDaoMock)
+                .getEnrollmentDataForFledgeByMatchingAdTechIdentifier(URI_FOR_AD_TECH);
+        verify(mEnrollmentUtilMock)
+                .logEnrollmentFailedStats(
+                        eq(mAdServicesLoggerMock),
+                        eq(2),
+                        eq(1),
+                        eq(3),
+                        eq(URI_FOR_AD_TECH.toString()),
+                        eq(
+                                EnrollmentStatus.ErrorCause.ENROLLMENT_NOT_FOUND_ERROR_CAUSE
+                                        .getValue()));
+        verifyNoMoreInteractions(mEnrollmentDaoMock);
+    }
+
+    @Test
+    public void testAssertAdTechFromUriEnrolled_blocklisted_throwsNotAllowedException() {
+        when(mEnrollmentDaoMock.getEnrollmentDataForFledgeByMatchingAdTechIdentifier(
+                        URI_FOR_AD_TECH))
+                .thenReturn(new Pair<>(CommonFixture.VALID_BUYER_1, ENROLLMENT_DATA));
+        when(mFlags.isEnrollmentBlocklisted(ENROLLMENT_ID)).thenReturn(true);
+
+        assertThrows(
+                FledgeAuthorizationFilter.AdTechNotAllowedException.class,
+                () ->
+                        mChecker.assertAdTechFromUriEnrolled(
+                                URI_FOR_AD_TECH, API_NAME_LOGGING_ID, API_CUSTOM_AUDIENCES));
+
+        verify(mEnrollmentDaoMock).getEnrollmentRecordCountForLogging();
+        verify(mEnrollmentDaoMock)
+                .getEnrollmentDataForFledgeByMatchingAdTechIdentifier(URI_FOR_AD_TECH);
+        verifyNoMoreInteractions(mEnrollmentDaoMock);
+    }
+
+    @Test
+    public void testAssertAdTechFromUriEnrolled_blocklisted_logsEnrollmentFailedStats() {
+        when(mEnrollmentUtilMock.getBuildId()).thenReturn(2);
+        when(mEnrollmentUtilMock.getFileGroupStatus()).thenReturn(1);
+        when(mEnrollmentDaoMock.getEnrollmentRecordCountForLogging()).thenReturn(3);
+        when(mEnrollmentDaoMock.getEnrollmentDataForFledgeByMatchingAdTechIdentifier(
+                        URI_FOR_AD_TECH))
+                .thenReturn(new Pair<>(CommonFixture.VALID_BUYER_1, ENROLLMENT_DATA));
+        when(mFlags.isEnrollmentBlocklisted(ENROLLMENT_ID)).thenReturn(true);
+
+        assertThrows(
+                FledgeAuthorizationFilter.AdTechNotAllowedException.class,
+                () ->
+                        mChecker.assertAdTechFromUriEnrolled(
+                                URI_FOR_AD_TECH, API_NAME_LOGGING_ID, API_CUSTOM_AUDIENCES));
+
+        verify(mEnrollmentDaoMock).getEnrollmentRecordCountForLogging();
+        verify(mEnrollmentDaoMock)
+                .getEnrollmentDataForFledgeByMatchingAdTechIdentifier(URI_FOR_AD_TECH);
+        verify(mEnrollmentUtilMock)
+                .logEnrollmentFailedStats(
+                        eq(mAdServicesLoggerMock),
+                        eq(2),
+                        eq(1),
+                        eq(3),
+                        eq(URI_FOR_AD_TECH.toString()),
+                        eq(
+                                EnrollmentStatus.ErrorCause.ENROLLMENT_BLOCKLISTED_ERROR_CAUSE
+                                        .getValue()));
+        verifyNoMoreInteractions(mEnrollmentDaoMock);
     }
 }
