@@ -410,7 +410,6 @@ public class ReportAndRegisterEventImplTest {
         ArgumentCaptor<ReportInteractionApiCalledStats> argumentCaptor =
                 ArgumentCaptor.forClass(ReportInteractionApiCalledStats.class);
 
-
         enableARA();
         persistReportingArtifacts();
 
