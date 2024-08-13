@@ -28,6 +28,8 @@ import java.util.concurrent.ThreadLocalRandom;
 public final class Tracing {
     public static final String DB_CUSTOM_AUDIENCE_TO_JSON = "DBCustomAudience#toJson";
     public static final String DB_CUSTOM_AUDIENCE_FROM_JSON = "DBCustomAudience#fromJson";
+    public static final String AD_SELECTION_SERVICE_FILTER =
+            "AdSelectionServiceFilter#filterRequest";
     public static final String FILTERER_FILTER_CA = "FrequencyCapAdFilterer#FilterCustomAudiences";
     public static final String FILTERER_FOR_EACH_CA =
             "FrequencyCapAdFilterer#ForEachCustomAudience";
