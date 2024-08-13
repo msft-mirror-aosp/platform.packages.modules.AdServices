@@ -16,15 +16,12 @@
 package com.android.adservices.mockito;
 
 import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
-import static com.android.adservices.mockito.MockitoExpectations.getSpiedAdServicesJobServiceLogger;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 
@@ -151,23 +148,28 @@ public final class ExtendedMockitoExpectations {
                 .when(() -> invocation.run());
     }
 
-    /** Mocks {@link AdServicesJobServiceLogger} to not actually log the stats to server. */
+    /**
+     * Mocks {@link AdServicesJobServiceLogger} to not actually log the stats to server.
+     *
+     * @deprecated Use {@link AdServicesJobMocker#mockNoOpAdServicesJobServiceLogger(Context,
+     *     Flags))} instead.
+     */
+    @Deprecated
     public static AdServicesJobServiceLogger mockAdServicesJobServiceLogger(
             Context context, Flags flags) {
-        AdServicesJobServiceLogger logger = getSpiedAdServicesJobServiceLogger(context, flags);
-
-        mockGetAdServicesJobServiceLogger(logger);
-        doNothing().when(logger).recordOnStartJob(anyInt());
-        doNothing().when(logger).recordOnStopJob(any(), anyInt(), anyBoolean());
-        doNothing().when(logger).recordJobSkipped(anyInt(), anyInt());
-        doNothing().when(logger).recordJobFinished(anyInt(), anyBoolean(), anyBoolean());
-
-        return logger;
+        return MockitoExpectations.jobMocker.mockNoOpAdServicesJobServiceLogger(context, flags);
     }
 
-    /** Mocks {@link AdServicesJobServiceLogger#getInstance()} to return a mocked logger. */
+    /**
+     * Mocks {@link AdServicesJobServiceLogger#getInstance()} to return a mocked logger.
+     *
+     * @deprecated Use {@link
+     *     AdServicesJobMocker#mockGetAdServicesJobServiceLogger(AdServicesJobServiceLogger)}
+     *     instead.
+     */
+    @Deprecated
     public static void mockGetAdServicesJobServiceLogger(AdServicesJobServiceLogger logger) {
-        doReturn(logger).when(() -> AdServicesJobServiceLogger.getInstance());
+        MockitoExpectations.jobMocker.mockGetAdServicesJobServiceLogger(logger);
     }
 
     /**

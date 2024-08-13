@@ -19,7 +19,7 @@ public final class MockitoExpectationJobMockerTest
         extends AdServicesJobMockerTestCase<AdServicesMockitoJobMocker> {
 
     @Override
-    protected AdServicesMockitoJobMocker getMocker() {
+    protected AdServicesMockitoJobMocker getMocker(StaticClassChecker checker) {
         return MockitoExpectations.jobMocker;
     }
 }
