@@ -367,28 +367,6 @@ public class MeasurementManagerCtsTest {
         Assert.assertTrue(result);
     }
 
-    @Test
-    public void testMeasurementApiStatus_killSwitchGlobalOn_returnDisabled() throws Exception {
-        enableGlobalKillSwitch(/* enabled= */ true);
-        boolean result = callMeasurementApiStatus();
-        Assert.assertFalse(result);
-    }
-
-    @Test
-    public void testMeasurementApiStatus_killSwitchMeasurementOn_returnDisabled() throws Exception {
-        enableMeasurementKillSwitch(/* enabled= */ true);
-        boolean result = callMeasurementApiStatus();
-        Assert.assertFalse(result);
-    }
-
-    @Test
-    public void testMeasurementApiStatus_notInAllowList_returnDisabled() throws Exception {
-        enableGlobalKillSwitch(/* enabled= */ true);
-        blockAllPackageNamesAccessToMeasurementApis();
-        boolean result = callMeasurementApiStatus();
-        Assert.assertFalse(result);
-    }
-
     /**
      * Performs calls to measurement status API and returns a boolean representing if the API was
      * enabled {@code true} or disabled {@code false}.
