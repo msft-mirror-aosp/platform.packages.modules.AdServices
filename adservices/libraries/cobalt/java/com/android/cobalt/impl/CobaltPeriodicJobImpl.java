@@ -30,6 +30,7 @@ import com.android.cobalt.data.ObservationGenerator;
 import com.android.cobalt.data.ObservationStoreEntity;
 import com.android.cobalt.data.ReportKey;
 import com.android.cobalt.domain.Project;
+import com.android.cobalt.logging.CobaltOperationLogger;
 import com.android.cobalt.observations.ObservationGeneratorFactory;
 import com.android.cobalt.observations.PrivacyGenerator;
 import com.android.cobalt.system.CobaltClock;
@@ -106,6 +107,7 @@ public final class CobaltPeriodicJobImpl implements CobaltPeriodicJob {
             @NonNull Encrypter encrypter,
             @NonNull ByteString apiKey,
             @NonNull Duration uploadDoneDelay,
+            @NonNull CobaltOperationLogger operationLogger,
             boolean enabled) {
         mProject = Objects.requireNonNull(project);
         mReleaseStage = Objects.requireNonNull(releaseStage);
@@ -125,7 +127,8 @@ public final class CobaltPeriodicJobImpl implements CobaltPeriodicJob {
                         Objects.requireNonNull(systemData),
                         mDataService.getDaoBuildingBlocks(),
                         Objects.requireNonNull(privacyGenerator),
-                        Objects.requireNonNull(secureRandom));
+                        Objects.requireNonNull(secureRandom),
+                        Objects.requireNonNull(operationLogger));
     }
 
     /**
