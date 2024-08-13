@@ -31,7 +31,6 @@ import android.app.job.JobParameters;
 import android.app.job.JobService;
 import android.util.Log;
 
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
@@ -129,16 +128,6 @@ public final class MockitoExpectations {
         callback.assertLoggingFinished();
 
         verify(logger).recordOnStopJob(any(), anyInt(), anyBoolean());
-    }
-
-    /**
-     * Mocks a call to {@link Flags#getBackgroundJobsLoggingKillSwitch()}, returning {@code value}.
-     *
-     * @deprecated use {@code mocker.mockGetBackgroundJobsLoggingKillSwitch()} instead.
-     */
-    @Deprecated
-    public static void mockBackgroundJobsLoggingKillSwitch(Flags flag, boolean value) {
-        ExtendedMockitoExpectations.mocker.mockGetBackgroundJobsLoggingKillSwitch(flag, value);
     }
 
     /**

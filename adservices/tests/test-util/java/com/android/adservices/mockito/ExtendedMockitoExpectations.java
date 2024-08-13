@@ -15,11 +15,7 @@
  */
 package com.android.adservices.mockito;
 
-import android.content.Context;
-
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.service.Flags;
-import com.android.adservices.spe.AdServicesJobServiceLogger;
 
 /**
  * Provides Mockito expectation for common calls.
@@ -45,18 +41,6 @@ public final class ExtendedMockitoExpectations {
             new AdServicesExtendedMockitoTestCase.Mocker(new StaticClassChecker() {});
 
     // CHECKSTYLE:ON
-
-    /**
-     * Mocks {@link AdServicesJobServiceLogger} to not actually log the stats to server.
-     *
-     * @deprecated Use {@link AdServicesJobMocker#mockNoOpAdServicesJobServiceLogger(Context,
-     *     Flags))} instead.
-     */
-    @Deprecated
-    public static AdServicesJobServiceLogger mockAdServicesJobServiceLogger(
-            Context context, Flags flags) {
-        return MockitoExpectations.jobMocker.mockNoOpAdServicesJobServiceLogger(context, flags);
-    }
 
     private ExtendedMockitoExpectations() {
         throw new UnsupportedOperationException("Provides only static methods");

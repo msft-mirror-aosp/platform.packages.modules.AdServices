@@ -15,15 +15,7 @@
  */
 package com.android.adservices.mockito;
 
-import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
-
-import static org.junit.Assert.assertThrows;
-
 import com.android.adservices.common.AdServicesMockitoTestCase;
-import com.android.adservices.service.Flags;
-
-import org.junit.Test;
-import org.mockito.Mock;
 
 // NOTE: ErrorProne complains that mock objects should not be called directly, but in this test
 // they need to, as the test verifies that they would return what is set by the mock
@@ -31,21 +23,7 @@ import org.mockito.Mock;
 @SuppressWarnings("DirectInvocationOnMock")
 public final class MockitoExpectationsTest extends AdServicesMockitoTestCase {
 
-    @Mock private Flags mMockFlags;
-
-    @Test
-    public void testMockBackgroundJobsLoggingKillSwitch_null() {
-        assertThrows(
-                NullPointerException.class, () -> mockBackgroundJobsLoggingKillSwitch(null, true));
-    }
-
-    @Test
-    public void testMockBackgroundJobsLoggingKillSwitch() {
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, true);
-
-        boolean result = mMockFlags.getBackgroundJobsLoggingKillSwitch();
-
-        expect.withMessage("flags.getBackgroundJobsLoggingKillSwitch()").that(result).isTrue();
-    }
-
+    // TODO(b/314969513): this test class is currently empty because the methods that were tested
+    // already moved away, and the remaining methods are not tested yet.
+    // It should be removed once MockitoExpectations is removed
 }

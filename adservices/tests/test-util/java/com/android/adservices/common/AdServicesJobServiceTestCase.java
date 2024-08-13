@@ -31,7 +31,8 @@ public abstract class AdServicesJobServiceTestCase extends AdServicesExtendedMoc
 
     public final AdServicesJobMocker jobMocker = new AdServicesMockitoJobMocker(extendedMockito);
 
-    // TODO(b/314969513): consider inlining after all classes are refactored
+    // TODO(b/314969513, 354932043): consider inlining and/or renaming helpers below after all
+    // classes are refactored.
     /**
      * Convenience method to call {@link
      * AdServicesJobMocker#mockJobSchedulingLogger(AdServicesJobServiceFactory)} using {@link
