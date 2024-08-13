@@ -34,7 +34,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.quality.Strictness;
 
 // NOTE: ErrorProne complains that mock objects should not be called directly, but in this test
 // they need to, as the test verifies that they would return what is set by the mock
@@ -56,9 +55,7 @@ public abstract class AdServicesStaticMockerTestCase<T extends AdServicesStaticM
 
     @Rule(order = 11)
     public final AdServicesExtendedMockitoRule extendedMockito =
-            new AdServicesExtendedMockitoRule.Builder(this)
-                    .setStrictness(Strictness.LENIENT)
-                    .build();
+            new AdServicesExtendedMockitoRule.Builder(this).build();
 
     protected abstract T getMocker(StaticClassChecker checker);
 
