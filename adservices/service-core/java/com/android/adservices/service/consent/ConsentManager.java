@@ -90,6 +90,7 @@ import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
 import com.android.modules.utils.build.SdkLevel;
 
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
@@ -136,11 +137,11 @@ public class ConsentManager {
     public static final int MANUAL_INTERACTIONS_RECORDED = 1;
 
     private final Flags mFlags;
-    private final TopicsWorker mTopicsWorker;
+    private final Supplier<TopicsWorker> mTopicsWorkerSupplier;
     private final AtomicFileDatastore mDatastore;
-    private final AppConsentDao mAppConsentDao;
-    private final EnrollmentDao mEnrollmentDao;
-    private final MeasurementImpl mMeasurementImpl;
+    private final Supplier<AppConsentDao> mAppConsentDaoSupplier;
+    private final Supplier<EnrollmentDao> mEnrollmentDaoSupplier;
+    private final Supplier<MeasurementImpl> mMeasurementSupplier;
     private final CustomAudienceDao mCustomAudienceDao;
     private final AppInstallDao mAppInstallDao;
     private final ProtectedSignalsDao mProtectedSignalsDao;
@@ -156,10 +157,10 @@ public class ConsentManager {
     private final ReadWriteLock mReadWriteLock = new ReentrantReadWriteLock();
 
     ConsentManager(
-            @NonNull TopicsWorker topicsWorker,
-            @NonNull AppConsentDao appConsentDao,
-            @NonNull EnrollmentDao enrollmentDao,
-            @NonNull MeasurementImpl measurementImpl,
+            @NonNull Supplier<TopicsWorker> topicsWorkerSupplier,
+            @NonNull Supplier<AppConsentDao> appConsentDaoSupplier,
+            @NonNull Supplier<EnrollmentDao> enrollmentDaoSupplier,
+            @NonNull Supplier<MeasurementImpl> measurementSupplier,
             @NonNull CustomAudienceDao customAudienceDao,
             @NonNull AppInstallDao appInstallDao,
             @NonNull ProtectedSignalsDao protectedSignalsDao,
@@ -174,10 +175,12 @@ public class ConsentManager {
             @Flags.ConsentSourceOfTruth int consentSourceOfTruth,
             boolean enableAppsearchConsentData,
             boolean enableAdExtServiceConsentData) {
-        mTopicsWorker = Objects.requireNonNull(topicsWorker, "topicsWorker cannot be null");
-        mAppConsentDao = Objects.requireNonNull(appConsentDao, "appConsentDao cannot be null");
-        mMeasurementImpl =
-                Objects.requireNonNull(measurementImpl, "measurementImpl cannot be null");
+        mTopicsWorkerSupplier =
+                Objects.requireNonNull(topicsWorkerSupplier, "topicsWorker cannot be null");
+        mAppConsentDaoSupplier =
+                Objects.requireNonNull(appConsentDaoSupplier, "appConsentDao cannot be null");
+        mMeasurementSupplier =
+                Objects.requireNonNull(measurementSupplier, "measurementImpl cannot be null");
         mCustomAudienceDao =
                 Objects.requireNonNull(customAudienceDao, "customAudienceDao cannot be null");
         mAppInstallDao = Objects.requireNonNull(appInstallDao, "appInstallDao cannot be null");
@@ -203,11 +206,9 @@ public class ConsentManager {
         if (enableAdExtServiceConsentData) {
             Objects.requireNonNull(adExtDataManager, "adExtDataManager cannot be null");
         }
-
         mAdServicesManager = adServicesManager;
-        mEnrollmentDao = enrollmentDao;
+        mEnrollmentDaoSupplier = enrollmentDaoSupplier;
         mUxStatesDao = uxStatesDao;
-
         mAppSearchConsentManager = appSearchConsentManager;
         mAdExtDataManager = adExtDataManager;
         mFlags = flags;
@@ -229,12 +230,14 @@ public class ConsentManager {
             synchronized (LOCK) {
                 if (sConsentManager == null) {
                     // Execute one-time consent migration if needed.
+                    LogUtil.d("start consent manager initialization");
                     int consentSourceOfTruth = FlagsFactory.getFlags().getConsentSourceOfTruth();
                     AtomicFileDatastore datastore =
                             createAndInitializeDataStore(
                                     context, AdServicesErrorLoggerImpl.getInstance());
                     AdServicesManager adServicesManager = AdServicesManager.getInstance(context);
-                    AppConsentDao appConsentDao = AppConsentDao.getInstance();
+                    Supplier<AppConsentDao> appConsentDaoSupplier =
+                            AppConsentDao.getSingletonSupplier();
 
                     // It is possible that the old value of the flag lingers after OTA until the
                     // first
@@ -255,7 +258,7 @@ public class ConsentManager {
                         handleConsentMigrationFromAppSearchIfNeeded(
                                 context,
                                 datastore,
-                                appConsentDao,
+                                appConsentDaoSupplier.get(),
                                 appSearchConsentManager,
                                 adServicesManager,
                                 statsdAdServicesLogger);
@@ -290,13 +293,12 @@ public class ConsentManager {
                             adServicesManager,
                             statsdAdServicesLogger,
                             consentSourceOfTruth);
-
                     sConsentManager =
                             new ConsentManager(
-                                    TopicsWorker.getInstance(),
-                                    appConsentDao,
-                                    EnrollmentDao.getInstance(),
-                                    MeasurementImpl.getInstance(),
+                                    TopicsWorker.getSingletonSupplier(),
+                                    appConsentDaoSupplier,
+                                    EnrollmentDao.getSingletonSupplier(),
+                                    MeasurementImpl.getSingletonSupplier(),
                                     CustomAudienceDatabase.getInstance().customAudienceDao(),
                                     SharedStorageDatabase.getInstance().appInstallDao(),
                                     ProtectedSignalsDatabase.getInstance().protectedSignalsDao(),
@@ -312,6 +314,7 @@ public class ConsentManager {
                                     consentSourceOfTruth,
                                     enableAppsearchConsentData,
                                     enableAdExtServiceConsentData);
+                    LogUtil.d("finish consent manager initialization");
                 }
             }
         }
@@ -582,7 +585,7 @@ public class ConsentManager {
         if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
             return ConsentManagerV2.getInstance().getKnownTopicsWithConsent();
         }
-        return mTopicsWorker.getKnownTopicsWithConsent();
+        return mTopicsWorkerSupplier.get().getKnownTopicsWithConsent();
     }
 
     /**
@@ -596,7 +599,7 @@ public class ConsentManager {
         if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
             return ConsentManagerV2.getInstance().getTopicsWithRevokedConsent();
         }
-        return mTopicsWorker.getTopicsWithRevokedConsent();
+        return mTopicsWorkerSupplier.get().getTopicsWithRevokedConsent();
     }
 
     /**
@@ -611,7 +614,7 @@ public class ConsentManager {
             ConsentManagerV2.getInstance().revokeConsentForTopic(topic);
             return;
         }
-        mTopicsWorker.revokeConsentForTopic(topic);
+        mTopicsWorkerSupplier.get().revokeConsentForTopic(topic);
     }
 
     /**
@@ -626,7 +629,7 @@ public class ConsentManager {
             ConsentManagerV2.getInstance().restoreConsentForTopic(topic);
             return;
         }
-        mTopicsWorker.restoreConsentForTopic(topic);
+        mTopicsWorkerSupplier.get().restoreConsentForTopic(topic);
     }
 
     /** Wipes out all the data gathered by Topics API but blocked topics. */
@@ -637,7 +640,7 @@ public class ConsentManager {
         }
         ArrayList<String> tablesToBlock = new ArrayList<>();
         tablesToBlock.add(TopicsTables.BlockedTopicsContract.TABLE);
-        mTopicsWorker.clearAllTopicsData(tablesToBlock);
+        mTopicsWorkerSupplier.get().clearAllTopicsData(tablesToBlock);
     }
 
     /** Wipes out all the data gathered by Topics API. */
@@ -646,7 +649,7 @@ public class ConsentManager {
             ConsentManagerV2.getInstance().resetTopicsAndBlockedTopics();
             return;
         }
-        mTopicsWorker.clearAllTopicsData(new ArrayList<>());
+        mTopicsWorkerSupplier.get().clearAllTopicsData(new ArrayList<>());
     }
 
     /**
@@ -661,7 +664,7 @@ public class ConsentManager {
                 /* defaultReturn= */ ImmutableList.of(),
                 () ->
                         ImmutableList.copyOf(
-                                mAppConsentDao.getKnownAppsWithConsent().stream()
+                                mAppConsentDaoSupplier.get().getKnownAppsWithConsent().stream()
                                         .map(App::create)
                                         .collect(Collectors.toList())),
                 () ->
@@ -669,7 +672,9 @@ public class ConsentManager {
                                 mAdServicesManager
                                         .getKnownAppsWithConsent(
                                                 new ArrayList<>(
-                                                        mAppConsentDao.getInstalledPackages()))
+                                                        mAppConsentDaoSupplier
+                                                                .get()
+                                                                .getInstalledPackages()))
                                         .stream()
                                         .map(App::create)
                                         .collect(Collectors.toList())),
@@ -696,7 +701,7 @@ public class ConsentManager {
                 /* defaultReturn= */ ImmutableList.of(),
                 () ->
                         ImmutableList.copyOf(
-                                mAppConsentDao.getAppsWithRevokedConsent().stream()
+                                mAppConsentDaoSupplier.get().getAppsWithRevokedConsent().stream()
                                         .map(App::create)
                                         .collect(Collectors.toList())),
                 () ->
@@ -704,7 +709,9 @@ public class ConsentManager {
                                 mAdServicesManager
                                         .getAppsWithRevokedConsent(
                                                 new ArrayList<>(
-                                                        mAppConsentDao.getInstalledPackages()))
+                                                        mAppConsentDaoSupplier
+                                                                .get()
+                                                                .getInstalledPackages()))
                                         .stream()
                                         .map(App::create)
                                         .collect(Collectors.toList())),
@@ -733,11 +740,13 @@ public class ConsentManager {
             return;
         }
         executeSettersByConsentSourceOfTruth(
-                () -> mAppConsentDao.setConsentForApp(app.getPackageName(), true),
+                () -> mAppConsentDaoSupplier.get().setConsentForApp(app.getPackageName(), true),
                 () ->
                         mAdServicesManager.setConsentForApp(
                                 app.getPackageName(),
-                                mAppConsentDao.getUidForInstalledPackageName(app.getPackageName()),
+                                mAppConsentDaoSupplier
+                                        .get()
+                                        .getUidForInstalledPackageName(app.getPackageName()),
                                 true),
                 () -> mAppSearchConsentManager.revokeConsentForApp(app),
                 () -> {
@@ -781,11 +790,13 @@ public class ConsentManager {
             return;
         }
         executeSettersByConsentSourceOfTruth(
-                () -> mAppConsentDao.setConsentForApp(app.getPackageName(), false),
+                () -> mAppConsentDaoSupplier.get().setConsentForApp(app.getPackageName(), false),
                 () ->
                         mAdServicesManager.setConsentForApp(
                                 app.getPackageName(),
-                                mAppConsentDao.getUidForInstalledPackageName(app.getPackageName()),
+                                mAppConsentDaoSupplier
+                                        .get()
+                                        .getUidForInstalledPackageName(app.getPackageName()),
                                 false),
                 () -> mAppSearchConsentManager.restoreConsentForApp(app),
                 () -> {
@@ -811,7 +822,7 @@ public class ConsentManager {
             return;
         }
         executeSettersByConsentSourceOfTruth(
-                () -> mAppConsentDao.clearAllConsentData(),
+                () -> mAppConsentDaoSupplier.get().clearAllConsentData(),
                 () -> mAdServicesManager.clearAllAppConsentData(),
                 () -> mAppSearchConsentManager.clearAllAppConsentData(),
                 () -> {
@@ -851,7 +862,7 @@ public class ConsentManager {
             return;
         }
         executeSettersByConsentSourceOfTruth(
-                () -> mAppConsentDao.clearKnownAppsWithConsent(),
+                () -> mAppConsentDaoSupplier.get().clearKnownAppsWithConsent(),
                 () -> mAdServicesManager.clearKnownAppsWithConsent(),
                 () -> mAppSearchConsentManager.clearKnownAppsWithConsent(),
                 () -> {
@@ -906,7 +917,7 @@ public class ConsentManager {
             switch (mConsentSourceOfTruth) {
                 case Flags.PPAPI_ONLY:
                     try {
-                        return mAppConsentDao.isConsentRevokedForApp(packageName);
+                        return mAppConsentDaoSupplier.get().isConsentRevokedForApp(packageName);
                     } catch (IOException exception) {
                         LogUtil.e(exception, "FLEDGE consent check failed due to IOException");
                     }
@@ -915,7 +926,10 @@ public class ConsentManager {
                     // Intentional fallthrough
                 case Flags.PPAPI_AND_SYSTEM_SERVER:
                     return mAdServicesManager.isConsentRevokedForApp(
-                            packageName, mAppConsentDao.getUidForInstalledPackageName(packageName));
+                            packageName,
+                            mAppConsentDaoSupplier
+                                    .get()
+                                    .getUidForInstalledPackageName(packageName));
                 case Flags.APPSEARCH_ONLY:
                     if (mFlags.getEnableAppsearchConsentData()) {
                         return mAppSearchConsentManager.isFledgeConsentRevokedForApp(packageName);
@@ -967,7 +981,9 @@ public class ConsentManager {
             switch (mConsentSourceOfTruth) {
                 case Flags.PPAPI_ONLY:
                     try {
-                        return mAppConsentDao.setConsentForAppIfNew(packageName, false);
+                        return mAppConsentDaoSupplier
+                                .get()
+                                .setConsentForAppIfNew(packageName, false);
                     } catch (IOException exception) {
                         LogUtil.e(exception, "FLEDGE consent check failed due to IOException");
                         return true;
@@ -975,18 +991,18 @@ public class ConsentManager {
                 case Flags.SYSTEM_SERVER_ONLY:
                     return mAdServicesManager.setConsentForAppIfNew(
                             packageName,
-                            mAppConsentDao.getUidForInstalledPackageName(packageName),
+                            mAppConsentDaoSupplier.get().getUidForInstalledPackageName(packageName),
                             false);
                 case Flags.PPAPI_AND_SYSTEM_SERVER:
                     try {
-                        mAppConsentDao.setConsentForAppIfNew(packageName, false);
+                        mAppConsentDaoSupplier.get().setConsentForAppIfNew(packageName, false);
                     } catch (IOException exception) {
                         LogUtil.e(exception, "FLEDGE consent check failed due to IOException");
                         return true;
                     }
                     return mAdServicesManager.setConsentForAppIfNew(
                             packageName,
-                            mAppConsentDao.getUidForInstalledPackageName(packageName),
+                            mAppConsentDaoSupplier.get().getUidForInstalledPackageName(packageName),
                             false);
                 case Flags.APPSEARCH_ONLY:
                     if (mFlags.getEnableAppsearchConsentData()) {
@@ -1020,7 +1036,10 @@ public class ConsentManager {
             return;
         }
         executeSettersByConsentSourceOfTruth(
-                () -> mAppConsentDao.clearConsentForUninstalledApp(packageName, packageUid),
+                () ->
+                        mAppConsentDaoSupplier
+                                .get()
+                                .clearConsentForUninstalledApp(packageName, packageUid),
                 () -> mAdServicesManager.clearConsentForUninstalledApp(packageName, packageUid),
                 () -> mAppSearchConsentManager.clearConsentForUninstalledApp(packageName),
                 () -> {
@@ -1051,7 +1070,7 @@ public class ConsentManager {
         Preconditions.checkStringNotEmpty(packageName, "Package name should not be empty");
 
         executeSettersByConsentSourceOfTruth(
-                () -> mAppConsentDao.clearConsentForUninstalledApp(packageName),
+                () -> mAppConsentDaoSupplier.get().clearConsentForUninstalledApp(packageName),
                 /* systemServiceSetter= */ null,
                 () -> mAppSearchConsentManager.clearConsentForUninstalledApp(packageName),
                 () -> {
@@ -1070,7 +1089,7 @@ public class ConsentManager {
             ConsentManagerV2.getInstance().resetMeasurement();
             return;
         }
-        mMeasurementImpl.deleteAllMeasurementData(List.of());
+        mMeasurementSupplier.get().deleteAllMeasurementData(List.of());
         // Log wipeout event triggered by consent flip to delete data of package
         WipeoutStatus wipeoutStatus = new WipeoutStatus();
         wipeoutStatus.setWipeoutType(WipeoutStatus.WipeoutType.CONSENT_FLIP);
@@ -1080,7 +1099,7 @@ public class ConsentManager {
     /** Wipes out all the Enrollment data */
     @VisibleForTesting
     void resetEnrollment() {
-        mEnrollmentDao.deleteAll();
+        mEnrollmentDaoSupplier.get().deleteAll();
     }
 
     /**

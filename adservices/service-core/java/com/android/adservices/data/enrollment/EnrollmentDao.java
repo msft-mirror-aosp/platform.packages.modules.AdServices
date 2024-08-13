@@ -55,6 +55,9 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -66,7 +69,20 @@ import java.util.Set;
 /** Data Access Object for the EnrollmentData. */
 public class EnrollmentDao implements IEnrollmentDao {
 
-    private static EnrollmentDao sSingleton;
+    private static volatile EnrollmentDao sSingleton;
+    private static Supplier<EnrollmentDao> sEnrollmentDaoSingletonSupplier =
+            Suppliers.memoize(
+                    () -> {
+                        Flags flags = FlagsFactory.getFlags();
+                        return new EnrollmentDao(
+                                ApplicationContextSingleton.get(),
+                                SharedDbHelper.getInstance(),
+                                flags,
+                                flags.isEnableEnrollmentTestSeed(),
+                                AdServicesLoggerImpl.getInstance(),
+                                EnrollmentUtil.getInstance());
+                    });
+
     private final SharedDbHelper mDbHelper;
     private final Context mContext;
     private final Flags mFlags;
@@ -109,20 +125,21 @@ public class EnrollmentDao implements IEnrollmentDao {
 
     /** Returns an instance of the EnrollmentDao given a context. */
     public static EnrollmentDao getInstance() {
-        synchronized (EnrollmentDao.class) {
-            if (sSingleton == null) {
-                Flags flags = FlagsFactory.getFlags();
-                sSingleton =
-                        new EnrollmentDao(
-                                ApplicationContextSingleton.get(),
-                                SharedDbHelper.getInstance(),
-                                flags,
-                                flags.isEnableEnrollmentTestSeed(),
-                                AdServicesLoggerImpl.getInstance(),
-                                EnrollmentUtil.getInstance());
+        if (sSingleton == null) {
+            synchronized (EnrollmentDao.class) {
+                if (sSingleton == null) {
+                    sSingleton = sEnrollmentDaoSingletonSupplier.get();
+                }
             }
-            return sSingleton;
         }
+        return sSingleton;
+    }
+
+    /**
+     * Returns the singleton supplier of the EnrollmentDao given a context for Lazy Initialization.
+     */
+    public static Supplier<EnrollmentDao> getSingletonSupplier() {
+        return sEnrollmentDaoSingletonSupplier;
     }
 
     @VisibleForTesting
