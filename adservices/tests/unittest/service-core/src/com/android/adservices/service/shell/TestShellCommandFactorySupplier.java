@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.shell;
 
+import static android.adservices.customaudience.CustomAudienceFixture.CUSTOM_AUDIENCE_ACTIVE_FETCH_WINDOW_MS;
+
 import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
@@ -28,6 +30,7 @@ import com.android.adservices.service.shell.signals.SignalsShellCommandFactory;
 
 import com.google.common.collect.ImmutableList;
 
+import java.time.Clock;
 import java.util.Objects;
 
 /**
@@ -81,7 +84,11 @@ public class TestShellCommandFactorySupplier extends ShellCommandFactorySupplier
     public ImmutableList<ShellCommandFactory> getAllShellCommandFactories() {
         return ImmutableList.of(
                 new CustomAudienceShellCommandFactory(
-                        mIsCustomAudienceCliEnabled, mBackgroundFetchRunner, mCustomAudienceDao),
+                        mIsCustomAudienceCliEnabled,
+                        mBackgroundFetchRunner,
+                        mCustomAudienceDao,
+                        Clock.systemUTC(),
+                        CUSTOM_AUDIENCE_ACTIVE_FETCH_WINDOW_MS),
                 new AdSelectionShellCommandFactory(
                         mIsConsentedDebugCliEnabled,
                         true,
