@@ -17,7 +17,8 @@
 package com.android.adservices.service;
 
 import static com.android.adservices.common.DeviceConfigUtil.setAdservicesFlag;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdServicesFlag;
+import static com.android.adservices.service.DeviceConfigAndSystemPropertiesExpectations.mockGetAdServicesFlag;
+import static com.android.adservices.service.DeviceConfigAndSystemPropertiesExpectations.verifyGetBooleanDeviceConfigFlagNotCalled;
 import static com.android.adservices.service.Flags.ADID_KILL_SWITCH;
 import static com.android.adservices.service.Flags.ADID_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.ADSERVICES_APK_SHA_CERTIFICATE;
@@ -1068,7 +1069,6 @@ import android.util.Log;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
-import com.android.adservices.mockito.ExtendedMockitoExpectations;
 import com.android.adservices.service.fixture.TestableSystemProperties;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -5744,8 +5744,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     private void verifyGetBooleanNotCalled(String name) {
-        ExtendedMockitoExpectations.verifyGetBooleanDeviceConfigFlagNotCalled(
-                DeviceConfig.NAMESPACE_ADSERVICES, name);
+        verifyGetBooleanDeviceConfigFlagNotCalled(DeviceConfig.NAMESPACE_ADSERVICES, name);
     }
 
     private void overrideGlobalKillSwitch(boolean phOverridingValue) {
