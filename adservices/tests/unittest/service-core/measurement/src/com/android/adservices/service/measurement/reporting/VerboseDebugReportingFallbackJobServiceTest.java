@@ -49,13 +49,12 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.AdServicesJobServiceTestCase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
+import com.android.adservices.service.measurement.MeasurementJobServiceTestCase;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
 import com.android.adservices.shared.testing.concurrency.JobServiceCallback;
@@ -82,24 +81,18 @@ import java.util.concurrent.TimeUnit;
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(AdServicesJobServiceLogger.class)
 @MockStatic(ServiceCompatUtils.class)
-public class VerboseDebugReportingFallbackJobServiceTest extends AdServicesJobServiceTestCase {
+public class VerboseDebugReportingFallbackJobServiceTest extends MeasurementJobServiceTestCase {
     private static final int MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_ID =
             MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB.getJobId();
     private static final long WAIT_IN_MILLIS = 1_000L;
     private static final long JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(4);
-    private JobScheduler mMockJobScheduler;
+
     private VerboseDebugReportingFallbackJobService mSpyService;
-    private DatastoreManager mMockDatastoreManager;
-    private Flags mMockFlags;
-    private AdServicesJobServiceLogger mSpyLogger;
 
     @Before
     public void setUp() {
         mSpyService = spy(new VerboseDebugReportingFallbackJobService());
-        mMockJobScheduler = mock(JobScheduler.class);
 
-        mMockFlags = mock(Flags.class);
-        mSpyLogger = getSpiedAdServicesJobServiceLogger(mContext, mMockFlags);
         when(mMockFlags.getMeasurementVerboseDebugReportingFallbackJobPersisted()).thenReturn(true);
         when(mMockFlags.getMeasurementVerboseDebugReportingJobRequiredNetworkType())
                 .thenReturn(JobInfo.NETWORK_TYPE_ANY);

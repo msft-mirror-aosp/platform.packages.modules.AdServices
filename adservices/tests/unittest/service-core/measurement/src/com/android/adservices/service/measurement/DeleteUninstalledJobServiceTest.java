@@ -45,8 +45,6 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.AdServicesJobServiceTestCase;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
@@ -70,19 +68,15 @@ import java.util.concurrent.TimeUnit;
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(AdServicesJobServiceLogger.class)
 @MockStatic(ServiceCompatUtils.class)
-public final class DeleteUninstalledJobServiceTest extends AdServicesJobServiceTestCase {
+public final class DeleteUninstalledJobServiceTest extends MeasurementJobServiceTestCase {
     private static final int MEASUREMENT_DELETE_UNINSTALLED_JOB_ID =
             MEASUREMENT_DELETE_UNINSTALLED_JOB.getJobId();
     private static final long WAIT_IN_MILLIS = 1_000L;
     private static final long JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(4);
 
-    @Mock private JobScheduler mMockJobScheduler;
     @Mock private MeasurementImpl mMockMeasurementImpl;
 
     @Spy private DeleteUninstalledJobService mSpyService;
-
-    @Mock private Flags mMockFlags;
-    private AdServicesJobServiceLogger mSpyLogger;
 
     @Test
     public void onStartJob_killSwitchOn_withoutLogging() throws Exception {
