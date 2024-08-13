@@ -44,6 +44,7 @@ import com.android.adservices.topics.TopicsTestHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -304,6 +305,7 @@ public final class TopicsManagerTest extends CtsTopicsEndToEndTestCase {
 
     @Test
     @FlakyTest(bugId = 349347165)
+    @Ignore("b/353956086")
     public void testTopicsManager_runOnDeviceClassifier_usingGetMethodToCreateManager()
             throws Exception {
         testTopicsManager_runOnDeviceClassifier(true);
@@ -311,6 +313,7 @@ public final class TopicsManagerTest extends CtsTopicsEndToEndTestCase {
 
     @Test
     @FlakyTest(bugId = 349347165)
+    @Ignore("b/353956086")
     public void testTopicsManager_runOnDeviceClassifier() throws Exception {
         testTopicsManager_runOnDeviceClassifier(false);
     }

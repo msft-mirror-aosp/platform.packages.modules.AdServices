@@ -37,7 +37,7 @@ import com.android.cobalt.data.TestOnlyDao.AggregateStoreTableRow;
 import com.android.cobalt.domain.Project;
 import com.android.cobalt.logging.CobaltOperationLogger;
 import com.android.cobalt.system.SystemData;
-import com.android.cobalt.testing.logging.NoOpCobaltOperationLogger;
+import com.android.cobalt.testing.logging.FakeCobaltOperationLogger;
 import com.android.cobalt.testing.system.FakeSystemClock;
 
 import com.google.cobalt.AggregateValue;
@@ -182,7 +182,7 @@ public class CobaltLoggerImplTest {
         mSystemData = new SystemData(APP_VERSION);
         mClock = new FakeSystemClock();
         mClock.set(WORKER_TIME);
-        mOperationLogger = new NoOpCobaltOperationLogger();
+        mOperationLogger = new FakeCobaltOperationLogger();
         mLogger =
                 new CobaltLoggerImpl(
                         COBALT_REGISTRY,

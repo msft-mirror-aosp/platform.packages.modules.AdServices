@@ -76,6 +76,7 @@ public final class AppSetIdManagerTest extends CtsAppSetIdEndToEndTestCase {
         appSetIdManager.getAppSetId(CALLBACK_EXECUTOR, callback);
 
         AppSetId resultAppSetId = callback.assertResultReceived();
+        assertWithMessage("getAppSetId() result").that(resultAppSetId).isNotNull();
         assertWithMessage("id on result").that(resultAppSetId.getId()).isNotNull();
     }
 

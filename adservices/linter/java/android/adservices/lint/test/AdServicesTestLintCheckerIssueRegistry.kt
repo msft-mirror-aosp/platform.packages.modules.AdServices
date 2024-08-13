@@ -31,7 +31,8 @@ class AdServicesTestLintCheckerIssueRegistry : IssueRegistry() {
         listOf(
             DeviceConfigUsageDetector.ISSUE,
             PreconditionsCheckStateDetector.ISSUE,
-            ErrorLogUtilStaticMockSpyUsageDetector.ISSUE
+            ErrorLogUtilMockingUsageDetector.INVALID_ANNOTATION_ISSUE,
+            ErrorLogUtilMockingUsageDetector.MOCKING_INVOCATION_ISSUE
         )
 
     override val api: Int

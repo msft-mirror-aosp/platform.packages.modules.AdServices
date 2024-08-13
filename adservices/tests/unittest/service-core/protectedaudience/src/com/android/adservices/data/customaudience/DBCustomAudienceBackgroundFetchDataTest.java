@@ -146,7 +146,7 @@ public final class DBCustomAudienceBackgroundFetchDataTest
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
                         NUM_VALIDATION_FAILURES_POSITIVE,
                         NUM_TIMEOUT_FAILURES_POSITIVE,
-                        /*debuggable=*/ true);
+                        /* debuggable= */ true);
 
         assertEquals(CustomAudienceFixture.VALID_OWNER, fetchData.getOwner());
         assertEquals(CommonFixture.VALID_BUYER_1, fetchData.getBuyer());

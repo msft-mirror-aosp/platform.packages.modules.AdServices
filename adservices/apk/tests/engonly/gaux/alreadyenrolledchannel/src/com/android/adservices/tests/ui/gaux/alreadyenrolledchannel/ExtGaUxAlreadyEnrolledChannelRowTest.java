@@ -21,7 +21,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.common.AdServicesCommonManager;
 import android.adservices.common.AdServicesStates;
-import android.content.Context;
 import android.os.OutcomeReceiver;
 import android.platform.test.rule.ScreenRecordRule;
 
@@ -57,16 +56,13 @@ public class ExtGaUxAlreadyEnrolledChannelRowTest
 
     private OutcomeReceiver<Boolean, Exception> mCallback;
 
-    private static final Context sContext =
-            InstrumentationRegistry.getInstrumentation().getContext();
-
     @Rule public final ScreenRecordRule sScreenRecordRule = new ScreenRecordRule();
 
     @Before
     public void setUp() throws Exception {
         mTestName = getTestName();
 
-        UiUtils.resetAdServicesConsentData(sContext, flags);
+        UiUtils.resetAdServicesConsentData(mContext, flags);
 
         UiUtils.enableNotificationPermission();
         UiUtils.enableGa(flags);
@@ -75,7 +71,7 @@ public class ExtGaUxAlreadyEnrolledChannelRowTest
 
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
-        mCommonManager = AdServicesCommonManager.get(sContext);
+        mCommonManager = AdServicesCommonManager.get(mContext);
 
         // General purpose callback used for expected success calls.
         mCallback =
@@ -143,14 +139,14 @@ public class ExtGaUxAlreadyEnrolledChannelRowTest
                 adServicesStates, Executors.newCachedThreadPool(), mCallback);
 
         AdservicesWorkflows.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ false, UX.GA_UX, true);
+                mContext, mDevice, /* isDisplayed */ true, /* isEuTest */ false, UX.GA_UX, true);
 
         // Notifications should not be shown twice.
         mCommonManager.enableAdServices(
                 adServicesStates, Executors.newCachedThreadPool(), mCallback);
 
         AdservicesWorkflows.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ false, UX.GA_UX, true);
+                mContext, mDevice, /* isDisplayed */ false, /* isEuTest */ false, UX.GA_UX, true);
     }
 
     /**
@@ -171,13 +167,13 @@ public class ExtGaUxAlreadyEnrolledChannelRowTest
                 adServicesStates, Executors.newCachedThreadPool(), mCallback);
 
         AdservicesWorkflows.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, UX.GA_UX, true);
+                mContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, UX.GA_UX, true);
 
         // Notifications should not be shown twice.
         mCommonManager.enableAdServices(
                 adServicesStates, Executors.newCachedThreadPool(), mCallback);
 
         AdservicesWorkflows.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ true, UX.GA_UX, true);
+                mContext, mDevice, /* isDisplayed */ false, /* isEuTest */ true, UX.GA_UX, true);
     }
 }

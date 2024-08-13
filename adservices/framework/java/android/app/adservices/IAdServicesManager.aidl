@@ -272,4 +272,8 @@ interface IAdServicesManager {
 
     /** Saves the isPaDataReset bit. */
     void setPaDataReset(boolean isPaDataReset);
+
+    String getModuleEnrollmentState();
+
+    void setModuleEnrollmentState(String enrollmentState);
 }

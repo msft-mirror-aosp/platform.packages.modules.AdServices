@@ -29,6 +29,7 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
+import com.android.adservices.service.profiling.Tracing;
 
 import java.util.Objects;
 
@@ -76,6 +77,7 @@ public class AdSelectionServiceFilter extends AbstractFledgeServiceFilter {
             int apiName,
             @NonNull Throttler.ApiKey apiKey,
             DevContext devContext) {
+        int traceCookie = Tracing.beginAsyncSection(Tracing.AD_SELECTION_SERVICE_FILTER);
         try {
             Objects.requireNonNull(callerPackageName);
             Objects.requireNonNull(apiKey);
@@ -95,6 +97,8 @@ public class AdSelectionServiceFilter extends AbstractFledgeServiceFilter {
             }
         } catch (Throwable t) {
             throw new FilterException(t);
+        } finally {
+            Tracing.endAsyncSection(Tracing.AD_SELECTION_SERVICE_FILTER, traceCookie);
         }
     }
 }

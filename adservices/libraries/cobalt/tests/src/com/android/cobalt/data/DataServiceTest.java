@@ -27,6 +27,7 @@ import androidx.test.runner.AndroidJUnit4;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.cobalt.data.TestOnlyDao.AggregateStoreTableRow;
+import com.android.cobalt.testing.logging.FakeCobaltOperationLogger;
 
 import com.google.cobalt.AggregateValue;
 import com.google.cobalt.LocalIndexHistogram;
@@ -59,7 +60,9 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
     private static final int DAY_INDEX_1 = 19202;
     private static final int DAY_INDEX_2 = 19203;
     private static final int DAY_INDEX_ENABLED = DAY_INDEX_1 - 30;
-    private static final ReportKey REPORT_1 = ReportKey.create(1, 2, 3, 4);
+    private static final int METRIC_ID_1 = 3;
+    private static final int REPORT_ID_1 = 4;
+    private static final ReportKey REPORT_1 = ReportKey.create(1, 2, METRIC_ID_1, REPORT_ID_1);
     private static final ReportKey REPORT_2 =
             ReportKey.create(
                     REPORT_1.customerId(),
@@ -106,6 +109,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
     private DataService mDataService;
     @Mock private ObservationGenerator mGenerator;
     private Function<Integer, ObservationGenerator> mGeneratorSupplier;
+    private FakeCobaltOperationLogger mOperationLogger;
 
     @Before
     public void setup() {
@@ -114,6 +118,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
         mTestOnlyDao = mCobaltDatabase.testOnlyDao();
         mDataService = new DataService(EXECUTOR, mCobaltDatabase);
         mGeneratorSupplier = (unused) -> mGenerator;
+        mOperationLogger = new FakeCobaltOperationLogger();
     }
 
     @After
@@ -488,7 +493,8 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_1,
                         /* eventVectorBufferMax= */ 0,
                         /* stringBufferMax= */ 0,
-                        "A")
+                        "A",
+                        mOperationLogger)
                 .get();
 
         // Check that the data is found in the database.
@@ -521,7 +527,8 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_1,
                         /* eventVectorBufferMax= */ 0,
                         /* stringBufferMax= */ 0,
-                        "A")
+                        "A",
+                        mOperationLogger)
                 .get();
 
         assertThat(mTestOnlyDao.getAllAggregates())
@@ -550,7 +557,8 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_1,
                         /* eventVectorBufferMax= */ 0,
                         /* stringBufferMax= */ 0,
-                        "B")
+                        "B",
+                        mOperationLogger)
                 .get();
 
         assertThat(mTestOnlyDao.getAllAggregates())
@@ -591,7 +599,8 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_1,
                         /* eventVectorBufferMax= */ 0,
                         /* stringBufferMax= */ 0,
-                        "A")
+                        "A",
+                        mOperationLogger)
                 .get();
         mDataService
                 .aggregateString(
@@ -601,7 +610,8 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_1,
                         /* eventVectorBufferMax= */ 0,
                         /* stringBufferMax= */ 0,
-                        "B")
+                        "B",
+                        mOperationLogger)
                 .get();
         mDataService
                 .aggregateString(
@@ -611,7 +621,8 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_1,
                         /* eventVectorBufferMax= */ 0,
                         /* stringBufferMax= */ 0,
-                        "C")
+                        "C",
+                        mOperationLogger)
                 .get();
         mDataService
                 .aggregateString(
@@ -621,7 +632,8 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_1,
                         /* eventVectorBufferMax= */ 0,
                         /* stringBufferMax= */ 0,
-                        "D")
+                        "D",
+                        mOperationLogger)
                 .get();
         mDataService
                 .aggregateString(
@@ -631,7 +643,8 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_2,
                         /* eventVectorBufferMax= */ 0,
                         /* stringBufferMax= */ 0,
-                        "E")
+                        "E",
+                        mOperationLogger)
                 .get();
 
         // Check that the data is found in the database.
@@ -728,7 +741,8 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_1,
                         /* eventVectorBufferMax= */ 2,
                         /* stringBufferMax= */ 0,
-                        "A")
+                        "A",
+                        mOperationLogger)
                 .get();
         mDataService
                 .aggregateString(
@@ -738,7 +752,8 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_2,
                         /* eventVectorBufferMax= */ 2,
                         /* stringBufferMax= */ 0,
-                        "B")
+                        "B",
+                        mOperationLogger)
                 .get();
         // A 3rd event vector is over the limit and is dropped.
         mDataService
@@ -749,7 +764,8 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_3,
                         /* eventVectorBufferMax= */ 2,
                         /* stringBufferMax= */ 0,
-                        "C")
+                        "C",
+                        mOperationLogger)
                 .get();
         // A previous event vector occurs again and its string is aggregated.
         mDataService
@@ -760,7 +776,8 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_1,
                         /* eventVectorBufferMax= */ 2,
                         /* stringBufferMax= */ 0,
-                        "D")
+                        "D",
+                        mOperationLogger)
                 .get();
         // 3rd event vector occurs but now with a different system profile and is aggregated.
         mDataService
@@ -771,7 +788,8 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_3,
                         /* eventVectorBufferMax= */ 2,
                         /* stringBufferMax= */ 0,
-                        "E")
+                        "E",
+                        mOperationLogger)
                 .get();
 
         // Check that the data is found in the database.
@@ -841,7 +859,8 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_1,
                         /* eventVectorBufferMax= */ 0,
                         /* stringBufferMax= */ 2,
-                        "A")
+                        "A",
+                        mOperationLogger)
                 .get();
         mDataService
                 .aggregateString(
@@ -851,7 +870,8 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_2,
                         /* eventVectorBufferMax= */ 0,
                         /* stringBufferMax= */ 2,
-                        "B")
+                        "B",
+                        mOperationLogger)
                 .get();
         // A 3rd string is over the limit and is dropped.
         mDataService
@@ -862,7 +882,8 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_3,
                         /* eventVectorBufferMax= */ 0,
                         /* stringBufferMax= */ 2,
-                        "C")
+                        "C",
+                        mOperationLogger)
                 .get();
         // A previous string occurs again and is aggregated.
         mDataService
@@ -873,7 +894,8 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_4,
                         /* eventVectorBufferMax= */ 0,
                         /* stringBufferMax= */ 2,
-                        "A")
+                        "A",
+                        mOperationLogger)
                 .get();
         // A new string occurs but now for a different report and is aggregated.
         mDataService
@@ -884,7 +906,8 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_1,
                         /* eventVectorBufferMax= */ 0,
                         /* stringBufferMax= */ 2,
-                        "D")
+                        "D",
+                        mOperationLogger)
                 .get();
 
         // Check that the data is found in the database.
@@ -951,6 +974,65 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         StringHashEntity.create(REPORT_1, DAY_INDEX_1, /* listIndex= */ 0, "A"),
                         StringHashEntity.create(REPORT_1, DAY_INDEX_1, /* listIndex= */ 1, "B"),
                         StringHashEntity.create(REPORT_2, DAY_INDEX_1, /* listIndex= */ 0, "D"));
+    }
+
+    @Test
+    public void aggregateString_stringBufferMaxLimit_stringBufferMaxExceededLogged()
+            throws Exception {
+        // Two strings occur and are aggregated.
+        mDataService
+                .aggregateString(
+                        REPORT_1,
+                        DAY_INDEX_1,
+                        SYSTEM_PROFILE_1,
+                        EVENT_VECTOR_1,
+                        /* eventVectorBufferMax= */ 0,
+                        /* stringBufferMax= */ 2,
+                        "A",
+                        mOperationLogger)
+                .get();
+        mDataService
+                .aggregateString(
+                        REPORT_1,
+                        DAY_INDEX_1,
+                        SYSTEM_PROFILE_1,
+                        EVENT_VECTOR_2,
+                        /* eventVectorBufferMax= */ 0,
+                        /* stringBufferMax= */ 2,
+                        "B",
+                        mOperationLogger)
+                .get();
+        // A 3rd string is over the limit and is logged.
+        mDataService
+                .aggregateString(
+                        REPORT_1,
+                        DAY_INDEX_1,
+                        SYSTEM_PROFILE_1,
+                        EVENT_VECTOR_3,
+                        /* eventVectorBufferMax= */ 0,
+                        /* stringBufferMax= */ 2,
+                        "C",
+                        mOperationLogger)
+                .get();
+        // A 4th string is over the limit and is logged.
+        mDataService
+                .aggregateString(
+                        REPORT_1,
+                        DAY_INDEX_1,
+                        SYSTEM_PROFILE_1,
+                        EVENT_VECTOR_4,
+                        /* eventVectorBufferMax= */ 0,
+                        /* stringBufferMax= */ 2,
+                        "D",
+                        mOperationLogger)
+                .get();
+
+        // Check that it was recorded that string buffer max was exceeded twice for the metric id
+        // and report id.
+        assertThat(
+                        mOperationLogger.getNumStringBufferMaxExceededOccurrences(
+                                METRIC_ID_1, REPORT_ID_1))
+                .isEqualTo(2);
     }
 
     @Test
@@ -1279,7 +1361,8 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_1,
                         /* eventVectorBufferMax= */ 0,
                         /* stringBufferMax= */ 0,
-                        /* stringValue= */ "STRING")
+                        /* stringValue= */ "STRING",
+                        mOperationLogger)
                 .get();
         mDataService
                 .aggregateCount(
@@ -1334,7 +1417,8 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_1,
                         /* eventVectorBufferMax= */ 0,
                         /* stringBufferMax= */ 0,
-                        /* stringValue= */ "STRING")
+                        /* stringValue= */ "STRING",
+                        mOperationLogger)
                 .get();
         mDataService
                 .aggregateCount(
@@ -1402,7 +1486,8 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_1,
                         /* eventVectorBufferMax= */ 0,
                         /* stringBufferMax= */ 0,
-                        /* stringValue= */ "STRING")
+                        /* stringValue= */ "STRING",
+                        mOperationLogger)
                 .get();
 
         // Insert a string hash with a bad report key.

@@ -4100,8 +4100,12 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
 
         mockWebServerRule.verifyMockServerRequests(
                 server,
-                2,
-                ImmutableList.of(BUYER_BIDDING_LOGIC_URI_PATH, BUYER_TRUSTED_SIGNAL_URI_PATH),
+                4,
+                ImmutableList.of(
+                        BUYER_BIDDING_LOGIC_URI_PATH,
+                        BUYER_TRUSTED_SIGNAL_URI_PATH,
+                        SELLER_DECISION_LOGIC_URI_PATH,
+                        SELLER_TRUSTED_SIGNAL_URI_PATH),
                 mRequestMatcherPrefixMatch);
     }
 

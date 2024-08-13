@@ -22,7 +22,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 
 import com.android.adservices.shared.testing.Nullable;
-import com.android.adservices.shared.testing.SidelessSharedMockitoTestCase;
+import com.android.adservices.shared.testing.SharedSidelessMockitoTestCase;
 
 import org.junit.Test;
 import org.mockito.Mock;
@@ -30,7 +30,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 @SuppressWarnings("DirectInvocationOnMock") // is testing mocking stuff
-public final class MockitoHelperTest extends SidelessSharedMockitoTestCase {
+public final class MockitoHelperTest extends SharedSidelessMockitoTestCase {
 
     // Used to get a "real" InvocationOnMock
     private final VoidAnswer mAnswer = new VoidAnswer();

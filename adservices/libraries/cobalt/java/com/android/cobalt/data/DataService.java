@@ -23,6 +23,8 @@ import static java.util.stream.Collectors.toMap;
 import android.annotation.NonNull;
 import android.util.Log;
 
+import com.android.cobalt.logging.CobaltOperationLogger;
+
 import com.google.cobalt.AggregateValue;
 import com.google.cobalt.SystemProfile;
 import com.google.cobalt.UnencryptedObservationBatch;
@@ -231,7 +233,8 @@ public final class DataService {
             EventVector eventVector,
             long eventVectorBufferMax,
             long stringBufferMax,
-            String stringValue) {
+            String stringValue,
+            CobaltOperationLogger operationLogger) {
         return Futures.submit(
                 () ->
                         mCobaltDatabase.runInTransaction(
@@ -243,7 +246,8 @@ public final class DataService {
                                                 eventVector,
                                                 eventVectorBufferMax,
                                                 stringBufferMax,
-                                                stringValue)),
+                                                stringValue,
+                                                operationLogger)),
                 mExecutorService);
     }
 
@@ -315,11 +319,14 @@ public final class DataService {
             EventVector eventVector,
             long eventVectorBufferMax,
             long stringBufferMax,
-            String stringValue) {
+            String stringValue,
+            CobaltOperationLogger operationLogger) {
         HashCode hash = StringHashEntity.getHash(stringValue);
         int index =
                 mDaoBuildingBlocks.queryStringListIndex(reportKey, dayIndex, stringBufferMax, hash);
         if (index == -1) {
+            operationLogger.logStringBufferMaxExceeded(
+                    (int) reportKey.metricId(), (int) reportKey.reportId());
             return;
         }
 
