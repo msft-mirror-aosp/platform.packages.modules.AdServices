@@ -15,15 +15,12 @@
  */
 package com.android.adservices.mockito;
 
-import static com.android.adservices.mockito.MockitoExpectations.getSpiedAdServicesJobServiceLogger;
 import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
 
 import static org.junit.Assert.assertThrows;
-import static org.mockito.Mockito.verify;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.service.Flags;
-import com.android.adservices.spe.AdServicesJobServiceLogger;
 
 import org.junit.Test;
 import org.mockito.Mock;
@@ -51,22 +48,4 @@ public final class MockitoExpectationsTest extends AdServicesMockitoTestCase {
         expect.withMessage("flags.getBackgroundJobsLoggingKillSwitch()").that(result).isTrue();
     }
 
-    @Test
-    public void testGetSpiedAdServicesJobServiceLogger_null() {
-        assertThrows(
-                NullPointerException.class,
-                () -> getSpiedAdServicesJobServiceLogger(/* context= */ null, mMockFlags));
-        assertThrows(
-                NullPointerException.class,
-                () -> getSpiedAdServicesJobServiceLogger(mContext, /* flags= */ null));
-    }
-
-    @Test
-    public void testGetSpiedAdServicesJobServiceLogger() {
-        AdServicesJobServiceLogger spy = getSpiedAdServicesJobServiceLogger(mContext, mMockFlags);
-        expect.withMessage("getSpiedAdServicesJobServiceLogger()").that(spy).isNotNull();
-
-        spy.recordOnStartJob(42);
-        verify(spy).recordOnStartJob(42);
-    }
 }

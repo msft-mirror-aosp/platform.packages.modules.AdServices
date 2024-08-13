@@ -29,7 +29,6 @@ import static org.mockito.Mockito.verify;
 
 import android.app.job.JobParameters;
 import android.app.job.JobService;
-import android.content.Context;
 import android.util.Log;
 
 import com.android.adservices.service.Flags;
@@ -226,18 +225,6 @@ public final class MockitoExpectations {
         callback.assertLoggingFinished();
 
         verify(logger).recordJobFinished(anyInt(), anyBoolean(), anyBoolean());
-    }
-
-    /**
-     * Gets a spied instance of {@link AdServicesJobServiceLogger}.
-     *
-     * @deprecated use {@code mocker.getSpiedAdServicesJobServiceLogger()} instead.
-     */
-    @Deprecated
-    @SuppressWarnings("InlineMeSuggester")
-    public static AdServicesJobServiceLogger getSpiedAdServicesJobServiceLogger(
-            Context context, Flags flags) {
-        return jobMocker.getSpiedAdServicesJobServiceLogger(context, flags);
     }
 
     private MockitoExpectations() {

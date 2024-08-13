@@ -58,18 +58,6 @@ public final class ExtendedMockitoExpectations {
         return MockitoExpectations.jobMocker.mockNoOpAdServicesJobServiceLogger(context, flags);
     }
 
-    /**
-     * Mocks {@link AdServicesJobServiceLogger#getInstance()} to return a mocked logger.
-     *
-     * @deprecated Use {@link
-     *     AdServicesJobMocker#mockGetAdServicesJobServiceLogger(AdServicesJobServiceLogger)}
-     *     instead.
-     */
-    @Deprecated
-    public static void mockGetAdServicesJobServiceLogger(AdServicesJobServiceLogger logger) {
-        MockitoExpectations.jobMocker.mockGetAdServicesJobServiceLogger(logger);
-    }
-
     private ExtendedMockitoExpectations() {
         throw new UnsupportedOperationException("Provides only static methods");
     }
