@@ -43,7 +43,6 @@ import com.google.common.truth.Expect;
 
 import org.mockito.verification.VerificationMode;
 
-import java.io.PrintWriter;
 import java.util.Objects;
 
 /**
@@ -128,24 +127,6 @@ public final class ExtendedMockitoExpectations {
                         })
                 .when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
         return callback;
-    }
-
-    /**
-     * Mocks a call to a method that dumps something into a {@link PrintWriter}.
-     *
-     * @param invocation invocation that will call dump passing a {@link PrintWriter}. Typically a
-     *     static method, using {@code any()} to represent the {@link PrintWriter} reference.
-     * @param pwArgIndex index of the {@link PrintWriter}
-     * @param dump value to be {@code println}'ed into the {@link PrintWriter}.
-     */
-    public static void mockDump(Runnable invocation, int pwArgIndex, String dump) {
-        doAnswer(
-                        inv -> {
-                            PrintWriter pw = (PrintWriter) inv.getArgument(1);
-                            pw.println(dump);
-                            return null;
-                        })
-                .when(() -> invocation.run());
     }
 
     /**
