@@ -16,7 +16,7 @@
 
 package com.android.adservices.service;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdServicesFlag;
+import static com.android.adservices.service.DeviceConfigAndSystemPropertiesExpectations.mockGetAdServicesFlag;
 import static com.android.adservices.service.Flags.DEFAULT_CLASSIFIER_TYPE;
 import static com.android.adservices.service.Flags.MAINTENANCE_JOB_FLEX_MS;
 import static com.android.adservices.service.Flags.MAINTENANCE_JOB_PERIOD_MS;

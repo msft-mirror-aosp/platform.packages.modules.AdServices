@@ -1011,7 +1011,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
         AdTechIdentifier adtechIdentifier = AdTechIdentifier.fromString("2test.com", false);
         EnrollmentData e =
                 mEnrollmentDao.getEnrollmentDataForFledgeByAdTechIdentifier(adtechIdentifier);
-        assertEquals(e, ENROLLMENT_DATA2);
+        assertWithMessage("Found enrollment").that(e).isEqualTo(ENROLLMENT_DATA2);
         verify(mEnrollmentUtil, times(1))
                 .logEnrollmentDataStats(
                         eq(mLogger),
