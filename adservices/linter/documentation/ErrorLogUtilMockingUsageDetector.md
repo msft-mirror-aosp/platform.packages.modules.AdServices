@@ -16,7 +16,7 @@ spying `ErrorLogUtil` and overriding its behavior.
 
 We will need a linter that flags if `ErrorLogUtil` is getting mocked explicitly in tests.
 
-## Linter Strategy
+# Linter Strategy
 
 The linter detects and flags the following:
 
