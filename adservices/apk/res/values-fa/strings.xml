@@ -146,7 +146,7 @@
     <string name="settingsUI_block_topic_title" msgid="542801436874037128">"مسدود کردن"</string>
     <string name="settingsUI_unblock_topic_title" msgid="9183891456548567284">"لغو انسداد"</string>
     <string name="settingsUI_blocked_topics_title" msgid="84411550241312692">"علایقی که مسدود کرده‌اید"</string>
-    <string name="settingsUI_reset_topics_title" msgid="4659272636850648155">"بازنشاندن همه موضوع‌های موردعلاقه"</string>
+    <string name="settingsUI_reset_topics_title" msgid="4659272636850648155">"بازنشانی همه موضوع‌های موردعلاقه"</string>
     <string name="settingsUI_topics_view_no_topics_text" msgid="8337078176142128219">"درحال‌حاضر علاقه‌ای برای نمایش وجود ندارد."</string>
     <string name="settingsUI_topics_view_no_topics_ga_text" msgid="4232374024129407829">"درحال‌حاضر موضوعی برای نمایش وجود ندارد.\nدرباره "<a href="https://support.google.com/android?p=ad_privacy">"موضوعات آگهی"</a>" بیشتر بدانید"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="1837427989556474858">"جعبه امن حریم خصوصی"</string>
