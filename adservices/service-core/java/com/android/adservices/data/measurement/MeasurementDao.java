@@ -2789,6 +2789,8 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.AggregateReport.TRIGGER_CONTEXT_ID,
                 aggregateReport.getTriggerContextId());
+        values.put(
+                MeasurementTables.AggregateReport.TRIGGER_TIME, aggregateReport.getTriggerTime());
         long rowId =
                 mSQLTransaction
                         .getDatabase()
