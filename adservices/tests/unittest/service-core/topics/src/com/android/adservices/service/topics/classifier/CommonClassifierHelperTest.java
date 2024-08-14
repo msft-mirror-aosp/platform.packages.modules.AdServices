@@ -16,8 +16,6 @@
 
 package com.android.adservices.service.topics.classifier;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mocker;
 import static com.android.adservices.service.topics.classifier.CommonClassifierHelper.computeClassifierAssetChecksum;
 import static com.android.adservices.service.topics.classifier.CommonClassifierHelper.getTopTopics;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
