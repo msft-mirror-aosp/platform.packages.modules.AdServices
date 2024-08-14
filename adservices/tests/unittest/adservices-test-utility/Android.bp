@@ -31,7 +31,7 @@ android_test {
     ],
     static_libs: [
         "adservices-test-utility",
-        "adservices-test-mockito-expectations", // TODO(b/338132355): needed by ExtendedMockitoExpectationsMockerTest.java
+        "adservices-test-mockito-expectations", // TODO(b/338132355): needed by MockitoExpectationJobMockerTest.java
         "auto_value_annotations",
         "androidx.test.core",
         "truth",

@@ -19,7 +19,6 @@ package com.android.adservices.mockito;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assume.assumeTrue;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.mockito.AbstractStaticMocker.ClassNotSpiedOrMockedException;
@@ -63,22 +62,6 @@ public abstract class AdServicesStaticMockerTestCase<T extends AdServicesStaticM
         return getMocker(extendedMockito);
     }
 
-    // TODO(b/314969513): workaround because ExtendedMockitoExpectationsMockerTest always returns
-    // the same mocker (ExtendedMockitoExpectations.mocker) - should be removed once that class is
-    // gone
-    private T getMockerWithStaticClassChecker() {
-        T mocker = getMocker();
-        var checker = mocker.getStaticClassChecker();
-        assumeTrue(
-                "mocker uses a different checker ("
-                        + checker
-                        + " instead of "
-                        + extendedMockito
-                        + ")",
-                checker == extendedMockito);
-        return mocker;
-    }
-
     @Before
     public final void verifyMocker() {
         assertWithMessage("getMocker()").that(getMocker(extendedMockito)).isNotNull();
@@ -91,8 +74,8 @@ public abstract class AdServicesStaticMockerTestCase<T extends AdServicesStaticM
 
     @Test
     public final void testMockGetFlags_staticClassNotMocked() {
-        T mocker = getMockerWithStaticClassChecker();
-        assertThrows(ClassNotSpiedOrMockedException.class, () -> mocker.mockGetFlags(mMockFlags));
+        assertThrows(
+                ClassNotSpiedOrMockedException.class, () -> getMocker().mockGetFlags(mMockFlags));
     }
 
     @Test
@@ -125,10 +108,9 @@ public abstract class AdServicesStaticMockerTestCase<T extends AdServicesStaticM
 
     @Test
     public final void testMockSpeJobScheduler_staticClassNotMocked() {
-        T mocker = getMockerWithStaticClassChecker();
         assertThrows(
                 ClassNotSpiedOrMockedException.class,
-                () -> mocker.mockSpeJobScheduler(mMockAdServicesJobScheduler));
+                () -> getMocker().mockSpeJobScheduler(mMockAdServicesJobScheduler));
     }
 
     // TODO(b/357944639): remove annotation if AdServicesJobScheduler doesn't depend on it anymore
@@ -152,10 +134,9 @@ public abstract class AdServicesStaticMockerTestCase<T extends AdServicesStaticM
 
     @Test
     public final void testMockAdServicesLoggerImpl_staticClassNotMocked() {
-        T mocker = getMockerWithStaticClassChecker();
         assertThrows(
                 ClassNotSpiedOrMockedException.class,
-                () -> mocker.mockAdServicesLoggerImpl(mMockAdServicesLoggerImpl));
+                () -> getMocker().mockAdServicesLoggerImpl(mMockAdServicesLoggerImpl));
     }
 
     @Test
