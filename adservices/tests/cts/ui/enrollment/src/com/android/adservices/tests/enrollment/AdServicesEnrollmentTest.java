@@ -59,7 +59,7 @@ public final class AdServicesEnrollmentTest extends AdServicesCtsTestCase
 
         // TODO(b/357961246) to fix R No enrollment channel available issue
         AdservicesWorkflows.verifyNotification(
-                sContext,
+                mContext,
                 uiDevice,
                 /* isDisplayed */ true,
                 /* isEuTest */ false,
