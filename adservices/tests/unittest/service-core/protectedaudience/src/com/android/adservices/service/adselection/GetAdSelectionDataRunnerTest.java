@@ -114,7 +114,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.internal.stubbing.answers.AnswersWithDelay;
 import org.mockito.internal.stubbing.answers.Returns;
@@ -192,7 +191,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
     private AdsRelevanceExecutionLoggerFactory mAdsRelevanceExecutionLoggerFactory;
     private AdsRelevanceExecutionLogger mAdsRelevanceExecutionLogger;
 
-    private ResultSyncCallback<ApiCallStats> logApiCallStatsCallback;
+    private ResultSyncCallback<ApiCallStats> mLogApiCallStatsCallback;
 
     private AdServicesLogger mAdServicesLoggerSpy;
     @Mock private ConsentedDebugConfigurationGenerator mConsentedDebugConfigurationGenerator;
@@ -238,7 +237,8 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                         DevContext.createForDevOptionsDisabled());
         when(mClockMock.instant()).thenReturn(AD_SELECTION_INITIALIZATION_INSTANT);
         when(mAuctionServerDebugReporting.isEnabled()).thenReturn(false);
-        mAdServicesLoggerSpy = Mockito.spy(AdServicesLoggerImpl.getInstance());
+        mAdServicesLoggerSpy = spy(AdServicesLoggerImpl.getInstance());
+        mLogApiCallStatsCallback = mockLogApiCallStats(mAdServicesLoggerSpy);
         mAdsRelevanceExecutionLoggerFactory =
                 new AdsRelevanceExecutionLoggerFactory(
                         TEST_PACKAGE_NAME,
@@ -328,7 +328,6 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                         BINDER_ELAPSED_TIMESTAMP,
                         GET_AD_SELECTION_DATA_START_TIMESTAMP,
                         GET_AD_SELECTION_DATA_END_TIMESTAMP);
-        logApiCallStatsCallback = mockLogApiCallStats(mAdServicesLoggerSpy);
         mAdsRelevanceExecutionLogger =
                 mAdsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger();
         mGetAdSelectionDataRunner =
@@ -450,7 +449,6 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                         BINDER_ELAPSED_TIMESTAMP,
                         GET_AD_SELECTION_DATA_START_TIMESTAMP,
                         GET_AD_SELECTION_DATA_END_TIMESTAMP);
-        logApiCallStatsCallback = mockLogApiCallStats(mAdServicesLoggerSpy);
         mAdsRelevanceExecutionLogger =
                 mAdsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger();
         mGetAdSelectionDataRunner =
@@ -566,7 +564,6 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                         BINDER_ELAPSED_TIMESTAMP,
                         GET_AD_SELECTION_DATA_START_TIMESTAMP,
                         GET_AD_SELECTION_DATA_END_TIMESTAMP);
-        logApiCallStatsCallback = mockLogApiCallStats(mAdServicesLoggerSpy);
         mAdsRelevanceExecutionLogger =
                 mAdsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger();
         mGetAdSelectionDataRunner =
@@ -670,7 +667,6 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                         BINDER_ELAPSED_TIMESTAMP,
                         GET_AD_SELECTION_DATA_START_TIMESTAMP,
                         GET_AD_SELECTION_DATA_END_TIMESTAMP);
-        logApiCallStatsCallback = mockLogApiCallStats(mAdServicesLoggerSpy);
         mAdsRelevanceExecutionLogger =
                 mAdsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger();
         mGetAdSelectionDataRunner =
@@ -777,7 +773,6 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                         BINDER_ELAPSED_TIMESTAMP,
                         GET_AD_SELECTION_DATA_START_TIMESTAMP,
                         GET_AD_SELECTION_DATA_END_TIMESTAMP);
-        logApiCallStatsCallback = mockLogApiCallStats(mAdServicesLoggerSpy);
         mAdsRelevanceExecutionLogger =
                 mAdsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger();
         mGetAdSelectionDataRunner =
@@ -1450,7 +1445,6 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                         BINDER_ELAPSED_TIMESTAMP,
                         GET_AD_SELECTION_DATA_START_TIMESTAMP,
                         GET_AD_SELECTION_DATA_END_TIMESTAMP);
-        logApiCallStatsCallback = mockLogApiCallStats(mAdServicesLoggerSpy);
         mAdsRelevanceExecutionLogger =
                 mAdsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger();
         mGetAdSelectionDataRunner =
@@ -1462,7 +1456,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
     }
 
     private void verifyGetAdSelectionDataApiUsageLog(int resultCode) throws InterruptedException {
-        ApiCallStats apiCallStats = logApiCallStatsCallback.assertResultReceived();
+        ApiCallStats apiCallStats = mLogApiCallStatsCallback.assertResultReceived();
         assertThat(apiCallStats.getApiName()).isEqualTo(
                 AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA);
         assertThat(apiCallStats.getAppPackageName()).isEqualTo(TEST_PACKAGE_NAME);
