@@ -37,7 +37,7 @@ import java.util.Objects;
  * Creates a {@link DevContext} instance using the information related to the caller of the current
  * API.
  */
-public final class DevContextFilter {
+public class DevContextFilter {
 
     @VisibleForTesting
     static final String PACKAGE_NAME_FOR_DISABLED_DEVELOPER_MODE_TEMPLATE =
@@ -51,8 +51,15 @@ public final class DevContextFilter {
     private final AppPackageNameRetriever mAppPackageNameRetriever;
     private final PackageManager mPackageManager;
 
+    /**
+     * Construct a DevContextFilter.
+     *
+     * @param contentResolver The system content resolver to use.
+     * @param packageManager The system package manager to use.
+     * @param appPackageNameRetriever An instance of a class to fetch app package names.
+     */
     @VisibleForTesting
-    DevContextFilter(
+    public DevContextFilter(
             @NonNull ContentResolver contentResolver,
             @NonNull PackageManager packageManager,
             @NonNull AppPackageNameRetriever appPackageNameRetriever) {

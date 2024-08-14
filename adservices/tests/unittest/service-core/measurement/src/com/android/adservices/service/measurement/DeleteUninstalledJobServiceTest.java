@@ -36,7 +36,6 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -48,7 +47,7 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
@@ -57,19 +56,23 @@ import com.android.adservices.shared.testing.JobServiceLoggingCallback;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
-import org.mockito.quality.Strictness;
 
 import java.util.concurrent.TimeUnit;
 
-public class DeleteUninstalledJobServiceTest {
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
+@SpyStatic(MeasurementImpl.class)
+@SpyStatic(DeleteUninstalledJobService.class)
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(AdServicesJobServiceLogger.class)
+@MockStatic(ServiceCompatUtils.class)
+public final class DeleteUninstalledJobServiceTest extends AdServicesExtendedMockitoTestCase {
     private static final int MEASUREMENT_DELETE_UNINSTALLED_JOB_ID =
             MEASUREMENT_DELETE_UNINSTALLED_JOB.getJobId();
     private static final long WAIT_IN_MILLIS = 1_000L;
@@ -82,17 +85,6 @@ public class DeleteUninstalledJobServiceTest {
 
     @Mock private Flags mMockFlags;
     private AdServicesJobServiceLogger mSpyLogger;
-
-    @Rule
-    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder(this)
-                    .spyStatic(MeasurementImpl.class)
-                    .spyStatic(DeleteUninstalledJobService.class)
-                    .spyStatic(FlagsFactory.class)
-                    .spyStatic(AdServicesJobServiceLogger.class)
-                    .mockStatic(ServiceCompatUtils.class)
-                    .setStrictness(Strictness.LENIENT)
-                    .build();
 
     @Test
     public void onStartJob_killSwitchOn_withoutLogging() throws Exception {
@@ -232,7 +224,7 @@ public class DeleteUninstalledJobServiceTest {
                     // Validate
                     ExtendedMockito.verify(
                             () -> DeleteUninstalledJobService.schedule(any(), any()), never());
-                    verify(mMockJobScheduler, times(1))
+                    verify(mMockJobScheduler)
                             .getPendingJob(eq(MEASUREMENT_DELETE_UNINSTALLED_JOB_ID));
                 });
     }
@@ -268,7 +260,7 @@ public class DeleteUninstalledJobServiceTest {
                     // Validate
                     ExtendedMockito.verify(
                             () -> DeleteUninstalledJobService.schedule(any(), any()));
-                    verify(mMockJobScheduler, times(1))
+                    verify(mMockJobScheduler)
                             .getPendingJob(eq(MEASUREMENT_DELETE_UNINSTALLED_JOB_ID));
                 });
     }
@@ -296,8 +288,8 @@ public class DeleteUninstalledJobServiceTest {
 
                     // Validate
                     ExtendedMockito.verify(
-                            () -> DeleteUninstalledJobService.schedule(any(), any()), times(1));
-                    verify(mMockJobScheduler, times(1))
+                            () -> DeleteUninstalledJobService.schedule(any(), any()));
+                    verify(mMockJobScheduler)
                             .getPendingJob(eq(MEASUREMENT_DELETE_UNINSTALLED_JOB_ID));
                 });
     }
@@ -324,8 +316,8 @@ public class DeleteUninstalledJobServiceTest {
 
                     // Validate
                     ExtendedMockito.verify(
-                            () -> DeleteUninstalledJobService.schedule(any(), any()), times(1));
-                    verify(mMockJobScheduler, times(1))
+                            () -> DeleteUninstalledJobService.schedule(any(), any()));
+                    verify(mMockJobScheduler)
                             .getPendingJob(eq(MEASUREMENT_DELETE_UNINSTALLED_JOB_ID));
                 });
     }
@@ -336,9 +328,8 @@ public class DeleteUninstalledJobServiceTest {
         runWithMocks(
                 () -> {
                     disableKillSwitch();
-                    Context spyContext = spy(CONTEXT);
                     final JobScheduler jobScheduler = mock(JobScheduler.class);
-                    doReturn(jobScheduler).when(spyContext).getSystemService(JobScheduler.class);
+                    doReturn(jobScheduler).when(mSpyContext).getSystemService(JobScheduler.class);
                     final ArgumentCaptor<JobInfo> captor = ArgumentCaptor.forClass(JobInfo.class);
                     doReturn(null)
                             .when(jobScheduler)
@@ -347,10 +338,10 @@ public class DeleteUninstalledJobServiceTest {
                     // Execute
                     ExtendedMockito.doCallRealMethod()
                             .when(() -> DeleteUninstalledJobService.schedule(any(), any()));
-                    DeleteUninstalledJobService.scheduleIfNeeded(spyContext, true);
+                    DeleteUninstalledJobService.scheduleIfNeeded(mSpyContext, true);
 
                     // Validate
-                    verify(jobScheduler, times(1)).schedule(captor.capture());
+                    verify(jobScheduler).schedule(captor.capture());
                     assertNotNull(captor.getValue());
                     assertTrue(captor.getValue().isPersisted());
                 });
@@ -369,8 +360,8 @@ public class DeleteUninstalledJobServiceTest {
         // Allow background thread to execute
         Thread.sleep(WAIT_IN_MILLIS);
         verify(mMockMeasurementImpl, never()).deleteAllUninstalledMeasurementData();
-        verify(mSpyService, times(1)).jobFinished(any(), eq(false));
-        verify(mMockJobScheduler, times(1)).cancel(eq(MEASUREMENT_DELETE_UNINSTALLED_JOB_ID));
+        verify(mSpyService).jobFinished(any(), eq(false));
+        verify(mMockJobScheduler).cancel(eq(MEASUREMENT_DELETE_UNINSTALLED_JOB_ID));
     }
 
     private void onStartJob_killSwitchOff() throws Exception {
@@ -385,8 +376,8 @@ public class DeleteUninstalledJobServiceTest {
 
         // Allow background thread to execute
         Thread.sleep(WAIT_IN_MILLIS);
-        verify(mMockMeasurementImpl, times(1)).deleteAllUninstalledMeasurementData();
-        verify(mSpyService, times(1)).jobFinished(any(), anyBoolean());
+        verify(mMockMeasurementImpl).deleteAllUninstalledMeasurementData();
+        verify(mSpyService).jobFinished(any(), anyBoolean());
         verify(mMockJobScheduler, never()).cancel(eq(MEASUREMENT_DELETE_UNINSTALLED_JOB_ID));
     }
 
@@ -407,8 +398,8 @@ public class DeleteUninstalledJobServiceTest {
         // Allow background thread to execute
         Thread.sleep(WAIT_IN_MILLIS);
         verify(mMockMeasurementImpl, never()).deleteAllUninstalledMeasurementData();
-        verify(mSpyService, times(1)).jobFinished(any(), eq(false));
-        verify(mMockJobScheduler, times(1)).cancel(eq(MEASUREMENT_DELETE_UNINSTALLED_JOB_ID));
+        verify(mSpyService).jobFinished(any(), eq(false));
+        verify(mMockJobScheduler).cancel(eq(MEASUREMENT_DELETE_UNINSTALLED_JOB_ID));
     }
 
     private void runWithMocks(TestUtils.RunnableWithThrow execute) throws Exception {
@@ -420,7 +411,7 @@ public class DeleteUninstalledJobServiceTest {
         ExtendedMockito.doNothing().when(() -> DeleteUninstalledJobService.schedule(any(), any()));
 
         StatsdAdServicesLogger mockStatsdLogger = mock(StatsdAdServicesLogger.class);
-        mSpyLogger = mockAdServicesJobServiceLogger(CONTEXT, mMockFlags);
+        mSpyLogger = mockAdServicesJobServiceLogger(mContext, mMockFlags);
 
         // Execute
         execute.run();

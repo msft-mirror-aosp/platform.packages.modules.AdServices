@@ -15,6 +15,8 @@
  */
 package com.android.adservices.shared.testing.common;
 
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
+
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.fail;
@@ -61,6 +63,27 @@ public final class DumpHelper {
                             + dump);
         }
         return lines;
+    }
+
+    /**
+     * Mocks a call to a static method that dumps something into a {@link PrintWriter}.
+     *
+     * @param invocation invocation that will call a static method that takes a {@link PrintWriter}.
+     *     Notice that your test must call {@code SpyStatic} / {@code MockStatic} in the underlying
+     *     mockito session.
+     * @param pwArgIndex index of the {@link PrintWriter}
+     * @param dump value to be {@code println}'ed into the {@link PrintWriter}.
+     */
+    public static void mockDump(Runnable invocation, int pwArgIndex, String dump) {
+        Objects.requireNonNull(invocation, "invocation cannot be null");
+        Objects.requireNonNull(dump, "dump cannot be null");
+        doAnswer(
+                        inv -> {
+                            PrintWriter pw = (PrintWriter) inv.getArgument(pwArgIndex);
+                            pw.println(dump);
+                            return null;
+                        })
+                .when(() -> invocation.run());
     }
 
     /** Helper to dump an object. */

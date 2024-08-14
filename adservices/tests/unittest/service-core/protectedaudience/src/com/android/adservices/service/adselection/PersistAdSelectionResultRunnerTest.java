@@ -28,11 +28,11 @@ import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 import static com.android.adservices.mockito.MockitoExpectations.mockLogApiCallStats;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT;
-import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplTest.BINDER_ELAPSED_TIMESTAMP;
-import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplTest.PERSIST_AD_SELECTION_RESULT_END_TIMESTAMP;
-import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplTest.PERSIST_AD_SELECTION_RESULT_OVERALL_LATENCY_MS;
-import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplTest.PERSIST_AD_SELECTION_RESULT_START_TIMESTAMP;
-import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplTest.sCallerMetadata;
+import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplFixture.BINDER_ELAPSED_TIMESTAMP;
+import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplFixture.PERSIST_AD_SELECTION_RESULT_END_TIMESTAMP;
+import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplFixture.PERSIST_AD_SELECTION_RESULT_OVERALL_LATENCY_MS;
+import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplFixture.PERSIST_AD_SELECTION_RESULT_START_TIMESTAMP;
+import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplFixture.sCallerMetadata;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.WINNER_TYPE_CA_WINNER;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.WINNER_TYPE_NO_WINNER;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.WINNER_TYPE_PAS_WINNER;
@@ -69,7 +69,7 @@ import android.os.RemoteException;
 
 import androidx.room.Room;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
@@ -110,11 +110,10 @@ import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledSt
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 import com.android.adservices.shared.util.Clock;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.collect.ImmutableList;
 
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -122,11 +121,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
 import org.mockito.internal.stubbing.answers.AnswersWithDelay;
 import org.mockito.internal.stubbing.answers.Returns;
-import org.mockito.quality.Strictness;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -140,8 +136,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
+@SpyStatic(FlagsFactory.class)
 @RequiresSdkLevelAtLeastS
-public final class PersistAdSelectionResultRunnerTest extends AdServicesUnitTestCase {
+public final class PersistAdSelectionResultRunnerTest extends AdServicesExtendedMockitoTestCase {
     private static final int CALLER_UID = Process.myUid();
     private static final String SHA256 = "SHA-256";
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
@@ -411,7 +408,6 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesUnitTest
     private PersistAdSelectionResultRunner.ReportingRegistrationLimits mReportingLimits;
     private final AdCounterHistogramUpdater mAdCounterHistogramUpdaterSpy =
             spy(new AdCounterHistogramUpdaterNoOpImpl());
-    private MockitoSession mStaticMockSession = null;
 
     private AuctionResultValidator mAuctionResultValidator;
 
@@ -443,15 +439,6 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesUnitTest
                         mFlags.getFledgeAuctionServerPayloadBucketSizes());
         mDataCompressor = new AuctionServerDataCompressorGzip();
 
-        // Test applications don't have the required permissions to read config P/H flags, and
-        // injecting mocked flags everywhere is annoying and non-trivial for static methods
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .initMocks(this)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
-        MockitoAnnotations.initMocks(this); // init @Mock mocks
         mOverallTimeout = FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS;
         mForceContinueOnAbsentOwner = false;
         mReportingLimits =
@@ -502,13 +489,6 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesUnitTest
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
         setupPersistAdSelectionResultCalledLogging();
-    }
-
-    @After
-    public void teardown() {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
     }
 
     @Test

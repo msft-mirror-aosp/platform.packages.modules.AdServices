@@ -50,7 +50,8 @@ public final class MockitoExpectations {
     // to use the superclasses, they wouldn't need to change the variable name.
 
     // CHECKSTYLE:OFF Generated code
-    public static final AdServicesMockitoJobMocker jobMocker = new AdServicesMockitoJobMocker();
+    public static final AdServicesMockitoJobMocker jobMocker =
+            new AdServicesMockitoJobMocker(new StaticClassChecker() {});
 
     // CHECKSTYLE:ON
 

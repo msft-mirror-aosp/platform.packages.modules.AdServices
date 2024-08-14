@@ -240,11 +240,15 @@ public class UpdateProcessingOrchestrator {
                         .map(DBProtectedSignal.Builder::build)
                         .collect(Collectors.toList()),
                 combinedUpdates.getToRemove());
+        sLogger.v("Completed write to PAS DB");
 
         // There is a valid possibility where there is no update for encoder
         if (combinedUpdates.getUpdateEncoderEvent() != null) {
             mUpdateEncoderEventHandler.handle(
                     adTech, combinedUpdates.getUpdateEncoderEvent(), devContext);
+            sLogger.v("Completed encoding update handler for buyer: " + adTech);
+        } else {
+            sLogger.v("No encoding update is present in CombinedUpdates");
         }
     }
 }

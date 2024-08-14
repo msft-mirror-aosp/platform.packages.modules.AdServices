@@ -15,6 +15,12 @@
  */
 package com.android.adservices.mockito;
 
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
@@ -34,8 +40,12 @@ import java.util.Objects;
 import java.util.concurrent.Executors;
 
 /** {@link AdServicesJobMocker} implementation that uses {@code Mockito}. */
-public final class AdServicesMockitoJobMocker extends AbstractMocker
+public final class AdServicesMockitoJobMocker extends AbstractStaticMocker
         implements AdServicesJobMocker {
+
+    public AdServicesMockitoJobMocker(StaticClassChecker staticClassChecker) {
+        super(staticClassChecker);
+    }
 
     @Override
     @SuppressWarnings("NewApi") // TODO(b/357944639): remove
@@ -55,6 +65,44 @@ public final class AdServicesMockitoJobMocker extends AbstractMocker
         nonNull(context);
         nonNull(flags);
 
+        var spy = internalGetSpiedAdServicesJobServiceLogger(context, flags);
+        logV("getSpiedAdServicesJobServiceLogger(): returning %s", spy);
+
+        return spy;
+    }
+
+    @Override
+    public void mockGetAdServicesJobServiceLogger(AdServicesJobServiceLogger logger) {
+        logV("mockGetAdServicesJobServiceLogger(%s)", logger);
+        Objects.requireNonNull(logger, "logger cannot be null");
+        assertSpiedOrMocked(AdServicesJobServiceLogger.class);
+
+        doReturn(logger).when(() -> AdServicesJobServiceLogger.getInstance());
+    }
+
+    @Override
+    public AdServicesJobServiceLogger mockNoOpAdServicesJobServiceLogger(
+            Context context, Flags flags) {
+        nonNull(context);
+        nonNull(flags);
+        assertSpiedOrMocked(AdServicesJobServiceLogger.class);
+
+        AdServicesJobServiceLogger logger =
+                internalGetSpiedAdServicesJobServiceLogger(context, flags);
+        logV("mockAdServicesJobServiceLogger(%s, %s): returning %s", context, flags, logger);
+        mockGetAdServicesJobServiceLogger(logger);
+
+        doNothing().when(logger).recordOnStartJob(anyInt());
+        doNothing().when(logger).recordOnStopJob(any(), anyInt(), anyBoolean());
+        doNothing().when(logger).recordJobSkipped(anyInt(), anyInt());
+        doNothing().when(logger).recordJobFinished(anyInt(), anyBoolean(), anyBoolean());
+
+        return logger;
+    }
+
+    // Just get the spy, without checking args or logging anything
+    private static AdServicesJobServiceLogger internalGetSpiedAdServicesJobServiceLogger(
+            Context context, Flags flags) {
         return spy(
                 new AdServicesJobServiceLogger(
                         context,

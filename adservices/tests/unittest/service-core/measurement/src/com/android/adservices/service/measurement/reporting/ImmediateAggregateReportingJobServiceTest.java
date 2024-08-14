@@ -49,12 +49,10 @@ import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.content.Context;
 
-import androidx.test.core.app.ApplicationProvider;
-
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
@@ -63,21 +61,27 @@ import com.android.adservices.shared.testing.concurrency.JobServiceCallback;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.internal.stubbing.answers.AnswersWithDelay;
 import org.mockito.internal.stubbing.answers.CallsRealMethods;
-import org.mockito.quality.Strictness;
 
 import java.util.Optional;
 
 /** Unit test for {@link ImmediateAggregateReportingJobService} */
-public class ImmediateAggregateReportingJobServiceTest {
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
+@SpyStatic(ImmediateAggregateReportingJobService.class)
+@SpyStatic(DatastoreManagerFactory.class)
+@SpyStatic(EnrollmentDao.class)
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(AdServicesJobServiceLogger.class)
+@MockStatic(ServiceCompatUtils.class)
+public final class ImmediateAggregateReportingJobServiceTest
+        extends AdServicesExtendedMockitoTestCase {
     private static final int MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_ID =
             MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB.getJobId();
     private static final long WAIT_IN_MILLIS = 200L;
@@ -89,18 +93,6 @@ public class ImmediateAggregateReportingJobServiceTest {
     private Flags mMockFlags;
     private AdServicesJobServiceLogger mSpyLogger;
 
-    @Rule
-    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder(this)
-                    .spyStatic(ImmediateAggregateReportingJobService.class)
-                    .spyStatic(DatastoreManagerFactory.class)
-                    .spyStatic(EnrollmentDao.class)
-                    .spyStatic(FlagsFactory.class)
-                    .spyStatic(AdServicesJobServiceLogger.class)
-                    .mockStatic(ServiceCompatUtils.class)
-                    .setStrictness(Strictness.LENIENT)
-                    .build();
-
     @Before
     public void setUp() {
         mSpyService = spy(new ImmediateAggregateReportingJobService());
@@ -108,7 +100,7 @@ public class ImmediateAggregateReportingJobServiceTest {
         mMockJobScheduler = mock(JobScheduler.class);
 
         mMockFlags = mock(Flags.class);
-        mSpyLogger = getSpiedAdServicesJobServiceLogger(CONTEXT, mMockFlags);
+        mSpyLogger = getSpiedAdServicesJobServiceLogger(mContext, mMockFlags);
         when(mMockFlags.getMeasurementImmediateAggregateReportingJobPersisted()).thenReturn(true);
         when(mMockFlags.getMeasurementImmediateAggregateReportingJobRequiredNetworkType())
                 .thenReturn(JobInfo.NETWORK_TYPE_ANY);
@@ -234,9 +226,8 @@ public class ImmediateAggregateReportingJobServiceTest {
                     // Setup
                     enableKillSwitch();
 
-                    final Context mockContext = mock(Context.class);
                     doReturn(mMockJobScheduler)
-                            .when(mockContext)
+                            .when(mMockContext)
                             .getSystemService(JobScheduler.class);
                     final JobInfo mockJobInfo = mock(JobInfo.class);
                     doReturn(mockJobInfo)
@@ -245,7 +236,7 @@ public class ImmediateAggregateReportingJobServiceTest {
 
                     // Execute
                     ImmediateAggregateReportingJobService.scheduleIfNeeded(
-                            mockContext, /* forceSchedule= */ false);
+                            mMockContext, /* forceSchedule= */ false);
 
                     // Validate
                     ExtendedMockito.verify(
@@ -263,16 +254,14 @@ public class ImmediateAggregateReportingJobServiceTest {
                 () -> {
                     // Setup
                     disableKillSwitch();
-
-                    final Context spyContext = spy(CONTEXT);
                     doReturn(mMockJobScheduler)
-                            .when(spyContext)
+                            .when(mSpyContext)
                             .getSystemService(JobScheduler.class);
                     final JobInfo scheduledJobInfo =
                             new JobInfo.Builder(
                                             MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_ID,
                                             new ComponentName(
-                                                    spyContext,
+                                                    mSpyContext,
                                                     ImmediateAggregateReportingJobService.class))
                                     .setRequiresBatteryNotLow(true)
                                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
@@ -284,13 +273,13 @@ public class ImmediateAggregateReportingJobServiceTest {
 
                     // Execute
                     ImmediateAggregateReportingJobService.scheduleIfNeeded(
-                            spyContext, /* forceSchedule= */ false);
+                            mSpyContext, /* forceSchedule= */ false);
 
                     // Validate
                     ExtendedMockito.verify(
                             () -> ImmediateAggregateReportingJobService.schedule(any(), any()),
                             never());
-                    verify(mMockJobScheduler, times(1))
+                    verify(mMockJobScheduler)
                             .getPendingJob(eq(MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_ID));
                 });
     }
@@ -303,15 +292,14 @@ public class ImmediateAggregateReportingJobServiceTest {
                     // Setup
                     disableKillSwitch();
 
-                    final Context spyContext = spy(CONTEXT);
                     doReturn(mMockJobScheduler)
-                            .when(spyContext)
+                            .when(mSpyContext)
                             .getSystemService(JobScheduler.class);
                     final JobInfo scheduledJobInfo =
                             new JobInfo.Builder(
                                             MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_ID,
                                             new ComponentName(
-                                                    spyContext,
+                                                    mSpyContext,
                                                     ImmediateAggregateReportingJobService.class))
                                     .setRequiresBatteryNotLow(true)
                                     .setRequiredNetworkType(
@@ -324,12 +312,12 @@ public class ImmediateAggregateReportingJobServiceTest {
 
                     // Execute
                     ImmediateAggregateReportingJobService.scheduleIfNeeded(
-                            spyContext, /* forceSchedule= */ false);
+                            mSpyContext, /* forceSchedule= */ false);
 
                     // Validate
                     ExtendedMockito.verify(
                             () -> ImmediateAggregateReportingJobService.schedule(any(), any()));
-                    verify(mMockJobScheduler, times(1))
+                    verify(mMockJobScheduler)
                             .getPendingJob(eq(MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_ID));
                 });
     }
@@ -342,9 +330,8 @@ public class ImmediateAggregateReportingJobServiceTest {
                     // Setup
                     disableKillSwitch();
 
-                    final Context mockContext = mock(Context.class);
                     doReturn(mMockJobScheduler)
-                            .when(mockContext)
+                            .when(mMockContext)
                             .getSystemService(JobScheduler.class);
                     final JobInfo mockJobInfo = mock(JobInfo.class);
                     doReturn(mockJobInfo)
@@ -353,13 +340,13 @@ public class ImmediateAggregateReportingJobServiceTest {
 
                     // Execute
                     ImmediateAggregateReportingJobService.scheduleIfNeeded(
-                            mockContext, /* forceSchedule= */ true);
+                            mMockContext, /* forceSchedule= */ true);
 
                     // Validate
                     ExtendedMockito.verify(
                             () -> ImmediateAggregateReportingJobService.schedule(any(), any()),
                             times(1));
-                    verify(mMockJobScheduler, times(1))
+                    verify(mMockJobScheduler)
                             .getPendingJob(eq(MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_ID));
                 });
     }
@@ -372,9 +359,8 @@ public class ImmediateAggregateReportingJobServiceTest {
                     // Setup
                     disableKillSwitch();
 
-                    final Context mockContext = mock(Context.class);
                     doReturn(mMockJobScheduler)
-                            .when(mockContext)
+                            .when(mMockContext)
                             .getSystemService(JobScheduler.class);
                     // Mock the JobScheduler to have no pending job.
                     doReturn(null)
@@ -382,13 +368,13 @@ public class ImmediateAggregateReportingJobServiceTest {
                             .getPendingJob(eq(MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_ID));
 
                     // Execute
-                    ImmediateAggregateReportingJobService.scheduleIfNeeded(mockContext, false);
+                    ImmediateAggregateReportingJobService.scheduleIfNeeded(mMockContext, false);
 
                     // Validate
                     ExtendedMockito.verify(
                             () -> ImmediateAggregateReportingJobService.schedule(any(), any()),
                             times(1));
-                    verify(mMockJobScheduler, times(1))
+                    verify(mMockJobScheduler)
                             .getPendingJob(eq(MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_ID));
                 });
     }
@@ -399,9 +385,8 @@ public class ImmediateAggregateReportingJobServiceTest {
                 () -> {
                     // Setup
                     disableKillSwitch();
-                    Context spyContext = spy(CONTEXT);
                     final JobScheduler jobScheduler = mock(JobScheduler.class);
-                    doReturn(jobScheduler).when(spyContext).getSystemService(JobScheduler.class);
+                    doReturn(jobScheduler).when(mSpyContext).getSystemService(JobScheduler.class);
                     final ArgumentCaptor<JobInfo> captor = ArgumentCaptor.forClass(JobInfo.class);
                     doReturn(null)
                             .when(jobScheduler)
@@ -413,10 +398,10 @@ public class ImmediateAggregateReportingJobServiceTest {
                                     () ->
                                             ImmediateAggregateReportingJobService.schedule(
                                                     any(), any()));
-                    ImmediateAggregateReportingJobService.scheduleIfNeeded(spyContext, true);
+                    ImmediateAggregateReportingJobService.scheduleIfNeeded(mSpyContext, true);
 
                     // Validate
-                    verify(jobScheduler, times(1)).schedule(captor.capture());
+                    verify(jobScheduler).schedule(captor.capture());
                     assertNotNull(captor.getValue());
                     assertTrue(captor.getValue().isPersisted());
                 });
@@ -438,7 +423,7 @@ public class ImmediateAggregateReportingJobServiceTest {
 
                     boolean onStopJobResult =
                             mSpyService.onStopJob(Mockito.mock(JobParameters.class));
-                    verify(mSpyService, times(0)).jobFinished(any(), anyBoolean());
+                    verify(mSpyService, never()).jobFinished(any(), anyBoolean());
                     assertTrue(onStopJobResult);
                     assertTrue(mSpyService.getFutureForTesting().isCancelled());
                 });
@@ -458,9 +443,8 @@ public class ImmediateAggregateReportingJobServiceTest {
 
         callback.assertJobFinished();
         verify(mMockDatastoreManager, never()).runInTransactionWithResult(any());
-        verify(mSpyService, times(1)).jobFinished(any(), eq(false));
-        verify(mMockJobScheduler, times(1))
-                .cancel(eq(MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_ID));
+        verify(mSpyService).jobFinished(any(), eq(false));
+        verify(mMockJobScheduler).cancel(eq(MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_ID));
     }
 
     private void onStartJob_killSwitchOff() throws Exception {
@@ -476,8 +460,8 @@ public class ImmediateAggregateReportingJobServiceTest {
         assertTrue(result);
 
         callback.assertJobFinished();
-        verify(mMockDatastoreManager, times(1)).runInTransactionWithResult(any());
-        verify(mSpyService, times(1)).jobFinished(any(), anyBoolean());
+        verify(mMockDatastoreManager).runInTransactionWithResult(any());
+        verify(mSpyService).jobFinished(any(), anyBoolean());
         verify(mMockJobScheduler, never())
                 .cancel(eq(MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_ID));
     }
@@ -500,21 +484,19 @@ public class ImmediateAggregateReportingJobServiceTest {
 
         callback.assertJobFinished();
         verify(mMockDatastoreManager, never()).runInTransactionWithResult(any());
-        verify(mSpyService, times(1)).jobFinished(any(), eq(false));
-        verify(mMockJobScheduler, times(1))
-                .cancel(eq(MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_ID));
+        verify(mSpyService).jobFinished(any(), eq(false));
+        verify(mMockJobScheduler).cancel(eq(MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_ID));
     }
 
     private void runWithMocks(TestUtils.RunnableWithThrow execute) throws Exception {
-        Context context = Mockito.mock(Context.class);
-        doReturn(CONTEXT.getPackageName()).when(context).getPackageName();
-        doReturn(CONTEXT.getPackageManager()).when(context).getPackageManager();
+        doReturn(mContext.getPackageName()).when(mMockContext).getPackageName();
+        doReturn(mContext.getPackageManager()).when(mMockContext).getPackageManager();
         // Setup mock everything in job
         mMockDatastoreManager = mock(DatastoreManager.class);
         doReturn(Optional.empty()).when(mMockDatastoreManager).runInTransactionWithResult(any());
         doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
         doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
-        doReturn(context).when(mSpyService).getApplicationContext();
+        doReturn(mMockContext).when(mSpyService).getApplicationContext();
         ExtendedMockito.doReturn(mock(EnrollmentDao.class)).when(() -> EnrollmentDao.getInstance());
         ExtendedMockito.doReturn(mMockDatastoreManager)
                 .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));

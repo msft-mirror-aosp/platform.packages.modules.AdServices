@@ -25,6 +25,8 @@
     <!-- Needed to schedule MDD jobs to persist across device reboots  -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_AD_ID" />
+
     <application android:debuggable="true" android:networkSecurityConfig="@xml/network_security_config">
         <uses-library android:name="android.ext.adservices" android:required="false" />
 
@@ -37,6 +39,24 @@
         <!-- CustomAudience Schedule Custom Audience Update Job -->
         <service android:name=
                      "com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
+        <!-- PA Background Key Fetch Job -->
+        <service android:name=
+                     "com.android.adservices.service.adselection.encryption.BackgroundKeyFetchJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
+        <!-- PA Ad selection debug report sender Job -->
+        <service android:name=
+                     "com.android.adservices.service.adselection.DebugReportSenderJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
+        <!-- PA KAnon sign join background job -->
+        <service android:name=
+                     "com.android.adservices.service.kanon.KAnonSignJoinBackgroundJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 

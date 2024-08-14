@@ -26,11 +26,11 @@ import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 import static com.android.adservices.mockito.MockitoExpectations.mockLogApiCallStats;
 import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA;
-import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplTest.BINDER_ELAPSED_TIMESTAMP;
-import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplTest.GET_AD_SELECTION_DATA_END_TIMESTAMP;
-import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplTest.GET_AD_SELECTION_DATA_OVERALL_LATENCY_MS;
-import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplTest.GET_AD_SELECTION_DATA_START_TIMESTAMP;
-import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplTest.sCallerMetadata;
+import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplFixture.BINDER_ELAPSED_TIMESTAMP;
+import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplFixture.GET_AD_SELECTION_DATA_END_TIMESTAMP;
+import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplFixture.GET_AD_SELECTION_DATA_OVERALL_LATENCY_MS;
+import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplFixture.GET_AD_SELECTION_DATA_START_TIMESTAMP;
+import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplFixture.sCallerMetadata;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_API;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_UNSET;
@@ -47,6 +47,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
@@ -65,7 +66,7 @@ import android.os.RemoteException;
 
 import androidx.room.Room;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
@@ -76,7 +77,6 @@ import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
-import com.android.adservices.ohttp.algorithms.UnsupportedHpkeAlgorithmException;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGenerator;
@@ -100,7 +100,8 @@ import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
 import com.android.adservices.service.stats.GetAdSelectionDataBuyerInputGeneratedStats;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.truth.Truth;
@@ -108,24 +109,18 @@ import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.protobuf.ByteString;
 
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
 import org.mockito.Spy;
 import org.mockito.internal.stubbing.answers.AnswersWithDelay;
 import org.mockito.internal.stubbing.answers.Returns;
-import org.mockito.quality.Strictness;
 import org.mockito.stubbing.Answer;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.spec.InvalidKeySpecException;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -137,8 +132,11 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
+@SpyStatic(FlagsFactory.class)
+@MockStatic(PackageManagerCompatUtils.class)
+@SpyStatic(AssetFileDescriptorUtil.class)
 @RequiresSdkLevelAtLeastS
-public final class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
+public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockitoTestCase {
     private static final int CALLER_UID = Process.myUid();
     private static final int E2E_TRACE_COOKIE = 0;
     private static final String CALLER_PACKAGE_NAME = TEST_PACKAGE_NAME;
@@ -174,7 +172,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
     private EncodedPayloadDao mEncodedPayloadDao;
     private MultiCloudSupportStrategy mMultiCloudSupportStrategyFlagOff;
     private MultiCloudSupportStrategy mMultiCloudSupportStrategyFlagOn;
-    @Spy private AdSelectionEntryDao mAdSelectionEntryDaoSpy;
+    private AdSelectionEntryDao mAdSelectionEntryDaoSpy;
     @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptorMock;
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
 
@@ -187,21 +185,20 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
 
     @Mock private AuctionServerDebugReporting mAuctionServerDebugReporting;
     private GetAdSelectionDataRunner mGetAdSelectionDataRunner;
-    private MockitoSession mStaticMockSession = null;
 
     @Mock private com.android.adservices.shared.util.Clock
             mFledgeAuctionServerExecutionLoggerClockMock;
     private AdsRelevanceExecutionLoggerFactory mAdsRelevanceExecutionLoggerFactory;
     private AdsRelevanceExecutionLogger mAdsRelevanceExecutionLogger;
 
-    private ResultSyncCallback<ApiCallStats> logApiCallStatsCallback;
+    private ResultSyncCallback<ApiCallStats> mLogApiCallStatsCallback;
 
     private AdServicesLogger mAdServicesLoggerSpy;
     @Mock private ConsentedDebugConfigurationGenerator mConsentedDebugConfigurationGenerator;
     @Mock private EgressConfigurationGenerator mEgressConfigurationGenerator;
 
     @Before
-    public void setup() throws InvalidKeySpecException, UnsupportedHpkeAlgorithmException {
+    public void setup() throws Exception {
         mFlags = new GetAdSelectionDataRunnerTestFlags();
         mMultiCloudSupportStrategyFlagOff =
                 MultiCloudTestStrategyFactory.getDisabledTestStrategy(mObliviousHttpEncryptorMock);
@@ -222,21 +219,10 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                         .build()
                         .getEncodedPayloadDao();
         mAdSelectionEntryDaoSpy =
-                Room.inMemoryDatabaseBuilder(mContext, AdSelectionDatabase.class)
-                        .build()
-                        .adSelectionEntryDao();
-
-        // Test applications don't have the required permissions to read config P/H flags, and
-        // injecting mocked flags everywhere is annoying and non-trivial for static methods
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .mockStatic(PackageManagerCompatUtils.class)
-                        .spyStatic(AssetFileDescriptorUtil.class)
-                        .initMocks(this)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
-        MockitoAnnotations.initMocks(this); // init @Mock mocks
+                spy(
+                        Room.inMemoryDatabaseBuilder(mContext, AdSelectionDatabase.class)
+                                .build()
+                                .adSelectionEntryDao());
 
         doNothing()
                 .when(mAdSelectionServiceFilterMock)
@@ -251,7 +237,8 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                         DevContext.createForDevOptionsDisabled());
         when(mClockMock.instant()).thenReturn(AD_SELECTION_INITIALIZATION_INSTANT);
         when(mAuctionServerDebugReporting.isEnabled()).thenReturn(false);
-        mAdServicesLoggerSpy = Mockito.spy(AdServicesLoggerImpl.getInstance());
+        mAdServicesLoggerSpy = spy(AdServicesLoggerImpl.getInstance());
+        mLogApiCallStatsCallback = mockLogApiCallStats(mAdServicesLoggerSpy);
         mAdsRelevanceExecutionLoggerFactory =
                 new AdsRelevanceExecutionLoggerFactory(
                         TEST_PACKAGE_NAME,
@@ -270,15 +257,8 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
         mGetAdSelectionDataRunner = initRunner(mFlags, mAdsRelevanceExecutionLogger);
     }
 
-    @After
-    public void teardown() {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
-    }
-
     @Test
-    public void testRunner_getAdSelectionData_returnsSuccess() throws InterruptedException {
+    public void testRunner_getAdSelectionData_returnsSuccess() throws Exception {
         doReturn(mFlags).when(FlagsFactory::getFlags);
         doReturn(FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))
                 .when(mObliviousHttpEncryptorMock)
@@ -324,7 +304,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
 
     @Test
     public void testRunner_getAdSelectionData_WithSellerConfigurationSuccessNoOptimizations()
-            throws InterruptedException {
+            throws Exception {
         ArgumentCaptor<GetAdSelectionDataApiCalledStats> apiCalledArgumentCaptor =
                 ArgumentCaptor.forClass(GetAdSelectionDataApiCalledStats.class);
         ArgumentCaptor<GetAdSelectionDataBuyerInputGeneratedStats>
@@ -348,7 +328,6 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                         BINDER_ELAPSED_TIMESTAMP,
                         GET_AD_SELECTION_DATA_START_TIMESTAMP,
                         GET_AD_SELECTION_DATA_END_TIMESTAMP);
-        logApiCallStatsCallback = mockLogApiCallStats(mAdServicesLoggerSpy);
         mAdsRelevanceExecutionLogger =
                 mAdsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger();
         mGetAdSelectionDataRunner =
@@ -446,7 +425,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
 
     @Test
     public void testRunner_getAdSelectionData_WithSellerConfigurationSuccessSellerMaxImpl()
-            throws InterruptedException {
+            throws Exception {
         ArgumentCaptor<GetAdSelectionDataApiCalledStats> apiCalledArgumentCaptor =
                 ArgumentCaptor.forClass(GetAdSelectionDataApiCalledStats.class);
         ArgumentCaptor<GetAdSelectionDataBuyerInputGeneratedStats>
@@ -470,7 +449,6 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                         BINDER_ELAPSED_TIMESTAMP,
                         GET_AD_SELECTION_DATA_START_TIMESTAMP,
                         GET_AD_SELECTION_DATA_END_TIMESTAMP);
-        logApiCallStatsCallback = mockLogApiCallStats(mAdServicesLoggerSpy);
         mAdsRelevanceExecutionLogger =
                 mAdsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger();
         mGetAdSelectionDataRunner =
@@ -569,7 +547,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
     @Test
     public void
             testRunner_getAdSelectionData_returnsSuccessGetAdSelectionDataPayloadMetricsEnabled()
-                    throws InterruptedException {
+                    throws Exception {
         ArgumentCaptor<GetAdSelectionDataApiCalledStats> apiCalledArgumentCaptor =
                 ArgumentCaptor.forClass(GetAdSelectionDataApiCalledStats.class);
         ArgumentCaptor<GetAdSelectionDataBuyerInputGeneratedStats>
@@ -586,7 +564,6 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                         BINDER_ELAPSED_TIMESTAMP,
                         GET_AD_SELECTION_DATA_START_TIMESTAMP,
                         GET_AD_SELECTION_DATA_END_TIMESTAMP);
-        logApiCallStatsCallback = mockLogApiCallStats(mAdServicesLoggerSpy);
         mAdsRelevanceExecutionLogger =
                 mAdsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger();
         mGetAdSelectionDataRunner =
@@ -673,7 +650,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
 
     @Test
     public void testRunner_getAdSelectionData_success_MetricsEnabled_withDefaultSourceCoordinator()
-            throws InterruptedException {
+            throws Exception {
         ArgumentCaptor<GetAdSelectionDataApiCalledStats> apiCalledArgumentCaptor =
                 ArgumentCaptor.forClass(GetAdSelectionDataApiCalledStats.class);
         ArgumentCaptor<GetAdSelectionDataBuyerInputGeneratedStats>
@@ -690,7 +667,6 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                         BINDER_ELAPSED_TIMESTAMP,
                         GET_AD_SELECTION_DATA_START_TIMESTAMP,
                         GET_AD_SELECTION_DATA_END_TIMESTAMP);
-        logApiCallStatsCallback = mockLogApiCallStats(mAdServicesLoggerSpy);
         mAdsRelevanceExecutionLogger =
                 mAdsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger();
         mGetAdSelectionDataRunner =
@@ -779,7 +755,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
     @Test
     public void
             testRunner_getAdSelectionData_returnsSuccessMetricsEnabled_withApiSourceCoordinator()
-                    throws InterruptedException {
+                    throws Exception {
         mFlags = new GetAdSelectionDataRunnerTestFlagsWithMultiCloudEnabled(true);
         ArgumentCaptor<GetAdSelectionDataApiCalledStats> apiCalledArgumentCaptor =
                 ArgumentCaptor.forClass(GetAdSelectionDataApiCalledStats.class);
@@ -797,7 +773,6 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                         BINDER_ELAPSED_TIMESTAMP,
                         GET_AD_SELECTION_DATA_START_TIMESTAMP,
                         GET_AD_SELECTION_DATA_END_TIMESTAMP);
-        logApiCallStatsCallback = mockLogApiCallStats(mAdServicesLoggerSpy);
         mAdsRelevanceExecutionLogger =
                 mAdsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger();
         mGetAdSelectionDataRunner =
@@ -890,7 +865,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
 
     @Test
     public void testRunner_getAdSelectionData_multiCloudFlagOn_invalidCoordinator_throwsError()
-            throws InterruptedException {
+            throws Exception {
 
         mockGetAdSelectionDataRunnerWithFledgeAuctionServerExecutionLogger(
                 mMultiCloudSupportStrategyFlagOn);
@@ -919,7 +894,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
 
     @Test
     public void testRunner_getAdSelectionData_multiCloudFlagOn_validCoordinator_IsSuccess()
-            throws InterruptedException {
+            throws Exception {
         doReturn(mFlags).when(FlagsFactory::getFlags);
 
         doReturn(FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))
@@ -948,7 +923,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
 
     @Test
     public void testRunner_getAdSelectionData_multiCloudFlagOn_nullCoordinator_IsSuccess()
-            throws InterruptedException {
+            throws Exception {
 
         doReturn(mFlags).when(FlagsFactory::getFlags);
 
@@ -978,7 +953,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
 
     @Test
     public void testRunner_getAdSelectionData_multiCloudFlagOff_invalidCoordinator_IsSuccess()
-            throws InterruptedException {
+            throws Exception {
 
         doReturn(mFlags).when(FlagsFactory::getFlags);
 
@@ -1007,7 +982,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
 
     @Test
     public void testRunner_getAdSelectionData_returnsSuccessWithExcessiveSizeFormatterVersion()
-            throws InterruptedException, IOException {
+            throws Exception {
         doReturn(FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))
                 .when(mObliviousHttpEncryptorMock)
                 .encryptBytes(any(), anyLong(), anyLong(), any(), any());
@@ -1064,7 +1039,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
 
     @Test
     public void testRunner_getAdSelectionData_returnsInternalErrorWhenEncounteringIOException()
-            throws InterruptedException, IOException {
+            throws Exception {
         mFlags = new GetAdSelectionDataRunnerTestFlagsWithExcessiveSizeFormatter();
         mockGetAdSelectionDataRunnerWithFledgeAuctionServerExecutionLogger(
                 mMultiCloudSupportStrategyFlagOff);
@@ -1096,7 +1071,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
     }
 
     @Test
-    public void testRunner_revokedUserConsent_returnsRandomResult() throws InterruptedException {
+    public void testRunner_revokedUserConsent_returnsRandomResult() throws Exception {
         doReturn(mFlags).when(FlagsFactory::getFlags);
         doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
                 .when(mAdSelectionServiceFilterMock)
@@ -1131,7 +1106,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
 
     @Test
     public void testRunner_revokedUserConsent_returnsRandomResultWithExcessiveSizeFormatterVersion()
-            throws InterruptedException, IOException {
+            throws Exception {
         mFlags = new GetAdSelectionDataRunnerTestFlagsWithExcessiveSizeFormatter();
         mGetAdSelectionDataRunner = initRunner(mFlags, mAdsRelevanceExecutionLogger);
 
@@ -1318,7 +1293,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
     }
 
     @Test
-    public void testRunner_getAdSelectionData_timeoutFailure() throws InterruptedException {
+    public void testRunner_getAdSelectionData_timeoutFailure() throws Exception {
         doReturn(mFlags).when(FlagsFactory::getFlags);
 
         Flags shortTimeoutFlags =
@@ -1470,7 +1445,6 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
                         BINDER_ELAPSED_TIMESTAMP,
                         GET_AD_SELECTION_DATA_START_TIMESTAMP,
                         GET_AD_SELECTION_DATA_END_TIMESTAMP);
-        logApiCallStatsCallback = mockLogApiCallStats(mAdServicesLoggerSpy);
         mAdsRelevanceExecutionLogger =
                 mAdsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger();
         mGetAdSelectionDataRunner =
@@ -1482,7 +1456,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesUnitTestCase {
     }
 
     private void verifyGetAdSelectionDataApiUsageLog(int resultCode) throws InterruptedException {
-        ApiCallStats apiCallStats = logApiCallStatsCallback.assertResultReceived();
+        ApiCallStats apiCallStats = mLogApiCallStatsCallback.assertResultReceived();
         assertThat(apiCallStats.getApiName()).isEqualTo(
                 AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA);
         assertThat(apiCallStats.getAppPackageName()).isEqualTo(TEST_PACKAGE_NAME);

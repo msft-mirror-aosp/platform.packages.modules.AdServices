@@ -22,6 +22,7 @@ import android.net.Uri;
 
 import androidx.annotation.NonNull;
 
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.signals.DBEncoderEndpoint;
 import com.android.adservices.data.signals.EncoderEndpointsDao;
 import com.android.adservices.data.signals.EncoderLogicHandler;
@@ -38,6 +39,7 @@ import java.util.Objects;
 
 /** Takes appropriate action be it update or download encoder based on {@link UpdateEncoderEvent} */
 public class UpdateEncoderEventHandler {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     @NonNull private final EncoderEndpointsDao mEncoderEndpointsDao;
     @NonNull private final EncoderLogicHandler mEncoderLogicHandler;
     private List<Observer> mUpdatesObserver;
@@ -76,6 +78,7 @@ public class UpdateEncoderEventHandler {
         Objects.requireNonNull(buyer);
         Objects.requireNonNull(event);
         Objects.requireNonNull(devContext);
+        sLogger.v("Entering UpdateEncoderEventHandler#handle");
 
         switch (event.getUpdateType()) {
             case REGISTER:
@@ -94,8 +97,12 @@ public class UpdateEncoderEventHandler {
                 DBEncoderEndpoint previousRegisteredEncoder =
                         mEncoderEndpointsDao.getEndpoint(buyer);
                 mEncoderEndpointsDao.registerEndpoint(endpoint);
+                sLogger.v(
+                        "Registered new endpoint %s for buyer %s",
+                        endpoint.getDownloadUri(), endpoint.getBuyer());
 
                 if (previousRegisteredEncoder == null) {
+                    sLogger.v("Ran download and update as previous encoder was null");
                     // We immediately download and update if no previous encoder existed
                     FluentFuture<Boolean> downloadAndUpdate =
                             mEncoderLogicHandler.downloadAndUpdate(buyer, devContext);

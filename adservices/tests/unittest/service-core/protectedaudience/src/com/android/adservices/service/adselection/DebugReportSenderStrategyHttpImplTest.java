@@ -40,8 +40,7 @@ import java.util.concurrent.ExecutionException;
 
 public class DebugReportSenderStrategyHttpImplTest {
 
-    @Mock
-    private AdServicesHttpsClient mMockHttpsClient;
+    @Mock private AdServicesHttpsClient mMockHttpsClient;
     private DebugReportSenderStrategyHttpImpl mDebugReportSender;
 
     private DevContext mDevContext;

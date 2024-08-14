@@ -18,6 +18,8 @@ package com.android.adservices.service.devapi;
 
 import android.annotation.Nullable;
 
+import com.android.adservices.shared.common.ApplicationContextSingleton;
+
 import com.google.auto.value.AutoValue;
 
 import java.util.Objects;
@@ -44,6 +46,7 @@ public abstract class DevContext {
     public abstract boolean getDevOptionsEnabled();
 
     // TODO(b/356709022): remove @Nullable
+
     /**
      * @return The package name for the calling app or NULL if the dev options are not enabled.
      */
@@ -58,6 +61,7 @@ public abstract class DevContext {
     }
 
     // TODO(b/356709022): remove once all callers were refactored
+
     /** Returns a new generic builder */
     public static DevContext.Builder builder(String callingAppPackageName) {
         Objects.requireNonNull(callingAppPackageName, "callingAppPackageName cannot be null");
@@ -71,6 +75,18 @@ public abstract class DevContext {
                 .build();
     }
 
+    /**
+     * Returns a new instance of {@link DevContext} with developer options enabled.
+     *
+     * <p>Used when the calling identity is an end-user interacting with the adservices module via a
+     * shell command. In this case we use the adservices package as the app package identity.
+     */
+    public static DevContext createForDevIdentity() {
+        return DevContext.builder(ApplicationContextSingleton.get().getPackageName())
+                .setDevOptionsEnabled(true)
+                .build();
+    }
+
     /** The Builder for {@link DevContext} */
     @AutoValue.Builder
     public abstract static class Builder {
@@ -78,6 +94,7 @@ public abstract class DevContext {
         public abstract DevContext.Builder setDevOptionsEnabled(boolean flag);
 
         // TODO(b/356709022): remove @Nullable
+
         /** Sets the value for the calling app package */
         public abstract DevContext.Builder setCallingAppPackageName(@Nullable String value);
 

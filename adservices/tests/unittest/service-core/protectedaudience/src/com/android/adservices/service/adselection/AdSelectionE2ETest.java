@@ -37,8 +37,6 @@ import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_BA
 import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS;
 import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.data.adselection.AdSelectionDatabase.DATABASE_NAME;
-import static com.android.adservices.data.encryptionkey.EncryptionKeyDaoTest.ENCRYPTION_KEY1;
-import static com.android.adservices.data.enrollment.EnrollmentDaoTest.ENROLLMENT_DATA1;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_AD_SELECTION_FAILURE;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_BUYERS_OR_CONTEXTUAL_ADS_AVAILABLE;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_CA_AND_CONTEXTUAL_ADS_AVAILABLE;
@@ -54,7 +52,7 @@ import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_SELECTION_USE_CASE;
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.PREBUILT_FEATURE_IS_DISABLED;
 import static com.android.adservices.service.adselection.signature.ProtectedAudienceSignatureManager.PUBLIC_TEST_KEY_STRING;
-import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.DB_AD_SELECTION_FILE_SIZE;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTestFixture.DB_AD_SELECTION_FILE_SIZE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
@@ -151,6 +149,7 @@ import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.encryptionkey.EncryptionKey;
+import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.signals.EgressConfigurationGenerator;
@@ -184,6 +183,7 @@ import org.mockito.Spy;
 import java.io.File;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -601,6 +601,37 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     private static final String CALLER_PACKAGE_NAME = TEST_PACKAGE_NAME;
     private static final String MY_APP_PACKAGE_NAME = TEST_PACKAGE_NAME;
     private static final boolean CONSOLE_MESSAGE_IN_LOGS_ENABLED = true;
+
+    private static final EnrollmentData ENROLLMENT_DATA1 =
+            new EnrollmentData.Builder()
+                    .setEnrollmentId("1")
+                    .setEnrolledAPIs(
+                            "PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING"
+                                    + " PRIVACY_SANDBOX_API_TOPICS"
+                                    + " PRIVACY_SANDBOX_API_PROTECTED_APP_SIGNALS")
+                    .setSdkNames("1sdk")
+                    .setAttributionSourceRegistrationUrl(Arrays.asList("https://1test.com/source"))
+                    .setAttributionTriggerRegistrationUrl(
+                            Arrays.asList("https://1test.com/trigger"))
+                    .setAttributionReportingUrl(Arrays.asList("https://1test.com"))
+                    .setRemarketingResponseBasedRegistrationUrl(Arrays.asList("https://1test.com"))
+                    .setEncryptionKeyUrl("https://1test.com/keys")
+                    .build();
+
+    private static final EncryptionKey ENCRYPTION_KEY1 =
+            new EncryptionKey.Builder()
+                    .setId("1")
+                    .setKeyType(EncryptionKey.KeyType.ENCRYPTION)
+                    .setEnrollmentId("100")
+                    .setReportingOrigin(Uri.parse("https://test1.com"))
+                    .setEncryptionKeyUrl("https://test1.com/.well-known/encryption-keys")
+                    .setProtocolType(EncryptionKey.ProtocolType.HPKE)
+                    .setKeyCommitmentId(11)
+                    .setBody("AVZBTFVF")
+                    .setExpiration(100001L)
+                    .setLastFetchTime(100001L)
+                    .build();
+
     private final AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
     private Flags mFlags = new AdSelectionE2ETestFlags();

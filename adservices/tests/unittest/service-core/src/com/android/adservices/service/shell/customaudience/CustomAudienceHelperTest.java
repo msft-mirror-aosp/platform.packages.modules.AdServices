@@ -16,6 +16,9 @@
 
 package com.android.adservices.service.shell.customaudience;
 
+import static com.android.adservices.service.shell.customaudience.CustomAudienceHelper.IS_ELIGIBLE_FOR_ON_DEVICE_AUCTION;
+import static com.android.adservices.service.shell.customaudience.CustomAudienceHelper.IS_ELIGIBLE_FOR_SERVER_AUCTION;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
@@ -48,6 +51,8 @@ public class CustomAudienceHelperTest {
     private static final DBCustomAudienceBackgroundFetchData.Builder
             CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA_BUILDER =
                     DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(BUYER);
+    private static final CustomAudienceEligibilityInfo ELIGIBLE_FOR_ALL_AUCTIONS =
+            CustomAudienceEligibilityInfo.create(true, true);
 
     @Test
     public void testCustomAudienceFromJson_happyPath() throws JSONException {
@@ -178,7 +183,10 @@ public class CustomAudienceHelperTest {
                 CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA_BUILDER.build();
 
         JSONObject jsonObject =
-                CustomAudienceHelper.toJson(customAudience, customAudienceBackgroundFetchData);
+                CustomAudienceHelper.toJson(
+                        customAudience,
+                        customAudienceBackgroundFetchData,
+                        ELIGIBLE_FOR_ALL_AUCTIONS);
 
         assertThat(customAudience)
                 .isEqualTo(CustomAudienceHelper.getCustomAudienceFromJson(jsonObject));
@@ -196,7 +204,10 @@ public class CustomAudienceHelperTest {
                 CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA_BUILDER.build();
 
         JSONObject jsonObject =
-                CustomAudienceHelper.toJson(customAudience, customAudienceBackgroundFetchData);
+                CustomAudienceHelper.toJson(
+                        customAudience,
+                        customAudienceBackgroundFetchData,
+                        ELIGIBLE_FOR_ALL_AUCTIONS);
 
         assertThat(jsonObject.isNull(CustomAudienceHelper.TRUSTED_BIDDING_DATA)).isTrue();
     }
@@ -209,7 +220,10 @@ public class CustomAudienceHelperTest {
                 CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA_BUILDER.build();
 
         JSONObject jsonObject =
-                CustomAudienceHelper.toJson(customAudience, customAudienceBackgroundFetchData);
+                CustomAudienceHelper.toJson(
+                        customAudience,
+                        customAudienceBackgroundFetchData,
+                        ELIGIBLE_FOR_ALL_AUCTIONS);
 
         assertThat(jsonObject.isNull(CustomAudienceHelper.USER_BIDDING_SIGNALS)).isTrue();
     }
@@ -221,7 +235,10 @@ public class CustomAudienceHelperTest {
                 CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA_BUILDER.build();
 
         JSONObject jsonObject =
-                CustomAudienceHelper.toJson(customAudience, customAudienceBackgroundFetchData);
+                CustomAudienceHelper.toJson(
+                        customAudience,
+                        customAudienceBackgroundFetchData,
+                        ELIGIBLE_FOR_ALL_AUCTIONS);
 
         assertThat(jsonObject.getJSONArray(CustomAudienceHelper.ADS).length()).isEqualTo(0);
     }
@@ -232,14 +249,65 @@ public class CustomAudienceHelperTest {
                 NullPointerException.class,
                 () ->
                         CustomAudienceHelper.toJson(
-                                null, CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA_BUILDER.build()));
+                                null,
+                                CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA_BUILDER.build(),
+                                ELIGIBLE_FOR_ALL_AUCTIONS));
     }
 
     @Test
     public void testToJson_withNullBackgroundFetchData_throwsNullPointerException() {
         assertThrows(
                 NullPointerException.class,
-                () -> CustomAudienceHelper.toJson(CUSTOM_AUDIENCE_BUILDER.build(), null));
+                () ->
+                        CustomAudienceHelper.toJson(
+                                CUSTOM_AUDIENCE_BUILDER.build(), null, ELIGIBLE_FOR_ALL_AUCTIONS));
+    }
+
+    @Test
+    public void testToJson_withEligibleForOnDeviceAuctions_correctOutput() throws JSONException {
+        DBCustomAudience customAudience = CUSTOM_AUDIENCE_BUILDER.build();
+        DBCustomAudienceBackgroundFetchData customAudienceBackgroundFetchData =
+                CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA_BUILDER.build();
+
+        JSONObject jsonObject =
+                CustomAudienceHelper.toJson(
+                        customAudience,
+                        customAudienceBackgroundFetchData,
+                        CustomAudienceEligibilityInfo.create(true, false));
+
+        assertThat(jsonObject.getBoolean(IS_ELIGIBLE_FOR_ON_DEVICE_AUCTION)).isEqualTo(true);
+        assertThat(jsonObject.getBoolean(IS_ELIGIBLE_FOR_SERVER_AUCTION)).isEqualTo(false);
+    }
+
+    @Test
+    public void testToJson_withEligibleForServerAuctions_correctOutput() throws JSONException {
+        DBCustomAudience customAudience = CUSTOM_AUDIENCE_BUILDER.build();
+        DBCustomAudienceBackgroundFetchData customAudienceBackgroundFetchData =
+                CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA_BUILDER.build();
+
+        JSONObject jsonObject =
+                CustomAudienceHelper.toJson(
+                        customAudience,
+                        customAudienceBackgroundFetchData,
+                        CustomAudienceEligibilityInfo.create(false, true));
+
+        assertThat(jsonObject.getBoolean(IS_ELIGIBLE_FOR_SERVER_AUCTION)).isEqualTo(true);
+    }
+
+    @Test
+    public void testToJson_withEligibleForNoAuctions_correctOutput() throws JSONException {
+        DBCustomAudience customAudience = CUSTOM_AUDIENCE_BUILDER.build();
+        DBCustomAudienceBackgroundFetchData customAudienceBackgroundFetchData =
+                CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA_BUILDER.build();
+
+        JSONObject jsonObject =
+                CustomAudienceHelper.toJson(
+                        customAudience,
+                        customAudienceBackgroundFetchData,
+                        CustomAudienceEligibilityInfo.create(false, false));
+
+        assertThat(jsonObject.getBoolean(IS_ELIGIBLE_FOR_ON_DEVICE_AUCTION)).isEqualTo(false);
+        assertThat(jsonObject.getBoolean(IS_ELIGIBLE_FOR_SERVER_AUCTION)).isEqualTo(false);
     }
 
     private static JSONArray getFakeAdsJson() throws JSONException {

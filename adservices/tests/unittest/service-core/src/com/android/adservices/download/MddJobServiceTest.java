@@ -56,7 +56,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.os.PersistableBundle;
 
-import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.AdServicesJobServiceTestCase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
@@ -92,7 +92,7 @@ import java.util.concurrent.Executors;
 @SpyStatic(EnrollmentDataDownloadManager.class)
 @SpyStatic(EncryptionDataDownloadManager.class)
 @MockStatic(ServiceCompatUtils.class)
-public final class MddJobServiceTest extends AdServicesExtendedMockitoTestCase {
+public final class MddJobServiceTest extends AdServicesJobServiceTestCase {
 
     private static final JobScheduler JOB_SCHEDULER = sContext.getSystemService(JobScheduler.class);
     private static final int MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID =

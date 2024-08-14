@@ -48,11 +48,9 @@ import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.content.Context;
 
-import androidx.test.core.app.ApplicationProvider;
-
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
@@ -61,23 +59,27 @@ import com.android.adservices.shared.testing.concurrency.JobServiceCallback;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.internal.stubbing.answers.AnswersWithDelay;
 import org.mockito.internal.stubbing.answers.CallsRealMethods;
-import org.mockito.quality.Strictness;
 
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 /** Unit test for {@link EventReportingJobService} */
-public class EventReportingJobServiceTest {
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
+@SpyStatic(DatastoreManagerFactory.class)
+@SpyStatic(EventReportingJobService.class)
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(AdServicesJobServiceLogger.class)
+@MockStatic(ServiceCompatUtils.class)
+public final class EventReportingJobServiceTest extends AdServicesExtendedMockitoTestCase {
     private static final int MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID =
             MEASUREMENT_EVENT_MAIN_REPORTING_JOB.getJobId();
     private static final long WAIT_IN_MILLIS = 200L;
@@ -90,17 +92,6 @@ public class EventReportingJobServiceTest {
     private Flags mMockFlags;
     private AdServicesJobServiceLogger mSpyLogger;
 
-    @Rule
-    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder(this)
-                    .spyStatic(DatastoreManagerFactory.class)
-                    .spyStatic(EventReportingJobService.class)
-                    .spyStatic(FlagsFactory.class)
-                    .spyStatic(AdServicesJobServiceLogger.class)
-                    .mockStatic(ServiceCompatUtils.class)
-                    .setStrictness(Strictness.LENIENT)
-                    .build();
-
     @Before
     public void setUp() {
         mSpyService = spy(new EventReportingJobService());
@@ -108,7 +99,7 @@ public class EventReportingJobServiceTest {
         mMockJobScheduler = mock(JobScheduler.class);
 
         mMockFlags = mock(Flags.class);
-        mSpyLogger = getSpiedAdServicesJobServiceLogger(CONTEXT, mMockFlags);
+        mSpyLogger = getSpiedAdServicesJobServiceLogger(mContext, mMockFlags);
         when(mMockFlags.getMeasurementEventReportingJobPersisted()).thenReturn(true);
         when(mMockFlags.getMeasurementEventReportingJobRequiredNetworkType())
                 .thenReturn(JobInfo.NETWORK_TYPE_UNMETERED);
@@ -267,15 +258,14 @@ public class EventReportingJobServiceTest {
                     // Setup
                     disableKillSwitch();
 
-                    final Context spyContext = spy(CONTEXT);
                     doReturn(mMockJobScheduler)
-                            .when(spyContext)
+                            .when(mSpyContext)
                             .getSystemService(JobScheduler.class);
                     final JobInfo scheduledJobInfo =
                             new JobInfo.Builder(
                                             MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID,
                                             new ComponentName(
-                                                    spyContext, EventReportingJobService.class))
+                                                    mSpyContext, EventReportingJobService.class))
                                     .setRequiresBatteryNotLow(true)
                                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
                                     .setPeriodic(JOB_PERIOD_MS)
@@ -287,12 +277,12 @@ public class EventReportingJobServiceTest {
 
                     // Execute
                     EventReportingJobService.scheduleIfNeeded(
-                            spyContext, /* forceSchedule= */ false);
+                            mSpyContext, /* forceSchedule= */ false);
 
                     // Validate
                     ExtendedMockito.verify(
                             () -> EventReportingJobService.schedule(any(), any()), never());
-                    verify(mMockJobScheduler, times(1))
+                    verify(mMockJobScheduler)
                             .getPendingJob(eq(MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID));
                 });
     }
@@ -305,15 +295,14 @@ public class EventReportingJobServiceTest {
                     // Setup
                     disableKillSwitch();
 
-                    final Context spyContext = spy(CONTEXT);
                     doReturn(mMockJobScheduler)
-                            .when(spyContext)
+                            .when(mSpyContext)
                             .getSystemService(JobScheduler.class);
                     final JobInfo scheduledJobInfo =
                             new JobInfo.Builder(
                                             MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID,
                                             new ComponentName(
-                                                    spyContext, EventReportingJobService.class))
+                                                    mSpyContext, EventReportingJobService.class))
                                     .setRequiresBatteryNotLow(true)
                                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
                                     .setPeriodic(
@@ -327,11 +316,11 @@ public class EventReportingJobServiceTest {
 
                     // Execute
                     EventReportingJobService.scheduleIfNeeded(
-                            spyContext, /* forceSchedule= */ false);
+                            mSpyContext, /* forceSchedule= */ false);
 
                     // Validate
                     ExtendedMockito.verify(() -> EventReportingJobService.schedule(any(), any()));
-                    verify(mMockJobScheduler, times(1))
+                    verify(mMockJobScheduler)
                             .getPendingJob(eq(MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID));
                 });
     }
@@ -358,9 +347,8 @@ public class EventReportingJobServiceTest {
                             mockContext, /* forceSchedule= */ true);
 
                     // Validate
-                    ExtendedMockito.verify(
-                            () -> EventReportingJobService.schedule(any(), any()), times(1));
-                    verify(mMockJobScheduler, times(1))
+                    ExtendedMockito.verify(() -> EventReportingJobService.schedule(any(), any()));
+                    verify(mMockJobScheduler)
                             .getPendingJob(eq(MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID));
                 });
     }
@@ -386,9 +374,8 @@ public class EventReportingJobServiceTest {
                     EventReportingJobService.scheduleIfNeeded(mockContext, false);
 
                     // Validate
-                    ExtendedMockito.verify(
-                            () -> EventReportingJobService.schedule(any(), any()), times(1));
-                    verify(mMockJobScheduler, times(1))
+                    ExtendedMockito.verify(() -> EventReportingJobService.schedule(any(), any()));
+                    verify(mMockJobScheduler)
                             .getPendingJob(eq(MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID));
                 });
     }
@@ -399,9 +386,8 @@ public class EventReportingJobServiceTest {
                 () -> {
                     // Setup
                     disableKillSwitch();
-                    Context spyContext = spy(CONTEXT);
                     final JobScheduler jobScheduler = mock(JobScheduler.class);
-                    doReturn(jobScheduler).when(spyContext).getSystemService(JobScheduler.class);
+                    doReturn(jobScheduler).when(mSpyContext).getSystemService(JobScheduler.class);
                     final ArgumentCaptor<JobInfo> captor = ArgumentCaptor.forClass(JobInfo.class);
                     doReturn(null)
                             .when(jobScheduler)
@@ -410,10 +396,10 @@ public class EventReportingJobServiceTest {
                     // Execute
                     ExtendedMockito.doCallRealMethod()
                             .when(() -> EventReportingJobService.schedule(any(), any()));
-                    EventReportingJobService.scheduleIfNeeded(spyContext, true);
+                    EventReportingJobService.scheduleIfNeeded(mSpyContext, true);
 
                     // Validate
-                    verify(jobScheduler, times(1)).schedule(captor.capture());
+                    verify(jobScheduler).schedule(captor.capture());
                     assertNotNull(captor.getValue());
                     assertTrue(captor.getValue().isPersisted());
                 });
@@ -435,7 +421,7 @@ public class EventReportingJobServiceTest {
 
                     boolean onStopJobResult =
                             mSpyService.onStopJob(Mockito.mock(JobParameters.class));
-                    verify(mSpyService, times(0)).jobFinished(any(), anyBoolean());
+                    verify(mSpyService, never()).jobFinished(any(), anyBoolean());
                     assertTrue(onStopJobResult);
                     assertTrue(mSpyService.getFutureForTesting().isCancelled());
                 });
@@ -456,8 +442,8 @@ public class EventReportingJobServiceTest {
 
         callback.assertJobFinished();
         verify(mMockDatastoreManager, never()).runInTransactionWithResult(any());
-        verify(mSpyService, times(1)).jobFinished(any(), eq(false));
-        verify(mMockJobScheduler, times(1)).cancel(eq(MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID));
+        verify(mSpyService).jobFinished(any(), eq(false));
+        verify(mMockJobScheduler).cancel(eq(MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID));
     }
 
     private void onStartJob_killSwitchOff() throws Exception {
@@ -476,8 +462,8 @@ public class EventReportingJobServiceTest {
         assertTrue(result);
 
         callback.assertJobFinished();
-        verify(mMockDatastoreManager, times(1)).runInTransactionWithResult(any());
-        verify(mSpyService, times(1)).jobFinished(any(), anyBoolean());
+        verify(mMockDatastoreManager).runInTransactionWithResult(any());
+        verify(mSpyService).jobFinished(any(), anyBoolean());
         verify(mMockJobScheduler, never()).cancel(eq(MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID));
     }
 
@@ -499,8 +485,8 @@ public class EventReportingJobServiceTest {
 
         callback.assertJobFinished();
         verify(mMockDatastoreManager, never()).runInTransactionWithResult(any());
-        verify(mSpyService, times(1)).jobFinished(any(), eq(false));
-        verify(mMockJobScheduler, times(1)).cancel(eq(MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID));
+        verify(mSpyService).jobFinished(any(), eq(false));
+        verify(mMockJobScheduler).cancel(eq(MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID));
     }
 
     private void runWithMocks(TestUtils.RunnableWithThrow execute) throws Exception {

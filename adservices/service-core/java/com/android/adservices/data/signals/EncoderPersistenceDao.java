@@ -119,13 +119,13 @@ public class EncoderPersistenceDao {
                         FileCompatUtils.newFileHelper(mFilesDir, ENCODERS_DIR),
                         uniqueFileNamePerBuyer);
         boolean deletionComplete = false;
-            if (!file.exists()) {
-                deletionComplete = true;
-            } else {
-                AtomicFile atomicFile = new AtomicFile(file);
-                atomicFile.delete();
-                deletionComplete = !file.exists();
-            }
+        if (!file.exists()) {
+            deletionComplete = true;
+        } else {
+            AtomicFile atomicFile = new AtomicFile(file);
+            atomicFile.delete();
+            deletionComplete = !file.exists();
+        }
         return deletionComplete;
     }
 
@@ -146,7 +146,7 @@ public class EncoderPersistenceDao {
 
             // This creates the actual directory
             if (encodersDir.mkdirs()) {
-                sLogger.v("New Encoders directory creation succeeded");
+                sLogger.v("New Encoders directory creation succeeded at: `" + encodersDir + "`");
             } else {
                 sLogger.e("New Encoders directory creation failed");
             }
@@ -228,8 +228,8 @@ public class EncoderPersistenceDao {
                             String.format(
                                     "Deleting from path: %s , file: %s",
                                     child.getPath(), child.getName()));
-                        AtomicFile atomicFile = new AtomicFile(child);
-                        atomicFile.delete();
+                    AtomicFile atomicFile = new AtomicFile(child);
+                    atomicFile.delete();
                 }
             }
         }

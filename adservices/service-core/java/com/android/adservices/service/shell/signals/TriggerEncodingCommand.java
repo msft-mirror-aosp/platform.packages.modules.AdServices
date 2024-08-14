@@ -42,6 +42,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.FluentFuture;
 
 import java.io.PrintWriter;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -75,10 +76,6 @@ public class TriggerEncodingCommand extends AbstractShellCommand {
     public static final String OUTPUT_SUCCESS = "successfully completed signals encoding";
 
     @VisibleForTesting
-    public static final String ERROR_FAIL_TO_DOWNLOAD_AND_UPDATE =
-            "failed to download and update signals";
-
-    @VisibleForTesting
     public static final String ERROR_FAIL_TO_ENCODE_SIGNALS =
             "failed during signal encoding execution";
 
@@ -94,11 +91,11 @@ public class TriggerEncodingCommand extends AbstractShellCommand {
             EncodingExecutionLogHelper encodingExecutionLogHelper,
             EncodingJobRunStatsLogger encodingJobRunStatsLogger,
             EncoderLogicMetadataDao encoderLogicMetadataDao) {
-        mPeriodicEncodingJobRunner = encodingJobRunner;
-        mEncoderLogicHandler = encoderLogicHandler;
-        mEncodingExecutionLogHelper = encodingExecutionLogHelper;
-        mEncodingJobRunStatsLogger = encodingJobRunStatsLogger;
-        mEncoderLogicMetadataDao = encoderLogicMetadataDao;
+        mPeriodicEncodingJobRunner = Objects.requireNonNull(encodingJobRunner);
+        mEncoderLogicHandler = Objects.requireNonNull(encoderLogicHandler);
+        mEncodingExecutionLogHelper = Objects.requireNonNull(encodingExecutionLogHelper);
+        mEncodingJobRunStatsLogger = Objects.requireNonNull(encodingJobRunStatsLogger);
+        mEncoderLogicMetadataDao = Objects.requireNonNull(encoderLogicMetadataDao);
     }
 
     @Override
@@ -115,7 +112,9 @@ public class TriggerEncodingCommand extends AbstractShellCommand {
         }
 
         if (!cliArgs.containsKey(BUYER) || cliArgs.get(BUYER) == null) {
-            sLogger.v("failure with error message: %s", ERROR_BUYER_ARGUMENT);
+            sLogger.v(
+                    "failure with error message: %s. current args are: %s",
+                    ERROR_BUYER_ARGUMENT, Arrays.toString(args));
             err.write(ERROR_BUYER_ARGUMENT);
             return toShellCommandResult(
                     ShellCommandStats.RESULT_GENERIC_ERROR, getMetricsLoggerCommand());
@@ -125,44 +124,38 @@ public class TriggerEncodingCommand extends AbstractShellCommand {
                 AdTechIdentifier.fromString(Objects.requireNonNull(cliArgs.get(BUYER)));
         sLogger.v("triggering signals update for buyer: %s", buyer);
         try {
-            return updateAndTriggerEncoding(buyer, out, err);
-        } catch (InterruptedException | TimeoutException | ExecutionException e) {
-            sLogger.v("timeout when triggering encoding: " + e.getMessage());
+            return updateAndTriggerEncoding(buyer, out);
+        } catch (InterruptedException | ExecutionException | IllegalStateException e) {
+            err.write(ERROR_FAIL_TO_ENCODE_SIGNALS);
+            sLogger.v(e.getMessage());
+            return toShellCommandResult(
+                    ShellCommandStats.RESULT_GENERIC_ERROR, getMetricsLoggerCommand());
+        } catch (TimeoutException e) {
             err.write(ERROR_TIMEOUT);
+            sLogger.v(ERROR_TIMEOUT + ": " + e.getMessage());
             return toShellCommandResult(
                     ShellCommandStats.RESULT_TIMEOUT_ERROR, getMetricsLoggerCommand());
         }
     }
 
-    private ShellCommandResult updateAndTriggerEncoding(
-            AdTechIdentifier buyer, PrintWriter out, PrintWriter err)
+    private ShellCommandResult updateAndTriggerEncoding(AdTechIdentifier buyer, PrintWriter out)
             throws ExecutionException, InterruptedException, TimeoutException {
         sLogger.v("triggering download and update for buyer: " + buyer);
-        FluentFuture<Boolean> future =
-                mEncoderLogicHandler.downloadAndUpdate(
-                        buyer, DevContext.createForDevOptionsDisabled());
-        boolean success = future.get(TIMEOUT_SEC, TimeUnit.SECONDS);
+        FluentFuture<Boolean> downloadAndUpdateFuture =
+                mEncoderLogicHandler.downloadAndUpdate(buyer, DevContext.createForDevIdentity());
+        boolean success = downloadAndUpdateFuture.get(TIMEOUT_SEC, TimeUnit.SECONDS);
         if (!success) {
-            err.write(ERROR_FAIL_TO_DOWNLOAD_AND_UPDATE);
-            return toShellCommandResult(
-                    ShellCommandStats.RESULT_GENERIC_ERROR, getMetricsLoggerCommand());
+            throw new IllegalStateException(ERROR_FAIL_TO_ENCODE_SIGNALS);
         }
 
-        try {
-            sLogger.v("triggering encoding for buyer: " + buyer);
-            mPeriodicEncodingJobRunner
-                    .runEncodingPerBuyer(
-                            getDbEncoderLogicMetadata(buyer),
-                            TIMEOUT_SEC,
-                            mEncodingExecutionLogHelper,
-                            mEncodingJobRunStatsLogger)
-                    .get(TIMEOUT_SEC, TimeUnit.SECONDS);
-        } catch (IllegalStateException e) {
-            err.write(ERROR_FAIL_TO_ENCODE_SIGNALS);
-            sLogger.v(ERROR_FAIL_TO_ENCODE_SIGNALS + ": " + e.getMessage());
-            return toShellCommandResult(
-                    ShellCommandStats.RESULT_GENERIC_ERROR, getMetricsLoggerCommand());
-        }
+        sLogger.v("triggering encoding for buyer: " + buyer);
+        mPeriodicEncodingJobRunner
+                .runEncodingPerBuyer(
+                        getDbEncoderLogicMetadata(buyer),
+                        TIMEOUT_SEC,
+                        mEncodingExecutionLogHelper,
+                        mEncodingJobRunStatsLogger)
+                .get(TIMEOUT_SEC, TimeUnit.SECONDS);
 
         out.write(OUTPUT_SUCCESS);
         sLogger.v("successfully completed encoding of signals for buyer: %s", buyer);

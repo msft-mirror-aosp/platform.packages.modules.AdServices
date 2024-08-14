@@ -34,6 +34,8 @@ import com.android.internal.annotations.VisibleForTesting;
 import org.json.JSONException;
 
 import java.io.PrintWriter;
+import java.time.Clock;
+import java.util.List;
 import java.util.Optional;
 
 /** Command to view custom audiences created in Protected Audience. */
@@ -59,14 +61,21 @@ public final class CustomAudienceViewCommand extends AbstractShellCommand {
 
     private final CustomAudienceDao mCustomAudienceDao;
     private final CustomAudienceArgParser mCustomAudienceArgParser;
+    private final Clock mClock;
+    private final long mFledgeCustomAudienceActiveTimeWindowInMs;
 
-    CustomAudienceViewCommand(CustomAudienceDao customAudienceDao) {
+    CustomAudienceViewCommand(
+            CustomAudienceDao customAudienceDao,
+            Clock clock,
+            long fledgeCustomAudienceActiveTimeWindowInMs) {
         mCustomAudienceDao = customAudienceDao;
+        mFledgeCustomAudienceActiveTimeWindowInMs = fledgeCustomAudienceActiveTimeWindowInMs;
         mCustomAudienceArgParser =
                 new CustomAudienceArgParser(
                         CustomAudienceArgs.OWNER,
                         CustomAudienceArgs.BUYER,
                         CustomAudienceArgs.NAME);
+        mClock = clock;
     }
 
     @Override
@@ -107,7 +116,12 @@ public final class CustomAudienceViewCommand extends AbstractShellCommand {
             if (customAudience.isPresent() && customAudienceBackgroundFetchData.isPresent()) {
                 out.print(
                         CustomAudienceHelper.toJson(
-                                customAudience.get(), customAudienceBackgroundFetchData.get()));
+                                customAudience.get(),
+                                customAudienceBackgroundFetchData.get(),
+                                CustomAudienceEligibilityInfo.create(
+                                        customAudience.get(),
+                                        queryForActiveCustomAudiences(
+                                                customAudience.get().getBuyer()))));
             } else {
                 out.print("{}");
             }
@@ -118,6 +132,20 @@ public final class CustomAudienceViewCommand extends AbstractShellCommand {
             return toShellCommandResult(
                     ShellCommandStats.RESULT_GENERIC_ERROR, COMMAND_CUSTOM_AUDIENCE_VIEW);
         }
+    }
+
+    private List<DBCustomAudience> queryForActiveCustomAudiences(AdTechIdentifier buyer) {
+        Log.d(TAG, String.format("Querying for active CAs from buyer %s", buyer));
+        List<DBCustomAudience> customAudienceList =
+                mCustomAudienceDao.getActiveCustomAudienceByBuyers(
+                        List.of(buyer),
+                        mClock.instant(),
+                        mFledgeCustomAudienceActiveTimeWindowInMs);
+        if (customAudienceList == null) {
+            customAudienceList = List.of();
+        }
+        Log.d(TAG, String.format("%d active custom audiences found.", customAudienceList.size()));
+        return customAudienceList;
     }
 
     private Optional<DBCustomAudience> queryForDebuggableCustomAudience(

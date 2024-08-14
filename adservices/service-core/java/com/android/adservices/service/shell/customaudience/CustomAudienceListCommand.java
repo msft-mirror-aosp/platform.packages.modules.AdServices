@@ -36,12 +36,12 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.PrintWriter;
+import java.time.Clock;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /** Command to list custom audiences created in Protected Audience. */
-// TODO(b/318496217): Merge with background fetch data in follow-up CL.
 public final class CustomAudienceListCommand extends AbstractShellCommand {
 
     @VisibleForTesting public static final String CMD = "list";
@@ -61,11 +61,18 @@ public final class CustomAudienceListCommand extends AbstractShellCommand {
 
     private final CustomAudienceDao mCustomAudienceDao;
     private final CustomAudienceArgParser mCustomAudienceArgParser;
+    private final Clock mClock;
+    private final long mFledgeCustomAudienceActiveTimeWindowInMs;
 
-    CustomAudienceListCommand(CustomAudienceDao customAudienceDao) {
+    CustomAudienceListCommand(
+            CustomAudienceDao customAudienceDao,
+            Clock clock,
+            long fledgeCustomAudienceActiveTimeWindowInMs) {
         mCustomAudienceDao = customAudienceDao;
+        mFledgeCustomAudienceActiveTimeWindowInMs = fledgeCustomAudienceActiveTimeWindowInMs;
         mCustomAudienceArgParser =
                 new CustomAudienceArgParser(CustomAudienceArgs.OWNER, CustomAudienceArgs.BUYER);
+        mClock = clock;
     }
 
     @Override
@@ -101,7 +108,8 @@ public final class CustomAudienceListCommand extends AbstractShellCommand {
             out.print(
                     createOutputJson(
                             queryForDebuggableCustomAudiences(owner, buyer),
-                            queryForDebuggableBackgroundFetchData(owner, buyer)));
+                            queryForDebuggableBackgroundFetchData(owner, buyer),
+                            queryForActiveCustomAudiences(buyer)));
         } catch (JSONException e) {
             err.printf("Failed to generate output: %s\n", e.getMessage());
             Log.e(TAG, "Failed to generate JSON: " + e.getMessage());
@@ -109,6 +117,20 @@ public final class CustomAudienceListCommand extends AbstractShellCommand {
                     ShellCommandStats.RESULT_GENERIC_ERROR, COMMAND_CUSTOM_AUDIENCE_LIST);
         }
         return toShellCommandResult(RESULT_SUCCESS, COMMAND_CUSTOM_AUDIENCE_LIST);
+    }
+
+    private List<DBCustomAudience> queryForActiveCustomAudiences(AdTechIdentifier buyer) {
+        Log.d(TAG, String.format("Querying for active CAs from buyer %s", buyer));
+        List<DBCustomAudience> customAudienceList =
+                mCustomAudienceDao.getActiveCustomAudienceByBuyers(
+                        List.of(buyer),
+                        mClock.instant(),
+                        mFledgeCustomAudienceActiveTimeWindowInMs);
+        if (customAudienceList == null) {
+            customAudienceList = List.of();
+        }
+        Log.d(TAG, String.format("%d active custom audiences found.", customAudienceList.size()));
+        return customAudienceList;
     }
 
     private List<DBCustomAudience> queryForDebuggableCustomAudiences(
@@ -150,7 +172,8 @@ public final class CustomAudienceListCommand extends AbstractShellCommand {
 
     private static JSONObject createOutputJson(
             List<DBCustomAudience> customAudienceList,
-            Map<String, DBCustomAudienceBackgroundFetchData> backgroundFetchDataMap)
+            Map<String, DBCustomAudienceBackgroundFetchData> backgroundFetchDataMap,
+            List<DBCustomAudience> activeCustomAudiences)
             throws JSONException {
         JSONObject jsonObject = new JSONObject();
         JSONArray jsonArray = new JSONArray();
@@ -168,7 +191,10 @@ public final class CustomAudienceListCommand extends AbstractShellCommand {
             }
             jsonArray.put(
                     CustomAudienceHelper.toJson(
-                            customAudience, backgroundFetchDataMap.get(customAudience.getName())));
+                            customAudience,
+                            backgroundFetchDataMap.get(customAudience.getName()),
+                            CustomAudienceEligibilityInfo.create(
+                                    customAudience, activeCustomAudiences)));
         }
         jsonObject.put("custom_audiences", jsonArray);
         return jsonObject;

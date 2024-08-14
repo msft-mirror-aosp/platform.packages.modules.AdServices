@@ -238,6 +238,7 @@ public class DebugReportProcessorTest {
 
         assertThat(uris).containsExactly(winUri);
     }
+
     @Test
     public void singleBuyerSessionWithComplexUrlVariables_returnsAllVariablesCorrectly() {
         // Test both changes to path and query parameters.
@@ -591,6 +592,7 @@ public class DebugReportProcessorTest {
                 .setWinningCustomAudienceName(CUSTOM_AUDIENCE_NAME_1)
                 .setWinningBid(AD_BID_1);
     }
+
     private static Uri makeUri(AdTechIdentifier adTechIdentifier, int i) {
         // Quickly create lots of small Uris for testing without using randomness.
         return Uri.parse(String.format("https://%s/report%d", adTechIdentifier, i));

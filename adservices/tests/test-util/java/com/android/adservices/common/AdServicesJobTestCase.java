@@ -25,7 +25,7 @@ import org.junit.Test;
 /** Base class for tests that exercise custom {@code Jobs}. */
 public abstract class AdServicesJobTestCase extends AdServicesExtendedMockitoTestCase {
 
-    public final AdServicesJobMocker jobMocker = new AdServicesMockitoJobMocker();
+    public final AdServicesJobMocker jobMocker = new AdServicesMockitoJobMocker(extendedMockito);
 
     // TODO(b/314969513): consider inlining after all classes are refactored
     /**

@@ -42,10 +42,8 @@ import android.app.job.JobInfo;
 import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
 import android.content.ComponentName;
-import android.content.Context;
 
-import androidx.test.core.app.ApplicationProvider;
-
+import com.android.adservices.common.AdServicesJobServiceTestCase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
@@ -54,6 +52,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.util.concurrent.FluentFuture;
 
@@ -61,15 +60,18 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoSession;
 import org.mockito.Spy;
-import org.mockito.quality.Strictness;
 
 import java.util.concurrent.CountDownLatch;
 
-public class KAnonSignJoinBackgroundJobServiceTest {
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
-    private static final JobScheduler JOB_SCHEDULER = CONTEXT.getSystemService(JobScheduler.class);
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(KAnonSignJoinBackgroundJobWorker.class)
+@SpyStatic(KAnonSignJoinBackgroundJobService.class)
+@SpyStatic(AdServicesJobServiceLogger.class)
+@SpyStatic(ConsentManager.class)
+@SpyStatic(ServiceCompatUtils.class)
+public final class KAnonSignJoinBackgroundJobServiceTest extends AdServicesJobServiceTestCase {
+    private static final JobScheduler JOB_SCHEDULER = sContext.getSystemService(JobScheduler.class);
     private static final int FLEDGE_KANON_SIGN_JOIN_BACKGROUND_JOB_ID =
             FLEDGE_KANON_SIGN_JOIN_BACKGROUND_JOB.getJobId();
     // Set a minimum delay of 1 hour so scheduled jobs don't run immediately
@@ -82,21 +84,9 @@ public class KAnonSignJoinBackgroundJobServiceTest {
     @Mock private KAnonSignJoinBackgroundJobWorker mKAnonSignJoinBackgroundJobWorkerMock;
     @Mock private JobParameters mJobParametersMock;
     @Mock private ConsentManager mConsentManagerMock;
-    private MockitoSession mStaticMockSession = null;
 
     @Before
     public void setup() {
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(KAnonSignJoinBackgroundJobWorker.class)
-                        .spyStatic(KAnonSignJoinBackgroundJobService.class)
-                        .spyStatic(AdServicesJobServiceLogger.class)
-                        .spyStatic(ConsentManager.class)
-                        .spyStatic(ServiceCompatUtils.class)
-                        .strictness(Strictness.LENIENT)
-                        .initMocks(this)
-                        .startMocking();
         doReturn(JOB_SCHEDULER)
                 .when(mKAnonSignJoinBackgroundJobService)
                 .getSystemService(JobScheduler.class);
@@ -104,17 +94,14 @@ public class KAnonSignJoinBackgroundJobServiceTest {
 
     @After
     public void tearDown() {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
         JOB_SCHEDULER.cancelAll();
     }
 
     @Test
-    public void onStartJob_jobStartsAndJobFinishedLogged() throws InterruptedException {
+    public void onStartJob_jobStartsAndJobFinishedLogged() throws Exception {
         KAnonSignJoinBackgroundJobServiceTestFlags testFlags =
                 new KAnonSignJoinBackgroundJobServiceTestFlags(10000, false, true);
-        doReturn(testFlags).when(() -> FlagsFactory.getFlags());
+        mocker.mockGetFlags(testFlags);
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
         doReturn(mKAnonSignJoinBackgroundJobWorkerMock)
@@ -132,7 +119,7 @@ public class KAnonSignJoinBackgroundJobServiceTest {
                         })
                 .when(mKAnonSignJoinBackgroundJobService)
                 .jobFinished(mJobParametersMock, false);
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(CONTEXT, testFlags);
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(mContext, testFlags);
         JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
         mKAnonSignJoinBackgroundJobService.onStartJob(mJobParametersMock);
@@ -145,16 +132,17 @@ public class KAnonSignJoinBackgroundJobServiceTest {
 
     @Test
     public void onStartJob_withDisabledExtServicesJobOnTPlus_skipsAndCancelsBackgroundJob()
-            throws InterruptedException {
+            throws Exception {
         doReturn(true).when(() -> ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(any()));
         doNothing().when(mKAnonSignJoinBackgroundJobService).jobFinished(mJobParametersMock, false);
         AdServicesJobServiceLogger logger =
-                mockAdServicesJobServiceLogger(CONTEXT, mock(Flags.class));
+                mockAdServicesJobServiceLogger(mContext, mock(Flags.class));
         JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 FLEDGE_KANON_SIGN_JOIN_BACKGROUND_JOB_ID,
-                                new ComponentName(CONTEXT, KAnonSignJoinBackgroundJobService.class))
+                                new ComponentName(
+                                        mContext, KAnonSignJoinBackgroundJobService.class))
                         .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
@@ -170,19 +158,20 @@ public class KAnonSignJoinBackgroundJobServiceTest {
 
     @Test
     public void onStartJob_withBackgroundProcessFlagDisabled_skipsAndCancelsBackgroundJob()
-            throws InterruptedException {
+            throws Exception {
         KAnonSignJoinBackgroundJobServiceTestFlags testWithBackgroundDisabled =
                 new KAnonSignJoinBackgroundJobServiceTestFlags(10000, false, false);
         doReturn(testWithBackgroundDisabled).when(() -> FlagsFactory.getFlags());
         doReturn(false).when(() -> ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(any()));
         doNothing().when(mKAnonSignJoinBackgroundJobService).jobFinished(mJobParametersMock, false);
         AdServicesJobServiceLogger logger =
-                mockAdServicesJobServiceLogger(CONTEXT, testWithBackgroundDisabled);
+                mockAdServicesJobServiceLogger(mContext, testWithBackgroundDisabled);
         JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 FLEDGE_KANON_SIGN_JOIN_BACKGROUND_JOB_ID,
-                                new ComponentName(CONTEXT, KAnonSignJoinBackgroundJobService.class))
+                                new ComponentName(
+                                        mContext, KAnonSignJoinBackgroundJobService.class))
                         .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
@@ -202,9 +191,9 @@ public class KAnonSignJoinBackgroundJobServiceTest {
                 new KAnonSignJoinBackgroundJobServiceTestFlags(10000, false, true);
         doReturn(testFlags).when(() -> FlagsFactory.getFlags());
         doReturn(mKAnonSignJoinBackgroundJobWorkerMock)
-                .when(() -> KAnonSignJoinBackgroundJobWorker.getInstance(CONTEXT));
+                .when(() -> KAnonSignJoinBackgroundJobWorker.getInstance(mContext));
 
-        KAnonSignJoinBackgroundJobService.scheduleIfNeeded(CONTEXT, false);
+        KAnonSignJoinBackgroundJobService.scheduleIfNeeded(mContext, false);
 
         assertThat(JOB_SCHEDULER.getPendingJob(FLEDGE_KANON_SIGN_JOIN_BACKGROUND_JOB_ID))
                 .isNotNull();
@@ -215,7 +204,8 @@ public class KAnonSignJoinBackgroundJobServiceTest {
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 FLEDGE_KANON_SIGN_JOIN_BACKGROUND_JOB_ID,
-                                new ComponentName(CONTEXT, KAnonSignJoinBackgroundJobService.class))
+                                new ComponentName(
+                                        mContext, KAnonSignJoinBackgroundJobService.class))
                         .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
@@ -227,7 +217,7 @@ public class KAnonSignJoinBackgroundJobServiceTest {
                                 KAnonSignJoinBackgroundJobService.scheduleIfNeeded(
                                         any(), eq(forceSchedule)));
 
-        KAnonSignJoinBackgroundJobService.scheduleIfNeeded(CONTEXT, forceSchedule);
+        KAnonSignJoinBackgroundJobService.scheduleIfNeeded(mContext, forceSchedule);
 
         ExtendedMockito.verify(
                 () -> KAnonSignJoinBackgroundJobService.schedule(any(), any()), never());
@@ -238,7 +228,8 @@ public class KAnonSignJoinBackgroundJobServiceTest {
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 FLEDGE_KANON_SIGN_JOIN_BACKGROUND_JOB_ID,
-                                new ComponentName(CONTEXT, KAnonSignJoinBackgroundJobService.class))
+                                new ComponentName(
+                                        mContext, KAnonSignJoinBackgroundJobService.class))
                         .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
@@ -251,12 +242,12 @@ public class KAnonSignJoinBackgroundJobServiceTest {
                                         any(), eq(forceSchedule)));
         doNothing().when(() -> KAnonSignJoinBackgroundJobService.schedule(any(), any()));
 
-        KAnonSignJoinBackgroundJobService.scheduleIfNeeded(CONTEXT, forceSchedule);
+        KAnonSignJoinBackgroundJobService.scheduleIfNeeded(mContext, forceSchedule);
 
         ExtendedMockito.verify(() -> KAnonSignJoinBackgroundJobService.schedule(any(), any()));
     }
 
-    public static class KAnonSignJoinBackgroundJobServiceTestFlags implements Flags {
+    public static final class KAnonSignJoinBackgroundJobServiceTestFlags implements Flags {
         private final int mBackgroundJobPeriod;
         private final boolean mSignJoinFeatureEnabled;
         private final boolean mKanonFledgeBackgroundJobEnabled;
