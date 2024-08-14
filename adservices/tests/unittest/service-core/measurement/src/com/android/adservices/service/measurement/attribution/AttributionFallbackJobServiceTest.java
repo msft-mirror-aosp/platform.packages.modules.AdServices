@@ -16,10 +16,6 @@
 
 package com.android.adservices.service.measurement.attribution;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdServicesJobServiceLogger;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mocker;
-import static com.android.adservices.mockito.MockitoExpectations.getSpiedAdServicesJobServiceLogger;
-import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
 import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
 import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobExecutionData;
 import static com.android.adservices.mockito.MockitoExpectations.verifyBackgroundJobsSkipLogged;
@@ -52,7 +48,7 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.AdServicesJobServiceTestCase;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.AdServicesConfig;
@@ -91,7 +87,7 @@ import java.util.concurrent.TimeUnit;
 @SpyStatic(ImmediateAggregateReportingJobService.class)
 @SpyStatic(ReportingJobService.class)
 @MockStatic(ServiceCompatUtils.class)
-public final class AttributionFallbackJobServiceTest extends AdServicesExtendedMockitoTestCase {
+public final class AttributionFallbackJobServiceTest extends AdServicesJobServiceTestCase {
     private static final long WAIT_IN_MILLIS = 200L;
     private static final long JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(24);
 

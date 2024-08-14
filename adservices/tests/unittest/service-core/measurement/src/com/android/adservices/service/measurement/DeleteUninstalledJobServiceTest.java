@@ -16,8 +16,6 @@
 
 package com.android.adservices.service.measurement;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdServicesJobServiceLogger;
-import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
 import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
 import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobExecutionData;
 import static com.android.adservices.mockito.MockitoExpectations.verifyBackgroundJobsSkipLogged;
@@ -47,7 +45,7 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.AdServicesJobServiceTestCase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
@@ -72,7 +70,7 @@ import java.util.concurrent.TimeUnit;
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(AdServicesJobServiceLogger.class)
 @MockStatic(ServiceCompatUtils.class)
-public final class DeleteUninstalledJobServiceTest extends AdServicesExtendedMockitoTestCase {
+public final class DeleteUninstalledJobServiceTest extends AdServicesJobServiceTestCase {
     private static final int MEASUREMENT_DELETE_UNINSTALLED_JOB_ID =
             MEASUREMENT_DELETE_UNINSTALLED_JOB.getJobId();
     private static final long WAIT_IN_MILLIS = 1_000L;

@@ -16,9 +16,6 @@
 
 package com.android.adservices.service.measurement.registration;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdServicesJobServiceLogger;
-import static com.android.adservices.mockito.MockitoExpectations.getSpiedAdServicesJobServiceLogger;
-import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
 import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
 import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobExecutionData;
 import static com.android.adservices.mockito.MockitoExpectations.verifyBackgroundJobsSkipLogged;
@@ -50,7 +47,7 @@ import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.content.Context;
 
-import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.AdServicesJobServiceTestCase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
@@ -86,7 +83,7 @@ import java.util.concurrent.TimeUnit;
 @SpyStatic(AdServicesJobServiceLogger.class)
 @SpyStatic(ApplicationContextSingleton.class)
 @MockStatic(ServiceCompatUtils.class)
-public class AsyncRegistrationFallbackJobServiceTest extends AdServicesExtendedMockitoTestCase {
+public class AsyncRegistrationFallbackJobServiceTest extends AdServicesJobServiceTestCase {
     private static final int MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID =
             MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB.getJobId();
     private static final long WAIT_IN_MILLIS = 1_000L;
