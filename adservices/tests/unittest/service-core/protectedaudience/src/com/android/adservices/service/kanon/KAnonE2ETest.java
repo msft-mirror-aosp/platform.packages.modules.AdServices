@@ -22,7 +22,7 @@ import static com.android.adservices.common.DBAdDataFixture.getValidDbAdDataNoFi
 import static com.android.adservices.service.common.httpclient.AdServicesHttpUtil.OHTTP_CONTENT_TYPE;
 import static com.android.adservices.service.common.httpclient.AdServicesHttpUtil.PROTOBUF_CONTENT_TYPE;
 import static com.android.adservices.service.common.httpclient.AdServicesHttpsClient.DEFAULT_MAX_BYTES;
-import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.sCallerMetadata;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTestFixture.sCallerMetadata;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyLong;

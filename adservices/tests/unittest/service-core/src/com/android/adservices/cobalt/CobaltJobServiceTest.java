@@ -44,7 +44,7 @@ import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.content.Context;
 
-import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.AdServicesJobServiceTestCase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
@@ -72,7 +72,7 @@ import java.util.concurrent.Executors;
 @SpyStatic(CobaltFactory.class)
 @SpyStatic(AdServicesJobServiceLogger.class)
 @MockStatic(ServiceCompatUtils.class)
-public final class CobaltJobServiceTest extends AdServicesExtendedMockitoTestCase {
+public final class CobaltJobServiceTest extends AdServicesJobServiceTestCase {
 
     private static final long JOB_INTERVAL_MS = 21_600_000L;
     private static final long JOB_FLEX_MS = 2_000_000L;

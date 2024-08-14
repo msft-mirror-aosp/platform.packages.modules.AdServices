@@ -25,7 +25,7 @@ import static com.android.adservices.service.adselection.AdSelectionScriptEngine
 import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_KEY;
 import static com.android.adservices.service.adselection.ImpressionReporterLegacy.CALLER_PACKAGE_NAME_MISMATCH;
 import static com.android.adservices.service.common.AppManifestConfigCall.API_AD_SELECTION;
-import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.DB_AD_SELECTION_FILE_SIZE;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTestFixture.DB_AD_SELECTION_FILE_SIZE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
@@ -5708,6 +5708,11 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
         @Override
         public boolean getFledgeAuctionServerEnabledForReportImpression() {
             return mAuctionServerEnabledReportImpression;
+        }
+
+        @Override
+        public String getPpapiAppAllowList() {
+            return CommonFixture.TEST_PACKAGE_NAME;
         }
     }
 

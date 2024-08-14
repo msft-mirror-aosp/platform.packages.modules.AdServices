@@ -17,16 +17,23 @@ package com.android.adservices.shared.testing.common;
 
 import static com.android.adservices.shared.testing.common.DumpHelper.assertDumpHasPrefix;
 import static com.android.adservices.shared.testing.common.DumpHelper.dump;
+import static com.android.adservices.shared.testing.common.DumpHelper.mockDump;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
-import com.android.adservices.shared.SharedUnitTestCase;
+import com.android.adservices.shared.SharedExtendedMockitoTestCase;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
 import org.junit.Test;
 
-public final class DumpHelperTest extends SharedUnitTestCase {
+import java.io.PrintWriter;
+
+public final class DumpHelperTest extends SharedExtendedMockitoTestCase {
 
     @Test
     public void testDump_null() throws Exception {
@@ -119,5 +126,33 @@ public final class DumpHelperTest extends SharedUnitTestCase {
                 .asList()
                 .containsExactly("pref_line1", "pref_line2")
                 .inOrder();
+    }
+
+    @Test
+    public void testMockDump_null() {
+        assertThrows(
+                NullPointerException.class,
+                () -> mockDump(/* invocation= */ null, /* pwArgIndex= */ 0, "Dumpo"));
+        assertThrows(
+                NullPointerException.class,
+                () -> mockDump(/* invocation= */ () -> {}, /* pwArgIndex= */ 0, /* dump= */ null));
+    }
+
+    @Test
+    @MockStatic(MyStaticDumper.class)
+    public void testMockDump() {
+        PrintWriter mockPw = mock(PrintWriter.class);
+
+        mockDump(() -> MyStaticDumper.dump(any()), /* pwArgIndex= */ 0, "El Dumpo!");
+        MyStaticDumper.dump(mockPw);
+
+        verify(mockPw).println("El Dumpo!");
+    }
+
+    private final class MyStaticDumper {
+
+        static void dump(PrintWriter printWriter) {
+            throw new UnsupportedOperationException("Should have been static mocked");
+        }
     }
 }
