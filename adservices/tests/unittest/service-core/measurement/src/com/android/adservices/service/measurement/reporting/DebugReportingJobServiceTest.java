@@ -45,14 +45,12 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.AdServicesJobServiceTestCase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
-import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.AdServicesConfig;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
+import com.android.adservices.service.measurement.MeasurementJobServiceTestCase;
 import com.android.adservices.shared.testing.concurrency.JobServiceCallback;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.compatibility.common.util.TestUtils;
@@ -77,30 +75,18 @@ import java.util.concurrent.CountDownLatch;
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(AdServicesJobServiceLogger.class)
 @MockStatic(ServiceCompatUtils.class)
-public final class DebugReportingJobServiceTest extends AdServicesJobServiceTestCase {
+public final class DebugReportingJobServiceTest extends MeasurementJobServiceTestCase {
 
     private static final int MEASUREMENT_DEBUG_REPORT_JOB_ID =
             MEASUREMENT_DEBUG_REPORT_JOB.getJobId();
 
     private static final long WAIT_IN_MILLIS = 1_000L;
 
-    private DatastoreManager mMockDatastoreManager;
-    private JobScheduler mMockJobScheduler;
-    private JobParameters mJobParameters;
     private DebugReportingJobService mSpyService;
-    private AdServicesJobServiceLogger mSpyLogger;
-
-    private Flags mMockFlags;
 
     @Before
     public void setUp() {
         mSpyService = spy(new DebugReportingJobService());
-        mMockDatastoreManager = mock(DatastoreManager.class);
-        mMockJobScheduler = mock(JobScheduler.class);
-        mJobParameters = mock(JobParameters.class);
-
-        mMockFlags = mock(Flags.class);
-        mSpyLogger = getSpiedAdServicesJobServiceLogger(sContext, mMockFlags);
     }
 
     @Test
@@ -215,7 +201,7 @@ public final class DebugReportingJobServiceTest extends AdServicesJobServiceTest
                     JobServiceCallback callback =
                             new JobServiceCallback().expectJobFinished(mSpyService);
                     // Execute
-                    boolean result = mSpyService.onStartJob(mJobParameters);
+                    boolean result = mSpyService.onStartJob(mMockJobParameters);
 
                     // Validate
                     assertFalse(result);
@@ -402,7 +388,6 @@ public final class DebugReportingJobServiceTest extends AdServicesJobServiceTest
         doReturn(sContext.getPackageName()).when(context).getPackageName();
         doReturn(sContext.getPackageManager()).when(context).getPackageManager();
         // Setup mock everything in job
-        mMockDatastoreManager = mock(DatastoreManager.class);
         doReturn(Optional.empty()).when(mMockDatastoreManager).runInTransactionWithResult(any());
         doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
         doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);

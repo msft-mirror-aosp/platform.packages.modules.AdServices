@@ -45,12 +45,10 @@ import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.content.Context;
 
-import com.android.adservices.common.AdServicesJobServiceTestCase;
-import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
+import com.android.adservices.service.measurement.MeasurementJobServiceTestCase;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
 import com.android.adservices.shared.testing.concurrency.JobServiceCallback;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
@@ -76,27 +74,18 @@ import java.util.concurrent.TimeUnit;
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(AdServicesJobServiceLogger.class)
 @MockStatic(ServiceCompatUtils.class)
-public final class EventReportingJobServiceTest extends AdServicesJobServiceTestCase {
+public final class EventReportingJobServiceTest extends MeasurementJobServiceTestCase {
     private static final int MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID =
             MEASUREMENT_EVENT_MAIN_REPORTING_JOB.getJobId();
     private static final long WAIT_IN_MILLIS = 200L;
     private static final long JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(4);
 
-    private DatastoreManager mMockDatastoreManager;
-    private JobScheduler mMockJobScheduler;
-
     private EventReportingJobService mSpyService;
-    private Flags mMockFlags;
-    private AdServicesJobServiceLogger mSpyLogger;
 
     @Before
     public void setUp() {
         mSpyService = spy(new EventReportingJobService());
-        mMockDatastoreManager = mock(DatastoreManager.class);
-        mMockJobScheduler = mock(JobScheduler.class);
 
-        mMockFlags = mock(Flags.class);
-        mSpyLogger = getSpiedAdServicesJobServiceLogger(mContext, mMockFlags);
         when(mMockFlags.getMeasurementEventReportingJobPersisted()).thenReturn(true);
         when(mMockFlags.getMeasurementEventReportingJobRequiredNetworkType())
                 .thenReturn(JobInfo.NETWORK_TYPE_UNMETERED);
@@ -488,7 +477,6 @@ public final class EventReportingJobServiceTest extends AdServicesJobServiceTest
 
     private void runWithMocks(TestUtils.RunnableWithThrow execute) throws Exception {
         // Setup mock everything in job
-        mMockDatastoreManager = mock(DatastoreManager.class);
         doReturn(Optional.empty()).when(mMockDatastoreManager).runInTransactionWithResult(any());
         doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
         doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);

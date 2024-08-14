@@ -45,13 +45,12 @@ import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.content.Context;
 
-import com.android.adservices.common.AdServicesJobServiceTestCase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
+import com.android.adservices.service.measurement.MeasurementJobServiceTestCase;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
 import com.android.adservices.shared.testing.concurrency.JobServiceCallback;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
@@ -76,26 +75,16 @@ import java.util.Optional;
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(AdServicesJobServiceLogger.class)
 @MockStatic(ServiceCompatUtils.class)
-public final class ImmediateAggregateReportingJobServiceTest extends AdServicesJobServiceTestCase {
+public final class ImmediateAggregateReportingJobServiceTest extends MeasurementJobServiceTestCase {
     private static final int MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_ID =
             MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB.getJobId();
     private static final long WAIT_IN_MILLIS = 200L;
 
-    private DatastoreManager mMockDatastoreManager;
-    private JobScheduler mMockJobScheduler;
-
     private ImmediateAggregateReportingJobService mSpyService;
-    private Flags mMockFlags;
-    private AdServicesJobServiceLogger mSpyLogger;
 
     @Before
     public void setUp() {
         mSpyService = spy(new ImmediateAggregateReportingJobService());
-        mMockDatastoreManager = mock(DatastoreManager.class);
-        mMockJobScheduler = mock(JobScheduler.class);
-
-        mMockFlags = mock(Flags.class);
-        mSpyLogger = getSpiedAdServicesJobServiceLogger(mContext, mMockFlags);
         when(mMockFlags.getMeasurementImmediateAggregateReportingJobPersisted()).thenReturn(true);
         when(mMockFlags.getMeasurementImmediateAggregateReportingJobRequiredNetworkType())
                 .thenReturn(JobInfo.NETWORK_TYPE_ANY);

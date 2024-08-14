@@ -45,14 +45,12 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.AdServicesJobServiceTestCase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
-import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.AdServicesConfig;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
+import com.android.adservices.service.measurement.MeasurementJobServiceTestCase;
 import com.android.adservices.shared.testing.concurrency.JobServiceCallback;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.compatibility.common.util.TestUtils;
@@ -76,28 +74,17 @@ import java.util.Optional;
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(AdServicesJobServiceLogger.class)
 @MockStatic(ServiceCompatUtils.class)
-public final class VerboseDebugReportingJobServiceTest extends AdServicesJobServiceTestCase {
+public final class VerboseDebugReportingJobServiceTest extends MeasurementJobServiceTestCase {
     private static final int MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB_ID =
             MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB.getJobId();
 
     private static final long WAIT_IN_MILLIS = 1_000L;
 
-    private DatastoreManager mMockDatastoreManager;
-    private JobScheduler mMockJobScheduler;
-    private JobParameters mJobParameters;
     private VerboseDebugReportingJobService mSpyService;
-    private Flags mMockFlags;
-    private AdServicesJobServiceLogger mSpyLogger;
 
     @Before
     public void setUp() {
         mSpyService = spy(new VerboseDebugReportingJobService());
-        mMockDatastoreManager = mock(DatastoreManager.class);
-        mMockJobScheduler = mock(JobScheduler.class);
-        mJobParameters = mock(JobParameters.class);
-
-        mMockFlags = mock(Flags.class);
-        mSpyLogger = getSpiedAdServicesJobServiceLogger(sContext, mMockFlags);
     }
 
     @Test
@@ -409,7 +396,6 @@ public final class VerboseDebugReportingJobServiceTest extends AdServicesJobServ
 
     private void runWithMocks(TestUtils.RunnableWithThrow execute) throws Exception {
         // Setup mock everything in job
-        mMockDatastoreManager = mock(DatastoreManager.class);
         doReturn(Optional.empty()).when(mMockDatastoreManager).runInTransactionWithResult(any());
         doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
         doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);

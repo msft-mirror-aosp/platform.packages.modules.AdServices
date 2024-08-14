@@ -50,13 +50,11 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.AdServicesJobServiceTestCase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
-import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
+import com.android.adservices.service.measurement.MeasurementJobServiceTestCase;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
 import com.android.adservices.shared.testing.concurrency.JobServiceCallback;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
@@ -85,27 +83,17 @@ import java.util.concurrent.TimeUnit;
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(AdServicesJobServiceLogger.class)
 @MockStatic(ServiceCompatUtils.class)
-public final class EventFallbackReportingJobServiceTest extends AdServicesJobServiceTestCase {
+public final class EventFallbackReportingJobServiceTest extends MeasurementJobServiceTestCase {
     private static final int MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID =
             MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB.getJobId();
     private static final long WAIT_IN_MILLIS = 200L;
     private static final long JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(24);
 
-    private DatastoreManager mMockDatastoreManager;
-    private JobScheduler mMockJobScheduler;
-
     private EventFallbackReportingJobService mSpyService;
-    private Flags mMockFlags;
-    private AdServicesJobServiceLogger mSpyLogger;
 
     @Before
     public void setUp() {
         mSpyService = spy(new EventFallbackReportingJobService());
-        mMockDatastoreManager = mock(DatastoreManager.class);
-        mMockJobScheduler = mock(JobScheduler.class);
-
-        mMockFlags = mock(Flags.class);
-        mSpyLogger = getSpiedAdServicesJobServiceLogger(mContext, mMockFlags);
         when(mMockFlags.getMeasurementEventFallbackReportingJobPersisted()).thenReturn(true);
         when(mMockFlags.getMeasurementEventFallbackReportingJobRequiredNetworkType())
                 .thenReturn(JobInfo.NETWORK_TYPE_ANY);
@@ -511,7 +499,6 @@ public final class EventFallbackReportingJobServiceTest extends AdServicesJobSer
 
     private void runWithMocks(TestUtils.RunnableWithThrow execute) throws Exception {
         // Setup mock everything in job
-        mMockDatastoreManager = mock(DatastoreManager.class);
         doReturn(Optional.empty()).when(mMockDatastoreManager).runInTransactionWithResult(any());
         doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
         doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
