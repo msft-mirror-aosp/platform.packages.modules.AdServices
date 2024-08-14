@@ -35,39 +35,34 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
-import android.content.Context;
 import android.net.Uri;
 
-import androidx.test.core.app.ApplicationProvider;
-
 import com.android.adservices.HpkeJni;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.topics.EncryptedTopic;
 import com.android.adservices.data.topics.Topic;
-import com.android.adservices.errorlogging.ErrorLogUtil;
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.encryptionkey.EncryptionKey;
 import com.android.adservices.service.enrollment.EnrollmentData;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import com.google.common.primitives.Bytes;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 
 /** Unit tests for {@link EncryptionManager}. */
-public final class EncryptionManagerTest {
+@RequiresSdkLevelAtLeastS
+public final class EncryptionManagerTest extends AdServicesExtendedMockitoTestCase {
     static final String PUBLIC_KEY_BASE64 = "YqYc6zOFQFFu3eRg4nkjqN9nSbw44nsQAc1bi5EC5Ew=";
     static final String PRIVATE_KEY_BASE64 = "2ZEyJDoJwkp0l/PahgjwuoCMIaV10zZ59LJGA+ltJ60=";
     static final byte[] DECODED_PUBLIC_KEY = Base64.getDecoder().decode(PUBLIC_KEY_BASE64);
@@ -107,31 +102,21 @@ public final class EncryptionManagerTest {
                     .setLastFetchTime(100001L)
                     .build();
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
-    @Rule
-    public final AdServicesExtendedMockitoRule mAdServicesExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder(this).spyStatic(ErrorLogUtil.class).build();
-
-    private final Context mContext = ApplicationProvider.getApplicationContext();
     private EncryptionManager mEncryptionManager;
     @Mock private EnrollmentDao mEnrollmentDao;
     @Mock private EncryptionKeyDao mEncryptionKeyDao;
-    @Mock private Flags mFlags;
+    @Mock private Flags mMockFlags;
     @Mock private Encrypter mEncrypter;
 
     @Before
     public void setup() {
-        MockitoAnnotations.initMocks(this);
-
         mEncryptionManager =
                 new EncryptionManager(
-                        new HpkeEncrypter(), mEnrollmentDao, mEncryptionKeyDao, mFlags);
+                        new HpkeEncrypter(), mEnrollmentDao, mEncryptionKeyDao, mMockFlags);
 
-        when(mFlags.getEnableDatabaseSchemaVersion9()).thenReturn(true);
-        when(mFlags.getTopicsEncryptionEnabled()).thenReturn(true);
-        when(mFlags.getTopicsTestEncryptionPublicKey()).thenReturn("");
+        when(mMockFlags.getEnableDatabaseSchemaVersion9()).thenReturn(true);
+        when(mMockFlags.getTopicsEncryptionEnabled()).thenReturn(true);
+        when(mMockFlags.getTopicsTestEncryptionPublicKey()).thenReturn("");
     }
 
     @Test
@@ -191,7 +176,7 @@ public final class EncryptionManagerTest {
     @Test
     public void testEncryption_useTestingKeys() {
         String overrideTestKey = "YVfr8K7rpuv45LtaCv9L1eIGxBv/UK22WugJBjg53fo";
-        when(mFlags.getTopicsTestEncryptionPublicKey()).thenReturn(overrideTestKey);
+        when(mMockFlags.getTopicsTestEncryptionPublicKey()).thenReturn(overrideTestKey);
         Topic topic = Topic.create(/* topic */ 5, /* taxonomyVersion */ 6L, /* modelVersion */ 7L);
 
         Optional<EncryptedTopic> optionalEncryptedTopic =
@@ -390,7 +375,7 @@ public final class EncryptionManagerTest {
     public void testEncryption_nullResponseFromEncrypter() {
         doNothingOnErrorLogUtilError();
         mEncryptionManager =
-                new EncryptionManager(mEncrypter, mEnrollmentDao, mEncryptionKeyDao, mFlags);
+                new EncryptionManager(mEncrypter, mEnrollmentDao, mEncryptionKeyDao, mMockFlags);
         when(mEnrollmentDao.getEnrollmentDataFromSdkName(SDK_NAME)).thenReturn(ENROLLMENT_DATA);
         when(mEncryptionKeyDao.getEncryptionKeyFromEnrollmentIdAndKeyType(
                         ENROLLMENT_ID, EncryptionKey.KeyType.ENCRYPTION))
@@ -412,7 +397,7 @@ public final class EncryptionManagerTest {
     public void testEncryption_smallResponseFromEncrypter() {
         doNothingOnErrorLogUtilError();
         mEncryptionManager =
-                new EncryptionManager(mEncrypter, mEnrollmentDao, mEncryptionKeyDao, mFlags);
+                new EncryptionManager(mEncrypter, mEnrollmentDao, mEncryptionKeyDao, mMockFlags);
         when(mEnrollmentDao.getEnrollmentDataFromSdkName(SDK_NAME)).thenReturn(ENROLLMENT_DATA);
         when(mEncryptionKeyDao.getEncryptionKeyFromEnrollmentIdAndKeyType(
                         ENROLLMENT_ID, EncryptionKey.KeyType.ENCRYPTION))

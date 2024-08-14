@@ -32,31 +32,22 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.HpkeJni;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.topics.Topic;
-import com.android.adservices.errorlogging.ErrorLogUtil;
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
-import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
 
 /** Unit tests for {@link HpkeEncrypter}. */
-public final class HpkeEncrypterTest {
-    private HpkeEncrypter mHpkeEncrypter = new HpkeEncrypter();
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
-    @Rule(order = 1)
-    public final AdServicesExtendedMockitoRule mAdServicesExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder(this).spyStatic(ErrorLogUtil.class).build();
+@RequiresSdkLevelAtLeastS
+public final class HpkeEncrypterTest extends AdServicesExtendedMockitoTestCase {
+    private final HpkeEncrypter mHpkeEncrypter = new HpkeEncrypter();
 
     @Test
-    public void testEncryption_success() throws JSONException {
+    public void testEncryption_success() throws Exception {
         Topic topic = Topic.create(/* topic */ 5, /* taxonomyVersion */ 6L, /* modelVersion */ 7L);
         byte[] plainText = generateTopicsPlainText(topic);
 
