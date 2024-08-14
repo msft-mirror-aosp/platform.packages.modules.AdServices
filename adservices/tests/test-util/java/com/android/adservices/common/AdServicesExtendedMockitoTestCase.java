@@ -52,10 +52,13 @@ import com.android.adservices.mockito.SharedMocker;
 import com.android.adservices.mockito.SharedMockitoMocker;
 import com.android.adservices.mockito.StaticClassChecker;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.shared.spe.logging.JobServiceLogger;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
 import com.android.adservices.shared.testing.SidelessTestCase;
+import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 import com.android.adservices.spe.AdServicesJobScheduler;
 import com.android.adservices.spe.AdServicesJobServiceFactory;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -308,6 +311,12 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
         @Override
         public void mockAllCobaltLoggingFlags(Flags flags, boolean enabled) {
             mAdServicesMocker.mockAllCobaltLoggingFlags(flags, enabled);
+        }
+
+        @Override
+        public ResultSyncCallback<ApiCallStats> mockLogApiCallStats(
+                AdServicesLogger adServicesLogger) {
+            return mAdServicesMocker.mockLogApiCallStats(adServicesLogger);
         }
 
         // AdServicesStaticMocker methods
