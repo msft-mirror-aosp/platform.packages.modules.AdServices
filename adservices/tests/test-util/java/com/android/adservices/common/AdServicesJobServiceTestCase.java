@@ -15,10 +15,14 @@
  */
 package com.android.adservices.common;
 
+import android.content.Context;
+
 import com.android.adservices.mockito.AdServicesJobMocker;
 import com.android.adservices.mockito.AdServicesMockitoJobMocker;
+import com.android.adservices.service.Flags;
 import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
 import com.android.adservices.spe.AdServicesJobServiceFactory;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
 
 import org.junit.Test;
 
@@ -41,5 +45,45 @@ public abstract class AdServicesJobServiceTestCase extends AdServicesExtendedMoc
     @Test
     public final void testAdServicesJobTestCaseFixtures() throws Exception {
         assertTestClassHasNoFieldsFromSuperclass(AdServicesJobServiceTestCase.class, "jobMocker");
+    }
+
+    // TODO(b/314969513): inline methods below once all classes are refactored (and use a common
+    // mMockFlags instance)
+
+    /**
+     * Convenience helper to call {@code
+     * AdServicesPragmaticMocker.mockGetBackgroundJobsLoggingKillSwitch()} using {@code mocker}.
+     */
+    protected final void mockBackgroundJobsLoggingKillSwitch(Flags flag, boolean value) {
+        mocker.mockGetBackgroundJobsLoggingKillSwitch(flag, value);
+    }
+
+    /**
+     * Convenience helper to call {@link
+     * AdServicesJobMocker#mockGetAdServicesJobServiceLogger(AdServicesJobServiceLogger)} using
+     * {@code jobMocker}.
+     */
+    protected final void mockGetAdServicesJobServiceLogger(AdServicesJobServiceLogger logger) {
+        jobMocker.mockGetAdServicesJobServiceLogger(logger);
+    }
+
+    /**
+     * Convenience helper to call {@link
+     * AdServicesJobMocker#getSpiedAdServicesJobServiceLogger(Context, Flags)} using {@code
+     * jobMocker}.
+     */
+    protected final AdServicesJobServiceLogger getSpiedAdServicesJobServiceLogger(
+            Context context, Flags flags) {
+        return jobMocker.getSpiedAdServicesJobServiceLogger(context, flags);
+    }
+
+    /**
+     * Convenience helper to call {@link
+     * AdServicesJobMocker#mockNoOpAdServicesJobServiceLogger(Context, Flags)} using {@code
+     * jobMocker}.
+     */
+    protected final AdServicesJobServiceLogger mockAdServicesJobServiceLogger(
+            Context context, Flags flags) {
+        return jobMocker.mockNoOpAdServicesJobServiceLogger(context, flags);
     }
 }

@@ -16,8 +16,6 @@
 
 package com.android.adservices.service.measurement.reporting;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdServicesJobServiceLogger;
-import static com.android.adservices.mockito.MockitoExpectations.getSpiedAdServicesJobServiceLogger;
 import static com.android.adservices.service.measurement.reporting.DebugReportingJobService.DEBUG_REPORT_JOB_ID;
 import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_DEBUG_REPORT_JOB;
 
@@ -47,7 +45,7 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.AdServicesJobServiceTestCase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
@@ -79,7 +77,7 @@ import java.util.concurrent.CountDownLatch;
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(AdServicesJobServiceLogger.class)
 @MockStatic(ServiceCompatUtils.class)
-public final class DebugReportingJobServiceTest extends AdServicesExtendedMockitoTestCase {
+public final class DebugReportingJobServiceTest extends AdServicesJobServiceTestCase {
 
     private static final int MEASUREMENT_DEBUG_REPORT_JOB_ID =
             MEASUREMENT_DEBUG_REPORT_JOB.getJobId();
