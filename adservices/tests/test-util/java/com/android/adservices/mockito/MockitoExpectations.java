@@ -16,42 +16,16 @@
 
 package com.android.adservices.mockito;
 
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.doCallRealMethod;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-
-import android.app.job.JobParameters;
-import android.app.job.JobService;
-import android.util.Log;
 
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ApiCallStats;
-import com.android.adservices.shared.testing.JobServiceLoggingCallback;
 import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
-import com.android.adservices.spe.AdServicesJobServiceLogger;
 
 /** Provides Mockito expectation for common calls. */
 public final class MockitoExpectations {
 
-    private static final String TAG = MockitoExpectations.class.getSimpleName();
-
-    // NOTE: not really "Generated code", but we're using mocker (instead of sMocker or MOCKER) as
-    // that's the name of the reference provided by the superclasses - once tests are refactored
-    // to use the superclasses, they wouldn't need to change the variable name.
-
-    // CHECKSTYLE:OFF Generated code
-    public static final AdServicesMockitoJobMocker jobMocker =
-            new AdServicesMockitoJobMocker(new StaticClassChecker() {});
-
-    private static final AdServicesMockitoMocker mocker = new AdServicesMockitoMocker();
-
-    // CHECKSTYLE:ON
+    private static final AdServicesMockitoMocker sMocker = new AdServicesMockitoMocker();
 
     /**
      * Mocks a call to {@link AdServicesLogger#logApiCallStats(ApiCallStats)} and returns a callback
@@ -61,146 +35,10 @@ public final class MockitoExpectations {
     @Deprecated
     public static ResultSyncCallback<ApiCallStats> mockLogApiCallStats(
             AdServicesLogger adServicesLogger) {
-        return mocker.mockLogApiCallStats(adServicesLogger);
-    }
-
-    /** Verifies methods in {@link AdServicesJobServiceLogger} were never called. */
-    public static void verifyLoggingNotHappened(AdServicesJobServiceLogger logger) {
-        // Mock logger to call actual public logging methods. Because when the feature flag of
-        // logging is on, these methods are actually called, but the internal logging methods will
-        // not be invoked.
-        callRealPublicMethodsForBackgroundJobLogging(logger);
-
-        verify(logger, never()).persistJobExecutionData(anyInt(), anyLong());
-        verify(logger, never()).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
-    }
-
-    /** Verifies {@link AdServicesJobServiceLogger#recordJobSkipped(int, int)} is called once. */
-    public static void verifyBackgroundJobsSkipLogged(
-            AdServicesJobServiceLogger logger, JobServiceLoggingCallback callback)
-            throws InterruptedException {
-        callback.assertLoggingFinished();
-
-        verify(logger).recordJobSkipped(anyInt(), anyInt());
-    }
-
-    /** Verifies the logging flow of a successful {@link JobService}'s execution is called once. */
-    public static void verifyJobFinishedLogged(
-            AdServicesJobServiceLogger logger,
-            JobServiceLoggingCallback onStartJobCallback,
-            JobServiceLoggingCallback onJobDoneCallback)
-            throws InterruptedException {
-        verifyOnStartJobLogged(logger, onStartJobCallback);
-        verifyOnJobFinishedLogged(logger, onJobDoneCallback);
-    }
-
-    /**
-     * Verifies {@link AdServicesJobServiceLogger#recordOnStopJob(JobParameters, int, boolean)} is
-     * called once.
-     */
-    public static void verifyOnStopJobLogged(
-            AdServicesJobServiceLogger logger, JobServiceLoggingCallback callback)
-            throws InterruptedException {
-        callback.assertLoggingFinished();
-
-        verify(logger).recordOnStopJob(any(), anyInt(), anyBoolean());
-    }
-
-    /**
-     * Mock {@link AdServicesJobServiceLogger#persistJobExecutionData(int, long)} to wait for it to
-     * complete.
-     */
-    public static JobServiceLoggingCallback syncPersistJobExecutionData(
-            AdServicesJobServiceLogger logger) {
-        JobServiceLoggingCallback callback = new JobServiceLoggingCallback();
-        doAnswer(
-                        invocation -> {
-                            Log.v(TAG, invocation.toString());
-                            invocation.callRealMethod();
-                            callback.onLoggingMethodCalled();
-                            return null;
-                        })
-                .when(logger)
-                .recordOnStartJob(anyInt());
-
-        return callback;
-    }
-
-    /**
-     * Mock one of below 3 endpoints for a {@link JobService}'s execution to wait for it to
-     * complete.
-     *
-     * <ul>
-     *   <li>{@link AdServicesJobServiceLogger#recordOnStopJob(JobParameters, int, boolean)}
-     *   <li>{@link AdServicesJobServiceLogger#recordJobSkipped(int, int)}
-     *   <li>{@link AdServicesJobServiceLogger#recordJobFinished(int, boolean, boolean)}
-     * </ul>
-     *
-     * @throws IllegalStateException if there is more than one method is called.
-     */
-    public static JobServiceLoggingCallback syncLogExecutionStats(
-            AdServicesJobServiceLogger logger) {
-        JobServiceLoggingCallback callback = new JobServiceLoggingCallback();
-
-        doAnswer(
-                        invocation -> {
-                            callback.onLoggingMethodCalled();
-                            return null;
-                        })
-                .when(logger)
-                .recordOnStopJob(any(), anyInt(), anyBoolean());
-
-        doAnswer(
-                        invocation -> {
-                            callback.onLoggingMethodCalled();
-                            return null;
-                        })
-                .when(logger)
-                .recordJobSkipped(anyInt(), anyInt());
-
-        doAnswer(
-                        invocation -> {
-                            callback.onLoggingMethodCalled();
-                            return null;
-                        })
-                .when(logger)
-                .recordJobFinished(anyInt(), anyBoolean(), anyBoolean());
-
-        return callback;
-    }
-
-    /**
-     * Verify the logging methods in {@link JobService#onStartJob(JobParameters)} has been invoked.
-     */
-    public static void verifyOnStartJobLogged(
-            AdServicesJobServiceLogger logger, JobServiceLoggingCallback callback)
-            throws InterruptedException {
-        callback.assertLoggingFinished();
-
-        verify(logger).recordOnStartJob(anyInt());
-    }
-
-    /**
-     * Verify the logging methods in {@link JobService#jobFinished(JobParameters, boolean)} has been
-     * invoked.
-     */
-    public static void verifyOnJobFinishedLogged(
-            AdServicesJobServiceLogger logger, JobServiceLoggingCallback callback)
-            throws InterruptedException {
-        callback.assertLoggingFinished();
-
-        verify(logger).recordJobFinished(anyInt(), anyBoolean(), anyBoolean());
+        return sMocker.mockLogApiCallStats(adServicesLogger);
     }
 
     private MockitoExpectations() {
         throw new UnsupportedOperationException("Provides only static methods");
-    }
-
-    private static void callRealPublicMethodsForBackgroundJobLogging(
-            AdServicesJobServiceLogger logger) {
-        doCallRealMethod().when(logger).recordOnStartJob(anyInt());
-        doCallRealMethod().when(logger).recordOnStopJob(any(), anyInt(), anyBoolean());
-        doCallRealMethod().when(logger).recordJobSkipped(anyInt(), anyInt());
-        doCallRealMethod().when(logger).recordJobFinished(anyInt(), anyBoolean(), anyBoolean());
     }
 }
