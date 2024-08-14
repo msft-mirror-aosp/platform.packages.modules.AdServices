@@ -41,6 +41,7 @@ import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableSet;
 
+import java.time.Clock;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -56,12 +57,16 @@ public class CustomAudienceShellCommandFactory implements ShellCommandFactory {
     public CustomAudienceShellCommandFactory(
             boolean isCustomAudienceCliEnabled,
             BackgroundFetchRunner backgroundFetchRunner,
-            CustomAudienceDao customAudienceDao) {
+            CustomAudienceDao customAudienceDao,
+            Clock clock,
+            long fledgeCustomAudienceActiveTimeWindowInMs) {
         mIsCustomAudienceCliEnabled = isCustomAudienceCliEnabled;
         Set<ShellCommand> allCommands =
                 ImmutableSet.of(
-                        new CustomAudienceListCommand(customAudienceDao),
-                        new CustomAudienceViewCommand(customAudienceDao),
+                        new CustomAudienceListCommand(
+                                customAudienceDao, clock, fledgeCustomAudienceActiveTimeWindowInMs),
+                        new CustomAudienceViewCommand(
+                                customAudienceDao, clock, fledgeCustomAudienceActiveTimeWindowInMs),
                         new CustomAudienceRefreshCommand(
                                 backgroundFetchRunner,
                                 customAudienceDao,
@@ -90,7 +95,9 @@ public class CustomAudienceShellCommandFactory implements ShellCommandFactory {
                         flags,
                         // Avoid logging metrics when using shell commands (such as daily update).
                         CustomAudienceLoggerFactory.getNoOpInstance()),
-                customAudienceDao);
+                customAudienceDao,
+                Clock.systemUTC(),
+                flags.getFledgeCustomAudienceActiveTimeWindowInMs());
     }
 
     @Nullable

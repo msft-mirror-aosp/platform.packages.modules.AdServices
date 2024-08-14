@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.shell.customaudience;
 
+import static android.adservices.customaudience.CustomAudienceFixture.CUSTOM_AUDIENCE_ACTIVE_FETCH_WINDOW_MS;
+
 import static com.android.adservices.service.shell.customaudience.CustomAudienceHelper.getCustomAudienceBackgroundFetchDataFromJson;
 import static com.android.adservices.service.shell.customaudience.CustomAudienceHelper.getCustomAudienceFromJson;
 import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_CUSTOM_AUDIENCE_LIST;
@@ -27,6 +29,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 
 import com.android.adservices.customaudience.DBCustomAudienceBackgroundFetchDataFixture;
@@ -41,7 +44,9 @@ import org.json.JSONObject;
 import org.junit.Test;
 import org.mockito.Mock;
 
+import java.time.Clock;
 import java.util.List;
+import java.util.TimeZone;
 
 public final class CustomAudienceListCommandTest
         extends ShellCommandTestCase<CustomAudienceListCommand> {
@@ -67,8 +72,11 @@ public final class CustomAudienceListCommandTest
                             .setIsDebuggable(CUSTOM_AUDIENCE_2.isDebuggable())
                             .build();
     private static final int EXPECTED_COMMAND = COMMAND_CUSTOM_AUDIENCE_LIST;
+    private final Clock mClock =
+            Clock.fixed(CommonFixture.FIXED_NOW, TimeZone.getDefault().toZoneId());
 
     @Mock private CustomAudienceDao mCustomAudienceDao;
+
     @Test
     public void testRun_simpleCase_returnsSuccess() throws Exception {
         when(mCustomAudienceDao.listDebuggableCustomAudiencesByOwnerAndBuyer(
@@ -116,7 +124,8 @@ public final class CustomAudienceListCommandTest
     @Test
     public void testRun_missingArgument_returnsGenericError() throws Exception {
         runAndExpectInvalidArgument(
-                new CustomAudienceListCommand(mCustomAudienceDao),
+                new CustomAudienceListCommand(
+                        mCustomAudienceDao, mClock, CUSTOM_AUDIENCE_ACTIVE_FETCH_WINDOW_MS),
                 CustomAudienceListCommand.HELP,
                 EXPECTED_COMMAND,
                 CustomAudienceListCommand.CMD,
@@ -171,19 +180,30 @@ public final class CustomAudienceListCommandTest
 
     @Test
     public void test_getCommandName() {
-        assertThat(new CustomAudienceListCommand(mCustomAudienceDao).getCommandName())
+        assertThat(
+                        new CustomAudienceListCommand(
+                                        mCustomAudienceDao,
+                                        mClock,
+                                        CUSTOM_AUDIENCE_ACTIVE_FETCH_WINDOW_MS)
+                                .getCommandName())
                 .isEqualTo(CustomAudienceListCommand.CMD);
     }
 
     @Test
     public void test_getCommandHelp() {
-        assertThat(new CustomAudienceListCommand(mCustomAudienceDao).getCommandHelp())
+        assertThat(
+                        new CustomAudienceListCommand(
+                                        mCustomAudienceDao,
+                                        mClock,
+                                        CUSTOM_AUDIENCE_ACTIVE_FETCH_WINDOW_MS)
+                                .getCommandHelp())
                 .isEqualTo(CustomAudienceListCommand.HELP);
     }
 
     private Result runCommandAndGetResult() {
         return run(
-                new CustomAudienceListCommand(mCustomAudienceDao),
+                new CustomAudienceListCommand(
+                        mCustomAudienceDao, mClock, CUSTOM_AUDIENCE_ACTIVE_FETCH_WINDOW_MS),
                 CustomAudienceShellCommandFactory.COMMAND_PREFIX,
                 CustomAudienceListCommand.CMD,
                 "--owner",
