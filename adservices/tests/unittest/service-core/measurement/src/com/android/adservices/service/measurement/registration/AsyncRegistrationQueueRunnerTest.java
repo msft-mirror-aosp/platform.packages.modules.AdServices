@@ -5395,8 +5395,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 getSpyAsyncRegistrationQueueRunner();
 
         // Execution
-        when(mMeasurementDao.getNavigationAttributionScopesForRegistration(
-                        any(), any(), anyInt(), any()))
+        when(mMeasurementDao.getNavigationAttributionScopesForRegistration(any(), any()))
                 .thenReturn(Set.of("1", "2", "3"));
 
         Source source =
@@ -5426,7 +5425,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
 
         // Assertions
         verify(mMeasurementDao, times(1))
-                .getNavigationAttributionScopesForRegistration(any(), any(), anyInt(), any());
+                .getNavigationAttributionScopesForRegistration(any(), any());
     }
 
     @Test
@@ -5442,8 +5441,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 getSpyAsyncRegistrationQueueRunner();
 
         // Execution
-        when(mMeasurementDao.getNavigationAttributionScopesForRegistration(
-                        any(), any(), anyInt(), any()))
+        when(mMeasurementDao.getNavigationAttributionScopesForRegistration(any(), any()))
                 .thenReturn(Set.of("1", "2", "3"));
 
         Source source =
@@ -5473,7 +5471,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
 
         // Assertions
         verify(mMeasurementDao, times(1))
-                .getNavigationAttributionScopesForRegistration(any(), any(), anyInt(), any());
+                .getNavigationAttributionScopesForRegistration(any(), any());
     }
 
     @Test
