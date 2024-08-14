@@ -248,15 +248,19 @@ public final class PolicyJobSchedulerTest extends SharedMockitoTestCase {
 
     @Test
     public void getJobInfoToSchedule_throwsWhenSyncPolicy() {
-        // Policy requires to have job_id field to merge.
+        // Policy requires to have job_id field to merge. It will throw an exception without job_id.
         JobPolicy serverJobPolicy = sJobPolicy.toBuilder().clearJobId().build();
         doReturn(Map.of(JOB_ID_1, serverJobPolicy)).when(mMockModuleJobPolicy).getJobPolicyMap();
 
         JobSpec jobSpec = new JobSpec.Builder(sJobPolicy).build();
+        // The JobInfo to return should come from the default policy if any error happens.
+        JobInfo expectedJobInfo =
+                PolicyProcessor.applyPolicyToJobInfo(
+                        getBaseJobInfoBuilder(), jobSpec.getJobPolicy());
 
         assertWithMessage("getJobInfoToSchedule()")
                 .that(mPolicyJobScheduler.getJobInfoToSchedule(sContext, jobSpec, JOB_NAME_1))
-                .isEqualTo(getBaseJobInfoBuilder().build());
+                .isEqualTo(expectedJobInfo);
         verify(mMockErrorLogger)
                 .logErrorWithExceptionInfo(
                         any(),

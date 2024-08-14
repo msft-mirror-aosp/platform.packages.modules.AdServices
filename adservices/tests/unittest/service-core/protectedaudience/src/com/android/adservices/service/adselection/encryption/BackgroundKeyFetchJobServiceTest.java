@@ -44,7 +44,7 @@ import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.content.Context;
 
-import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.AdServicesJobServiceTestCase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
@@ -80,7 +80,7 @@ import java.util.concurrent.TimeoutException;
 @SpyStatic(BackgroundKeyFetchWorker.class)
 @SpyStatic(AdServicesJobServiceLogger.class)
 @MockStatic(ServiceCompatUtils.class)
-public final class BackgroundKeyFetchJobServiceTest extends AdServicesExtendedMockitoTestCase {
+public final class BackgroundKeyFetchJobServiceTest extends AdServicesJobServiceTestCase {
 
     private static final int FLEDGE_AD_SELECTION_ENCRYPTION_KEY_FETCH_JOB_ID =
             FLEDGE_AD_SELECTION_ENCRYPTION_KEY_FETCH_JOB.getJobId();

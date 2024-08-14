@@ -28,7 +28,7 @@ import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_BA
 import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS;
 import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.data.adselection.AdSelectionDatabase.DATABASE_NAME;
-import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.DB_AD_SELECTION_FILE_SIZE;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTestFixture.DB_AD_SELECTION_FILE_SIZE;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 

@@ -13,13 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.mockito;
 
-public final class MockitoExpectationJobMockerTest
-        extends AdServicesJobMockerTestCase<AdServicesMockitoJobMocker> {
+package com.android.adservices.service.stats;
 
-    @Override
-    protected AdServicesMockitoJobMocker getMocker(StaticClassChecker checker) {
-        return MockitoExpectations.jobMocker;
-    }
+public class EncodingJsFetchProcessLoggerImplTestFixture {
+    public static final String TEST_AD_TECH_ID = "com.google.android";
+    public static final long TEST_JS_DOWNLOAD_START_TIMESTAMP = 100L;
+    public static final long TEST_JS_DOWNLOAD_END_TIMESTAMP = 120L;
 }

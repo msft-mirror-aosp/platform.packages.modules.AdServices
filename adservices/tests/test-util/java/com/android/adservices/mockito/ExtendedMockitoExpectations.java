@@ -16,15 +16,12 @@
 package com.android.adservices.mockito;
 
 import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
-import static com.android.adservices.mockito.MockitoExpectations.getSpiedAdServicesJobServiceLogger;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 
@@ -46,7 +43,6 @@ import com.google.common.truth.Expect;
 
 import org.mockito.verification.VerificationMode;
 
-import java.io.PrintWriter;
 import java.util.Objects;
 
 /**
@@ -134,40 +130,27 @@ public final class ExtendedMockitoExpectations {
     }
 
     /**
-     * Mocks a call to a method that dumps something into a {@link PrintWriter}.
+     * Mocks {@link AdServicesJobServiceLogger} to not actually log the stats to server.
      *
-     * @param invocation invocation that will call dump passing a {@link PrintWriter}. Typically a
-     *     static method, using {@code any()} to represent the {@link PrintWriter} reference.
-     * @param pwArgIndex index of the {@link PrintWriter}
-     * @param dump value to be {@code println}'ed into the {@link PrintWriter}.
+     * @deprecated Use {@link AdServicesJobMocker#mockNoOpAdServicesJobServiceLogger(Context,
+     *     Flags))} instead.
      */
-    public static void mockDump(Runnable invocation, int pwArgIndex, String dump) {
-        doAnswer(
-                        inv -> {
-                            PrintWriter pw = (PrintWriter) inv.getArgument(1);
-                            pw.println(dump);
-                            return null;
-                        })
-                .when(() -> invocation.run());
-    }
-
-    /** Mocks {@link AdServicesJobServiceLogger} to not actually log the stats to server. */
+    @Deprecated
     public static AdServicesJobServiceLogger mockAdServicesJobServiceLogger(
             Context context, Flags flags) {
-        AdServicesJobServiceLogger logger = getSpiedAdServicesJobServiceLogger(context, flags);
-
-        mockGetAdServicesJobServiceLogger(logger);
-        doNothing().when(logger).recordOnStartJob(anyInt());
-        doNothing().when(logger).recordOnStopJob(any(), anyInt(), anyBoolean());
-        doNothing().when(logger).recordJobSkipped(anyInt(), anyInt());
-        doNothing().when(logger).recordJobFinished(anyInt(), anyBoolean(), anyBoolean());
-
-        return logger;
+        return MockitoExpectations.jobMocker.mockNoOpAdServicesJobServiceLogger(context, flags);
     }
 
-    /** Mocks {@link AdServicesJobServiceLogger#getInstance()} to return a mocked logger. */
+    /**
+     * Mocks {@link AdServicesJobServiceLogger#getInstance()} to return a mocked logger.
+     *
+     * @deprecated Use {@link
+     *     AdServicesJobMocker#mockGetAdServicesJobServiceLogger(AdServicesJobServiceLogger)}
+     *     instead.
+     */
+    @Deprecated
     public static void mockGetAdServicesJobServiceLogger(AdServicesJobServiceLogger logger) {
-        doReturn(logger).when(() -> AdServicesJobServiceLogger.getInstance());
+        MockitoExpectations.jobMocker.mockGetAdServicesJobServiceLogger(logger);
     }
 
     /**

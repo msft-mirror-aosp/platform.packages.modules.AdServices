@@ -54,7 +54,7 @@ import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.content.Context;
 
-import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.AdServicesJobServiceTestCase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
@@ -88,7 +88,7 @@ import java.util.concurrent.TimeoutException;
 @SpyStatic(DebugReportSenderWorker.class)
 @SpyStatic(AdServicesJobServiceLogger.class)
 @MockStatic(ServiceCompatUtils.class)
-public final class DebugReportSenderJobServiceTest extends AdServicesExtendedMockitoTestCase {
+public final class DebugReportSenderJobServiceTest extends AdServicesJobServiceTestCase {
 
     private static final int FLEDGE_DEBUG_REPORT_SENDER_JOB_ID =
             FLEDGE_AD_SELECTION_DEBUG_REPORT_SENDER_JOB.getJobId();
