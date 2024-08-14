@@ -334,7 +334,6 @@ public class ReportAndRegisterEventE2ETest {
         when(mEnrollmentDaoMock.getEnrollmentDataFromMeasurementUrl(any()))
                 .thenReturn(ENROLLMENT_DATA);
 
-
         when(mDevContextFilterMock.createDevContext()).thenReturn(mDevContext);
         mRetryStrategyFactory = RetryStrategyFactory.createInstanceForTesting();
         mConsentedDebugConfigurationDao =

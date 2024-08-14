@@ -51,10 +51,10 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
@@ -64,21 +64,27 @@ import com.android.adservices.shared.testing.concurrency.JobServiceCallback;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.internal.stubbing.answers.AnswersWithDelay;
 import org.mockito.internal.stubbing.answers.CallsRealMethods;
-import org.mockito.quality.Strictness;
 
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-public class DebugReportingFallbackJobServiceTest {
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
+@SpyStatic(DebugReportingFallbackJobService.class)
+@SpyStatic(AdServicesLoggerImpl.class)
+@SpyStatic(DatastoreManagerFactory.class)
+@SpyStatic(EnrollmentDao.class)
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(AdServicesJobServiceLogger.class)
+@MockStatic(ServiceCompatUtils.class)
+public final class DebugReportingFallbackJobServiceTest extends AdServicesExtendedMockitoTestCase {
     private static final int MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_ID =
             MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB.getJobId();
     private static final long WAIT_IN_MILLIS = 200L;
@@ -89,26 +95,13 @@ public class DebugReportingFallbackJobServiceTest {
     private Flags mMockFlags;
     private AdServicesJobServiceLogger mSpyLogger;
 
-    @Rule
-    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder(this)
-                    .spyStatic(DebugReportingFallbackJobService.class)
-                    .spyStatic(AdServicesLoggerImpl.class)
-                    .spyStatic(DatastoreManagerFactory.class)
-                    .spyStatic(EnrollmentDao.class)
-                    .spyStatic(FlagsFactory.class)
-                    .spyStatic(AdServicesJobServiceLogger.class)
-                    .mockStatic(ServiceCompatUtils.class)
-                    .setStrictness(Strictness.LENIENT)
-                    .build();
-
     @Before
     public void setUp() {
         mSpyService = spy(new DebugReportingFallbackJobService());
         mMockJobScheduler = mock(JobScheduler.class);
 
         mMockFlags = mock(Flags.class);
-        mSpyLogger = getSpiedAdServicesJobServiceLogger(CONTEXT, mMockFlags);
+        mSpyLogger = getSpiedAdServicesJobServiceLogger(mContext, mMockFlags);
         when(mMockFlags.getMeasurementDebugReportingFallbackJobPersisted()).thenReturn(true);
         when(mMockFlags.getMeasurementDebugReportingFallbackJobRequiredNetworkType())
                 .thenReturn(JobInfo.NETWORK_TYPE_ANY);
@@ -291,7 +284,7 @@ public class DebugReportingFallbackJobServiceTest {
                     // Validate
                     ExtendedMockito.verify(
                             () -> DebugReportingFallbackJobService.schedule(any(), any()), never());
-                    verify(mMockJobScheduler, times(1))
+                    verify(mMockJobScheduler)
                             .getPendingJob(eq(MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_ID));
                 });
     }
@@ -329,7 +322,7 @@ public class DebugReportingFallbackJobServiceTest {
                     // Validate
                     ExtendedMockito.verify(
                             () -> DebugReportingFallbackJobService.schedule(any(), any()));
-                    verify(mMockJobScheduler, times(1))
+                    verify(mMockJobScheduler)
                             .getPendingJob(eq(MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_ID));
                 });
     }
@@ -359,7 +352,7 @@ public class DebugReportingFallbackJobServiceTest {
                     ExtendedMockito.verify(
                             () -> DebugReportingFallbackJobService.schedule(any(), any()),
                             times(1));
-                    verify(mMockJobScheduler, times(1))
+                    verify(mMockJobScheduler)
                             .getPendingJob(eq(MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_ID));
                 });
     }
@@ -388,7 +381,7 @@ public class DebugReportingFallbackJobServiceTest {
                     ExtendedMockito.verify(
                             () -> DebugReportingFallbackJobService.schedule(any(), any()),
                             times(1));
-                    verify(mMockJobScheduler, times(1))
+                    verify(mMockJobScheduler)
                             .getPendingJob(eq(MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_ID));
                 });
     }
@@ -409,7 +402,7 @@ public class DebugReportingFallbackJobServiceTest {
 
                     boolean onStopJobResult =
                             mSpyService.onStopJob(Mockito.mock(JobParameters.class));
-                    verify(mSpyService, times(0)).jobFinished(any(), anyBoolean());
+                    verify(mSpyService, never()).jobFinished(any(), anyBoolean());
                     assertTrue(onStopJobResult);
                     assertTrue(mSpyService.getFutureForTesting().isCancelled());
                 });
@@ -432,8 +425,8 @@ public class DebugReportingFallbackJobServiceTest {
         assertFalse(result);
 
         callback.assertJobFinished();
-        verify(mSpyService, times(1)).jobFinished(any(), eq(false));
-        verify(mMockJobScheduler, times(1)).cancel(eq(MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_ID));
+        verify(mSpyService).jobFinished(any(), eq(false));
+        verify(mMockJobScheduler).cancel(eq(MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_ID));
     }
 
     private void onStartJob_killSwitchOn() throws Exception {
@@ -449,8 +442,8 @@ public class DebugReportingFallbackJobServiceTest {
         assertFalse(result);
 
         callback.assertJobFinished();
-        verify(mSpyService, times(1)).jobFinished(any(), eq(false));
-        verify(mMockJobScheduler, times(1)).cancel(eq(MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_ID));
+        verify(mSpyService).jobFinished(any(), eq(false));
+        verify(mMockJobScheduler).cancel(eq(MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_ID));
     }
 
     private void onStartJob_killSwitchOff() throws Exception {
@@ -469,20 +462,19 @@ public class DebugReportingFallbackJobServiceTest {
 
         callback.assertJobFinished();
 
-        verify(mSpyService, times(1)).jobFinished(any(), anyBoolean());
+        verify(mSpyService).jobFinished(any(), anyBoolean());
         verify(mMockJobScheduler, never()).cancel(eq(MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_ID));
     }
 
     private void runWithMocks(TestUtils.RunnableWithThrow execute) throws Exception {
-        Context context = Mockito.mock(Context.class);
-        doReturn(CONTEXT.getPackageName()).when(context).getPackageName();
-        doReturn(CONTEXT.getPackageManager()).when(context).getPackageManager();
+        doReturn(mContext.getPackageName()).when(mMockContext).getPackageName();
+        doReturn(mContext.getPackageManager()).when(mMockContext).getPackageManager();
         // Setup mock everything in job
         mMockDatastoreManager = mock(DatastoreManager.class);
         doReturn(Optional.empty()).when(mMockDatastoreManager).runInTransactionWithResult(any());
         doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
         doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
-        doReturn(context).when(mSpyService).getApplicationContext();
+        doReturn(mMockContext).when(mSpyService).getApplicationContext();
         ExtendedMockito.doReturn(mock(EnrollmentDao.class)).when(() -> EnrollmentDao.getInstance());
         ExtendedMockito.doReturn(mock(AdServicesLoggerImpl.class))
                 .when(AdServicesLoggerImpl::getInstance);

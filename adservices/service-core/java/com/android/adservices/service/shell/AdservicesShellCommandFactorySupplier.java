@@ -40,7 +40,9 @@ public final class AdservicesShellCommandFactorySupplier extends ShellCommandFac
                             ApplicationContextSingleton.get()),
                     SignalsShellCommandFactory.getInstance(
                             DebugFlags.getInstance(),
-                            ProtectedSignalsDatabase.getInstance().protectedSignalsDao()));
+                            ProtectedSignalsDatabase.getInstance().protectedSignalsDao(),
+                            FlagsFactory.getFlags(),
+                            ApplicationContextSingleton.get()));
 
     @Override
     public ImmutableList<ShellCommandFactory> getAllShellCommandFactories() {

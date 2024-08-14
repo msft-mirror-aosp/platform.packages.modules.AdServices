@@ -17,6 +17,7 @@
 package com.android.adservices.ui.util;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import android.app.Instrumentation;
 import android.content.Intent;
@@ -119,13 +120,21 @@ public class ApkTestUtil {
 
     public static UiObject2 scrollTo(UiDevice device, int resId) {
         String targetStr = getString(resId);
-        return scrollToFindElement(
-                device, By.text(Pattern.compile(targetStr, Pattern.CASE_INSENSITIVE)));
+        assertWithMessage("getString(resId=%s)", resId).that(targetStr).isNotNull();
+        UiObject2 uiObject2 =
+                scrollToFindElement(
+                        device, By.text(Pattern.compile(targetStr, Pattern.CASE_INSENSITIVE)));
+
+        assertWithMessage("scrollToFindElement(resId=%s)", resId).that(uiObject2).isNotNull();
+        return uiObject2;
     }
 
     public static UiObject2 scrollTo(UiDevice device, String regexStr) {
-        return scrollToFindElement(
-                device, By.res(Pattern.compile(regexStr, Pattern.CASE_INSENSITIVE)));
+        UiObject2 uiObject2 =
+                scrollToFindElement(
+                        device, By.res(Pattern.compile(regexStr, Pattern.CASE_INSENSITIVE)));
+        assertWithMessage("scrollToFindElement(regexStr=%s)", regexStr).that(uiObject2).isNotNull();
+        return uiObject2;
     }
 
     public static UiObject2 scrollToFindElement(UiDevice device, BySelector selector) {
