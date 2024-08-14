@@ -49,9 +49,9 @@ final class ConcurrencyHelper {
         mSleeper = sleeper;
     }
 
-    Thread runAsync(long timeoutMs, Runnable r) {
+    Thread runAsync(long delayMs, Runnable r) {
         Objects.requireNonNull(r, "Runnable cannot be null");
-        return startNewThread(() -> sleep(timeoutMs, r, "runAsync() call"));
+        return startNewThread(() -> sleep(delayMs, r, "runAsync() call"));
     }
 
     Thread startNewThread(Runnable r) {
