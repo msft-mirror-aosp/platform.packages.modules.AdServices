@@ -28,19 +28,15 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
-import android.content.Context;
-
-import androidx.test.core.app.ApplicationProvider;
-
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.topics.Topic;
-import com.android.adservices.errorlogging.ErrorLogUtil;
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.EpochComputationClassifierStats;
 import com.android.adservices.service.topics.CacheManager;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.android.libraries.mobiledatadownload.file.SynchronousFileStorage;
 import com.google.common.collect.ImmutableList;
@@ -49,7 +45,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.mobiledatadownload.ClientConfigProto.ClientFile;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -62,7 +57,9 @@ import java.util.Random;
 import java.util.stream.Collectors;
 
 /** Topic Classifier Test {@link OnDeviceClassifier}. */
-public class OnDeviceClassifierTest {
+@SpyStatic(FlagsFactory.class)
+@RequiresSdkLevelAtLeastS
+public final class OnDeviceClassifierTest extends AdServicesExtendedMockitoTestCase {
     private static final String TEST_LABELS_FILE_PATH = "classifier/labels_test_topics.txt";
     private static final String TEST_PRECOMPUTED_FILE_PATH =
             "classifier/precomputed_test_app_list.csv";
@@ -76,41 +73,31 @@ public class OnDeviceClassifierTest {
     private static final float DEFAULT_THRESHOLD = 0.1f;
     private static final int DEFAULT_DESCRIPTION_MAX_LENGTH = 2500;
     private static final int DEFAULT_DESCRIPTION_MAX_WORDS = 500;
-    private static final Context sContext = ApplicationProvider.getApplicationContext();
 
-    @Mock private Flags mFlags;
+    @Mock private Flags mMockFlags;
     @Mock private SynchronousFileStorage mMockFileStorage;
     @Mock private ModelManager mModelManager;
     @Mock private CacheManager mCacheManager;
     @Mock private ClassifierInputManager mClassifierInputManager;
-    @Mock Map<String, ClientFile> mMockDownloadedFiles;
+    @Mock private Map<String, ClientFile> mMockDownloadedFiles;
+    @Mock private AdServicesLogger mLogger;
     private OnDeviceClassifier mOnDeviceClassifier;
-    @Mock AdServicesLogger mLogger;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
-    @Rule(order = 1)
-    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder(this)
-                    .spyStatic(FlagsFactory.class)
-                    .spyStatic(ErrorLogUtil.class)
-                    .build();
 
     @Before
     public void setUp() throws IOException {
         // Mock default flag values.
-        doReturn(DEFAULT_NUMBER_OF_TOP_LABELS).when(mFlags).getClassifierNumberOfTopLabels();
-        doReturn(DEFAULT_THRESHOLD).when(mFlags).getClassifierThreshold();
-        doReturn(DEFAULT_DESCRIPTION_MAX_LENGTH).when(mFlags).getClassifierDescriptionMaxLength();
-        doReturn(DEFAULT_DESCRIPTION_MAX_WORDS).when(mFlags).getClassifierDescriptionMaxWords();
+        doReturn(DEFAULT_NUMBER_OF_TOP_LABELS).when(mMockFlags).getClassifierNumberOfTopLabels();
+        doReturn(DEFAULT_THRESHOLD).when(mMockFlags).getClassifierThreshold();
+        doReturn(DEFAULT_DESCRIPTION_MAX_LENGTH)
+                .when(mMockFlags)
+                .getClassifierDescriptionMaxLength();
+        doReturn(DEFAULT_DESCRIPTION_MAX_WORDS).when(mMockFlags).getClassifierDescriptionMaxWords();
 
-        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mMockFlags);
 
         mModelManager =
                 new ModelManager(
-                        sContext,
+                        mContext,
                         TEST_LABELS_FILE_PATH,
                         TEST_PRECOMPUTED_FILE_PATH,
                         TEST_CLASSIFIER_ASSETS_METADATA_PATH,
@@ -135,7 +122,7 @@ public class OnDeviceClassifierTest {
     public void testClassify_earlyReturnIfNoModelAvailable() {
         mModelManager =
                 new ModelManager(
-                        sContext,
+                        mContext,
                         TEST_LABELS_FILE_PATH,
                         TEST_PRECOMPUTED_FILE_PATH,
                         TEST_CLASSIFIER_ASSETS_METADATA_PATH,
@@ -383,7 +370,7 @@ public class OnDeviceClassifierTest {
         ImmutableSet<String> appPackages = ImmutableSet.of(appPackage1);
         // Override classifierNumberOfTopLabels.
         int overrideNumberOfTopLabels = 0;
-        doReturn(overrideNumberOfTopLabels).when(mFlags).getClassifierNumberOfTopLabels();
+        doReturn(overrideNumberOfTopLabels).when(mMockFlags).getClassifierNumberOfTopLabels();
 
         ImmutableMap<String, List<Topic>> classifications =
                 mOnDeviceClassifier.classify(appPackages);
@@ -424,7 +411,7 @@ public class OnDeviceClassifierTest {
         ImmutableSet<String> appPackages = ImmutableSet.of(appPackage1);
         // Override classifierThreshold.
         float overrideThreshold = 0.1f;
-        doReturn(overrideThreshold).when(mFlags).getClassifierThreshold();
+        doReturn(overrideThreshold).when(mMockFlags).getClassifierThreshold();
 
         ImmutableMap<String, List<Topic>> classifications =
                 mOnDeviceClassifier.classify(appPackages);

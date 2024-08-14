@@ -16,7 +16,6 @@
 package com.android.adservices.mockito;
 
 import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
@@ -26,9 +25,6 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 
 import android.content.Context;
-import android.util.Log;
-
-import androidx.annotation.Nullable;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
@@ -36,14 +32,9 @@ import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
-import com.android.adservices.shared.testing.concurrency.FailableResultSyncCallback;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 
-import com.google.common.truth.Expect;
-
 import org.mockito.verification.VerificationMode;
-
-import java.util.Objects;
 
 /**
  * Provides Mockito expectation for common calls.
@@ -83,50 +74,6 @@ public final class ExtendedMockitoExpectations {
     public static void doNothingOnErrorLogUtilError() {
         doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
-    }
-
-    /**
-     * Mocks a call to {@link ErrorLogUtil#e(Throwable, int, int)} and returns a callback object
-     * that blocks until that call is made.
-     *
-     * <p>Useful in cases where {@link ErrorLogUtil} is expected to be called asynchronously.
-     */
-    public static ErrorLogUtilCallback mockErrorLogUtilWithThrowable() {
-        ErrorLogUtilCallback callback = new ErrorLogUtilCallback();
-        doAnswer(
-                        inv -> {
-                            Log.d(TAG, "mockErrorLogUtilError(): inv= " + inv);
-                            callback.injectResult(
-                                    new ErrorLogUtilInvocation(
-                                            inv.getArgument(0),
-                                            inv.getArgument(1),
-                                            inv.getArgument(2)));
-                            return null;
-                        })
-                .when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
-        return callback;
-    }
-
-    /**
-     * Mocks a call to {@link ErrorLogUtil#e(int, int)} and returns a callback object that blocks
-     * until that call is made.
-     *
-     * <p>Useful in cases where {@link ErrorLogUtil} is expected to be called asynchronously.
-     */
-    public static ErrorLogUtilCallback mockErrorLogUtilWithoutThrowable() {
-        ErrorLogUtilCallback callback = new ErrorLogUtilCallback();
-        doAnswer(
-                        inv -> {
-                            Log.d(TAG, "mockErrorLogUtilError(): inv= " + inv);
-                            callback.injectResult(
-                                    new ErrorLogUtilInvocation(
-                                            /* throwable= */ null,
-                                            inv.getArgument(0),
-                                            inv.getArgument(1)));
-                            return null;
-                        })
-                .when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
-        return callback;
     }
 
     /**
@@ -247,89 +194,6 @@ public final class ExtendedMockitoExpectations {
     public static void verifyErrorLogUtilError(
             int errorCode, int ppapiName, VerificationMode mode) {
         verify(() -> ErrorLogUtil.e(errorCode, ppapiName), mode);
-    }
-
-    /**
-     * {@code SyncCallback} used in conjunction with {@link #mockErrorLogUtilWithoutThrowable()} /
-     * {@link #mockErrorLogUtilWithThrowable()}.
-     */
-    public static final class ErrorLogUtilCallback
-            extends FailableResultSyncCallback<ErrorLogUtilInvocation, Exception> {
-
-        /**
-         * Asserts {@link ErrorLogUtil#e(Throwable, int, int)}) was called with the given values.
-         */
-        public void assertReceived(Expect expect, Throwable throwable, int errorCode, int ppapiName)
-                throws InterruptedException {
-            ErrorLogUtilInvocation result = assertResultReceived();
-            expect.withMessage("throwable on %s", result)
-                    .that(result.throwable)
-                    .isSameInstanceAs(throwable);
-            expect.withMessage("errorCode on %s", result)
-                    .that(result.errorCode)
-                    .isSameInstanceAs(errorCode);
-            expect.withMessage("ppapiName on %s", result)
-                    .that(result.ppapiName)
-                    .isSameInstanceAs(ppapiName);
-        }
-
-        /** Asserts {@link ErrorLogUtil#e(int, int)}) was called with the given values. */
-        public void assertReceived(Expect expect, int errorCode, int ppapiName)
-                throws InterruptedException {
-            ErrorLogUtilInvocation result = assertResultReceived();
-            expect.withMessage("throwable on %s", result).that(result.throwable).isNull();
-            expect.withMessage("errorCode on %s", result)
-                    .that(result.errorCode)
-                    .isSameInstanceAs(errorCode);
-            expect.withMessage("ppapiName on %s", result)
-                    .that(result.ppapiName)
-                    .isSameInstanceAs(ppapiName);
-        }
-    }
-
-    private static final class ErrorLogUtilInvocation {
-        @Nullable public final Throwable throwable;
-        public final int errorCode;
-        public final int ppapiName;
-
-        ErrorLogUtilInvocation(Throwable throwable, int errorCode, int ppapiName) {
-            this.throwable = throwable;
-            this.errorCode = errorCode;
-            this.ppapiName = ppapiName;
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(errorCode, ppapiName, throwable);
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if (obj == null) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            ErrorLogUtilInvocation other = (ErrorLogUtilInvocation) obj;
-            return errorCode == other.errorCode
-                    && ppapiName == other.ppapiName
-                    && Objects.equals(throwable, other.throwable);
-        }
-
-        @Override
-        public String toString() {
-            return "ErrorLogUtilInvocation [exception="
-                    + throwable
-                    + ", errorCode="
-                    + errorCode
-                    + ", ppapiName="
-                    + ppapiName
-                    + "]";
-        }
     }
 
     private ExtendedMockitoExpectations() {
