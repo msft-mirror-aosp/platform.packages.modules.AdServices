@@ -15,26 +15,11 @@
  */
 package com.android.adservices.mockito;
 
-import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.eq;
-
 import android.content.Context;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
-import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
-import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
-import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
-
-import org.mockito.verification.VerificationMode;
 
 /**
  * Provides Mockito expectation for common calls.
@@ -62,21 +47,6 @@ public final class ExtendedMockitoExpectations {
     // CHECKSTYLE:ON
 
     /**
-     * Mocks a call to {@link ErrorLogUtil#e()}, does nothing.
-     *
-     * <p>Mocks behavior for both variants of the method.
-     *
-     * @deprecated Use {@link AdServicesLoggingUsageRule} to verify {@link ErrorLogUtil#e()} calls.
-     *     Tests using this rule should NOT mock {@link ErrorLogUtil#e()} calls as it's taken care
-     *     of under the hood.
-     */
-    @Deprecated
-    public static void doNothingOnErrorLogUtilError() {
-        doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
-        doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
-    }
-
-    /**
      * Mocks {@link AdServicesJobServiceLogger} to not actually log the stats to server.
      *
      * @deprecated Use {@link AdServicesJobMocker#mockNoOpAdServicesJobServiceLogger(Context,
@@ -98,102 +68,6 @@ public final class ExtendedMockitoExpectations {
     @Deprecated
     public static void mockGetAdServicesJobServiceLogger(AdServicesJobServiceLogger logger) {
         MockitoExpectations.jobMocker.mockGetAdServicesJobServiceLogger(logger);
-    }
-
-    /**
-     * Verifies {@link ErrorLogUtil#e()} was called with the expected values.
-     *
-     * <p><b>Note: </b>you must call either {@link #doNothingOnErrorLogUtilError()} or {@link
-     * #mockErrorLogUtilWithThrowable()} before the test calls {@link ErrorLogUtil#e(Throwable, int,
-     * int)}.
-     *
-     * @deprecated Use {@link AdServicesLoggingUsageRule} to verify {@link ErrorLogUtil#e()} calls.
-     *     To specify excepted calls with any exception, use {@link
-     *     ExpectErrorLogUtilWithExceptionCall} along with {@link Any}.
-     */
-    @Deprecated
-    public static void verifyErrorLogUtilErrorWithAnyException(int errorCode, int ppapiName) {
-        verifyErrorLogUtilErrorWithAnyException(errorCode, ppapiName, times(1));
-    }
-
-    /**
-     * Verifies {@link ErrorLogUtil#e()} was called with the expected values, using Mockito's {@link
-     * VerificationMode} to set the number of times (like {@code times(2)} or {@code never}).
-     *
-     * <p><b>Note: </b>you must call either {@link #doNothingOnErrorLogUtilError()} or {@link
-     * #mockErrorLogUtilWithThrowable()} before the test calls {@link ErrorLogUtil#e(Throwable, int,
-     * int)}.
-     *
-     * @deprecated Use {@link AdServicesLoggingUsageRule} to verify {@link ErrorLogUtil#e()} calls.
-     *     To specify excepted calls with any exception, use {@link
-     *     ExpectErrorLogUtilWithExceptionCall} along with {@link Any} as the throwable parameter.
-     */
-    @Deprecated
-    public static void verifyErrorLogUtilErrorWithAnyException(
-            int errorCode, int ppapiName, VerificationMode mode) {
-        verify(() -> ErrorLogUtil.e(any(), eq(errorCode), eq(ppapiName)), mode);
-    }
-
-    /**
-     * Verifies {@link ErrorLogUtil#e()} was called with the expected values.
-     *
-     * <p><b>Note: </b>you must call either {@link #doNothingOnErrorLogUtilError()} or {@link
-     * #mockErrorLogUtilWithThrowable()} before the test calls {@link ErrorLogUtil#e(Throwable, int,
-     * int)}.
-     *
-     * @deprecated Use {@link AdServicesLoggingUsageRule} to verify {@link ErrorLogUtil#e()} calls.
-     *     Use {@link ExpectErrorLogUtilWithExceptionCall} to specify expected calls with exception.
-     */
-    @Deprecated
-    public static void verifyErrorLogUtilError(Throwable throwable, int errorCode, int ppapiName) {
-        verifyErrorLogUtilError(throwable, errorCode, ppapiName, times(1));
-    }
-
-    /**
-     * Verifies {@link ErrorLogUtil#e()} was called with the expected values, using Mockito's {@link
-     * VerificationMode} to set the number of times (like {@code times(2)} or {@code never}).
-     *
-     * <p><b>Note: </b>you must call either {@link #doNothingOnErrorLogUtilError()} or {@link
-     * #mockErrorLogUtilWithThrowable()} before the test calls {@link ErrorLogUtil#e(Throwable, int,
-     * int)}.
-     *
-     * @deprecated Use {@link AdServicesLoggingUsageRule} to verify {@link ErrorLogUtil#e()} calls.
-     *     Use {@link ExpectErrorLogUtilWithExceptionCall} to specify expected calls with exception.
-     */
-    @Deprecated
-    public static void verifyErrorLogUtilError(
-            Throwable throwable, int errorCode, int ppapiName, VerificationMode mode) {
-        verify(() -> ErrorLogUtil.e(throwable, errorCode, ppapiName), mode);
-    }
-
-    /**
-     * Verifies {@link ErrorLogUtil#e()} was called with the expected values.
-     *
-     * <p><b>Note: </b>you must call either {@link #doNothingOnErrorLogUtilError()} or {@link
-     * #mockErrorLogUtilWithoutThrowable()} before the test calls {@link ErrorLogUtil#e(int, int)}.
-     *
-     * @deprecated Use {@link AdServicesLoggingUsageRule} to verify {@link ErrorLogUtil#e()} calls.
-     *     Use {@link ExpectErrorLogUtilCall} to specify expected calls without exception.
-     */
-    @Deprecated
-    public static void verifyErrorLogUtilError(int errorCode, int ppapiName) {
-        verify(() -> ErrorLogUtil.e(errorCode, ppapiName));
-    }
-
-    /**
-     * Verifies {@link ErrorLogUtil#e()} was called with the expected values, using Mockito's {@link
-     * VerificationMode} to set the number of times (like {@code times(2)} or {@code never}).
-     *
-     * <p><b>Note: </b>you must call either {@link #doNothingOnErrorLogUtilError()} or {@link
-     * #mockErrorLogUtilWithoutThrowable()} before the test calls {@link ErrorLogUtil#e(int, int)}.
-     *
-     * @deprecated Use {@link AdServicesLoggingUsageRule} to verify {@link ErrorLogUtil#e()} calls.
-     *     Use {@link ExpectErrorLogUtilCall} to specify expected calls without exception.
-     */
-    @Deprecated
-    public static void verifyErrorLogUtilError(
-            int errorCode, int ppapiName, VerificationMode mode) {
-        verify(() -> ErrorLogUtil.e(errorCode, ppapiName), mode);
     }
 
     private ExtendedMockitoExpectations() {
