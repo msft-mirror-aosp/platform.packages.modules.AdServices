@@ -16,10 +16,6 @@
 
 package com.android.adservices.service.measurement.registration;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdServicesJobServiceLogger;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mocker;
-import static com.android.adservices.mockito.MockitoExpectations.getSpiedAdServicesJobServiceLogger;
-import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
 import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
 import static com.android.adservices.mockito.MockitoExpectations.verifyBackgroundJobsSkipLogged;
 import static com.android.adservices.mockito.MockitoExpectations.verifyLoggingNotHappened;
@@ -43,7 +39,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.timeout;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -55,10 +50,10 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesJobServiceTestCase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
@@ -69,22 +64,28 @@ import com.android.adservices.spe.AdServicesJobInfo;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.internal.stubbing.answers.AnswersWithDelay;
 import org.mockito.internal.stubbing.answers.CallsRealMethods;
-import org.mockito.quality.Strictness;
 
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-public class AsyncRegistrationQueueJobServiceTest {
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
+@SpyStatic(AsyncRegistrationQueueJobService.class)
+@SpyStatic(AdServicesLoggerImpl.class)
+@SpyStatic(DatastoreManagerFactory.class)
+@SpyStatic(EnrollmentDao.class)
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(AdServicesJobServiceLogger.class)
+@MockStatic(ServiceCompatUtils.class)
+public final class AsyncRegistrationQueueJobServiceTest extends AdServicesJobServiceTestCase {
     private static final int MEASUREMENT_ASYNC_REGISTRATION_JOB_ID =
             MEASUREMENT_ASYNC_REGISTRATION_JOB.getJobId();
     private static final long WAIT_IN_MILLIS = 5_000L;
@@ -97,25 +98,12 @@ public class AsyncRegistrationQueueJobServiceTest {
     @Mock private Flags mMockFlags;
     private AdServicesJobServiceLogger mSpyLogger;
 
-    @Rule
-    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder(this)
-                    .spyStatic(AsyncRegistrationQueueJobService.class)
-                    .spyStatic(AdServicesLoggerImpl.class)
-                    .spyStatic(DatastoreManagerFactory.class)
-                    .spyStatic(EnrollmentDao.class)
-                    .spyStatic(FlagsFactory.class)
-                    .spyStatic(AdServicesJobServiceLogger.class)
-                    .mockStatic(ServiceCompatUtils.class)
-                    .setStrictness(Strictness.LENIENT)
-                    .build();
-
     @Before
     public void setUp() {
         mSpyService = spy(new AsyncRegistrationQueueJobService());
 
         mMockFlags = mock(Flags.class);
-        mSpyLogger = getSpiedAdServicesJobServiceLogger(CONTEXT, mMockFlags);
+        mSpyLogger = getSpiedAdServicesJobServiceLogger(mContext, mMockFlags);
         when(mMockFlags.getMeasurementAsyncRegistrationQueueJobPersisted()).thenReturn(false);
         when(mMockFlags.getMeasurementAsyncRegistrationQueueJobRequiredNetworkType())
                 .thenReturn(JobInfo.NETWORK_TYPE_ANY);
@@ -447,7 +435,7 @@ public class AsyncRegistrationQueueJobServiceTest {
                             spyContext, /* forceSchedule= */ false);
 
                     // Validate
-                    verify(mMockJobScheduler, times(1))
+                    verify(mMockJobScheduler)
                             .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
                 });
     }
@@ -494,7 +482,7 @@ public class AsyncRegistrationQueueJobServiceTest {
                     ExtendedMockito.verify(
                             () -> AsyncRegistrationQueueJobService.schedule(any(), any()),
                             timeout(WAIT_IN_MILLIS));
-                    verify(mMockJobScheduler, times(1))
+                    verify(mMockJobScheduler)
                             .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
                 });
     }
@@ -524,7 +512,7 @@ public class AsyncRegistrationQueueJobServiceTest {
                     ExtendedMockito.verify(
                             () -> AsyncRegistrationQueueJobService.schedule(any(), any()),
                             atLeast(1));
-                    verify(mMockJobScheduler, times(1))
+                    verify(mMockJobScheduler)
                             .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
                 });
     }
@@ -622,7 +610,7 @@ public class AsyncRegistrationQueueJobServiceTest {
                             new JobInfo.Builder(
                                             DEPRECATED_ASYNC_REGISTRATION_QUEUE_JOB.getJobId(),
                                             new ComponentName(
-                                                    CONTEXT,
+                                                    mContext,
                                                     AsyncRegistrationQueueJobService.class))
                                     .setPeriodic(TimeUnit.MINUTES.toMillis(30))
                                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
@@ -743,8 +731,8 @@ public class AsyncRegistrationQueueJobServiceTest {
 
     private void runWithMocks(TestUtils.RunnableWithThrow execute) throws Exception {
         Context context = Mockito.mock(Context.class);
-        doReturn(CONTEXT.getPackageName()).when(context).getPackageName();
-        doReturn(CONTEXT.getPackageManager()).when(context).getPackageManager();
+        doReturn(mContext.getPackageName()).when(context).getPackageName();
+        doReturn(mContext.getPackageManager()).when(context).getPackageManager();
         // Setup mock everything in job
         doReturn(Optional.empty()).when(mMockDatastoreManager).runInTransactionWithResult(any());
         doNothing().when(mSpyService).jobFinished(any(), anyBoolean());

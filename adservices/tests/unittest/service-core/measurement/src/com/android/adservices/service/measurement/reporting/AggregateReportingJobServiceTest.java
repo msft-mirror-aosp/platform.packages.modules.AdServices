@@ -16,10 +16,6 @@
 
 package com.android.adservices.service.measurement.reporting;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdServicesJobServiceLogger;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mocker;
-import static com.android.adservices.mockito.MockitoExpectations.getSpiedAdServicesJobServiceLogger;
-import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
 import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
 import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobExecutionData;
 import static com.android.adservices.mockito.MockitoExpectations.verifyBackgroundJobsSkipLogged;
@@ -49,12 +45,10 @@ import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.content.Context;
 
-import androidx.test.core.app.ApplicationProvider;
-
+import com.android.adservices.common.AdServicesJobServiceTestCase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
@@ -63,15 +57,15 @@ import com.android.adservices.shared.testing.concurrency.JobServiceCallback;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.internal.stubbing.answers.AnswersWithDelay;
 import org.mockito.internal.stubbing.answers.CallsRealMethods;
-import org.mockito.quality.Strictness;
 
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
@@ -80,8 +74,13 @@ import java.util.concurrent.TimeUnit;
 /**
  * Unit test for {@link AggregateReportingJobService
  */
-public class AggregateReportingJobServiceTest {
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
+@SpyStatic(AggregateReportingJobService.class)
+@SpyStatic(DatastoreManagerFactory.class)
+@SpyStatic(EnrollmentDao.class)
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(AdServicesJobServiceLogger.class)
+@MockStatic(ServiceCompatUtils.class)
+public final class AggregateReportingJobServiceTest extends AdServicesJobServiceTestCase {
     private static final int MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID =
             MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB.getJobId();
     private static final long WAIT_IN_MILLIS = 200L;
@@ -94,18 +93,6 @@ public class AggregateReportingJobServiceTest {
     private Flags mMockFlags;
     private AdServicesJobServiceLogger mSpyLogger;
 
-    @Rule
-    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder(this)
-                    .spyStatic(AggregateReportingJobService.class)
-                    .spyStatic(DatastoreManagerFactory.class)
-                    .spyStatic(EnrollmentDao.class)
-                    .spyStatic(FlagsFactory.class)
-                    .spyStatic(AdServicesJobServiceLogger.class)
-                    .mockStatic(ServiceCompatUtils.class)
-                    .setStrictness(Strictness.LENIENT)
-                    .build();
-
     @Before
     public void setUp() {
         mSpyService = spy(new AggregateReportingJobService());
@@ -113,7 +100,7 @@ public class AggregateReportingJobServiceTest {
         mMockJobScheduler = mock(JobScheduler.class);
 
         mMockFlags = mock(Flags.class);
-        mSpyLogger = getSpiedAdServicesJobServiceLogger(CONTEXT, mMockFlags);
+        mSpyLogger = getSpiedAdServicesJobServiceLogger(mContext, mMockFlags);
         when(mMockFlags.getMeasurementAggregateReportingJobPersisted()).thenReturn(true);
         when(mMockFlags.getMeasurementAggregateReportingJobRequiredNetworkType())
                 .thenReturn(JobInfo.NETWORK_TYPE_UNMETERED);
@@ -241,9 +228,8 @@ public class AggregateReportingJobServiceTest {
                     // Setup
                     enableKillSwitch();
 
-                    final Context mockContext = mock(Context.class);
                     doReturn(mMockJobScheduler)
-                            .when(mockContext)
+                            .when(mMockContext)
                             .getSystemService(JobScheduler.class);
                     final JobInfo mockJobInfo = mock(JobInfo.class);
                     doReturn(mockJobInfo)
@@ -252,7 +238,7 @@ public class AggregateReportingJobServiceTest {
 
                     // Execute
                     AggregateReportingJobService.scheduleIfNeeded(
-                            mockContext, /* forceSchedule= */ false);
+                            mMockContext, /* forceSchedule= */ false);
 
                     // Validate
                     ExtendedMockito.verify(
@@ -270,15 +256,15 @@ public class AggregateReportingJobServiceTest {
                     // Setup
                     disableKillSwitch();
 
-                    final Context spyContext = spy(CONTEXT);
                     doReturn(mMockJobScheduler)
-                            .when(spyContext)
+                            .when(mSpyContext)
                             .getSystemService(JobScheduler.class);
                     final JobInfo scheduledJobInfo =
                             new JobInfo.Builder(
                                             MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID,
                                             new ComponentName(
-                                                    spyContext, AggregateReportingJobService.class))
+                                                    mSpyContext,
+                                                    AggregateReportingJobService.class))
                                     .setRequiresBatteryNotLow(true)
                                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
                                     .setPeriodic(JOB_PERIOD_MS)
@@ -290,12 +276,12 @@ public class AggregateReportingJobServiceTest {
 
                     // Execute
                     AggregateReportingJobService.scheduleIfNeeded(
-                            spyContext, /* forceSchedule= */ false);
+                            mSpyContext, /* forceSchedule= */ false);
 
                     // Validate
                     ExtendedMockito.verify(
                             () -> AggregateReportingJobService.schedule(any(), any()), never());
-                    verify(mMockJobScheduler, times(1))
+                    verify(mMockJobScheduler)
                             .getPendingJob(eq(MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID));
                 });
     }
@@ -308,15 +294,15 @@ public class AggregateReportingJobServiceTest {
                     // Setup
                     disableKillSwitch();
 
-                    final Context spyContext = spy(CONTEXT);
                     doReturn(mMockJobScheduler)
-                            .when(spyContext)
+                            .when(mSpyContext)
                             .getSystemService(JobScheduler.class);
                     final JobInfo scheduledJobInfo =
                             new JobInfo.Builder(
                                             MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID,
                                             new ComponentName(
-                                                    spyContext, AggregateReportingJobService.class))
+                                                    mSpyContext,
+                                                    AggregateReportingJobService.class))
                                     .setRequiresBatteryNotLow(true)
                                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
                                     .setPeriodic(
@@ -330,12 +316,12 @@ public class AggregateReportingJobServiceTest {
 
                     // Execute
                     AggregateReportingJobService.scheduleIfNeeded(
-                            spyContext, /* forceSchedule= */ false);
+                            mSpyContext, /* forceSchedule= */ false);
 
                     // Validate
                     ExtendedMockito.verify(
                             () -> AggregateReportingJobService.schedule(any(), any()));
-                    verify(mMockJobScheduler, times(1))
+                    verify(mMockJobScheduler)
                             .getPendingJob(eq(MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID));
                 });
     }
@@ -348,9 +334,8 @@ public class AggregateReportingJobServiceTest {
                     // Setup
                     disableKillSwitch();
 
-                    final Context mockContext = mock(Context.class);
                     doReturn(mMockJobScheduler)
-                            .when(mockContext)
+                            .when(mMockContext)
                             .getSystemService(JobScheduler.class);
                     final JobInfo mockJobInfo = mock(JobInfo.class);
                     doReturn(mockJobInfo)
@@ -359,12 +344,12 @@ public class AggregateReportingJobServiceTest {
 
                     // Execute
                     AggregateReportingJobService.scheduleIfNeeded(
-                            mockContext, /* forceSchedule= */ true);
+                            mMockContext, /* forceSchedule= */ true);
 
                     // Validate
                     ExtendedMockito.verify(
-                            () -> AggregateReportingJobService.schedule(any(), any()), times(1));
-                    verify(mMockJobScheduler, times(1))
+                            () -> AggregateReportingJobService.schedule(any(), any()));
+                    verify(mMockJobScheduler)
                             .getPendingJob(eq(MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID));
                 });
     }
@@ -377,9 +362,8 @@ public class AggregateReportingJobServiceTest {
                     // Setup
                     disableKillSwitch();
 
-                    final Context mockContext = mock(Context.class);
                     doReturn(mMockJobScheduler)
-                            .when(mockContext)
+                            .when(mMockContext)
                             .getSystemService(JobScheduler.class);
                     // Mock the JobScheduler to have no pending job.
                     doReturn(null)
@@ -387,12 +371,12 @@ public class AggregateReportingJobServiceTest {
                             .getPendingJob(eq(MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID));
 
                     // Execute
-                    AggregateReportingJobService.scheduleIfNeeded(mockContext, false);
+                    AggregateReportingJobService.scheduleIfNeeded(mMockContext, false);
 
                     // Validate
                     ExtendedMockito.verify(
-                            () -> AggregateReportingJobService.schedule(any(), any()), times(1));
-                    verify(mMockJobScheduler, times(1))
+                            () -> AggregateReportingJobService.schedule(any(), any()));
+                    verify(mMockJobScheduler)
                             .getPendingJob(eq(MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID));
                 });
     }
@@ -403,9 +387,8 @@ public class AggregateReportingJobServiceTest {
                 () -> {
                     // Setup
                     disableKillSwitch();
-                    Context spyContext = spy(CONTEXT);
                     final JobScheduler jobScheduler = mock(JobScheduler.class);
-                    doReturn(jobScheduler).when(spyContext).getSystemService(JobScheduler.class);
+                    doReturn(jobScheduler).when(mSpyContext).getSystemService(JobScheduler.class);
                     final ArgumentCaptor<JobInfo> captor = ArgumentCaptor.forClass(JobInfo.class);
                     doReturn(null)
                             .when(jobScheduler)
@@ -414,10 +397,10 @@ public class AggregateReportingJobServiceTest {
                     // Execute
                     ExtendedMockito.doCallRealMethod()
                             .when(() -> AggregateReportingJobService.schedule(any(), any()));
-                    AggregateReportingJobService.scheduleIfNeeded(spyContext, true);
+                    AggregateReportingJobService.scheduleIfNeeded(mSpyContext, true);
 
                     // Validate
-                    verify(jobScheduler, times(1)).schedule(captor.capture());
+                    verify(jobScheduler).schedule(captor.capture());
                     assertNotNull(captor.getValue());
                     assertTrue(captor.getValue().isPersisted());
                 });
@@ -439,7 +422,7 @@ public class AggregateReportingJobServiceTest {
 
                     boolean onStopJobResult =
                             mSpyService.onStopJob(Mockito.mock(JobParameters.class));
-                    verify(mSpyService, times(0)).jobFinished(any(), anyBoolean());
+                    verify(mSpyService, never()).jobFinished(any(), anyBoolean());
                     assertTrue(onStopJobResult);
                     assertTrue(mSpyService.getFutureForTesting().isCancelled());
                 });
@@ -459,8 +442,8 @@ public class AggregateReportingJobServiceTest {
 
         callback.assertJobFinished();
         verify(mMockDatastoreManager, never()).runInTransactionWithResult(any());
-        verify(mSpyService, times(1)).jobFinished(any(), eq(false));
-        verify(mMockJobScheduler, times(1)).cancel(eq(MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID));
+        verify(mSpyService).jobFinished(any(), eq(false));
+        verify(mMockJobScheduler).cancel(eq(MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID));
     }
 
     private void onStartJob_killSwitchOff() throws Exception {
@@ -476,8 +459,8 @@ public class AggregateReportingJobServiceTest {
         assertTrue(result);
 
         callback.assertJobFinished();
-        verify(mMockDatastoreManager, times(1)).runInTransactionWithResult(any());
-        verify(mSpyService, times(1)).jobFinished(any(), anyBoolean());
+        verify(mMockDatastoreManager).runInTransactionWithResult(any());
+        verify(mSpyService).jobFinished(any(), anyBoolean());
         verify(mMockJobScheduler, never()).cancel(eq(MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID));
     }
 
@@ -499,20 +482,19 @@ public class AggregateReportingJobServiceTest {
 
         callback.assertJobFinished();
         verify(mMockDatastoreManager, never()).runInTransactionWithResult(any());
-        verify(mSpyService, times(1)).jobFinished(any(), eq(false));
-        verify(mMockJobScheduler, times(1)).cancel(eq(MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID));
+        verify(mSpyService).jobFinished(any(), eq(false));
+        verify(mMockJobScheduler).cancel(eq(MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID));
     }
 
     private void runWithMocks(TestUtils.RunnableWithThrow execute) throws Exception {
-        Context context = Mockito.mock(Context.class);
-        doReturn(CONTEXT.getPackageName()).when(context).getPackageName();
-        doReturn(CONTEXT.getPackageManager()).when(context).getPackageManager();
+        doReturn(mContext.getPackageName()).when(mMockContext).getPackageName();
+        doReturn(mContext.getPackageManager()).when(mMockContext).getPackageManager();
         // Setup mock everything in job
         mMockDatastoreManager = mock(DatastoreManager.class);
         doReturn(Optional.empty()).when(mMockDatastoreManager).runInTransactionWithResult(any());
         doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
         doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
-        doReturn(context).when(mSpyService).getApplicationContext();
+        doReturn(mMockContext).when(mSpyService).getApplicationContext();
         ExtendedMockito.doReturn(mock(EnrollmentDao.class)).when(() -> EnrollmentDao.getInstance());
         ExtendedMockito.doReturn(mMockDatastoreManager)
                 .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));

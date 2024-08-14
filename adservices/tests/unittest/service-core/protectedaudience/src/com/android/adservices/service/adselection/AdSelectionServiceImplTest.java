@@ -7494,7 +7494,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     @Test
     public void testReportImpressionSucceedsWhenAdTechPassesEnrollmentCheck() throws Exception {
 
-
         // Reset flags to perform enrollment check
         boolean enrollmentCheckEnabled = true;
         mFlags = new AdSelectionServicesTestsFlags(enrollmentCheckEnabled);
