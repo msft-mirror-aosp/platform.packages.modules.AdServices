@@ -64,4 +64,13 @@ public interface AdServicesPragmaticMocker {
      * object that blocks until that call is made.
      */
     ResultSyncCallback<ApiCallStats> mockLogApiCallStats(AdServicesLogger adServicesLogger);
+
+    /**
+     * Mocks a call to {@link AdServicesLogger#logApiCallStats(ApiCallStats)} and returns a callback
+     * object that blocks until that call is made.
+     *
+     * <p>This method allows to pass in a customizedtimeout.
+     */
+    ResultSyncCallback<ApiCallStats> mockLogApiCallStats(
+            AdServicesLogger adServicesLogger, long timeoutMs);
 }

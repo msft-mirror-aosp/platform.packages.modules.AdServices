@@ -16,7 +16,6 @@
 
 package com.android.adservices.mockito;
 
-import static com.android.adservices.shared.testing.concurrency.SyncCallbackSettings.DEFAULT_TIMEOUT_MS;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doCallRealMethod;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -35,7 +34,6 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
 import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
-import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 
 /** Provides Mockito expectation for common calls. */
@@ -51,41 +49,19 @@ public final class MockitoExpectations {
     public static final AdServicesMockitoJobMocker jobMocker =
             new AdServicesMockitoJobMocker(new StaticClassChecker() {});
 
+    private static final AdServicesMockitoMocker mocker = new AdServicesMockitoMocker();
+
     // CHECKSTYLE:ON
 
     /**
      * Mocks a call to {@link AdServicesLogger#logApiCallStats(ApiCallStats)} and returns a callback
-     * object that blocks until that call is made.
+     * object that blocks until that call is made. This method allows to pass in a customized
+     * timeout. @Deprecated use {@code mocker.mockLogApiCallStats()} instead
      */
+    @Deprecated
     public static ResultSyncCallback<ApiCallStats> mockLogApiCallStats(
             AdServicesLogger adServicesLogger) {
-        return mockLogApiCallStats(adServicesLogger, DEFAULT_TIMEOUT_MS);
-    }
-
-    /**
-     * Mocks a call to {@link AdServicesLogger#logApiCallStats(ApiCallStats)} and returns a callback
-     * object that blocks until that call is made. This method allows to pass in a customized
-     * timeout.
-     */
-    public static ResultSyncCallback<ApiCallStats> mockLogApiCallStats(
-            AdServicesLogger adServicesLogger, long timeoutMs) {
-        ResultSyncCallback<ApiCallStats> callback =
-                new ResultSyncCallback<>(
-                        SyncCallbackFactory.newSettingsBuilder()
-                                .setMaxTimeoutMs(timeoutMs)
-                                .build());
-
-        doAnswer(
-                        inv -> {
-                            Log.v(TAG, "mockLogApiCallStats(): inv=" + inv);
-                            ApiCallStats apiCallStats = inv.getArgument(0);
-                            callback.injectResult(apiCallStats);
-                            return null;
-                        })
-                .when(adServicesLogger)
-                .logApiCallStats(any());
-
-        return callback;
+        return mocker.mockLogApiCallStats(adServicesLogger);
     }
 
     /** Verifies methods in {@link AdServicesJobServiceLogger} were never called. */
