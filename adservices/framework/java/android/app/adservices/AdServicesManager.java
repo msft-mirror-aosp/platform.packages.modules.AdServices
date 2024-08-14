@@ -726,4 +726,24 @@ public final class AdServicesManager {
             throw e.rethrowFromSystemServer();
         }
     }
+
+    /** Gets the module enrollment data. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public String getModuleEnrollmentState() {
+        try {
+            return mService.getModuleEnrollmentState();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Saves the module enrollment data. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void setModuleEnrollmentState(String enrollmentState) {
+        try {
+            mService.setModuleEnrollmentState(enrollmentState);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
 }
