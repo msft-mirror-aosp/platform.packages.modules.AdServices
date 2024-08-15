@@ -13,19 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.common;
+package com.android.adservices.mockito;
 
-import com.android.adservices.shared.meta_testing.SharedMockerTestCase;
+import com.android.adservices.service.Flags;
 
-/**
- * Unit tests for {@link AdServicesExtendedMockitoTestCase.Mocker}'s implementation of {@link
- * com.android.adservices.mockito.SharedMocker}.
- */
-public final class AdServicesExtendedMockitoTestCaseSharedMockerTest
-        extends SharedMockerTestCase<AdServicesExtendedMockitoTestCase.Mocker> {
+public final class AdServicesMockitoFlagsMockerTest
+        extends AdServicesFlagsMockerTestCase<AdServicesFlagsMocker> {
 
     @Override
-    protected AdServicesExtendedMockitoTestCase.Mocker getMocker() {
-        return AdServicesExtendedMockitoTestCase.Mocker.forSharedMockerTests();
+    protected AdServicesFlagsMocker getMocker(Flags flags) {
+        return new AdServicesMockitoFlagsMocker(flags);
     }
 }

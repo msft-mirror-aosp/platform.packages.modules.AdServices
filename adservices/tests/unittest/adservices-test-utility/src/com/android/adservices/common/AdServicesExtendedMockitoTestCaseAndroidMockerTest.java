@@ -26,6 +26,6 @@ public final class AdServicesExtendedMockitoTestCaseAndroidMockerTest
 
     @Override
     protected AdServicesExtendedMockitoTestCase.Mocker getMocker() {
-        return new AdServicesExtendedMockitoTestCase.Mocker();
+        return AdServicesExtendedMockitoTestCase.Mocker.forAndroidMockerTests();
     }
 }
