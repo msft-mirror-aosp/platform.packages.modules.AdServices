@@ -19,6 +19,9 @@ package com.android.adservices.service.js;
 import static java.util.Arrays.asList;
 
 import android.adservices.common.AdSelectionSignals;
+import android.os.Trace;
+
+import com.android.adservices.service.profiling.Tracing;
 
 import com.google.common.collect.ImmutableList;
 
@@ -63,8 +66,17 @@ public abstract class JSScriptArgument {
      */
     public static JSScriptJsonArrayArgument jsonArrayArg(String name, String value)
             throws JSONException {
-        new JSONArray(value);
-        return new JSScriptJsonArrayArgument(name, value);
+        Trace.beginSection(Tracing.JS_ARRAY_ARG + ":validation");
+        try {
+            new JSONArray(value);
+        } finally {
+            Trace.endSection();
+        }
+
+        Trace.beginSection(Tracing.JS_ARRAY_ARG + ":conversion");
+        JSScriptJsonArrayArgument result = new JSScriptJsonArrayArgument(name, value);
+        Trace.endSection();
+        return result;
     }
 
     /**

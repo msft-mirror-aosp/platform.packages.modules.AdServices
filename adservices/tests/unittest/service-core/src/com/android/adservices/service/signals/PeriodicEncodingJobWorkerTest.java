@@ -16,21 +16,14 @@
 
 package com.android.adservices.service.signals;
 
-import static com.android.adservices.service.signals.PeriodicEncodingJobWorker.PAYLOAD_PERSISTENCE_ERROR_MSG;
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OTHER_FAILURE;
-
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
@@ -41,19 +34,14 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.signals.DBEncodedPayload;
 import com.android.adservices.data.signals.DBEncoderLogicMetadata;
-import com.android.adservices.data.signals.DBSignalsUpdateMetadata;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.EncoderLogicHandler;
 import com.android.adservices.data.signals.EncoderLogicMetadataDao;
 import com.android.adservices.data.signals.EncoderPersistenceDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.adservices.service.stats.pas.EncodingExecutionLogHelper;
 import com.android.adservices.service.stats.pas.EncodingJobRunStats;
-import com.android.adservices.service.stats.pas.EncodingJobRunStatsLogger;
-import com.android.adservices.service.stats.pas.EncodingJobRunStatsLoggerNoLoggingImpl;
 import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.adservices.shared.util.Clock;
 
@@ -70,19 +58,16 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
 import java.time.Instant;
-import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -116,7 +101,6 @@ public class PeriodicEncodingJobWorkerTest {
                                     .setPackageName("package name")
                                     .build()));
 
-    private static final int TIMEOUT_SECONDS = 5;
     private static final int MAX_SIZE_BYTES = 100;
 
     @Rule public MockitoRule rule = MockitoJUnit.rule();
@@ -128,13 +112,11 @@ public class PeriodicEncodingJobWorkerTest {
     @Mock private ProtectedSignalsDao mProtectedSignalsDao;
     @Mock private SignalsProviderImpl mSignalStorageManager;
     @Mock private SignalsScriptEngine mScriptEngine;
-    @Mock private DevContextFilter mDevContextFilter;
     @Mock Flags mFlags;
     @Mock private EnrollmentDao mEnrollmentDao;
     @Mock private Clock mClock;
     @Mock private AdServicesLogger mAdServicesLogger;
-    @Mock private EncodingExecutionLogHelper mEncodingExecutionLoggerMock;
-    @Mock private EncodingJobRunStatsLogger mEncodingJobRunStatsLoggerMock;
+    @Mock private ProtectedSignalsArgument mProtectedSignalsArgument;
 
     @Captor private ArgumentCaptor<DBEncodedPayload> mEncodedPayloadCaptor;
 
@@ -168,223 +150,11 @@ public class PeriodicEncodingJobWorkerTest {
                         mScriptEngine,
                         mBackgroundExecutor,
                         mLightWeightExecutor,
-                        mDevContextFilter,
                         mFlags,
                         mEnrollmentDao,
                         mClock,
-                        mAdServicesLogger);
-    }
-
-    @Test
-    public void testValidateAndPersistPayloadSuccess() {
-        byte[] payload = new byte[] {0x0A, 0x01};
-        int version = 1;
-        mJobWorker.validateAndPersistPayload(DB_ENCODER_LOGIC_BUYER_1, payload, version);
-
-        verify(mEncodedPayloadDao).persistEncodedPayload(mEncodedPayloadCaptor.capture());
-        assertEquals(BUYER, mEncodedPayloadCaptor.getValue().getBuyer());
-        assertEquals(version, mEncodedPayloadCaptor.getValue().getVersion());
-
-        assertEquals(
-                getSetFromBytes(payload),
-                getSetFromBytes(mEncodedPayloadCaptor.getValue().getEncodedPayload()));
-    }
-
-    @Test
-    public void testValidateAndPersistLargePayloadSkips() {
-        int reallySmallMaxSizeLimit = 5;
-        when(mFlags.getProtectedSignalsEncodedPayloadMaxSizeBytes())
-                .thenReturn(reallySmallMaxSizeLimit);
-        mJobWorker =
-                new PeriodicEncodingJobWorker(
-                        mEncoderLogicHandler,
-                        mEncoderLogicMetadataDao,
-                        mEncodedPayloadDao,
-                        mSignalStorageManager,
-                        mProtectedSignalsDao,
-                        mScriptEngine,
-                        mBackgroundExecutor,
-                        mLightWeightExecutor,
-                        mDevContextFilter,
-                        mFlags,
-                        mEnrollmentDao,
-                        mClock,
-                        mAdServicesLogger);
-        int version = 1;
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                        mJobWorker.validateAndPersistPayload(
-                                DB_ENCODER_LOGIC_BUYER_1,
-                                new byte[] {0x01, 0x02, 0x03, 0x04, 0x05, 0x06},
-                                version));
-
-        Mockito.verifyZeroInteractions(mEncodedPayloadDao);
-    }
-
-    @Test
-    public void testEncodingPerBuyerSuccess()
-            throws ExecutionException, InterruptedException, TimeoutException {
-        String encoderLogic = "function fakeEncodeJs() {}";
-
-        when(mEncoderLogicHandler.getEncoder(BUYER)).thenReturn(encoderLogic);
-        when(mSignalStorageManager.getSignals(BUYER)).thenReturn(FAKE_SIGNALS);
-
-        byte[] validResponse = new byte[] {0x01, 0x02, 0x03, 0x04, 0x05, 0x0A};
-        ListenableFuture<byte[]> jsScriptResponse = Futures.immediateFuture(validResponse);
-        when(mScriptEngine.encodeSignals(any(), any(), anyInt(), any()))
-                .thenReturn(jsScriptResponse);
-        when((mEncodedPayloadDao.persistEncodedPayload(any()))).thenReturn(10L);
-
-        // Run encoding for the buyer
-        mJobWorker
-                .runEncodingPerBuyer(
-                        DB_ENCODER_LOGIC_BUYER_1,
-                        TIMEOUT_SECONDS,
-                        mEncodingExecutionLoggerMock,
-                        new EncodingJobRunStatsLoggerNoLoggingImpl())
-                .get(5, TimeUnit.SECONDS);
-
-        verify(mScriptEngine)
-                .encodeSignals(
-                        encoderLogic, FAKE_SIGNALS, MAX_SIZE_BYTES, mEncodingExecutionLoggerMock);
-        verify(mEncodedPayloadDao).persistEncodedPayload(mEncodedPayloadCaptor.capture());
-        assertEquals(BUYER, mEncodedPayloadCaptor.getValue().getBuyer());
-        assertEquals(VERSION_1, mEncodedPayloadCaptor.getValue().getVersion());
-        assertEquals(
-                getSetFromBytes(validResponse),
-                getSetFromBytes(mEncodedPayloadCaptor.getValue().getEncodedPayload()));
-        verify(mEncodingExecutionLoggerMock).finish();
-    }
-
-    @Test
-    public void testEncodingPerBuyerScriptFailureCausesIllegalStateException() {
-        String encoderLogic = "function fakeEncodeJs() {}";
-
-        when(mEncoderLogicHandler.getEncoder(BUYER)).thenReturn(encoderLogic);
-        when(mSignalStorageManager.getSignals(BUYER)).thenReturn(FAKE_SIGNALS);
-
-        when(mScriptEngine.encodeSignals(any(), any(), anyInt(), any()))
-                .thenReturn(
-                        Futures.immediateFailedFuture(
-                                new IllegalStateException("Simulating illegal response from JS")));
-
-        // Run encoding for the buyer where jsEngine returns invalid payload
-        Exception e =
-                assertThrows(
-                        ExecutionException.class,
-                        () ->
-                                mJobWorker
-                                        .runEncodingPerBuyer(
-                                                DB_ENCODER_LOGIC_BUYER_1,
-                                                TIMEOUT_SECONDS,
-                                                mEncodingExecutionLoggerMock,
-                                                new EncodingJobRunStatsLoggerNoLoggingImpl())
-                                        .get(5, TimeUnit.SECONDS));
-        assertEquals(IllegalStateException.class, e.getCause().getClass());
-        assertEquals(PAYLOAD_PERSISTENCE_ERROR_MSG, e.getCause().getMessage());
-        verify(mEncodedPayloadDao).getEncodedPayload(BUYER);
-        verifyNoMoreInteractions(mEncodedPayloadDao);
-        verify(mEncodingExecutionLoggerMock).setStatus(eq(JS_RUN_STATUS_OTHER_FAILURE));
-        verify(mEncodingExecutionLoggerMock).finish();
-    }
-
-    @Test
-    public void testEncodingPerBuyerFailedFuture() {
-        String encoderLogic = "function fakeEncodeJs() {}";
-        when(mEncoderLogicHandler.getEncoder(BUYER)).thenReturn(encoderLogic);
-        when(mSignalStorageManager.getSignals(BUYER)).thenReturn(FAKE_SIGNALS);
-
-        when(mScriptEngine.encodeSignals(any(), any(), anyInt(), any()))
-                .thenReturn(
-                        Futures.immediateFailedFuture(new RuntimeException("Random exception")));
-
-        // Run encoding for the buyer where jsEngine encounters Runtime Exception
-        Exception e =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> {
-                            mJobWorker
-                                    .runEncodingPerBuyer(
-                                            DB_ENCODER_LOGIC_BUYER_1,
-                                            TIMEOUT_SECONDS,
-                                            mEncodingExecutionLoggerMock,
-                                            new EncodingJobRunStatsLoggerNoLoggingImpl())
-                                    .get(5, TimeUnit.SECONDS);
-                        });
-        assertEquals(IllegalStateException.class, e.getCause().getClass());
-        assertEquals(PAYLOAD_PERSISTENCE_ERROR_MSG, e.getCause().getMessage());
-        verify(mEncodedPayloadDao).getEncodedPayload(BUYER);
-        verifyNoMoreInteractions(mEncodedPayloadDao);
-    }
-
-    @Test
-    public void testEncodingPerBuyerNoSignalAvailable()
-            throws ExecutionException, InterruptedException, TimeoutException {
-        when(mSignalStorageManager.getSignals(BUYER)).thenReturn(ImmutableMap.of());
-        mJobWorker
-                .runEncodingPerBuyer(
-                        DB_ENCODER_LOGIC_BUYER_1,
-                        TIMEOUT_SECONDS,
-                        mEncodingExecutionLoggerMock,
-                        new EncodingJobRunStatsLoggerNoLoggingImpl())
-                .get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        verify(mEncoderLogicHandler).deleteEncoderForBuyer(BUYER);
-        verifyNoMoreInteractions(mEncoderLogicHandler);
-        verifyZeroInteractions(mScriptEngine);
-    }
-
-    @Test
-    public void testEncodingPerBuyerFailedTimeout() throws InterruptedException {
-        String encoderLogic = "function fakeEncodeJs() {}";
-        when(mEncoderLogicHandler.getEncoder(BUYER)).thenReturn(encoderLogic);
-
-        when(mSignalStorageManager.getSignals(BUYER)).thenReturn(FAKE_SIGNALS);
-
-        CountDownLatch stallEncodingLatch = new CountDownLatch(1);
-        CountDownLatch startEncodingLatch = new CountDownLatch(1);
-        doAnswer(
-                        invocation -> {
-                            startEncodingLatch.countDown();
-                            return mBackgroundExecutor.submit(
-                                    () -> {
-                                        // Await and stall encoding, indefinitely until timed out
-                                        try {
-                                            stallEncodingLatch.await();
-                                        } catch (InterruptedException e) {
-                                            // Cleanup stalled thread
-                                            Thread.currentThread().interrupt();
-                                        }
-                                    });
-                        })
-                .when(mScriptEngine)
-                .encodeSignals(any(), any(), anyInt(), any());
-
-        // Run encoding for the buyer with a really short timeout
-        int shortTimeoutSecond = 1;
-        Exception e =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> {
-                            mJobWorker
-                                    .runEncodingPerBuyer(
-                                            DB_ENCODER_LOGIC_BUYER_1,
-                                            shortTimeoutSecond,
-                                            mEncodingExecutionLoggerMock,
-                                            new EncodingJobRunStatsLoggerNoLoggingImpl())
-                                    .get(shortTimeoutSecond + 1, TimeUnit.SECONDS);
-                        });
-
-        // Encoding should have been started
-        startEncodingLatch.await(5, TimeUnit.SECONDS);
-        assertEquals(
-                "Stalling latch should have never been counted down, but interrupted by timeout",
-                1,
-                stallEncodingLatch.getCount());
-        // e is TimeoutFuture$TimeoutFutureException which extends TimeoutException
-        assertTrue(TimeoutException.class.isAssignableFrom(e.getCause().getClass()));
-        verify(mEncodedPayloadDao).getEncodedPayload(BUYER);
-        verifyNoMoreInteractions(mEncodedPayloadDao);
+                        mAdServicesLogger,
+                        mProtectedSignalsArgument);
     }
 
     @Test
@@ -398,7 +168,8 @@ public class PeriodicEncodingJobWorkerTest {
         when(mSignalStorageManager.getSignals(BUYER)).thenReturn(FAKE_SIGNALS);
         byte[] validResponse = new byte[] {0x01, 0x02, 0x03, 0x04, 0x05, 0x0A};
         ListenableFuture<byte[]> successResponse = Futures.immediateFuture(validResponse);
-        when(mScriptEngine.encodeSignals(eq(encoderLogic1), any(), anyInt(), any()))
+        when(mScriptEngine.encodeSignals(
+                        eq(encoderLogic1), any(), anyInt(), any(), eq(mProtectedSignalsArgument)))
                 .thenReturn(successResponse);
 
         // Buyer 2 encoding would fail
@@ -407,7 +178,8 @@ public class PeriodicEncodingJobWorkerTest {
         when(mSignalStorageManager.getSignals(BUYER_2)).thenReturn(FAKE_SIGNALS);
         ListenableFuture<byte[]> failureResponse =
                 Futures.immediateFailedFuture(new RuntimeException("Random exception"));
-        when(mScriptEngine.encodeSignals(eq(encoderLogic2), any(), anyInt(), any()))
+        when(mScriptEngine.encodeSignals(
+                        eq(encoderLogic2), any(), anyInt(), any(), eq(mProtectedSignalsArgument)))
                 .thenReturn(failureResponse);
         when(mEncoderLogicHandler.getAllRegisteredEncoders())
                 .thenReturn(List.of(DB_ENCODER_LOGIC_BUYER_1, DB_ENCODER_LOGIC_BUYER_2));
@@ -434,99 +206,6 @@ public class PeriodicEncodingJobWorkerTest {
                 /* countOfSignalEncodingSkips */ 0);
     }
 
-    @Test
-    public void testEncodeSignals_tooManyFailure_noJsExecution()
-            throws ExecutionException, InterruptedException, TimeoutException {
-        when(mSignalStorageManager.getSignals(BUYER)).thenReturn(FAKE_SIGNALS);
-        int maxFailure =
-                Flags.PROTECTED_SIGNALS_MAX_JS_FAILURE_EXECUTION_ON_CERTAIN_VERSION_BEFORE_STOP;
-        DBEncoderLogicMetadata metadata =
-                DBEncoderLogicMetadata.builder()
-                        .setBuyer(BUYER)
-                        .setCreationTime(Instant.now())
-                        .setVersion(1)
-                        .setFailedEncodingCount(maxFailure)
-                        .build();
-
-        mJobWorker
-                .runEncodingPerBuyer(
-                        metadata,
-                        5,
-                        mEncodingExecutionLoggerMock,
-                        new EncodingJobRunStatsLoggerNoLoggingImpl())
-                .get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-
-        verify(mSignalStorageManager).getSignals(BUYER);
-        verifyNoMoreInteractions(mSignalStorageManager);
-        verifyZeroInteractions(mScriptEngine);
-    }
-
-    @Test
-    public void testEncodeSignals_previousFailureAndThenSuccess_resetFailedCount()
-            throws ExecutionException, InterruptedException, TimeoutException {
-        DBEncoderLogicMetadata metadata =
-                DBEncoderLogicMetadata.builder()
-                        .setBuyer(BUYER)
-                        .setCreationTime(Instant.now())
-                        .setVersion(1)
-                        .setFailedEncodingCount(1)
-                        .build();
-        when(mSignalStorageManager.getSignals(BUYER)).thenReturn(FAKE_SIGNALS);
-
-        String encoderLogic = "function buyer1_EncodeJs() {\" correct result \"}";
-        when(mEncoderLogicHandler.getEncoder(BUYER)).thenReturn(encoderLogic);
-        byte[] validResponse = new byte[] {0x01, 0x02, 0x03, 0x04, 0x05, 0x0A};
-        ListenableFuture<byte[]> successResponse = Futures.immediateFuture(validResponse);
-        when(mScriptEngine.encodeSignals(eq(encoderLogic), any(), anyInt(), any()))
-                .thenReturn(successResponse);
-
-        mJobWorker
-                .runEncodingPerBuyer(
-                        metadata,
-                        5,
-                        mEncodingExecutionLoggerMock,
-                        new EncodingJobRunStatsLoggerNoLoggingImpl())
-                .get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-
-        verify(mEncoderLogicHandler).updateEncoderFailedCount(BUYER, 0);
-    }
-
-    @Test
-    public void testEncodeSignals_noUpdateToBuyer_skipEncoding()
-            throws ExecutionException, InterruptedException, TimeoutException {
-        when(mSignalStorageManager.getSignals(BUYER)).thenReturn(FAKE_SIGNALS);
-        when(mProtectedSignalsDao.getSignalsUpdateMetadata(BUYER))
-                .thenReturn(
-                        DBSignalsUpdateMetadata.builder()
-                                .setBuyer(BUYER)
-                                .setLastSignalsUpdatedTime(CommonFixture.FIXED_EARLIER_ONE_DAY)
-                                .build());
-        when(mEncodedPayloadDao.getEncodedPayload(BUYER))
-                .thenReturn(
-                        DBEncodedPayload.create(
-                                BUYER, 1, CommonFixture.FIXED_NOW, new byte[] {0x22, 0x33}));
-
-        mJobWorker
-                .runEncodingPerBuyer(
-                        DBEncoderLogicMetadata.builder()
-                                .setBuyer(BUYER)
-                                .setCreationTime(CommonFixture.FIXED_EARLIER_ONE_DAY)
-                                .setVersion(1)
-                                .setFailedEncodingCount(1)
-                                .build(),
-                        TIMEOUT_SECONDS,
-                        mEncodingExecutionLoggerMock,
-                        mEncodingJobRunStatsLoggerMock)
-                .get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-
-        verify(mSignalStorageManager).getSignals(BUYER);
-        verify(mProtectedSignalsDao).getSignalsUpdateMetadata(BUYER);
-        verify(mEncodedPayloadDao).getEncodedPayload(BUYER);
-        verifyNoMoreInteractions(mSignalStorageManager, mProtectedSignalsDao, mEncodedPayloadDao);
-        verifyZeroInteractions(mEncoderLogicHandler, mScriptEngine);
-
-        verify(mEncodingJobRunStatsLoggerMock).addOneSignalEncodingSkips();
-    }
 
     @Test
     public void testUpdatesEncodersAllUpdatedEncodersDoNotDownloadAgain() {
@@ -579,7 +258,8 @@ public class PeriodicEncodingJobWorkerTest {
         // All the encodings are wired to fail with exceptions
         ListenableFuture<byte[]> failureResponse =
                 Futures.immediateFailedFuture(new RuntimeException("Random exception"));
-        when(mScriptEngine.encodeSignals(any(), any(), anyInt(), any()))
+        when(mScriptEngine.encodeSignals(
+                        any(), any(), anyInt(), any(), eq(mProtectedSignalsArgument)))
                 .thenReturn(failureResponse);
 
         when(mEncoderLogicMetadataDao.getBuyersWithEncodersBeforeTime(any()))
@@ -595,14 +275,6 @@ public class PeriodicEncodingJobWorkerTest {
                 /* countOfSignalEncodingSuccesses */ 0,
                 /* countOfSignalEncodingFailures */ 0,
                 /* countOfSignalEncodingSkips */ 0);
-    }
-
-    private String getBase64String(String str) {
-        return Base64.getEncoder().encodeToString(str.getBytes());
-    }
-
-    private byte[] getBytesFromBase64(String base64String) {
-        return Base64.getDecoder().decode(base64String);
     }
 
     private Set<Byte> getSetFromBytes(byte[] bytes) {

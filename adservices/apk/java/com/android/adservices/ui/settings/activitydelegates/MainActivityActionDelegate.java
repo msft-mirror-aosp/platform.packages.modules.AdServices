@@ -116,11 +116,6 @@ public class MainActivityActionDelegate extends BaseActionDelegate {
     }
 
     @Override
-    public void initRvc() {
-        initU18();
-    }
-
-    @Override
     public void initGaUxWithPas() {
         initGA();
     }

@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.consent;
 
+import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
 import static com.android.adservices.service.consent.ConsentConstants.CONSENT_KEY;
 import static com.android.adservices.service.consent.ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE;
 import static com.android.adservices.service.consent.ConsentConstants.MANUAL_INTERACTION_WITH_CONSENT_RECORDED;
@@ -27,8 +28,10 @@ import static com.android.adservices.service.consent.ConsentConstants.SHARED_PRE
 import static com.android.adservices.service.consent.ConsentManagerV2.MANUAL_INTERACTIONS_RECORDED;
 import static com.android.adservices.service.consent.ConsentManagerV2.UNKNOWN;
 import static com.android.adservices.service.consent.ConsentManagerV2.resetSharedPreference;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_SEARCH_DATA_MIGRATION_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_WHILE_GET_CONSENT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PRIVACY_SANDBOX_SAVE_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX;
 import static com.android.adservices.spe.AdServicesJobInfo.COBALT_LOGGING_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.CONSENT_NOTIFICATION_JOB;
@@ -103,10 +106,13 @@ import androidx.test.filters.SmallTest;
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.cobalt.CobaltJobService;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.common.DbTestUtil;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
-import com.android.adservices.data.common.BooleanFileDatastore;
+import com.android.adservices.data.common.AtomicFileDatastore;
 import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.consent.AppConsentDaoFixture;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
@@ -115,7 +121,6 @@ import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.download.MddJob;
-import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
@@ -156,7 +161,6 @@ import com.android.adservices.service.ui.data.UxStatesDao;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
-import com.android.dx.mockito.inline.extended.MockedVoidMethod;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -193,7 +197,6 @@ import java.util.stream.Collectors;
 @SpyStatic(DeleteUninstalledJobService.class)
 @SpyStatic(DeviceRegionProvider.class)
 @SpyStatic(EpochJob.class)
-@SpyStatic(ErrorLogUtil.class)
 @SpyStatic(EventFallbackReportingJobService.class)
 @SpyStatic(EventReportingJobService.class)
 @SpyStatic(DebugReportingFallbackJobService.class)
@@ -207,12 +210,15 @@ import java.util.stream.Collectors;
 @SpyStatic(StatsdAdServicesLogger.class)
 @MockStatic(PackageManagerCompatUtils.class)
 @MockStatic(SdkLevel.class)
+@SetErrorLogUtilDefaultParams(
+        throwable = Any.class,
+        ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX)
 @SmallTest
 public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCase {
     public static final int UX_TYPE_COUNT = 5;
     public static final int ENROLLMENT_CHANNEL_COUNT = 22;
-    private BooleanFileDatastore mDatastore;
-    private BooleanFileDatastore mConsentDatastore;
+    private AtomicFileDatastore mDatastore;
+    private AtomicFileDatastore mConsentDatastore;
     private ConsentManagerV2 mConsentManager;
     private AppConsentDao mAppConsentDaoSpy;
     private EnrollmentDao mEnrollmentDaoSpy;
@@ -255,12 +261,12 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         doReturn(mStatsdAdServicesLoggerMock).when(StatsdAdServicesLogger::getInstance);
         mDatastore =
                 spy(
-                        new BooleanFileDatastore(
+                        new AtomicFileDatastore(
                                 mSpyContext,
                                 AppConsentDao.DATASTORE_NAME,
                                 AppConsentDao.DATASTORE_VERSION));
         // For each file, we should ensure there is only one instance of datastore that is able to
-        // access it. (Refer to BooleanFileDatastore.class)
+        // access it. (Refer to AtomicFileDatastore.class)
         mConsentDatastore = spy(ConsentManagerV2.createAndInitializeDataStore(mSpyContext));
         mAppConsentDaoSpy = spy(new AppConsentDao(mDatastore, mSpyContext.getPackageManager()));
         mEnrollmentDaoSpy =
@@ -292,6 +298,7 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         doReturn(true).when(mMockFlags).getFledgeAppInstallFilteringEnabled();
         doReturn(true).when(mMockFlags).getAdservicesConsentMigrationLoggingEnabled();
         doReturn(true).when(mMockFlags).getEnrollmentEnableLimitedLogging();
+        doReturn(true).when(mMockFlags).getFledgeScheduleCustomAudienceUpdateEnabled();
         doReturn(mAdServicesLoggerImplMock).when(AdServicesLoggerImpl::getInstance);
         doNothing().when(EpochJob::schedule);
         doReturn(true)
@@ -776,7 +783,8 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         verify(mAppConsentDaoSpy).clearAllConsentData();
         verify(mEnrollmentDaoSpy).deleteAll();
         verify(mMeasurementImplMock).deleteAllMeasurementData(any());
-        verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+        verify(mCustomAudienceDaoMock)
+                .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
         verify(mFrequencyCapDaoMock).deleteAllHistogramData();
         verify(mUserProfileIdManagerMock).deleteId();
@@ -796,7 +804,8 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         verify(mAppConsentDaoSpy).clearAllConsentData();
         verify(mEnrollmentDaoSpy).deleteAll();
         verify(mMeasurementImplMock).deleteAllMeasurementData(any());
-        verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+        verify(mCustomAudienceDaoMock)
+                .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
         verifyZeroInteractions(mFrequencyCapDaoMock);
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
         verify(mUserProfileIdManagerMock).deleteId();
@@ -816,7 +825,8 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         verify(mAppConsentDaoSpy).clearAllConsentData();
         verify(mEnrollmentDaoSpy).deleteAll();
         verify(mMeasurementImplMock).deleteAllMeasurementData(any());
-        verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+        verify(mCustomAudienceDaoMock)
+                .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
         verifyZeroInteractions(mAppInstallDaoMock);
         verify(mFrequencyCapDaoMock).deleteAllHistogramData();
         verify(mUserProfileIdManagerMock).deleteId();
@@ -833,7 +843,8 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         // TODO(b/240988406): change to test for correct method call
         verify(mAppConsentDaoSpy).clearAllConsentData();
         verify(mMeasurementImplMock).deleteAllMeasurementData(any());
-        verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+        verify(mCustomAudienceDaoMock)
+                .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
         verify(mFrequencyCapDaoMock).deleteAllHistogramData();
         verify(mUserProfileIdManagerMock).deleteId();
@@ -853,7 +864,8 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         // TODO(b/240988406): change to test for correct method call
         verify(mAppConsentDaoSpy).clearAllConsentData();
         verify(mMeasurementImplMock).deleteAllMeasurementData(any());
-        verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+        verify(mCustomAudienceDaoMock)
+                .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
         verifyZeroInteractions(mFrequencyCapDaoMock);
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
         verify(mUserProfileIdManagerMock).deleteId();
@@ -872,7 +884,8 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         // TODO(b/240988406): change to test for correct method call
         verify(mAppConsentDaoSpy).clearAllConsentData();
         verify(mMeasurementImplMock).deleteAllMeasurementData(any());
-        verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+        verify(mCustomAudienceDaoMock)
+                .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
         verifyZeroInteractions(mAppInstallDaoMock);
         verify(mFrequencyCapDaoMock).deleteAllHistogramData();
         verify(mUserProfileIdManagerMock).deleteId();
@@ -892,8 +905,8 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         mockGetPackageUid(AppConsentDaoFixture.APP20_PACKAGE_NAME, AppConsentDaoFixture.APP20_UID);
         mockGetPackageUid(AppConsentDaoFixture.APP30_PACKAGE_NAME, AppConsentDaoFixture.APP30_UID);
 
-        mDatastore.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
-        mDatastore.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
+        mDatastore.putBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
+        mDatastore.putBoolean(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
 
         assertFalse(
                 mConsentManager.isFledgeConsentRevokedForApp(
@@ -1178,8 +1191,8 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         mockGetPackageUid(AppConsentDaoFixture.APP20_PACKAGE_NAME, AppConsentDaoFixture.APP20_UID);
         mockGetPackageUid(AppConsentDaoFixture.APP30_PACKAGE_NAME, AppConsentDaoFixture.APP30_UID);
 
-        mDatastore.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
-        mDatastore.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
+        mDatastore.putBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
+        mDatastore.putBoolean(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
 
         assertFalse(
                 mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
@@ -1402,9 +1415,9 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         mockGetPackageUid(AppConsentDaoFixture.APP20_PACKAGE_NAME, AppConsentDaoFixture.APP20_UID);
         mockGetPackageUid(AppConsentDaoFixture.APP30_PACKAGE_NAME, AppConsentDaoFixture.APP30_UID);
 
-        mDatastore.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
-        mDatastore.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, false);
-        mDatastore.put(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
+        mDatastore.putBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
+        mDatastore.putBoolean(AppConsentDaoFixture.APP20_DATASTORE_KEY, false);
+        mDatastore.putBoolean(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
         List<ApplicationInfo> applicationsInstalled =
                 createApplicationInfos(
                         AppConsentDaoFixture.APP10_PACKAGE_NAME,
@@ -1558,7 +1571,9 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
     public void testGetKnownAppsWithConsentAfterConsentForOneOfThemWasRevoked_ppApiOnly()
             throws IOException, PackageManager.NameNotFoundException {
         // mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.PPAPI_ONLY);
-        doNothing().when(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(any());
+        doNothing()
+                .when(mCustomAudienceDaoMock)
+                .deleteCustomAudienceDataByOwner(any(), anyBoolean());
 
         mConsentManager.enable(mSpyContext);
         mConsentManager.setConsentToSourceOfTruth(true);
@@ -1570,9 +1585,9 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         mockGetPackageUid(AppConsentDaoFixture.APP20_PACKAGE_NAME, AppConsentDaoFixture.APP20_UID);
         mockGetPackageUid(AppConsentDaoFixture.APP30_PACKAGE_NAME, AppConsentDaoFixture.APP30_UID);
 
-        mDatastore.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
-        mDatastore.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, false);
-        mDatastore.put(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
+        mDatastore.putBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
+        mDatastore.putBoolean(AppConsentDaoFixture.APP20_DATASTORE_KEY, false);
+        mDatastore.putBoolean(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
         List<ApplicationInfo> applicationsInstalled =
                 createApplicationInfos(
                         AppConsentDaoFixture.APP10_PACKAGE_NAME,
@@ -1594,7 +1609,9 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         assertThat(appWithRevokedConsent.getPackageName()).isEqualTo(app.getPackageName());
 
         SystemClock.sleep(1000);
-        verify(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(app.getPackageName());
+        verify(mCustomAudienceDaoMock)
+                .deleteCustomAudienceDataByOwner(
+                        app.getPackageName(), /* scheduleCustomAudienceEnabled= */ true);
         verify(mAppInstallDaoMock).deleteByPackageName(app.getPackageName());
         verify(mFrequencyCapDaoMock).deleteHistogramDataBySourceApp(app.getPackageName());
     }
@@ -1602,7 +1619,9 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
     @Test
     public void testGetKnownAppsWithConsentAfterConsentForOneOfThemWasRevokedAndRestored_ppApiOnly()
             throws IOException, PackageManager.NameNotFoundException {
-        doNothing().when(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(any());
+        doNothing()
+                .when(mCustomAudienceDaoMock)
+                .deleteCustomAudienceDataByOwner(any(), anyBoolean());
 
         mConsentManager.enable(mSpyContext);
         assertTrue(mConsentManager.getConsent().isGiven());
@@ -1613,9 +1632,9 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         mockGetPackageUid(AppConsentDaoFixture.APP20_PACKAGE_NAME, AppConsentDaoFixture.APP20_UID);
         mockGetPackageUid(AppConsentDaoFixture.APP30_PACKAGE_NAME, AppConsentDaoFixture.APP30_UID);
 
-        mDatastore.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
-        mDatastore.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, false);
-        mDatastore.put(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
+        mDatastore.putBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
+        mDatastore.putBoolean(AppConsentDaoFixture.APP20_DATASTORE_KEY, false);
+        mDatastore.putBoolean(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
         App app = App.create(AppConsentDaoFixture.APP10_PACKAGE_NAME);
         List<ApplicationInfo> applicationsInstalled =
                 createApplicationInfos(
@@ -1636,7 +1655,9 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         assertThat(appWithRevokedConsent.getPackageName()).isEqualTo(app.getPackageName());
 
         SystemClock.sleep(1000);
-        verify(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(app.getPackageName());
+        verify(mCustomAudienceDaoMock)
+                .deleteCustomAudienceDataByOwner(
+                        app.getPackageName(), /* scheduleCustomAudienceEnabled= */ true);
         verify(mAppInstallDaoMock).deleteByPackageName(app.getPackageName());
         verify(mFrequencyCapDaoMock).deleteHistogramDataBySourceApp(app.getPackageName());
 
@@ -1711,7 +1732,7 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
                         AppConsentDaoFixture.APP10_PACKAGE_NAME,
                         AppConsentDaoFixture.APP10_UID,
                         true);
-        assertEquals(Boolean.TRUE, mDatastore.get(AppConsentDaoFixture.APP10_DATASTORE_KEY));
+        assertEquals(Boolean.TRUE, mDatastore.getBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY));
 
         mConsentManager.restoreConsentForApp(App.create(AppConsentDaoFixture.APP10_PACKAGE_NAME));
         verify(mMockIAdServicesManager)
@@ -1719,7 +1740,8 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
                         AppConsentDaoFixture.APP10_PACKAGE_NAME,
                         AppConsentDaoFixture.APP10_UID,
                         false);
-        assertEquals(Boolean.FALSE, mDatastore.get(AppConsentDaoFixture.APP10_DATASTORE_KEY));
+        assertEquals(
+                Boolean.FALSE, mDatastore.getBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY));
     }
 
     @Test
@@ -1760,10 +1782,11 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         mockGetPackageUid(AppConsentDaoFixture.APP10_PACKAGE_NAME, AppConsentDaoFixture.APP10_UID);
 
         mConsentManager.restoreConsentForApp(App.create(AppConsentDaoFixture.APP10_PACKAGE_NAME));
-        assertEquals(Boolean.FALSE, mDatastore.get(AppConsentDaoFixture.APP10_DATASTORE_KEY));
+        assertEquals(
+                Boolean.FALSE, mDatastore.getBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY));
         mConsentManager.clearConsentForUninstalledApp(
                 AppConsentDaoFixture.APP10_PACKAGE_NAME, AppConsentDaoFixture.APP10_UID);
-        assertNull(mDatastore.get(AppConsentDaoFixture.APP10_DATASTORE_KEY));
+        assertNull(mDatastore.getBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY));
     }
 
     @Test
@@ -1783,7 +1806,8 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         mockGetPackageUid(AppConsentDaoFixture.APP10_PACKAGE_NAME, AppConsentDaoFixture.APP10_UID);
 
         mConsentManager.restoreConsentForApp(App.create(AppConsentDaoFixture.APP10_PACKAGE_NAME));
-        assertEquals(Boolean.FALSE, mDatastore.get(AppConsentDaoFixture.APP10_DATASTORE_KEY));
+        assertEquals(
+                Boolean.FALSE, mDatastore.getBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY));
         verify(mMockIAdServicesManager)
                 .setConsentForApp(
                         AppConsentDaoFixture.APP10_PACKAGE_NAME,
@@ -1791,7 +1815,7 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
                         false);
         mConsentManager.clearConsentForUninstalledApp(
                 AppConsentDaoFixture.APP10_PACKAGE_NAME, AppConsentDaoFixture.APP10_UID);
-        assertNull(mDatastore.get(AppConsentDaoFixture.APP10_DATASTORE_KEY));
+        assertNull(mDatastore.getBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY));
         verify(mMockIAdServicesManager)
                 .clearConsentForUninstalledApp(
                         AppConsentDaoFixture.APP10_PACKAGE_NAME, AppConsentDaoFixture.APP10_UID);
@@ -1824,15 +1848,15 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
 
     @Test
     public void clearConsentForUninstalledAppWithoutUid_ppApiOnly() throws IOException {
-        mDatastore.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, true);
-        mDatastore.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
-        mDatastore.put(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
+        mDatastore.putBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY, true);
+        mDatastore.putBoolean(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
+        mDatastore.putBoolean(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
 
         mConsentManager.clearConsentForUninstalledApp(AppConsentDaoFixture.APP20_PACKAGE_NAME);
 
-        assertEquals(true, mDatastore.get(AppConsentDaoFixture.APP10_DATASTORE_KEY));
-        assertNull(mDatastore.get(AppConsentDaoFixture.APP20_DATASTORE_KEY));
-        assertEquals(false, mDatastore.get(AppConsentDaoFixture.APP30_DATASTORE_KEY));
+        assertEquals(true, mDatastore.getBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY));
+        assertNull(mDatastore.getBoolean(AppConsentDaoFixture.APP20_DATASTORE_KEY));
+        assertEquals(false, mDatastore.getBoolean(AppConsentDaoFixture.APP30_DATASTORE_KEY));
 
         verify(mAppConsentDaoSpy).clearConsentForUninstalledApp(anyString());
     }
@@ -1889,7 +1913,9 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
     @Test
     public void testResetAllAppConsentAndAppData_ppApiOnly()
             throws IOException, PackageManager.NameNotFoundException {
-        doNothing().when(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+        doNothing()
+                .when(mCustomAudienceDaoMock)
+                .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
 
         // Prepopulate with consent data for some apps
         mConsentManager.enable(mSpyContext);
@@ -1901,9 +1927,9 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         mockGetPackageUid(AppConsentDaoFixture.APP20_PACKAGE_NAME, AppConsentDaoFixture.APP20_UID);
         mockGetPackageUid(AppConsentDaoFixture.APP30_PACKAGE_NAME, AppConsentDaoFixture.APP30_UID);
 
-        mDatastore.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
-        mDatastore.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
-        mDatastore.put(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
+        mDatastore.putBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
+        mDatastore.putBoolean(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
+        mDatastore.putBoolean(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
         List<ApplicationInfo> applicationsInstalled =
                 createApplicationInfos(
                         AppConsentDaoFixture.APP10_PACKAGE_NAME,
@@ -1926,7 +1952,8 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         assertThat(appsWithRevokedConsent).isEmpty();
 
         SystemClock.sleep(1000);
-        verify(mCustomAudienceDaoMock, times(2)).deleteAllCustomAudienceData();
+        verify(mCustomAudienceDaoMock, times(2))
+                .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
         verify(mAppInstallDaoMock, times(2)).deleteAllAppInstallData();
         verify(mFrequencyCapDaoMock, times(2)).deleteAllHistogramData();
     }
@@ -1934,7 +1961,9 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
     @Test
     public void testResetAllAppConsentAndAppData_systemServerOnly()
             throws IOException, RemoteException {
-        doNothing().when(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+        doNothing()
+                .when(mCustomAudienceDaoMock)
+                .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
 
         mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.SYSTEM_SERVER_ONLY);
 
@@ -1943,7 +1972,8 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         verify(mMockIAdServicesManager).clearAllAppConsentData();
 
         SystemClock.sleep(1000);
-        verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+        verify(mCustomAudienceDaoMock)
+                .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
         verify(mFrequencyCapDaoMock).deleteAllHistogramData();
     }
@@ -1951,7 +1981,9 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
     @Test
     public void testResetAllAppConsentAndAppData_ppApiAndSystemServer()
             throws IOException, PackageManager.NameNotFoundException, RemoteException {
-        doNothing().when(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+        doNothing()
+                .when(mCustomAudienceDaoMock)
+                .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
 
         // Prepopulate with consent data for some apps
         mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.PPAPI_AND_SYSTEM_SERVER);
@@ -1968,9 +2000,9 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         mockGetPackageUid(AppConsentDaoFixture.APP20_PACKAGE_NAME, AppConsentDaoFixture.APP20_UID);
         mockGetPackageUid(AppConsentDaoFixture.APP30_PACKAGE_NAME, AppConsentDaoFixture.APP30_UID);
 
-        mDatastore.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
-        mDatastore.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
-        mDatastore.put(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
+        mDatastore.putBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
+        mDatastore.putBoolean(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
+        mDatastore.putBoolean(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
         List<ApplicationInfo> applicationsInstalled =
                 createApplicationInfos(
                         AppConsentDaoFixture.APP10_PACKAGE_NAME,
@@ -1999,7 +2031,8 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         verify(mMockIAdServicesManager, times(2)).clearAllAppConsentData();
 
         SystemClock.sleep(1000);
-        verify(mCustomAudienceDaoMock, times(2)).deleteAllCustomAudienceData();
+        verify(mCustomAudienceDaoMock, times(2))
+                .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
         verify(mAppInstallDaoMock, times(2)).deleteAllAppInstallData();
         verify(mFrequencyCapDaoMock, times(2)).deleteAllHistogramData();
     }
@@ -2024,7 +2057,9 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
     @Test
     public void testResetAllowedAppConsentAndAppData_ppApiOnly()
             throws IOException, PackageManager.NameNotFoundException {
-        doNothing().when(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+        doNothing()
+                .when(mCustomAudienceDaoMock)
+                .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
 
         // Prepopulate with consent data for some apps
         mConsentManager.enable(mSpyContext);
@@ -2036,9 +2071,9 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         mockGetPackageUid(AppConsentDaoFixture.APP20_PACKAGE_NAME, AppConsentDaoFixture.APP20_UID);
         mockGetPackageUid(AppConsentDaoFixture.APP30_PACKAGE_NAME, AppConsentDaoFixture.APP30_UID);
 
-        mDatastore.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
-        mDatastore.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
-        mDatastore.put(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
+        mDatastore.putBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
+        mDatastore.putBoolean(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
+        mDatastore.putBoolean(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
         List<ApplicationInfo> applicationsInstalled =
                 createApplicationInfos(
                         AppConsentDaoFixture.APP10_PACKAGE_NAME,
@@ -2072,7 +2107,8 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
                                 .collect(Collectors.toList()));
 
         SystemClock.sleep(1000);
-        verify(mCustomAudienceDaoMock, times(2)).deleteAllCustomAudienceData();
+        verify(mCustomAudienceDaoMock, times(2))
+                .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
         verify(mAppInstallDaoMock, times(2)).deleteAllAppInstallData();
         verify(mFrequencyCapDaoMock, times(2)).deleteAllHistogramData();
     }
@@ -2080,7 +2116,9 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
     @Test
     public void testResetAllowedAppConsentAndAppData_systemServerOnly()
             throws IOException, RemoteException {
-        doNothing().when(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+        doNothing()
+                .when(mCustomAudienceDaoMock)
+                .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
 
         // Prepopulate with consent data for some apps
         mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.SYSTEM_SERVER_ONLY);
@@ -2089,7 +2127,8 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         verify(mMockIAdServicesManager).clearKnownAppsWithConsent();
 
         SystemClock.sleep(1000);
-        verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+        verify(mCustomAudienceDaoMock)
+                .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
         verify(mFrequencyCapDaoMock).deleteAllHistogramData();
     }
@@ -2097,7 +2136,9 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
     @Test
     public void testResetAllowedAppConsentAndAppData_ppApiAndSystemServer()
             throws IOException, PackageManager.NameNotFoundException, RemoteException {
-        doNothing().when(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+        doNothing()
+                .when(mCustomAudienceDaoMock)
+                .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
 
         // Prepopulate with consent data for some apps
         mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.PPAPI_AND_SYSTEM_SERVER);
@@ -2109,9 +2150,9 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         mockGetPackageUid(AppConsentDaoFixture.APP20_PACKAGE_NAME, AppConsentDaoFixture.APP20_UID);
         mockGetPackageUid(AppConsentDaoFixture.APP30_PACKAGE_NAME, AppConsentDaoFixture.APP30_UID);
 
-        mDatastore.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
-        mDatastore.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
-        mDatastore.put(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
+        mDatastore.putBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
+        mDatastore.putBoolean(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
+        mDatastore.putBoolean(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
         List<ApplicationInfo> applicationsInstalled =
                 createApplicationInfos(
                         AppConsentDaoFixture.APP10_PACKAGE_NAME,
@@ -2147,7 +2188,8 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         verify(mMockIAdServicesManager).clearKnownAppsWithConsent();
 
         SystemClock.sleep(1000);
-        verify(mCustomAudienceDaoMock).deleteAllCustomAudienceData();
+        verify(mCustomAudienceDaoMock)
+                .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
         verify(mFrequencyCapDaoMock).deleteAllHistogramData();
     }
@@ -2208,7 +2250,7 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         verify(mMockIAdServicesManager).recordNotificationDisplayed(true);
 
         // Verify notificationDisplayed is not set in PPAPI
-        assertThat(mConsentDatastore.get(NOTIFICATION_DISPLAYED_ONCE)).isFalse();
+        assertThat(mConsentDatastore.getBoolean(NOTIFICATION_DISPLAYED_ONCE)).isFalse();
     }
 
     @Test
@@ -2233,7 +2275,7 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         verify(mMockIAdServicesManager).recordNotificationDisplayed(true);
 
         // Verify notificationDisplayed is also set in PPAPI
-        assertThat(mConsentDatastore.get(NOTIFICATION_DISPLAYED_ONCE)).isTrue();
+        assertThat(mConsentDatastore.getBoolean(NOTIFICATION_DISPLAYED_ONCE)).isTrue();
     }
 
     @Test
@@ -2308,7 +2350,7 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         verify(mMockIAdServicesManager).recordGaUxNotificationDisplayed(true);
 
         // Verify notificationDisplayed is not set in PPAPI
-        assertThat(mConsentDatastore.get(GA_UX_NOTIFICATION_DISPLAYED_ONCE)).isFalse();
+        assertThat(mConsentDatastore.getBoolean(GA_UX_NOTIFICATION_DISPLAYED_ONCE)).isFalse();
     }
 
     @Test
@@ -2334,7 +2376,7 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         verify(mMockIAdServicesManager).recordGaUxNotificationDisplayed(true);
 
         // Verify notificationDisplayed is also set in PPAPI
-        assertThat(mConsentDatastore.get(GA_UX_NOTIFICATION_DISPLAYED_ONCE)).isTrue();
+        assertThat(mConsentDatastore.getBoolean(GA_UX_NOTIFICATION_DISPLAYED_ONCE)).isTrue();
     }
 
     @Test
@@ -2381,24 +2423,24 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
 
     @Test
     public void testClearPpApiConsent() throws IOException {
-        mConsentDatastore.put(CONSENT_KEY, true);
-        mConsentDatastore.put(NOTIFICATION_DISPLAYED_ONCE, true);
-        assertThat(mConsentDatastore.get(CONSENT_KEY)).isTrue();
-        assertThat(mConsentDatastore.get(NOTIFICATION_DISPLAYED_ONCE)).isTrue();
+        mConsentDatastore.putBoolean(CONSENT_KEY, true);
+        mConsentDatastore.putBoolean(NOTIFICATION_DISPLAYED_ONCE, true);
+        assertThat(mConsentDatastore.getBoolean(CONSENT_KEY)).isTrue();
+        assertThat(mConsentDatastore.getBoolean(NOTIFICATION_DISPLAYED_ONCE)).isTrue();
 
         ConsentManagerV2.clearPpApiConsent(mSpyContext, mConsentDatastore);
-        assertThat(mConsentDatastore.get(CONSENT_KEY)).isNull();
-        assertThat(mConsentDatastore.get(NOTIFICATION_DISPLAYED_ONCE)).isNull();
+        assertThat(mConsentDatastore.getBoolean(CONSENT_KEY)).isNull();
+        assertThat(mConsentDatastore.getBoolean(NOTIFICATION_DISPLAYED_ONCE)).isNull();
 
         // Verify this should only happen once
-        mConsentDatastore.put(CONSENT_KEY, true);
-        mConsentDatastore.put(NOTIFICATION_DISPLAYED_ONCE, true);
-        assertThat(mConsentDatastore.get(CONSENT_KEY)).isTrue();
-        assertThat(mConsentDatastore.get(NOTIFICATION_DISPLAYED_ONCE)).isTrue();
+        mConsentDatastore.putBoolean(CONSENT_KEY, true);
+        mConsentDatastore.putBoolean(NOTIFICATION_DISPLAYED_ONCE, true);
+        assertThat(mConsentDatastore.getBoolean(CONSENT_KEY)).isTrue();
+        assertThat(mConsentDatastore.getBoolean(NOTIFICATION_DISPLAYED_ONCE)).isTrue();
         // Consent is not cleared again
         ConsentManagerV2.clearPpApiConsent(mSpyContext, mConsentDatastore);
-        assertThat(mConsentDatastore.get(CONSENT_KEY)).isTrue();
-        assertThat(mConsentDatastore.get(NOTIFICATION_DISPLAYED_ONCE)).isTrue();
+        assertThat(mConsentDatastore.getBoolean(CONSENT_KEY)).isTrue();
+        assertThat(mConsentDatastore.getBoolean(NOTIFICATION_DISPLAYED_ONCE)).isTrue();
 
         // Clear shared preference
         ConsentManagerV2.resetSharedPreference(mSpyContext, SHARED_PREFS_KEY_PPAPI_HAS_CLEARED);
@@ -2410,10 +2452,10 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         doNothing().when(mMockIAdServicesManager).setConsent(any());
         doNothing().when(mMockIAdServicesManager).recordNotificationDisplayed(true);
 
-        mConsentDatastore.put(CONSENT_KEY, true);
-        mConsentDatastore.put(NOTIFICATION_DISPLAYED_ONCE, true);
-        assertThat(mConsentDatastore.get(CONSENT_KEY)).isTrue();
-        assertThat(mConsentDatastore.get(NOTIFICATION_DISPLAYED_ONCE)).isTrue();
+        mConsentDatastore.putBoolean(CONSENT_KEY, true);
+        mConsentDatastore.putBoolean(NOTIFICATION_DISPLAYED_ONCE, true);
+        assertThat(mConsentDatastore.getBoolean(CONSENT_KEY)).isTrue();
+        assertThat(mConsentDatastore.getBoolean(NOTIFICATION_DISPLAYED_ONCE)).isTrue();
 
         ConsentManagerV2.migratePpApiConsentToSystemService(
                 mSpyContext,
@@ -2443,10 +2485,10 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         // Disable IPC calls
         doNothing().when(mMockIAdServicesManager).setConsent(any());
         doNothing().when(mMockIAdServicesManager).recordNotificationDisplayed(true);
-        mConsentDatastore.put(CONSENT_KEY, true);
-        mConsentDatastore.put(NOTIFICATION_DISPLAYED_ONCE, true);
-        assertThat(mConsentDatastore.get(CONSENT_KEY)).isTrue();
-        assertThat(mConsentDatastore.get(NOTIFICATION_DISPLAYED_ONCE)).isTrue();
+        mConsentDatastore.putBoolean(CONSENT_KEY, true);
+        mConsentDatastore.putBoolean(NOTIFICATION_DISPLAYED_ONCE, true);
+        assertThat(mConsentDatastore.getBoolean(CONSENT_KEY)).isTrue();
+        assertThat(mConsentDatastore.getBoolean(NOTIFICATION_DISPLAYED_ONCE)).isTrue();
 
         SharedPreferences sharedPreferences =
                 mSpyContext.getSharedPreferences(SHARED_PREFS_CONSENT, Context.MODE_PRIVATE);
@@ -2485,13 +2527,15 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE)
     public void testMigratePpApiConsentToSystemServiceWithUnSuccessfulConsentMigrationLogging()
             throws RemoteException, IOException {
         // Disable IPC calls
         doNothing().when(mMockIAdServicesManager).setConsent(any());
         doNothing().when(mMockIAdServicesManager).recordNotificationDisplayed(true);
-        mConsentDatastore.put(CONSENT_KEY, true);
-        mConsentDatastore.put(NOTIFICATION_DISPLAYED_ONCE, true);
+        mConsentDatastore.putBoolean(CONSENT_KEY, true);
+        mConsentDatastore.putBoolean(NOTIFICATION_DISPLAYED_ONCE, true);
 
         SharedPreferences sharedPreferences = mock(SharedPreferences.class);
         SharedPreferences.Editor editor = mock(SharedPreferences.Editor.class);
@@ -2499,7 +2543,6 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         doReturn(false).when(editor).commit();
         doReturn(sharedPreferences).when(mSpyContext).getSharedPreferences(anyString(), anyInt());
 
-        doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
         doNothing().when(mStatsdAdServicesLoggerMock).logConsentMigrationStats(any());
         ExtendedMockito.doReturn(false).when(() -> DeviceRegionProvider.isEuDevice(any()));
 
@@ -2532,12 +2575,11 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
     @Test
     public void testMigratePpApiConsentToSystemServiceThrowsException()
             throws RemoteException, IOException {
-        mConsentDatastore.put(NOTIFICATION_DISPLAYED_ONCE, true);
+        mConsentDatastore.putBoolean(NOTIFICATION_DISPLAYED_ONCE, true);
         doThrow(RemoteException.class)
                 .when(mMockIAdServicesManager)
                 .recordNotificationDisplayed(true);
 
-        doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
         doNothing().when(mStatsdAdServicesLoggerMock).logConsentMigrationStats(any());
         ExtendedMockito.doReturn(false).when(() -> DeviceRegionProvider.isEuDevice(any()));
 
@@ -2815,7 +2857,7 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
     public void testHandleConsentMigrationFromAppSearchIfNeeded_notMigrated() throws Exception {
         when(mAppSearchConsentManagerMock.migrateConsentDataIfNeeded(any(), any(), any(), any()))
                 .thenReturn(false);
-        BooleanFileDatastore mockDatastore = mock(BooleanFileDatastore.class);
+        AtomicFileDatastore mockDatastore = mock(AtomicFileDatastore.class);
 
         SharedPreferences mockSharedPrefs = mock(SharedPreferences.class);
         SharedPreferences.Editor mockEditor = mock(SharedPreferences.Editor.class);
@@ -2844,8 +2886,8 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         when(mAppSearchConsentManagerMock.migrateConsentDataIfNeeded(any(), any(), any(), any()))
                 .thenReturn(true);
         when(mAppSearchConsentManagerMock.getConsent(any())).thenReturn(AdServicesApiConsent.GIVEN);
-        mConsentDatastore.put(CONSENT_KEY, true);
-        mConsentDatastore.put(NOTIFICATION_DISPLAYED_ONCE, true);
+        mConsentDatastore.putBoolean(CONSENT_KEY, true);
+        mConsentDatastore.putBoolean(NOTIFICATION_DISPLAYED_ONCE, true);
 
         SharedPreferences mockSharedPrefs = mock(SharedPreferences.class);
         SharedPreferences.Editor mockEditor = mock(SharedPreferences.Editor.class);
@@ -2867,7 +2909,9 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         verify(mAppSearchConsentManagerMock).migrateConsentDataIfNeeded(any(), any(), any(), any());
 
         // Verify interactions data is migrated.
-        assertThat(mConsentDatastore.get(ConsentConstants.MANUAL_INTERACTION_WITH_CONSENT_RECORDED))
+        assertThat(
+                        mConsentDatastore.getBoolean(
+                                ConsentConstants.MANUAL_INTERACTION_WITH_CONSENT_RECORDED))
                 .isTrue();
         verify(mAdServicesStorageManager).recordUserManualInteractionWithConsent(anyInt());
 
@@ -2875,12 +2919,16 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         verify(mockEditor)
                 .putBoolean(eq(ConsentConstants.SHARED_PREFS_KEY_APPSEARCH_HAS_MIGRATED), eq(true));
 
-        assertThat(mConsentDatastore.get(ConsentConstants.CONSENT_KEY)).isTrue();
+        assertThat(mConsentDatastore.getBoolean(ConsentConstants.CONSENT_KEY)).isTrue();
 
         // Verify per API consents data is migrated.
-        assertThat(mConsentDatastore.get(AdServicesApiType.TOPICS.toPpApiDatastoreKey())).isTrue();
-        assertThat(mConsentDatastore.get(AdServicesApiType.FLEDGE.toPpApiDatastoreKey())).isTrue();
-        assertThat(mConsentDatastore.get(AdServicesApiType.MEASUREMENTS.toPpApiDatastoreKey()))
+        assertThat(mConsentDatastore.getBoolean(AdServicesApiType.TOPICS.toPpApiDatastoreKey()))
+                .isTrue();
+        assertThat(mConsentDatastore.getBoolean(AdServicesApiType.FLEDGE.toPpApiDatastoreKey()))
+                .isTrue();
+        assertThat(
+                        mConsentDatastore.getBoolean(
+                                AdServicesApiType.MEASUREMENTS.toPpApiDatastoreKey()))
                 .isTrue();
         ExtendedMockito.doReturn(false).when(() -> DeviceRegionProvider.isEuDevice(any()));
 
@@ -2906,8 +2954,8 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         when(mAppSearchConsentManagerMock.migrateConsentDataIfNeeded(any(), any(), any(), any()))
                 .thenReturn(true);
         when(mAppSearchConsentManagerMock.getConsent(any())).thenReturn(AdServicesApiConsent.GIVEN);
-        mConsentDatastore.put(CONSENT_KEY, true);
-        mConsentDatastore.put(NOTIFICATION_DISPLAYED_ONCE, true);
+        mConsentDatastore.putBoolean(CONSENT_KEY, true);
+        mConsentDatastore.putBoolean(NOTIFICATION_DISPLAYED_ONCE, true);
 
         SharedPreferences mockSharedPrefs = mock(SharedPreferences.class);
         SharedPreferences.Editor mockEditor = mock(SharedPreferences.Editor.class);
@@ -2917,7 +2965,6 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         when(mAppSearchConsentManagerMock.getUserManualInteractionWithConsent())
                 .thenReturn(MANUAL_INTERACTIONS_RECORDED);
         when(mockEditor.commit()).thenReturn(false);
-        doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         ExtendedMockito.doReturn(false).when(() -> DeviceRegionProvider.isEuDevice(any()));
 
         ConsentManagerV2.handleConsentMigrationFromAppSearchIfNeeded(
@@ -2945,11 +2992,13 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            throwable = IOException.class,
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_SEARCH_DATA_MIGRATION_FAILURE)
     public void testHandleConsentMigrationFromAppSearchIfNeededThrowsException() throws Exception {
         when(mAppSearchConsentManagerMock.migrateConsentDataIfNeeded(any(), any(), any(), any()))
                 .thenThrow(IOException.class);
 
-        doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         doNothing().when(mStatsdAdServicesLoggerMock).logConsentMigrationStats(any());
 
         doReturn(false).when(() -> DeviceRegionProvider.isEuDevice(any()));
@@ -3085,9 +3134,10 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_WHILE_GET_CONSENT)
     public void testConsentPerApiIsGivenAfterEnabling_PpApiAndSystemServer()
-            throws RemoteException, IOException {
-        doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
+            throws RemoteException {
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
         doReturn(PrivacySandboxUxCollection.UNSUPPORTED_UX).when(mAdServicesStorageManager).getUx();
         boolean isGiven = true;
@@ -3111,12 +3161,6 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
                 .setPerApiConsentToSourceOfTruth(
                         eq(/* isGiven */ true), eq(AdServicesApiType.TOPICS));
         verify(spyConsentManager).resetTopicsAndBlockedTopics();
-        verify(
-                () ->
-                        ErrorLogUtil.e(
-                                any(Throwable.class),
-                                eq(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_WHILE_GET_CONSENT),
-                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX)));
     }
 
     @Test
@@ -3185,7 +3229,6 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
     @Test
     public void testFledgeConsentIsEnabled_userProfileIdIsClearedThanRecreated()
             throws RemoteException {
-        doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         doReturn(PrivacySandboxUxCollection.UNSUPPORTED_UX).when(mAdServicesStorageManager).getUx();
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
         boolean isGiven = true;
@@ -3203,7 +3246,6 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
 
     @Test
     public void testFledgeConsentIsDisabled_userProfileIdIsCleared() throws RemoteException {
-        doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
         doReturn(PrivacySandboxUxCollection.UNSUPPORTED_UX).when(mAdServicesStorageManager).getUx();
         boolean isGiven = false;
@@ -3245,7 +3287,7 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
                 .setPerApiConsentToSourceOfTruth(
                         eq(/* isGiven */ true), eq(AdServicesApiType.MEASUREMENTS));
         verify(mConsentDatastore, times(1))
-                .put(eq(AdServicesApiType.ALL_API.toPpApiDatastoreKey()), eq(true));
+                .putBoolean(eq(AdServicesApiType.ALL_API.toPpApiDatastoreKey()), eq(true));
 
         verifyDataCleanup(spyConsentManager);
     }
@@ -3350,7 +3392,7 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         verify(mMockIAdServicesManager).recordUserManualInteractionWithConsent(anyInt());
 
         // Verify the bit is not set in PPAPI
-        assertThat(mConsentDatastore.get(MANUAL_INTERACTION_WITH_CONSENT_RECORDED)).isNull();
+        assertThat(mConsentDatastore.getBoolean(MANUAL_INTERACTION_WITH_CONSENT_RECORDED)).isNull();
     }
 
     @Test
@@ -3381,7 +3423,7 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         verify(mMockIAdServicesManager).recordUserManualInteractionWithConsent(anyInt());
 
         // Verify the bit is also set in PPAPI
-        assertThat(mConsentDatastore.get(MANUAL_INTERACTION_WITH_CONSENT_RECORDED)).isTrue();
+        assertThat(mConsentDatastore.getBoolean(MANUAL_INTERACTION_WITH_CONSENT_RECORDED)).isTrue();
     }
 
     @Test
@@ -3620,6 +3662,8 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PRIVACY_SANDBOX_SAVE_FAILURE)
     public void testCurrentPrivacySandboxFeature_SystemServerOnly()
             throws RemoteException, IOException {
         int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
@@ -3629,19 +3673,10 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         ConsentManagerV2 spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
                         /* isGiven */ false, consentSourceOfTruth);
-        doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         assertThat(spyConsentManager.getCurrentPrivacySandboxFeature())
                 .isEqualTo(PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED);
         verify(mAdServicesStorageManager).getCurrentPrivacySandboxFeature();
 
-        int errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PRIVACY_SANDBOX_SAVE_FAILURE;
-        MockedVoidMethod mockedVoidMethod =
-                () ->
-                        ErrorLogUtil.e(
-                                any(),
-                                eq(errorCode),
-                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX));
-        verify(mockedVoidMethod);
         doReturn(PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT)
                 .when(mAdServicesStorageManager)
                 .getCurrentPrivacySandboxFeature();
@@ -3667,23 +3702,24 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
                 .isEqualTo(PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED);
 
         assertThat(
-                        mConsentDatastore.get(
+                        mConsentDatastore.getBoolean(
                                 PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED.name()))
                 .isNull();
         assertThat(
-                        mConsentDatastore.get(
+                        mConsentDatastore.getBoolean(
                                 PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT.name()))
                 .isNull();
         assertThat(
-                        mConsentDatastore.get(
+                        mConsentDatastore.getBoolean(
                                 PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT.name()))
                 .isNull();
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PRIVACY_SANDBOX_SAVE_FAILURE)
     public void testCurrentPrivacySandboxFeature_PpApiAndSystemServer()
             throws RemoteException, IOException {
-        doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
         ConsentManagerV2 spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -3697,14 +3733,6 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         doThrow(RuntimeException.class)
                 .when(mAdServicesStorageManager)
                 .getCurrentPrivacySandboxFeature();
-        int saveErrorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PRIVACY_SANDBOX_SAVE_FAILURE;
-        MockedVoidMethod mockedVoidMethod =
-                () ->
-                        ErrorLogUtil.e(
-                                any(),
-                                eq(saveErrorCode),
-                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX));
-        verify(mockedVoidMethod);
         doReturn(PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT)
                 .when(mAdServicesStorageManager)
                 .getCurrentPrivacySandboxFeature();
@@ -3731,15 +3759,15 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
 
         // Only the last set bit is true.
         assertThat(
-                        mConsentDatastore.get(
+                        mConsentDatastore.getBoolean(
                                 PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED.name()))
                 .isFalse();
         assertThat(
-                        mConsentDatastore.get(
+                        mConsentDatastore.getBoolean(
                                 PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT.name()))
                 .isFalse();
         assertThat(
-                        mConsentDatastore.get(
+                        mConsentDatastore.getBoolean(
                                 PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT.name()))
                 .isTrue();
     }

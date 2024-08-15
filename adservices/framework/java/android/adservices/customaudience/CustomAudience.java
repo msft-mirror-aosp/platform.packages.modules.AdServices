@@ -16,6 +16,8 @@
 
 package android.adservices.customaudience;
 
+import static com.android.adservices.flags.Flags.FLAG_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED;
+
 import android.adservices.adselection.GetAdSelectionDataRequest;
 import android.adservices.common.AdData;
 import android.adservices.common.AdSelectionSignals;
@@ -354,13 +356,16 @@ public final class CustomAudience implements Parcelable {
 
     /**
      * Returns the priority of this CustomAudience with respect to other CustomAudiences for this
-     * buyer. This means if there is insufficient space during buyer input generation in the {@link
+     * buyer.
+     *
+     * <p>This means if there is insufficient space during buyer input generation in the {@link
      * android.adservices.adselection.AdSelectionManager#getAdSelectionData(GetAdSelectionDataRequest,
      * Executor, OutcomeReceiver)} call, the service will attempt to include the highest priority
      * custom audiences first.
      *
-     * @hide
+     * <p>The default value if this field is not set is 0.
      */
+    @FlaggedApi(FLAG_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED)
     public double getPriority() {
         return mPriority;
     }
@@ -383,7 +388,7 @@ public final class CustomAudience implements Parcelable {
                 && mBiddingLogicUri.equals(that.mBiddingLogicUri)
                 && mAds.equals(that.mAds)
                 && mAuctionServerRequestFlags == that.mAuctionServerRequestFlags
-                && mPriority == that.mPriority;
+                && Double.compare(mPriority, that.mPriority) == 0;
     }
 
     /**
@@ -550,11 +555,11 @@ public final class CustomAudience implements Parcelable {
         }
 
         /**
-         * Sets the priority for this custom audience. See {@link #getPriority()} for further
-         * details.
+         * Sets the priority for this custom audience.
          *
-         * @hide
+         * <p>See {@link #getPriority()} for further details.
          */
+        @FlaggedApi(FLAG_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED)
         @NonNull
         public CustomAudience.Builder setPriority(double priority) {
             mPriority = priority;

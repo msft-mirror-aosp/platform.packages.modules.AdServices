@@ -178,17 +178,17 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
             ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
 
     private StatsdAdServicesLogger mLogger;
-    @Mock private Flags mFlags;
+    @Mock private Flags mMockFlags;
 
     @Before
     public void setUp() {
-        mLogger = new StatsdAdServicesLogger(mFlags);
+        mLogger = new StatsdAdServicesLogger(mMockFlags);
     }
 
     @Test
     public void testLogGetTopicsReportedStats_tPlus() {
         // Mocks
-        when(mFlags.getCompatLoggingKillSwitch()).thenReturn(false);
+        when(mMockFlags.getCompatLoggingKillSwitch()).thenReturn(false);
         mockIsAtLeastT(true);
         doNothing()
                 .when(
@@ -229,7 +229,7 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
     @Test
     public void testLogGetTopicsReportedStats_tPlus_noCompatLoggingDueToKillSwitch() {
         // Mocks
-        when(mFlags.getCompatLoggingKillSwitch()).thenReturn(true);
+        when(mMockFlags.getCompatLoggingKillSwitch()).thenReturn(true);
         mockIsAtLeastT(true);
         doNothing()
                 .when(
@@ -256,7 +256,7 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
     @Test
     public void testLogGetTopicsReportedStats_sMinus() {
         // Mocks
-        when(mFlags.getCompatLoggingKillSwitch()).thenReturn(false);
+        when(mMockFlags.getCompatLoggingKillSwitch()).thenReturn(false);
         mockIsAtLeastT(false);
         doNothing()
                 .when(
@@ -283,7 +283,7 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
     @Test
     public void testLogGetTopicsReportedStats_sMinus_noLoggingDueToKillSwitch() {
         // Mocks
-        when(mFlags.getCompatLoggingKillSwitch()).thenReturn(true);
+        when(mMockFlags.getCompatLoggingKillSwitch()).thenReturn(true);
         mockIsAtLeastT(false);
 
         // Invoke logging call
@@ -296,7 +296,7 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
     @Test
     public void testLogEpochComputationClassifierStats_tPlus() {
         // Mocks
-        when(mFlags.getCompatLoggingKillSwitch()).thenReturn(false);
+        when(mMockFlags.getCompatLoggingKillSwitch()).thenReturn(false);
         mockIsAtLeastT(true);
         doNothing()
                 .when(
@@ -361,7 +361,7 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
     @Test
     public void testLogEpochComputationClassifierStats_tPlus_noCompatLoggingDueToKillSwitch() {
         // Mocks
-        when(mFlags.getCompatLoggingKillSwitch()).thenReturn(true);
+        when(mMockFlags.getCompatLoggingKillSwitch()).thenReturn(true);
         mockIsAtLeastT(true);
         doNothing()
                 .when(
@@ -399,7 +399,7 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
     @Test
     public void testLogEpochComputationClassifierStats_sMinus() {
         // Mocks
-        when(mFlags.getCompatLoggingKillSwitch()).thenReturn(false);
+        when(mMockFlags.getCompatLoggingKillSwitch()).thenReturn(false);
         mockIsAtLeastT(false);
         doNothing()
                 .when(
@@ -439,7 +439,7 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
     @Test
     public void testLogEpochComputationClassifierStats_sMinus_noLoggingDueToKillSwitch() {
         // Mocks
-        when(mFlags.getCompatLoggingKillSwitch()).thenReturn(true);
+        when(mMockFlags.getCompatLoggingKillSwitch()).thenReturn(true);
         mockIsAtLeastT(false);
 
         // Invoke logging call
@@ -488,7 +488,7 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testlogFledgeApiCallStatsWithAppPackageNameLogging_enabled() {
-        when(mFlags.getFledgeAppPackageNameLoggingEnabled()).thenReturn(true);
+        when(mMockFlags.getFledgeAppPackageNameLoggingEnabled()).thenReturn(true);
         doNothing()
                 .when(
                         () ->
@@ -501,7 +501,7 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                                         anyInt(),
                                         anyInt()));
 
-        mLogger = new StatsdAdServicesLogger(mFlags);
+        mLogger = new StatsdAdServicesLogger(mMockFlags);
 
         int apiName = AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
         String appPackageName = TEST_PACKAGE_NAME;
@@ -528,7 +528,7 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testlogFledgeApiCallStatsWithAppPackageNameLogging_nullAppPackageName() {
-        when(mFlags.getFledgeAppPackageNameLoggingEnabled()).thenReturn(true);
+        when(mMockFlags.getFledgeAppPackageNameLoggingEnabled()).thenReturn(true);
         doNothing()
                 .when(
                         () ->
@@ -541,7 +541,7 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                                         anyInt(),
                                         anyInt()));
 
-        mLogger = new StatsdAdServicesLogger(mFlags);
+        mLogger = new StatsdAdServicesLogger(mMockFlags);
 
         int apiName = AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
         String appPackageName = null;
@@ -568,7 +568,7 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testlogFledgeApiCallStatsWithAppPackageNameLogging_disabled() {
-        when(mFlags.getFledgeAppPackageNameLoggingEnabled()).thenReturn(false);
+        when(mMockFlags.getFledgeAppPackageNameLoggingEnabled()).thenReturn(false);
         doNothing()
                 .when(
                         () ->
@@ -581,7 +581,7 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                                         anyInt(),
                                         anyInt()));
 
-        mLogger = new StatsdAdServicesLogger(mFlags);
+        mLogger = new StatsdAdServicesLogger(mMockFlags);
 
         int apiName = AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
         String appPackageName = TEST_PACKAGE_NAME;
@@ -609,8 +609,9 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
 
     @Test
     public void logMeasurementDebugKeysMatch_success() {
-        when(mFlags.getMeasurementEnableAppPackageNameLogging()).thenReturn(true);
-        when(mFlags.getMeasurementAppPackageNameLoggingAllowlist()).thenReturn(SOURCE_REGISTRANT);
+        when(mMockFlags.getMeasurementEnableAppPackageNameLogging()).thenReturn(true);
+        when(mMockFlags.getMeasurementAppPackageNameLoggingAllowlist())
+                .thenReturn(SOURCE_REGISTRANT);
         String enrollmentId = "EnrollmentId";
         long hashedValue = 5000L;
         long hashLimit = 10000L;
@@ -658,8 +659,9 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
 
     @Test
     public void logMeasurementAttribution_success() {
-        when(mFlags.getMeasurementEnableAppPackageNameLogging()).thenReturn(true);
-        when(mFlags.getMeasurementAppPackageNameLoggingAllowlist()).thenReturn(SOURCE_REGISTRANT);
+        when(mMockFlags.getMeasurementEnableAppPackageNameLogging()).thenReturn(true);
+        when(mMockFlags.getMeasurementAppPackageNameLoggingAllowlist())
+                .thenReturn(SOURCE_REGISTRANT);
         MeasurementAttributionStats stats =
                 new MeasurementAttributionStats.Builder()
                         .setCode(AD_SERVICES_MEASUREMENT_ATTRIBUTION)
@@ -727,8 +729,9 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
 
     @Test
     public void logMeasurementWipeout_success() {
-        when(mFlags.getMeasurementEnableAppPackageNameLogging()).thenReturn(true);
-        when(mFlags.getMeasurementAppPackageNameLoggingAllowlist()).thenReturn(SOURCE_REGISTRANT);
+        when(mMockFlags.getMeasurementEnableAppPackageNameLogging()).thenReturn(true);
+        when(mMockFlags.getMeasurementAppPackageNameLoggingAllowlist())
+                .thenReturn(SOURCE_REGISTRANT);
         MeasurementWipeoutStats stats =
                 new MeasurementWipeoutStats.Builder()
                         .setCode(AD_SERVICES_MEASUREMENT_WIPEOUT)
@@ -755,8 +758,9 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
 
     @Test
     public void logMeasurementDelayedSourceRegistration_success() {
-        when(mFlags.getMeasurementEnableAppPackageNameLogging()).thenReturn(true);
-        when(mFlags.getMeasurementAppPackageNameLoggingAllowlist()).thenReturn(SOURCE_REGISTRANT);
+        when(mMockFlags.getMeasurementEnableAppPackageNameLogging()).thenReturn(true);
+        when(mMockFlags.getMeasurementAppPackageNameLoggingAllowlist())
+                .thenReturn(SOURCE_REGISTRANT);
         int UnknownEnumValue = 0;
         long registrationDelay = 500L;
         MeasurementDelayedSourceRegistrationStats stats =
@@ -845,7 +849,7 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
 
     @Test
     public void logConsentMigrationStats_success() {
-        when(mFlags.getAdservicesConsentMigrationLoggingEnabled()).thenReturn(true);
+        when(mMockFlags.getAdservicesConsentMigrationLoggingEnabled()).thenReturn(true);
         doNothing()
                 .when(
                         () ->
@@ -894,7 +898,7 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
 
     @Test
     public void logConsentMigrationStats_disabled() {
-        when(mFlags.getAdservicesConsentMigrationLoggingEnabled()).thenReturn(false);
+        when(mMockFlags.getAdservicesConsentMigrationLoggingEnabled()).thenReturn(false);
 
         ConsentMigrationStats consentMigrationStats =
                 ConsentMigrationStats.builder()
@@ -917,8 +921,9 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
 
     @Test
     public void logMeasurementAdIdMatchForDebugKeys_success() {
-        when(mFlags.getMeasurementEnableAppPackageNameLogging()).thenReturn(true);
-        when(mFlags.getMeasurementAppPackageNameLoggingAllowlist()).thenReturn(SOURCE_REGISTRANT);
+        when(mMockFlags.getMeasurementEnableAppPackageNameLogging()).thenReturn(true);
+        when(mMockFlags.getMeasurementAppPackageNameLoggingAllowlist())
+                .thenReturn(SOURCE_REGISTRANT);
         String enrollmentId = "EnrollmentId";
         long uniqueAdIdValue = 1L;
         long uniqueAdIdLimit = 5L;
@@ -966,7 +971,7 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
 
     @Test
     public void logMeasurementAdIdMatchForDebugKeys_appLoggingDisabled_emptyString() {
-        when(mFlags.getMeasurementEnableAppPackageNameLogging()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableAppPackageNameLogging()).thenReturn(false);
         String enrollmentId = "EnrollmentId";
         long uniqueAdIdValue = 1L;
         long uniqueAdIdLimit = 5L;
@@ -1014,8 +1019,8 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
 
     @Test
     public void logMeasurementAdIdMatchForDebugKeys_appNotAllowlisted_emptyString() {
-        when(mFlags.getMeasurementEnableAppPackageNameLogging()).thenReturn(true);
-        when(mFlags.getMeasurementAppPackageNameLoggingAllowlist()).thenReturn("");
+        when(mMockFlags.getMeasurementEnableAppPackageNameLogging()).thenReturn(true);
+        when(mMockFlags.getMeasurementAppPackageNameLoggingAllowlist()).thenReturn("");
         String enrollmentId = "EnrollmentId";
         long uniqueAdIdValue = 1L;
         long uniqueAdIdLimit = 5L;
@@ -1704,7 +1709,53 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                                 eq(64),
                                 eq(3),
                                 eq(STATUS_SUCCESS),
-                                eq(SERVER_AUCTION_COORDINATOR_SOURCE_UNSET));
+                                eq(SERVER_AUCTION_COORDINATOR_SOURCE_UNSET),
+                                eq(-1),
+                                eq(0),
+                                eq(-1),
+                                eq(-1),
+                                eq(-1));
+
+        verify(writeInvocation);
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testLogGetAdSelectionDataApiCalledStatsWithSellerConfigurationMetrics_success() {
+        GetAdSelectionDataApiCalledStats stats =
+                GetAdSelectionDataApiCalledStats.builder()
+                        .setPayloadSizeKb(64)
+                        .setNumBuyers(3)
+                        .setStatusCode(STATUS_SUCCESS)
+                        .setSellerMaxSizeKb(10)
+                        .setPayloadOptimizationResult(
+                                GetAdSelectionDataApiCalledStats.PayloadOptimizationResult
+                                        .PAYLOAD_TRUNCATED_FOR_REQUESTED_MAX)
+                        .setInputGenerationLatencyMs(45)
+                        .setCompressedBuyerInputCreatorVersion(2)
+                        .setNumReEstimations(5)
+                        .build();
+
+        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt()));
+
+        // Invoke logging call.
+        mLogger.logGetAdSelectionDataApiCalledStats(stats);
+
+        // Verify only compat logging took place.
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(GET_AD_SELECTION_DATA_API_CALLED),
+                                eq(64),
+                                eq(3),
+                                eq(STATUS_SUCCESS),
+                                eq(SERVER_AUCTION_COORDINATOR_SOURCE_UNSET),
+                                eq(10),
+                                eq(1),
+                                eq(45),
+                                eq(2),
+                                eq(5));
 
         verify(writeInvocation);
 
@@ -1734,7 +1785,12 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                                 eq(64),
                                 eq(3),
                                 eq(STATUS_SUCCESS),
-                                eq(SERVER_AUCTION_COORDINATOR_SOURCE_API));
+                                eq(SERVER_AUCTION_COORDINATOR_SOURCE_API),
+                                eq(-1),
+                                eq(0),
+                                eq(-1),
+                                eq(-1),
+                                eq(-1));
 
         verify(writeInvocation);
 

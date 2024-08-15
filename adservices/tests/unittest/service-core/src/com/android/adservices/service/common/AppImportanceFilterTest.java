@@ -62,7 +62,6 @@ import java.util.List;
 @SpyStatic(SdkLevel.class)
 public final class AppImportanceFilterTest extends AdServicesExtendedMockitoTestCase {
 
-    private static final int API_CLASS = AD_SERVICES_API_CALLED__API_CLASS__TARGETING;
     private static final int API_NAME = AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS;
     private static final int APP_UID = 321;
     private static final String APP_PACKAGE_NAME = "test.package.name";
@@ -83,7 +82,6 @@ public final class AppImportanceFilterTest extends AdServicesExtendedMockitoTest
                         mActivityManager,
                         mPackageManager,
                         mAdServiceLogger,
-                        API_CLASS,
                         () -> IMPORTANCE_FOREGROUND_SERVICE);
     }
 

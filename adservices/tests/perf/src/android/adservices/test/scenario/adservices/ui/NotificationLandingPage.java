@@ -54,9 +54,9 @@ public class NotificationLandingPage {
 
     @Before
     public void setup() throws Exception {
-        UiUtils.setFlipFlow(true);
-        UiUtils.setAsEuDevice();
-        UiUtils.enableGa();
+        UiUtils.setFlipFlow(flags, true);
+        UiUtils.setAsEuDevice(flags);
+        UiUtils.enableGa(flags);
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
         // Initialize UiDevice instance
@@ -77,7 +77,7 @@ public class NotificationLandingPage {
 
         Trace.beginSection("NotificationTriggerEvent");
         AdservicesWorkflows.testNotificationActivityFlow(
-                sContext, sDevice, true, ux, true, false, true);
+                sContext, sDevice, flags, true, ux, true, false, true);
         Trace.endSection();
     }
 

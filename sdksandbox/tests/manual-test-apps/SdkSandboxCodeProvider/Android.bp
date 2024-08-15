@@ -44,6 +44,7 @@ android_test_helper_app {
         "androidx.media3.media3-common",
         "androidx.media3.media3-exoplayer",
         "androidx.media3.media3-ui",
+        "androidx.core_core",
     ],
     manifest: "AndroidManifest.xml",
     test_suites: ["general-tests"],

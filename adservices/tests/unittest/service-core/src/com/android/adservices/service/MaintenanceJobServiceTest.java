@@ -16,19 +16,9 @@
 
 package com.android.adservices.service;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdServicesJobServiceLogger;
-import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
-import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
-import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobExecutionData;
-import static com.android.adservices.mockito.MockitoExpectations.verifyBackgroundJobsSkipLogged;
-import static com.android.adservices.mockito.MockitoExpectations.verifyLoggingNotHappened;
-import static com.android.adservices.mockito.MockitoExpectations.verifyOnStartJobLogged;
-import static com.android.adservices.mockito.MockitoExpectations.verifyOnStopJobLogged;
 import static com.android.adservices.spe.AdServicesJobInfo.MAINTENANCE_JOB;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyLong;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
@@ -52,8 +42,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.pm.PackageManager;
 
-import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.common.AdServicesJobServiceTestCase;
 import com.android.adservices.service.common.FledgeMaintenanceTasksWorker;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.signals.SignalsMaintenanceTasksWorker;
@@ -81,9 +70,8 @@ import org.mockito.Spy;
 @SpyStatic(TopicsWorker.class)
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(AdServicesJobServiceLogger.class)
-@SpyStatic(ErrorLogUtil.class)
 @MockStatic(ServiceCompatUtils.class)
-public final class MaintenanceJobServiceTest extends AdServicesExtendedMockitoTestCase {
+public final class MaintenanceJobServiceTest extends AdServicesJobServiceTestCase {
     private static final int BACKGROUND_THREAD_TIMEOUT_MS = 5_000;
     private static final int MAINTENANCE_JOB_ID = MAINTENANCE_JOB.getJobId();
     private static final long MAINTENANCE_JOB_PERIOD_MS = 10_000L;
@@ -622,7 +610,6 @@ public final class MaintenanceJobServiceTest extends AdServicesExtendedMockitoTe
 
     @Test
     public void testScheduleIfNeeded_scheduledWithKillSwitchOn() {
-        doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
         // Killswitch is on.
         doReturn(true).when(mMockFlags).getTopicsKillSwitch();
         doReturn(true).when(mMockFlags).getFledgeSelectAdsKillSwitch();

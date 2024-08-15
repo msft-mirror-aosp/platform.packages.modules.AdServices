@@ -47,6 +47,12 @@ public final class ShellCommandStats {
             AdServicesStatsLog
                     .AD_SERVICES_SHELL_COMMAND_CALLED__COMMAND__COMMAND_IS_ALLOWED_TOPICS_ACCESS;
 
+    public static final int COMMAND_ENABLE_ADSERVICES =
+            AdServicesStatsLog.AD_SERVICES_SHELL_COMMAND_CALLED__COMMAND__COMMAND_ENABLE_ADSERVICES;
+    public static final int COMMAND_RESET_CONSENT_DATA =
+            AdServicesStatsLog
+                    .AD_SERVICES_SHELL_COMMAND_CALLED__COMMAND__COMMAND_RESET_CONSENT_DATA;
+
     public static final int COMMAND_CUSTOM_AUDIENCE_VIEW =
             AdServicesStatsLog
                     .AD_SERVICES_SHELL_COMMAND_CALLED__COMMAND__COMMAND_CUSTOM_AUDIENCE_VIEW;
@@ -73,13 +79,13 @@ public final class ShellCommandStats {
     public static final int COMMAND_AD_SELECTION_GET_AD_SELECTION_DATA =
             AdServicesStatsLog
                     .AD_SERVICES_SHELL_COMMAND_CALLED__COMMAND__COMMAND_AD_SELECTION_GET_AD_SELECTION_DATA;
-    public static final int COMMAND_AD_SELECTION_MOCK_AUCTION_RESULT =
-            AdServicesStatsLog
-                    .AD_SERVICES_SHELL_COMMAND_CALLED__COMMAND__COMMAND_AD_SELECTION_MOCK_AUCTION;
 
     public static final int COMMAND_APP_SIGNALS_GENERATE_INPUT_FOR_ENCODING =
             AdServicesStatsLog
                     .AD_SERVICES_SHELL_COMMAND_CALLED__COMMAND__COMMAND_APP_SIGNALS_GENERATE_INPUT_FOR_ENCODING;
+    public static final int COMMAND_APP_SIGNALS_TRIGGER_ENCODING =
+            AdServicesStatsLog
+                    .AD_SERVICES_SHELL_COMMAND_CALLED__COMMAND__COMMAND_APP_SIGNALS_TRIGGER_ENCODING;
 
     @IntDef({
         COMMAND_UNKNOWN,
@@ -91,6 +97,8 @@ public final class ShellCommandStats {
         COMMAND_IS_ALLOWED_CUSTOM_AUDIENCE_ACCESS,
         COMMAND_IS_ALLOWED_AD_SELECTION_ACCESS,
         COMMAND_IS_ALLOWED_TOPICS_ACCESS,
+        COMMAND_ENABLE_ADSERVICES,
+        COMMAND_RESET_CONSENT_DATA,
 
         // Custom audience commands
         COMMAND_CUSTOM_AUDIENCE_VIEW,
@@ -103,10 +111,10 @@ public final class ShellCommandStats {
         COMMAND_AD_SELECTION_CONSENTED_DEBUG_VIEW,
         COMMAND_AD_SELECTION_CONSENTED_DEBUG_HELP,
         COMMAND_AD_SELECTION_GET_AD_SELECTION_DATA,
-        COMMAND_AD_SELECTION_MOCK_AUCTION_RESULT,
 
         // Protected App Signals commands
-        COMMAND_APP_SIGNALS_GENERATE_INPUT_FOR_ENCODING
+        COMMAND_APP_SIGNALS_GENERATE_INPUT_FOR_ENCODING,
+        COMMAND_APP_SIGNALS_TRIGGER_ENCODING
     })
     @Retention(SOURCE)
     public @interface Command {}

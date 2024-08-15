@@ -62,7 +62,7 @@ public abstract class ServerAuctionE2ETestBase {
 
             int responseCode = connection.getResponseCode();
             if (responseCode == HttpURLConnection.HTTP_OK) {
-                Log.w(getTag(), "Warm-up call successful.");
+                Log.w(getTag(), "Warm-up call successful for : " + endpointUrl);
             } else {
                 Log.w(getTag(), "Failed to make warm-up call. Response code: " + responseCode);
             }

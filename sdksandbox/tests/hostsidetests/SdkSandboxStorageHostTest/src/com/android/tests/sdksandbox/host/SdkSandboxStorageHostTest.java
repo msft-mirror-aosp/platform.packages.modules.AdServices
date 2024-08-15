@@ -27,7 +27,7 @@ import static org.junit.Assume.assumeTrue;
 
 import android.app.sdksandbox.hosttestutils.AdoptableStorageUtils;
 import android.app.sdksandbox.hosttestutils.AwaitUtils;
-import android.app.sdksandbox.hosttestutils.DeviceSupportHostUtils;
+import android.app.sdksandbox.hosttestutils.SdkSandboxDeviceSupportedHostRule;
 import android.app.sdksandbox.hosttestutils.SecondaryUserUtils;
 import android.platform.test.annotations.LargeTest;
 
@@ -36,6 +36,7 @@ import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -49,6 +50,10 @@ import javax.annotation.Nullable;
 
 @RunWith(DeviceJUnit4ClassRunner.class)
 public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
+
+    @Rule(order = 0)
+    public final SdkSandboxDeviceSupportedHostRule deviceSupportRule =
+            new SdkSandboxDeviceSupportedHostRule(this);
 
     private static final String TEST_APP_STORAGE_PACKAGE = "com.android.tests.sdksandbox";
     private static final String TEST_APP_STORAGE_APK = "SdkSandboxStorageTestApp.apk";
@@ -69,7 +74,6 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     private final SecondaryUserUtils mUserUtils = new SecondaryUserUtils(this);
     private final AdoptableStorageUtils mAdoptableUtils = new AdoptableStorageUtils(this);
     private final DeviceLockUtils mDeviceLockUtils = new DeviceLockUtils(this);
-    private final DeviceSupportHostUtils mDeviceSupportUtils = new DeviceSupportHostUtils(this);
 
     /**
      * Runs the given phase of a test by calling into the device.
@@ -88,14 +92,24 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
     @Before
     public void setUp() throws Exception {
-        assumeTrue(mDeviceSupportUtils.isSdkSandboxSupported());
-        uninstallPackage(TEST_APP_STORAGE_PACKAGE);
+        try {
+            uninstallPackage(TEST_APP_STORAGE_PACKAGE);
+        } finally {
+            mUserUtils.removeSecondaryUserIfNecessary();
+            // Several storage tests check storage for user 0, switch before running tests.
+            if (getDevice().getCurrentUser() != 0) {
+                getDevice().switchUser(0);
+            }
+        }
     }
 
     @After
     public void tearDown() throws Exception {
-        mUserUtils.removeSecondaryUserIfNecessary();
-        uninstallPackage(TEST_APP_STORAGE_PACKAGE);
+        try {
+            mUserUtils.removeSecondaryUserIfNecessary();
+        } finally {
+            uninstallPackage(TEST_APP_STORAGE_PACKAGE);
+        }
     }
 
     @Test
@@ -159,7 +173,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
         // delete the new user
         final int newUser = mUserUtils.createAndStartSecondaryUser();
-        mUserUtils.removeSecondaryUserIfNecessary(/*waitForUserDataDeletion=*/ true);
+        mUserUtils.removeSecondaryUserIfNecessary();
 
         // Sdk Sandbox root directories should not exist as the user was removed
         final String ceSdkSandboxDataRootPath = getSdkDataRootPath(newUser, true);
@@ -703,8 +717,6 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         assertThat(getDevice().isDirectory(deAppPath)).isTrue();
         assertThat(getDevice().isDirectory(cePath)).isTrue();
         assertThat(getDevice().isDirectory(dePath)).isTrue();
-
-        mUserUtils.removeSecondaryUserIfNecessary(/*waitForUserDataDeletion=*/ true);
     }
 
     @Test

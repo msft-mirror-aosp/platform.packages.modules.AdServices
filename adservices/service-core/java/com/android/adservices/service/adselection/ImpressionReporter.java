@@ -23,6 +23,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARG
 import static android.adservices.common.AdServicesStatusUtils.STATUS_IO_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
+import static com.android.adservices.service.common.AppManifestConfigCall.API_AD_SELECTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
 
 import android.adservices.adselection.AdSelectionConfig;
@@ -184,7 +185,6 @@ public class ImpressionReporter {
         }
         mJsEngine =
                 new ReportImpressionScriptEngine(
-                        flags::getEnforceIsolateMaxHeapSize,
                         flags::getIsolateMaxHeapSizeBytes,
                         registerAdBeaconScriptEngineHelper,
                         retryStrategy,
@@ -238,7 +238,7 @@ public class ImpressionReporter {
                                 Trace.beginSection(Tracing.VALIDATE_REQUEST);
                                 sLogger.v("Starting filtering and validation.");
                                 mAdSelectionServiceFilter.filterRequest(
-                                        null,
+                                        adSelectionConfig.getSeller(),
                                         requestParams.getCallerPackageName(),
                                         mFlags
                                                 .getEnforceForegroundStatusForFledgeReportImpression(),
@@ -476,15 +476,21 @@ public class ImpressionReporter {
         ListenableFuture<Void> sellerFuture = bestEffortReporting(sellerReportingUri);
 
         ListenableFuture<Void> buyerFuture;
-        try {
-            if (!mFlags.getDisableFledgeEnrollmentCheck()) {
-                mFledgeAuthorizationFilter.assertAdTechEnrolled(
-                        AdTechIdentifier.fromString(buyerReportingUri.getHost()),
-                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION);
+        if (buyerReportingUri == null || buyerReportingUri.getHost() == null) {
+            sLogger.w("Buyer reporting URI not found, skipping reporting");
+            buyerFuture = Futures.immediateVoidFuture();
+        } else {
+            try {
+                if (!mFlags.getDisableFledgeEnrollmentCheck()) {
+                    mFledgeAuthorizationFilter.assertAdTechFromUriEnrolled(
+                            buyerReportingUri,
+                            AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                            API_AD_SELECTION);
+                }
+                buyerFuture = bestEffortReporting(buyerReportingUri);
+            } catch (FledgeAuthorizationFilter.AdTechNotAllowedException e) {
+                buyerFuture = Futures.immediateVoidFuture();
             }
-            buyerFuture = bestEffortReporting(buyerReportingUri);
-        } catch (FledgeAuthorizationFilter.AdTechNotAllowedException e) {
-            buyerFuture = Futures.immediateFuture(null);
         }
 
         return FluentFuture.from(Futures.allAsList(sellerFuture, buyerFuture));
