@@ -36,13 +36,6 @@ public abstract class AbstractStaticMocker {
         mStaticClassChecker = Objects.requireNonNull(staticClassChecker);
     }
 
-    // TODO(b/314969513): workaround because MockitoExpectationsMockerTest always returns
-    // the same mocker (MockitoExpectations.jobMocker) - should be removed once that class is
-    // gone
-    public final StaticClassChecker getStaticClassChecker() {
-        return mStaticClassChecker;
-    }
-
     @FormatMethod
     protected final void logV(@FormatString String fmt, Object... args) {
         try {
