@@ -203,7 +203,7 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
                         mEncodingJobRunStatsLogger,
                         mEncoderLogicMetadataDao,
                         consentedDebugConfigurationGenerator,
-                        mFlags.getPasEncodingJobImprovementsEnabled()
+                        mFakeFlags.getPasEncodingJobImprovementsEnabled()
                                 ? new ProtectedSignalsArgumentFastImpl()
                                 : new ProtectedSignalsArgumentImpl());
         mShellCommandService =
