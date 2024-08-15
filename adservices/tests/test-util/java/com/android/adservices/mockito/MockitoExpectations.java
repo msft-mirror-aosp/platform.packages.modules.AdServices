@@ -29,10 +29,8 @@ import static org.mockito.Mockito.verify;
 
 import android.app.job.JobParameters;
 import android.app.job.JobService;
-import android.content.Context;
 import android.util.Log;
 
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
@@ -133,16 +131,6 @@ public final class MockitoExpectations {
     }
 
     /**
-     * Mocks a call to {@link Flags#getBackgroundJobsLoggingKillSwitch()}, returning {@code value}.
-     *
-     * @deprecated use {@code mocker.mockGetBackgroundJobsLoggingKillSwitch()} instead.
-     */
-    @Deprecated
-    public static void mockBackgroundJobsLoggingKillSwitch(Flags flag, boolean value) {
-        ExtendedMockitoExpectations.mocker.mockGetBackgroundJobsLoggingKillSwitch(flag, value);
-    }
-
-    /**
      * Mock {@link AdServicesJobServiceLogger#persistJobExecutionData(int, long)} to wait for it to
      * complete.
      */
@@ -226,18 +214,6 @@ public final class MockitoExpectations {
         callback.assertLoggingFinished();
 
         verify(logger).recordJobFinished(anyInt(), anyBoolean(), anyBoolean());
-    }
-
-    /**
-     * Gets a spied instance of {@link AdServicesJobServiceLogger}.
-     *
-     * @deprecated use {@code mocker.getSpiedAdServicesJobServiceLogger()} instead.
-     */
-    @Deprecated
-    @SuppressWarnings("InlineMeSuggester")
-    public static AdServicesJobServiceLogger getSpiedAdServicesJobServiceLogger(
-            Context context, Flags flags) {
-        return jobMocker.getSpiedAdServicesJobServiceLogger(context, flags);
     }
 
     private MockitoExpectations() {

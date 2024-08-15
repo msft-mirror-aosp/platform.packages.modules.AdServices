@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.signals;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdServicesJobServiceLogger;
 import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
 import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobExecutionData;
 import static com.android.adservices.mockito.MockitoExpectations.verifyBackgroundJobsSkipLogged;
@@ -47,7 +46,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.util.Log;
 
-import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.AdServicesJobServiceTestCase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
@@ -80,7 +79,7 @@ import java.util.concurrent.TimeoutException;
 @SpyStatic(PeriodicEncodingJobWorker.class)
 @SpyStatic(AdServicesJobServiceLogger.class)
 @MockStatic(ServiceCompatUtils.class)
-public final class PeriodicEncodingJobServiceTest extends AdServicesExtendedMockitoTestCase {
+public final class PeriodicEncodingJobServiceTest extends AdServicesJobServiceTestCase {
 
     private static final int PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID =
             PERIODIC_SIGNALS_ENCODING_JOB.getJobId();
