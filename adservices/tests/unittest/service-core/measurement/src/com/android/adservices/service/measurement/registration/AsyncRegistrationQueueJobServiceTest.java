@@ -16,9 +16,6 @@
 
 package com.android.adservices.service.measurement.registration;
 
-import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
-import static com.android.adservices.mockito.MockitoExpectations.verifyBackgroundJobsSkipLogged;
-import static com.android.adservices.mockito.MockitoExpectations.verifyLoggingNotHappened;
 import static com.android.adservices.spe.AdServicesJobInfo.DEPRECATED_ASYNC_REGISTRATION_QUEUE_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_ASYNC_REGISTRATION_JOB;
 
