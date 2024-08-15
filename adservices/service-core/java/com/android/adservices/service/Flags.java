@@ -19,7 +19,6 @@ package com.android.adservices.service;
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND_SERVICE;
 import static android.os.Build.VERSION.SDK_INT;
 
-import static com.android.adservices.shared.common.flags.FeatureFlag.Type.DEBUG;
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH;
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH_GLOBAL;
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH_RAMPED_UP;
@@ -164,6 +163,32 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns the privacy budget for logging topic ID distributions with randomized response. */
     default float getTopicsPrivacyBudgetForTopicIdDistribution() {
         return TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION;
+    }
+
+    /**
+     * Flag to enable rescheduling of Topics job scheduler tasks when modifications are made
+     * to the configuration of the background job.
+     */
+    @FeatureFlag boolean TOPICS_JOB_SCHEDULER_RESCHEDULE_ENABLED = false;
+
+    /** Returns the feature flag to enable rescheduling of Topics job scheduler. */
+    default boolean getTopicsJobSchedulerRescheduleEnabled() {
+        return TOPICS_JOB_SCHEDULER_RESCHEDULE_ENABLED;
+    }
+
+    /**
+     * This flag allows you to execute the job regardless of the device's charging status.
+     * By default, the Topics API background job scheduler requires the device to be in charging
+     * mode for job execution. The default value for this flag is false, indicating that the job
+     * should only be executed when the device is charging. By enabling this flag, the job can be
+     * executed when the battery level is not low.
+     */
+    @FeatureFlag boolean TOPICS_EPOCH_JOB_BATTERY_NOT_LOW_INSTEAD_OF_CHARGING = false;
+
+    /** Returns the feature flag to enable the device to be in batter not low mode for
+     * Topics API job execution.  */
+    default boolean getTopicsEpochJobBatteryNotLowInsteadOfCharging() {
+        return TOPICS_EPOCH_JOB_BATTERY_NOT_LOW_INSTEAD_OF_CHARGING;
     }
 
     /** Available types of classifier behaviours for the Topics API. */
@@ -2060,39 +2085,23 @@ public interface Flags extends ModuleSharedFlags {
         return CONSENT_NOTIFICATION_MINIMAL_DELAY_BEFORE_INTERVAL_ENDS;
     }
 
-    @FeatureFlag(DEBUG)
-    boolean CONSENT_NOTIFICATION_DEBUG_MODE = false;
-
     default boolean getConsentNotificationDebugMode() {
         return DebugFlags.getInstance().getConsentNotificationDebugMode();
     }
-
-    /** The consent notification activity debug mode is off by default. */
-    @FeatureFlag(DEBUG)
-    boolean CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE = false;
 
     /** Returns the consent notification activity debug mode. */
     default boolean getConsentNotificationActivityDebugMode() {
         return DebugFlags.getInstance().getConsentNotificationActivityDebugMode();
     }
 
-    @FeatureFlag(DEBUG)
-    boolean CONSENT_NOTIFIED_DEBUG_MODE = false;
-
     /** Returns whether to suppress consent notified state. */
     default boolean getConsentNotifiedDebugMode() {
         return DebugFlags.getInstance().getConsentNotifiedDebugMode();
     }
 
-    @FeatureFlag(DEBUG)
-    boolean CONSENT_MANAGER_DEBUG_MODE = false;
-
     default boolean getConsentManagerDebugMode() {
         return DebugFlags.getInstance().getConsentManagerDebugMode();
     }
-
-    @FeatureFlag(DEBUG)
-    boolean DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE = false;
 
     /** When enabled, the device is treated as OTA device. */
     default boolean getConsentManagerOTADebugMode() {
@@ -4925,6 +4934,15 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_ENABLE_DESTINATION_LIMIT_ALGORITHM_FIELD;
     }
 
+    @FeatureFlag boolean MEASUREMENT_ENABLE_AGGREGATE_VALUE_FILTERS = false;
+
+    /*
+     * Returns whether filtering in Trigger's AGGREGATABLE_VALUES is allowed.
+     */
+    default boolean getMeasurementEnableAggregateValueFilters() {
+        return MEASUREMENT_ENABLE_AGGREGATE_VALUE_FILTERS;
+    }
+
     /**
      * Default whether to limit logging for enrollment metrics to avoid performance issues. This
      * includes not logging data that requires database queries and downloading MDD files.
@@ -5026,29 +5044,6 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns whether the U18 supervised account is enabled. */
     default boolean isU18SupervisedAccountEnabled() {
         return IS_U18_SUPERVISED_ACCOUNT_ENABLED_DEFAULT;
-    }
-
-    /**
-     * Default value to determine whether {@link
-     * com.android.adservices.service.adid.AdIdCacheManager} is enabled to read AdId from and for
-     * AdIdProvider to update AdId to.
-     */
-    boolean DEFAULT_ADID_CACHE_ENABLED = false;
-
-    /**
-     * Returns if {@link com.android.adservices.service.adid.AdIdCacheManager} is enabled to read
-     * AdId from and for AdIdProvider to update AdId to.
-     *
-     * <ul>
-     *   <li>When enabled, AdIdCacheManager will read AdId from the cache and AdIdProvider will
-     *       update the cache if AdId changes.
-     *   <li>When disabled, AdIdCacheManager will call AdIdProvider to get the AdId.
-     * </ul>
-     *
-     * Returns if {@link com.android.adservices.service.adid.AdIdCacheManager} is enabled.
-     */
-    default boolean getAdIdCacheEnabled() {
-        return DEFAULT_ADID_CACHE_ENABLED;
     }
 
     long DEFAULT_AD_ID_FETCHER_TIMEOUT_MS = 50;
@@ -5719,7 +5714,7 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     /** Enrollment Manifest File URL, used to provide proto file for MDD download. */
-    String MDD_DEFAULT_ENROLLMENT_MANIFEST_FILE_URL = "";
+    @ConfigFlag String MDD_DEFAULT_ENROLLMENT_MANIFEST_FILE_URL = "";
 
     /**
      * @return default Enrollment Manifest File URL
@@ -5738,6 +5733,44 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_ENROLLMENT_PROTO_FILE_ENABLED;
     }
 
+    /** Protected app signals encoding job performance improvements flag. */
+    @FeatureFlag boolean PAS_ENCODING_JOB_IMPROVEMENTS_ENABLED = false;
+
+    /** Returns whether the PAS encoding job performance improvements are enabled. */
+    default boolean getPasEncodingJobImprovementsEnabled() {
+        return PAS_ENCODING_JOB_IMPROVEMENTS_ENABLED;
+    }
+
+    /**
+     * Default value to determine whether {@link
+     * com.android.adservices.service.adid.AdIdCacheManager} cache is timeout.
+     */
+    @ConfigFlag long DEFAULT_ADID_CACHE_TTL_MS = 0;
+
+    /**
+     * Returns {@link com.android.adservices.service.adid.AdIdCacheManager} ttl(time to live) time.
+     * It will be used to expire the cached adid.
+     *
+     * <ul>
+     *   <li>if value is 0, the cache has no ttl.
+     *   <li>otherwise, check the stored time and current time inverval, if larger than the ttl,
+     *       refetch the adid.
+     * </ul>
+     *
+     * Returns ttl of {@link com.android.adservices.service.adid.AdIdCacheManager}.
+     */
+    default long getAdIdCacheTtlMs() {
+        return DEFAULT_ADID_CACHE_TTL_MS;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // NOTE: Add new getters either above this comment, or closer to the relevant getters         //
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
     /** Dump some debug info for the flags */
     default void dump(PrintWriter writer, @Nullable String[] args) {}
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // NOTE: do NOT add new getters down here                                                     //
+    ////////////////////////////////////////////////////////////////////////////////////////////////
 }

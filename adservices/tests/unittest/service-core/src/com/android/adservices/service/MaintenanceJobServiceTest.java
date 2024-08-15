@@ -16,14 +16,6 @@
 
 package com.android.adservices.service;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdServicesJobServiceLogger;
-import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
-import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
-import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobExecutionData;
-import static com.android.adservices.mockito.MockitoExpectations.verifyBackgroundJobsSkipLogged;
-import static com.android.adservices.mockito.MockitoExpectations.verifyLoggingNotHappened;
-import static com.android.adservices.mockito.MockitoExpectations.verifyOnStartJobLogged;
-import static com.android.adservices.mockito.MockitoExpectations.verifyOnStopJobLogged;
 import static com.android.adservices.spe.AdServicesJobInfo.MAINTENANCE_JOB;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyLong;
@@ -50,9 +42,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.pm.PackageManager;
 
-import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
-import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.common.AdServicesJobServiceTestCase;
 import com.android.adservices.service.common.FledgeMaintenanceTasksWorker;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.signals.SignalsMaintenanceTasksWorker;
@@ -69,7 +59,6 @@ import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -81,9 +70,8 @@ import org.mockito.Spy;
 @SpyStatic(TopicsWorker.class)
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(AdServicesJobServiceLogger.class)
-@SpyStatic(ErrorLogUtil.class)
 @MockStatic(ServiceCompatUtils.class)
-public final class MaintenanceJobServiceTest extends AdServicesExtendedMockitoTestCase {
+public final class MaintenanceJobServiceTest extends AdServicesJobServiceTestCase {
     private static final int BACKGROUND_THREAD_TIMEOUT_MS = 5_000;
     private static final int MAINTENANCE_JOB_ID = MAINTENANCE_JOB.getJobId();
     private static final long MAINTENANCE_JOB_PERIOD_MS = 10_000L;
@@ -108,10 +96,6 @@ public final class MaintenanceJobServiceTest extends AdServicesExtendedMockitoTe
     @Mock private PackageManager mPackageManagerMock;
     @Mock private FledgeMaintenanceTasksWorker mFledgeMaintenanceTasksWorkerMock;
     @Mock private SignalsMaintenanceTasksWorker mSignalsMaintenanceTasksWorkerMock;
-
-    @Rule(order = 11)
-    public final AdServicesLoggingUsageRule errorLogUtilUsageRule =
-            AdServicesLoggingUsageRule.errorLogUtilUsageRule();
 
     @Before
     public void setup() {

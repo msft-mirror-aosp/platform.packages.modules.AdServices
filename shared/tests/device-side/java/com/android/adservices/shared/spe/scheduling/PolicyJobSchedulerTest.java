@@ -72,9 +72,9 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+/** Unit Test for {@link PolicyJobScheduler}. */
 // TODO(b/335935200): Service class android.app.job.JobScheduler not yet supported under Ravenwood
 @DisabledOnRavenwood(blockedBy = JobScheduler.class)
-/** Unit Test for {@link PolicyJobScheduler}. */
 public final class PolicyJobSchedulerTest extends SharedMockitoTestCase {
     // Since this unit test is to test scheduling behavior, it doesn't need to actually execute the
     // job. Set this unreachable latency to prevent the job to execute.
@@ -248,15 +248,19 @@ public final class PolicyJobSchedulerTest extends SharedMockitoTestCase {
 
     @Test
     public void getJobInfoToSchedule_throwsWhenSyncPolicy() {
-        // Policy requires to have job_id field to merge.
+        // Policy requires to have job_id field to merge. It will throw an exception without job_id.
         JobPolicy serverJobPolicy = sJobPolicy.toBuilder().clearJobId().build();
         doReturn(Map.of(JOB_ID_1, serverJobPolicy)).when(mMockModuleJobPolicy).getJobPolicyMap();
 
         JobSpec jobSpec = new JobSpec.Builder(sJobPolicy).build();
+        // The JobInfo to return should come from the default policy if any error happens.
+        JobInfo expectedJobInfo =
+                PolicyProcessor.applyPolicyToJobInfo(
+                        getBaseJobInfoBuilder(), jobSpec.getJobPolicy());
 
         assertWithMessage("getJobInfoToSchedule()")
                 .that(mPolicyJobScheduler.getJobInfoToSchedule(sContext, jobSpec, JOB_NAME_1))
-                .isEqualTo(getBaseJobInfoBuilder().build());
+                .isEqualTo(expectedJobInfo);
         verify(mMockErrorLogger)
                 .logErrorWithExceptionInfo(
                         any(),

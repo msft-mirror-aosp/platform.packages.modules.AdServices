@@ -28,6 +28,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
+import org.junit.Test;
 
 /**
  * Superclass for all device-side tests, it contains just the bare minimum features used by all
@@ -46,17 +47,48 @@ public abstract class DeviceSideTestCase extends SidelessTestCase {
     // NOTE: references below CANNOT be set when declared as the call to InstrumentationRegistry
     // would fail when running on host / under Ravenwood
 
-    /** Reference to the context of package being instrumented (target context). */
-    protected static Context sContext;
+    /**
+     * @deprecated use {@link #mContext}
+     */
+    @Deprecated protected static Context sContext;
 
-    /** Package name of the app being instrumented. */
-    protected static String sPackageName;
+    /**
+     * @deprecated use {@link #mTargetContext}
+     */
+    @Deprecated protected static Context sTargetContext;
 
-    /** Reference to the context of package being instrumented (target context). */
+    /**
+     * Package name of the app being instrumented.
+     *
+     * @deprecated use {@link #mPackageName} instead.
+     */
+    @Deprecated protected static String sPackageName;
+
+    @Deprecated protected static String sTargetPackageName;
+
+    /**
+     * Reference to the context of this test's instrumentation package (as defined by {@link
+     * android.app.Instrumentation#getContext()})
+     */
     protected Context mContext;
 
-    /** Package name of the app being instrumented. */
+    /**
+     * Reference to the context of app being instrumented (as defined by {@link
+     * android.app.Instrumentation#getTargetContext()})
+     */
+    protected Context mTargetContext;
+
+    /**
+     * Package name of this test's instrumentation package (as defined by {@link
+     * android.app.Instrumentation#getContext()})
+     */
     protected String mPackageName;
+
+    /**
+     * Package name of the app being instrumented (as defined by {@link
+     * android.app.Instrumentation#getTargetContext()})
+     */
+    protected String mTargetPackageName;
 
     // TODO(b/355286824) - Used only to set the static context, it doesn't skip tests. There is a
     // RavenwoodClassRule which skips tests, but it doesn't set the Context, so need to use
@@ -87,18 +119,23 @@ public abstract class DeviceSideTestCase extends SidelessTestCase {
             return;
         }
         try {
-            sContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
+            sContext = InstrumentationRegistry.getInstrumentation().getContext();
             sPackageName = sContext.getPackageName();
+            sTargetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
+            sTargetPackageName = sTargetContext.getPackageName();
         } catch (Exception e) {
             DynamicLogger.getInstance()
                     .log(
                             LogLevel.ERROR,
                             TAG,
                             e,
-                            "setStaticFixtures() failed (usually happens under Ravenwood). Set"
-                                    + " sContext=%s and sPackageName=%s",
+                            "setStaticFixtures() failed (usually happens under Ravenwood). Setting"
+                                    + " sContext=%s, sPackageName=%s, sTargetContext=%s,"
+                                    + " sTargetPackageName=%s",
                             sContext,
-                            sPackageName);
+                            sPackageName,
+                            sTargetContext,
+                            sTargetPackageName);
         }
     }
 
@@ -106,6 +143,30 @@ public abstract class DeviceSideTestCase extends SidelessTestCase {
     public final void setInstanceFixtures() {
         mContext = sContext;
         mPackageName = sPackageName;
+        mTargetContext = sTargetContext;
+        mTargetPackageName = sTargetPackageName;
+    }
+
+    @Test
+    public final void testDeviceSideTestCaseFixtures() throws Exception {
+        assertTestClassHasNoFieldsFromSuperclass(
+                DeviceSideTestCase.class,
+                "mContext",
+                "mTargetContext",
+                "mPackageName",
+                "mTargetPackageName",
+                "mTag",
+                "ravenwood",
+                "sdkLevel",
+                "processLifeGuard",
+                "sContext",
+                "sTargetContext",
+                "sPackageName",
+                "sTargetPackageName",
+                "sRavenWood",
+                "RAVENWOOD_PACKAGE_NAME");
+        assertTestClassHasNoSuchField("CONTEXT", "should use existing sContext instead");
+        assertTestClassHasNoSuchField("context", "should use existing mContext instead");
     }
 
     // TODO(b/335935200): temporary hac^H^H^Hworkaround to set context references before subclasses

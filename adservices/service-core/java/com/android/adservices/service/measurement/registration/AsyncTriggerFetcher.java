@@ -15,6 +15,7 @@
  */
 package com.android.adservices.service.measurement.registration;
 
+import static com.android.adservices.service.measurement.registration.AsyncFetchStatus.EntityStatus;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_INVALID;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REGISTRATION_ODP_GET_MANAGER_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
@@ -143,242 +144,99 @@ public class AsyncTriggerFetcher {
             return Optional.empty();
         }
         builder.setRegistrationOrigin(registrationUriOrigin.get());
-
         builder.setPlatformAdId(asyncRegistration.getPlatformAdId());
-
-        List<String> field =
-                headers.get(TriggerHeaderContract.HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER);
-        if (field == null || field.size() != 1) {
-            LoggerFactory.getMeasurementLogger()
-                    .d(
-                            "AsyncTriggerFetcher: "
-                                    + "Invalid "
-                                    + TriggerHeaderContract
-                                            .HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER
-                                    + " header.");
-            asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.HEADER_ERROR);
-            return Optional.empty();
-        }
-        String registrationHeaderStr = field.get(0);
 
         boolean isHeaderErrorDebugReportEnabled =
                 FetcherUtil.isHeaderErrorDebugReportEnabled(
                         headers.get(TriggerHeaderContract.HEADER_ATTRIBUTION_REPORTING_INFO),
                         mFlags);
+        String registrationHeaderStr = null;
         try {
-            String eventTriggerData = new JSONArray().toString();
-            JSONObject json = new JSONObject(registrationHeaderStr);
-            if (!json.isNull(TriggerHeaderContract.EVENT_TRIGGER_DATA)) {
-                Optional<String> validEventTriggerData =
-                        getValidEventTriggerData(
-                                json.getJSONArray(TriggerHeaderContract.EVENT_TRIGGER_DATA));
-                if (!validEventTriggerData.isPresent()) {
-                    asyncFetchStatus.setEntityStatus(
-                            AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
-                    return Optional.empty();
-                }
-                eventTriggerData = validEventTriggerData.get();
-            }
-            builder.setEventTriggers(eventTriggerData);
-            if (!json.isNull(TriggerHeaderContract.AGGREGATABLE_TRIGGER_DATA)) {
-                Optional<String> validAggregateTriggerData =
-                        getValidAggregateTriggerData(
-                                json.getJSONArray(TriggerHeaderContract.AGGREGATABLE_TRIGGER_DATA));
-                if (!validAggregateTriggerData.isPresent()) {
-                    asyncFetchStatus.setEntityStatus(
-                            AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
-                    return Optional.empty();
-                }
-                builder.setAggregateTriggerData(validAggregateTriggerData.get());
-            }
-            if (!json.isNull(TriggerHeaderContract.AGGREGATABLE_VALUES)) {
-                if (!isValidAggregateValues(
-                        json.getJSONObject(TriggerHeaderContract.AGGREGATABLE_VALUES))) {
-                    asyncFetchStatus.setEntityStatus(
-                            AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
-                    return Optional.empty();
-                }
-                builder.setAggregateValues(
-                        json.getString(TriggerHeaderContract.AGGREGATABLE_VALUES));
-            }
-            if (!json.isNull(TriggerHeaderContract.AGGREGATABLE_DEDUPLICATION_KEYS)) {
-                Optional<String> validAggregateDeduplicationKeysString =
-                        getValidAggregateDuplicationKeysString(
-                                json.getJSONArray(
-                                        TriggerHeaderContract.AGGREGATABLE_DEDUPLICATION_KEYS));
-                if (!validAggregateDeduplicationKeysString.isPresent()) {
-                    LoggerFactory.getMeasurementLogger()
-                            .d("parseTrigger: aggregate deduplication keys are invalid.");
-                    asyncFetchStatus.setEntityStatus(
-                            AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
-                    return Optional.empty();
-                }
-                builder.setAggregateDeduplicationKeys(validAggregateDeduplicationKeysString.get());
-            }
-            boolean shouldCheckFilterSize = !mFlags.getMeasurementEnableUpdateTriggerHeaderLimit();
-            if (!json.isNull(TriggerHeaderContract.FILTERS)) {
-                JSONArray filters = Filter.maybeWrapFilters(json, TriggerHeaderContract.FILTERS);
-                if (!FetcherUtil.areValidAttributionFilters(
-                        filters, mFlags, true, shouldCheckFilterSize)) {
-                    LoggerFactory.getMeasurementLogger().d("parseTrigger: filters are invalid.");
-                    asyncFetchStatus.setEntityStatus(
-                            AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
-                    return Optional.empty();
-                }
-                builder.setFilters(filters.toString());
-            }
-            if (!json.isNull(TriggerHeaderContract.NOT_FILTERS)) {
-                JSONArray notFilters =
-                        Filter.maybeWrapFilters(json, TriggerHeaderContract.NOT_FILTERS);
-                if (!FetcherUtil.areValidAttributionFilters(
-                        notFilters, mFlags, true, shouldCheckFilterSize)) {
-                    LoggerFactory.getMeasurementLogger()
-                            .d("parseTrigger: not-filters are invalid.");
-                    asyncFetchStatus.setEntityStatus(
-                            AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
-                    return Optional.empty();
-                }
-                builder.setNotFilters(notFilters.toString());
-            }
-            if (!json.isNull(TriggerHeaderContract.DEBUG_REPORTING)) {
-                builder.setIsDebugReporting(json.optBoolean(TriggerHeaderContract.DEBUG_REPORTING));
-            }
-            if (!json.isNull(TriggerHeaderContract.DEBUG_KEY)) {
-                Optional<UnsignedLong> maybeDebugKey =
-                        FetcherUtil.extractUnsignedLong(json, TriggerHeaderContract.DEBUG_KEY);
-                if (maybeDebugKey.isPresent()) {
-                    builder.setDebugKey(maybeDebugKey.get());
-                }
-            }
-            if (mFlags.getMeasurementEnableXNA()
-                    && !json.isNull(TriggerHeaderContract.X_NETWORK_KEY_MAPPING)) {
-                if (!isValidXNetworkKeyMapping(
-                        json.getJSONObject(TriggerHeaderContract.X_NETWORK_KEY_MAPPING))) {
-                    LoggerFactory.getMeasurementLogger()
-                            .d("parseTrigger: adtech bit mapping is invalid.");
-                } else {
-                    builder.setAdtechBitMapping(
-                            json.getString(TriggerHeaderContract.X_NETWORK_KEY_MAPPING));
-                }
-            }
-            if (mFlags.getMeasurementEnableXNA()
-                    && isXnaAllowedForTriggerRegistrant(
-                            asyncRegistration.getRegistrant(), asyncRegistration.getType())
-                    && !json.isNull(TriggerHeaderContract.ATTRIBUTION_CONFIG)) {
-                String attributionConfigsString =
-                        extractValidAttributionConfigs(
-                                json.getJSONArray(TriggerHeaderContract.ATTRIBUTION_CONFIG));
-                builder.setAttributionConfig(attributionConfigsString);
+            List<String> field =
+                    headers.get(
+                            TriggerHeaderContract.HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER);
+
+            // Check the trigger registration header size. Only one header is accepted.
+            if (field == null || field.size() != 1) {
+                registrationHeaderStr = field == null ? null : field.toString();
+                asyncFetchStatus.setEntityStatus(EntityStatus.HEADER_ERROR);
+                LoggerFactory.getMeasurementLogger()
+                        .e(
+                                String.format(
+                                        "AsyncTriggerFetcher: null or multiple %s headers",
+                                        TriggerHeaderContract
+                                                .HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER));
+                FetcherUtil.sendHeaderErrorDebugReport(
+                        isHeaderErrorDebugReportEnabled,
+                        mDebugReportApi,
+                        mDatastoreManager,
+                        asyncRegistration.getTopOrigin(),
+                        registrationUriOrigin.get(),
+                        asyncRegistration.getRegistrant(),
+                        TriggerHeaderContract.HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER,
+                        enrollmentId,
+                        registrationHeaderStr);
+                return Optional.empty();
             }
 
-            if (mFlags.getMeasurementAggregationCoordinatorOriginEnabled()
-                    && !json.isNull(TriggerHeaderContract.AGGREGATION_COORDINATOR_ORIGIN)) {
-                String origin =
-                        json.getString(TriggerHeaderContract.AGGREGATION_COORDINATOR_ORIGIN);
-                String allowlist = mFlags.getMeasurementAggregationCoordinatorOriginList();
-                if (origin.isEmpty() || !isAllowlisted(allowlist, origin)) {
-                    LoggerFactory.getMeasurementLogger()
-                            .d("parseTrigger: aggregation_coordinator_origin is invalid.");
-                    asyncFetchStatus.setEntityStatus(
-                            AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
-                    return Optional.empty();
-                }
-                builder.setAggregationCoordinatorOrigin(Uri.parse(origin));
+            // Validate trigger header parameters.
+            registrationHeaderStr = field.get(0);
+            boolean isValid =
+                    parseValidateTrigger(
+                            registrationHeaderStr, asyncRegistration, builder, enrollmentId);
+            if (!isValid) {
+                asyncFetchStatus.setEntityStatus(EntityStatus.VALIDATION_ERROR);
+                LoggerFactory.getMeasurementLogger()
+                        .e(
+                                String.format(
+                                        "AsyncTriggerFetcher: Invalid trigger params in %s header.",
+                                        TriggerHeaderContract
+                                                .HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER));
+                FetcherUtil.sendHeaderErrorDebugReport(
+                        isHeaderErrorDebugReportEnabled,
+                        mDebugReportApi,
+                        mDatastoreManager,
+                        asyncRegistration.getTopOrigin(),
+                        registrationUriOrigin.get(),
+                        asyncRegistration.getRegistrant(),
+                        TriggerHeaderContract.HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER,
+                        enrollmentId,
+                        registrationHeaderStr);
+                return Optional.empty();
             }
 
-            String enrollmentBlockList =
-                    mFlags.getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist();
-            Set<String> blockedEnrollmentsString =
-                    new HashSet<>(AllowLists.splitAllowList(enrollmentBlockList));
-            if (!AllowLists.doesAllowListAllowAll(enrollmentBlockList)
-                    && !blockedEnrollmentsString.contains(enrollmentId)
-                    && !json.isNull(TriggerHeaderContract.DEBUG_AD_ID)) {
-                builder.setDebugAdId(json.optString(TriggerHeaderContract.DEBUG_AD_ID));
-            }
-
-            Set<String> allowedEnrollmentsString =
-                    new HashSet<>(
-                            AllowLists.splitAllowList(
-                                    mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist()));
-            if (allowedEnrollmentsString.contains(enrollmentId)
-                    && !json.isNull(TriggerHeaderContract.DEBUG_JOIN_KEY)) {
-                builder.setDebugJoinKey(json.optString(TriggerHeaderContract.DEBUG_JOIN_KEY));
-            }
-
-            Trigger.SourceRegistrationTimeConfig sourceRegistrationTimeConfig =
-                    getSourceRegistrationTimeConfig(json);
-
-            builder.setAggregatableSourceRegistrationTimeConfig(sourceRegistrationTimeConfig);
-
-            if (mFlags.getMeasurementEnableTriggerContextId()
-                    && !json.isNull(TriggerHeaderContract.TRIGGER_CONTEXT_ID)) {
-                if (Trigger.SourceRegistrationTimeConfig.INCLUDE.equals(
-                        sourceRegistrationTimeConfig)) {
-                    LoggerFactory.getMeasurementLogger()
-                            .d(
-                                    "parseTrigger: %s cannot be set when %s has a value of %s",
-                                    TriggerHeaderContract.TRIGGER_CONTEXT_ID,
-                                    TriggerHeaderContract.AGGREGATABLE_SOURCE_REGISTRATION_TIME,
-                                    Trigger.SourceRegistrationTimeConfig.INCLUDE.name());
-                    asyncFetchStatus.setEntityStatus(
-                            AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
-                    return Optional.empty();
-                }
-
-                Optional<String> contextIdOpt = getValidTriggerContextId(json);
-                if (contextIdOpt.isEmpty()) {
-                    asyncFetchStatus.setEntityStatus(
-                            AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
-                    return Optional.empty();
-                }
-
-                builder.setTriggerContextId(contextIdOpt.get());
-            }
-
-            if (mFlags.getMeasurementEnableAttributionScope()
-                    && !json.isNull(TriggerHeaderContract.ATTRIBUTION_SCOPES)) {
-                Optional<List<String>> attributionScopes =
-                        FetcherUtil.extractStringArray(
-                                json,
-                                TriggerHeaderContract.ATTRIBUTION_SCOPES,
-                                Integer.MAX_VALUE,
-                                Integer.MAX_VALUE);
-                if (attributionScopes.isEmpty() || attributionScopes.get().isEmpty()) {
-                    LoggerFactory.getMeasurementLogger()
-                            .e("parseTrigger: attribution_scopes is invalid.");
-                    asyncFetchStatus.setEntityStatus(
-                            AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
-                    return Optional.empty();
-                }
-                builder.setAttributionScopesString(
-                        json.getJSONArray(TriggerHeaderContract.ATTRIBUTION_SCOPES).toString());
-            }
-
-            asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.SUCCESS);
+            // Set success status and return parsed trigger if no error.
+            asyncFetchStatus.setEntityStatus(EntityStatus.SUCCESS);
             return Optional.of(builder.build());
         } catch (JSONException e) {
-            String errMsg = "Trigger JSON parsing failed";
-            LoggerFactory.getMeasurementLogger().e(e, errMsg);
-            asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.PARSING_ERROR);
-            if (isHeaderErrorDebugReportEnabled) {
-                mDatastoreManager.runInTransaction(
-                        (dao) -> {
-                            mDebugReportApi.scheduleHeaderErrorReport(
-                                    asyncRegistration.getRegistrationUri(),
-                                    asyncRegistration.getRegistrant(),
-                                    TriggerHeaderContract
-                                            .HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER,
-                                    enrollmentId,
-                                    errMsg,
-                                    registrationHeaderStr,
-                                    dao);
-                        });
-            }
+            asyncFetchStatus.setEntityStatus(EntityStatus.PARSING_ERROR);
+            LoggerFactory.getMeasurementLogger()
+                    .d(e, "AsyncTriggerFetcher: Trigger JSON Parsing Exception. ");
+            FetcherUtil.sendHeaderErrorDebugReport(
+                    isHeaderErrorDebugReportEnabled,
+                    mDebugReportApi,
+                    mDatastoreManager,
+                    asyncRegistration.getTopOrigin(),
+                    registrationUriOrigin.get(),
+                    asyncRegistration.getRegistrant(),
+                    TriggerHeaderContract.HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER,
+                    enrollmentId,
+                    registrationHeaderStr);
             return Optional.empty();
         } catch (IllegalArgumentException e) {
+            asyncFetchStatus.setEntityStatus(EntityStatus.VALIDATION_ERROR);
             LoggerFactory.getMeasurementLogger()
                     .d(e, "AsyncTriggerFetcher: IllegalArgumentException");
-            asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
+            FetcherUtil.sendHeaderErrorDebugReport(
+                    isHeaderErrorDebugReportEnabled,
+                    mDebugReportApi,
+                    mDatastoreManager,
+                    asyncRegistration.getTopOrigin(),
+                    registrationUriOrigin.get(),
+                    asyncRegistration.getRegistrant(),
+                    TriggerHeaderContract.HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER,
+                    enrollmentId,
+                    registrationHeaderStr);
             return Optional.empty();
         }
     }
@@ -525,7 +383,7 @@ public class AsyncTriggerFetcher {
         asyncRedirects.configure(headers, asyncRegistration);
 
         if (!isTriggerHeaderPresent(headers)) {
-            asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.HEADER_MISSING);
+            asyncFetchStatus.setEntityStatus(EntityStatus.HEADER_MISSING);
             asyncFetchStatus.setRedirectOnlyStatus(true);
             return Optional.empty();
         }
@@ -535,7 +393,7 @@ public class AsyncTriggerFetcher {
                     .d(
                             "fetchTrigger: Valid enrollment id not found. Registration URI: %s",
                             asyncRegistration.getRegistrationUri());
-            asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.INVALID_ENROLLMENT);
+            asyncFetchStatus.setEntityStatus(EntityStatus.INVALID_ENROLLMENT);
             ErrorLogUtil.e(
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_INVALID,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
@@ -547,6 +405,251 @@ public class AsyncTriggerFetcher {
     /** Return instance of IOdpDelegationWrapper. */
     public IOdpDelegationWrapper getOdpWrapper() {
         return mOdpWrapper;
+    }
+
+    private boolean parseValidateTrigger(
+            String registrationHeaderStr,
+            AsyncRegistration asyncRegistration,
+            Trigger.Builder builder,
+            String enrollmentId)
+            throws JSONException {
+        String eventTriggerData = new JSONArray().toString();
+        JSONObject json = new JSONObject(registrationHeaderStr);
+        if (!json.isNull(TriggerHeaderContract.EVENT_TRIGGER_DATA)) {
+            Optional<String> validEventTriggerData =
+                    getValidEventTriggerData(
+                            json.getJSONArray(TriggerHeaderContract.EVENT_TRIGGER_DATA));
+            if (!validEventTriggerData.isPresent()) {
+                LoggerFactory.getMeasurementLogger()
+                        .e(
+                                String.format(
+                                        "AsyncTriggerFetcher: Invalid event trigger data in %s"
+                                                + " header",
+                                        TriggerHeaderContract
+                                                .HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER));
+                return false;
+            }
+            eventTriggerData = validEventTriggerData.get();
+        }
+        builder.setEventTriggers(eventTriggerData);
+        if (!json.isNull(TriggerHeaderContract.AGGREGATABLE_TRIGGER_DATA)) {
+            Optional<String> validAggregateTriggerData =
+                    getValidAggregateTriggerData(
+                            json.getJSONArray(TriggerHeaderContract.AGGREGATABLE_TRIGGER_DATA));
+            if (!validAggregateTriggerData.isPresent()) {
+                LoggerFactory.getMeasurementLogger()
+                        .e(
+                                String.format(
+                                        "AsyncTriggerFetcher: Invalid aggregate trigger data in"
+                                                + " %s header",
+                                        TriggerHeaderContract
+                                                .HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER));
+                return false;
+            }
+            builder.setAggregateTriggerData(validAggregateTriggerData.get());
+        }
+        if (!json.isNull(TriggerHeaderContract.AGGREGATABLE_VALUES)) {
+            if (mFlags.getMeasurementEnableAggregateValueFilters()) {
+                Object aggregatableValues = json.get(TriggerHeaderContract.AGGREGATABLE_VALUES);
+                if (!isValidAggregatableValues(aggregatableValues)) {
+                    LoggerFactory.getMeasurementLogger()
+                            .e(
+                                    String.format(
+                                            "AsyncTriggerFetcher: Invalid aggregate values"
+                                                    + " in %s header",
+                                            TriggerHeaderContract
+                                                    .HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER));
+                    return false;
+                }
+                builder.setAggregateValues(
+                        json.getString(TriggerHeaderContract.AGGREGATABLE_VALUES));
+            } else {
+                if (!isValidAggregateValues(
+                        json.getJSONObject(TriggerHeaderContract.AGGREGATABLE_VALUES))) {
+                    LoggerFactory.getMeasurementLogger()
+                            .e(
+                                    String.format(
+                                            "AsyncTriggerFetcher: Invalid aggregate values in %s"
+                                                    + " header",
+                                            TriggerHeaderContract
+                                                    .HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER));
+                    return false;
+                }
+                builder.setAggregateValues(
+                        json.getString(TriggerHeaderContract.AGGREGATABLE_VALUES));
+            }
+        }
+        if (!json.isNull(TriggerHeaderContract.AGGREGATABLE_DEDUPLICATION_KEYS)) {
+            Optional<String> validAggregateDeduplicationKeysString =
+                    getValidAggregateDuplicationKeysString(
+                            json.getJSONArray(
+                                    TriggerHeaderContract.AGGREGATABLE_DEDUPLICATION_KEYS));
+            if (!validAggregateDeduplicationKeysString.isPresent()) {
+                LoggerFactory.getMeasurementLogger()
+                        .e(
+                                String.format(
+                                        "AsyncTriggerFetcher: Invalid aggregate dedup keys in"
+                                                + " %s header",
+                                        TriggerHeaderContract
+                                                .HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER));
+                return false;
+            }
+            builder.setAggregateDeduplicationKeys(validAggregateDeduplicationKeysString.get());
+        }
+        boolean shouldCheckFilterSize = !mFlags.getMeasurementEnableUpdateTriggerHeaderLimit();
+        if (!json.isNull(TriggerHeaderContract.FILTERS)) {
+            JSONArray filters = Filter.maybeWrapFilters(json, TriggerHeaderContract.FILTERS);
+            if (!FetcherUtil.areValidAttributionFilters(
+                    filters, mFlags, true, shouldCheckFilterSize)) {
+                LoggerFactory.getMeasurementLogger()
+                        .e(
+                                String.format(
+                                        "AsyncTriggerFetcher: Invalid attribution filters in %s"
+                                                + " header",
+                                        TriggerHeaderContract
+                                                .HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER));
+                return false;
+            }
+            builder.setFilters(filters.toString());
+        }
+        if (!json.isNull(TriggerHeaderContract.NOT_FILTERS)) {
+            JSONArray notFilters = Filter.maybeWrapFilters(json, TriggerHeaderContract.NOT_FILTERS);
+            if (!FetcherUtil.areValidAttributionFilters(
+                    notFilters, mFlags, true, shouldCheckFilterSize)) {
+                LoggerFactory.getMeasurementLogger()
+                        .e(
+                                String.format(
+                                        "AsyncTriggerFetcher: Invalid not-filters in %s header",
+                                        TriggerHeaderContract
+                                                .HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER));
+                return false;
+            }
+            builder.setNotFilters(notFilters.toString());
+        }
+        if (!json.isNull(TriggerHeaderContract.DEBUG_REPORTING)) {
+            builder.setIsDebugReporting(json.optBoolean(TriggerHeaderContract.DEBUG_REPORTING));
+        }
+        if (!json.isNull(TriggerHeaderContract.DEBUG_KEY)) {
+            Optional<UnsignedLong> maybeDebugKey =
+                    FetcherUtil.extractUnsignedLong(json, TriggerHeaderContract.DEBUG_KEY);
+            if (maybeDebugKey.isPresent()) {
+                builder.setDebugKey(maybeDebugKey.get());
+            }
+        }
+        if (mFlags.getMeasurementEnableXNA()
+                && !json.isNull(TriggerHeaderContract.X_NETWORK_KEY_MAPPING)) {
+            if (!isValidXNetworkKeyMapping(
+                    json.getJSONObject(TriggerHeaderContract.X_NETWORK_KEY_MAPPING))) {
+                LoggerFactory.getMeasurementLogger()
+                        .d("parseTrigger: adtech bit mapping is invalid.");
+            } else {
+                builder.setAdtechBitMapping(
+                        json.getString(TriggerHeaderContract.X_NETWORK_KEY_MAPPING));
+            }
+        }
+        if (mFlags.getMeasurementEnableXNA()
+                && isXnaAllowedForTriggerRegistrant(
+                        asyncRegistration.getRegistrant(), asyncRegistration.getType())
+                && !json.isNull(TriggerHeaderContract.ATTRIBUTION_CONFIG)) {
+            String attributionConfigsString =
+                    extractValidAttributionConfigs(
+                            json.getJSONArray(TriggerHeaderContract.ATTRIBUTION_CONFIG));
+            builder.setAttributionConfig(attributionConfigsString);
+        }
+
+        if (mFlags.getMeasurementAggregationCoordinatorOriginEnabled()
+                && !json.isNull(TriggerHeaderContract.AGGREGATION_COORDINATOR_ORIGIN)) {
+            String origin = json.getString(TriggerHeaderContract.AGGREGATION_COORDINATOR_ORIGIN);
+            String allowlist = mFlags.getMeasurementAggregationCoordinatorOriginList();
+            if (origin.isEmpty() || !isAllowlisted(allowlist, origin)) {
+                LoggerFactory.getMeasurementLogger()
+                        .e(
+                                String.format(
+                                        "AsyncTriggerFetcher: Invalid aggregation coordinator"
+                                                + " origin in %s header",
+                                        TriggerHeaderContract
+                                                .HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER));
+                return false;
+            }
+            builder.setAggregationCoordinatorOrigin(Uri.parse(origin));
+        }
+
+        String enrollmentBlockList =
+                mFlags.getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist();
+        Set<String> blockedEnrollmentsString =
+                new HashSet<>(AllowLists.splitAllowList(enrollmentBlockList));
+        if (!AllowLists.doesAllowListAllowAll(enrollmentBlockList)
+                && !blockedEnrollmentsString.contains(enrollmentId)
+                && !json.isNull(TriggerHeaderContract.DEBUG_AD_ID)) {
+            builder.setDebugAdId(json.optString(TriggerHeaderContract.DEBUG_AD_ID));
+        }
+
+        Set<String> allowedEnrollmentsString =
+                new HashSet<>(
+                        AllowLists.splitAllowList(
+                                mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist()));
+        if (allowedEnrollmentsString.contains(enrollmentId)
+                && !json.isNull(TriggerHeaderContract.DEBUG_JOIN_KEY)) {
+            builder.setDebugJoinKey(json.optString(TriggerHeaderContract.DEBUG_JOIN_KEY));
+        }
+
+        Trigger.SourceRegistrationTimeConfig sourceRegistrationTimeConfig =
+                getSourceRegistrationTimeConfig(json);
+
+        builder.setAggregatableSourceRegistrationTimeConfig(sourceRegistrationTimeConfig);
+
+        if (mFlags.getMeasurementEnableTriggerContextId()
+                && !json.isNull(TriggerHeaderContract.TRIGGER_CONTEXT_ID)) {
+            if (Trigger.SourceRegistrationTimeConfig.INCLUDE.equals(sourceRegistrationTimeConfig)) {
+                LoggerFactory.getMeasurementLogger()
+                        .e(
+                                String.format(
+                                        "AsyncTriggerFetcher: Invalid %s in %s header when %s"
+                                                + " has a value of %s",
+                                        TriggerHeaderContract.TRIGGER_CONTEXT_ID,
+                                        TriggerHeaderContract
+                                                .HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER,
+                                        TriggerHeaderContract.AGGREGATABLE_SOURCE_REGISTRATION_TIME,
+                                        Trigger.SourceRegistrationTimeConfig.INCLUDE.name()));
+                return false;
+            }
+
+            Optional<String> contextIdOpt = getValidTriggerContextId(json);
+            if (contextIdOpt.isEmpty()) {
+                LoggerFactory.getMeasurementLogger()
+                        .e(
+                                String.format(
+                                        "AsyncTriggerFetcher: Invalid context id in %s header",
+                                        TriggerHeaderContract
+                                                .HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER));
+                return false;
+            }
+
+            builder.setTriggerContextId(contextIdOpt.get());
+        }
+
+        if (mFlags.getMeasurementEnableAttributionScope()
+                && !json.isNull(TriggerHeaderContract.ATTRIBUTION_SCOPES)) {
+            Optional<List<String>> attributionScopes =
+                    FetcherUtil.extractStringArray(
+                            json,
+                            TriggerHeaderContract.ATTRIBUTION_SCOPES,
+                            Integer.MAX_VALUE,
+                            Integer.MAX_VALUE);
+            if (attributionScopes.isEmpty() || attributionScopes.get().isEmpty()) {
+                LoggerFactory.getMeasurementLogger()
+                        .e(
+                                String.format(
+                                        "AsyncTriggerFetcher: Invalid attribution scopes in %s"
+                                                + " header",
+                                        TriggerHeaderContract
+                                                .HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER));
+                return false;
+            }
+            builder.setAttributionScopesString(
+                    json.getJSONArray(TriggerHeaderContract.ATTRIBUTION_SCOPES).toString());
+        }
+        return true;
     }
 
     private boolean isTriggerHeaderPresent(Map<String, List<String>> headers) {
@@ -664,6 +767,60 @@ public class AsyncTriggerFetcher {
             }
         }
         return Optional.of(validEventTriggerData.toString());
+    }
+
+    private boolean isValidAggregatableValues(Object aggregatableValues) throws JSONException {
+        boolean shouldCheckFilterSize = !mFlags.getMeasurementEnableUpdateTriggerHeaderLimit();
+        boolean isJSONObject = (aggregatableValues instanceof JSONObject);
+        boolean isJSONArray = (aggregatableValues instanceof JSONArray);
+        if (!isJSONObject && !isJSONArray) {
+            return false;
+        }
+        if (isJSONObject) {
+            return isValidAggregateValues((JSONObject) aggregatableValues);
+        } else {
+            JSONArray aggregatableValuesArr = (JSONArray) aggregatableValues;
+            for (int i = 0; i < aggregatableValuesArr.length(); i++) {
+                JSONObject aggregateValuesObj = aggregatableValuesArr.getJSONObject(i);
+                // validate values
+                if (aggregateValuesObj.isNull("values")) {
+                    LoggerFactory.getMeasurementLogger().d("Aggregate value values do not exist.");
+                    return false;
+                }
+                if (!isValidAggregateValues(aggregateValuesObj.getJSONObject("values"))) {
+                    LoggerFactory.getMeasurementLogger().d("Aggregate value values are invalid.");
+                    return false;
+                }
+                // validate filters
+                if (!aggregateValuesObj.isNull("filters")) {
+                    JSONArray filters = Filter.maybeWrapFilters(aggregateValuesObj, "filters");
+                    if (!FetcherUtil.areValidAttributionFilters(
+                            filters,
+                            mFlags,
+                            /* canIncludeLookbackWindow= */ true,
+                            shouldCheckFilterSize)) {
+                        LoggerFactory.getMeasurementLogger()
+                                .d("Aggregate value filters are invalid.");
+                        return false;
+                    }
+                }
+                // validate not_filters
+                if (!aggregateValuesObj.isNull("not_filters")) {
+                    JSONArray not_filters =
+                            Filter.maybeWrapFilters(aggregateValuesObj, "not_filters");
+                    if (!FetcherUtil.areValidAttributionFilters(
+                            not_filters,
+                            mFlags,
+                            /* canIncludeLookbackWindow= */ true,
+                            shouldCheckFilterSize)) {
+                        LoggerFactory.getMeasurementLogger()
+                                .d("Aggregate value not_filters are invalid.");
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
     }
 
     private Optional<String> getValidAggregateTriggerData(JSONArray aggregateTriggerDataArr)

@@ -21,8 +21,6 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 import static android.content.pm.PackageManager.NameNotFoundException;
 
-import static com.android.adservices.mockito.MockitoExpectations.mockCobaltLoggingFlags;
-import static com.android.adservices.mockito.MockitoExpectations.mockLogApiCallStats;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__APPSETID;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_APPSETID;
@@ -57,10 +55,8 @@ import androidx.annotation.NonNull;
 
 import com.android.adservices.NoOpServiceBinder;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
-import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -75,7 +71,6 @@ import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 import com.android.adservices.shared.util.Clock;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -86,7 +81,6 @@ import java.util.concurrent.CountDownLatch;
 /** Unit test for {@link com.android.adservices.service.appsetid.AppSetIdServiceImpl}. */
 @MockStatic(Binder.class)
 @SpyStatic(FlagsFactory.class)
-@SpyStatic(ErrorLogUtil.class)
 @SetErrorLogUtilDefaultParams(ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__APP_SET_ID)
 public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTestCase {
 
@@ -113,10 +107,6 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
     @Mock private AppSetIdServiceImpl mAppSetIdServiceImpl;
     @Mock private AppImportanceFilter mMockAppImportanceFilter;
 
-    @Rule(order = 11)
-    public final AdServicesLoggingUsageRule errorLogUtilUsageRule =
-            AdServicesLoggingUsageRule.errorLogUtilUsageRule();
-
     @Before
     public void setup() throws Exception {
         when(mClock.elapsedRealtime()).thenReturn(150L, 200L);
@@ -140,7 +130,7 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
 
         mocker.mockGetFlags(mMockFlags);
 
-        mockCobaltLoggingFlags(mMockFlags, false);
+        mocker.mockAllCobaltLoggingFlags(mMockFlags, false);
     }
 
     @Test
@@ -358,7 +348,7 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
                         .build();
 
         ResultSyncCallback<ApiCallStats> logApiCallStatsCallback =
-                mockLogApiCallStats(mAdServicesLogger, BACKGROUND_THREAD_TIMEOUT_MS);
+                mocker.mockLogApiCallStats(mAdServicesLogger, BACKGROUND_THREAD_TIMEOUT_MS);
 
         GetAppSetIdResult getAppSetIdResult = getAppSetIdResults(appSetIdServiceImpl);
 

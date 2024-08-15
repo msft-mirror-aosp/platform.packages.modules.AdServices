@@ -93,6 +93,10 @@ public final class FlagsConstants {
             "topics_number_of_lookback_epochs";
     public static final String KEY_TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION =
             "topics_privacy_budget_for_topic_ids_distribution";
+    public static final String KEY_TOPICS_JOB_SCHEDULER_RESCHEDULE_ENABLED =
+            "topics_job_scheduler_reschedule_enabled";
+    public static final String KEY_TOPICS_EPOCH_JOB_BATTERY_NOT_LOW_INSTEAD_OF_CHARGING =
+            "topics_epoch_job_battery_not_low_instead_of_charging";
     public static final String KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY =
             "topics_number_of_epochs_to_keep_in_history";
     public static final String KEY_GLOBAL_BLOCKED_TOPIC_IDS = "topics_global_blocked_topic_ids";
@@ -1380,6 +1384,9 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_ENABLE_EVENT_LEVEL_EPSILON_IN_SOURCE =
             "measurement_enable_event_level_epsilon_in_source";
 
+    public static final String KEY_MEASUREMENT_ENABLE_AGGREGATE_VALUE_FILTERS =
+            "measurement_enable_aggregate_value_filters";
+
     // Database Schema Version Flags
     public static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_8 =
             "enable_database_schema_version_8";
@@ -1606,4 +1613,11 @@ public final class FlagsConstants {
     /** Key for enabling R notification default consent fix. */
     public static final String KEY_R_NOTIFICATION_DEFAULT_CONSENT_FIX_ENABLED =
             "r_notification_default_consent_fix_enabled";
+
+    /** Key for the PAS encoding job performance improvements. */
+    public static final String KEY_PAS_ENCODING_JOB_IMPROVEMENTS_ENABLED =
+            "pas_encoding_job_improvements_enabled";
+
+    /** Key for ad id cache ttl. */
+    public static final String KEY_AD_ID_CACHE_TTL_MS = "ad_id_cache_ttl_ms";
 }

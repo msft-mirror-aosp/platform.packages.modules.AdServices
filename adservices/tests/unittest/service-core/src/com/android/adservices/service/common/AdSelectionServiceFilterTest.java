@@ -370,10 +370,7 @@ public final class AdSelectionServiceFilterTest extends AdServicesMockitoTestCas
                 MY_UID,
                 API_NAME,
                 Throttler.ApiKey.UNKNOWN,
-                DevContext.builder()
-                        .setDevOptionsEnabled(true)
-                        .setCallingAppPackageName(CALLER_PACKAGE_NAME)
-                        .build());
+                DevContext.builder(CALLER_PACKAGE_NAME).setDevOptionsEnabled(true).build());
     }
 
     @Test
@@ -396,10 +393,7 @@ public final class AdSelectionServiceFilterTest extends AdServicesMockitoTestCas
                 MY_UID,
                 API_NAME,
                 Throttler.ApiKey.UNKNOWN,
-                DevContext.builder()
-                        .setDevOptionsEnabled(true)
-                        .setCallingAppPackageName(CALLER_PACKAGE_NAME)
-                        .build());
+                DevContext.builder(CALLER_PACKAGE_NAME).setDevOptionsEnabled(true).build());
 
         verify(mFledgeAuthorizationFilterSpy, never())
                 .assertAdTechAllowed(any(), anyString(), any(), anyInt(), anyInt());

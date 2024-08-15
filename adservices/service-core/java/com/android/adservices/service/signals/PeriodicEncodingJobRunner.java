@@ -17,6 +17,7 @@
 package com.android.adservices.service.signals;
 
 import android.adservices.common.AdTechIdentifier;
+import android.os.Trace;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -26,6 +27,7 @@ import com.android.adservices.data.signals.DBSignalsUpdateMetadata;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.EncoderLogicHandler;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
+import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
 import com.android.adservices.service.stats.pas.EncodingExecutionLogHelper;
 import com.android.adservices.service.stats.pas.EncodingJobRunStatsLogger;
@@ -40,7 +42,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-class PeriodicEncodingJobRunner {
+/** Encapsulate the business logic of executing an encoding update. */
+public class PeriodicEncodingJobRunner {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
     private final SignalsProvider mSignalsProvider;
@@ -53,7 +56,21 @@ class PeriodicEncodingJobRunner {
     private final ListeningExecutorService mBackgroundExecutor;
     private final ListeningExecutorService mLightWeightExecutor;
 
-    PeriodicEncodingJobRunner(
+    /**
+     * Create a periodic encoding job runner.
+     *
+     * @param signalsProvider Provider to access signals data stored on the device.
+     * @param protectedSignalsDao DAO for underlying raw signals tables.
+     * @param scriptEngine Wrapper over JSScriptEngine for evaluating user-defined scripts.
+     * @param encoderLogicMaximumFailure Maximum number of tolerable failures in encoding logic.
+     * @param encodedPayLoadMaxSizeBytes Maximum size of an encoded payload.
+     * @param encoderLogicHandler Handler for downloading, updating and deleting user-defined
+     *     scripts.
+     * @param encodedPayloadDao DAO for encoded payload tables.
+     * @param backgroundExecutor Executor for background tasks.
+     * @param lightWeightExecutor Executor for lightweight tasks.
+     */
+    public PeriodicEncodingJobRunner(
             SignalsProvider signalsProvider,
             ProtectedSignalsDao protectedSignalsDao,
             SignalsScriptEngine scriptEngine,
@@ -74,22 +91,48 @@ class PeriodicEncodingJobRunner {
         mLightWeightExecutor = lightWeightExecutor;
     }
 
-    FluentFuture<Void> runEncodingPerBuyer(
+    /**
+     * Run encoding for a given buyer.
+     *
+     * @param encoderLogicMetadata Metadata for the encoding logic. The buyer field is used to
+     *     select the correct ad tech.
+     * @param timeout Timeout in seconds.
+     * @param logHelper Logger utility for execution.
+     * @param encodingJobRunStatsLogger Stats utility for execution.
+     * @return future for completion.
+     */
+    public FluentFuture<Void> runEncodingPerBuyer(
             DBEncoderLogicMetadata encoderLogicMetadata,
             int timeout,
             EncodingExecutionLogHelper logHelper,
             EncodingJobRunStatsLogger encodingJobRunStatsLogger) {
+        sLogger.v("entering runEncodingPerBuyer");
+        int traceCookie = Tracing.beginAsyncSection(Tracing.RUN_ENCODING_PER_BUYER);
         AdTechIdentifier buyer = encoderLogicMetadata.getBuyer();
+
+        Trace.beginSection(Tracing.GET_BUYER_SIGNALS);
         Map<String, List<ProtectedSignal>> signals = mSignalsProvider.getSignals(buyer);
+        Trace.endSection();
+
         if (signals.isEmpty()) {
+            sLogger.v("runEncodingPerBuyer: no signals present on device");
             mEncoderLogicHandler.deleteEncoderForBuyer(buyer);
+            Tracing.endAsyncSection(Tracing.RUN_ENCODING_PER_BUYER, traceCookie);
             return FluentFuture.from(Futures.immediateFuture(null));
         }
 
+        Trace.beginSection(Tracing.RUN_ENCODING_PER_BUYER + ":get signals update metadata");
         DBSignalsUpdateMetadata signalsUpdateMetadata =
                 mProtectedSignalsDao.getSignalsUpdateMetadata(buyer);
+        Trace.endSection();
+
+        Trace.beginSection(Tracing.RUN_ENCODING_PER_BUYER + ":get encoded payload");
         DBEncodedPayload existingPayload = mEncodedPayloadDao.getEncodedPayload(buyer);
+        Trace.endSection();
+
         if (signalsUpdateMetadata != null && existingPayload != null) {
+            sLogger.v(
+                    "runEncodingPerBuyer: existing payload or signals update is present on device");
             boolean isNoNewSignalUpdateAfterLastEncoding =
                     signalsUpdateMetadata
                             .getLastSignalsUpdatedTime()
@@ -99,13 +142,19 @@ class PeriodicEncodingJobRunner {
                             .getCreationTime()
                             .isBefore(existingPayload.getCreationTime());
             if (isNoNewSignalUpdateAfterLastEncoding && isEncoderLogicNotUpdatedAfterLastEncoding) {
+                sLogger.v("runEncodingPerBuyer: no new signal update or encoder update");
                 encodingJobRunStatsLogger.addOneSignalEncodingSkips();
+                Tracing.endAsyncSection(Tracing.RUN_ENCODING_PER_BUYER, traceCookie);
                 return FluentFuture.from(Futures.immediateFuture(null));
             }
         }
 
         int failedCount = encoderLogicMetadata.getFailedEncodingCount();
         if (failedCount >= mEncoderLogicMaximumFailure) {
+            sLogger.v(
+                    "runEncodingPerBuyer: failure count %d is more than maximum allowed %d",
+                    failedCount, mEncoderLogicMaximumFailure);
+            Tracing.endAsyncSection(Tracing.RUN_ENCODING_PER_BUYER, traceCookie);
             return FluentFuture.from(Futures.immediateFuture(null));
         }
         String encodingLogic = mEncoderLogicHandler.getEncoder(buyer);
@@ -113,15 +162,18 @@ class PeriodicEncodingJobRunner {
 
         logHelper.setAdtech(buyer);
 
+        sLogger.v("runEncodingPerBuyer: beginning encoding of signals");
         return FluentFuture.from(
                         mScriptEngine.encodeSignals(
                                 encodingLogic, signals, mEncodedPayLoadMaxSizeBytes, logHelper))
                 .transform(
                         encodedPayload -> {
+                            sLogger.v("runEncodingPerBuyer: completed encoding of signals");
                             validateAndPersistPayload(
                                     encoderLogicMetadata, encodedPayload, version);
                             logHelper.setStatus(AdsRelevanceStatusUtils.JS_RUN_STATUS_SUCCESS);
                             logHelper.finish();
+                            Tracing.endAsyncSection(Tracing.RUN_ENCODING_PER_BUYER, traceCookie);
                             return (Void) null;
                         },
                         mBackgroundExecutor)
@@ -136,6 +188,7 @@ class PeriodicEncodingJobRunner {
                             logHelper.setStatus(
                                     AdsRelevanceStatusUtils.JS_RUN_STATUS_OTHER_FAILURE);
                             logHelper.finish();
+                            Tracing.endAsyncSection(Tracing.RUN_ENCODING_PER_BUYER, traceCookie);
                             throw new IllegalStateException(
                                     PeriodicEncodingJobWorker.PAYLOAD_PERSISTENCE_ERROR_MSG, e);
                         },
@@ -146,24 +199,30 @@ class PeriodicEncodingJobRunner {
     @VisibleForTesting
     void validateAndPersistPayload(
             DBEncoderLogicMetadata encoderLogicMetadata, byte[] encodedBytes, int version) {
-        AdTechIdentifier buyer = encoderLogicMetadata.getBuyer();
-        if (encodedBytes.length > mEncodedPayLoadMaxSizeBytes) {
-            // Do not persist encoded payload if the encoding logic violates the size constraints
-            sLogger.e("Buyer:%s encoded payload exceeded max size limit", buyer);
-            throw new IllegalArgumentException("Payload size exceeds limits.");
-        }
+        Trace.beginSection(Tracing.VALIDATE_AND_PERSIST_PAYLOAD);
+        try {
+            AdTechIdentifier buyer = encoderLogicMetadata.getBuyer();
+            if (encodedBytes.length > mEncodedPayLoadMaxSizeBytes) {
+                // Do not persist encoded payload if the encoding logic violates the size
+                // constraints
+                sLogger.e("Buyer:%s encoded payload exceeded max size limit", buyer);
+                throw new IllegalArgumentException("Payload size exceeds limits.");
+            }
 
-        DBEncodedPayload dbEncodedPayload =
-                DBEncodedPayload.builder()
-                        .setBuyer(buyer)
-                        .setCreationTime(Instant.now())
-                        .setVersion(version)
-                        .setEncodedPayload(encodedBytes)
-                        .build();
-        sLogger.v("Persisting encoded payload for buyer: %s", buyer);
-        mEncodedPayloadDao.persistEncodedPayload(dbEncodedPayload);
-        if (encoderLogicMetadata.getFailedEncodingCount() > 0) {
-            mEncoderLogicHandler.updateEncoderFailedCount(buyer, 0);
+            DBEncodedPayload dbEncodedPayload =
+                    DBEncodedPayload.builder()
+                            .setBuyer(buyer)
+                            .setCreationTime(Instant.now())
+                            .setVersion(version)
+                            .setEncodedPayload(encodedBytes)
+                            .build();
+            sLogger.v("Persisting encoded payload for buyer: %s", buyer);
+            mEncodedPayloadDao.persistEncodedPayload(dbEncodedPayload);
+            if (encoderLogicMetadata.getFailedEncodingCount() > 0) {
+                mEncoderLogicHandler.updateEncoderFailedCount(buyer, 0);
+            }
+        } finally {
+            Trace.endSection();
         }
     }
 }
