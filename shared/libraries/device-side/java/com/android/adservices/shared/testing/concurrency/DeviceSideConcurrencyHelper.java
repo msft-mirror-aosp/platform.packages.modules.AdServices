@@ -44,12 +44,12 @@ public final class DeviceSideConcurrencyHelper {
     }
 
     /**
-     * Starts a new thread and runs {@code r} on it after {@code timeoutMs} ms.
+     * Starts a new thread and runs {@code r} on it after {@code delayMs} ms.
      *
      * @return the new thread.
      */
-    public static Thread runAsync(long timeoutMs, Runnable r) {
-        return getConcurrencyHelper().runAsync(timeoutMs, r);
+    public static Thread runAsync(long delayMs, Runnable r) {
+        return getConcurrencyHelper().runAsync(delayMs, r);
     }
 
     /**
