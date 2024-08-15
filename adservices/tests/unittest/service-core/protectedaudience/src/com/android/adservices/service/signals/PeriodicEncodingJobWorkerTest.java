@@ -199,7 +199,6 @@ public class PeriodicEncodingJobWorkerTest {
                 /* countOfSignalEncodingSkips */ 0);
     }
 
-
     @Test
     public void testUpdatesEncodersAllUpdatedEncodersDoNotDownloadAgain() {
         when(mEncoderLogicMetadataDao.getBuyersWithEncodersBeforeTime(any()))
