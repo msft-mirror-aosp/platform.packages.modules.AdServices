@@ -38,7 +38,6 @@ import android.util.Pair;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.data.measurement.IMeasurementDao;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
@@ -71,7 +70,6 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
             AdIdEncryption.encryptAdIdAndEnrollmentSha256(
                     TEST_ACTUAL_AD_ID_2, ValidTriggerParams.ENROLLMENT_ID);
 
-    @Mock private Flags mMockFlags;
     @Mock private AdServicesLogger mAdServicesLogger;
 
     @Mock private IMeasurementDao mMeasurementDao;

@@ -74,7 +74,6 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
 
     private DebugReportApi mDebugReportApi;
     @Mock private IMeasurementDao mMeasurementDao;
-    @Mock private Flags mMockFlags;
 
     @Before
     public void setup() {

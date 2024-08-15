@@ -32,7 +32,6 @@ import static org.mockito.Mockito.verify;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.DbTestUtil;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -48,7 +47,6 @@ public final class SQLDatastoreManagerTest extends AdServicesExtendedMockitoTest
 
     @Mock private DatastoreManager.ThrowingCheckedFunction<Void> mFunction;
     @Mock private DatastoreManager.ThrowingCheckedConsumer mConsumer;
-    @Mock private Flags mMockFlags;
     @Mock private AdServicesErrorLogger mErrorLogger;
     @Mock private LoggerFactory.Logger mLogger;
     private SQLDatastoreManager mSQLDatastoreManager;
