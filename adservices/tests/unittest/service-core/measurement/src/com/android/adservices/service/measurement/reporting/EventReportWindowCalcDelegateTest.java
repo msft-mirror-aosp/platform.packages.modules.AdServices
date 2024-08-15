@@ -41,7 +41,6 @@ import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
 
 import java.util.concurrent.TimeUnit;
 
@@ -67,8 +66,6 @@ public final class EventReportWindowCalcDelegateTest extends AdServicesMockitoTe
     private static final String EVENT_REPORT_WINDOWS_5_WINDOWS_WITH_START =
             "{'start_time': 86400000, 'end_times': [172800000, 432000000, 604800000, 864000000,"
                     + " 1728000000]}";
-
-    @Mock private Flags mMockFlags;
 
     private EventReportWindowCalcDelegate mEventReportWindowCalcDelegate;
 

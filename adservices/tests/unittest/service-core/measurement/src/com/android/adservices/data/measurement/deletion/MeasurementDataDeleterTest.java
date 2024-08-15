@@ -40,7 +40,6 @@ import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
@@ -147,7 +146,6 @@ public final class MeasurementDataDeleterTest extends AdServicesExtendedMockitoT
     @Mock private AggregateReport mAggregateReport3;
     @Mock private List<Uri> mOriginUris;
     @Mock private List<Uri> mDomainUris;
-    @Mock private Flags mMockFlags;
     @Mock private AdServicesErrorLogger mErrorLogger;
     @Mock private AdServicesLogger mLogger;
 

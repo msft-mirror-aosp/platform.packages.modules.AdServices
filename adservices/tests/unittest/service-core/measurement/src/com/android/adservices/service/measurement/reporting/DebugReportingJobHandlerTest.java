@@ -44,7 +44,6 @@ import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultP
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.MeasurementReportsStats;
@@ -76,7 +75,6 @@ public final class DebugReportingJobHandlerTest extends AdServicesExtendedMockit
 
     @Mock private IMeasurementDao mMeasurementDao;
     @Mock private ITransaction mTransaction;
-    @Mock private Flags mMockFlags;
     @Mock private AdServicesLogger mLogger;
     @Mock private AdServicesErrorLogger mErrorLogger;
 
