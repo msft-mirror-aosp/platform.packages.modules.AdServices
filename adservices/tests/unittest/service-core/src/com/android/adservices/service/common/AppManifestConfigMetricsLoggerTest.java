@@ -50,7 +50,6 @@ import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.logging.ErrorLogUtilCallback;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppManifestConfigCall.ApiType;
 import com.android.adservices.service.common.AppManifestConfigCall.Result;
@@ -85,7 +84,6 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
     private static final String KEY_PKG_NAME_API =
             String.format(Locale.US, PREFS_KEY_TEMPLATE, PKG_NAME, API);
 
-    @Mock private Flags mMockFlags;
     @Mock private StatsdAdServicesLogger mStatsdLogger;
 
     private final FakeSharedPreferences mPrefs = new FakeSharedPreferences();
