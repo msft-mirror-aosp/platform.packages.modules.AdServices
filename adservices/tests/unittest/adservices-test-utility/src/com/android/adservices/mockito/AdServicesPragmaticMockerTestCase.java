@@ -15,13 +15,17 @@
  */
 package com.android.adservices.mockito;
 
+import static com.android.adservices.shared.testing.concurrency.DeviceSideConcurrencyHelper.runAsync;
+
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
 
-
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.ApiCallStats;
+import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -44,6 +48,8 @@ public abstract class AdServicesPragmaticMockerTestCase<T extends AdServicesPrag
         extends AdServicesUnitTestCase {
 
     @Mock private Flags mMockFlags;
+    @Mock private AdServicesLogger mMockAdServicesLogger;
+    @Mock private ApiCallStats mApiCallStats;
 
     @Rule public final MockitoRule mockito = MockitoJUnit.rule().strictness(Strictness.LENIENT);
 
@@ -143,5 +149,35 @@ public abstract class AdServicesPragmaticMockerTestCase<T extends AdServicesPrag
         expect.withMessage("flags.getAdservicesReleaseStageForCobalt()")
                 .that(mMockFlags.getAdservicesReleaseStageForCobalt())
                 .isEqualTo("DEBUG");
+    }
+
+    @Test
+    public final void testMockLogApiCallStats_null() {
+        assertThrows(NullPointerException.class, () -> getMocker().mockLogApiCallStats(null));
+        assertThrows(NullPointerException.class, () -> getMocker().mockLogApiCallStats(null, 42));
+    }
+
+    @Test
+    public final void testMockLogApiCallStats_defaultTimeout() throws Exception {
+        ResultSyncCallback<ApiCallStats> callback =
+                getMocker().mockLogApiCallStats(mMockAdServicesLogger);
+        assertWithMessage("mockLogApiCallStats()").that(callback).isNotNull();
+
+        runAsync(/* delayMs= */ 10, () -> mMockAdServicesLogger.logApiCallStats(mApiCallStats));
+
+        ApiCallStats stats = callback.assertResultReceived();
+        assertWithMessage("callback result").that(stats).isSameInstanceAs(mApiCallStats);
+    }
+
+    @Test
+    public final void testMockLogApiCallStats_customTimeout() throws Exception {
+        ResultSyncCallback<ApiCallStats> callback =
+                getMocker().mockLogApiCallStats(mMockAdServicesLogger, /* timeoutMs= */ 42);
+        assertWithMessage("mockLogApiCallStats()").that(callback).isNotNull();
+
+        runAsync(/* delayMs= */ 10, () -> mMockAdServicesLogger.logApiCallStats(mApiCallStats));
+
+        ApiCallStats stats = callback.assertResultReceived();
+        assertWithMessage("callback result").that(stats).isSameInstanceAs(mApiCallStats);
     }
 }

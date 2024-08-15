@@ -24,7 +24,6 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZE
 import static com.android.adservices.data.common.AdservicesEntryPointConstant.ADSERVICES_ENTRY_POINT_STATUS_DISABLE;
 import static com.android.adservices.data.common.AdservicesEntryPointConstant.ADSERVICES_ENTRY_POINT_STATUS_ENABLE;
 import static com.android.adservices.data.common.AdservicesEntryPointConstant.KEY_ADSERVICES_ENTRY_POINT_STATUS;
-import static com.android.adservices.mockito.MockitoExpectations.mockLogApiCallStats;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IAPC_UPDATE_AD_ID_API_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID;
 import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.GA_UX;
@@ -141,7 +140,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
                         mMockAdIdWorker,
                         mAdServicesLogger,
                         mClock);
-        mLogApiCallStatsCallback = mockLogApiCallStats(mAdServicesLogger);
+        mLogApiCallStatsCallback = mocker.mockLogApiCallStats(mAdServicesLogger);
         mocker.mockGetFlags(mFlags);
         doReturn(true).when(mFlags).getAdServicesEnabled();
 
@@ -823,7 +822,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
                                 PermissionHelper.hasAccessAdServicesCommonStatePermission(
                                         any(), any()));
         ResultSyncCallback<ApiCallStats> logApiCallStatsCallback =
-                mockLogApiCallStats(mAdServicesLogger);
+                mocker.mockLogApiCallStats(mAdServicesLogger);
         when(mClock.elapsedRealtime()).thenReturn(150L, 200L);
         GetAdServicesCommonStatesParams params =
                 new GetAdServicesCommonStatesParams.Builder(TEST_APP_PACKAGE_NAME, SOME_SDK_NAME)

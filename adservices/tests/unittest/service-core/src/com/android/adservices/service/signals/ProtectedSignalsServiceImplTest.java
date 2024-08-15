@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.signals;
 
-import static com.android.adservices.mockito.MockitoExpectations.mockLogApiCallStats;
 import static com.android.adservices.service.common.Throttler.ApiKey.PROTECTED_SIGNAL_API_UPDATE_SIGNALS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JSON_PROCESSING_STATUS_OTHER_ERROR;
@@ -107,7 +106,7 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
     @Before
     public void setup() {
         mFlags = new ProtectedSignalsServiceImplTestFlags();
-        logApiCallStatsCallback = mockLogApiCallStats(mAdServicesLoggerMock);
+        logApiCallStatsCallback = mocker.mockLogApiCallStats(mAdServicesLoggerMock);
 
         mProtectedSignalsService =
                 new ProtectedSignalsServiceImpl(

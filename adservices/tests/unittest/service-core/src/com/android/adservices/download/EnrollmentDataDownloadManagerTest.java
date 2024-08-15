@@ -16,6 +16,7 @@
 
 package com.android.adservices.download;
 
+import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_FAILED_PARSING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__LOAD_MDD_FILE_GROUP_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
@@ -32,6 +33,8 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.encryptionkey.EncryptionKeyDaoTest;
 import com.android.adservices.data.enrollment.EnrollmentDao;
@@ -71,6 +74,9 @@ import java.util.concurrent.ExecutionException;
 @MockStatic(EnrollmentDao.class)
 @MockStatic(EncryptionKeyDao.class)
 @RequiresSdkLevelAtLeastS
+@SetErrorLogUtilDefaultParams(
+        throwable = Any.class,
+        ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT)
 public final class EnrollmentDataDownloadManagerTest extends AdServicesExtendedMockitoTestCase {
     private static final String TEST_ENROLLMENT_DATA_FILE_PATH =
             "enrollment/adtech_enrollment_data.csv";
@@ -224,9 +230,9 @@ public final class EnrollmentDataDownloadManagerTest extends AdServicesExtendedM
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__LOAD_MDD_FILE_GROUP_FAILURE)
     public void testReadFileAndInsertIntoDatabaseExecutionException() throws Exception {
-        doNothingOnErrorLogUtilError();
-
         doReturn(mMockFileStorage).when(() -> (MobileDataDownloadFactory.getFileStorage()));
         doReturn(mMockMdd).when(() -> (MobileDataDownloadFactory.getMdd(any())));
         doReturn(mMockEnrollmentDao).when(() -> (EnrollmentDao.getInstance()));
@@ -244,16 +250,12 @@ public final class EnrollmentDataDownloadManagerTest extends AdServicesExtendedM
 
         verify(mMockEnrollmentDao, never()).insert(any());
         verifyZeroInteractions(mLogger);
-
-        verifyErrorLogUtilErrorWithAnyException(
-                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__LOAD_MDD_FILE_GROUP_FAILURE,
-                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_FAILED_PARSING)
     public void testReadFileAndInsertIntoDatabaseParsingFailed() throws Exception {
-        doNothingOnErrorLogUtilError();
-
         doReturn(mMockFileStorage).when(() -> (MobileDataDownloadFactory.getFileStorage()));
         doReturn(mMockMdd).when(() -> (MobileDataDownloadFactory.getMdd(any())));
         doReturn(mMockEnrollmentDao).when(() -> (EnrollmentDao.getInstance()));
@@ -282,10 +284,6 @@ public final class EnrollmentDataDownloadManagerTest extends AdServicesExtendedM
                 EnrollmentDataDownloadManager.DownloadStatus.PARSING_FAILED);
 
         verify(mMockEnrollmentDao, never()).insert(any());
-
-        verifyErrorLogUtilErrorWithAnyException(
-                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_FAILED_PARSING,
-                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
     }
 
     @Test
@@ -527,9 +525,9 @@ public final class EnrollmentDataDownloadManagerTest extends AdServicesExtendedM
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_FAILED_PARSING)
     public void testReadProtoFileAndInsertIntoDatabaseParsingFailed() throws Exception {
-        doNothingOnErrorLogUtilError();
-
         doReturn(mMockFileStorage).when(MobileDataDownloadFactory::getFileStorage);
         doReturn(mMockMdd).when(() -> (MobileDataDownloadFactory.getMdd(any())));
         doReturn(mMockEnrollmentDao).when(EnrollmentDao::getInstance);
@@ -560,9 +558,6 @@ public final class EnrollmentDataDownloadManagerTest extends AdServicesExtendedM
                 EnrollmentDataDownloadManager.DownloadStatus.PARSING_FAILED);
 
         verifyZeroInteractions(mMockEnrollmentDao);
-        verifyErrorLogUtilErrorWithAnyException(
-                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_FAILED_PARSING,
-                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
     }
 
     @Test

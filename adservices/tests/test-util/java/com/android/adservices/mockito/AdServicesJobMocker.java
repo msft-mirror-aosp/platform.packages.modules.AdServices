@@ -54,10 +54,4 @@ public interface AdServicesJobMocker {
      *     equivalent annotations) on {@link AdServicesJobServiceLogger}.
      */
     AdServicesJobServiceLogger mockNoOpAdServicesJobServiceLogger(Context context, Flags flags);
-
-    // TODO(b/314969513): workaround because MockitoExpectationJobMockerTest always returns
-    // the same mocker (MockitoExpectationJobMockerTest.jobMocker) - should be removed once that
-    // class is gone
-    /** Gets the {@link StaticClassChecker} associated with the mocker. */
-    StaticClassChecker getStaticClassChecker();
 }

@@ -34,6 +34,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.EpochComputationClassifierStats;
 import com.android.adservices.service.topics.CacheManager;
+import com.android.adservices.shared.testing.SkipLoggingUsageRule;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -58,6 +59,8 @@ import java.util.stream.Collectors;
 /** Topic Classifier Test {@link OnDeviceClassifier}. */
 @SpyStatic(FlagsFactory.class)
 @RequiresSdkLevelAtLeastS
+// TODO (b/359964245): Remove after bug is resolved.
+@SkipLoggingUsageRule(reason = "b/359964245")
 public final class OnDeviceClassifierTest extends AdServicesExtendedMockitoTestCase {
     private static final String TEST_LABELS_FILE_PATH = "classifier/labels_test_topics.txt";
     private static final String TEST_PRECOMPUTED_FILE_PATH =
@@ -114,6 +117,7 @@ public final class OnDeviceClassifierTest extends AdServicesExtendedMockitoTestC
                         mLogger);
         when(mCacheManager.getTopicsWithRevokedConsent()).thenReturn(ImmutableList.of());
 
+        // TODO (b/359964245): Delete after bug is resolved and use annotations to verify calls.
         doNothingOnErrorLogUtilError();
     }
 

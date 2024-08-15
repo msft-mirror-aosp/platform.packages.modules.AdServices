@@ -16,10 +16,6 @@
 
 package com.android.adservices.service.kanon;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdServicesJobServiceLogger;
-import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
-import static com.android.adservices.mockito.MockitoExpectations.verifyBackgroundJobsSkipLogged;
-import static com.android.adservices.mockito.MockitoExpectations.verifyOnJobFinishedLogged;
 import static com.android.adservices.spe.AdServicesJobInfo.FLEDGE_KANON_SIGN_JOIN_BACKGROUND_JOB;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doCallRealMethod;

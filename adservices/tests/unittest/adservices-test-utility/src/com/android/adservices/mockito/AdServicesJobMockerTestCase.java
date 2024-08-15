@@ -21,7 +21,6 @@ import static com.android.adservices.shared.testing.mockito.MockitoHelper.isSpy;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assume.assumeTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -66,22 +65,6 @@ public abstract class AdServicesJobMockerTestCase<T extends AdServicesJobMocker>
 
     private T getMocker() {
         return getMocker(extendedMockito);
-    }
-
-    // TODO(b/314969513): workaround because MockitoExpectationJobMockerTest always returns
-    // the same mocker (MockitoExpectationJobMockerTest.jobMocker) - should be removed once that
-    // class is gone
-    private T getMockerWithStaticClassChecker() {
-        T mocker = getMocker();
-        var checker = mocker.getStaticClassChecker();
-        assumeTrue(
-                "mocker uses a different checker ("
-                        + checker
-                        + " instead of "
-                        + extendedMockito
-                        + ")",
-                checker == extendedMockito);
-        return mocker;
     }
 
     @Before
@@ -138,11 +121,9 @@ public abstract class AdServicesJobMockerTestCase<T extends AdServicesJobMocker>
 
     @Test
     public final void testMockGetAdServicesJobServiceLogger_staticClassNotMocked() {
-        T mocker = getMockerWithStaticClassChecker();
-
         assertThrows(
                 ClassNotSpiedOrMockedException.class,
-                () -> mocker.mockGetAdServicesJobServiceLogger(mAdServicesJobServiceLogger));
+                () -> getMocker().mockGetAdServicesJobServiceLogger(mAdServicesJobServiceLogger));
     }
 
     @Test
@@ -170,11 +151,9 @@ public abstract class AdServicesJobMockerTestCase<T extends AdServicesJobMocker>
 
     @Test
     public void testMockNoOpAdServicesJobServiceLogger_staticClassNotMocked() {
-        T mocker = getMockerWithStaticClassChecker();
-
         assertThrows(
                 ClassNotSpiedOrMockedException.class,
-                () -> mocker.mockNoOpAdServicesJobServiceLogger(mContext, mMockFlags));
+                () -> getMocker().mockNoOpAdServicesJobServiceLogger(mContext, mMockFlags));
     }
 
     @Test

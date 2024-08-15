@@ -16,17 +16,6 @@
 
 package com.android.adservices.service.adselection;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdServicesJobServiceLogger;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mocker;
-import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
-import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
-import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobExecutionData;
-import static com.android.adservices.mockito.MockitoExpectations.verifyBackgroundJobsSkipLogged;
-import static com.android.adservices.mockito.MockitoExpectations.verifyJobFinishedLogged;
-import static com.android.adservices.mockito.MockitoExpectations.verifyLoggingNotHappened;
-import static com.android.adservices.mockito.MockitoExpectations.verifyOnJobFinishedLogged;
-import static com.android.adservices.mockito.MockitoExpectations.verifyOnStartJobLogged;
-import static com.android.adservices.mockito.MockitoExpectations.verifyOnStopJobLogged;
 import static com.android.adservices.spe.AdServicesJobInfo.FLEDGE_AD_SELECTION_DEBUG_REPORT_SENDER_JOB;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doCallRealMethod;

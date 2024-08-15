@@ -23,7 +23,6 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_TIMEOUT;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
-import static com.android.adservices.mockito.MockitoExpectations.mockLogApiCallStats;
 import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA;
 import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplFixture.BINDER_ELAPSED_TIMESTAMP;
@@ -238,7 +237,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
         when(mClockMock.instant()).thenReturn(AD_SELECTION_INITIALIZATION_INSTANT);
         when(mAuctionServerDebugReporting.isEnabled()).thenReturn(false);
         mAdServicesLoggerSpy = spy(AdServicesLoggerImpl.getInstance());
-        mLogApiCallStatsCallback = mockLogApiCallStats(mAdServicesLoggerSpy);
+        mLogApiCallStatsCallback = mocker.mockLogApiCallStats(mAdServicesLoggerSpy);
         mAdsRelevanceExecutionLoggerFactory =
                 new AdsRelevanceExecutionLoggerFactory(
                         TEST_PACKAGE_NAME,

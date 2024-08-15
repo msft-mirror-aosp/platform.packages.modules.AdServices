@@ -30,26 +30,23 @@ import static org.mockito.Mockito.when;
 
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
-import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 
 import androidx.room.Room;
-import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoSession;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
@@ -58,43 +55,31 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
-public class ProtectedSignalsDaoTest {
+@MockStatic(PackageManagerCompatUtils.class)
+@RequiresSdkLevelAtLeastT
+public final class ProtectedSignalsDaoTest extends AdServicesExtendedMockitoTestCase {
+
     public static AdTechIdentifier BUYER_1 = CommonFixture.VALID_BUYER_1;
     public static AdTechIdentifier BUYER_2 = CommonFixture.VALID_BUYER_2;
     public static String PACKAGE_1 = CommonFixture.TEST_PACKAGE_NAME_1;
     public static String PACKAGE_2 = CommonFixture.TEST_PACKAGE_NAME_2;
 
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
-
     @Mock private EnrollmentDao mEnrollmentDaoMock;
     @Mock private PackageManager mPackageManagerMock;
-    @Mock private Flags mFlagsMock;
+    @Mock private Flags mMockFlags;
 
     private ProtectedSignalsDao mProtectedSignalsDao;
 
-    private MockitoSession mStaticMockSession;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
-
     @Before
     public void setup() {
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .mockStatic(PackageManagerCompatUtils.class)
-                        .initMocks(this)
-                        .startMocking();
         mProtectedSignalsDao =
-                Room.inMemoryDatabaseBuilder(CONTEXT, ProtectedSignalsDatabase.class)
+                Room.inMemoryDatabaseBuilder(mContext, ProtectedSignalsDatabase.class)
                         .build()
                         .protectedSignalsDao();
     }
 
     @After
     public void teardown() {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
         mProtectedSignalsDao.deleteByBuyers(Arrays.asList(BUYER_1, BUYER_2));
     }
 
@@ -348,7 +333,7 @@ public class ProtectedSignalsDaoTest {
                 0,
                 mProtectedSignalsDao.deleteAllDisallowedPackageSignalsAndUpdateSignalUpdateMetadata(
                         mPackageManagerMock,
-                        mFlagsMock,
+                        mMockFlags,
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI));
     }
 
@@ -409,7 +394,7 @@ public class ProtectedSignalsDaoTest {
         assertEquals(
                 1,
                 mProtectedSignalsDao.deleteAllDisallowedPackageSignalsAndUpdateSignalUpdateMetadata(
-                        CONTEXT.getPackageManager(),
+                        mContext.getPackageManager(),
                         new FlagsThatAllowOneApp(),
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI));
         List<DBProtectedSignal> readResult2 = mProtectedSignalsDao.getSignalsByBuyer(BUYER_1);

@@ -1299,6 +1299,14 @@
       ]
     },
     {
+      "name": "AdServicesServiceCoreProtectedAudienceUnitTests",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
       "name": "AdServicesServiceCoreTopicsUnitTests",
       "options": [
         {
@@ -1505,14 +1513,6 @@
     },
     {
       "name": "AdServicesApkUISettingsGaOtaTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
-    },
-    {
-      "name": "AdServicesServiceCoreProtectedAudienceUnitTests",
       "options": [
         {
           "exclude-annotation": "androidx.test.filters.FlakyTest"

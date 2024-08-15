@@ -26,41 +26,38 @@ import static org.mockito.Mockito.when;
 import android.adservices.common.CommonFixture;
 import android.os.Process;
 
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.Flags;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import com.google.common.util.concurrent.Futures;
 
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 
-public class AuctionServerDebugReportingTest {
+@RequiresSdkLevelAtLeastS
+public final class AuctionServerDebugReportingTest extends AdServicesMockitoTestCase {
 
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     private static final int CALLER_UID = Process.myUid();
     private static final long AD_ID_FETCHER_TIMEOUT_MS = 20;
-    @Mock private Flags mFlagsMock;
+
+    @Mock private Flags mMockFlags;
     @Mock private AdIdFetcher mAdIdFetcher;
     private ExecutorService mLightweightExecutorService;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setUp() {
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
-        MockitoAnnotations.initMocks(this);
-        when(mFlagsMock.getAdIdKillSwitch()).thenReturn(false);
-        when(mFlagsMock.getFledgeAuctionServerEnableDebugReporting()).thenReturn(false);
-        when(mFlagsMock.getFledgeAuctionServerAdIdFetcherTimeoutMs())
+        when(mMockFlags.getAdIdKillSwitch()).thenReturn(false);
+        when(mMockFlags.getFledgeAuctionServerEnableDebugReporting()).thenReturn(false);
+        when(mMockFlags.getFledgeAuctionServerAdIdFetcherTimeoutMs())
                 .thenReturn(AD_ID_FETCHER_TIMEOUT_MS);
         when(mAdIdFetcher.isLimitedAdTrackingEnabled(
                         CALLER_PACKAGE_NAME, CALLER_UID, AD_ID_FETCHER_TIMEOUT_MS))
@@ -69,13 +66,13 @@ public class AuctionServerDebugReportingTest {
 
     @Test
     public void isDisabled_withAdIdServiceKillSwitchTrue() {
-        when(mFlagsMock.getAdIdKillSwitch()).thenReturn(true);
+        when(mMockFlags.getAdIdKillSwitch()).thenReturn(true);
 
         AuctionServerDebugReporting auctionServerDebugReporting = initAuctionServerDebugReporting();
 
         assertThat(auctionServerDebugReporting.isEnabled()).isFalse();
-        verify(mFlagsMock, times(1)).getAdIdKillSwitch();
-        verify(mFlagsMock, never()).getFledgeAuctionServerEnableDebugReporting();
+        verify(mMockFlags, times(1)).getAdIdKillSwitch();
+        verify(mMockFlags, never()).getFledgeAuctionServerEnableDebugReporting();
         verify(mAdIdFetcher, never())
                 .isLimitedAdTrackingEnabled(
                         CALLER_PACKAGE_NAME, CALLER_UID, AD_ID_FETCHER_TIMEOUT_MS);
@@ -83,13 +80,13 @@ public class AuctionServerDebugReportingTest {
 
     @Test
     public void isDisabled_withDisabledDebugReporting() {
-        when(mFlagsMock.getAdIdKillSwitch()).thenReturn(false);
-        when(mFlagsMock.getFledgeAuctionServerEnableDebugReporting()).thenReturn(false);
+        when(mMockFlags.getAdIdKillSwitch()).thenReturn(false);
+        when(mMockFlags.getFledgeAuctionServerEnableDebugReporting()).thenReturn(false);
 
         AuctionServerDebugReporting auctionServerDebugReporting = initAuctionServerDebugReporting();
 
         assertThat(auctionServerDebugReporting.isEnabled()).isFalse();
-        verify(mFlagsMock, times(1)).getFledgeAuctionServerEnableDebugReporting();
+        verify(mMockFlags, times(1)).getFledgeAuctionServerEnableDebugReporting();
         verify(mAdIdFetcher, never())
                 .isLimitedAdTrackingEnabled(
                         CALLER_PACKAGE_NAME, CALLER_UID, AD_ID_FETCHER_TIMEOUT_MS);
@@ -97,8 +94,8 @@ public class AuctionServerDebugReportingTest {
 
     @Test
     public void isDisabled_withLatTrue() {
-        when(mFlagsMock.getAdIdKillSwitch()).thenReturn(false);
-        when(mFlagsMock.getFledgeAuctionServerEnableDebugReporting()).thenReturn(true);
+        when(mMockFlags.getAdIdKillSwitch()).thenReturn(false);
+        when(mMockFlags.getFledgeAuctionServerEnableDebugReporting()).thenReturn(true);
         when(mAdIdFetcher.isLimitedAdTrackingEnabled(
                         CALLER_PACKAGE_NAME, CALLER_UID, AD_ID_FETCHER_TIMEOUT_MS))
                 .thenReturn(Futures.immediateFuture(true));
@@ -113,8 +110,8 @@ public class AuctionServerDebugReportingTest {
 
     @Test
     public void isEnabled_withLatFalse() {
-        when(mFlagsMock.getAdIdKillSwitch()).thenReturn(false);
-        when(mFlagsMock.getFledgeAuctionServerEnableDebugReporting()).thenReturn(true);
+        when(mMockFlags.getAdIdKillSwitch()).thenReturn(false);
+        when(mMockFlags.getFledgeAuctionServerEnableDebugReporting()).thenReturn(true);
         when(mAdIdFetcher.isLimitedAdTrackingEnabled(
                         CALLER_PACKAGE_NAME, CALLER_UID, AD_ID_FETCHER_TIMEOUT_MS))
                 .thenReturn(Futures.immediateFuture(false));
@@ -130,7 +127,7 @@ public class AuctionServerDebugReportingTest {
     private AuctionServerDebugReporting initAuctionServerDebugReporting() {
         try {
             return AuctionServerDebugReporting.createInstance(
-                            mFlagsMock,
+                            mMockFlags,
                             mAdIdFetcher,
                             CALLER_PACKAGE_NAME,
                             CALLER_UID,

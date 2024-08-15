@@ -24,53 +24,45 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.adservices.common.CommonFixture;
-import android.content.Context;
 import android.os.Process;
 
-import androidx.test.core.app.ApplicationProvider;
-
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.DevContext;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import com.google.common.util.concurrent.Futures;
 
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 
-public class DebugReportingTest {
+@RequiresSdkLevelAtLeastS
+public final class DebugReportingTest extends AdServicesMockitoTestCase {
 
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final DevContext DEV_CONTEXT_DISABLED = DevContext.createForDevOptionsDisabled();
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     private static final int CALLER_UID = Process.myUid();
     private static final long AD_ID_FETCHER_TIMEOUT_MS = 50;
-    @Mock private Flags mFlagsMock;
+    @Mock private Flags mMockFlags;
     @Mock private AdServicesHttpsClient mHttpClientMock;
     @Mock private AdSelectionDebugReportDao mAdSelectionDebugReportDao;
     @Mock private AdIdFetcher mAdIdFetcher;
     private ExecutorService mLightweightExecutorService;
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Before
     public void setUp() {
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
-        MockitoAnnotations.initMocks(this);
-        when(mFlagsMock.getAdIdKillSwitch()).thenReturn(false);
-        when(mFlagsMock.getFledgeEventLevelDebugReportSendImmediately()).thenReturn(false);
-        when(mFlagsMock.getAdIdFetcherTimeoutMs()).thenReturn(AD_ID_FETCHER_TIMEOUT_MS);
+        when(mMockFlags.getAdIdKillSwitch()).thenReturn(false);
+        when(mMockFlags.getFledgeEventLevelDebugReportSendImmediately()).thenReturn(false);
+        when(mMockFlags.getAdIdFetcherTimeoutMs()).thenReturn(AD_ID_FETCHER_TIMEOUT_MS);
         when(mAdIdFetcher.isLimitedAdTrackingEnabled(
                         CALLER_PACKAGE_NAME, CALLER_UID, AD_ID_FETCHER_TIMEOUT_MS))
                 .thenReturn(Futures.immediateFuture(true));
@@ -78,8 +70,8 @@ public class DebugReportingTest {
 
     @Test
     public void isDisabled_withAdIdServiceKillSwitchTrue_returnsFalse() {
-        when(mFlagsMock.getAdIdKillSwitch()).thenReturn(true);
-        when(mFlagsMock.getFledgeEventLevelDebugReportingEnabled()).thenReturn(true);
+        when(mMockFlags.getAdIdKillSwitch()).thenReturn(true);
+        when(mMockFlags.getFledgeEventLevelDebugReportingEnabled()).thenReturn(true);
         when(mAdIdFetcher.isLimitedAdTrackingEnabled(
                         CALLER_PACKAGE_NAME, CALLER_UID, AD_ID_FETCHER_TIMEOUT_MS))
                 .thenReturn(Futures.immediateFuture(false));
@@ -95,7 +87,7 @@ public class DebugReportingTest {
 
     @Test
     public void isEnabled_withLatDisabledAndFlagEnabled_returnsTrue() {
-        when(mFlagsMock.getFledgeEventLevelDebugReportingEnabled()).thenReturn(true);
+        when(mMockFlags.getFledgeEventLevelDebugReportingEnabled()).thenReturn(true);
         when(mAdIdFetcher.isLimitedAdTrackingEnabled(
                         CALLER_PACKAGE_NAME, CALLER_UID, AD_ID_FETCHER_TIMEOUT_MS))
                 .thenReturn(Futures.immediateFuture(false));
@@ -111,7 +103,7 @@ public class DebugReportingTest {
 
     @Test
     public void isEnabled_withFlagDisabled_returnsFalse() {
-        when(mFlagsMock.getFledgeEventLevelDebugReportingEnabled()).thenReturn(false);
+        when(mMockFlags.getFledgeEventLevelDebugReportingEnabled()).thenReturn(false);
 
         DebugReporting debugReporting = initDebugReporting();
 
@@ -124,7 +116,7 @@ public class DebugReportingTest {
 
     @Test
     public void isEnabled_withLatEnabled_returnsFalse() {
-        when(mFlagsMock.getFledgeEventLevelDebugReportingEnabled()).thenReturn(true);
+        when(mMockFlags.getFledgeEventLevelDebugReportingEnabled()).thenReturn(true);
         when(mAdIdFetcher.isLimitedAdTrackingEnabled(
                         CALLER_PACKAGE_NAME, CALLER_UID, AD_ID_FETCHER_TIMEOUT_MS))
                 .thenReturn(Futures.immediateFuture(true));
@@ -140,7 +132,7 @@ public class DebugReportingTest {
 
     @Test
     public void getScriptStrategy_isEnabled_returnsCorrect() {
-        when(mFlagsMock.getFledgeEventLevelDebugReportingEnabled()).thenReturn(true);
+        when(mMockFlags.getFledgeEventLevelDebugReportingEnabled()).thenReturn(true);
         when(mAdIdFetcher.isLimitedAdTrackingEnabled(
                         CALLER_PACKAGE_NAME, CALLER_UID, AD_ID_FETCHER_TIMEOUT_MS))
                 .thenReturn(Futures.immediateFuture(false));
@@ -153,7 +145,7 @@ public class DebugReportingTest {
 
     @Test
     public void getScriptStrategy_isDisabled_returnsCorrect() {
-        when(mFlagsMock.getFledgeEventLevelDebugReportingEnabled()).thenReturn(false);
+        when(mMockFlags.getFledgeEventLevelDebugReportingEnabled()).thenReturn(false);
 
         DebugReporting debugReporting = initDebugReporting();
 
@@ -163,8 +155,8 @@ public class DebugReportingTest {
 
     @Test
     public void getSenderStrategy_isSentImmediatelyEnabled_returnsCorrect() {
-        when(mFlagsMock.getFledgeEventLevelDebugReportingEnabled()).thenReturn(true);
-        when(mFlagsMock.getFledgeEventLevelDebugReportSendImmediately()).thenReturn(true);
+        when(mMockFlags.getFledgeEventLevelDebugReportingEnabled()).thenReturn(true);
+        when(mMockFlags.getFledgeEventLevelDebugReportSendImmediately()).thenReturn(true);
         when(mAdIdFetcher.isLimitedAdTrackingEnabled(
                         CALLER_PACKAGE_NAME, CALLER_UID, AD_ID_FETCHER_TIMEOUT_MS))
                 .thenReturn(Futures.immediateFuture(false));
@@ -177,7 +169,7 @@ public class DebugReportingTest {
 
     @Test
     public void getSenderStrategy_isEnabled_returnsCorrect() {
-        when(mFlagsMock.getFledgeEventLevelDebugReportingEnabled()).thenReturn(true);
+        when(mMockFlags.getFledgeEventLevelDebugReportingEnabled()).thenReturn(true);
         when(mAdIdFetcher.isLimitedAdTrackingEnabled(
                         CALLER_PACKAGE_NAME, CALLER_UID, AD_ID_FETCHER_TIMEOUT_MS))
                 .thenReturn(Futures.immediateFuture(false));
@@ -190,7 +182,7 @@ public class DebugReportingTest {
 
     @Test
     public void getSenderStrategy_isDisabled_returnsCorrect() {
-        when(mFlagsMock.getFledgeEventLevelDebugReportingEnabled()).thenReturn(false);
+        when(mMockFlags.getFledgeEventLevelDebugReportingEnabled()).thenReturn(false);
 
         DebugReporting debugReporting = initDebugReporting();
 
@@ -201,8 +193,8 @@ public class DebugReportingTest {
     private DebugReporting initDebugReporting() {
         try {
             return DebugReporting.createInstance(
-                            CONTEXT,
-                            mFlagsMock,
+                            mContext,
+                            mMockFlags,
                             mHttpClientMock,
                             DEV_CONTEXT_DISABLED,
                             mAdSelectionDebugReportDao,

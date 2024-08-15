@@ -31,7 +31,6 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSEN
 import static android.content.pm.PackageManager.NameNotFoundException;
 
 import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
-import static com.android.adservices.mockito.MockitoExpectations.mockLogApiCallStats;
 import static com.android.adservices.service.enrollment.EnrollmentUtil.BUILD_ID;
 import static com.android.adservices.service.enrollment.EnrollmentUtil.ENROLLMENT_SHARED_PREF;
 import static com.android.adservices.service.enrollment.EnrollmentUtil.FILE_GROUP_STATUS;
@@ -852,7 +851,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
         // service side to calculate the latency
         SyncGetTopicsCallback callback = new SyncGetTopicsCallback();
         ResultSyncCallback<ApiCallStats> logApiCallStatsCallback =
-                mockLogApiCallStats(mAdServicesLogger);
+                mocker.mockLogApiCallStats(mAdServicesLogger);
 
         topicsServiceImpl.getTopics(mRequest, mCallerMetadata, callback);
 
@@ -902,7 +901,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
                         .build();
 
         ResultSyncCallback<ApiCallStats> logApiCallStatsCallback =
-                mockLogApiCallStats(mAdServicesLogger);
+                mocker.mockLogApiCallStats(mAdServicesLogger);
 
         SyncGetTopicsCallback callback = new SyncGetTopicsCallback();
         topicsService.getTopics(mRequest, mCallerMetadata, callback);
@@ -955,7 +954,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
 
         SyncGetTopicsCallback callback = new SyncGetTopicsCallback();
         ResultSyncCallback<ApiCallStats> logApiCallStatsCallback =
-                mockLogApiCallStats(mAdServicesLogger);
+                mocker.mockLogApiCallStats(mAdServicesLogger);
 
         topicsService.getTopics(mRequest, mCallerMetadata, callback);
         // NOTE: not awaiting for the callback result but for apiCallStats instead
@@ -989,7 +988,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
 
         SyncGetTopicsCallback callback = new SyncGetTopicsCallback();
         ResultSyncCallback<ApiCallStats> logApiCallStatsCallback =
-                mockLogApiCallStats(mAdServicesLogger);
+                mocker.mockLogApiCallStats(mAdServicesLogger);
 
         topicsService.getTopics(mRequest, mCallerMetadata, callback);
 
@@ -1034,7 +1033,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
             throws InterruptedException {
 
         ResultSyncCallback<ApiCallStats> logApiCallStatsCallback =
-                mockLogApiCallStats(mAdServicesLogger);
+                mocker.mockLogApiCallStats(mAdServicesLogger);
 
         mTopicsServiceImpl =
                 new TopicsServiceImpl(
@@ -1110,7 +1109,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
     private GetTopicsResult getTopicsResults(TopicsServiceImpl topicsServiceImpl)
             throws InterruptedException {
         ResultSyncCallback<ApiCallStats> logApiCallStatsCallback =
-                mockLogApiCallStats(mAdServicesLogger);
+                mocker.mockLogApiCallStats(mAdServicesLogger);
 
         SyncGetTopicsCallback callback = new SyncGetTopicsCallback();
         topicsServiceImpl.getTopics(mRequest, mCallerMetadata, callback);

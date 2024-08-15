@@ -16,13 +16,6 @@
 
 package com.android.adservices.service.customaudience;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdServicesJobServiceLogger;
-import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
-import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobExecutionData;
-import static com.android.adservices.mockito.MockitoExpectations.verifyBackgroundJobsSkipLogged;
-import static com.android.adservices.mockito.MockitoExpectations.verifyJobFinishedLogged;
-import static com.android.adservices.mockito.MockitoExpectations.verifyLoggingNotHappened;
-import static com.android.adservices.mockito.MockitoExpectations.verifyOnStopJobLogged;
 import static com.android.adservices.spe.AdServicesJobInfo.SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doCallRealMethod;
@@ -49,7 +42,7 @@ import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.content.Context;
 
-import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.AdServicesJobServiceTestCase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
@@ -60,7 +53,8 @@ import com.android.adservices.shared.testing.JobServiceLoggingCallback;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
-import com.android.modules.utils.testing.ExtendedMockitoRule;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.util.concurrent.FluentFuture;
 
@@ -76,13 +70,13 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 @RequiresSdkLevelAtLeastS()
-@ExtendedMockitoRule.SpyStatic(FlagsFactory.class)
-@ExtendedMockitoRule.MockStatic(ConsentManager.class)
-@ExtendedMockitoRule.SpyStatic(ScheduleCustomAudienceUpdateJobService.class)
-@ExtendedMockitoRule.SpyStatic(ScheduleCustomAudienceUpdateWorker.class)
-@ExtendedMockitoRule.SpyStatic(AdServicesJobServiceLogger.class)
-@ExtendedMockitoRule.MockStatic(ServiceCompatUtils.class)
-public class ScheduleCustomAudienceUpdateJobServiceTest extends AdServicesExtendedMockitoTestCase {
+@SpyStatic(FlagsFactory.class)
+@MockStatic(ConsentManager.class)
+@SpyStatic(ScheduleCustomAudienceUpdateJobService.class)
+@SpyStatic(ScheduleCustomAudienceUpdateWorker.class)
+@SpyStatic(AdServicesJobServiceLogger.class)
+@MockStatic(ServiceCompatUtils.class)
+public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServicesJobServiceTestCase {
 
     private static final int SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_ID =
             SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB.getJobId();

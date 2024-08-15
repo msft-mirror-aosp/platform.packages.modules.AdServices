@@ -15,9 +15,15 @@
  */
 package com.android.adservices.mockito;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.ApiCallStats;
+import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
+import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
 
 import java.util.Objects;
 
@@ -57,6 +63,41 @@ public final class AdServicesMockitoMocker extends AbstractMocker
         mockGetCobaltLoggingEnabled(flags, enabled);
         mockGetAppNameApiErrorCobaltLoggingEnabled(flags, enabled);
         mockGetAdservicesReleaseStageForCobalt(flags, "DEBUG");
+    }
+
+    @Override
+    public ResultSyncCallback<ApiCallStats> mockLogApiCallStats(AdServicesLogger adServicesLogger) {
+        ResultSyncCallback<ApiCallStats> callback = new ResultSyncCallback<>();
+        logV("mockLogApiCallStats(%s): will return %s", adServicesLogger, callback);
+        mockLogApiCallStats(callback, adServicesLogger);
+        return callback;
+    }
+
+    @Override
+    public ResultSyncCallback<ApiCallStats> mockLogApiCallStats(
+            AdServicesLogger adServicesLogger, long timeoutMs) {
+        ResultSyncCallback<ApiCallStats> callback =
+                new ResultSyncCallback<>(
+                        SyncCallbackFactory.newSettingsBuilder()
+                                .setMaxTimeoutMs(timeoutMs)
+                                .build());
+        mockLogApiCallStats(callback, adServicesLogger);
+        logV("mockLogApiCallStats(%s, %d): will return %s", adServicesLogger, timeoutMs, callback);
+        return callback;
+    }
+
+    private void mockLogApiCallStats(
+            ResultSyncCallback<ApiCallStats> callback, AdServicesLogger adServicesLogger) {
+        Objects.requireNonNull(adServicesLogger, "adServicesLogger cannot be null");
+        doAnswer(
+                        inv -> {
+                            logV("mockLogApiCallStats(): inv=%s", inv);
+                            ApiCallStats apiCallStats = inv.getArgument(0);
+                            callback.injectResult(apiCallStats);
+                            return null;
+                        })
+                .when(adServicesLogger)
+                .logApiCallStats(any());
     }
 
     private static Flags nonNull(Flags flags) {

@@ -383,6 +383,11 @@ message GetBidsRequest {
     // The Id is specified by the buyer to support coordinated experiments
     // with the buyer's Key/Value services.
     optional int32 buyer_kv_experiment_group_id = 13;
+
+    // Optional.
+    // A boolean value which indicates whether temporary unlimited egress should
+    // be enabled.
+    bool enable_unlimited_egress = 14;
   }
 
   // Encrypted GetBidsRawRequest.

@@ -31,8 +31,10 @@ import android.util.Log;
 import com.android.adservices.service.adselection.AuctionServerDataCompressor;
 import com.android.adservices.service.adselection.BuyerInputGenerator;
 import com.android.adservices.service.adselection.PayloadOptimizationContext;
+import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGenerator;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.BuyerInput;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ClientType;
+import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ConsentedDebugConfiguration;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.GetBidsRequest;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ProtectedAppSignalsBuyerInput;
 import com.android.adservices.service.shell.AbstractShellCommand;
@@ -49,6 +51,7 @@ import org.json.JSONObject;
 
 import java.io.PrintWriter;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -68,6 +71,25 @@ public class GetAdSelectionDataCommand extends AbstractShellCommand {
     @VisibleForTesting
     public static final String ERROR_JSON_FORMAT = "could not format json output: %s";
 
+    @VisibleForTesting
+    public static final String APP_PACKAGE_NAME_HINT =
+            "Placeholder-Should-Match-With-App-Package-Name";
+
+    @VisibleForTesting
+    public static final String TOP_LEVEL_SELLER_HINT =
+            "Placeholder-Should-Match-With-Top-Level-Seller-Origin-Domain-In-SFE-Config";
+
+    @VisibleForTesting
+    public static final String SELLER_HINT =
+            "Placeholder-Should-Match-With-Seller-Origin-Domain-In-SFE-Config";
+
+    @VisibleForTesting public static final int BUYER_KV_EXPERIMENT_ID_HINT = 0;
+
+    // Both debug reporting and unlimited egress are enabled by default for shell command and
+    // testing purposes.
+    private static final boolean IS_DEBUG_REPORTING_ENABLED = true;
+    private static final boolean IS_UNLIMITED_EGRESS_ENABLED = true;
+
     public static final String HELP =
             AdSelectionShellCommandFactory.COMMAND_PREFIX
                     + " "
@@ -85,12 +107,15 @@ public class GetAdSelectionDataCommand extends AbstractShellCommand {
 
     private final BuyerInputGenerator mBuyerInputGenerator;
     private final AuctionServerDataCompressor mAuctionServerDataCompressor;
+    private final ConsentedDebugConfigurationGenerator mConsentedDebugConfigurationGenerator;
 
     public GetAdSelectionDataCommand(
             BuyerInputGenerator buyerInputGenerator,
-            AuctionServerDataCompressor auctionServerDataCompressor) {
+            AuctionServerDataCompressor auctionServerDataCompressor,
+            ConsentedDebugConfigurationGenerator consentedDebugConfigurationGenerator) {
         mBuyerInputGenerator = buyerInputGenerator;
         mAuctionServerDataCompressor = auctionServerDataCompressor;
+        mConsentedDebugConfigurationGenerator = consentedDebugConfigurationGenerator;
     }
 
     @Override
@@ -106,8 +131,10 @@ public class GetAdSelectionDataCommand extends AbstractShellCommand {
 
         AdTechIdentifier buyer = AdTechIdentifier.fromString(cliArgs.get(BUYER));
         BuyerInput buyerInput;
+        ConsentedDebugConfiguration consentedDebugConfiguration = getConsentedDebugConfiguration();
         try {
             buyerInput = getBuyerInputForBuyer(buyer);
+
         } catch (InvalidProtocolBufferException e) {
             err.printf(ERROR_PROTOBUF_FORMAT);
             Log.v(TAG, ERROR_PROTOBUF_FORMAT);
@@ -127,7 +154,8 @@ public class GetAdSelectionDataCommand extends AbstractShellCommand {
                     RESULT_TIMEOUT_ERROR, COMMAND_AD_SELECTION_GET_AD_SELECTION_DATA);
         }
 
-        GetBidsRequest.GetBidsRawRequest request = getBidsRawRequestForBuyer(buyerInput);
+        GetBidsRequest.GetBidsRawRequest request =
+                getBidsRawRequestForBuyer(buyerInput, consentedDebugConfiguration);
         Log.v(TAG, "Loaded GetBidsRawRequest: " + request.toString());
         try {
             out.printf(
@@ -147,7 +175,8 @@ public class GetAdSelectionDataCommand extends AbstractShellCommand {
         return toShellCommandResult(RESULT_SUCCESS, COMMAND_AD_SELECTION_GET_AD_SELECTION_DATA);
     }
 
-    private GetBidsRequest.GetBidsRawRequest getBidsRawRequestForBuyer(BuyerInput buyerInput) {
+    private GetBidsRequest.GetBidsRawRequest getBidsRawRequestForBuyer(
+            BuyerInput buyerInput, ConsentedDebugConfiguration consentedDebugConfiguration) {
         return GetBidsRequest.GetBidsRawRequest.newBuilder()
                 .setIsChaff(false)
                 .setBuyerInput(buyerInput.toBuilder().clearProtectedAppSignals().build())
@@ -157,8 +186,14 @@ public class GetAdSelectionDataCommand extends AbstractShellCommand {
                                 .setProtectedAppSignals(buyerInput.getProtectedAppSignals())
                                 .build())
                 .setBuyerSignals(new JSONObject().toString())
-                .setEnableDebugReporting(true)
+                .setEnableDebugReporting(IS_DEBUG_REPORTING_ENABLED)
+                .setEnableUnlimitedEgress(IS_UNLIMITED_EGRESS_ENABLED)
+                .setConsentedDebugConfig(consentedDebugConfiguration)
                 .setClientType(ClientType.ANDROID)
+                .setPublisherName(APP_PACKAGE_NAME_HINT)
+                .setTopLevelSeller(TOP_LEVEL_SELLER_HINT)
+                .setSeller(SELLER_HINT)
+                .setBuyerKvExperimentGroupId(BUYER_KV_EXPERIMENT_ID_HINT)
                 .build();
     }
 
@@ -183,11 +218,15 @@ public class GetAdSelectionDataCommand extends AbstractShellCommand {
         }
         AuctionServerDataCompressor.CompressedData compressedData = buyerInputs.get(buyer);
 
-        BuyerInput buyerInput =
-                BuyerInput.parseFrom(
-                        mAuctionServerDataCompressor.decompress(compressedData).getData());
+        return BuyerInput.parseFrom(
+                mAuctionServerDataCompressor.decompress(compressedData).getData());
+    }
 
-        return buyerInput;
+    private ConsentedDebugConfiguration getConsentedDebugConfiguration() {
+        Optional<ConsentedDebugConfiguration> consentedDebugConfiguration =
+                mConsentedDebugConfigurationGenerator.getConsentedDebugConfiguration();
+        return consentedDebugConfiguration.orElseGet(
+                () -> ConsentedDebugConfiguration.newBuilder().setIsConsented(false).build());
     }
 
     @Override
