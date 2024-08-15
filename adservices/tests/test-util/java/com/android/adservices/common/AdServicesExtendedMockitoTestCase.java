@@ -15,7 +15,6 @@
  */
 package com.android.adservices.common;
 
-import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
 import static com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.Mode.CLEAR_AFTER_TEST_CLASS;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
@@ -425,7 +424,7 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
      *     Use {@link ExpectErrorLogUtilWithExceptionCall} to specify expected calls with exception.
      */
     @Deprecated
-    protected final void verifyErrorLogUtilError(
+    protected final void verifyErrorLogUtilErrorWithAnyException(
             Throwable throwable, int errorCode, int ppapiName) {
         verifyErrorLogUtilError(throwable, errorCode, ppapiName, times(1));
     }
