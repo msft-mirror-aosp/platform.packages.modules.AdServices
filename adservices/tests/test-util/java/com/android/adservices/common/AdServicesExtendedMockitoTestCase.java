@@ -319,6 +319,12 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
             return mAdServicesMocker.mockLogApiCallStats(adServicesLogger);
         }
 
+        @Override
+        public ResultSyncCallback<ApiCallStats> mockLogApiCallStats(
+                AdServicesLogger adServicesLogger, long timeoutMs) {
+            return mAdServicesMocker.mockLogApiCallStats(adServicesLogger, timeoutMs);
+        }
+
         // AdServicesStaticMocker methods
 
         @Override
