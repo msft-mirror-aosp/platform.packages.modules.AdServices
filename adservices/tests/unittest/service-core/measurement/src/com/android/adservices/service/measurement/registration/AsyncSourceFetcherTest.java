@@ -10208,10 +10208,11 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + DEFAULT_DESTINATION
                                                 + "\","
                                                 + "\"source_event_id\":\"35\","
-                                                + "\"attribution_scopes\":[\"1\", \"2\", \"3\"],"
-                                                + "\"attribution_scope_limit\":4,"
+                                                + "\"attribution_scopes\":{"
+                                                + "\"values\":[\"1\", \"2\", \"3\"],"
+                                                + "\"limit\":4,"
                                                 + "\"max_event_states\":3"
-                                                + "}")));
+                                                + "}}")));
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -10245,10 +10246,11 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + DEFAULT_DESTINATION
                                                 + "\","
                                                 + "\"source_event_id\":\"35\","
-                                                + "\"attribution_scopes\":[\"1\", \"2\", \"3\"],"
-                                                + "\"attribution_scope_limit\":4,"
+                                                + "\"attribution_scopes\":{"
+                                                + "\"values\":[\"1\", \"2\", \"3\"],"
+                                                + "\"limit\":4,"
                                                 + "\"max_event_states\":3"
-                                                + "}")));
+                                                + "}}")));
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -10283,8 +10285,9 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + DEFAULT_DESTINATION
                                                 + "\","
                                                 + "\"source_event_id\":\"35\","
-                                                + "\"attribution_scopes\":[\"1\", \"2\", \"3\"]"
-                                                + "}")));
+                                                + "\"attribution_scopes\":{"
+                                                + "\"values\":[\"1\", \"2\", \"3\"]"
+                                                + "}}")));
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -10318,9 +10321,10 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + DEFAULT_DESTINATION
                                                 + "\","
                                                 + "\"source_event_id\":\"35\","
-                                                + "\"attribution_scopes\":[1, 2, 3],"
-                                                + "\"attribution_scope_limit\":4"
-                                                + "}")));
+                                                + "\"attribution_scopes\":{"
+                                                + "\"values\":[1, 2, 3],"
+                                                + "\"limit\":4"
+                                                + "}}")));
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -10354,9 +10358,10 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + DEFAULT_DESTINATION
                                                 + "\","
                                                 + "\"source_event_id\":\"35\","
-                                                + "\"attribution_scopes\":[\"\", \"1\"],"
-                                                + "\"attribution_scope_limit\":4"
-                                                + "}")));
+                                                + "\"attribution_scopes\":{"
+                                                + "\"values\":[\"\", \"1\"],"
+                                                + "\"limit\":4"
+                                                + "}}")));
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -10391,8 +10396,9 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + DEFAULT_DESTINATION
                                                 + "\","
                                                 + "\"source_event_id\":\"35\","
+                                                + "\"attribution_scopes\":{"
                                                 + "\"max_event_states\":3"
-                                                + "}")));
+                                                + "}}")));
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -10426,10 +10432,11 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + DEFAULT_DESTINATION
                                                 + "\",\""
                                                 + "source_event_id\":\"35\","
-                                                + "\"attribution_scopes\":[\"1\", \"2\", "
+                                                + "\"attribution_scopes\":{"
+                                                + "\"values\":[\"1\", \"2\", "
                                                 + "\"long_attribution_scope\"],"
-                                                + "\"attribution_scope_limit\":4,"
-                                                + "\"max_event_states\":3}")));
+                                                + "\"limit\":4,"
+                                                + "\"max_event_states\":3}}")));
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -10463,8 +10470,9 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + DEFAULT_DESTINATION
                                                 + "\",\""
                                                 + "source_event_id\":\"35\","
-                                                + "\"attribution_scopes\":[],"
-                                                + "\"attribution_scope_limit\":4}")));
+                                                + "\"attribution_scopes\":{"
+                                                + "\"values\":[],"
+                                                + "\"limit\":4}}")));
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -10720,10 +10728,11 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + DEFAULT_DESTINATION
                                                 + "\","
                                                 + "\"source_event_id\":\"35\","
-                                                + "\"attribution_scopes\":[\"1\", \"2\", \"3\"],"
-                                                + "\"attribution_scope_limit\":4,"
+                                                + "\"attribution_scopes\":{"
+                                                + "\"values\":[\"1\", \"2\", \"3\"],"
+                                                + "\"limit\":4,"
                                                 + "\"max_event_states\":-1"
-                                                + "}")));
+                                                + "}}")));
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -10758,10 +10767,11 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + DEFAULT_DESTINATION
                                                 + "\","
                                                 + "\"source_event_id\":\"35\","
-                                                + "\"attribution_scopes\":[\"1\", \"2\", \"3\"],"
-                                                + "\"attribution_scope_limit\":4,"
+                                                + "\"attribution_scopes\":{"
+                                                + "\"values\":[\"1\", \"2\", \"3\"],"
+                                                + "\"limit\":4,"
                                                 + "\"max_event_states\":100"
-                                                + "}")));
+                                                + "}}")));
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -10795,10 +10805,11 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + DEFAULT_DESTINATION
                                                 + "\","
                                                 + "\"source_event_id\":\"35\","
-                                                + "\"attribution_scopes\":[\"1\", \"2\", \"3\"],"
-                                                + "\"attribution_scope_limit\":4,"
+                                                + "\"attribution_scopes\":{"
+                                                + "\"values\":[\"1\", \"2\", \"3\"],"
+                                                + "\"limit\":4,"
                                                 + "\"max_event_states\":\"abc\""
-                                                + "}")));
+                                                + "}}")));
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -10832,10 +10843,11 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + DEFAULT_DESTINATION
                                                 + "\","
                                                 + "\"source_event_id\":\"35\","
-                                                + "\"attribution_scopes\":[\"1\", \"2\", \"3\"],"
-                                                + "\"attribution_scope_limit\":4,"
+                                                + "\"attribution_scopes\":{"
+                                                + "\"values\":[\"1\", \"2\", \"3\"],"
+                                                + "\"limit\":4,"
                                                 + "\"max_event_states\":\"123\""
-                                                + "}")));
+                                                + "}}")));
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -10869,10 +10881,11 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + DEFAULT_DESTINATION
                                                 + "\","
                                                 + "\"source_event_id\":\"35\","
-                                                + "\"attribution_scopes\":[\"1\", \"2\", \"3\"],"
-                                                + "\"attribution_scope_limit\":2,"
+                                                + "\"attribution_scopes\":{"
+                                                + "\"values\":[\"1\", \"2\", \"3\"],"
+                                                + "\"limit\":2,"
                                                 + "\"max_event_states\":3"
-                                                + "}")));
+                                                + "}}")));
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -10906,10 +10919,11 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + DEFAULT_DESTINATION
                                                 + "\","
                                                 + "\"source_event_id\":\"35\","
-                                                + "\"attribution_scopes\":[\"1\", \"2\", \"3\"],"
-                                                + "\"attribution_scope_limit\":\"abc\","
+                                                + "\"attribution_scopes\":{"
+                                                + "\"values\":[\"1\", \"2\", \"3\"],"
+                                                + "\"limit\":\"abc\","
                                                 + "\"max_event_states\":3"
-                                                + "}")));
+                                                + "}}")));
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -10943,10 +10957,11 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + DEFAULT_DESTINATION
                                                 + "\","
                                                 + "\"source_event_id\":\"35\","
-                                                + "\"attribution_scopes\":[\"1\", \"2\", \"3\"],"
-                                                + "\"attribution_scope_limit\":\"123\","
+                                                + "\"attribution_scopes\":{"
+                                                + "\"values\":[\"1\", \"2\", \"3\"],"
+                                                + "\"limit\":\"123\","
                                                 + "\"max_event_states\":3"
-                                                + "}")));
+                                                + "}}")));
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -10980,10 +10995,11 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + DEFAULT_DESTINATION
                                                 + "\","
                                                 + "\"source_event_id\":\"35\","
-                                                + "\"attribution_scopes\":[\"1\", \"2\", \"3\"],"
-                                                + "\"attribution_scope_limit\":10,"
+                                                + "\"attribution_scopes\":{"
+                                                + "\"values\":[\"1\", \"2\", \"3\"],"
+                                                + "\"limit\":10,"
                                                 + "\"max_event_states\":3"
-                                                + "}")));
+                                                + "}}")));
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
