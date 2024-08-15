@@ -125,7 +125,9 @@ public class ApkTestUtil {
                 scrollToFindElement(
                         device, By.text(Pattern.compile(targetStr, Pattern.CASE_INSENSITIVE)));
 
-        assertWithMessage("scrollToFindElement(resId=%s)", resId).that(uiObject2).isNotNull();
+        assertWithMessage("scrollToFindElement(resId=%s, text=\"%s\")", resId, targetStr)
+                .that(uiObject2)
+                .isNotNull();
         return uiObject2;
     }
 
