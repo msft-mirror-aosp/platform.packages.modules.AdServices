@@ -97,11 +97,6 @@ public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
     }
 
     @Override
-    public void initBeta() {
-        initMainActivity(R.layout.main_activity);
-    }
-
-    @Override
     public void initGA() {
         initMainActivity(R.layout.main_activity);
     }
@@ -109,11 +104,6 @@ public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
     @Override
     public void initU18() {
         initMainActivity(R.layout.main_u18_activity);
-    }
-
-    @Override
-    public void initRvc() {
-        initU18();
     }
 
     @Override

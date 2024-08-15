@@ -33,20 +33,15 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FrequencyCapFilters;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceRequest;
-import android.content.Context;
+import android.adservices.utils.CtsWebViewSupportUtil;
 import android.net.Uri;
 
-import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
-import com.android.adservices.common.AdServicesDeviceSupportedRule;
-import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.service.js.JSScriptEngine;
 
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -57,22 +52,12 @@ import java.util.concurrent.Executors;
 /** In the ad_services_config.xml file, API access is revoked for all but a few, for this test. */
 @RunWith(AndroidJUnit4.class)
 // TODO: Add tests for measurement (b/238194122).
-public class PermissionsAppOptOutTest {
+public final class PermissionsAppOptOutTest
+        extends CtsAdServicesPermissionsAppOptOutEndToEndTestCase {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
-    private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final String CALLER_NOT_AUTHORIZED =
             "java.lang.SecurityException: Caller is not authorized to call this API. "
                     + "Caller is not allowed.";
-
-    @Rule(order = 0)
-    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
-            new AdServicesDeviceSupportedRule();
-
-    @Rule(order = 1)
-    public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forAllApisEnabledTests()
-                    .setCompatModeFlags()
-                    .setPpapiAppAllowList(sContext.getPackageName());
 
     @Before
     public void setup() {
@@ -92,7 +77,7 @@ public class PermissionsAppOptOutTest {
         ExecutionException exception =
                 assertThrows(
                         ExecutionException.class, () -> advertisingTopicsClient1.getTopics().get());
-        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_AUTHORIZED);
     }
 
     @Test
@@ -115,7 +100,7 @@ public class PermissionsAppOptOutTest {
                 assertThrows(
                         ExecutionException.class,
                         () -> customAudienceClient.joinCustomAudience(customAudience).get());
-        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_AUTHORIZED);
     }
 
     @Test
@@ -136,7 +121,7 @@ public class PermissionsAppOptOutTest {
                 assertThrows(
                         ExecutionException.class,
                         () -> customAudienceClient.fetchAndJoinCustomAudience(request).get());
-        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_AUTHORIZED);
     }
 
     @Test
@@ -178,7 +163,7 @@ public class PermissionsAppOptOutTest {
                                                 AdTechIdentifier.fromString("buyer.example.com"),
                                                 "exampleCustomAudience")
                                         .get());
-        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_AUTHORIZED);
     }
 
     @Test
@@ -200,7 +185,7 @@ public class PermissionsAppOptOutTest {
 
     @Test
     public void testNoEnrollment_selectAds_adSelectionConfig() {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(CtsWebViewSupportUtil.isJSSandboxAvailable(mContext));
         AdSelectionConfig adSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfig(
                         AdTechIdentifier.fromString("seller.example.com"));
@@ -215,12 +200,12 @@ public class PermissionsAppOptOutTest {
                 assertThrows(
                         ExecutionException.class,
                         () -> mAdSelectionClient.selectAds(adSelectionConfig).get());
-        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_AUTHORIZED);
     }
 
     @Test
     public void testWithEnrollment_selectAds_adSelectionConfig() {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(CtsWebViewSupportUtil.isJSSandboxAvailable(mContext));
         // The "test.com" buyer is a pre-seeded enrolled ad tech
         AdSelectionConfig adSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfig(
@@ -243,7 +228,7 @@ public class PermissionsAppOptOutTest {
 
     @Test
     public void testNoEnrollment_selectAds_adSelectionFromOutcomesConfig() {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(CtsWebViewSupportUtil.isJSSandboxAvailable(mContext));
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
                         AdTechIdentifier.fromString("unauthorized.seller.com"));
@@ -257,12 +242,12 @@ public class PermissionsAppOptOutTest {
         ExecutionException exception =
                 assertThrows(
                         ExecutionException.class, () -> mAdSelectionClient.selectAds(config).get());
-        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_AUTHORIZED);
     }
 
     @Test
     public void testWithEnrollment_selectAds_adSelectionFromOutcomesConfig() {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(CtsWebViewSupportUtil.isJSSandboxAvailable(mContext));
         // The "test.com" buyer is a pre-seeded enrolled ad tech
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
@@ -284,7 +269,7 @@ public class PermissionsAppOptOutTest {
 
     @Test
     public void testNoEnrollment_reportImpression() {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(CtsWebViewSupportUtil.isJSSandboxAvailable(mContext));
         AdSelectionConfig adSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfig(
                         AdTechIdentifier.fromString("seller.example.com"));
@@ -304,12 +289,12 @@ public class PermissionsAppOptOutTest {
                 assertThrows(
                         ExecutionException.class,
                         () -> mAdSelectionClient.reportImpression(request).get());
-        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_AUTHORIZED);
     }
 
     @Test
     public void testWithEnrollment_reportImpression() {
-        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        Assume.assumeTrue(CtsWebViewSupportUtil.isJSSandboxAvailable(mContext));
         // The "test.com" buyer is a pre-seeded enrolled ad tech
         AdSelectionConfig adSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfig(
@@ -356,7 +341,7 @@ public class PermissionsAppOptOutTest {
                 assertThrows(
                         ExecutionException.class,
                         () -> mAdSelectionClient.updateAdCounterHistogram(request).get());
-        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_AUTHORIZED);
     }
 
     @Test

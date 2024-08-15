@@ -18,9 +18,6 @@ package android.adservices.cts;
 
 import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
 
-import static com.google.common.truth.Truth.assertThat;
-
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
@@ -32,19 +29,14 @@ import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.TrustedBiddingData;
 import android.adservices.customaudience.TrustedBiddingDataFixture;
-import android.content.Context;
 import android.net.Uri;
 import android.os.Parcel;
 
-import androidx.test.core.app.ApplicationProvider;
-
-import com.android.adservices.common.AdServicesDeviceSupportedRule;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import com.google.common.collect.ImmutableList;
 
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.time.Instant;
@@ -57,49 +49,102 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 /** Unit tests for {@link android.adservices.customaudience.CustomAudience} */
-public final class CustomAudienceTest {
+@RequiresSdkLevelAtLeastS
+public final class CustomAudienceTest extends CtsAdServicesDeviceTestCase {
+    // TODO(b/342332791): add to these tests with CA priority
 
-    private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Executor sCallbackExecutor = Executors.newCachedThreadPool();
-
-    // TODO(b/291488819) - Remove SDK Level check if Fledge is enabled on R.
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
-    // Skip the test if it runs on unsupported platforms.
-    @Rule(order = 1)
-    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
-            new AdServicesDeviceSupportedRule();
+    private static final double PRIORITY = 5.3;
 
     @Test
     public void testBuildValidCustomAudienceSuccess() {
         CustomAudience validCustomAudience =
                 CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1).build();
 
-        assertEquals(CommonFixture.VALID_BUYER_1, validCustomAudience.getBuyer());
-        assertEquals(CustomAudienceFixture.VALID_NAME, validCustomAudience.getName());
-        assertEquals(
-                CustomAudienceFixture.VALID_ACTIVATION_TIME,
-                validCustomAudience.getActivationTime());
-        assertEquals(
-                CustomAudienceFixture.VALID_EXPIRATION_TIME,
-                validCustomAudience.getExpirationTime());
-        assertEquals(
-                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(CommonFixture.VALID_BUYER_1),
-                validCustomAudience.getDailyUpdateUri());
-        assertEquals(
-                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS,
-                validCustomAudience.getUserBiddingSignals());
-        assertEquals(
-                TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(
-                        CommonFixture.VALID_BUYER_1),
-                validCustomAudience.getTrustedBiddingData());
-        assertEquals(
-                CustomAudienceFixture.getValidBiddingLogicUriByBuyer(CommonFixture.VALID_BUYER_1),
-                validCustomAudience.getBiddingLogicUri());
-        assertEquals(
-                AdDataFixture.getValidAdsByBuyer(CommonFixture.VALID_BUYER_1),
-                validCustomAudience.getAds());
+        expect.that(validCustomAudience.getBuyer()).isEqualTo(CommonFixture.VALID_BUYER_1);
+        expect.that(validCustomAudience.getName()).isEqualTo(CustomAudienceFixture.VALID_NAME);
+        expect.that(validCustomAudience.getActivationTime())
+                .isEqualTo(CustomAudienceFixture.VALID_ACTIVATION_TIME);
+        expect.that(validCustomAudience.getExpirationTime())
+                .isEqualTo(CustomAudienceFixture.VALID_EXPIRATION_TIME);
+        expect.that(validCustomAudience.getDailyUpdateUri())
+                .isEqualTo(
+                        CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
+                                CommonFixture.VALID_BUYER_1));
+        expect.that(validCustomAudience.getUserBiddingSignals())
+                .isEqualTo(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
+        expect.that(validCustomAudience.getTrustedBiddingData())
+                .isEqualTo(
+                        TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(
+                                CommonFixture.VALID_BUYER_1));
+        expect.that(validCustomAudience.getBiddingLogicUri())
+                .isEqualTo(
+                        CustomAudienceFixture.getValidBiddingLogicUriByBuyer(
+                                CommonFixture.VALID_BUYER_1));
+        expect.that(validCustomAudience.getAds())
+                .isEqualTo(AdDataFixture.getValidAdsByBuyer(CommonFixture.VALID_BUYER_1));
+    }
+
+    @Test
+    public void testBuildValidCustomAudienceSuccessWithPriority() {
+        CustomAudience validCustomAudience =
+                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
+                        .setPriority(PRIORITY)
+                        .build();
+
+        expect.that(validCustomAudience.getBuyer()).isEqualTo(CommonFixture.VALID_BUYER_1);
+        expect.that(validCustomAudience.getName()).isEqualTo(CustomAudienceFixture.VALID_NAME);
+        expect.that(validCustomAudience.getActivationTime())
+                .isEqualTo(CustomAudienceFixture.VALID_ACTIVATION_TIME);
+        expect.that(validCustomAudience.getExpirationTime())
+                .isEqualTo(CustomAudienceFixture.VALID_EXPIRATION_TIME);
+        expect.that(validCustomAudience.getDailyUpdateUri())
+                .isEqualTo(
+                        CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
+                                CommonFixture.VALID_BUYER_1));
+        expect.that(validCustomAudience.getUserBiddingSignals())
+                .isEqualTo(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
+        expect.that(validCustomAudience.getTrustedBiddingData())
+                .isEqualTo(
+                        TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(
+                                CommonFixture.VALID_BUYER_1));
+        expect.that(validCustomAudience.getBiddingLogicUri())
+                .isEqualTo(
+                        CustomAudienceFixture.getValidBiddingLogicUriByBuyer(
+                                CommonFixture.VALID_BUYER_1));
+        expect.that(validCustomAudience.getAds())
+                .isEqualTo(AdDataFixture.getValidAdsByBuyer(CommonFixture.VALID_BUYER_1));
+        expect.that(validCustomAudience.getPriority()).isWithin(0).of(PRIORITY);
+    }
+
+    @Test
+    public void testBuildValidCustomAudienceSuccessWithoutPriority() {
+        CustomAudience validCustomAudience =
+                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1).build();
+
+        expect.that(validCustomAudience.getBuyer()).isEqualTo(CommonFixture.VALID_BUYER_1);
+        expect.that(validCustomAudience.getName()).isEqualTo(CustomAudienceFixture.VALID_NAME);
+        expect.that(validCustomAudience.getActivationTime())
+                .isEqualTo(CustomAudienceFixture.VALID_ACTIVATION_TIME);
+        expect.that(validCustomAudience.getExpirationTime())
+                .isEqualTo(CustomAudienceFixture.VALID_EXPIRATION_TIME);
+        expect.that(validCustomAudience.getDailyUpdateUri())
+                .isEqualTo(
+                        CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
+                                CommonFixture.VALID_BUYER_1));
+        expect.that(validCustomAudience.getUserBiddingSignals())
+                .isEqualTo(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
+        expect.that(validCustomAudience.getTrustedBiddingData())
+                .isEqualTo(
+                        TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(
+                                CommonFixture.VALID_BUYER_1));
+        expect.that(validCustomAudience.getBiddingLogicUri())
+                .isEqualTo(
+                        CustomAudienceFixture.getValidBiddingLogicUriByBuyer(
+                                CommonFixture.VALID_BUYER_1));
+        expect.that(validCustomAudience.getAds())
+                .isEqualTo(AdDataFixture.getValidAdsByBuyer(CommonFixture.VALID_BUYER_1));
+        expect.that(validCustomAudience.getPriority()).isWithin(0).of(0);
     }
 
     @Test
@@ -109,29 +154,29 @@ public final class CustomAudienceTest {
                         .setAuctionServerRequestFlags(FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS)
                         .build();
 
-        assertThat(validCustomAudience.getBuyer()).isEqualTo(CommonFixture.VALID_BUYER_1);
-        assertThat(validCustomAudience.getName()).isEqualTo(CustomAudienceFixture.VALID_NAME);
-        assertThat(validCustomAudience.getActivationTime())
+        expect.that(validCustomAudience.getBuyer()).isEqualTo(CommonFixture.VALID_BUYER_1);
+        expect.that(validCustomAudience.getName()).isEqualTo(CustomAudienceFixture.VALID_NAME);
+        expect.that(validCustomAudience.getActivationTime())
                 .isEqualTo(CustomAudienceFixture.VALID_ACTIVATION_TIME);
-        assertThat(validCustomAudience.getExpirationTime())
+        expect.that(validCustomAudience.getExpirationTime())
                 .isEqualTo(CustomAudienceFixture.VALID_EXPIRATION_TIME);
-        assertThat(validCustomAudience.getDailyUpdateUri())
+        expect.that(validCustomAudience.getDailyUpdateUri())
                 .isEqualTo(
                         CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
                                 CommonFixture.VALID_BUYER_1));
-        assertThat(validCustomAudience.getUserBiddingSignals())
+        expect.that(validCustomAudience.getUserBiddingSignals())
                 .isEqualTo(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
-        assertThat(validCustomAudience.getTrustedBiddingData())
+        expect.that(validCustomAudience.getTrustedBiddingData())
                 .isEqualTo(
                         TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(
                                 CommonFixture.VALID_BUYER_1));
-        assertThat(validCustomAudience.getBiddingLogicUri())
+        expect.that(validCustomAudience.getBiddingLogicUri())
                 .isEqualTo(
                         CustomAudienceFixture.getValidBiddingLogicUriByBuyer(
                                 CommonFixture.VALID_BUYER_1));
-        assertThat(validCustomAudience.getAds())
+        expect.that(validCustomAudience.getAds())
                 .isEqualTo(AdDataFixture.getValidAdsByBuyer(CommonFixture.VALID_BUYER_1));
-        assertThat(validCustomAudience.getAuctionServerRequestFlags())
+        expect.that(validCustomAudience.getAuctionServerRequestFlags())
                 .isEqualTo(FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS);
     }
 
@@ -143,29 +188,29 @@ public final class CustomAudienceTest {
                         .setExpirationTime(CustomAudienceFixture.VALID_DELAYED_EXPIRATION_TIME)
                         .build();
 
-        assertThat(validDelayedActivationCustomAudience.getBuyer())
+        expect.that(validDelayedActivationCustomAudience.getBuyer())
                 .isEqualTo(CommonFixture.VALID_BUYER_1);
-        assertThat(validDelayedActivationCustomAudience.getName())
+        expect.that(validDelayedActivationCustomAudience.getName())
                 .isEqualTo(CustomAudienceFixture.VALID_NAME);
-        assertThat(validDelayedActivationCustomAudience.getActivationTime())
+        expect.that(validDelayedActivationCustomAudience.getActivationTime())
                 .isEqualTo(CustomAudienceFixture.VALID_DELAYED_ACTIVATION_TIME);
-        assertThat(validDelayedActivationCustomAudience.getExpirationTime())
+        expect.that(validDelayedActivationCustomAudience.getExpirationTime())
                 .isEqualTo(CustomAudienceFixture.VALID_DELAYED_EXPIRATION_TIME);
-        assertThat(validDelayedActivationCustomAudience.getDailyUpdateUri())
+        expect.that(validDelayedActivationCustomAudience.getDailyUpdateUri())
                 .isEqualTo(
                         CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
                                 CommonFixture.VALID_BUYER_1));
-        assertThat(validDelayedActivationCustomAudience.getUserBiddingSignals())
+        expect.that(validDelayedActivationCustomAudience.getUserBiddingSignals())
                 .isEqualTo(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
-        assertThat(validDelayedActivationCustomAudience.getTrustedBiddingData())
+        expect.that(validDelayedActivationCustomAudience.getTrustedBiddingData())
                 .isEqualTo(
                         TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(
                                 CommonFixture.VALID_BUYER_1));
-        assertThat(validDelayedActivationCustomAudience.getBiddingLogicUri())
+        expect.that(validDelayedActivationCustomAudience.getBiddingLogicUri())
                 .isEqualTo(
                         CustomAudienceFixture.getValidBiddingLogicUriByBuyer(
                                 CommonFixture.VALID_BUYER_1));
-        assertThat(validDelayedActivationCustomAudience.getAds())
+        expect.that(validDelayedActivationCustomAudience.getAds())
                 .isEqualTo(AdDataFixture.getValidAdsByBuyer(CommonFixture.VALID_BUYER_1));
     }
 
@@ -179,7 +224,23 @@ public final class CustomAudienceTest {
         p.setDataPosition(0);
         CustomAudience fromParcel = CustomAudience.CREATOR.createFromParcel(p);
 
-        assertEquals(validCustomAudience, fromParcel);
+        expect.that(fromParcel).isEqualTo(validCustomAudience);
+    }
+
+    /** @hide */
+    @Test
+    public void testParcelValidCustomAudienceSuccessWithPriority() {
+        CustomAudience validCustomAudience =
+                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
+                        .setPriority(PRIORITY)
+                        .build();
+
+        Parcel p = Parcel.obtain();
+        validCustomAudience.writeToParcel(p, 0);
+        p.setDataPosition(0);
+        CustomAudience fromParcel = CustomAudience.CREATOR.createFromParcel(p);
+
+        expect.that(fromParcel).isEqualTo(validCustomAudience);
     }
 
     @Test
@@ -195,7 +256,7 @@ public final class CustomAudienceTest {
             p.setDataPosition(0);
             CustomAudience fromParcel = CustomAudience.CREATOR.createFromParcel(p);
 
-            assertEquals(validCustomAudience, fromParcel);
+            expect.that(fromParcel).isEqualTo(validCustomAudience);
         } finally {
             p.recycle();
         }
@@ -214,7 +275,7 @@ public final class CustomAudienceTest {
         p.setDataPosition(0);
         CustomAudience fromParcel = CustomAudience.CREATOR.createFromParcel(p);
 
-        assertEquals(validCustomAudienceWithNullValue, fromParcel);
+        expect.that(fromParcel).isEqualTo(validCustomAudienceWithNullValue);
     }
 
     @Test
@@ -262,27 +323,27 @@ public final class CustomAudienceTest {
                         .setAds(null)
                         .build();
 
-        assertThat(nullAdsCustomAudience.getBuyer()).isEqualTo(CommonFixture.VALID_BUYER_1);
-        assertThat(nullAdsCustomAudience.getName()).isEqualTo(CustomAudienceFixture.VALID_NAME);
-        assertThat(nullAdsCustomAudience.getActivationTime())
+        expect.that(nullAdsCustomAudience.getBuyer()).isEqualTo(CommonFixture.VALID_BUYER_1);
+        expect.that(nullAdsCustomAudience.getName()).isEqualTo(CustomAudienceFixture.VALID_NAME);
+        expect.that(nullAdsCustomAudience.getActivationTime())
                 .isEqualTo(CustomAudienceFixture.VALID_ACTIVATION_TIME);
-        assertThat(nullAdsCustomAudience.getExpirationTime())
+        expect.that(nullAdsCustomAudience.getExpirationTime())
                 .isEqualTo(CustomAudienceFixture.VALID_EXPIRATION_TIME);
-        assertThat(nullAdsCustomAudience.getDailyUpdateUri())
+        expect.that(nullAdsCustomAudience.getDailyUpdateUri())
                 .isEqualTo(
                         CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
                                 CommonFixture.VALID_BUYER_1));
-        assertThat(nullAdsCustomAudience.getUserBiddingSignals())
+        expect.that(nullAdsCustomAudience.getUserBiddingSignals())
                 .isEqualTo(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
-        assertThat(nullAdsCustomAudience.getTrustedBiddingData())
+        expect.that(nullAdsCustomAudience.getTrustedBiddingData())
                 .isEqualTo(
                         TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(
                                 CommonFixture.VALID_BUYER_1));
-        assertThat(nullAdsCustomAudience.getBiddingLogicUri())
+        expect.that(nullAdsCustomAudience.getBiddingLogicUri())
                 .isEqualTo(
                         CustomAudienceFixture.getValidBiddingLogicUriByBuyer(
                                 CommonFixture.VALID_BUYER_1));
-        assertThat(nullAdsCustomAudience.getAds()).isEqualTo(Collections.emptyList());
+        expect.that(nullAdsCustomAudience.getAds()).isEqualTo(Collections.emptyList());
     }
 
     @Test
@@ -295,27 +356,27 @@ public final class CustomAudienceTest {
                         .setAds(emptyAds)
                         .build();
 
-        assertThat(emptyAdsCustomAudience.getBuyer()).isEqualTo(CommonFixture.VALID_BUYER_1);
-        assertThat(emptyAdsCustomAudience.getName()).isEqualTo(CustomAudienceFixture.VALID_NAME);
-        assertThat(emptyAdsCustomAudience.getActivationTime())
+        expect.that(emptyAdsCustomAudience.getBuyer()).isEqualTo(CommonFixture.VALID_BUYER_1);
+        expect.that(emptyAdsCustomAudience.getName()).isEqualTo(CustomAudienceFixture.VALID_NAME);
+        expect.that(emptyAdsCustomAudience.getActivationTime())
                 .isEqualTo(CustomAudienceFixture.VALID_ACTIVATION_TIME);
-        assertThat(emptyAdsCustomAudience.getExpirationTime())
+        expect.that(emptyAdsCustomAudience.getExpirationTime())
                 .isEqualTo(CustomAudienceFixture.VALID_EXPIRATION_TIME);
-        assertThat(emptyAdsCustomAudience.getDailyUpdateUri())
+        expect.that(emptyAdsCustomAudience.getDailyUpdateUri())
                 .isEqualTo(
                         CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
                                 CommonFixture.VALID_BUYER_1));
-        assertThat(emptyAdsCustomAudience.getUserBiddingSignals())
+        expect.that(emptyAdsCustomAudience.getUserBiddingSignals())
                 .isEqualTo(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
-        assertThat(emptyAdsCustomAudience.getTrustedBiddingData())
+        expect.that(emptyAdsCustomAudience.getTrustedBiddingData())
                 .isEqualTo(
                         TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(
                                 CommonFixture.VALID_BUYER_1));
-        assertThat(emptyAdsCustomAudience.getBiddingLogicUri())
+        expect.that(emptyAdsCustomAudience.getBiddingLogicUri())
                 .isEqualTo(
                         CustomAudienceFixture.getValidBiddingLogicUriByBuyer(
                                 CommonFixture.VALID_BUYER_1));
-        assertThat(emptyAdsCustomAudience.getAds()).isEqualTo(emptyAds);
+        expect.that(emptyAdsCustomAudience.getAds()).isEqualTo(emptyAds);
     }
 
     @Test
@@ -323,7 +384,7 @@ public final class CustomAudienceTest {
         CustomAudience validCustomAudience =
                 CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1).build();
 
-        assertThat(validCustomAudience.describeContents()).isEqualTo(0);
+        expect.that(validCustomAudience.describeContents()).isEqualTo(0);
     }
 
     @Test
@@ -357,7 +418,7 @@ public final class CustomAudienceTest {
                 assertThrows(
                         ExecutionException.class,
                         () -> client.joinCustomAudience(customAudience).get());
-        assertThat(exception).hasCauseThat().isInstanceOf(IllegalStateException.class);
-        assertThat(exception).hasMessageThat().contains("service is not available");
+        expect.that(exception).hasCauseThat().isInstanceOf(IllegalStateException.class);
+        expect.that(exception).hasMessageThat().contains("service is not available");
     }
 }

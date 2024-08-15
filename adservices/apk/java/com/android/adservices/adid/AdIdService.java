@@ -15,8 +15,6 @@
  */
 package com.android.adservices.adid;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__ADID;
-
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
@@ -30,8 +28,6 @@ import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.shared.util.Clock;
 
-import java.io.FileDescriptor;
-import java.io.PrintWriter;
 import java.util.Objects;
 
 /** AdId Service */
@@ -52,7 +48,6 @@ public class AdIdService extends Service {
         AppImportanceFilter appImportanceFilter =
                 AppImportanceFilter.create(
                         this,
-                        AD_SERVICES_API_CALLED__API_CLASS__ADID,
                         () -> FlagsFactory.getFlags().getForegroundStatuslLevelForValidation());
 
         if (mAdIdService == null) {
@@ -77,10 +72,5 @@ public class AdIdService extends Service {
         }
 
         return Objects.requireNonNull(mAdIdService);
-    }
-
-    @Override
-    public void dump(FileDescriptor fd, PrintWriter writer, String[] args) {
-        super.dump(fd, writer, args);
     }
 }

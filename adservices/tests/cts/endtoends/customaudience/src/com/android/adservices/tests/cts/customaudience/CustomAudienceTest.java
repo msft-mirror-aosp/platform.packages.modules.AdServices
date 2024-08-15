@@ -56,6 +56,7 @@ import com.google.mockwebserver.MockWebServer;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -186,8 +187,7 @@ public final class CustomAudienceTest extends CtsAdServicesCustomAudienceTestCas
 
     private final Random mCacheBusterRandom = new Random();
 
-    // TODO (b/337014024): Replace CountDownLatch with SyncCallback once it
-    //                     supports awaiting multiple events before proceeding.
+    // TODO(b/343272481): Replace CountDownLatch with SyncCallback subclasses
     private BroadcastReceiver mJoinedCustomAudienceBroadcastReceiver;
     private CountDownLatch mJoinedCustomAudienceBroadcastLatch;
     private Multiset<String> mExpectedJoinedCustomAudienceBroadcasts;
@@ -251,6 +251,7 @@ public final class CustomAudienceTest extends CtsAdServicesCustomAudienceTestCas
         mMockWebServer.shutdown();
     }
 
+    @Ignore("Flaky test. Bug ID: 342636189")
     @Test
     public void testCustomAudience_dataPurgedForUninstalledApp() throws Exception {
         AdSelectionClient adSelectionClient =
@@ -363,6 +364,7 @@ public final class CustomAudienceTest extends CtsAdServicesCustomAudienceTestCas
         assertThat(mExpectedAppUninstallBroadcasts).isEmpty();
     }
 
+    @Ignore("Flaky test. Bug ID: 342636189")
     @Test
     public void testCustomAudience_doesNotPersistAfterAppUninstallAndReinstall() throws Exception {
         AdSelectionClient adSelectionClient =

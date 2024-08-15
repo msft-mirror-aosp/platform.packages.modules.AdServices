@@ -59,10 +59,6 @@ public class TopicsActivityActionDelegate extends BaseActionDelegate {
     }
 
     @Override
-    public void initBeta() {
-    }
-
-    @Override
     public void initGA() {
         // set title
         mActivity.setTitle(R.string.settingsUI_topics_ga_title);
@@ -108,9 +104,6 @@ public class TopicsActivityActionDelegate extends BaseActionDelegate {
 
     @Override
     public void initU18() {}
-
-    @Override
-    public void initRvc() {}
 
     @Override
     public void initGaUxWithPas() {

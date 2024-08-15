@@ -26,6 +26,7 @@ import android.os.LimitExceededException;
 
 import androidx.test.filters.FlakyTest;
 
+import com.android.adservices.common.AdServicesCtsTestCase;
 import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
 import com.android.adservices.common.annotations.RequiresAndroidServiceAvailable;
 import com.android.adservices.shared.common.exception.ServiceUnavailableException;
@@ -41,8 +42,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 @RequiresAndroidServiceAvailable(intentAction = ACTION_ADID_PROVIDER_SERVICE)
-public final class AdIdCompatibleManagerTest extends CtsAdIdEndToEndTestCase {
-
+public final class AdIdCompatibleManagerTest extends AdServicesCtsTestCase
+        implements CtsAdIdEndToEndTestFlags {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
     @Before
@@ -114,6 +115,9 @@ public final class AdIdCompatibleManagerTest extends CtsAdIdEndToEndTestCase {
 
         adIdCompatibleManager.getAdId(CALLBACK_EXECUTOR, callback);
 
-        callback.assertFailure(ServiceUnavailableException.class);
+        // TODO(b/345835218): Create an Exception Checker for internal exceptions in tests.
+        Exception e = callback.assertFailure(IllegalStateException.class);
+        assertThat(e.getClass().getSimpleName())
+                .isEqualTo(ServiceUnavailableException.class.getSimpleName());
     }
 }

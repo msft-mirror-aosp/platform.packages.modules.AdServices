@@ -20,12 +20,9 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.AdServicesState;
 
-import androidx.test.filters.SmallTest;
-
 import org.junit.Test;
 
-@SmallTest
-public class AdServicesStateTest {
+public final class AdServicesStateTest {
     @Test
     public void testIsAdServicesStateEnabled() {
         assertThat(AdServicesState.isAdServicesStateEnabled()).isTrue();

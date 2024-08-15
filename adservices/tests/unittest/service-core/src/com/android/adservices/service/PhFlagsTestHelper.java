@@ -17,7 +17,8 @@
 package com.android.adservices.service;
 
 import static com.android.adservices.common.DeviceConfigUtil.setAdservicesFlag;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdServicesFlag;
+import static com.android.adservices.service.DeviceConfigAndSystemPropertiesExpectations.mockGetAdServicesFlag;
+import static com.android.adservices.service.DeviceConfigAndSystemPropertiesExpectations.verifyGetBooleanDeviceConfigFlagNotCalled;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_BACK_COMPAT;
 import static com.android.adservices.service.FlagsConstants.KEY_GLOBAL_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH;
@@ -30,7 +31,6 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
-import com.android.adservices.mockito.ExtendedMockitoExpectations;
 import com.android.adservices.service.fixture.TestableSystemProperties;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -199,6 +199,7 @@ public final class PhFlagsTestHelper {
     // TODO(b/330796095): looks like testConsentManagerDebugMode() is the only caller (other than
     // testFeatureFlagGuardedByGlobalKs() from this class), so it should be removed (or made
     // private)
+
     /**
      * Tests the behavior of a feature flag that is guarded by a "generic" guard (typically the
      * global kill switch and a per-API kill switch).
@@ -224,11 +225,27 @@ public final class PhFlagsTestHelper {
      */
     public void testConfigFlag(
             String flagName, String defaultConstantValue, Flaginator<Flags, String> flaginator) {
+        testConfigFlag(
+                flagName,
+                defaultConstantValue,
+                flaginator,
+                /* overriddenValue= */ "new" + defaultConstantValue);
+    }
+
+    /**
+     * Tests the behavior of a feature flag and verifies default value and provided overridden
+     * value.
+     */
+    public void testConfigFlag(
+            String flagName,
+            String defaultConstantValue,
+            Flaginator<Flags, String> flaginator,
+            String overriddenValue) {
         testFeatureFlagDefaultOverriddenAndIllegalValue(
                 flagName,
                 defaultConstantValue,
                 flaginator,
-                /* overriddenValue= */ "new" + defaultConstantValue,
+                overriddenValue,
                 /* illegalValue= */ Optional.empty());
     }
 
@@ -556,12 +573,12 @@ public final class PhFlagsTestHelper {
     }
 
     private static void verifyGetBooleanSystemPropertyNotCalled(String name) {
-        ExtendedMockitoExpectations.verifyGetBooleanSystemPropertyNotCalled(
+        DeviceConfigAndSystemPropertiesExpectations.verifyGetBooleanSystemPropertyNotCalled(
                 PhFlags.getSystemPropertyName(name));
     }
 
     private static void verifyGetBooleanDeviceConfigFlagNotCalled(String name) {
-        ExtendedMockitoExpectations.verifyGetBooleanDeviceConfigFlagNotCalled(
+        DeviceConfigAndSystemPropertiesExpectations.verifyGetBooleanDeviceConfigFlagNotCalled(
                 NAMESPACE_ADSERVICES, name);
     }
 

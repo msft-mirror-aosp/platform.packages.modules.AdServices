@@ -16,6 +16,8 @@
 
 package android.adservices.rootcts;
 
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE;
 import static com.android.adservices.spe.AdServicesJobInfo.SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -29,12 +31,13 @@ import android.adservices.common.AdSelectionSignals;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.PartialCustomAudience;
 import android.adservices.customaudience.ScheduleCustomAudienceUpdateRequest;
-import android.adservices.utils.FledgeScenarioTest;
 import android.adservices.utils.ScenarioDispatcher;
 import android.adservices.utils.ScenarioDispatcherFactory;
 import android.adservices.utils.Scenarios;
 import android.net.Uri;
 
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
@@ -47,8 +50,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-public class ScheduleCustomAudienceUpdateTest extends FledgeScenarioTest {
-
+@SetFlagEnabled(KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED)
+@SetIntegerFlag(
+        name = KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE,
+        value = 30)
+public class ScheduleCustomAudienceUpdateTest extends FledgeRootScenarioTest {
     private static final String CA_NAME = "delayed_updated_ca";
     private static final int MIN_ALLOWED_DELAY_TEST_OVERRIDE = -100;
     private BackgroundJobHelper mBackgroundJobHelper;
@@ -57,16 +63,10 @@ public class ScheduleCustomAudienceUpdateTest extends FledgeScenarioTest {
     public void setUp() throws Exception {
         super.setUp();
         mBackgroundJobHelper = new BackgroundJobHelper(sContext);
-        ShellUtils.runShellCommand(
-                "device_config put adservices fledge_schedule_custom_audience_update_enabled true");
     }
 
     @After
     public void teardown() {
-        ShellUtils.runShellCommand(
-                "device_config put adservices fledge_schedule_custom_audience_update_enabled"
-                        + " false");
-        setMinAllowedDelayTimeMinutes(30);
         clearAlDebuggableUpdates();
     }
 
@@ -75,9 +75,7 @@ public class ScheduleCustomAudienceUpdateTest extends FledgeScenarioTest {
         Uri updateUri = Uri.parse("");
         ScheduleCustomAudienceUpdateRequest request =
                 new ScheduleCustomAudienceUpdateRequest.Builder(
-                                updateUri,
-                                Duration.of(60, ChronoUnit.MINUTES),
-                                Collections.EMPTY_LIST)
+                                updateUri, Duration.of(60, ChronoUnit.MINUTES), List.of())
                         .build();
 
         ExecutionException e =
@@ -88,10 +86,10 @@ public class ScheduleCustomAudienceUpdateTest extends FledgeScenarioTest {
 
     @Test
     public void testScheduleCustomAudienceUpdate_DelayExceedsLimit_failure() {
-        Uri updateUri = Uri.parse(mMockWebServerRule.getServerBaseAddress());
+        Uri updateUri = Uri.parse("http://localhost/update/ca");
         ScheduleCustomAudienceUpdateRequest request =
                 new ScheduleCustomAudienceUpdateRequest.Builder(
-                                updateUri, Duration.of(20, ChronoUnit.DAYS), Collections.EMPTY_LIST)
+                                updateUri, Duration.of(20, ChronoUnit.DAYS), List.of())
                         .build();
 
         ExecutionException e =
@@ -102,18 +100,19 @@ public class ScheduleCustomAudienceUpdateTest extends FledgeScenarioTest {
 
     @Test
     public void testScheduleCustomAudienceUpdate_DelayLowerLimit_failure() {
-        Uri updateUri = Uri.parse(mMockWebServerRule.getServerBaseAddress());
+        Uri updateUri = Uri.parse("http://localhost/update/ca");
         ScheduleCustomAudienceUpdateRequest request =
                 new ScheduleCustomAudienceUpdateRequest.Builder(
-                                updateUri,
-                                Duration.of(-20, ChronoUnit.DAYS),
-                                Collections.EMPTY_LIST)
+                                updateUri, Duration.of(1, ChronoUnit.MILLIS), List.of())
                         .build();
 
-        ExecutionException e =
+        Exception e =
                 assertThrows(
                         ExecutionException.class, () -> doScheduleCustomAudienceUpdate(request));
-        assertEquals("IllegalArgumentException", e.getCause().getClass().getSimpleName());
+        expect.withMessage("Thrown exception for duration below limit")
+                .that(e)
+                .hasCauseThat()
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -127,7 +126,9 @@ public class ScheduleCustomAudienceUpdateTest extends FledgeScenarioTest {
                 makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
 
         // Set min allowed delay in past for easier testing
-        setMinAllowedDelayTimeMinutes(MIN_ALLOWED_DELAY_TEST_OVERRIDE);
+        flags.setFlag(
+                KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE,
+                MIN_ALLOWED_DELAY_TEST_OVERRIDE);
 
         Uri updateUri =
                 Uri.parse(
@@ -167,9 +168,8 @@ public class ScheduleCustomAudienceUpdateTest extends FledgeScenarioTest {
 
     @Test
     public void testScheduleCustomAudienceUpdate_Disabled_failure() throws Exception {
-        ShellUtils.runShellCommand(
-                "device_config put adservices fledge_schedule_custom_audience_update_enabled"
-                        + " false");
+        flags.setFlag(KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED, false);
+
         ScenarioDispatcher dispatcher =
                 setupDispatcher(
                         ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
@@ -185,13 +185,6 @@ public class ScheduleCustomAudienceUpdateTest extends FledgeScenarioTest {
                 assertThrows(
                         ExecutionException.class, () -> doScheduleCustomAudienceUpdate(request));
         assertEquals("IllegalStateException", e.getCause().getClass().getSimpleName());
-    }
-
-    private void setMinAllowedDelayTimeMinutes(int minAllowedDelayTimeMinutes) {
-        ShellUtils.runShellCommand(
-                "device_config put adservices "
-                        + "fledge_schedule_custom_audience_update_min_delay_mins_override %s",
-                minAllowedDelayTimeMinutes);
     }
 
     private void clearAlDebuggableUpdates() {

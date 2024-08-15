@@ -21,7 +21,7 @@ import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assume.assumeTrue;
 
-import android.app.sdksandbox.hosttestutils.DeviceSupportHostUtils;
+import android.app.sdksandbox.hosttestutils.SdkSandboxDeviceSupportedHostRule;
 
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
 import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
@@ -29,19 +29,22 @@ import com.android.tradefed.testtype.junit4.DeviceTestRunOptions;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(DeviceJUnit4ClassRunner.class)
 public final class SdkSandboxSmallModuleHostTest extends BaseHostJUnit4Test {
 
+    @Rule(order = 0)
+    public final SdkSandboxDeviceSupportedHostRule deviceSupportRule =
+            new SdkSandboxDeviceSupportedHostRule(this);
+
     private static final String TEST_APP_PACKAGE = "com.android.tests.sdksandbox";
     private static final String MODULE_NAME = "com.android.adservices";
     private static final String SYSTEM_APEX_PATH = "/system/apex/" + MODULE_NAME + ".capex";
     private static final String PRIV_APP_DIR = "/apex/" + MODULE_NAME + "/priv-app";
     private static final String ACTIVE_APEX_DIR = "/data/apex/active/";
-
-    private final DeviceSupportHostUtils mDeviceSupportUtils = new DeviceSupportHostUtils(this);
 
     /**
      * Runs the given phase of a test by calling into the device.
@@ -64,9 +67,6 @@ public final class SdkSandboxSmallModuleHostTest extends BaseHostJUnit4Test {
 
     @Before
     public void setUp() throws Exception {
-        assumeTrue(
-                "Device needs to support SdkSandbox", mDeviceSupportUtils.isSdkSandboxSupported());
-
         // Determine if Small module related test can be run on the device
         boolean canBeUpdatedWithSmallModule = isSmallModuleUpdatePossible();
         boolean alreadyHasSmallModuleInstalled = !isAdServicesApkPresent();

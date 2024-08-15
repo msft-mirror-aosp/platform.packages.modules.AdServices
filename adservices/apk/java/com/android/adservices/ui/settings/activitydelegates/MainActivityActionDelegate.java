@@ -57,10 +57,6 @@ public class MainActivityActionDelegate extends BaseActionDelegate {
     }
 
     @Override
-    public void initBeta() {
-    }
-
-    @Override
     public void initGA() {
         mActivity.setTitle(R.string.settingsUI_main_view_ga_title);
 
@@ -117,11 +113,6 @@ public class MainActivityActionDelegate extends BaseActionDelegate {
                 mMainViewModel.getMeasurementConsentFromConsentManager()
                         ? R.string.settingsUI_subtitle_consent_on
                         : R.string.settingsUI_subtitle_consent_off);
-    }
-
-    @Override
-    public void initRvc() {
-        initU18();
     }
 
     @Override

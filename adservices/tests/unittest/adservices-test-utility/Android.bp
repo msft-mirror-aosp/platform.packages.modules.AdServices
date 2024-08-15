@@ -23,6 +23,7 @@ android_test {
     srcs: [
         "src/**/*.java",
         "side-less/**/*.java",
+        ":adservices-shared-device-side-meta-testing-sources",
         ":adservices-shared-sideless-meta-testing-sources",
     ],
     libs: [
@@ -40,4 +41,9 @@ android_test {
     test_config: "AndroidTest.xml",
     min_sdk_version: "30",
     target_sdk_version: "31",
+    lint: {
+        extra_check_modules: ["AdServicesTestLintChecker"],
+        baseline_filename: "lint-baseline.xml",
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
 }

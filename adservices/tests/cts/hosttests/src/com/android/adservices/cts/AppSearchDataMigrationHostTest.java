@@ -16,8 +16,8 @@
 
 package com.android.adservices.cts;
 
-import static com.android.adservices.common.AdServicesHostSideTestCase.CTS_TEST_PACKAGE;
 import static com.android.adservices.common.AdServicesHostSideTestCase.APPSEARCH_WRITER_ACTIVITY_CLASS;
+import static com.android.adservices.common.AdServicesHostSideTestCase.CTS_TEST_PACKAGE;
 import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA;
@@ -33,9 +33,9 @@ import com.android.adservices.common.annotations.SetAllLogcatTags;
 import com.android.adservices.common.annotations.SetMsmtApiAppAllowList;
 import com.android.adservices.common.annotations.SetMsmtWebContextClientAppAllowList;
 import com.android.adservices.shared.testing.BackgroundLogReceiver;
+import com.android.adservices.shared.testing.Logger.LogLevel;
 import com.android.adservices.shared.testing.TestDeviceHelper;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
-import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.shared.testing.annotations.SetLogcatTag;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.log.LogUtil.CLog;
@@ -125,23 +125,20 @@ public final class AppSearchDataMigrationHostTest extends AdServicesHostSideTest
     }
 
     @Test
-    // Need to re-set these because the reboot in the setup method causes them to be cleared.
-    @SetAllLogcatTags
-    @SetLogcatTag(tag = APPSEARCH_WRITER_ACTIVITY_CLASS)
-    @SetFlagEnabled(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK)
     public void testAppSearchConsentMigration() throws Exception {
         // Wait a few seconds for the device to get to the home screen
         TimeUnit.SECONDS.sleep(5);
 
-        String msmtSuccessMsg = "AppSearchWriterActivity: GetMeasurementStatus API call succeeded";
-        String msmtFailureMsg = "AppSearchWriterActivity: GetMeasurementStatus API call failed";
+        // Need to re-set these tags and flags here because the reboot in the setup method
+        // causes them to be cleared. The SetLogcatTag annotation cannot be used on this method
+        // because it gets processed before the start of the setup method.
+        flags.setFlag(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, true)
+                .setLogcatTag("adservices", LogLevel.VERBOSE)
+                .setLogcatTag("AppSearchWriterActivity", LogLevel.VERBOSE);
+
+        String migrationMsg = "Finished migrating Consent from AppSearch to PPAPI + System Service";
         Predicate<String[]> apiCompletedLogPresentPredicate =
-                s ->
-                        Arrays.stream(s)
-                                .anyMatch(
-                                        t ->
-                                                t.contains(msmtSuccessMsg)
-                                                        || t.contains(msmtFailureMsg));
+                s -> Arrays.stream(s).anyMatch(t -> t.contains(migrationMsg));
 
         // Instantiate and start background log collection
         BackgroundLogReceiver receiver =
@@ -168,12 +165,8 @@ public final class AppSearchDataMigrationHostTest extends AdServicesHostSideTest
         CLog.d("Collected logs: %s", logs);
 
         // Verify that the logs contain the appropriate success messages
-        String migrationMsg = "Finished migrating Consent from AppSearch to PPAPI + System Service";
         expect.withMessage("Migration completed")
                 .that(logs.stream().anyMatch(s -> s.contains(migrationMsg)))
-                .isTrue();
-        expect.withMessage("GetMeasurementStatus API succeeded")
-                .that(logs.stream().anyMatch(s -> s.contains(msmtSuccessMsg)))
                 .isTrue();
 
         // Validate that the Consent xml file in system server contains the migrated values

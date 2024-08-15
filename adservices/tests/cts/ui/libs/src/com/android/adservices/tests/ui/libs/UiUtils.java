@@ -17,8 +17,21 @@ package com.android.adservices.tests.ui.libs;
 
 import static android.Manifest.permission.POST_NOTIFICATIONS;
 
-import static com.android.adservices.tests.ui.libs.UiConstants.AD_ID_ENABLED;
-import static com.android.adservices.tests.ui.libs.UiConstants.ENTRY_POINT_ENABLED;
+import static com.android.adservices.AdServicesCommon.BINDER_TIMEOUT_SYSTEM_PROPERTY_NAME;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MANAGER_OTA_DEBUG_MODE;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_RESET_TOKEN;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_AD_SERVICES_SYSTEM_API;
+import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_GET_ADSERVICES_COMMON_STATES_ALLOW_LIST;
+import static com.android.adservices.service.FlagsConstants.KEY_IS_EEA_DEVICE;
+import static com.android.adservices.service.FlagsConstants.KEY_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_UX_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_RVC_POST_OTA_NOTIFICATION_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_RVC_UX_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_U18_UX_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_UI_OTA_STRINGS_FEATURE_ENABLED;
 import static com.android.adservices.tests.ui.libs.UiConstants.SYSTEM_UI_NAME;
 import static com.android.adservices.tests.ui.libs.UiConstants.SYSTEM_UI_RESOURCE_ID;
 
@@ -41,7 +54,7 @@ import androidx.test.uiautomator.Until;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.api.R;
-import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.shared.testing.common.FileHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
@@ -58,8 +71,6 @@ import java.util.concurrent.Executors;
 import java.util.regex.Pattern;
 
 public class UiUtils {
-    private static final String PRIVACY_SANDBOX_PACKAGE_NAME = "android.adservices.ui.SETTINGS";
-    private static final String NOTIFICATION_PACKAGE_NAME = "android.adservices.ui.NOTIFICATIONS";
     public static final int LAUNCH_TIMEOUT = 5000;
     public static final int PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT = 500;
     public static final int SCROLL_WAIT_TIME = 1000;
@@ -68,155 +79,90 @@ public class UiUtils {
 
     private static final String ANDROID_WIDGET_SCROLLVIEW = "android.widget.ScrollView";
 
-    private static void forceSetFlag(String flagName, boolean newFlagValue) throws Exception {
-        String shellCmdGetTemplate;
-        String shellCmdSetTemplate;
-        if (flagName.endsWith("debug_mode")) {
-            shellCmdGetTemplate = "getprop debug.adservices.%s";
-            shellCmdSetTemplate = "setprop debug.adservices.%s %s";
-        } else {
-            shellCmdGetTemplate = "device_config get adservices %s";
-            shellCmdSetTemplate = "device_config put adservices %s %s";
-        }
-        String currentFlagValue = ShellUtils.runShellCommand(shellCmdGetTemplate, flagName);
-
-        for (int i = 0; i < 5; i++) {
-            if (currentFlagValue.equals(String.valueOf(newFlagValue))) {
-                return;
-            }
-
-            ShellUtils.runShellCommand(shellCmdSetTemplate, flagName, newFlagValue);
-
-            Thread.sleep(250);
-
-            currentFlagValue = ShellUtils.runShellCommand(shellCmdGetTemplate, flagName);
-
-            LogUtil.e(String.format("Flag was not set on iteration %d.", i));
-        }
-
-        throw new IllegalStateException("Unable to set flag in 5 iterations.");
+    /** Refreshes the consent reset token to a new randomly-generated value */
+    public static void refreshConsentResetToken(AdServicesFlagsSetterRule flags) {
+        flags.setFlag(KEY_CONSENT_NOTIFICATION_RESET_TOKEN, UUID.randomUUID().toString());
     }
 
-    public static void refreshConsentResetToken() {
-        ShellUtils.runShellCommand(
-                "device_config put adservices consent_notification_reset_token "
-                        + UUID.randomUUID().toString());
+    /** Enables consent manager debug mode */
+    public static void enableConsentDebugMode(AdServicesFlagsSetterRule flags) {
+        flags.setDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE, true);
     }
 
-    public static void turnOffEnableAdsServicesAPI() throws Exception {
-        forceSetFlag("enable_ad_services_system_api", false);
+    /** Disables consent manager debug mode */
+    public static void disableConsentDebugMode(AdServicesFlagsSetterRule flags) {
+        flags.setDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE, false);
     }
 
-    public static void turnOnEnableAdsServicesAPI() throws Exception {
-        forceSetFlag("enable_ad_services_system_api", true);
+    /** Sets the flag to mimic the behavior of an EEA device */
+    public static void setAsEuDevice(AdServicesFlagsSetterRule flags) {
+        flags.setFlag(KEY_IS_EEA_DEVICE, true);
     }
 
-    public static void disableSchedulingParams() {
-        ShellUtils.runShellCommand(
-                "device_config put adservices consent_notification_interval_begin_ms 0");
-        // set the notification interval end time to 12:00 AM
-        ShellUtils.runShellCommand(
-                "device_config put adservices consent_notification_interval_end_ms 86400000");
+    /** Sets the flag to mimic the behavior of a non-EEA device */
+    public static void setAsRowDevice(AdServicesFlagsSetterRule flags) {
+        flags.setFlag(KEY_IS_EEA_DEVICE, false);
     }
 
-    public static void enableConsentDebugMode() throws Exception {
-        forceSetFlag("consent_notification_debug_mode", true);
+    /** Enables Under-18 UX */
+    public static void enableU18(AdServicesFlagsSetterRule flags) {
+        flags.setFlag(KEY_U18_UX_ENABLED, true);
     }
 
-    public static void disableConsentDebugMode() throws Exception {
-        forceSetFlag("consent_notification_debug_mode", false);
+    /** Sets the flag to enable GA UX */
+    public static void enableGa(AdServicesFlagsSetterRule flags) throws Exception {
+        flags.setFlag(KEY_GA_UX_FEATURE_ENABLED, true);
     }
 
-    public static void enableGlobalKillSwitch() throws Exception {
-        forceSetFlag("global_kill_switch", true);
+    /** Overrides flag rvc_ux_enabled in tests to true */
+    public static void enableRvc(AdServicesFlagsSetterRule flags) {
+        flags.setFlag(KEY_RVC_UX_ENABLED, true);
     }
 
-    public static void setAsEuDevice() throws Exception {
-        forceSetFlag("is_eea_device", true);
+    /** Overrides flag rvc_post_ota_notification_enabled in tests to true */
+    public static void enableRvcNotification(AdServicesFlagsSetterRule flags) {
+        flags.setFlag(KEY_RVC_POST_OTA_NOTIFICATION_ENABLED, true);
     }
 
-    public static void setAsRowDevice() throws Exception {
-        forceSetFlag("is_eea_device", false);
-    }
-
-    public static void enableU18() throws Exception {
-        forceSetFlag("u18_ux_enabled", true);
-    }
-
-    public static void enableGa() throws Exception {
-        forceSetFlag("ga_ux_enabled", true);
-    }
-
-    /** Override flag rvc_ux_enabled in tests to true */
-    public static void enableRvc() throws Exception {
-        forceSetFlag("rvc_ux_enabled", true);
-    }
-
-    /** Override flag rvc_post_ota_notification_enabled in tests to true */
-    public static void enableRvcNotification() throws Exception {
-        forceSetFlag("rvc_post_ota_notification_enabled", true);
-    }
-
-    /** Override flag rvc_ux_enabled in tests to false */
-    public static void disableRvc() throws Exception {
-        forceSetFlag("rvc_ux_enabled", false);
-    }
-
-    /** Disables the enableAdServices system API. */
-    public static void turnOffEnableAdServicesSystemApi() throws Exception {
-        forceSetFlag("enable_ad_services_system_api", false);
+    /** Overrides flag rvc_ux_enabled in tests to false */
+    public static void disableRvc(AdServicesFlagsSetterRule flags) {
+        flags.setFlag(KEY_RVC_UX_ENABLED, false);
     }
 
     /** Enables the enableAdServices system API. */
-    public static void turnOnAdServicesSystemApi() throws Exception {
-        forceSetFlag("enable_ad_services_system_api", true);
+    public static void turnOnAdServicesSystemApi(AdServicesFlagsSetterRule flags) {
+        flags.setFlag(KEY_ENABLE_AD_SERVICES_SYSTEM_API, true);
     }
 
-    public static void enableBeta() throws Exception {
-        forceSetFlag("ga_ux_enabled", false);
+    /** Sets the flag to enable Beta UX */
+    public static void enableBeta(AdServicesFlagsSetterRule flags) {
+        flags.setFlag(KEY_GA_UX_FEATURE_ENABLED, false);
     }
 
-    public static void enableOtaStrings() throws Exception {
-        forceSetFlag("ui_ota_strings_feature_enabled", true);
+    /** Sets the flag to disable OTA String download feature */
+    public static void disableOtaStrings(AdServicesFlagsSetterRule flags) throws Exception {
+        flags.setFlag(KEY_UI_OTA_STRINGS_FEATURE_ENABLED, false);
     }
 
-    public static void disableOtaStrings() throws Exception {
-        forceSetFlag("ui_ota_strings_feature_enabled", false);
-    }
-
+    /** Restarts the AdServices process */
     public static void restartAdservices() {
         ShellUtils.runShellCommand("am force-stop com.google.android.adservices.api");
         ShellUtils.runShellCommand("am force-stop com.android.adservices.api");
     }
 
-    public static void clearSavedStatus() {
-        ShellUtils.runShellCommand(
-                "rm /data/user/0/com.google.android.adservices.api/files/"
-                        + "ConsentManagerStorageIdentifier.xml");
-        ShellUtils.runShellCommand(
-                "rm /data/user/0/com.android.adservices.api/files/"
-                        + "ConsentManagerStorageIdentifier.xml");
-        ShellUtils.runShellCommand(
-                "rm /data/system/adservices/0/consent/ConsentManagerStorageIdentifier.xml");
+    /** Sets flag consent_manager_debug_mode to true in tests */
+    public static void setConsentManagerDebugMode(AdServicesFlagsSetterRule flags) {
+        flags.setDebugFlag(KEY_CONSENT_MANAGER_DEBUG_MODE, true);
     }
 
-    public static void setSourceOfTruthToPPAPI() {
-        ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 1");
+    /** Sets flag consent_manager_ota_debug_mode to true in tests */
+    public static void setConsentManagerOtaDebugMode(AdServicesFlagsSetterRule flags) {
+        flags.setDebugFlag(KEY_CONSENT_MANAGER_OTA_DEBUG_MODE, true);
     }
 
-    /** Set flag consent_manager_debug_mode to true in tests */
-    public static void setConsentManagerDebugMode() {
-        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
-    }
-
-    /** Set flag consent_manager_ota_debug_mode to true in tests */
-    public static void setConsentManagerOtaDebugMode() {
-        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_ota_debug_mode true");
-    }
-
-    /** Set flag consent_manager_debug_mode to false in tests */
-    public static void resetConsentManagerDebugMode() {
-        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode false");
+    /** Sets flag consent_manager_debug_mode to false in tests */
+    public static void resetConsentManagerDebugMode(AdServicesFlagsSetterRule flags) {
+        flags.setDebugFlag(KEY_CONSENT_MANAGER_DEBUG_MODE, false);
     }
 
     public static void enableNotificationPermission() {
@@ -225,24 +171,25 @@ public class UiUtils {
                 .grantRuntimePermission("com.android.adservices.api", POST_NOTIFICATIONS);
     }
 
-    public static void disableNotificationFlowV2() throws Exception {
-        forceSetFlag("eu_notif_flow_change_enabled", false);
+    /** Sets the flag to disable the V2 notification flow */
+    public static void disableNotificationFlowV2(AdServicesFlagsSetterRule flags) throws Exception {
+        flags.setFlag("eu_notif_flow_change_enabled", false);
     }
 
-    /** set the binder time for cts test */
-    public static void setBinderTimeout() throws Exception {
-        ShellUtils.runShellCommand(
-                "setprop debug.adservices.binder_timeout %s", DEFAULT_BINDER_CONNECTION_TIMEOUT_MS);
+    /** Sets the binder time for cts test */
+    public static void setBinderTimeout(AdServicesFlagsSetterRule flags) {
+        flags.setDebugFlag(
+                BINDER_TIMEOUT_SYSTEM_PROPERTY_NAME, DEFAULT_BINDER_CONNECTION_TIMEOUT_MS);
     }
 
-    /** enable pas */
-    public static void enablePas() throws Exception {
-        forceSetFlag("pas_ux_enabled", true);
+    /** Enables pas */
+    public static void enablePas(AdServicesFlagsSetterRule flags) {
+        flags.setFlag(KEY_PAS_UX_ENABLED, true);
     }
 
-    /** disable pas */
-    public static void disablePas() throws Exception {
-        forceSetFlag("pas_ux_enabled", false);
+    /** Disables pas */
+    public static void disablePas(AdServicesFlagsSetterRule flags) {
+        flags.setFlag(KEY_PAS_UX_ENABLED, false);
     }
 
     public static void verifyNotification(
@@ -316,160 +263,11 @@ public class UiUtils {
         assertThat(title).isNotNull();
     }
 
-    public static void setupOTAStrings(
-            Context context, UiDevice device, AdServicesCommonManager commonManager, String mddURL)
-            throws Exception {
-        setAdServicesFlagsForOTATesting(mddURL);
-
-        AdservicesTestHelper.killAdservicesProcess(context);
-
-        // Consent is required to trigger the MDD job.
-        commonManager.setAdServicesEnabled(ENTRY_POINT_ENABLED, AD_ID_ENABLED);
-        Thread.sleep(LAUNCH_TIMEOUT);
-
-        ShellUtils.runShellCommand("cmd jobscheduler run -f com.google.android.adservices.api 14");
-
-        Thread.sleep(LAUNCH_TIMEOUT);
-        clearNotifications(context, device);
-    }
-
-    public static void setAdServicesFlagsForOTATesting(String mddURL) throws Exception {
-        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled false");
-        ShellUtils.runShellCommand(
-                "device_config put adservices ui_ota_strings_feature_enabled true");
-        ShellUtils.runShellCommand("device_config put adservices adservice_enabled true");
-        ShellUtils.runShellCommand("setprop debug.adservices.consent_notification_debug_mode true");
-        ShellUtils.runShellCommand("device_config put adservices global_kill_switch false");
-        ShellUtils.runShellCommand(
-                "device_config put adservices mdd_ui_ota_strings_manifest_file_url " + mddURL);
-
-        // Set as ROW device for default consent opt-in.
-        UiUtils.setAsRowDevice();
-    }
-
-    public static void setOTADownloadTimeout(long timeout) {
-        ShellUtils.runShellCommand(
-                String.format(
-                        "device_config put adservices ui_ota_strings_download_deadline %d",
-                        timeout));
-    }
-
-    public static void clearNotifications(Context context, UiDevice device)
-            throws InterruptedException {
-        device.openNotification();
-        Thread.sleep(LAUNCH_TIMEOUT);
-        UiObject2 scroller2 =
-                device.findObject(By.res("com.android.systemui:id/notification_stack_scroller"));
-        UiObject2 notificationCard =
-                scroller2.findObject(
-                        By.textContains(
-                                getString(context, R.string.notificationUI_notification_title)));
-
-        if (notificationCard != null) {
-            notificationCard.click();
-        }
-        Thread.sleep(LAUNCH_TIMEOUT);
-        device.pressHome();
-    }
-
-    public static void verifyNotificationAndSettingsPage(
-            Context context, UiDevice device, Boolean isOTA) throws InterruptedException {
-        // open notification tray
-        device.openNotification();
-        Thread.sleep(LAUNCH_TIMEOUT);
-        device.wait(Until.hasObject(By.pkg("com.android.systemui")), LAUNCH_TIMEOUT);
-
-        // verify notification card
-        UiObject2 scroller =
-                device.findObject(By.res("com.android.systemui:id/notification_stack_scroller"));
-
-        String targetStr =
-                isOTA
-                        ? getOTAString(context, R.string.notificationUI_notification_title)
-                        : getString(context, R.string.notificationUI_notification_title);
-
-        UiObject2 notificationCard = scroller.findObject(By.text(targetStr));
-        Thread.sleep(LAUNCH_TIMEOUT);
-
-        notificationCard.click();
-
-        // Wait for the notification landing page to appear
-        device.wait(Until.hasObject(By.pkg(NOTIFICATION_PACKAGE_NAME).depth(0)), LAUNCH_TIMEOUT);
-
-        // verify strings
-        UiObject2 title =
-                isOTA
-                        ? scrollToOTAElement(context, device, R.string.notificationUI_header_title)
-                        : scrollToElement(context, device, R.string.notificationUI_header_title);
-
-        assertThat(title).isNotNull();
-        // open settings
-        scrollToThenClickElementContainingText(
-                device,
-                isOTA
-                        ? "Manage privacy settings!"
-                        : getString(context, R.string.notificationUI_left_control_button_text));
-
-        // Wait for the app to appear
-        device.wait(Until.hasObject(By.pkg(PRIVACY_SANDBOX_PACKAGE_NAME).depth(0)), LAUNCH_TIMEOUT);
-
-        // verify strings have changed
-        UiObject2 appButton =
-                isOTA
-                        ? scrollToOTAElement(context, device, R.string.settingsUI_apps_title)
-                        : scrollToElement(context, device, R.string.settingsUI_apps_title);
-
-        device.waitForIdle(LAUNCH_TIMEOUT);
-        assertThat(appButton).isNotNull();
-        UiObject2 topicsButton =
-                isOTA
-                        ? scrollToOTAElement(context, device, R.string.settingsUI_topics_title)
-                        : scrollToElement(context, device, R.string.settingsUI_topics_title);
-        assertThat(topicsButton).isNotNull();
-    }
-
-    public static void connectToWifi() {
-        ShellUtils.runShellCommand("svc wifi enable");
-        ShellUtils.runShellCommand("cmd wifi connect-network VirtWifi open");
-    }
-
-    public static void turnOffWifi() {
-        ShellUtils.runShellCommand("svc wifi disable");
-    }
-
-    private static void scrollToThenClickElementContainingText(UiDevice device, String text) {
-        UiObject2 element = scrollToElement(device, text);
-        element.click();
-    }
-
-    private static UiObject2 scrollToOTAElement(Context context, UiDevice device, int resId) {
-        return scrollToElement(device, getOTAString(context, resId));
-    }
-
-    private static UiObject2 scrollToElement(UiDevice device, String targetStr) {
-        UiObject2 scrollView =
-                device.findObject(By.clazz(ANDROID_WIDGET_SCROLLVIEW).scrollable(true));
-        UiObject2 element =
-                scrollView.scrollUntil(
-                        Direction.DOWN, Until.findObject(By.textContains(targetStr)));
-        if (element != null) {
-            return element;
-        }
-        return device.findObject(By.textContains(targetStr));
-    }
-
-    private static UiObject2 scrollToElement(Context context, UiDevice device, int resId) {
-        return scrollToElement(device, getString(context, resId));
-    }
-
-    // Test strings for OTA have an exclamation mark appended to the end
-    private static String getOTAString(Context context, int resourceId) {
-        return getString(context, resourceId) + "!";
-    }
-
     /**
      * Swipes through the screen to show elements on the button of the page but hidden by the
      * navigation bar.
+     *
+     * @param device the UiDevice to manipulate
      */
     public static void gentleSwipe(UiDevice device) {
         UiObject2 scrollView =
@@ -480,21 +278,21 @@ public class UiUtils {
         }
     }
 
-    public static void setFlipFlow(boolean isFlip) {
-        ShellUtils.runShellCommand(
-                "device_config put adservices eu_notif_flow_change_enabled " + isFlip);
+    /** Sets the flag to enable or disable the flip flow */
+    public static void setFlipFlow(AdServicesFlagsSetterRule flags, boolean isFlip) {
+        flags.setFlag("eu_notif_flow_change_enabled", isFlip);
     }
 
-    /** set get adservices common states services enabled */
-    public static void setGetAdservicesCommonStatesServiceEnable(boolean enable) {
-        ShellUtils.runShellCommand(
-                "device_config put adservices get_adservices_common_states_api_enabled " + enable);
+    /** Sets get adservices common states services enabled */
+    public static void setGetAdservicesCommonStatesServiceEnable(
+            AdServicesFlagsSetterRule flags, boolean enable) {
+        flags.setFlag(KEY_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED, enable);
     }
 
-    /** set get adservices common states services enabled */
-    public static void setGetAdservicesCommonStatesAllowList(String list) {
-        ShellUtils.runShellCommand(
-                "device_config put adservices get_adservices_common_states_allow_list " + list);
+    /** Sets get adservices common states services enabled */
+    public static void setGetAdservicesCommonStatesAllowList(
+            AdServicesFlagsSetterRule flags, String list) {
+        flags.setFlag(KEY_GET_ADSERVICES_COMMON_STATES_ALLOW_LIST, list);
     }
 
     public static String getString(Context context, int resourceId) {
@@ -566,15 +364,17 @@ public class UiUtils {
         }
     }
 
-    public static void resetAdServicesConsentData(Context context) throws Exception {
+    /** Resets AdServices consent data */
+    public static void resetAdServicesConsentData(Context context, AdServicesFlagsSetterRule flags)
+            throws Exception {
         // Neeed to disable debug mode since it takes precedence over reset channel.
-        disableConsentDebugMode();
-        turnOnAdServicesSystemApi();
+        disableConsentDebugMode(flags);
+        turnOnAdServicesSystemApi(flags);
 
         AdServicesCommonManager mCommonManager = AdServicesCommonManager.get(context);
 
         // Reset consent and thereby AdServices data before each test.
-        UiUtils.refreshConsentResetToken();
+        UiUtils.refreshConsentResetToken(flags);
 
         SettableFuture<Boolean> responseFuture = SettableFuture.create();
 

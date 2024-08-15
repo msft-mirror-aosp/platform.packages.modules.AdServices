@@ -45,6 +45,7 @@ import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
+import com.android.adservices.service.exception.PersistScheduleCAUpdateException;
 import com.android.adservices.service.stats.AdServicesLogger;
 
 import com.google.common.util.concurrent.FluentFuture;
@@ -113,12 +114,10 @@ public class ScheduleCustomAudienceUpdateImpl {
             @NonNull DevContext devContext) {
         try {
             mCallerAppPackageName = input.getCallerPackageName();
-
             if (!mScheduleCustomAudienceUpdateEnabled) {
                 sLogger.v("scheduleCustomAudienceUpdate is disabled.");
                 throw new IllegalStateException("scheduleCustomAudienceUpdate is disabled.");
             }
-
             FluentFuture<AdTechIdentifier> buyerFuture =
                     FluentFuture.from(filterAndValidateRequest(input, devContext));
             buyerFuture
@@ -170,6 +169,7 @@ public class ScheduleCustomAudienceUpdateImpl {
         return mBackgroundExecutorService.submit(
                 () -> {
                     sLogger.v("In scheduleCustomAudienceUpdate filterAndValidateRequest");
+
                     AdTechIdentifier buyer = null;
                     try {
                         if (mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
@@ -192,20 +192,16 @@ public class ScheduleCustomAudienceUpdateImpl {
 
                         validateDelayTime(input.getMinDelay());
 
-                    } catch (FledgeAuthorizationFilter.CallerMismatchException t) {
-                        throw new FilterException(t);
-                    } catch (AppImportanceFilter.WrongCallingApplicationStateException t) {
-                        throw new FilterException(t);
-                    } catch (FledgeAuthorizationFilter.AdTechNotAllowedException t) {
-                        throw new FilterException(t);
-                    } catch (FledgeAllowListsFilter.AppNotAllowedException t) {
-                        throw new FilterException(t);
-                    } catch (LimitExceededException t) {
-                        throw new FilterException(t);
-                    } catch (ConsentManager.RevokedConsentException t) {
+                    } catch (FledgeAuthorizationFilter.CallerMismatchException
+                            | AppImportanceFilter.WrongCallingApplicationStateException
+                            | FledgeAuthorizationFilter.AdTechNotAllowedException
+                            | FledgeAllowListsFilter.AppNotAllowedException
+                            | LimitExceededException
+                            | ConsentManager.RevokedConsentException t) {
                         throw new FilterException(t);
                     }
                     sLogger.v("Completed scheduleCustomAudienceUpdate filterAndValidateRequest");
+
                     return buyer;
                 });
     }
@@ -239,7 +235,8 @@ public class ScheduleCustomAudienceUpdateImpl {
                                 mCustomAudienceDao
                                         .insertScheduledUpdateAndPartialCustomAudienceList(
                                                 scheduledUpdate,
-                                                input.getPartialCustomAudienceList()));
+                                                input.getPartialCustomAudienceList(),
+                                                input.shouldReplacePendingUpdates()));
     }
 
     private void notifyFailure(ScheduleCustomAudienceUpdateCallback callback, Throwable t) {
@@ -250,12 +247,14 @@ public class ScheduleCustomAudienceUpdateImpl {
 
             if (isFilterException) {
                 resultCode = FilterException.getResultCode(t);
-            } else if (t instanceof IllegalArgumentException) {
-                resultCode = AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
             } else if (t instanceof InvalidObjectException) {
                 resultCode = AdServicesStatusUtils.STATUS_INVALID_OBJECT;
             } else if (t instanceof LimitExceededException) {
                 resultCode = AdServicesStatusUtils.STATUS_SERVER_RATE_LIMIT_REACHED;
+            } else if (t instanceof IllegalArgumentException) {
+                resultCode = AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+            } else if (t instanceof PersistScheduleCAUpdateException) {
+                resultCode = AdServicesStatusUtils.STATUS_UPDATE_ALREADY_PENDING_ERROR;
             } else {
                 sLogger.d(t, "Unexpected error during operation");
                 resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;

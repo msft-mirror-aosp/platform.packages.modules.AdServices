@@ -47,6 +47,7 @@ import android.app.job.JobInfo;
 import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
 import android.content.ComponentName;
+import android.platform.test.annotations.DisabledOnRavenwood;
 
 import com.android.adservices.shared.SharedMockitoTestCase;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
@@ -54,8 +55,8 @@ import com.android.adservices.shared.proto.ModuleJobPolicy;
 import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
 import com.android.adservices.shared.spe.logging.JobServiceLogger;
 import com.android.adservices.shared.spe.scheduling.BackoffPolicy;
-import com.android.adservices.shared.testing.JobServiceCallback;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
+import com.android.adservices.shared.testing.concurrency.JobServiceCallback;
 
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -71,6 +72,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 /** Unit test for {@link AbstractJobService}. */
+// TODO(b/335935200): Service class android.app.job.JobScheduler not yet supported under Ravenwood
+@DisabledOnRavenwood(blockedBy = JobScheduler.class)
 public final class AbstractJobServiceTest extends SharedMockitoTestCase {
     // This is used to schedule a job with a latency before its execution. Use a large value so that
     // the job can NOT execute.

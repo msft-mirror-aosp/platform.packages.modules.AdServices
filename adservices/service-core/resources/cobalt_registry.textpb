@@ -39,14 +39,13 @@ customers {
       metric_type: OCCURRENCE
       time_zone_policy: OTHER_TIME_ZONE
       meta_data {
-        expiration_date: "2024/06/01"
+        expiration_date: "2025/05/01"
         max_release_stage: GA
       }
       reports {
         report_name: "fleetwide_counts_true"
         id: 1
         report_type: FLEETWIDE_OCCURRENCE_COUNTS
-        privacy_level: NO_ADDED_PRIVACY
         event_vector_buffer_max: 18
         reporting_interval: DAYS_1
         system_profile_selection: REPORT_ALL
@@ -58,12 +57,10 @@ customers {
         id: 2
         report_type: FLEETWIDE_OCCURRENCE_COUNTS
         reporting_threshold: 1
-        privacy_level: LOW_PRIVACY
         num_index_points: 10
         min_value: 1
         max_value: 100
         event_vector_buffer_max: 18
-        poisson_mean: 0.1
         reporting_interval: DAYS_1
         system_profile_selection: REPORT_ALL
         max_release_stage: DEBUG
@@ -73,6 +70,8 @@ customers {
           delta: 0.9
           reporting_threshold: 1
           poisson_mean: 0.1
+          skip_poisson_mean_validation_test_only: true
+          device_privacy_dependency_set: V1
         }
       }
       reports {
@@ -80,12 +79,10 @@ customers {
         id: 3
         report_type: FLEETWIDE_OCCURRENCE_COUNTS
         reporting_threshold: 1000000
-        privacy_level: HIGH_PRIVACY
         num_index_points: 49
         min_value: 1
         max_value: 100
         event_vector_buffer_max: 18
-        poisson_mean: 0.00124512
         reporting_interval: DAYS_1
         system_profile_selection: REPORT_ALL
         privacy_mechanism: SHUFFLED_DIFFERENTIAL_PRIVACY
@@ -94,6 +91,7 @@ customers {
           delta: 1e-10
           reporting_threshold: 1000000
           poisson_mean: 0.00124512
+          device_privacy_dependency_set: V1
         }
       }
       reports {
@@ -101,12 +99,10 @@ customers {
         id: 4
         report_type: FLEETWIDE_OCCURRENCE_COUNTS
         reporting_threshold: 10000000
-        privacy_level: HIGH_PRIVACY
         num_index_points: 49
         min_value: 1
         max_value: 100
         event_vector_buffer_max: 18
-        poisson_mean: 0.000124512
         reporting_interval: DAYS_1
         system_profile_selection: REPORT_ALL
         privacy_mechanism: SHUFFLED_DIFFERENTIAL_PRIVACY
@@ -115,6 +111,7 @@ customers {
           delta: 1e-10
           reporting_threshold: 10000000
           poisson_mean: 0.000124512
+          device_privacy_dependency_set: V1
         }
       }
       reports {
@@ -122,12 +119,10 @@ customers {
         id: 5
         report_type: FLEETWIDE_OCCURRENCE_COUNTS
         reporting_threshold: 2
-        privacy_level: LOW_PRIVACY
         num_index_points: 25
         min_value: 1
         max_value: 25
         event_vector_buffer_max: 18
-        poisson_mean: 0.002
         reporting_interval: DAYS_1
         system_profile_selection: REPORT_ALL
         max_release_stage: DOGFOOD
@@ -137,6 +132,8 @@ customers {
           delta: 0.8187
           reporting_threshold: 2
           poisson_mean: 0.002
+          skip_poisson_mean_validation_test_only: true
+          device_privacy_dependency_set: V1
         }
       }
       metric_dimensions {
@@ -1941,7 +1938,7 @@ customers {
       id: 2
       metric_type: STRING
       meta_data {
-        expiration_date: "2025/01/24"
+        expiration_date: "2025/05/01"
         max_release_stage: GA
       }
       reports {
@@ -1949,7 +1946,6 @@ customers {
         id: 1
         report_type: STRING_COUNTS
         reporting_threshold: 1000000
-        privacy_level: NO_ADDED_PRIVACY
         event_vector_buffer_max: 100
         string_buffer_max: 50
         reporting_interval: DAYS_1
@@ -1962,7 +1958,6 @@ customers {
         id: 2
         report_type: STRING_COUNTS
         reporting_threshold: 1
-        privacy_level: NO_ADDED_PRIVACY
         event_vector_buffer_max: 100
         string_buffer_max: 50
         reporting_interval: DAYS_1
@@ -2238,7 +2233,6 @@ customers {
         id: 1
         report_type: STRING_COUNTS
         reporting_threshold: 1000000
-        privacy_level: NO_ADDED_PRIVACY
         event_vector_buffer_max: 100
         string_buffer_max: 50
         reporting_interval: DAYS_1
@@ -2252,7 +2246,6 @@ customers {
         id: 2
         report_type: STRING_COUNTS
         reporting_threshold: 1
-        privacy_level: NO_ADDED_PRIVACY
         event_vector_buffer_max: 100
         string_buffer_max: 50
         reporting_interval: DAYS_1
@@ -2372,6 +2365,398 @@ customers {
         event_codes {
           key: 2
           value: "ROW"
+        }
+      }
+      metric_semantics: USAGE_COUNTING
+    }
+    metrics {
+      metric_name: "per_package_attribution_status"
+      customer_id: 200004
+      project_id: 2
+      id: 4
+      metric_type: STRING
+      meta_data {
+        expiration_date: "2025/06/01"
+        max_release_stage: GA
+      }
+      reports {
+        report_name: "attribution_status_counts"
+        id: 1
+        report_type: STRING_COUNTS
+        reporting_threshold: 1000000
+        event_vector_buffer_max: 100
+        string_buffer_max: 50
+        reporting_interval: DAYS_1
+        system_profile_field: APP_VERSION
+        system_profile_field: SYSTEM_VERSION
+        system_profile_selection: REPORT_ALL
+        privacy_mechanism: DE_IDENTIFICATION
+      }
+      reports {
+        report_name: "registration_status_counts_dogfood"
+        id: 2
+        report_type: STRING_COUNTS
+        reporting_threshold: 1
+        event_vector_buffer_max: 100
+        string_buffer_max: 50
+        reporting_interval: DAYS_1
+        system_profile_field: APP_VERSION
+        system_profile_field: SYSTEM_VERSION
+        system_profile_selection: REPORT_ALL
+        max_release_stage: DOGFOOD
+        privacy_mechanism: DE_IDENTIFICATION
+      }
+      metric_dimensions {
+        dimension: "attribution_surface_type"
+        event_codes {
+          key: 0
+          value: "UNKNOWN_ATTRIBUTION_SURFACE_COMBINATION"
+        }
+        event_codes {
+          key: 1
+          value: "APP_APP_ATTRIBUTION_SURFACE_COMBINATION"
+        }
+        event_codes {
+          key: 2
+          value: "APP_WEB_ATTRIBUTION_SURFACE_COMBINATION"
+        }
+        event_codes {
+          key: 3
+          value: "WEB_APP_ATTRIBUTION_SURFACE_COMBINATION"
+        }
+        event_codes {
+          key: 4
+          value: "WEB_WEB_ATTRIBUTION_SURFACE_COMBINATION"
+        }
+      }
+      metric_dimensions {
+        dimension: "source_type"
+        event_codes {
+          key: 0
+          value: "UNKNOWN_SOURCE_TYPE"
+        }
+        event_codes {
+          key: 1
+          value: "EVENT_SOURCE_TYPE"
+        }
+        event_codes {
+          key: 2
+          value: "NAVIGATION_SOURCE_TYPE"
+        }
+        event_codes {
+          key: 3
+          value: "VIEW_SOURCE_TYPE"
+        }
+        event_codes {
+          key: 4
+          value: "CLICK_SOURCE_TYPE"
+        }
+      }
+      metric_dimensions {
+        dimension: "status"
+        event_codes {
+          key: 0
+          value: "UNKNOWN_ATTRIBUTION_FAILURE_TYPE"
+        }
+        event_codes {
+          key: 1
+          value: "TRIGGER_IGNORED_ATTRIBUTION_FAILURE_TYPE"
+        }
+        event_codes {
+          key: 2
+          value: "TRIGGER_ALREADY_ATTRIBUTED_ATTRIBUTION_FAILURE_TYPE"
+        }
+        event_codes {
+          key: 3
+          value: "TRIGGER_MARKED_FOR_DELETION_ATTRIBUTION_FAILURE_TYPE"
+        }
+        event_codes {
+          key: 4
+          value: "NO_MATCHING_SOURCE_ATTRIBUTION_FAILURE_TYPE"
+        }
+        event_codes {
+          key: 5
+          value: "NO_TOP_LEVEL_FILTER_MATCH_ATTRIBUTION_FAILURE_TYPE"
+        }
+        event_codes {
+          key: 6
+          value: "RATE_LIMIT_EXCEEDED_ATTRIBUTION_FAILURE_TYPE"
+        }
+        event_codes {
+          key: 7
+          value: "NO_REPORTS_GENERATED_ATTRIBUTION_FAILURE_TYPE"
+        }
+        event_codes {
+          key: 8
+          value: "JOB_RETRY_LIMIT_EXCEEDED_ATTRIBUTION_FAILURE_TYPE"
+        }
+        event_codes {
+          key: 9
+          value: "TRIGGER_NOT_FOUND_FAILURE_TYPE"
+        }
+        event_codes {
+          key: 100
+          value: "SUCCESS_STATUS"
+        }
+        event_codes {
+          key: 101
+          value: "AGGREGATE_REPORT_GENERATED_SUCCESS_STATUS"
+        }
+        event_codes {
+          key: 102
+          value: "EVENT_REPORT_GENERATED_SUCCESS_STATUS"
+        }
+        event_codes {
+          key: 103
+          value: "AGGREGATE_AND_EVENT_REPORTS_GENERATED_SUCCESS_STATUS"
+        }
+        event_codes {
+          key: 200
+          value: "UNKNOWN_STATUS"
+        }
+      }
+      metric_semantics: USAGE_COUNTING
+    }
+    metrics {
+      metric_name: "per_package_reporting_status"
+      customer_id: 200004
+      project_id: 2
+      id: 5
+      metric_type: STRING
+      meta_data {
+        expiration_date: "2025/06/01"
+        max_release_stage: GA
+      }
+      reports {
+        report_name: "reporting_status_counts"
+        id: 1
+        report_type: STRING_COUNTS
+        reporting_threshold: 1000000
+        event_vector_buffer_max: 200
+        string_buffer_max: 50
+        reporting_interval: DAYS_1
+        system_profile_field: APP_VERSION
+        system_profile_field: SYSTEM_VERSION
+        system_profile_selection: REPORT_ALL
+        privacy_mechanism: DE_IDENTIFICATION
+      }
+      reports {
+        report_name: "reporting_status_counts_dogfood"
+        id: 2
+        report_type: STRING_COUNTS
+        reporting_threshold: 1
+        event_vector_buffer_max: 200
+        string_buffer_max: 50
+        reporting_interval: DAYS_1
+        system_profile_field: APP_VERSION
+        system_profile_field: SYSTEM_VERSION
+        system_profile_selection: REPORT_ALL
+        max_release_stage: DOGFOOD
+        privacy_mechanism: DE_IDENTIFICATION
+      }
+      metric_dimensions {
+        dimension: "report_type"
+        event_codes {
+          key: 0
+          value: "UNKNOWN_REPORT"
+        }
+        event_codes {
+          key: 1
+          value: "EVENT"
+        }
+        event_codes {
+          key: 2
+          value: "AGGREGATE"
+        }
+        event_codes {
+          key: 3
+          value: "DEBUG_EVENT"
+        }
+        event_codes {
+          key: 4
+          value: "DEBUG_AGGREGATE"
+        }
+        event_codes {
+          key: 5
+          value: "VERBOSE_DEBUG_SOURCE_DESTINATION_LIMIT"
+        }
+        event_codes {
+          key: 6
+          value: "VERBOSE_DEBUG_SOURCE_NOISED"
+        }
+        event_codes {
+          key: 7
+          value: "VERBOSE_DEBUG_SOURCE_STORAGE_LIMIT"
+        }
+        event_codes {
+          key: 8
+          value: "VERBOSE_DEBUG_SOURCE_SUCCESS"
+        }
+        event_codes {
+          key: 9
+          value: "VERBOSE_DEBUG_SOURCE_UNKNOWN_ERROR"
+        }
+        event_codes {
+          key: 10
+          value: "VERBOSE_DEBUG_SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR"
+        }
+        event_codes {
+          key: 11
+          value: "VERBOSE_DEBUG_TRIGGER_AGGREGATE_DEDUPLICATED"
+        }
+        event_codes {
+          key: 12
+          value: "VERBOSE_DEBUG_TRIGGER_AGGREGATE_INSUFFICIENT_BUDGET"
+        }
+        event_codes {
+          key: 13
+          value: "VERBOSE_DEBUG_TRIGGER_AGGREGATE_NO_CONTRIBUTIONS"
+        }
+        event_codes {
+          key: 14
+          value: "VERBOSE_DEBUG_TRIGGER_AGGREGATE_REPORT_WINDOW_PASSED"
+        }
+        event_codes {
+          key: 15
+          value: "VERBOSE_DEBUG_TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT"
+        }
+        event_codes {
+          key: 16
+          value: "VERBOSE_DEBUG_TRIGGER_EVENT_DEDUPLICATED"
+        }
+        event_codes {
+          key: 17
+          value: "VERBOSE_DEBUG_TRIGGER_EVENT_EXCESSIVE_REPORTS"
+        }
+        event_codes {
+          key: 18
+          value: "VERBOSE_DEBUG_TRIGGER_EVENT_LOW_PRIORITY"
+        }
+        event_codes {
+          key: 19
+          value: "VERBOSE_DEBUG_TRIGGER_EVENT_NO_MATCHING_CONFIGURATIONS"
+        }
+        event_codes {
+          key: 20
+          value: "VERBOSE_DEBUG_TRIGGER_EVENT_NOISE"
+        }
+        event_codes {
+          key: 21
+          value: "VERBOSE_DEBUG_TRIGGER_EVENT_REPORT_WINDOW_PASSED"
+        }
+        event_codes {
+          key: 22
+          value: "VERBOSE_DEBUG_TRIGGER_NO_MATCHING_FILTER_DATA"
+        }
+        event_codes {
+          key: 23
+          value: "VERBOSE_DEBUG_TRIGGER_NO_MATCHING_SOURCE"
+        }
+        event_codes {
+          key: 24
+          value: "VERBOSE_DEBUG_TRIGGER_REPORTING_ORIGIN_LIMIT"
+        }
+        event_codes {
+          key: 25
+          value: "VERBOSE_DEBUG_TRIGGER_EVENT_STORAGE_LIMIT"
+        }
+        event_codes {
+          key: 26
+          value: "VERBOSE_DEBUG_TRIGGER_UNKNOWN_ERROR"
+        }
+        event_codes {
+          key: 27
+          value: "VERBOSE_DEBUG_TRIGGER_AGGREGATE_STORAGE_LIMIT"
+        }
+        event_codes {
+          key: 28
+          value: "VERBOSE_DEBUG_TRIGGER_AGGREGATE_EXCESSIVE_REPORTS"
+        }
+        event_codes {
+          key: 29
+          value: "VERBOSE_DEBUG_TRIGGER_EVENT_REPORT_WINDOW_NOT_STARTED"
+        }
+        event_codes {
+          key: 30
+          value: "VERBOSE_DEBUG_TRIGGER_EVENT_NO_MATCHING_TRIGGER_DATA"
+        }
+        event_codes {
+          key: 31
+          value: "VERBOSE_DEBUG_TRIGGER_EVENT_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT"
+        }
+        event_codes {
+          key: 32
+          value: "VERBOSE_DEBUG_TRIGGER_AGG_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT"
+        }
+        event_codes {
+          key: 9999
+          value: "VERBOSE_DEBUG_UNKNOWN"
+        }
+      }
+      metric_dimensions {
+        dimension: "report_upload_method"
+        event_codes {
+          key: 0
+          value: "UNKNOWN_REPORT_UPLOAD_METHOD"
+        }
+        event_codes {
+          key: 1
+          value: "REGULAR_REPORT_UPLOAD_METHOD"
+        }
+        event_codes {
+          key: 2
+          value: "FALLBACK_REPORT_UPLOAD_METHOD"
+        }
+      }
+      metric_dimensions {
+        dimension: "status"
+        event_codes {
+          key: 0
+          value: "UNKNOWN_REPORT_UPLOAD_FAILURE_TYPE"
+        }
+        event_codes {
+          key: 1
+          value: "ENROLLMENT_NOT_FOUND_REPORT_UPLOAD_FAILURE_TYPE"
+        }
+        event_codes {
+          key: 2
+          value: "NETWORK_ERROR_REPORT_UPLOAD_FAILURE_TYPE"
+        }
+        event_codes {
+          key: 3
+          value: "DATASTORE_ERROR_REPORT_UPLOAD_FAILURE_TYPE"
+        }
+        event_codes {
+          key: 4
+          value: "REPORT_NOT_PENDING_REPORT_UPLOAD_FAILURE_TYPE"
+        }
+        event_codes {
+          key: 5
+          value: "JOB_RETRY_LIMIT_EXCEEDED_REPORT_UPLOAD_FAILURE_TYPE"
+        }
+        event_codes {
+          key: 6
+          value: "SERIALIZATION_ERROR_REPORT_UPLOAD_FAILURE_TYPE"
+        }
+        event_codes {
+          key: 7
+          value: "ENCRYPTION_ERROR_REPORT_UPLOAD_FAILURE_TYPE"
+        }
+        event_codes {
+          key: 8
+          value: "UNSUCCESSFUL_HTTP_RESPONSE_CODE_FAILURE_TYPE"
+        }
+        event_codes {
+          key: 9
+          value: "REPORT_NOT_FOUND_FAILURE_TYPE"
+        }
+        event_codes {
+          key: 100
+          value: "SUCCESS_STATUS"
+        }
+        event_codes {
+          key: 200
+          value: "UNKNOWN_STATUS"
         }
       }
       metric_semantics: USAGE_COUNTING

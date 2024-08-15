@@ -24,8 +24,9 @@ public class AuctionServerPayloadMetricsStrategyWithKeyFetchEnabled
         extends AuctionServerPayloadMetricsStrategyEnabled {
     /** Constructs a {@link AuctionServerPayloadMetricsStrategyWithKeyFetchEnabled} instance. */
     public AuctionServerPayloadMetricsStrategyWithKeyFetchEnabled(
-            AdServicesLogger adServicesLogger) {
-        super(adServicesLogger);
+            AdServicesLogger adServicesLogger,
+            SellerConfigurationMetricsStrategy sellerConfigurationMetricsStrategy) {
+        super(adServicesLogger, sellerConfigurationMetricsStrategy);
     }
 
     @Override

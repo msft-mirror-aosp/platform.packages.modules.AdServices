@@ -16,6 +16,17 @@
 
 package android.adservices.debuggablects;
 
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_LIST;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_AGGREGATION_COORDINATOR_PATH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCE;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_TRIGGER;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.common.AdServicesOutcomeReceiver;
@@ -26,28 +37,20 @@ import android.adservices.measurement.WebSourceRegistrationRequest;
 import android.adservices.measurement.WebTriggerParams;
 import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.adservices.utils.MockWebServerRule;
-import android.content.Context;
 import android.net.Uri;
 
-import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
 
-import com.android.adservices.common.AdServicesDeviceSupportedRule;
-import com.android.adservices.common.AdServicesFlagsSetterRule;
-import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.AdServicesSupportHelper;
 
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
 import com.google.mockwebserver.RecordedRequest;
 
-import org.junit.AfterClass;
+import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -63,9 +66,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /** CTS debuggable test for Measurement API. */
-@RunWith(JUnit4.class)
-public class MeasurementCtsDebuggableTest {
-    protected static final Context sContext = ApplicationProvider.getApplicationContext();
+public final class MeasurementCtsDebuggableTest extends AdServicesDebuggableTestCase {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static UiDevice sDevice;
 
@@ -73,9 +74,6 @@ public class MeasurementCtsDebuggableTest {
     private static final String WEB_ORIGIN = replaceTestDomain("https://rb-example-origin.test");
     private static final String WEB_DESTINATION =
             replaceTestDomain("https://rb-example-destination.test");
-
-    private static final String PACKAGE_NAME =
-            ApplicationProvider.getApplicationContext().getPackageName();
 
     private static final int DEFAULT_PORT = 38383;
     private static final int KEYS_PORT = 38384;
@@ -103,69 +101,50 @@ public class MeasurementCtsDebuggableTest {
 
     private MeasurementManager mMeasurementManager;
 
-    @Rule(order = 0)
-    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
-            new AdServicesDeviceSupportedRule();
-
-    @Rule(order = 1)
-    public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
-                    .setCompatModeFlags()
-                    .setMeasurementTags();
-
-    @BeforeClass
-    public static void setupDevicePropertiesAndInitializeClient() throws Exception {
-        setFlagsForMeasurement();
-    }
-
-    @AfterClass
-    public static void resetDeviceProperties() throws Exception {
-        resetFlagsForMeasurement();
-    }
-
     @Before
     public void setup() throws Exception {
+        setFlagsForMeasurement();
+
         mMeasurementManager = MeasurementManager.get(sContext);
         Objects.requireNonNull(mMeasurementManager);
         executeDeleteRegistrations();
     }
 
+    @After
+    public void tearDown() {
+        executeDeleteRegistrations();
+    }
+
     @Test
-    public void registerSourceAndTriggerAndRunAttributionAndEventReporting() throws Exception {
+    public void registerSourceAndTriggerAndRunAttributionAndEventReporting() {
         executeRegisterSource();
         executeRegisterTrigger();
         executeAttribution();
         executeEventReporting();
-        executeDeleteRegistrations();
     }
 
     @Test
-    public void registerSourceAndTriggerAndRunAttributionAndAggregateReporting() throws Exception {
+    public void registerSourceAndTriggerAndRunAttributionAndAggregateReporting() {
         executeRegisterSource();
         executeRegisterTrigger();
         executeAttribution();
         executeAggregateReporting();
-        executeDeleteRegistrations();
     }
 
     @Test
-    public void registerWebSourceAndWebTriggerAndRunAttributionAndEventReporting()
-            throws Exception {
+    public void registerWebSourceAndWebTriggerAndRunAttributionAndEventReporting() {
         executeRegisterWebSource();
         executeRegisterWebTrigger();
         executeAttribution();
         executeEventReporting();
-        executeDeleteRegistrations();
     }
 
     @Test
-    public void registerWebSourceAndWebTriggerAndRunAttributionAndAggregateReporting()
-            throws Exception {
+    public void registerWebSourceAndWebTriggerAndRunAttributionAndAggregateReporting() {
         executeRegisterWebSource();
         executeRegisterWebTrigger();
         executeAttribution();
         executeAggregateReporting();
-        executeDeleteRegistrations();
     }
 
     private static UiDevice getUiDevice() {
@@ -179,22 +158,15 @@ public class MeasurementCtsDebuggableTest {
         return value.replaceAll("test", "com");
     }
 
-    private MockWebServerRule createForHttps(int port) {
-        MockWebServerRule mockWebServerRule =
-                MockWebServerRule.forHttps(
-                        sContext, "adservices_untrusted_test_server.p12", "adservices_test");
-        try {
-            mockWebServerRule.reserveServerListeningPort(port);
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
-        return mockWebServerRule;
+    private MockWebServerRule createForHttps() {
+        return MockWebServerRule.forHttps(
+                sContext, "adservices_untrusted_test_server.p12", "adservices_test");
     }
 
     private MockWebServer startServer(int port, MockResponse... mockResponses) {
         try {
-            final MockWebServerRule serverRule = createForHttps(port);
-            return serverRule.startMockWebServer(List.of(mockResponses));
+            MockWebServerRule serverRule = createForHttps();
+            return serverRule.startMockWebServer(List.of(mockResponses), port);
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
@@ -223,11 +195,11 @@ public class MeasurementCtsDebuggableTest {
     }
 
     private MockResponse createRegisterSourceResponse() {
-        final MockResponse mockRegisterSourceResponse = new MockResponse();
-        final String payload =
+        MockResponse mockRegisterSourceResponse = new MockResponse();
+        String payload =
                 "{"
                         + "\"destination\": \"android-app://"
-                        + PACKAGE_NAME
+                        + mPackageName
                         + "\","
                         + "\"priority\": \"10\","
                         + "\"expiry\": \"1728000\","
@@ -245,8 +217,8 @@ public class MeasurementCtsDebuggableTest {
     }
 
     private MockResponse createRegisterTriggerResponse() {
-        final MockResponse mockRegisterTriggerResponse = new MockResponse();
-        final String payload =
+        MockResponse mockRegisterTriggerResponse = new MockResponse();
+        String payload =
                 "{\"event_trigger_data\":"
                         + "[{"
                         + "  \"trigger_data\": \"1\","
@@ -274,8 +246,8 @@ public class MeasurementCtsDebuggableTest {
     }
 
     private MockResponse createRegisterWebSourceResponse() {
-        final MockResponse mockRegisterWebSourceResponse = new MockResponse();
-        final String payload =
+        MockResponse mockRegisterWebSourceResponse = new MockResponse();
+        String payload =
                 "{"
                         + "\"web_destination\": \""
                         + WEB_DESTINATION
@@ -296,8 +268,8 @@ public class MeasurementCtsDebuggableTest {
     }
 
     private MockResponse createRegisterWebTriggerResponse() {
-        final MockResponse mockRegisterWebTriggerResponse = new MockResponse();
-        final String payload =
+        MockResponse mockRegisterWebTriggerResponse = new MockResponse();
+        String payload =
                 "{\"event_trigger_data\":"
                         + "[{"
                         + "  \"trigger_data\": \"9\","
@@ -338,7 +310,7 @@ public class MeasurementCtsDebuggableTest {
 
     private MockResponse createGetAggregationKeyResponse() {
         MockResponse mockGetAggregationKeyResponse = new MockResponse();
-        final String body =
+        String body =
                 "{\"keys\":[{"
                         + "\"id\":\"0fa73e34-c6f3-4839-a4ed-d1681f185a76\","
                         + "\"key\":\"bcy3EsCsm/7rhO1VSl9W+h4MM0dv20xjcFbbLPE16Vg\\u003d\"}]}";
@@ -356,8 +328,8 @@ public class MeasurementCtsDebuggableTest {
     }
 
     private void executeJob(int jobId) {
-        final String packageName = AdservicesTestHelper.getAdServicesPackageName(sContext);
-        final String cmd = "cmd jobscheduler run -f " + packageName + " " + jobId;
+        String packageName = AdServicesSupportHelper.getInstance().getAdServicesPackageName();
+        String cmd = "cmd jobscheduler run -f " + packageName + " " + jobId;
         try {
             getUiDevice().executeShellCommand(cmd);
         } catch (IOException e) {
@@ -379,13 +351,13 @@ public class MeasurementCtsDebuggableTest {
     }
 
     private void executeRegisterSource() {
-        final MockResponse mockResponse = createRegisterSourceResponse();
-        final MockWebServer mockWebServer = startServer(DEFAULT_PORT, mockResponse);
+        MockResponse mockResponse = createRegisterSourceResponse();
+        MockWebServer mockWebServer = startServer(DEFAULT_PORT, mockResponse);
 
         try {
-            final String path = SERVER_BASE_URI + ":" + mockWebServer.getPort() + SOURCE_PATH;
+            String path = SERVER_BASE_URI + ":" + mockWebServer.getPort() + SOURCE_PATH;
 
-            final CountDownLatch countDownLatch = new CountDownLatch(1);
+            CountDownLatch countDownLatch = new CountDownLatch(1);
             mMeasurementManager.registerSource(
                     Uri.parse(path),
                     /* inputEvent= */ null,
@@ -409,13 +381,13 @@ public class MeasurementCtsDebuggableTest {
     }
 
     private void executeRegisterTrigger() {
-        final MockResponse mockResponse = createRegisterTriggerResponse();
-        final MockWebServer mockWebServer = startServer(DEFAULT_PORT, mockResponse);
+        MockResponse mockResponse = createRegisterTriggerResponse();
+        MockWebServer mockWebServer = startServer(DEFAULT_PORT, mockResponse);
 
         try {
-            final String path = SERVER_BASE_URI + ":" + mockWebServer.getPort() + TRIGGER_PATH;
+            String path = SERVER_BASE_URI + ":" + mockWebServer.getPort() + TRIGGER_PATH;
 
-            final CountDownLatch countDownLatch = new CountDownLatch(1);
+            CountDownLatch countDownLatch = new CountDownLatch(1);
             mMeasurementManager.registerTrigger(
                     Uri.parse(path),
                     CALLBACK_EXECUTOR,
@@ -438,19 +410,19 @@ public class MeasurementCtsDebuggableTest {
     }
 
     private void executeRegisterWebSource() {
-        final MockResponse mockResponse = createRegisterWebSourceResponse();
-        final MockWebServer mockWebServer = startServer(DEFAULT_PORT, mockResponse);
+        MockResponse mockResponse = createRegisterWebSourceResponse();
+        MockWebServer mockWebServer = startServer(DEFAULT_PORT, mockResponse);
 
         try {
-            final String path = SERVER_BASE_URI + ":" + mockWebServer.getPort() + SOURCE_PATH;
-            final WebSourceParams params = new WebSourceParams.Builder(Uri.parse(path)).build();
-            final WebSourceRegistrationRequest request =
+            String path = SERVER_BASE_URI + ":" + mockWebServer.getPort() + SOURCE_PATH;
+            WebSourceParams params = new WebSourceParams.Builder(Uri.parse(path)).build();
+            WebSourceRegistrationRequest request =
                     new WebSourceRegistrationRequest.Builder(
                                     Collections.singletonList(params), Uri.parse(WEB_ORIGIN))
                             .setWebDestination(Uri.parse(WEB_DESTINATION))
                             .build();
 
-            final CountDownLatch countDownLatch = new CountDownLatch(1);
+            CountDownLatch countDownLatch = new CountDownLatch(1);
             mMeasurementManager.registerWebSource(
                     request,
                     CALLBACK_EXECUTOR,
@@ -473,18 +445,18 @@ public class MeasurementCtsDebuggableTest {
     }
 
     private void executeRegisterWebTrigger() {
-        final MockResponse mockResponse = createRegisterWebTriggerResponse();
-        final MockWebServer mockWebServer = startServer(DEFAULT_PORT, mockResponse);
+        MockResponse mockResponse = createRegisterWebTriggerResponse();
+        MockWebServer mockWebServer = startServer(DEFAULT_PORT, mockResponse);
 
         try {
-            final String path = SERVER_BASE_URI + ":" + mockWebServer.getPort() + TRIGGER_PATH;
-            final WebTriggerParams params = new WebTriggerParams.Builder(Uri.parse(path)).build();
-            final WebTriggerRegistrationRequest request =
+            String path = SERVER_BASE_URI + ":" + mockWebServer.getPort() + TRIGGER_PATH;
+            WebTriggerParams params = new WebTriggerParams.Builder(Uri.parse(path)).build();
+            WebTriggerRegistrationRequest request =
                     new WebTriggerRegistrationRequest.Builder(
                                     Collections.singletonList(params), Uri.parse(WEB_DESTINATION))
                             .build();
 
-            final CountDownLatch countDownLatch = new CountDownLatch(1);
+            CountDownLatch countDownLatch = new CountDownLatch(1);
             mMeasurementManager.registerWebTrigger(
                     request,
                     CALLBACK_EXECUTOR,
@@ -507,8 +479,8 @@ public class MeasurementCtsDebuggableTest {
     }
 
     private void executeAttribution() {
-        final MockResponse mockResponse = createGetAggregationKeyResponse();
-        final MockWebServer mockWebServer = startServer(KEYS_PORT, mockResponse);
+        MockResponse mockResponse = createGetAggregationKeyResponse();
+        MockWebServer mockWebServer = startServer(KEYS_PORT, mockResponse);
 
         try {
             sleep();
@@ -520,8 +492,8 @@ public class MeasurementCtsDebuggableTest {
     }
 
     private void executeEventReporting() {
-        final MockResponse mockResponse = createEventReportUploadResponse();
-        final MockWebServer mockWebServer = startServer(DEFAULT_PORT, mockResponse, mockResponse);
+        MockResponse mockResponse = createEventReportUploadResponse();
+        MockWebServer mockWebServer = startServer(DEFAULT_PORT, mockResponse, mockResponse);
         try {
             sleep();
             executeEventReportingJob();
@@ -536,12 +508,12 @@ public class MeasurementCtsDebuggableTest {
     }
 
     private void executeAggregateReporting() {
-        final MockResponse aggregateReportMockResponse = createAggregateReportUploadResponse();
-        final MockWebServer aggregateReportWebServer =
+        MockResponse aggregateReportMockResponse = createAggregateReportUploadResponse();
+        MockWebServer aggregateReportWebServer =
                 startServer(DEFAULT_PORT, aggregateReportMockResponse, aggregateReportMockResponse);
 
-        final MockResponse keysMockResponse = createGetAggregationKeyResponse();
-        final MockWebServer keysReportWebServer =
+        MockResponse keysMockResponse = createGetAggregationKeyResponse();
+        MockWebServer keysReportWebServer =
                 startServer(KEYS_PORT, keysMockResponse, keysMockResponse);
 
         try {
@@ -565,7 +537,7 @@ public class MeasurementCtsDebuggableTest {
                             // Preserve none since empty origin and site lists are provided.
                             .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_PRESERVE)
                             .build();
-            final CountDownLatch countDownLatch = new CountDownLatch(1);
+            CountDownLatch countDownLatch = new CountDownLatch(1);
             mMeasurementManager.deleteRegistrations(
                     deletionRequest,
                     CALLBACK_EXECUTOR,
@@ -589,147 +561,28 @@ public class MeasurementCtsDebuggableTest {
         }
     }
 
-    private static void setFlagsForMeasurement() throws Exception {
-        // Disable device config sync
-        getUiDevice().executeShellCommand(
-                "device_config set_sync_disabled_for_tests persistent");
+    private void setFlagsForMeasurement() {
+        flags.setFlag(KEY_MEASUREMENT_KILL_SWITCH, false)
+                .setMsmtApiAppAllowList(mPackageName)
+                .setFlag(KEY_MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH, false)
+                .setFlag(KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCE, false)
+                .setFlag(KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_TRIGGER, false)
+                .setFlag(
+                        KEY_MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_LIST,
+                        AGGREGATE_ENCRYPTION_KEY_COORDINATOR_ORIGIN)
+                .setFlag(KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST, mPackageName)
+                .setFlag(
+                        KEY_MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_LIST,
+                        AGGREGATE_ENCRYPTION_KEY_COORDINATOR_ORIGIN)
+                .setFlag(
+                        KEY_MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN,
+                        AGGREGATE_ENCRYPTION_KEY_COORDINATOR_ORIGIN)
+                .setFlag(
+                        KEY_MEASUREMENT_AGGREGATION_COORDINATOR_PATH,
+                        AGGREGATE_ENCRYPTION_KEY_COORDINATOR_PATH)
+                .setFlag(KEY_MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS, "8,15")
+                .setFlag(KEY_MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG, "0,0");
 
-        // Override consent notified behavior to give user consent.
-        getUiDevice()
-                .executeShellCommand("setprop debug.adservices.consent_notified_debug_mode true");
-
-        // Override consent manager behavior to give user consent.
-        getUiDevice().executeShellCommand(
-                "setprop debug.adservices.consent_manager_debug_mode true");
-
-        // Override the flag to allow current package to call APIs.
-        getUiDevice()
-                .executeShellCommand(
-                        "device_config put adservices msmt_api_app_allow_list " + PACKAGE_NAME);
-
-        // Override the flag to allow current package to call web API.
-        getUiDevice().executeShellCommand(
-                "device_config put adservices web_context_client_allow_list " + PACKAGE_NAME);
-
-        // Override global kill switch.
-        getUiDevice().executeShellCommand(
-                "device_config put adservices global_kill_switch false");
-
-        // Override Ad ID kill switch.
-        getUiDevice().executeShellCommand("device_config put adservices adid_kill_switch false");
-
-        // Override measurement kill switch.
-        getUiDevice().executeShellCommand(
-                "device_config put adservices measurement_kill_switch false");
-
-        // Override measurement registration job kill switch.
-        getUiDevice().executeShellCommand(
-                "device_config put adservices measurement_job_registration_job_queue_kill_switch "
-                + "false");
-
-        // Disable foreground checks.
-        getUiDevice().executeShellCommand(
-                "device_config put adservices "
-                + "measurement_enforce_foreground_status_register_source false");
-
-        getUiDevice().executeShellCommand(
-                "device_config put adservices "
-                + "measurement_enforce_foreground_status_register_trigger false");
-
-        // Set aggregate key URL.
-        getUiDevice()
-                .executeShellCommand(
-                        "device_config put adservices "
-                                + "measurement_aggregation_coordinator_origin_list "
-                                + AGGREGATE_ENCRYPTION_KEY_COORDINATOR_ORIGIN);
-
-        getUiDevice()
-                .executeShellCommand(
-                        "device_config put adservices "
-                                + "measurement_default_aggregation_coordinator_origin "
-                                + AGGREGATE_ENCRYPTION_KEY_COORDINATOR_ORIGIN);
-
-        getUiDevice()
-                .executeShellCommand(
-                        "device_config put adservices "
-                                + "measurement_aggregation_coordinator_path "
-                                + AGGREGATE_ENCRYPTION_KEY_COORDINATOR_PATH);
-
-        // Set reporting windows
-        // Assume trigger registration can happen within 8 seconds of source registration.
-        getUiDevice().executeShellCommand(
-                "device_config put adservices "
-                + "measurement_event_reports_vtc_early_reporting_windows 8,15");
-
-        getUiDevice().executeShellCommand(
-                "device_config put adservices "
-                + "measurement_enable_configurable_aggregate_report_delay true");
-
-        getUiDevice().executeShellCommand(
-                "device_config put adservices "
-                + "measurement_aggregate_report_delay_config 0,0");
         sleep();
-    }
-
-    private static void resetFlagsForMeasurement() throws Exception {
-        // Reset device config sync
-        getUiDevice().executeShellCommand(
-                "device_config set_sync_disabled_for_tests null");
-
-        // Reset allowed packages.
-        getUiDevice()
-                .executeShellCommand("device_config put adservices msmt_api_app_allow_list null");
-
-        // Reset the flag to allow current package to call web API.
-        getUiDevice().executeShellCommand(
-                "device_config put adservices web_context_client_allow_list null");
-
-        // Reset global kill switch.
-        getUiDevice().executeShellCommand(
-                "device_config put adservices global_kill_switch null");
-
-        // Reset Ad ID kill switch.
-        getUiDevice().executeShellCommand("device_config put adservices adid_kill_switch null");
-
-        // Reset measurement kill switch.
-        getUiDevice().executeShellCommand(
-                "device_config put adservices measurement_kill_switch false");
-
-        // Reset measurement registration job kill switch.
-        getUiDevice().executeShellCommand(
-                "device_config put adservices measurement_job_registration_job_queue_kill_switch "
-                + "null");
-
-        // Reset foreground checks.
-        getUiDevice().executeShellCommand(
-                "device_config put adservices "
-                + "measurement_enforce_foreground_status_register_source null");
-
-        getUiDevice().executeShellCommand(
-                "device_config put adservices "
-                + "measurement_enforce_foreground_status_register_trigger null");
-
-        // Reset aggregate key URL.
-        getUiDevice()
-                .executeShellCommand(
-                        "device_config put adservices "
-                                + "measurement_default_aggregation_coordinator_origin null");
-        getUiDevice()
-                .executeShellCommand(
-                        "device_config put adservices "
-                                + "measurement_aggregation_coordinator_path null");
-
-        // Reset reporting windows
-        getUiDevice().executeShellCommand(
-                "device_config put adservices "
-                + "measurement_event_reports_vtc_early_reporting_windows null");
-
-        getUiDevice().executeShellCommand(
-                "device_config put adservices "
-                + "measurement_enable_configurable_aggregate_report_delay null");
-
-        getUiDevice().executeShellCommand(
-                "device_config put adservices "
-                + "measurement_aggregate_report_delay_config null");
     }
 }

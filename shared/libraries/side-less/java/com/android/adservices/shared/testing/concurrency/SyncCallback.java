@@ -16,24 +16,63 @@
 package com.android.adservices.shared.testing.concurrency;
 
 import com.android.adservices.shared.testing.Identifiable;
-import com.android.adservices.shared.testing.Nullable;
 
-import com.google.errorprone.annotations.FormatMethod;
-import com.google.errorprone.annotations.FormatString;
+/* Usage examples (not in the javadoc because of the <> inside)
 
-import java.util.concurrent.TimeUnit;
+   // Result-less
+   SimpleSyncCallback callback = new SimpleSyncCallback();
+   mExecutor.execute(() -> callback.setCalled());
+   callback.assertCalled();
 
-/** Base interface for all testing-related sync callbacks. */
+   // Result-oriented
+   ResultSyncCallback<String> callback = new ResultSyncCallback<>();
+   mExecutor.execute(() -> callback.injectResult("dqw4w9wxcq"));
+   String videoId = callback.assertResultReceived();
+   expect.withMessage("video id").that(videoId).isEqualTo("dqw4w9wxcq!");
+
+   // Internal
+   AnswerSyncCallback<Void> answer = AnswerSyncCallback.forVoidAnswer();
+   doAnswer(answer).when(mMockExecutor).execute(any());
+   mMockExecutor.execute(null);
+   answer.assertCalled();
+*/
+
+/**
+ * Base interface for all sync callbacks.
+ *
+ * <p>A {@code SyncCallback} has 2 types of methods, which are used to:
+ *
+ * <ol>
+ *   <li>Block the test until the callback is called.
+ *   <li>Unblock the test (i.e., call the callback).
+ * </ol>
+ *
+ * <p>Hence, it's typical usage in a test method is:
+ *
+ * <ol>
+ *   <li>Gets a callback.
+ *   <li>Do something in the background that calls the callback.
+ *   <li>Call a callback method that will block the test until the callback is called.
+ * </ol>
+ *
+ * <p>The first type includes {@link #assertCalled()}, although subclasses can provide other methods
+ * that are more specialized (like {@code assertResultReceived()} and/or {@code
+ * assertFailureReceived()}.
+ *
+ * <p>The second type depends on the callback, but it can be divided in 3 categories:
+ *
+ * <ol>
+ *   <li>Methods that don't take a result.
+ *   <li>Methods that take a result.
+ *   <li>Internal methods (i.e., they're not called by tests, but internally by the callback).
+ * </ol>
+ *
+ * <p>See a few concrete examples in the code, above the class javadoc...
+ */
 public interface SyncCallback extends Identifiable {
 
     /** Tag used on {@code logcat} calls. */
     String LOG_TAG = "SyncCallback";
-
-    /**
-     * Indicates the callback was called, so it unblocks {@link #waitCalled()} / {@link
-     * #waitCalled(long, TimeUnit)}.
-     */
-    void setCalled();
 
     /**
      * Asserts the callback was called or throw if it times out - the timeout value is defined by
@@ -49,43 +88,4 @@ public interface SyncCallback extends Identifiable {
 
     /** Gets the callback settings. */
     SyncCallbackSettings getSettings();
-
-    /**
-     * Checks if the callback supports calls to {@link #setCalled()}.
-     *
-     * <p>Returns {@code true} by default, but some callbacks don't support it because they provide
-     * a more customized method (like {@code injectResult()}).
-     */
-    default boolean supportsSetCalled() {
-        return true;
-    }
-
-    // TODO(b/337014024): move log methods to AbstractSyncCallback instead
-
-    /**
-     * Convenience method to log a debug message.
-     *
-     * <p>By default it's a no-op, but subclasses should implement it including all info (provided
-     * by {@link #toString()}) in the message.
-     */
-    @FormatMethod
-    void logE(@FormatString String msgFmt, @Nullable Object... msgArgs);
-
-    /**
-     * Convenience method to log a debug message.
-     *
-     * <p>By default it's a no-op, but subclasses should implement it including the {@link #getId()
-     * id} in the message.
-     */
-    @FormatMethod
-    void logD(@FormatString String msgFmt, @Nullable Object... msgArgs);
-
-    /**
-     * Convenience method to log a verbose message.
-     *
-     * <p>By default it's a no-op, but subclasses should implement it including all info (provided
-     * by {@link #toString()}) in the message.
-     */
-    @FormatMethod
-    void logV(@FormatString String msgFmt, @Nullable Object... msgArgs);
 }

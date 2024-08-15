@@ -15,11 +15,7 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-import static org.junit.Assert.assertThrows;
-
 import com.android.adservices.shared.testing.BooleanSyncCallback;
-
-import org.junit.Test;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -36,22 +32,6 @@ public final class BooleanSyncCallbackTest
     @Override
     protected Boolean newResult() {
         int callNumber = mNewResultCall.incrementAndGet();
-        switch (callNumber) {
-            case 1:
-                return Boolean.FALSE;
-            case 2:
-                return Boolean.TRUE;
-            default:
-                // There are only 2 boolean values...
-                throw new IllegalStateException(
-                        "cannot be called more than 2x (this is call #" + callNumber + ")");
-        }
-    }
-
-    @Test
-    public void testNewResult_calledThreeTimes() {
-        newResult();
-        newResult();
-        assertThrows(IllegalStateException.class, () -> newResult());
+        return callNumber % 2 == 0;
     }
 }

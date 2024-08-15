@@ -33,6 +33,7 @@ import android.os.Process;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.dx.mockito.inline.extended.StaticMockitoSessionBuilder;
 import com.android.sdksandbox.service.stats.SdkSandboxStatsLog;
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 
 import org.junit.After;
 import org.junit.Before;
@@ -43,7 +44,7 @@ import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 
 @RunWith(JUnit4.class)
-public class SdkSandboxStatsdLoggerUnitTest {
+public class SdkSandboxStatsdLoggerUnitTest extends DeviceSupportedBaseTest {
     private MockitoSession mStaticMockSession;
     private SdkSandboxStatsdLogger mSdkSandboxStatsdLogger;
     private int mClientAppUid;

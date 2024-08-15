@@ -79,6 +79,23 @@ public interface IMeasurementDao {
     List<String> getSourceAttributionScopes(@NonNull String sourceId) throws DatastoreException;
 
     /**
+     * Queries and returns the {@link Source}'s attribution scopes for a given source registration,
+     * reporting origin and destination.
+     *
+     * @param registrationId ID of the registration.
+     * @param registrationOrigin source registration origin.
+     * @param destination String for the destination.
+     * @param destinationType DestinationType App/Web.
+     * @return a list of attribution scopes.
+     */
+    Set<String> getNavigationAttributionScopesForRegistration(
+            @NonNull String registrationId,
+            @NonNull String registrationOrigin,
+            @EventSurfaceType int destinationType,
+            @NonNull String destination)
+            throws DatastoreException;
+
+    /**
      * Updates existing sources based on the following criteria for attribution scope:
      *
      * <ol>
@@ -395,8 +412,8 @@ public interface IMeasurementDao {
     /** Saves the {@link EventReport} to the datastore. */
     void insertEventReport(EventReport eventReport) throws DatastoreException;
 
-    /** Deletes the {@link EventReport} from the datastore. */
-    void deleteEventReport(EventReport eventReport) throws DatastoreException;
+    /** Deletes the {@link EventReport} and associated {@link Attribution} from the datastore. */
+    void deleteEventReportAndAttribution(EventReport eventReport) throws DatastoreException;
 
     /** Deletes the {@link DebugReport} from the datastore. */
     void deleteDebugReport(String debugReportId) throws DatastoreException;
@@ -426,15 +443,6 @@ public interface IMeasurementDao {
     List<String> getPendingEventReportIdsForGivenApp(Uri appName) throws DatastoreException;
 
     /**
-     * Find the number of entries for a rate limit window using the {@link Source} and {@link
-     * Trigger}. Rate-Limit Window: (Source Site, Destination Site, Window) from triggerTime.
-     *
-     * @return the number of entries for the window.
-     */
-    long getAttributionsPerRateLimitWindow(@NonNull Source source, @NonNull Trigger trigger)
-            throws DatastoreException;
-
-    /**
      * Find the number of entries for a rate limit window, scoped to event- or aggregate-level using
      * the {@link Source} and {@link Trigger}. Rate-Limit Window: (Scope, Source Site, Destination
      * Site, Window) from triggerTime.
@@ -448,7 +456,10 @@ public interface IMeasurementDao {
     void insertAttribution(@NonNull Attribution attribution) throws DatastoreException;
 
     /** Deletes all expired records in measurement tables. */
-    void deleteExpiredRecords(long earliestValidInsertion, int registrationRetryLimit)
+    void deleteExpiredRecords(
+            long earliestValidInsertion,
+            int registrationRetryLimit,
+            @Nullable Long earliestValidAppReportInsertion)
             throws DatastoreException;
 
     /**
@@ -757,6 +768,22 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
+     * Inserts an entry of app report history with enrollment ID into the {@link
+     * MeasurementTables.AppReportHistoryContract#TABLE}. It means that event / aggregate reports
+     * for the given app destination have been delivered to the registration origin.
+     *
+     * @param appDestination app destination
+     * @param registrationOrigin source registration origin
+     * @param lastReportDeliveredTimestamp last deliver time for the report
+     * @throws DatastoreException when SQLite issue occurs.
+     */
+    void insertOrUpdateAppReportHistory(
+            @NonNull Uri appDestination,
+            @NonNull Uri registrationOrigin,
+            long lastReportDeliveredTimestamp)
+            throws DatastoreException;
+
+    /**
      * Returns the number of unique navigation sources by reporting origin and registration id.
      *
      * @param reportingOrigin the reporting origin to match.
@@ -769,8 +796,9 @@ public interface IMeasurementDao {
 
     /**
      * Let matchingSources be unexpired sources that match the provided publisher, publisher type
-     * destination surface type and enrollmentId. Pick and return the sources that have the least
-     * recently used destination excluding the provided list of destinations.
+     * destination surface type and enrollmentId. Pick and return the sources that have the lowest
+     * destination priority value or secondarily the least recently used destination excluding the
+     * provided list of destinations.
      *
      * @param publisher publisher to match
      * @param publisherType publisher surface type, i.e. app/web to match
@@ -778,10 +806,10 @@ public interface IMeasurementDao {
      * @param excludedDestinations destinations to exclude while matching
      * @param destinationType destination type app/web
      * @param windowEndTime selected sources' expiry needs to be greater than this time
-     * @return sources with least recently used destination
+     * @return sources with least recently used destination along with the priority value
      * @throws DatastoreException when accessing the DB fails
      */
-    List<String> fetchSourceIdsForLruDestinationXEnrollmentXPublisher(
+    Pair<Long, List<String>> fetchSourceIdsForLowestPriorityDestinationXEnrollmentXPublisher(
             Uri publisher,
             int publisherType,
             String enrollmentId,
@@ -799,4 +827,26 @@ public interface IMeasurementDao {
      */
     void deletePendingAggregateReportsAndAttributionsForSources(List<String> sourceIds)
             throws DatastoreException;
+
+    /**
+     * Deletes pending fake event reports for the provided sources. Attributions are not deleted.
+     *
+     * @param sourceIds sources to consider to query the pending reports
+     * @param currentTimeStamp it's practically the current time stamp, we delete only those reports
+     *     that have trigger time in future indicating that they are fake
+     * @throws DatastoreException when deletion fails
+     */
+    void deleteFutureFakeEventReportsForSources(List<String> sourceIds, long currentTimeStamp)
+            throws DatastoreException;
+
+    /**
+     * Return the timestamp of the latest pending report (Event or Aggregate) in the batching
+     * window. The batching window is calculated as the earliest report's timestamp + batchWindow.
+     * If there are no reports, return null.
+     *
+     * @param batchWindow Size of the batching window, in ms, starting at the next pending report.
+     * @return Latest report's timestamp, in ms, within the batching window.
+     * @throws DatastoreException when SQLite issue occurs
+     */
+    Long getLatestReportTimeInBatchWindow(long batchWindow) throws DatastoreException;
 }

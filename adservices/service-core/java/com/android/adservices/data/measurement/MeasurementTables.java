@@ -49,6 +49,7 @@ public final class MeasurementTables {
         MeasurementTables.DebugReportContract.TABLE,
         MeasurementTables.XnaIgnoredSourcesContract.TABLE,
         KeyValueDataContract.TABLE,
+        AppReportHistoryContract.TABLE,
     };
 
     public static final String[] V6_TABLES = {
@@ -131,6 +132,7 @@ public final class MeasurementTables {
         String SHARED_AGGREGATION_KEYS = "shared_aggregation_keys";
         String INSTALL_TIME = "install_time";
         String DEBUG_JOIN_KEY = "debug_join_key";
+        String TRIGGER_DATA = "trigger_data";
         String TRIGGER_SPECS = "trigger_specs";
         String PLATFORM_AD_ID = "platform_ad_id";
         String DEBUG_AD_ID = "debug_ad_id";
@@ -145,6 +147,8 @@ public final class MeasurementTables {
         String ATTRIBUTION_SCOPE_LIMIT = "attribution_scope_limit";
         String MAX_EVENT_STATES = "max_event_states";
         String REINSTALL_REATTRIBUTION_WINDOW = "reinstall_reattribution_window";
+        String DESTINATION_LIMIT_PRIORITY = "destination_limit_priority";
+        String EVENT_LEVEL_EPSILON = "event_level_epsilon";
     }
 
     /** Contract for sub-table for destinations in Source. */
@@ -299,6 +303,14 @@ public final class MeasurementTables {
         String DATA_TYPE = "data_type";
         String KEY = "_key"; // Avoid collision with SQLite keyword 'key'
         String VALUE = "value";
+    }
+
+    /** Contract for app report history for reinstall reattribution. */
+    public interface AppReportHistoryContract {
+        String TABLE = MSMT_TABLE_PREFIX + "app_report_history";
+        String REGISTRATION_ORIGIN = "registration_origin";
+        String APP_DESTINATION = "app_destination";
+        String LAST_REPORT_DELIVERED_TIME = "last_report_delivered_time";
     }
 
     public static final String CREATE_TABLE_ASYNC_REGISTRATION_V6 =
@@ -544,7 +556,13 @@ public final class MeasurementTables {
                     + SourceContract.MAX_EVENT_STATES
                     + " INTEGER, "
                     + SourceContract.REINSTALL_REATTRIBUTION_WINDOW
-                    + " INTEGER "
+                    + " INTEGER, "
+                    + SourceContract.DESTINATION_LIMIT_PRIORITY
+                    + " INTEGER, "
+                    + SourceContract.TRIGGER_DATA
+                    + " TEXT, "
+                    + SourceContract.EVENT_LEVEL_EPSILON
+                    + " DOUBLE "
                     + ")";
 
     public static final String CREATE_TABLE_SOURCE_DESTINATION_LATEST =
@@ -1229,6 +1247,26 @@ public final class MeasurementTables {
                 + "("
                 + XnaIgnoredSourcesContract.ENROLLMENT_ID
                 + ")",
+        "CREATE INDEX "
+                + INDEX_PREFIX
+                + AppReportHistoryContract.TABLE
+                + "_lrdt "
+                + "ON "
+                + AppReportHistoryContract.TABLE
+                + "("
+                + AppReportHistoryContract.LAST_REPORT_DELIVERED_TIME
+                + ")",
+        "CREATE INDEX "
+                + INDEX_PREFIX
+                + AppReportHistoryContract.TABLE
+                + "_ro_ad "
+                + "ON "
+                + AppReportHistoryContract.TABLE
+                + "("
+                + AppReportHistoryContract.REGISTRATION_ORIGIN
+                + ", "
+                + AppReportHistoryContract.APP_DESTINATION
+                + ")",
     };
 
     public static final String[] CREATE_INDEXES_V6 = {
@@ -1315,6 +1353,22 @@ public final class MeasurementTables {
                 + ")"
     };
 
+    public static final String CREATE_TABLE_APP_REPORT_HISTORY_LATEST =
+            "CREATE TABLE "
+                    + AppReportHistoryContract.TABLE
+                    + " ("
+                    + AppReportHistoryContract.REGISTRATION_ORIGIN
+                    + " TEXT, "
+                    + AppReportHistoryContract.APP_DESTINATION
+                    + " TEXT, "
+                    + AppReportHistoryContract.LAST_REPORT_DELIVERED_TIME
+                    + " INTEGER, "
+                    + "PRIMARY KEY("
+                    + AppReportHistoryContract.REGISTRATION_ORIGIN
+                    + ", "
+                    + AppReportHistoryContract.APP_DESTINATION
+                    + "))";
+
     // Consolidated list of create statements for all tables.
     public static final List<String> CREATE_STATEMENTS =
             Collections.unmodifiableList(
@@ -1330,7 +1384,8 @@ public final class MeasurementTables {
                             CREATE_TABLE_ASYNC_REGISTRATION_LATEST,
                             CREATE_TABLE_DEBUG_REPORT_LATEST,
                             CREATE_TABLE_XNA_IGNORED_SOURCES_LATEST,
-                            CREATE_TABLE_KEY_VALUE_STORE_LATEST));
+                            CREATE_TABLE_KEY_VALUE_STORE_LATEST,
+                            CREATE_TABLE_APP_REPORT_HISTORY_LATEST));
 
     // Consolidated list of create statements for all tables at version 6.
     public static final List<String> CREATE_STATEMENTS_V6 =

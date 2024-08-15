@@ -16,6 +16,8 @@
 package com.android.server.adservices;
 
 import static com.android.server.adservices.AdServicesShellCommand.CMD_IS_SYSTEM_SERVICE_ENABLED;
+import static com.android.server.adservices.AdServicesShellCommand.DEFAULT_TIMEOUT_MILLIS;
+import static com.android.server.adservices.AdServicesShellCommand.TIMEOUT_OFFSET_MILLIS;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -59,6 +61,8 @@ public final class AdServicesShellCommandTest extends AdServicesExtendedMockitoT
     private static final String[] ALL_COMMANDS =
             new String[] {"help", CMD_IS_SYSTEM_SERVICE_ENABLED};
     private static final int SYSTEM_USER = UserHandle.SYSTEM.getIdentifier();
+    private static final long DEFAULT_MAX_COMMAND_DURATION_MILLIS =
+            DEFAULT_TIMEOUT_MILLIS - TIMEOUT_OFFSET_MILLIS;
 
     private final StringWriter mOutStringWriter = new StringWriter();
     private final StringWriter mErrStringWriter = new StringWriter();
@@ -66,7 +70,9 @@ public final class AdServicesShellCommandTest extends AdServicesExtendedMockitoT
     private final PrintWriter mOut = new PrintWriter(mOutStringWriter);
     private final PrintWriter mErr = new PrintWriter(mErrStringWriter);
 
-    @Mock private Flags mFlags;
+    // TODO(b/358120731): create an AdServicesServerExtendedMockitoTestCase class instead, which
+    // contains a mMockFlags
+    @Mock private Flags mMockServerFlags;
     @Mock private IShellCommand mIShellCommand;
 
     private AdServicesShellCommand mShellCmd;
@@ -88,7 +94,7 @@ public final class AdServicesShellCommandTest extends AdServicesExtendedMockitoT
                     }
                 };
         mShellCmd =
-                new AdServicesShellCommand(mInjector, mFlags, mMockContext) {
+                new AdServicesShellCommand(mInjector, mMockServerFlags, mMockContext) {
                     @Override
                     public PrintWriter getOutPrintWriter() {
                         return mOut;
@@ -132,7 +138,7 @@ public final class AdServicesShellCommandTest extends AdServicesExtendedMockitoT
                                                         return 42;
                                                     }
                                                 },
-                                                mFlags,
+                                                mMockServerFlags,
                                                 mMockContext)
                                         .onCommand("D'OH"));
         assertThat(e)
@@ -142,7 +148,7 @@ public final class AdServicesShellCommandTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testExec_nullShowsHelp() throws Exception {
-        mockHelpShellCommand();
+        mockHelpShellCommand(DEFAULT_MAX_COMMAND_DURATION_MILLIS);
 
         int result = runCmd((String[]) null);
 
@@ -154,7 +160,7 @@ public final class AdServicesShellCommandTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testExec_emptyShowsHelp() throws Exception {
-        mockHelpShellCommand();
+        mockHelpShellCommand(DEFAULT_MAX_COMMAND_DURATION_MILLIS);
         int result = runCmd("");
         expect.withMessage("result").that(result).isEqualTo(0);
 
@@ -165,7 +171,7 @@ public final class AdServicesShellCommandTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testExec_help() throws Exception {
-        mockHelpShellCommand();
+        mockHelpShellCommand(DEFAULT_MAX_COMMAND_DURATION_MILLIS);
         int result = runCmd("help");
         expect.withMessage("result").that(result).isEqualTo(0);
 
@@ -176,7 +182,7 @@ public final class AdServicesShellCommandTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testExec_helpShort() throws Exception {
-        mockHelpShellCommand();
+        mockHelpShellCommand(DEFAULT_MAX_COMMAND_DURATION_MILLIS);
         int result = runCmd("-h");
         expect.withMessage("result").that(result).isEqualTo(0);
 
@@ -194,7 +200,7 @@ public final class AdServicesShellCommandTest extends AdServicesExtendedMockitoT
                         .setErr(String.format("Unsupported command: %s\n%s", cmd, helpMsg))
                         .setResultCode(-1)
                         .build();
-        mockRunShellCommand(responseInvalidShellCommand, cmd);
+        mockRunShellCommand(responseInvalidShellCommand, DEFAULT_MAX_COMMAND_DURATION_MILLIS, cmd);
 
         int result = runCmd(cmd);
 
@@ -345,7 +351,7 @@ public final class AdServicesShellCommandTest extends AdServicesExtendedMockitoT
         String out = "hello";
         ShellCommandResult response =
                 new ShellCommandResult.Builder().setOut(out).setResultCode(0).build();
-        mockRunShellCommand(response, cmd);
+        mockRunShellCommand(response, DEFAULT_MAX_COMMAND_DURATION_MILLIS, cmd);
 
         int result = runCmd(cmd);
 
@@ -362,7 +368,7 @@ public final class AdServicesShellCommandTest extends AdServicesExtendedMockitoT
         String out = "hello";
         ShellCommandResult response =
                 new ShellCommandResult.Builder().setOut(out).setResultCode(0).build();
-        mockRunShellCommand(response, cmd, arg1, arg2);
+        mockRunShellCommand(response, DEFAULT_MAX_COMMAND_DURATION_MILLIS, cmd, arg1, arg2);
 
         int result = runCmd(cmd, arg1, arg2);
 
@@ -378,9 +384,10 @@ public final class AdServicesShellCommandTest extends AdServicesExtendedMockitoT
         String out = "hello";
         ShellCommandResult response =
                 new ShellCommandResult.Builder().setOut(out).setResultCode(0).build();
-        mockRunShellCommand(response, cmd, arg1);
+        long timeout = 1000L;
+        mockRunShellCommand(response, timeout - TIMEOUT_OFFSET_MILLIS, cmd, arg1);
 
-        int result = runCmd(cmd, arg1, "--timeout", "1000");
+        int result = runCmd(cmd, arg1, "--timeout", String.valueOf(timeout));
 
         expect.withMessage("result").that(result).isEqualTo(0);
         expect.withMessage("out").that(getOut()).contains(out);
@@ -394,9 +401,10 @@ public final class AdServicesShellCommandTest extends AdServicesExtendedMockitoT
         String out = "hello";
         ShellCommandResult response =
                 new ShellCommandResult.Builder().setOut(out).setResultCode(0).build();
-        mockRunShellCommand(response, cmd, arg1);
+        long timeout = 1000L;
+        mockRunShellCommand(response, timeout - TIMEOUT_OFFSET_MILLIS, cmd, arg1);
 
-        int result = runCmd(cmd, "--timeout", "1000", arg1);
+        int result = runCmd(cmd, "--timeout", String.valueOf(timeout), arg1);
 
         expect.withMessage("result").that(result).isEqualTo(0);
         expect.withMessage("out").that(getOut()).contains(out);
@@ -429,7 +437,7 @@ public final class AdServicesShellCommandTest extends AdServicesExtendedMockitoT
         String out = "hello";
         ShellCommandResult response =
                 new ShellCommandResult.Builder().setOut(out).setResultCode(0).build();
-        mockRunShellCommand(response, cmd);
+        mockRunShellCommand(response, DEFAULT_MAX_COMMAND_DURATION_MILLIS, cmd);
 
         int result = runCmd(cmd);
 
@@ -470,11 +478,13 @@ public final class AdServicesShellCommandTest extends AdServicesExtendedMockitoT
 
     // TODO(b/294423183): use AdServicesFlagSetter (if / when it supports mocking unit tests)
     private void mockAdServicesSystemServiceEnabled(boolean value) {
-        when(mFlags.getAdServicesSystemServiceEnabled()).thenReturn(value);
+        when(mMockServerFlags.getAdServicesSystemServiceEnabled()).thenReturn(value);
     }
 
-    private void mockRunShellCommand(ShellCommandResult response, String... args) throws Exception {
-        ShellCommandParam param = new ShellCommandParam(args);
+    private void mockRunShellCommand(
+            ShellCommandResult response, long maxCommandDurationMillis, String... args)
+            throws Exception {
+        ShellCommandParam param = new ShellCommandParam(maxCommandDurationMillis, args);
         doAnswer(
                         invocation -> {
                             ((IShellCommandCallback) invocation.getArgument(1)).onResult(response);
@@ -484,9 +494,9 @@ public final class AdServicesShellCommandTest extends AdServicesExtendedMockitoT
                 .runShellCommand(eq(param), any());
     }
 
-    private void mockHelpShellCommand() throws Exception {
+    private void mockHelpShellCommand(long maxCommandDurationMillis) throws Exception {
         ShellCommandResult response =
                 new ShellCommandResult.Builder().setOut(HELP_ADSERVICES_SERVICE_CMDS).build();
-        mockRunShellCommand(response, "help");
+        mockRunShellCommand(response, maxCommandDurationMillis, "help");
     }
 }

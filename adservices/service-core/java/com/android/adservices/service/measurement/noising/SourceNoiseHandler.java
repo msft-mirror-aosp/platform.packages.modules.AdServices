@@ -31,6 +31,7 @@ import com.google.common.collect.ImmutableList;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
@@ -42,18 +43,22 @@ public class SourceNoiseHandler {
 
     private final Flags mFlags;
     private final EventReportWindowCalcDelegate mEventReportWindowCalcDelegate;
+    private final ImpressionNoiseUtil mImpressionNoiseUtil;
 
     public SourceNoiseHandler(@NonNull Flags flags) {
         mFlags = flags;
         mEventReportWindowCalcDelegate = new EventReportWindowCalcDelegate(flags);
+        mImpressionNoiseUtil = new ImpressionNoiseUtil();
     }
 
     @VisibleForTesting
-    SourceNoiseHandler(
+    public SourceNoiseHandler(
             @NonNull Flags flags,
-            @NonNull EventReportWindowCalcDelegate eventReportWindowCalcDelegate) {
+            @NonNull EventReportWindowCalcDelegate eventReportWindowCalcDelegate,
+            @NonNull ImpressionNoiseUtil impressionNoiseUtil) {
         mFlags = flags;
         mEventReportWindowCalcDelegate = eventReportWindowCalcDelegate;
+        mImpressionNoiseUtil = impressionNoiseUtil;
     }
 
     /** Multiplier is 1, when only one destination needs to be considered. */
@@ -74,19 +79,21 @@ public class SourceNoiseHandler {
     public List<Source.FakeReport> assignAttributionModeAndGenerateFakeReports(
             @NonNull Source source) {
         ThreadLocalRandom rand = ThreadLocalRandom.current();
-        double value = rand.nextDouble();
+        double value = getRandomDouble(rand);
         if (value >= getRandomizedSourceResponsePickRate(source)) {
             source.setAttributionMode(Source.AttributionMode.TRUTHFULLY);
             return null;
         }
 
-        List<Source.FakeReport> fakeReports;
+        List<Source.FakeReport> fakeReports = new ArrayList<>();
         TriggerSpecs triggerSpecs = source.getTriggerSpecs();
+
         if (triggerSpecs == null) {
             // There will at least be one (app or web) destination available
             ImpressionNoiseParams noiseParams = getImpressionNoiseParams(source);
             fakeReports =
-                    ImpressionNoiseUtil.selectRandomStateAndGenerateReportConfigs(noiseParams, rand)
+                    mImpressionNoiseUtil
+                            .selectRandomStateAndGenerateReportConfigs(noiseParams, rand)
                             .stream()
                             .map(
                                     reportConfig -> {
@@ -95,7 +102,7 @@ public class SourceNoiseHandler {
                                                 mEventReportWindowCalcDelegate
                                                         .getReportingTimeForNoising(
                                                                 source, reportConfig[1]);
-                                        if (mFlags.getMeasurementEnableAttributionScope()) {
+                                        if (mFlags.getMeasurementEnableFakeReportTriggerTime()) {
                                             Pair<Long, Long> reportingAndTriggerTime =
                                                     mEventReportWindowCalcDelegate
                                                             .getReportingAndTriggerTimeForNoising(
@@ -108,44 +115,75 @@ public class SourceNoiseHandler {
                                                 reportingTime,
                                                 triggerTime,
                                                 resolveFakeReportDestinations(
-                                                        source, reportConfig[2]));
+                                                        source, reportConfig[2]),
+                                                /* triggerSummaryBucket= */ null);
                                     })
                             .collect(Collectors.toList());
         } else {
             int destinationTypeMultiplier = source.getDestinationTypeMultiplier(mFlags);
             List<int[]> fakeReportConfigs =
-                    ImpressionNoiseUtil.selectFlexEventReportRandomStateAndGenerateReportConfigs(
+                    mImpressionNoiseUtil.selectFlexEventReportRandomStateAndGenerateReportConfigs(
                             triggerSpecs, destinationTypeMultiplier, rand);
-            fakeReports =
-                    fakeReportConfigs.stream()
-                            .map(
-                                    reportConfig -> {
-                                        long triggerTime = source.getEventTime();
-                                        long reportingTime =
-                                                mEventReportWindowCalcDelegate
-                                                        .getReportingTimeForNoisingFlexEventApi(
-                                                                reportConfig[1],
-                                                                reportConfig[0],
-                                                                source);
-                                        if (mFlags.getMeasurementEnableAttributionScope()) {
-                                            Pair<Long, Long> reportingAndTriggerTime =
-                                                    mEventReportWindowCalcDelegate
-                                                            .getReportingAndTriggerTimeForNoisingFlexEventApi(
-                                                                    reportConfig[1],
-                                                                    reportConfig[0],
-                                                                    source);
-                                            triggerTime = reportingAndTriggerTime.first;
-                                            reportingTime = reportingAndTriggerTime.second;
-                                        }
-                                        return new Source.FakeReport(
-                                                triggerSpecs.getTriggerDataFromIndex(
-                                                        reportConfig[0]),
-                                                reportingTime,
-                                                triggerTime,
-                                                resolveFakeReportDestinations(
-                                                        source, reportConfig[2]));
-                                    })
-                            .collect(Collectors.toList());
+
+            // Group configurations by trigger data, ordered by window index.
+            fakeReportConfigs.sort((config1, config2) -> {
+                UnsignedLong triggerData1 = triggerSpecs.getTriggerDataFromIndex(config1[0]);
+                UnsignedLong triggerData2 = triggerSpecs.getTriggerDataFromIndex(config2[0]);
+
+                if (triggerData1.equals(triggerData2)) {
+                    return Integer.valueOf(config1[1]).compareTo(Integer.valueOf(config2[1]));
+                }
+
+                return triggerData1.compareTo(triggerData2);
+            });
+
+            int bucketIndex = -1;
+            UnsignedLong currentTriggerData = null;
+            List<Long> buckets = new ArrayList<>();
+
+            for (int[] reportConfig : fakeReportConfigs) {
+                UnsignedLong triggerData = triggerSpecs.getTriggerDataFromIndex(reportConfig[0]);
+
+                // A new group of trigger data ordered by report index.
+                if (!triggerData.equals(currentTriggerData)) {
+                    buckets = triggerSpecs.getSummaryBucketsForTriggerData(triggerData);
+                    bucketIndex = 0;
+                    currentTriggerData = triggerData;
+                // The same trigger data, the next report ordered by window index will have the next
+                // trigger summary bucket.
+                } else {
+                    bucketIndex += 1;
+                }
+
+                Pair<Long, Long> triggerSummaryBucket =
+                        TriggerSpecs.getSummaryBucketFromIndex(bucketIndex, buckets);
+                long triggerTime = source.getEventTime();
+                long reportingTime =
+                        mEventReportWindowCalcDelegate
+                                .getReportingTimeForNoisingFlexEventApi(
+                                        reportConfig[1],
+                                        reportConfig[0],
+                                        source);
+
+                if (mFlags.getMeasurementEnableFakeReportTriggerTime()) {
+                    Pair<Long, Long> reportingAndTriggerTime =
+                            mEventReportWindowCalcDelegate
+                                    .getReportingAndTriggerTimeForNoisingFlexEventApi(
+                                            reportConfig[1],
+                                            reportConfig[0],
+                                            source);
+                    triggerTime = reportingAndTriggerTime.first;
+                    reportingTime = reportingAndTriggerTime.second;
+                }
+
+                fakeReports.add(new Source.FakeReport(
+                        currentTriggerData,
+                        reportingTime,
+                        triggerTime,
+                        resolveFakeReportDestinations(
+                                source, reportConfig[2]),
+                        triggerSummaryBucket));
+            }
         }
         @Source.AttributionMode
         int attributionMode =
@@ -157,7 +195,7 @@ public class SourceNoiseHandler {
     }
 
     @VisibleForTesting
-    double getRandomizedSourceResponsePickRate(Source source) {
+    public double getRandomizedSourceResponsePickRate(Source source) {
         // Methods on Source and EventReportWindowCalcDelegate that calculate flip probability for
         // the source rely on reporting windows and max reports that are obtained with consideration
         // to install-state and its interaction with configurable report windows and configurable
@@ -212,5 +250,11 @@ public class SourceNoiseHandler {
                 source.getTriggerDataCardinality(),
                 mEventReportWindowCalcDelegate.getReportingWindowCountForNoising(source),
                 destinationTypeMultiplier);
+    }
+
+    /** Return a random double */
+    @VisibleForTesting
+    public double getRandomDouble(ThreadLocalRandom rand) {
+        return rand.nextDouble();
     }
 }

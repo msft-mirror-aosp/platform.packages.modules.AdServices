@@ -22,9 +22,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_PERMISSION_
 import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilErrorWithAnyException;
-import static com.android.adservices.mockito.MockitoExpectations.mockCobaltLoggingFlags;
+import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
 import static com.android.adservices.service.Flags.AD_ID_API_APP_BLOCK_LIST;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__ADID;
@@ -59,7 +57,8 @@ import android.os.Process;
 import androidx.annotation.NonNull;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -87,6 +86,9 @@ import java.util.concurrent.TimeUnit;
 /** Unit test for {@link com.android.adservices.service.adid.AdIdServiceImpl}. */
 @SpyStatic(Binder.class)
 @SpyStatic(FlagsFactory.class)
+@SetErrorLogUtilDefaultParams(
+        throwable = Any.class,
+        ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID)
 public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase {
     private static final String TEST_APP_PACKAGE_NAME = "com.android.adservices.servicecoretest";
     private static final String INVALID_PACKAGE_NAME = "com.do_not_exists";
@@ -142,7 +144,7 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
         mocker.mockGetFlags(mMockFlags);
         mocker.mockGetCallingUidOrThrow(); // expected calling by its test uid by default
 
-        mockCobaltLoggingFlags(mMockFlags, false);
+        mocker.mockAllCobaltLoggingFlags(mMockFlags, false);
     }
 
     @Test
@@ -284,9 +286,9 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
     }
 
     @Test
-    @SpyStatic(ErrorLogUtil.class)
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION)
     public void testGetAdId_enforceCallingPackage_logCallingPackageNotFound() throws Exception {
-        doNothingOnErrorLogUtilError();
         when(mMockPackageManager.getPackageUid(TEST_APP_PACKAGE_NAME, 0))
                 .thenThrow(new PackageManager.NameNotFoundException());
         setupPermissions(TEST_APP_PACKAGE_NAME, ACCESS_ADSERVICES_AD_ID);
@@ -299,9 +301,6 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
 
         invokeGetAdIdAndVerifyError(
                 mSpyContext, STATUS_UNAUTHORIZED, mRequest, /* checkLoggingStatus= */ true);
-        verifyErrorLogUtilErrorWithAnyException(
-                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION,
-                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID);
     }
 
     @Test

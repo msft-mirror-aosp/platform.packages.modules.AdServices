@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import static com.android.adservices.service.measurement.util.Time.roundDownToDay;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_ENCRYPTION_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_NETWORK_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_PARSING_ERROR;
@@ -24,15 +25,21 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MESUREMENT_REPORTS_UPLOADED;
 
 import android.adservices.common.AdServicesStatusUtils;
+import android.annotation.Nullable;
 import android.content.Context;
 import android.net.Uri;
+import android.util.Pair;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
+import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.exception.CryptoException;
+import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.KeyValueData;
+import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
@@ -253,7 +260,17 @@ public class AggregateReportingJobHandler {
             Uri reportingOrigin = aggregateReport.getRegistrationOrigin();
             JSONObject aggregateReportJsonBody =
                     createReportJsonPayload(aggregateReport, reportingOrigin, key);
-            int returnCode = makeHttpPostRequest(reportingOrigin, aggregateReportJsonBody);
+            Boolean triggerDebugHeaderAvailable = null;
+            if (mFlags.getMeasurementEnableTriggerDebugSignal()) {
+                Optional<Boolean> hasTriggerDebugSignal =
+                        mDatastoreManager.runInTransactionWithResult(
+                                (dao) -> getTriggerDebugAvailability(aggregateReport, dao));
+                triggerDebugHeaderAvailable = hasTriggerDebugSignal.orElse(null);
+            }
+            int returnCode =
+                    makeHttpPostRequest(
+                            reportingOrigin, aggregateReportJsonBody, triggerDebugHeaderAvailable);
+
             if (returnCode >= HttpURLConnection.HTTP_OK
                     && returnCode <= 299) {
                 boolean success =
@@ -265,6 +282,9 @@ public class AggregateReportingJobHandler {
                                         dao.markAggregateReportStatus(
                                                 aggregateReportId,
                                                 AggregateReport.Status.DELIVERED);
+                                    }
+                                    if (mFlags.getMeasurementEnableReinstallReattribution()) {
+                                        updateAppReportHistory(aggregateReport, dao);
                                     }
                                 });
 
@@ -346,6 +366,22 @@ public class AggregateReportingJobHandler {
         }
     }
 
+    private void updateAppReportHistory(AggregateReport aggregateReport, IMeasurementDao dao)
+            throws DatastoreException {
+        Pair<List<Uri>, List<Uri>> destinations =
+                dao.getSourceDestinations(aggregateReport.getSourceId());
+        List<Uri> appDestinations = destinations.first;
+        if (appDestinations.isEmpty()
+                || !appDestinations.get(0).equals(aggregateReport.getAttributionDestination())
+                || aggregateReport.isFakeReport()) {
+            return;
+        }
+        dao.insertOrUpdateAppReportHistory(
+                appDestinations.get(0),
+                aggregateReport.getRegistrationOrigin(),
+                aggregateReport.getScheduledReportTime());
+    }
+
     /** Creates the JSON payload for the POST request from the AggregateReport. */
     @VisibleForTesting
     JSONObject createReportJsonPayload(AggregateReport aggregateReport, Uri reportingOrigin,
@@ -355,7 +391,8 @@ public class AggregateReportingJobHandler {
                         ? null
                         : String.valueOf(
                                 TimeUnit.MILLISECONDS.toSeconds(
-                                        aggregateReport.getSourceRegistrationTime()));
+                                        roundDownToDay(
+                                                aggregateReport.getSourceRegistrationTime())));
         return new AggregateReportBody.Builder()
                 .setReportId(aggregateReport.getId())
                 .setAttributionDestination(aggregateReport.getAttributionDestination().toString())
@@ -380,15 +417,31 @@ public class AggregateReportingJobHandler {
                 .toJson(key, mFlags);
     }
 
-    /**
-     * Makes the POST request to the reporting URL.
-     */
+    /** Makes the POST request to the reporting URL. */
     @VisibleForTesting
-    public int makeHttpPostRequest(Uri adTechDomain, JSONObject aggregateReportBody)
+    public int makeHttpPostRequest(
+            Uri adTechDomain, JSONObject aggregateReportBody, @Nullable Boolean hasTriggerDebug)
             throws IOException {
         AggregateReportSender aggregateReportSender =
                 new AggregateReportSender(mIsDebugInstance, mContext);
+        if (hasTriggerDebug != null) {
+            aggregateReportSender.sendReportWithExtraHeaders(
+                    adTechDomain,
+                    aggregateReportBody,
+                    Map.of("Trigger-Debugging-Available", hasTriggerDebug.toString()));
+        }
         return aggregateReportSender.sendReport(adTechDomain, aggregateReportBody);
+    }
+
+    @Nullable
+    private Boolean getTriggerDebugAvailability(
+            AggregateReport aggregateReport, IMeasurementDao dao) throws DatastoreException {
+        Trigger trigger = dao.getTrigger(aggregateReport.getTriggerId());
+        // Only set the header when the conversion happens on web.
+        if (trigger.getDestinationType() == EventSurfaceType.APP) {
+            return null;
+        }
+        return trigger.hasArDebugPermission();
     }
 
     private void logReportingStats(ReportingStatus reportingStatus) {

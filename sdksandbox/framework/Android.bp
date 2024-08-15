@@ -80,4 +80,7 @@ java_sdk_library {
             "com.android.server.sdksandbox.**",
         ],
     },
+    lint: {
+        baseline_filename: "lint-baseline.xml",
+    },
 }

@@ -19,13 +19,13 @@ package com.android.adservices.service.appsetid;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
+import static android.content.pm.PackageManager.NameNotFoundException;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
-import static com.android.adservices.mockito.MockitoExpectations.mockCobaltLoggingFlags;
-import static com.android.adservices.mockito.MockitoExpectations.mockLogApiCallStats;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__APPSETID;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_APPSETID;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__APP_SET_ID;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import static com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -55,7 +55,8 @@ import androidx.annotation.NonNull;
 
 import com.android.adservices.NoOpServiceBinder;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -80,7 +81,7 @@ import java.util.concurrent.CountDownLatch;
 /** Unit test for {@link com.android.adservices.service.appsetid.AppSetIdServiceImpl}. */
 @MockStatic(Binder.class)
 @SpyStatic(FlagsFactory.class)
-@SpyStatic(ErrorLogUtil.class)
+@SetErrorLogUtilDefaultParams(ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__APP_SET_ID)
 public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTestCase {
 
     private static final String TEST_APP_PACKAGE_NAME =
@@ -129,7 +130,7 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
 
         mocker.mockGetFlags(mMockFlags);
 
-        mockCobaltLoggingFlags(mMockFlags, false);
+        mocker.mockAllCobaltLoggingFlags(mMockFlags, false);
     }
 
     @Test
@@ -245,11 +246,13 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            throwable = NameNotFoundException.class,
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION)
     public void testGetAppSetId_enforceCallingPackage_logCallingPackageNotFound() throws Exception {
-        doNothingOnErrorLogUtilError();
         when(mSpyContext.getPackageManager()).thenReturn(mPackageManager);
         when(mPackageManager.getPackageUid(TEST_APP_PACKAGE_NAME, 0))
-                .thenThrow(new PackageManager.NameNotFoundException());
+                .thenThrow(new NameNotFoundException());
 
         mRequest =
                 new GetAppSetIdParam.Builder()
@@ -345,7 +348,7 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
                         .build();
 
         ResultSyncCallback<ApiCallStats> logApiCallStatsCallback =
-                mockLogApiCallStats(mAdServicesLogger, BACKGROUND_THREAD_TIMEOUT_MS);
+                mocker.mockLogApiCallStats(mAdServicesLogger, BACKGROUND_THREAD_TIMEOUT_MS);
 
         GetAppSetIdResult getAppSetIdResult = getAppSetIdResults(appSetIdServiceImpl);
 

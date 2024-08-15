@@ -17,12 +17,12 @@
 package com.android.adservices.common;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
 
-import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -30,12 +30,12 @@ import java.util.concurrent.TimeoutException;
 public final class WebViewSupportUtil {
 
     private static final String TAG = "WebViewSupportUtil";
+    private static final int JS_SANDBOX_TIMEOUT_MS = 5000;
 
     /**
      * @return instance of SupportedByConditionRule which checks if Javascript Sandbox is available
      */
     public static SupportedByConditionRule createJSSandboxAvailableRule(Context context) {
-        Objects.requireNonNull(context);
         return new SupportedByConditionRule(
                 "JS Sandbox is not available", () -> isJSSandboxAvailable(context));
     }
@@ -45,7 +45,6 @@ public final class WebViewSupportUtil {
      *     for Fledge/Protected Audience
      */
     public static SupportedByConditionRule createWasmSupportAvailableRule(Context context) {
-        Objects.requireNonNull(context);
         return new SupportedByConditionRule(
                 "JS Sandbox does not support WASM", () -> isWasmSupportAvailable(context));
     }
@@ -55,10 +54,13 @@ public final class WebViewSupportUtil {
      */
     public static boolean isJSSandboxAvailable(Context context)
             throws ExecutionException, InterruptedException, TimeoutException {
-        return JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable()
-                && JSScriptEngine.getInstance(context, LoggerFactory.getLogger())
-                        .isConfigurableHeapSizeSupported()
-                        .get(2, TimeUnit.SECONDS);
+        boolean isJSSandboxAvailable =
+                JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable()
+                        && JSScriptEngine.getInstance(context, LoggerFactory.getLogger())
+                                .isConfigurableHeapSizeSupported()
+                                .get(JS_SANDBOX_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        Log.d(TAG, String.format("isJSSandboxAvailable: %s", isJSSandboxAvailable));
+        return isJSSandboxAvailable;
     }
 
     /**
@@ -66,10 +68,17 @@ public final class WebViewSupportUtil {
      */
     public static boolean isJSIsolateConsoleCallbackAvailable(Context context)
             throws ExecutionException, InterruptedException, TimeoutException {
-        return isJSSandboxAvailable(context)
-                && JSScriptEngine.getInstance(context, LoggerFactory.getLogger())
-                        .isConsoleCallbackSupported()
-                        .get(2, TimeUnit.SECONDS);
+        boolean isJSIsolateConsoleCallbackAvailable =
+                isJSSandboxAvailable(context)
+                        && JSScriptEngine.getInstance(context, LoggerFactory.getLogger())
+                                .isConsoleCallbackSupported()
+                                .get(JS_SANDBOX_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        Log.d(
+                TAG,
+                String.format(
+                        "isJSIsolateConsoleCallbackAvailable: %s",
+                        isJSIsolateConsoleCallbackAvailable));
+        return isJSIsolateConsoleCallbackAvailable;
     }
 
     /**
@@ -77,9 +86,31 @@ public final class WebViewSupportUtil {
      */
     public static boolean isWasmSupportAvailable(Context context)
             throws ExecutionException, InterruptedException, TimeoutException {
-        return JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable()
-                && JSScriptEngine.getInstance(context, LoggerFactory.getLogger())
-                        .isWasmSupported()
-                        .get(2, TimeUnit.SECONDS);
+        boolean isWasmSupportAvailable =
+                JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable()
+                        && JSScriptEngine.getInstance(context, LoggerFactory.getLogger())
+                                .isWasmSupported()
+                                .get(JS_SANDBOX_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        Log.d(TAG, String.format("isWasmSupportAvailable: %s", isWasmSupportAvailable));
+        return isWasmSupportAvailable;
+    }
+
+    /**
+     * @return a boolean to indicate if Javascript sandbox supports evaluation without transaction
+     *     limits.
+     */
+    public static boolean isEvaluationWithoutTransactionLimitSupportAvailable(Context context)
+            throws ExecutionException, InterruptedException, TimeoutException {
+        boolean isEvaluationWithoutTransactionLimitSupportAvailable =
+                isJSSandboxAvailable(context)
+                        && JSScriptEngine.getInstance(context, LoggerFactory.getLogger())
+                                .isLargeTransactionsSupported()
+                                .get(JS_SANDBOX_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        Log.d(
+                TAG,
+                String.format(
+                        "isEvaluationWithoutTransactionLimitSupportAvailable: %s",
+                        isEvaluationWithoutTransactionLimitSupportAvailable));
+        return isEvaluationWithoutTransactionLimitSupportAvailable;
     }
 }

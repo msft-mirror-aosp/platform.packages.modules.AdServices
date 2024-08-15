@@ -66,8 +66,7 @@ public class AppSearchMeasurementRollbackWorkerTest {
     private static final int APPSEARCH_WRITE_TIMEOUT_MS = 1000;
 
     private final Context mContext = ApplicationProvider.getApplicationContext();
-    private final String mAdServicesPackageName =
-            AppSearchConsentWorker.getAdServicesPackageName(mContext);
+    private String mAdServicesPackageName;
     private AppSearchMeasurementRollbackWorker mWorker;
     private final ListenableFuture<AppSearchSession> mAppSearchSession =
             Futures.immediateFuture(null);
@@ -88,6 +87,7 @@ public class AppSearchMeasurementRollbackWorkerTest {
 
     @Before
     public void setup() {
+        mAdServicesPackageName = AppSearchConsentWorker.getAdServicesPackageName(mContext);
         doReturn(mMockFlags).when(FlagsFactory::getFlags);
         doReturn(APPSEARCH_WRITE_TIMEOUT_MS).when(mMockFlags).getAppSearchWriteTimeout();
 

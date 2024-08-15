@@ -17,7 +17,6 @@
 package com.android.adservices.shared.testing;
 
 import static com.android.adservices.shared.testing.concurrency.SyncCallbackSettings.DEFAULT_TIMEOUT_MS;
-import static com.android.internal.util.Preconditions.checkArgument;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -28,56 +27,46 @@ import android.util.Log;
 import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
-import com.android.adservices.shared.util.Preconditions;
 import com.android.internal.annotations.VisibleForTesting;
+
+import java.util.Objects;
 
 /**
  * Helper used to block util a broadcast is received.
  *
- * <p>Caller typically calls {@link #prepare(String)} to pass the action as argument which registers
- * the receiver for the broadcast. Then caller calls {@link #assertResultReceived()} to assert the
- * expected outcome.
+ * <p>Caller passes the action as part of the constructor which registers the receiver for the
+ * broadcast. Then caller calls {@link #assertResultReceived()} to assert the expected outcome.
  */
-public final class BroadcastReceiverSyncCallback {
+public final class BroadcastReceiverSyncCallback extends ResultSyncCallback<Intent> {
 
     private static final String TAG = BroadcastReceiverSyncCallback.class.getSimpleName();
 
     private final Context mContext;
     private final ResultBroadcastReceiver mReceiver;
-    private String mAction;
+    private final String mAction;
 
-    public BroadcastReceiverSyncCallback(Context context) {
-        this(context, DEFAULT_TIMEOUT_MS);
+    public BroadcastReceiverSyncCallback(Context context, String action) {
+        this(context, action, DEFAULT_TIMEOUT_MS);
     }
 
-    public BroadcastReceiverSyncCallback(Context context, long timeoutMs) {
+    public BroadcastReceiverSyncCallback(Context context, String action, long timeoutMs) {
         this(
                 context,
+                action,
                 SyncCallbackFactory.newSettingsBuilder()
                         .setMaxTimeoutMs(timeoutMs)
                         .setFailIfCalledOnMainThread(false)
                         .build());
     }
 
-    public BroadcastReceiverSyncCallback(Context context, SyncCallbackSettings settings) {
-        this(context, new ResultBroadcastReceiver(settings));
-    }
+    public BroadcastReceiverSyncCallback(
+            Context context, String action, SyncCallbackSettings settings) {
+        super(SyncCallbackSettings.checkCanFailOnMainThread(settings));
 
-    @VisibleForTesting
-    BroadcastReceiverSyncCallback(Context context, ResultBroadcastReceiver receiver) {
-        mContext = context;
-        mReceiver = receiver;
-    }
+        mContext = Objects.requireNonNull(context);
+        mAction = Objects.requireNonNull(action);
+        mReceiver = new ResultBroadcastReceiver(this);
 
-    /**
-     * Registers receiver for the action.
-     *
-     * @param action The action to match, such as Intent.ACTION_MAIN.
-     */
-    public void prepare(String action) {
-        Preconditions.checkState(
-                mAction == null, "BroadcastReceiverCallback.prepared() already called");
-        mAction = action;
         IntentFilter filter = new IntentFilter(action);
         Log.d(TAG, "Registering receiver for action: " + mAction);
         mContext.registerReceiver(mReceiver, filter, Context.RECEIVER_EXPORTED);
@@ -91,44 +80,32 @@ public final class BroadcastReceiverSyncCallback {
      *
      * @return the intent received from the broadcast.
      */
+    @Override
     public Intent assertResultReceived() throws InterruptedException {
-        Preconditions.checkState(
-                mAction != null, "Call BroadcastReceiverCallback.prepare() before this method");
         try {
-            return mReceiver.assertResultReceived();
+            return super.assertResultReceived();
         } finally {
             cleanup();
         }
     }
 
     private void cleanup() {
-        if (mAction == null) {
-            return;
-        }
         Log.d(TAG, "Unregistering receiver for action: " + mAction);
         mContext.unregisterReceiver(mReceiver);
-        mAction = null;
     }
 
     @VisibleForTesting
     static class ResultBroadcastReceiver extends BroadcastReceiver {
-        private final ResultSyncCallback<Intent> mSyncCallback;
+        private final BroadcastReceiverSyncCallback mSyncCallback;
 
-        ResultBroadcastReceiver(SyncCallbackSettings settings) {
-            checkArgument(
-                    !settings.isFailIfCalledOnMainThread(),
-                    "Cannot use a SyncCallbackSettings that fails if called on main thread");
-            mSyncCallback = new ResultSyncCallback<>(settings);
+        ResultBroadcastReceiver(BroadcastReceiverSyncCallback syncCallback) {
+            mSyncCallback = Objects.requireNonNull(syncCallback);
         }
 
         @Override
         public void onReceive(Context context, Intent intent) {
             Log.d(TAG, "Broadcast received with intent: " + intent);
-            mSyncCallback.injectResult(intent);
-        }
-
-        public Intent assertResultReceived() throws InterruptedException {
-            return mSyncCallback.assertResultReceived();
+            mSyncCallback.internalInjectResult("onReceive", intent);
         }
     }
 }

@@ -17,20 +17,28 @@ package com.android.adservices.shared.testing.concurrency;
 
 import com.android.adservices.shared.testing.Nullable;
 
-import com.google.common.base.Optional;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.errorprone.annotations.concurrent.GuardedBy;
 
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * {@code SyncCallback} use to return an object (result).
  *
- * @param <T> type of the result.
+ * @param <R> type of the result.
  */
-public class ResultSyncCallback<T> extends DeviceSideSyncCallback
-        implements IResultSyncCallback<T> {
+public class ResultSyncCallback<R> extends DeviceSideSyncCallback
+        implements IResultSyncCallback<R> {
 
-    private final AtomicReference<Optional<T>> mResult = new AtomicReference<>();
+    private final Object mLock = new Object();
+
+    @GuardedBy("mLock")
+    private R mResult;
+
+    @GuardedBy("mLock")
+    private final List<R> mResults = new ArrayList<>();
 
     public ResultSyncCallback() {
         super(SyncCallbackFactory.newSettingsBuilder().build());
@@ -40,55 +48,76 @@ public class ResultSyncCallback<T> extends DeviceSideSyncCallback
         super(settings);
     }
 
+    @VisibleForTesting
+    ResultSyncCallback(AbstractSyncCallback realCallback, SyncCallbackSettings settings) {
+        super(realCallback, settings);
+    }
+
     @Override
-    protected final String getSetCalledAlternatives() {
-        return "injectResult()";
+    public final void injectResult(@Nullable R result) {
+        internalInjectResult("injectResult", result);
     }
 
-    /**
-     * Sets the result.
-     *
-     * @throws IllegalStateException if it was already called.
-     */
-    public final void injectResult(@Nullable T result) {
-        logV("Injecting %s (mResult=%s)", result, mResult);
-        Optional<T> newResult = Optional.fromNullable(result);
-        if (!mResult.compareAndSet(null, newResult)) {
-            setInternalFailure(
-                    new CallbackAlreadyCalledException("injectResult()", getResult(), result));
+    // TODO(b/342448771): Make this method package protected
+    protected final void internalInjectResult(String name, @Nullable R result) {
+        StringBuilder methodName = new StringBuilder(name).append("(").append(result);
+        synchronized (mLock) {
+            boolean firstCall = mResults.isEmpty();
+            if (firstCall) {
+                mResult = result;
+            } else {
+                // Don't set mResult
+                methodName
+                        .append("; already called: mResult=")
+                        .append(mResult)
+                        .append(", mResults=")
+                        .append(mResults);
+            }
+            mResults.add(result);
         }
-        super.internalSetCalled();
+        super.internalSetCalled(methodName.append(')').toString());
     }
 
-    /**
-     * Asserts that {@link #injectResult(Object)} was called, waiting up to {@link
-     * #getMaxTimeoutMs()} milliseconds before failing (if not called).
-     *
-     * @return the result
-     */
-    public final @Nullable T assertResultReceived() throws InterruptedException {
-        waitCalled(mSettings.getMaxTimeoutMs(), TimeUnit.MILLISECONDS);
-        postAssertCalled();
+    @Override
+    public @Nullable R assertResultReceived() throws InterruptedException {
+        super.assertCalled();
         return getResult();
     }
 
-    /**
-     * Gets the result returned by {@link #injectResult(Object)} (or {@code null} if it was not
-     * called yet).
-     */
-    public final @Nullable T getResult() {
-        Optional<T> result = mResult.get();
-        return result == null ? null : result.orNull();
+    @Override
+    public final @Nullable R getResult() {
+        synchronized (mLock) {
+            return mResult;
+        }
+    }
+
+    @Override
+    public List<R> getResults() {
+        synchronized (mLock) {
+            return mResults.isEmpty()
+                    ? Collections.emptyList()
+                    : Collections.unmodifiableList(new ArrayList<>(mResults));
+        }
     }
 
     @Override
     protected void customizeToString(StringBuilder string) {
         super.customizeToString(string);
 
-        if (mResult.get() == null) {
-            string.append(", (no result yet)");
-        } else {
-            string.append(", result=").append(getResult());
+        synchronized (mLock) {
+            List<R> results = getResults();
+            if (results.isEmpty()) {
+                string.append(", (no result yet)");
+            } else {
+                string.append(", result=").append(getResult()).append(", results=").append(results);
+            }
         }
+    }
+
+    // Ideally should be moved to some helper class (which would require unit-testint it as well)
+    static <I> List<I> getImmutableList(List<I> list) {
+        return list.isEmpty()
+                ? Collections.emptyList()
+                : Collections.unmodifiableList(new ArrayList<>(list));
     }
 }

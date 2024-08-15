@@ -22,6 +22,8 @@ import androidx.annotation.Nullable;
 import com.android.adservices.service.proto.PrivacySandboxApi;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.common.collect.ImmutableBiMap;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -94,6 +96,32 @@ public class EnrollmentData {
                 mAttributionReportingUrl,
                 mRemarketingResponseBasedRegistrationUrl,
                 mEncryptionKeyUrl);
+    }
+
+    @Override
+    public String toString() {
+        return "EnrollmentData{"
+                + "mEnrollmentId='"
+                + mEnrollmentId
+                + "', mEnrolledSite='"
+                + mEnrolledSite
+                + "', mEnrolledAPIsString='"
+                + mEnrolledAPIsString
+                + "', mEnrolledAPIs="
+                + mEnrolledAPIs
+                + ", mSdkNames="
+                + mSdkNames
+                + ", mAttributionSourceRegistrationUrl="
+                + mAttributionSourceRegistrationUrl
+                + ", mAttributionTriggerRegistrationUrl="
+                + mAttributionTriggerRegistrationUrl
+                + ", mAttributionReportingUrl="
+                + mAttributionReportingUrl
+                + ", mRemarketingResponseBasedRegistrationUrl="
+                + mRemarketingResponseBasedRegistrationUrl
+                + ", mEncryptionKeyUrl='"
+                + mEncryptionKeyUrl
+                + "'}";
     }
 
     /** Returns ID provided to the Adtech at the end of the enrollment process. */
@@ -173,31 +201,39 @@ public class EnrollmentData {
 
         String[] enrolledAPIsList = enrolledAPIs.trim().split("\\s+");
         for (String enrolledApi : enrolledAPIsList) {
-            enrolledApiEnums.add(enrolledApiToEnum(enrolledApi));
+            PrivacySandboxApi enrolledApiEnum =
+                    ENROLLMENT_API_ENUM_STRING_MAP
+                            .inverse()
+                            .getOrDefault(
+                                    enrolledApi,
+                                    /* defaultValue= */ PrivacySandboxApi
+                                            .PRIVACY_SANDBOX_API_UNKNOWN);
+            enrolledApiEnums.add(enrolledApiEnum);
         }
         return enrolledApiEnums;
     }
 
-    /**
-     * Returns the given {@code enrolledAPI} to corresponding {@link PrivacySandboxApi} enum value
-     */
-    // LINT.IfChange(enrolledApiToEnum)
-    private static PrivacySandboxApi enrolledApiToEnum(String enrolledAPI) {
-        return switch (enrolledAPI) {
-            case ("PRIVACY_SANDBOX_API_TOPICS") -> PrivacySandboxApi.PRIVACY_SANDBOX_API_TOPICS;
-            case ("PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE") -> PrivacySandboxApi
-                    .PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE;
-            case ("PRIVACY_SANDBOX_API_PRIVATE_AGGREGATION") -> PrivacySandboxApi
-                    .PRIVACY_SANDBOX_API_PRIVATE_AGGREGATION;
-            case ("PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING") -> PrivacySandboxApi
-                    .PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING;
-            case ("PRIVACY_SANDBOX_API_SHARED_STORAGE") -> PrivacySandboxApi
-                    .PRIVACY_SANDBOX_API_SHARED_STORAGE;
-            case ("PRIVACY_SANDBOX_API_PROTECTED_APP_SIGNALS") -> PrivacySandboxApi
-                    .PRIVACY_SANDBOX_API_PROTECTED_APP_SIGNALS;
-            default -> PrivacySandboxApi.PRIVACY_SANDBOX_API_UNKNOWN;
-        };
-    }
+    // LINT.IfChange(EnrollmentApiEnumStringMap)
+    public static final ImmutableBiMap<PrivacySandboxApi, String> ENROLLMENT_API_ENUM_STRING_MAP =
+            ImmutableBiMap.<PrivacySandboxApi, String>builder()
+                    .put(PrivacySandboxApi.PRIVACY_SANDBOX_API_TOPICS, "PRIVACY_SANDBOX_API_TOPICS")
+                    .put(
+                            PrivacySandboxApi.PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE,
+                            "PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE")
+                    .put(
+                            PrivacySandboxApi.PRIVACY_SANDBOX_API_PRIVATE_AGGREGATION,
+                            "PRIVACY_SANDBOX_API_PRIVATE_AGGREGATION")
+                    .put(
+                            PrivacySandboxApi.PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING,
+                            "PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING")
+                    .put(
+                            PrivacySandboxApi.PRIVACY_SANDBOX_API_SHARED_STORAGE,
+                            "PRIVACY_SANDBOX_API_SHARED_STORAGE")
+                    .put(
+                            PrivacySandboxApi.PRIVACY_SANDBOX_API_PROTECTED_APP_SIGNALS,
+                            "PRIVACY_SANDBOX_API_PROTECTED_APP_SIGNALS")
+                    .build();
+
     // LINT.ThenChange(/adservices/service-core/proto/rb_enrollment.proto:PrivacySandboxApi)
 
     /** Returns the builder for the instance */

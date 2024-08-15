@@ -17,11 +17,11 @@
 package com.android.adservices.service.adselection;
 
 import static com.android.adservices.service.common.JsonUtils.getStringFromJson;
-import static com.android.adservices.service.js.JSScriptEngineCommonConstants.RESULTS_FIELD_NAME;
-import static com.android.adservices.service.js.JSScriptEngineCommonConstants.STATUS_FIELD_NAME;
 import static com.android.adservices.service.js.JSScriptArgument.jsonArg;
 import static com.android.adservices.service.js.JSScriptArgument.numericArg;
 import static com.android.adservices.service.js.JSScriptArgument.stringArg;
+import static com.android.adservices.service.js.JSScriptEngineCommonConstants.RESULTS_FIELD_NAME;
+import static com.android.adservices.service.js.JSScriptEngineCommonConstants.STATUS_FIELD_NAME;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_JS_REFERENCE_ERROR;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OTHER_FAILURE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OUTPUT_SEMANTIC_ERROR;
@@ -33,7 +33,6 @@ import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.common.AdSelectionSignals;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
-import android.content.Context;
 import android.net.Uri;
 
 import com.android.adservices.LoggerFactory;
@@ -73,7 +72,6 @@ import java.util.function.Supplier;
  */
 public class ReportImpressionScriptEngine {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
-    private static final String TAG = "ReportImpressionScriptEngine";
 
     // TODO: (b/228094391): Put these common constants in a separate class
     private static final int JS_SCRIPT_STATUS_SUCCESS = 0;
@@ -165,21 +163,17 @@ public class ReportImpressionScriptEngine {
     private final JSScriptEngine mJsEngine;
     // Used for the Futures.transform calls to compose futures.
     private final Executor mExecutor = MoreExecutors.directExecutor();
-    private final Supplier<Boolean> mEnforceMaxHeapSizeFeatureSupplier;
     private final Supplier<Long> mMaxHeapSizeBytesSupplier;
     private final RegisterAdBeaconScriptEngineHelper mRegisterAdBeaconScriptEngineHelper;
     private final RetryStrategy mRetryStrategy;
     private final DevContext mDevContext;
 
     public ReportImpressionScriptEngine(
-            Context context,
-            Supplier<Boolean> enforceMaxHeapSizeFeatureSupplier,
             Supplier<Long> maxHeapSizeBytesSupplier,
             RegisterAdBeaconScriptEngineHelper registerAdBeaconScriptEngineHelper,
             RetryStrategy retryStrategy,
             DevContext devContext) {
-        mJsEngine = JSScriptEngine.getInstance(context, sLogger);
-        mEnforceMaxHeapSizeFeatureSupplier = enforceMaxHeapSizeFeatureSupplier;
+        mJsEngine = JSScriptEngine.getInstance(sLogger);
         mMaxHeapSizeBytesSupplier = maxHeapSizeBytesSupplier;
         mRegisterAdBeaconScriptEngineHelper = registerAdBeaconScriptEngineHelper;
         mRetryStrategy = retryStrategy;
@@ -358,7 +352,6 @@ public class ReportImpressionScriptEngine {
             throws JSONException {
         IsolateSettings isolateSettings =
                 IsolateSettings.builder()
-                        .setEnforceMaxHeapSizeFeature(mEnforceMaxHeapSizeFeatureSupplier.get())
                         .setMaxHeapSizeBytes(mMaxHeapSizeBytesSupplier.get())
                         .setIsolateConsoleMessageInLogsEnabled(mDevContext.getDevOptionsEnabled())
                         .build();

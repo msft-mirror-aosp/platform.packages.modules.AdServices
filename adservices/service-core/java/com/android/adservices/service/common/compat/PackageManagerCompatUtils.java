@@ -48,8 +48,6 @@ public final class PackageManagerCompatUtils {
 
     // This list is the same as the list declared in the AdExtServicesManifest, where the
     // activities need need to be enabled/disabled based on flag settings and SDK version.
-    // TODO(b/263904312): Remove after max_sdk_version is implemented.
-    // TODO(b/272737642) scan activities instead of hardcode
     // LINT.IfChange(activities_and_services)
     public static final ImmutableList<String> CONSENT_ACTIVITIES_CLASSES =
             ImmutableList.of(
@@ -66,8 +64,6 @@ public final class PackageManagerCompatUtils {
     // services with intent filters need to be enabled/disabled based on flag settings and SDK
     // version. The list is a collection of pairs where the first value is the name of the service,
     // and the second value is the min SDK version for which the service is supported.
-    // TODO(b/263904312): Remove after max_sdk_version is implemented.
-    // TODO(b/272737642) scan services instead of hardcode
     public static final ImmutableList<Pair<String, Integer>>
             SERVICE_CLASSES_AND_MIN_SDK_SUPPORT_PAIRS =
                     ImmutableList.of(

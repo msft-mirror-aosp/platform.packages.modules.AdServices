@@ -19,24 +19,23 @@ package com.android.adservices.service.signals;
 import static com.android.adservices.service.signals.SignalsFixture.assertSignalsUnorderedListEqualsExceptIdAndTime;
 import static com.android.adservices.service.signals.SignalsFixture.intToBase64;
 import static com.android.adservices.service.signals.SignalsFixture.intToBytes;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyBoolean;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.when;
 
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CallingAppUidSupplierProcessImpl;
 import android.adservices.common.CommonFixture;
 import android.adservices.http.MockWebServerRule;
 import android.adservices.signals.UpdateSignalsInput;
-import android.content.Context;
 import android.net.Uri;
 
 import androidx.room.Room;
@@ -44,9 +43,9 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.signals.DBEncodedPayload;
 import com.android.adservices.data.signals.DBProtectedSignal;
@@ -62,11 +61,12 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
+import com.android.adservices.service.common.FledgeApiThrottleFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.common.FledgeConsentFilter;
 import com.android.adservices.service.common.NoOpRetryStrategyImpl;
 import com.android.adservices.service.common.ProtectedSignalsServiceFilter;
 import com.android.adservices.service.common.RetryStrategy;
-import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
@@ -112,11 +112,9 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
     private static final String SIGNALS_PATH = "/signals";
     private static final String ENCODER_PATH = "/encoder";
     private static final boolean ISOLATE_CONSOLE_MESSAGE_IN_LOGS_ENABLED = true;
-    private static final IsolateSettings ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED =
-            IsolateSettings.forMaxHeapSizeEnforcementDisabled(
+    private static final IsolateSettings ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_ENABLED =
+            IsolateSettings.forMaxHeapSizeEnforcementEnabled(
                     ISOLATE_CONSOLE_MESSAGE_IN_LOGS_ENABLED);
-
-    @Spy private final Context mContextSpy = ApplicationProvider.getApplicationContext();
 
     // Every test in this class requires that the JS Sandbox be available. The JS Sandbox
     // availability depends on an external component (the system webview) being higher than a
@@ -132,8 +130,9 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
     private final AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
     @Mock private ConsentManager mConsentManagerMock;
+    @Mock private FledgeConsentFilter mFledgeConsentFilterMock;
     @Mock private AppImportanceFilter mAppImportanceFilterMock;
-    @Mock private Throttler mMockThrottler;
+    @Mock private FledgeApiThrottleFilter mFledgeApiThrottleFilterMock;
     @Mock private DevContextFilter mDevContextFilterMock;
     @Mock private AdServicesLoggerImpl mAdServicesLoggerImplMock;
 
@@ -159,6 +158,7 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
     private SignalsProviderImpl mSignalStorageManager;
     private PeriodicEncodingJobWorker mPeriodicEncodingJobWorker;
     private SignalsScriptEngine mScriptEngine;
+    private ProtectedSignalsArgument mProtectedSignalsArgument;
 
     private AdTechUriValidator mAdtechUriValidator;
     private FledgeAuthorizationFilter mFledgeAuthorizationFilter;
@@ -175,31 +175,31 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
     @Before
     public void setup() {
         mSignalsDao =
-                Room.inMemoryDatabaseBuilder(mContextSpy, ProtectedSignalsDatabase.class)
+                Room.inMemoryDatabaseBuilder(mSpyContext, ProtectedSignalsDatabase.class)
                         .build()
                         .protectedSignalsDao();
         mEncoderEndpointsDao =
-                Room.inMemoryDatabaseBuilder(mContextSpy, ProtectedSignalsDatabase.class)
+                Room.inMemoryDatabaseBuilder(mSpyContext, ProtectedSignalsDatabase.class)
                         .build()
                         .getEncoderEndpointsDao();
         mEncoderLogicMetadataDao =
-                Room.inMemoryDatabaseBuilder(mContextSpy, ProtectedSignalsDatabase.class)
+                Room.inMemoryDatabaseBuilder(mSpyContext, ProtectedSignalsDatabase.class)
                         .build()
                         .getEncoderLogicMetadataDao();
         mEncodedPayloadDao =
-                Room.inMemoryDatabaseBuilder(mContextSpy, ProtectedSignalsDatabase.class)
+                Room.inMemoryDatabaseBuilder(mSpyContext, ProtectedSignalsDatabase.class)
                         .build()
                         .getEncodedPayloadDao();
         mEnrollmentDao =
                 new EnrollmentDao(
-                        mContextSpy,
+                        mSpyContext,
                         DbTestUtil.getSharedDbHelperForTest(),
                         mFlagsWithProtectedSignalsAndEncodingEnabled);
 
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mUpdateProcessorSelector = new UpdateProcessorSelector();
-        mEncoderPersistenceDao = EncoderPersistenceDao.getInstance(mContextSpy);
+        mEncoderPersistenceDao = EncoderPersistenceDao.getInstance(mSpyContext);
 
         mAdServicesHttpsClient =
                 new AdServicesHttpsClient(mBackgroundExecutorService, 2000, 2000, 10000);
@@ -227,23 +227,20 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
         mFledgeAuthorizationFilter =
                 ExtendedMockito.spy(
                         new FledgeAuthorizationFilter(
-                                mContextSpy.getPackageManager(),
+                                mSpyContext.getPackageManager(),
                                 mEnrollmentDao,
                                 mAdServicesLoggerMock));
         mProtectedSignalsServiceFilter =
                 new ProtectedSignalsServiceFilter(
-                        mContextSpy,
-                        mConsentManagerMock,
+                        mSpyContext,
+                        mFledgeConsentFilterMock,
                         mFlagsWithProtectedSignalsAndEncodingEnabled,
                         mAppImportanceFilterMock,
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilterSpy,
-                        mMockThrottler);
-        when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(any()))
-                .thenReturn(false);
+                        mFledgeApiThrottleFilterMock);
         when(mConsentManagerMock.isPasFledgeConsentGiven()).thenReturn(true);
 
-        when(mMockThrottler.tryAcquire(any(), any())).thenReturn(true);
         doReturn(DevContext.createForDevOptionsDisabled())
                 .when(mDevContextFilterMock)
                 .createDevContext();
@@ -260,7 +257,7 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
                         CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI);
         mService =
                 new ProtectedSignalsServiceImpl(
-                        mContextSpy,
+                        mSpyContext,
                         mUpdateSignalsOrchestrator,
                         mFledgeAuthorizationFilter,
                         mConsentManagerMock,
@@ -276,14 +273,12 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
         RetryStrategy retryStrategy = new NoOpRetryStrategyImpl();
         mScriptEngine =
                 new SignalsScriptEngine(
-                        mContextSpy,
-                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED
-                                ::getEnforceMaxHeapSizeFeature,
-                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED::getMaxHeapSizeBytes,
+                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_ENABLED::getMaxHeapSizeBytes,
                         retryStrategy,
-                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_DISABLED
+                        ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_ENABLED
                                 ::getIsolateConsoleMessageInLogsEnabled);
         mClock = Clock.getInstance();
+        mProtectedSignalsArgument = new ProtectedSignalsArgumentImpl();
         mPeriodicEncodingJobWorker =
                 new PeriodicEncodingJobWorker(
                         mEncoderLogicHandler,
@@ -294,11 +289,11 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
                         mScriptEngine,
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
-                        mDevContextFilterMock,
                         mFlagsWithProtectedSignalsAndEncodingEnabled,
                         mEnrollmentDao,
                         mClock,
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        mProtectedSignalsArgument);
 
         doNothing()
                 .when(
@@ -666,11 +661,11 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
                         mScriptEngine,
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
-                        mDevContextFilterMock,
                         flagsWithLargeUpdateWindow,
                         mEnrollmentDao,
                         mClock,
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        mProtectedSignalsArgument);
 
         // Manually trigger encoding job worker to validate encoding gets done
         jobWorkerWithLargeTimeWindow.encodeProtectedSignals().get(5, TimeUnit.SECONDS);
@@ -705,11 +700,11 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
                         mScriptEngine,
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
-                        mDevContextFilterMock,
                         flagsWithTinyUpdateWindow,
                         mEnrollmentDao,
                         mClock,
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        mProtectedSignalsArgument);
 
         // Manually trigger encoding job worker to validate encoding gets done
         jobWorkerWithTinyTimeWindow.encodeProtectedSignals().get(5, TimeUnit.SECONDS);

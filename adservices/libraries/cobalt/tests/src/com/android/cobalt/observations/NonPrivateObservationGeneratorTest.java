@@ -23,9 +23,9 @@ import androidx.test.runner.AndroidJUnit4;
 import com.android.cobalt.data.EventRecordAndSystemProfile;
 import com.android.cobalt.data.EventVector;
 import com.android.cobalt.testing.observations.FakeSecureRandom;
+import com.android.cobalt.testing.observations.ObservationFactory;
 
 import com.google.cobalt.AggregateValue;
-import com.google.cobalt.IntegerObservation;
 import com.google.cobalt.MetricDefinition;
 import com.google.cobalt.MetricDefinition.MetricType;
 import com.google.cobalt.MetricDefinition.TimeZonePolicy;
@@ -94,46 +94,17 @@ public final class NonPrivateObservationGeneratorTest {
     private static final ByteString RANDOM_BYTES_4 =
             ByteString.copyFrom(new byte[] {3, 3, 3, 3, 3, 3, 3, 3});
     private static final Observation OBSERVATION_1 =
-            Observation.newBuilder()
-                    .setInteger(
-                            IntegerObservation.newBuilder()
-                                    .addValues(
-                                            IntegerObservation.Value.newBuilder()
-                                                    .setValue(EVENT_COUNT_1)
-                                                    .addAllEventCodes(EVENT_VECTOR_1.eventCodes())))
-                    .setRandomId(RANDOM_BYTES_1)
-                    .build();
+            ObservationFactory.createIntegerObservation(
+                    EVENT_VECTOR_1, EVENT_COUNT_1, RANDOM_BYTES_1);
     private static final Observation OBSERVATION_1_AND_2 =
-            Observation.newBuilder()
-                    .setInteger(
-                            IntegerObservation.newBuilder()
-                                    .addValues(
-                                            IntegerObservation.Value.newBuilder()
-                                                    .setValue(EVENT_COUNT_1)
-                                                    .addAllEventCodes(EVENT_VECTOR_1.eventCodes()))
-                                    .addValues(
-                                            IntegerObservation.Value.newBuilder()
-                                                    .setValue(EVENT_COUNT_2)
-                                                    .addAllEventCodes(EVENT_VECTOR_2.eventCodes())))
-                    .setRandomId(RANDOM_BYTES_1)
-                    .build();
+            ObservationFactory.createIntegerObservation(
+                    EVENT_VECTOR_1, EVENT_COUNT_1, EVENT_VECTOR_2, EVENT_COUNT_2, RANDOM_BYTES_1);
     private static final Observation OBSERVATION_2 =
-            Observation.newBuilder()
-                    .setInteger(
-                            IntegerObservation.newBuilder()
-                                    .addValues(
-                                            IntegerObservation.Value.newBuilder()
-                                                    .setValue(EVENT_COUNT_2)
-                                                    .addAllEventCodes(EVENT_VECTOR_2.eventCodes())))
-                    .setRandomId(RANDOM_BYTES_3)
-                    .build();
+            ObservationFactory.createIntegerObservation(
+                    EVENT_VECTOR_2, EVENT_COUNT_2, RANDOM_BYTES_3);
     private static final Observation NO_EVENT_CODES_OBSERVATION =
-            Observation.newBuilder()
-                    .setInteger(
-                            IntegerObservation.newBuilder()
-                                    .addValues(IntegerObservation.Value.newBuilder().setValue(7)))
-                    .setRandomId(RANDOM_BYTES_1)
-                    .build();
+            ObservationFactory.createIntegerObservation(
+                    EventVector.create(), /* countValue= */ 7, RANDOM_BYTES_1);
 
     private static final MetricDefinition METRIC =
             MetricDefinition.newBuilder()

@@ -15,7 +15,7 @@
  */
 package com.android.adservices.shared.testing.concurrency;
 
-import static com.android.adservices.shared.testing.ConcurrencyHelper.runAsync;
+import static com.android.adservices.shared.testing.concurrency.DeviceSideConcurrencyHelper.runAsync;
 
 import com.android.adservices.shared.SharedMockitoTestCase;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;

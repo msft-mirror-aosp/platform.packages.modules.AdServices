@@ -87,6 +87,8 @@ public class MobileDataDownloadFactory {
     private static final String ENCRYPTION_KEYS_MANIFEST_ID = "EncryptionKeysManifestId";
     private static final String UI_OTA_STRINGS_MANIFEST_ID = "UiOtaStringsManifestId";
     private static final String UI_OTA_RESOURCES_MANIFEST_ID = "UiOtaResourcesManifestId";
+    private static final String ENROLLMENT_PROTO_MANIFEST_ID = "EnrollmentProtoManifestId";
+    private static final String COBALT_REGISTRY_MANIFEST_ID = "CobaltRegistryManifestId";
 
     private static final int MAX_ADB_LOGCAT_SIZE = 4000;
 
@@ -105,19 +107,19 @@ public class MobileDataDownloadFactory {
                 NetworkUsageMonitor networkUsageMonitor =
                         new NetworkUsageMonitor(
                                 context,
-                            new TimeSource() {
-                                @Override
-                                public long currentTimeMillis() {
-                                    return System.currentTimeMillis();
-                                }
+                                new TimeSource() {
+                                    @Override
+                                    public long currentTimeMillis() {
+                                        return System.currentTimeMillis();
+                                    }
 
-                                @Override
-                                public long elapsedRealtimeNanos() {
-                                    return SystemClock.elapsedRealtimeNanos();
-                                }
-                            });
+                                    @Override
+                                    public long elapsedRealtimeNanos() {
+                                        return SystemClock.elapsedRealtimeNanos();
+                                    }
+                                });
 
-                sSingletonMdd =
+                MobileDataDownloadBuilder mobileDataDownloadBuilder =
                         MobileDataDownloadBuilder.newBuilder()
                                 .setContext(context)
                                 .setControlExecutor(getControlExecutor())
@@ -129,16 +131,29 @@ public class MobileDataDownloadFactory {
                                                 flags, fileStorage, fileDownloader))
                                 .addFileGroupPopulator(
                                         getMeasurementManifestPopulator(
-                                                flags, fileStorage, fileDownloader))
+                                                flags,
+                                                fileStorage,
+                                                fileDownloader,
+                                                /* getProto= */ false))
                                 .addFileGroupPopulator(
                                         getEncryptionKeysManifestPopulator(
                                                 context, flags, fileStorage, fileDownloader))
                                 .addFileGroupPopulator(
                                         getUiOtaResourcesManifestPopulator(
                                                 flags, fileStorage, fileDownloader))
+                                .addFileGroupPopulator(
+                                        getCobaltRegistryManifestPopulator(
+                                                flags, fileStorage, fileDownloader))
                                 .setLoggerOptional(getMddLogger(flags))
-                                .setFlagsOptional(Optional.of(MddFlags.getInstance()))
-                                .build();
+                                .setFlagsOptional(Optional.of(MddFlags.getInstance()));
+
+                if (flags.getEnrollmentProtoFileEnabled()) {
+                    mobileDataDownloadBuilder.addFileGroupPopulator(
+                            getMeasurementManifestPopulator(
+                                    flags, fileStorage, fileDownloader, /* getProto= */ true));
+                }
+
+                sSingletonMdd = mobileDataDownloadBuilder.build();
             }
 
             return sSingletonMdd;
@@ -257,8 +272,9 @@ public class MobileDataDownloadFactory {
                         } else {
                             LogUtil.d(
                                     "Topics Classifier's Bundled BuildId = %d is bigger than or"
-                                        + " equal to the BuildId = %d from Server side, skipping"
-                                        + " the downloading.",
+                                            + " equal to the BuildId = %d from Server side, "
+                                            + "skipping"
+                                            + " the downloading.",
                                     bundledModelBuildId, dataFileGroupBuildId);
                         }
                     }
@@ -373,13 +389,22 @@ public class MobileDataDownloadFactory {
 
     @VisibleForTesting
     static ManifestFileGroupPopulator getMeasurementManifestPopulator(
-            Flags flags, SynchronousFileStorage fileStorage, FileDownloader fileDownloader) {
+            Flags flags,
+            SynchronousFileStorage fileStorage,
+            FileDownloader fileDownloader,
+            boolean getProto) {
         Context context = ApplicationContextSingleton.get();
+
+        String manifestId = getProto ? ENROLLMENT_PROTO_MANIFEST_ID : MEASUREMENT_MANIFEST_ID;
+        String fileUrl =
+                getProto
+                        ? flags.getMddEnrollmentManifestFileUrl()
+                        : flags.getMeasurementManifestFileUrl();
 
         ManifestFileFlag manifestFileFlag =
                 ManifestFileFlag.newBuilder()
-                        .setManifestId(MEASUREMENT_MANIFEST_ID)
-                        .setManifestFileUrl(flags.getMeasurementManifestFileUrl())
+                        .setManifestId(manifestId)
+                        .setManifestFileUrl(fileUrl)
                         .build();
 
         ManifestConfigFileParser manifestConfigFileParser =
@@ -448,6 +473,56 @@ public class MobileDataDownloadFactory {
                             }
                         })
                 .setEnabledSupplier(flags::getEnableMddEncryptionKeys)
+                .setBackgroundExecutor(AdServicesExecutors.getBackgroundExecutor())
+                .setFileDownloader(() -> fileDownloader)
+                .setFileStorage(fileStorage)
+                .setManifestFileFlagSupplier(() -> manifestFileFlag)
+                .setManifestConfigParser(manifestConfigFileParser)
+                .setMetadataStore(
+                        SharedPreferencesManifestFileMetadata.createFromContext(
+                                context, /*InstanceId*/
+                                Optional.absent(),
+                                AdServicesExecutors.getBackgroundExecutor()))
+                // TODO(b/239265537): Enable dedup using etag.
+                .setDedupDownloadWithEtag(false)
+                // TODO(b/243829623): use proper Logger.
+                .setLogger(
+                        new Logger() {
+                            @Override
+                            public void log(MessageLite event, int eventCode) {
+                                // A no-op logger.
+                            }
+                        })
+                .build();
+    }
+
+    @VisibleForTesting
+    static ManifestFileGroupPopulator getCobaltRegistryManifestPopulator(
+            Flags flags, SynchronousFileStorage fileStorage, FileDownloader fileDownloader) {
+        ManifestFileFlag manifestFileFlag =
+                ManifestFileFlag.newBuilder()
+                        .setManifestId(COBALT_REGISTRY_MANIFEST_ID)
+                        .setManifestFileUrl(flags.getMddCobaltRegistryManifestFileUrl())
+                        .build();
+
+        ManifestConfigFileParser manifestConfigFileParser =
+                new ManifestConfigFileParser(
+                        fileStorage, AdServicesExecutors.getBackgroundExecutor());
+
+        Context context = ApplicationContextSingleton.get();
+
+        return ManifestFileGroupPopulator.builder()
+                .setContext(context)
+                // cobalt registry should not be downloaded pre-consent
+                .setEnabledSupplier(
+                        () -> {
+                            if (flags.getGaUxFeatureEnabled()) {
+                                return isAnyConsentGiven(flags);
+                            } else {
+                                return ConsentManager.getInstance().getConsent().isGiven();
+                            }
+                        })
+                .setEnabledSupplier(flags::getCobaltRegistryOutOfBandUpdateEnabled)
                 .setBackgroundExecutor(AdServicesExecutors.getBackgroundExecutor())
                 .setFileDownloader(() -> fileDownloader)
                 .setFileStorage(fileStorage)

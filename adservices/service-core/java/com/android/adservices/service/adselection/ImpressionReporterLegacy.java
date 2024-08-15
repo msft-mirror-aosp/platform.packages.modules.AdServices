@@ -23,6 +23,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARG
 import static android.adservices.common.AdServicesStatusUtils.STATUS_IO_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
+import static com.android.adservices.service.common.AppManifestConfigCall.API_AD_SELECTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
 
 import android.adservices.adselection.AdSelectionConfig;
@@ -31,11 +32,9 @@ import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
-import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
-import android.content.Context;
 import android.net.Uri;
 import android.os.Build;
 import android.os.RemoteException;
@@ -127,7 +126,6 @@ public class ImpressionReporterLegacy {
     @NonNull private String mCallerAppPackageName;
 
     public ImpressionReporterLegacy(
-            @NonNull Context context,
             @NonNull ExecutorService lightweightExecutor,
             @NonNull ExecutorService backgroundExecutor,
             @NonNull ScheduledThreadPoolExecutor scheduledExecutor,
@@ -144,7 +142,6 @@ public class ImpressionReporterLegacy {
             boolean shouldUseUnifiedTables,
             @NonNull final RetryStrategy retryStrategy,
             ReportImpressionExecutionLogger reportImpressionExecutionLogger) {
-        Objects.requireNonNull(context);
         Objects.requireNonNull(lightweightExecutor);
         Objects.requireNonNull(backgroundExecutor);
         Objects.requireNonNull(scheduledExecutor);
@@ -186,8 +183,6 @@ public class ImpressionReporterLegacy {
         }
         mJsEngine =
                 new ReportImpressionScriptEngine(
-                        context,
-                        flags::getEnforceIsolateMaxHeapSize,
                         flags::getIsolateMaxHeapSizeBytes,
                         registerAdBeaconScriptEngineHelper,
                         retryStrategy,
@@ -478,9 +473,10 @@ public class ImpressionReporterLegacy {
             try {
                 buyerValidator.validate(reportingUris.buyerReportingUri);
                 if (!mFlags.getDisableFledgeEnrollmentCheck()) {
-                    mFledgeAuthorizationFilter.assertAdTechEnrolled(
-                            AdTechIdentifier.fromString(reportingUris.buyerReportingUri.getHost()),
-                            AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION);
+                    mFledgeAuthorizationFilter.assertAdTechFromUriEnrolled(
+                            reportingUris.buyerReportingUri,
+                            AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                            API_AD_SELECTION);
                 }
                 // Perform reporting if no exception was thrown
                 buyerFuture =

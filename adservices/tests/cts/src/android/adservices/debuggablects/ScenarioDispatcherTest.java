@@ -33,7 +33,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
 
-public class ScenarioDispatcherTest {
+public final class ScenarioDispatcherTest {
 
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRule.forHttp();
 
@@ -44,7 +44,7 @@ public class ScenarioDispatcherTest {
                         ScenarioDispatcherFactory.createFromScenarioFile(
                                 "scenarios/scenario-test-001.json"));
 
-        String baseAddress = mMockWebServerRule.getServerBaseAddress();
+        String baseAddress = dispatcher.getBaseAddressWithPrefix().toString();
         URL url = new URL(baseAddress + "/bidding");
         makeSimpleGetRequest(url);
 
@@ -71,7 +71,7 @@ public class ScenarioDispatcherTest {
                         ScenarioDispatcherFactory.createFromScenarioFile(
                                 "scenarios/scenario-test-002.json"));
 
-        String baseAddress = mMockWebServerRule.getServerBaseAddress();
+        String baseAddress = dispatcher.getBaseAddressWithPrefix().toString();
         makeSimpleGetRequest(new URL(baseAddress + "/bidding"));
         makeSimpleGetRequest(new URL(baseAddress + "/scoring"));
 
@@ -86,7 +86,7 @@ public class ScenarioDispatcherTest {
                         ScenarioDispatcherFactory.createFromScenarioFile(
                                 "scenarios/scenario-test-003.json"));
 
-        String baseAddress = mMockWebServerRule.getServerBaseAddress();
+        String baseAddress = dispatcher.getBaseAddressWithPrefix().toString();
         makeSimpleGetRequest(new URL(baseAddress + "/bidding")); // Call something else.
 
         assertThat(dispatcher.getCalledPaths())
@@ -100,7 +100,7 @@ public class ScenarioDispatcherTest {
                         ScenarioDispatcherFactory.createFromScenarioFile(
                                 "scenarios/scenario-test-004.json"));
 
-        String baseAddress = mMockWebServerRule.getServerBaseAddress();
+        String baseAddress = dispatcher.getBaseAddressWithPrefix().toString();
         long startTime = System.currentTimeMillis();
         makeSimpleGetRequest(new URL(baseAddress + "/bidding")); // Call something else.
         long endTime = System.currentTimeMillis();
@@ -117,7 +117,7 @@ public class ScenarioDispatcherTest {
                         ScenarioDispatcherFactory.createFromScenarioFile(
                                 "scenarios/scenario-test-005.json"));
 
-        makeSimpleGetRequest(new URL(mMockWebServerRule.getServerBaseAddress() + "/hello/world"));
+        makeSimpleGetRequest(new URL(dispatcher.getBaseAddressWithPrefix() + "/hello/world"));
 
         assertThat(dispatcher.getCalledPaths()).containsExactlyElementsIn(List.of("/hello/world"));
     }
@@ -130,7 +130,7 @@ public class ScenarioDispatcherTest {
                         ScenarioDispatcherFactory.createFromScenarioFile(
                                 "scenarios/scenario-test-006.json"));
 
-        String baseAddress = mMockWebServerRule.getServerBaseAddress();
+        String baseAddress = dispatcher.getBaseAddressWithPrefix().toString();
         makeSimpleGetRequest(new URL(baseAddress + "/bidding"));
         makeSimpleGetRequest(new URL(baseAddress + "/bidding"));
         makeSimpleGetRequest(new URL(baseAddress + "/scoring"));
@@ -147,7 +147,7 @@ public class ScenarioDispatcherTest {
                         ScenarioDispatcherFactory.createFromScenarioFile(
                                 "scenarios/scenario-test-007.json"));
 
-        String baseAddress = mMockWebServerRule.getServerBaseAddress();
+        String baseAddress = dispatcher.getBaseAddressWithPrefix().toString();
         makeSimpleGetRequest(new URL(baseAddress + "/bidding"));
         makeSimpleGetRequest(new URL(baseAddress + "/scoring"));
         makeSimpleGetRequest(new URL(baseAddress + "/seller/reportImpression"));
@@ -167,7 +167,7 @@ public class ScenarioDispatcherTest {
                 mMockWebServerRule.startMockWebServer(
                         ScenarioDispatcherFactory.createFromScenarioFile(
                                 "scenarios/scenario-test-008.json"));
-        String baseAddress = mMockWebServerRule.getServerBaseAddress();
+        String baseAddress = dispatcher.getBaseAddressWithPrefix().toString();
         String path =
                 "/seller/reportImpression?render_uri=https://localhost:38383/render/shoes/0?bid=10";
 
@@ -182,7 +182,7 @@ public class ScenarioDispatcherTest {
                 mMockWebServerRule.startMockWebServer(
                         ScenarioDispatcherFactory.createFromScenarioFile(
                                 "scenarios/scenario-test-009.json"));
-        String baseAddress = mMockWebServerRule.getServerBaseAddress();
+        String baseAddress = dispatcher.getBaseAddressWithPrefix().toString();
         String path =
                 "/seller/reportImpression?render_uri=https://localhost:38383/render/shoes/0?bid=10";
 
@@ -199,7 +199,7 @@ public class ScenarioDispatcherTest {
                 mMockWebServerRule.startMockWebServer(
                         ScenarioDispatcherFactory.createFromScenarioFile(
                                 "scenarios/scenario-test-010.json"));
-        String baseAddress = mMockWebServerRule.getServerBaseAddress();
+        String baseAddress = dispatcher.getBaseAddressWithPrefix().toString();
         String path =
                 "/seller/reportImpression?render_uri=http://localhost:"
                         + mMockWebServerRule.getMockWebServer().getPort()
@@ -211,7 +211,7 @@ public class ScenarioDispatcherTest {
     }
 
     @Test
-    public void testScenarioDispatcher_withMissingSlashPrefix_throwsException() throws Exception {
+    public void testScenarioDispatcher_withMissingSlashPrefix_throwsException() {
         ScenarioDispatcherFactory scenarioDispatcherFactory =
                 ScenarioDispatcherFactory.createFromScenarioFile(
                         "scenarios/scenario-test-011.json");

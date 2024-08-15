@@ -21,14 +21,17 @@ import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
 
-import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
+import android.app.ActivityManager;
 import android.net.LocalServerSocket;
 import android.net.LocalSocket;
 import android.net.LocalSocketAddress;
 
-import com.android.compatibility.common.util.SystemUtil;
+import androidx.test.platform.app.InstrumentationRegistry;
 
-import org.junit.After;
+import com.android.compatibility.common.util.SystemUtil;
+import com.android.modules.utils.build.SdkLevel;
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -36,13 +39,12 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /** Tests for the instrumentation running the Sdk sanbdox tests. */
 @RunWith(JUnit4.class)
-public class SdkSandboxUnixStreamTest {
-
-    @Rule
-    public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
+public class SdkSandboxUnixStreamTest extends DeviceSupportedBaseTest {
 
     @Before
     public void setUp() {
@@ -50,15 +52,7 @@ public class SdkSandboxUnixStreamTest {
                 SystemUtil.runShellCommandOrThrow(
                         "am start --user current -W -S --activity-reorder-to-front "
                                 + "com.android.socketapp/.SocketApp"));
-        assertAppIsRunning();
-        assertAppSandboxIsRunning();
-    }
-
-    @After
-    public void tearDown() {
-        // Ensure the app or the sandbox did not crash as a result of the test.
-        assertAppIsRunning();
-        assertAppSandboxIsRunning();
+        assertAppAndSandboxRunning();
     }
 
     @Test
@@ -115,15 +109,40 @@ public class SdkSandboxUnixStreamTest {
         assertThat(output).contains("LaunchState: COLD");
     }
 
-    private static void assertAppIsRunning() {
-        assertWithMessage("SocketApp is not running")
-                .that(SystemUtil.runShellCommand("ps -A"))
-                .contains("com.android.socketapp\n");
+    private static void assertAppAndSandboxRunning() {
+        if (SdkLevel.isAtLeastV()) {
+            List<String> runningProcesses = getRunningProcesses();
+            assertWithMessage("No running processes").that(runningProcesses).isNotNull();
+            assertWithMessage("SocketApp is not running")
+                    .that(runningProcesses)
+                    .contains("com.android.socketapp");
+            assertWithMessage("SocketApp sandbox is not running")
+                    .that(runningProcesses)
+                    .contains("com.android.socketapp_sdk_sandbox");
+        } else {
+            // On pre-V devices instrumentation for sandbox test is not set up correctly, and
+            // ActivityManager#getRunningAppProcesses does not return the correct list.
+            assertWithMessage("SocketApp is not running")
+                    .that(SystemUtil.runShellCommand("pgrep -lfx com.android.socketapp"))
+                    .contains("com.android.socketapp\n");
+            assertWithMessage("SocketApp sandbox is not running")
+                    .that(
+                            SystemUtil.runShellCommand(
+                                    "pgrep -lfx com.android.socketapp_sdk_sandbox"))
+                    .contains("com.android.socketapp_sdk_sandbox\n");
+        }
     }
 
-    private static void assertAppSandboxIsRunning() {
-        assertWithMessage("SocketApp is not running")
-                .that(SystemUtil.runShellCommand("ps -A"))
-                .contains("com.android.socketapp_sdk_sandbox\n");
+    private static List<String> getRunningProcesses() {
+        final ActivityManager activityManager =
+                InstrumentationRegistry.getInstrumentation()
+                        .getTargetContext()
+                        .getSystemService(ActivityManager.class);
+        return SystemUtil.runWithShellPermissionIdentity(
+                        () -> activityManager.getRunningAppProcesses(),
+                        android.Manifest.permission.REAL_GET_TASKS)
+                .stream()
+                .map(app -> app.processName)
+                .collect(Collectors.toList());
     }
 }

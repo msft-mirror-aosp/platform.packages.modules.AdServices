@@ -25,7 +25,6 @@ import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
-import android.content.Context;
 import android.net.Uri;
 import android.util.Pair;
 
@@ -86,7 +85,6 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
     static final String BIDDING_ENCOUNTERED_UNEXPECTED_ERROR =
             "Bidding failed for unexpected error";
 
-    @NonNull private final Context mContext;
     @NonNull private final DevContext mDevContext;
     @NonNull private final ListeningExecutorService mLightweightExecutorService;
     @NonNull private final ListeningExecutorService mBackgroundExecutorService;
@@ -103,7 +101,6 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
             mBuyerContextualSignalsDataVersionFetcher;
 
     public AdBidGeneratorImpl(
-            @NonNull Context context,
             @NonNull AdServicesHttpsClient adServicesHttpsClient,
             @NonNull ListeningExecutorService lightweightExecutorService,
             @NonNull ListeningExecutorService backgroundExecutorService,
@@ -117,7 +114,6 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
             boolean dataVersionHeaderEnabled,
             @NonNull RetryStrategy retryStrategy,
             boolean consoleMessageInLogsEnabled) {
-        Objects.requireNonNull(context);
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(lightweightExecutorService);
         Objects.requireNonNull(backgroundExecutorService);
@@ -128,7 +124,6 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         Objects.requireNonNull(flags);
         Objects.requireNonNull(retryStrategy);
 
-        mContext = context;
         mDevContext = devContext;
         mLightweightExecutorService = lightweightExecutorService;
         mBackgroundExecutorService = backgroundExecutorService;
@@ -139,8 +134,6 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         mFlags = flags;
         mAdSelectionScriptEngine =
                 new AdSelectionScriptEngine(
-                        mContext,
-                        mFlags::getEnforceIsolateMaxHeapSize,
                         mFlags::getIsolateMaxHeapSizeBytes,
                         mAdCounterKeyCopier,
                         debugReporting.getScriptStrategy(),
@@ -166,7 +159,6 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
 
     @VisibleForTesting
     AdBidGeneratorImpl(
-            @NonNull Context context,
             @NonNull ListeningExecutorService lightWeightExecutorService,
             @NonNull ListeningExecutorService backgroundExecutorService,
             @NonNull ScheduledThreadPoolExecutor scheduledExecutor,
@@ -179,7 +171,6 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
             @NonNull DebugReporting debugReporting,
             @NonNull DevContext devContext,
             boolean dataVersionHeaderEnabled) {
-        Objects.requireNonNull(context);
         Objects.requireNonNull(lightWeightExecutorService);
         Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(scheduledExecutor);
@@ -191,7 +182,6 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         Objects.requireNonNull(jsFetcher);
         Objects.requireNonNull(devContext);
 
-        mContext = context;
         mLightweightExecutorService = lightWeightExecutorService;
         mBackgroundExecutorService = backgroundExecutorService;
         mScheduledExecutor = scheduledExecutor;
@@ -289,7 +279,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                                 candidate -> {
                                     if (Objects.isNull(candidate)
                                             || Objects.isNull(candidate.first)
-                                            || candidate.first.getAdWithBid().getBid() <= 0.0) {
+                                            || candidate.first.getAdWithBid().getBid() < 0.0) {
                                         sLogger.v(
                                                 "Bidding for CA completed but result %s is"
                                                         + " filtered out",
@@ -554,7 +544,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                 bidResults.stream().max(Comparator.comparingDouble(
                         value -> value.getAdWithBid().getBid())).get();
         sLogger.v("Obtained #%d ads with bids for current CA", bidResults.size());
-        if (maxBidCandidate.getAdWithBid().getBid() <= 0.0) {
+        if (maxBidCandidate.getAdWithBid().getBid() < 0.0) {
             sLogger.v("No positive bids found, no valid bids to return");
             return null;
         }

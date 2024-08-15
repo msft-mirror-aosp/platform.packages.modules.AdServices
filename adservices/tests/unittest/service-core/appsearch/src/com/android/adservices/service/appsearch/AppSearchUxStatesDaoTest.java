@@ -51,8 +51,7 @@ public class AppSearchUxStatesDaoTest {
     private static final String ID2 = "2";
     private static final String NAMESPACE = "uxstates";
     private final Context mContext = ApplicationProvider.getApplicationContext();
-    private final String mAdServicesPackageName =
-            AppSearchConsentWorker.getAdServicesPackageName(mContext);
+    private String mAdServicesPackageName;
     private final ListenableFuture mSearchSessionFuture = Futures.immediateFuture(null);
     private MockitoSession mStaticMockSession;
 
@@ -64,6 +63,9 @@ public class AppSearchUxStatesDaoTest {
 
     @Before
     public void setup() {
+        // TODO(b/347043278): must be set inside @Before so it's not called when device is not
+        // supported
+        mAdServicesPackageName = AppSearchConsentWorker.getAdServicesPackageName(mContext);
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .mockStatic(AppSearchDao.class)

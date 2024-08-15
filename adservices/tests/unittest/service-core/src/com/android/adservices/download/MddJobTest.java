@@ -51,7 +51,7 @@ import static org.mockito.Mockito.when;
 import android.app.job.JobScheduler;
 import android.os.PersistableBundle;
 
-import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.AdServicesJobTestCase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.shared.spe.framework.ExecutionResult;
@@ -82,7 +82,7 @@ import org.mockito.Mock;
 @SpyStatic(MddJob.class)
 @SpyStatic(MddJobService.class)
 @SpyStatic(MobileDataDownloadFactory.class)
-public final class MddJobTest extends AdServicesExtendedMockitoTestCase {
+public final class MddJobTest extends AdServicesJobTestCase {
     private static final com.google.android.libraries.mobiledatadownload.Flags sMddFlags =
             new com.google.android.libraries.mobiledatadownload.Flags() {};
 

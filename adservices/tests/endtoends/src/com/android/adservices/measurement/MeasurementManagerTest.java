@@ -15,8 +15,12 @@
  */
 package com.android.adservices.measurement;
 
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE;
+
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
@@ -32,21 +36,16 @@ import android.adservices.measurement.WebSourceParams;
 import android.adservices.measurement.WebSourceRegistrationRequest;
 import android.adservices.measurement.WebTriggerParams;
 import android.adservices.measurement.WebTriggerRegistrationRequest;
-import android.content.Context;
 import android.net.Uri;
 import android.os.OutcomeReceiver;
 
 import androidx.annotation.NonNull;
-import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.AdServicesFlagsSetterRule;
-import com.android.compatibility.common.util.ShellUtils;
-import com.android.modules.utils.build.SdkLevel;
+import com.android.adservices.AdServicesEndToEndTestCase;
+import com.android.adservices.common.annotations.SetMsmtApiAppAllowList;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Assume;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -58,32 +57,21 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public class MeasurementManagerTest {
+@SetMsmtApiAppAllowList
+public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     private static final long TIMEOUT = 5000L;
 
-    protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
     private MeasurementManager getMeasurementManager() {
         return MeasurementManager.get(sContext);
     }
 
-    @Rule
-    public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
-                    .setCompatModeFlags()
-                    .setMsmtApiAppAllowList(sContext.getPackageName());
-
-    @After
-    public void tearDown() {
-        resetOverrideConsentManagerDebugMode();
-    }
-
     @Test
+    @RequiresSdkLevelAtLeastS
     public void testRegisterSource_executorAndCallbackCalled() throws Exception {
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
-        final MeasurementManager mm = getMeasurementManager();
-        final CountDownLatch anyCountDownLatch = new CountDownLatch(1);
+        MeasurementManager mm = getMeasurementManager();
+        CountDownLatch anyCountDownLatch = new CountDownLatch(1);
 
         mm.registerSource(
                 Uri.parse("https://registration-source"),
@@ -101,13 +89,13 @@ public class MeasurementManagerTest {
                     }
                 });
 
-        assertTrue(anyCountDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
+        assertThat(anyCountDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
     }
 
     @Test
     public void testRegisterSource_executorAndCallbackCalled_customReceiver() throws Exception {
-        final MeasurementManager mm = getMeasurementManager();
-        final CountDownLatch anyCountDownLatch = new CountDownLatch(1);
+        MeasurementManager mm = getMeasurementManager();
+        CountDownLatch anyCountDownLatch = new CountDownLatch(1);
 
         mm.registerSource(
                 Uri.parse("https://registration-source"),
@@ -125,7 +113,7 @@ public class MeasurementManagerTest {
                     }
                 });
 
-        assertTrue(anyCountDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
+        assertThat(anyCountDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
     }
 
     private WebSourceRegistrationRequest buildDefaultWebSourceRegistrationRequest() {
@@ -145,10 +133,10 @@ public class MeasurementManagerTest {
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS
     public void testRegisterWebSource_executorAndCallbackCalled() throws Exception {
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
-        final MeasurementManager mm = getMeasurementManager();
-        final CountDownLatch anyCountDownLatch = new CountDownLatch(1);
+        MeasurementManager mm = getMeasurementManager();
+        CountDownLatch anyCountDownLatch = new CountDownLatch(1);
 
         mm.registerWebSource(
                 buildDefaultWebSourceRegistrationRequest(),
@@ -165,13 +153,13 @@ public class MeasurementManagerTest {
                     }
                 });
 
-        assertTrue(anyCountDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
+        assertThat(anyCountDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
     }
 
     @Test
     public void testRegisterWebSource_executorAndCallbackCalled_customReceiver() throws Exception {
-        final MeasurementManager mm = getMeasurementManager();
-        final CountDownLatch anyCountDownLatch = new CountDownLatch(1);
+        MeasurementManager mm = getMeasurementManager();
+        CountDownLatch anyCountDownLatch = new CountDownLatch(1);
 
         mm.registerWebSource(
                 buildDefaultWebSourceRegistrationRequest(),
@@ -188,7 +176,7 @@ public class MeasurementManagerTest {
                     }
                 });
 
-        assertTrue(anyCountDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
+        assertThat(anyCountDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
     }
 
     private WebTriggerRegistrationRequest buildDefaultWebTriggerRegistrationRequest() {
@@ -203,11 +191,10 @@ public class MeasurementManagerTest {
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS
     public void testRegisterWebTrigger_executorAndCallbackCalled() throws Exception {
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
-
-        final MeasurementManager mm = getMeasurementManager();
-        final CountDownLatch anyCountDownLatch = new CountDownLatch(1);
+        MeasurementManager mm = getMeasurementManager();
+        CountDownLatch anyCountDownLatch = new CountDownLatch(1);
 
         mm.registerWebTrigger(
                 buildDefaultWebTriggerRegistrationRequest(),
@@ -224,13 +211,13 @@ public class MeasurementManagerTest {
                     }
                 });
 
-        assertTrue(anyCountDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
+        assertThat(anyCountDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
     }
 
     @Test
     public void testRegisterWebTrigger_executorAndCallbackCalled_customReceiver() throws Exception {
-        final MeasurementManager mm = getMeasurementManager();
-        final CountDownLatch anyCountDownLatch = new CountDownLatch(1);
+        MeasurementManager mm = getMeasurementManager();
+        CountDownLatch anyCountDownLatch = new CountDownLatch(1);
 
         mm.registerWebTrigger(
                 buildDefaultWebTriggerRegistrationRequest(),
@@ -247,15 +234,14 @@ public class MeasurementManagerTest {
                     }
                 });
 
-        assertTrue(anyCountDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
+        assertThat(anyCountDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS
     public void testRegisterTrigger_executorAndCallbackCalled() throws Exception {
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
-
-        final MeasurementManager mm = getMeasurementManager();
-        final CountDownLatch anyCountDownLatch = new CountDownLatch(1);
+        MeasurementManager mm = getMeasurementManager();
+        CountDownLatch anyCountDownLatch = new CountDownLatch(1);
 
         mm.registerTrigger(
                 Uri.parse("https://registration-trigger"),
@@ -272,13 +258,13 @@ public class MeasurementManagerTest {
                     }
                 });
 
-        assertTrue(anyCountDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
+        assertThat(anyCountDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
     }
 
     @Test
     public void testRegisterTrigger_executorAndCallbackCalled_customReceiver() throws Exception {
-        final MeasurementManager mm = getMeasurementManager();
-        final CountDownLatch anyCountDownLatch = new CountDownLatch(1);
+        MeasurementManager mm = getMeasurementManager();
+        CountDownLatch anyCountDownLatch = new CountDownLatch(1);
 
         mm.registerTrigger(
                 Uri.parse("https://registration-trigger"),
@@ -295,13 +281,12 @@ public class MeasurementManagerTest {
                     }
                 });
 
-        assertTrue(anyCountDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
+        assertThat(anyCountDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS
     public void testDeleteRegistrations_nullExecutor_throwNullPointerException() {
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
-
         MeasurementManager mm = getMeasurementManager();
         assertThrows(
                 NullPointerException.class,
@@ -328,9 +313,8 @@ public class MeasurementManagerTest {
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS
     public void testDeleteRegistrations_nullCallback_throwNullPointerException() {
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
-
         MeasurementManager mm = getMeasurementManager();
         assertThrows(
                 NullPointerException.class,
@@ -356,10 +340,9 @@ public class MeasurementManagerTest {
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS
     public void testGetMeasurementApiStatus() throws Exception {
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
-
-        final MeasurementManager mm = getMeasurementManager();
+        MeasurementManager mm = getMeasurementManager();
         overrideConsentNotifiedDebugMode();
         overrideConsentManagerDebugMode();
         CompletableFuture<Integer> future = new CompletableFuture<>();
@@ -377,13 +360,13 @@ public class MeasurementManagerTest {
                 };
 
         mm.getMeasurementApiStatus(CALLBACK_EXECUTOR, callback);
-        final int response = future.get();
-        Assert.assertEquals(MeasurementManager.MEASUREMENT_API_STATE_ENABLED, response);
+        int response = future.get();
+        assertThat(response).isEqualTo(MeasurementManager.MEASUREMENT_API_STATE_ENABLED);
     }
 
     @Test
     public void testGetMeasurementApiStatus_customReceiver() throws Exception {
-        final MeasurementManager mm = getMeasurementManager();
+        MeasurementManager mm = getMeasurementManager();
         overrideConsentNotifiedDebugMode();
         overrideConsentManagerDebugMode();
         CompletableFuture<Integer> future = new CompletableFuture<>();
@@ -401,14 +384,13 @@ public class MeasurementManagerTest {
                 };
 
         mm.getMeasurementApiStatus(CALLBACK_EXECUTOR, callback);
-        final int response = future.get();
-        Assert.assertEquals(MeasurementManager.MEASUREMENT_API_STATE_ENABLED, response);
+        int response = future.get();
+        assertThat(response).isEqualTo(MeasurementManager.MEASUREMENT_API_STATE_ENABLED);
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS
     public void testGetMeasurementApiStatus_nullExecutor_throwNullPointerException() {
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
-
         MeasurementManager mm = getMeasurementManager();
         overrideConsentManagerDebugMode();
 
@@ -435,9 +417,8 @@ public class MeasurementManagerTest {
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS
     public void testGetMeasurementApiStatus_nullCallback_throwNullPointerException() {
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
-
         MeasurementManager mm = getMeasurementManager();
         overrideConsentManagerDebugMode();
 
@@ -481,8 +462,8 @@ public class MeasurementManagerTest {
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS
     public void testRegisterSource_SPlus() {
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
         Uri uri = Uri.parse("http://www.example.com");
@@ -510,8 +491,8 @@ public class MeasurementManagerTest {
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS
     public void testRegisterSource_propagatesExecutor_SPlus() {
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
         Uri uri = Uri.parse("http://www.example.com");
@@ -538,9 +519,8 @@ public class MeasurementManagerTest {
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS
     public void testRegisterSource_propagatesCallback_SPlus() {
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
-
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
         Uri uri = Uri.parse("http://www.example.com");
@@ -569,9 +549,8 @@ public class MeasurementManagerTest {
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS
     public void testRegisterWebSource_SPlus() {
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
-
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
         WebSourceRegistrationRequest request = buildDefaultWebSourceRegistrationRequest();
@@ -601,9 +580,8 @@ public class MeasurementManagerTest {
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS
     public void testRegisterWebTrigger_SPlus() {
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
-
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
         WebTriggerRegistrationRequest request = buildDefaultWebTriggerRegistrationRequest();
@@ -633,9 +611,8 @@ public class MeasurementManagerTest {
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS
     public void testRegisterTrigger_SPlus() {
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
-
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
         Uri uri = Uri.parse("https://www.example.com");
@@ -665,9 +642,8 @@ public class MeasurementManagerTest {
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS
     public void testDeleteRegistrations_SPlus() {
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
-
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
         DeletionRequest request = new DeletionRequest.Builder().build();
@@ -696,9 +672,8 @@ public class MeasurementManagerTest {
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS
     public void testGetMeasurementApiStatus_MockImpl_SPlus() {
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
-
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
         OutcomeReceiver<Integer, Exception> callback = mock(OutcomeReceiver.class);
@@ -734,9 +709,8 @@ public class MeasurementManagerTest {
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS
     public void testRegisterSourceMultiple_SPlus() {
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
-
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
         SourceRegistrationRequest request = buildDefaultAppSourcesRegistrationRequest();
@@ -787,15 +761,11 @@ public class MeasurementManagerTest {
 
     // Override the Consent Manager behaviour - Consent Given
     private void overrideConsentNotifiedDebugMode() {
-        ShellUtils.runShellCommand("setprop debug.adservices.consent_notified_debug_mode true");
+        flags.setDebugFlag(KEY_CONSENT_NOTIFIED_DEBUG_MODE, true);
     }
 
     // Override the Consent Manager behaviour - Consent Given
     private void overrideConsentManagerDebugMode() {
-        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
-    }
-
-    private void resetOverrideConsentManagerDebugMode() {
-        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode null");
+        flags.setDebugFlag(KEY_CONSENT_MANAGER_DEBUG_MODE, true);
     }
 }
