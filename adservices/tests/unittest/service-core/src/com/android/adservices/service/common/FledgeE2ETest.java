@@ -2207,10 +2207,11 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
                         API_AD_SELECTION);
 
+        // Make buyer interaction reporting fail enrollment check
         doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
                 .when(mFledgeAuthorizationFilterMock)
                 .assertAdTechFromUriEnrolled(
-                        mockWebServerRule.uriForPath(BUYER_REPORTING_PATH),
+                        mockWebServerRule.uriForPath(CLICK_BUYER_PATH),
                         AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION,
                         API_AD_SELECTION);
 
@@ -2239,8 +2240,8 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
         // Assert only seller impression reporting happened since buyer enrollment check fails
         assertTrue(impressionReportingSemaphore.tryAcquire(1, 10, TimeUnit.SECONDS));
 
-        // Assert buyer interaction reporting did not happen
-        assertTrue(interactionReportingSemaphore.tryAcquire(0, 10, TimeUnit.SECONDS));
+        // Only buyer interaction is attempted and assert that buyer reporting did not happen
+        assertFalse(interactionReportingSemaphore.tryAcquire(1, 10, TimeUnit.SECONDS));
 
         assertEquals(
                 "Extra calls made to MockWebServer",
@@ -2251,7 +2252,14 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                 0,
                 interactionReportingSemaphore.availablePermits());
 
-        // Verify 3 less requests than normal since only seller impression reporting happens
+        /*
+         * We expect 7 requests:
+         * 2 bidding logic requests (one for each CA)
+         * 2 decision logic requests (scoring and reporting)
+         * 1 trusted bidding signals requests
+         * 1 trusted seller signals request
+         * 1 reportResult
+         */
         mockWebServerRule.verifyMockServerRequests(
                 server,
                 7,
