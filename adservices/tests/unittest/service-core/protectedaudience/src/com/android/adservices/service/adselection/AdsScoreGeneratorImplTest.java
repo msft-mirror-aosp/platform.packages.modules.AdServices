@@ -160,7 +160,7 @@ public final class AdsScoreGeneratorImplTest extends AdServicesMockitoTestCase {
 
     private AdsScoreGenerator mAdsScoreGenerator;
     private DevContext mDevContext;
-    private Flags mFlags;
+    private Flags mFakeFlags;
 
     private AdSelectionEntryDao mAdSelectionEntryDao;
 
@@ -183,7 +183,7 @@ public final class AdsScoreGeneratorImplTest extends AdServicesMockitoTestCase {
 
     @Before
     public void setUp() throws Exception {
-        mFlags = new AdsScoreGeneratorImplTestFlags(false);
+        mFakeFlags = new AdsScoreGeneratorImplTestFlags(false);
         mDevContext = DevContext.createForDevOptionsDisabled();
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
@@ -283,9 +283,9 @@ public final class AdsScoreGeneratorImplTest extends AdServicesMockitoTestCase {
                         mAdSelectionExecutionLoggerClock,
                         ApplicationProvider.getApplicationContext(),
                         mAdServicesLoggerMock,
-                        mFlags);
+                        mFakeFlags);
         when(mDebugReporting.isEnabled()).thenReturn(false);
-        mAdsScoreGenerator = initAdScoreGenerator(mFlags, DATA_VERSION_HEADER_STATUS_DISABLED);
+        mAdsScoreGenerator = initAdScoreGenerator(mFakeFlags, DATA_VERSION_HEADER_STATUS_DISABLED);
     }
 
     @Test
@@ -398,7 +398,7 @@ public final class AdsScoreGeneratorImplTest extends AdServicesMockitoTestCase {
     public void testRunAdScoringSuccessWithDataVersionHeaderEnabled() throws Exception {
         // Re init generator
         boolean dataVersionHeaderEnabled = true;
-        mAdsScoreGenerator = initAdScoreGenerator(mFlags, dataVersionHeaderEnabled);
+        mAdsScoreGenerator = initAdScoreGenerator(mFakeFlags, dataVersionHeaderEnabled);
         when(mAdSelectionExecutionLoggerClock.elapsedRealtime())
                 .thenReturn(
                         RUN_AD_SCORING_START_TIMESTAMP,
@@ -524,7 +524,7 @@ public final class AdsScoreGeneratorImplTest extends AdServicesMockitoTestCase {
     public void testRunAdScoringSuccessWithDataVersionHeaderDisabled() throws Exception {
         // Re init generator
         boolean dataVersionHeaderEnabled = false;
-        mAdsScoreGenerator = initAdScoreGenerator(mFlags, dataVersionHeaderEnabled);
+        mAdsScoreGenerator = initAdScoreGenerator(mFakeFlags, dataVersionHeaderEnabled);
         when(mAdSelectionExecutionLoggerClock.elapsedRealtime())
                 .thenReturn(
                         RUN_AD_SCORING_START_TIMESTAMP,
@@ -730,7 +730,8 @@ public final class AdsScoreGeneratorImplTest extends AdServicesMockitoTestCase {
                 .thenAnswer(loggerAnswer);
 
         AdsScoreGenerator adsScoreGenerator =
-                initAdScoreGeneratorWithMockHttpClient(mFlags, DATA_VERSION_HEADER_STATUS_DISABLED);
+                initAdScoreGeneratorWithMockHttpClient(
+                        mFakeFlags, DATA_VERSION_HEADER_STATUS_DISABLED);
 
         FluentFuture<List<AdScoringOutcome>> scoringResultFuture =
                 adsScoreGenerator.runAdScoring(mAdBiddingOutcomeList, mAdSelectionConfig);
@@ -787,9 +788,9 @@ public final class AdsScoreGeneratorImplTest extends AdServicesMockitoTestCase {
 
     @Test
     public void testRunAdScoringContextual_Success() throws Exception {
-        mFlags = new AdsScoreGeneratorImplTestFlags(true);
+        mFakeFlags = new AdsScoreGeneratorImplTestFlags(true);
         boolean dataVersionHeaderEnabled = false;
-        mAdsScoreGenerator = initAdScoreGenerator(mFlags, dataVersionHeaderEnabled);
+        mAdsScoreGenerator = initAdScoreGenerator(mFakeFlags, dataVersionHeaderEnabled);
         when(mAdSelectionExecutionLoggerClock.elapsedRealtime())
                 .thenReturn(
                         RUN_AD_SCORING_START_TIMESTAMP,
@@ -912,9 +913,9 @@ public final class AdsScoreGeneratorImplTest extends AdServicesMockitoTestCase {
 
     @Test
     public void testRunAdScoringContextual_withDebugReportingEnabled_Success() throws Exception {
-        mFlags = new AdsScoreGeneratorImplTestFlags(true);
+        mFakeFlags = new AdsScoreGeneratorImplTestFlags(true);
         boolean dataVersionHeaderEnabled = false;
-        mAdsScoreGenerator = initAdScoreGenerator(mFlags, dataVersionHeaderEnabled);
+        mAdsScoreGenerator = initAdScoreGenerator(mFakeFlags, dataVersionHeaderEnabled);
         when(mAdSelectionExecutionLoggerClock.elapsedRealtime())
                 .thenReturn(
                         RUN_AD_SCORING_START_TIMESTAMP,
@@ -1006,7 +1007,7 @@ public final class AdsScoreGeneratorImplTest extends AdServicesMockitoTestCase {
                 .thenAnswer(loggerAnswer);
 
         AdsScoreGenerator adsScoreGenerator =
-                initAdScoreGenerator(mFlags, dataVersionHeaderEnabled);
+                initAdScoreGenerator(mFakeFlags, dataVersionHeaderEnabled);
 
         FluentFuture<List<AdScoringOutcome>> scoringResultFuture =
                 adsScoreGenerator.runAdScoring(mAdBiddingOutcomeList, mAdSelectionConfig);
@@ -1060,9 +1061,9 @@ public final class AdsScoreGeneratorImplTest extends AdServicesMockitoTestCase {
 
     @Test
     public void testRunAdScoringContextual_UseOverride_Success() throws Exception {
-        mFlags = new AdsScoreGeneratorImplTestFlags(true);
+        mFakeFlags = new AdsScoreGeneratorImplTestFlags(true);
         boolean dataVersionHeaderEnabled = false;
-        mAdsScoreGenerator = initAdScoreGenerator(mFlags, dataVersionHeaderEnabled);
+        mAdsScoreGenerator = initAdScoreGenerator(mFakeFlags, dataVersionHeaderEnabled);
         when(mAdSelectionExecutionLoggerClock.elapsedRealtime())
                 .thenReturn(
                         RUN_AD_SCORING_START_TIMESTAMP,
@@ -1167,7 +1168,7 @@ public final class AdsScoreGeneratorImplTest extends AdServicesMockitoTestCase {
                                 mAdSelectionExecutionLogger))
                 .thenAnswer(loggerAnswer);
 
-        mAdsScoreGenerator = initAdScoreGenerator(mFlags, dataVersionHeaderEnabled);
+        mAdsScoreGenerator = initAdScoreGenerator(mFakeFlags, dataVersionHeaderEnabled);
         FluentFuture<List<AdScoringOutcome>> scoringResultFuture =
                 mAdsScoreGenerator.runAdScoring(mAdBiddingOutcomeList, mAdSelectionConfig);
 
@@ -1219,9 +1220,9 @@ public final class AdsScoreGeneratorImplTest extends AdServicesMockitoTestCase {
 
     @Test
     public void testRunAdScoringContextualScoresMismatch_Failure() throws Exception {
-        mFlags = new AdsScoreGeneratorImplTestFlags(true);
+        mFakeFlags = new AdsScoreGeneratorImplTestFlags(true);
         boolean dataVersionHeaderEnabled = false;
-        mAdsScoreGenerator = initAdScoreGenerator(mFlags, dataVersionHeaderEnabled);
+        mAdsScoreGenerator = initAdScoreGenerator(mFakeFlags, dataVersionHeaderEnabled);
         when(mAdSelectionExecutionLoggerClock.elapsedRealtime())
                 .thenReturn(
                         RUN_AD_SCORING_START_TIMESTAMP,
@@ -1438,7 +1439,7 @@ public final class AdsScoreGeneratorImplTest extends AdServicesMockitoTestCase {
         mDevContext = DevContext.builder(myAppPackageName).setDevOptionsEnabled(true).build();
 
         boolean dataVersionHeaderEnabled = false;
-        mAdsScoreGenerator = initAdScoreGenerator(mFlags, dataVersionHeaderEnabled);
+        mAdsScoreGenerator = initAdScoreGenerator(mFakeFlags, dataVersionHeaderEnabled);
         Answer<ListenableFuture<List<ScoreAdResult>>> loggerAnswer =
                 unused -> {
                     mAdSelectionExecutionLogger.startScoreAds();

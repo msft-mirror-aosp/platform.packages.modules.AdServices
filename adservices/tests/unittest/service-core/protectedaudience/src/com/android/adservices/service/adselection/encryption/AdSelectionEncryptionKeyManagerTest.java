@@ -86,7 +86,7 @@ public final class AdSelectionEncryptionKeyManagerTest extends AdServicesMockito
     @Mock private AdServicesHttpsClient mMockHttpClient;
     @Spy private Clock mClock = Clock.systemUTC();
     private EncryptionKeyDao mEncryptionKeyDao;
-    private Flags mFlags = new AdSelectionEncryptionKeyManagerTestFlags();
+    private Flags mFakeFlags = new AdSelectionEncryptionKeyManagerTestFlags();
     private AdServicesLogger mAdServicesLoggerSpy = Mockito.spy(AdServicesLoggerImpl.getInstance());
     private com.android.adservices.shared.util.Clock mLoggerClock =
             com.android.adservices.shared.util.Clock.getInstance();
@@ -97,8 +97,9 @@ public final class AdSelectionEncryptionKeyManagerTest extends AdServicesMockito
 
     private ExecutorService mLightweightExecutor;
     private AuctionEncryptionKeyParser mAuctionEncryptionKeyParser =
-            new AuctionEncryptionKeyParser(mFlags);
-    private JoinEncryptionKeyParser mJoinEncryptionKeyParser = new JoinEncryptionKeyParser(mFlags);
+            new AuctionEncryptionKeyParser(mFakeFlags);
+    private JoinEncryptionKeyParser mJoinEncryptionKeyParser =
+            new JoinEncryptionKeyParser(mFakeFlags);
     private AdSelectionEncryptionKeyManager mKeyManager;
     private DevContext mDevContext;
 
@@ -112,7 +113,7 @@ public final class AdSelectionEncryptionKeyManagerTest extends AdServicesMockito
         mKeyManager =
                 new AdSelectionEncryptionKeyManager(
                         mEncryptionKeyDao,
-                        mFlags,
+                        mFakeFlags,
                         mClock,
                         mAuctionEncryptionKeyParser,
                         mJoinEncryptionKeyParser,
