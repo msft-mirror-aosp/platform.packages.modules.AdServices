@@ -13,13 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.mockito;
 
-public final class MockitoExpectationJobMockerTest
-        extends AdServicesJobMockerTestCase<AdServicesMockitoJobMocker> {
+package android.sdksandbox.test.scenario.testsdk;
 
-    @Override
-    protected AdServicesMockitoJobMocker getMocker(StaticClassChecker checker) {
-        return MockitoExpectations.jobMocker;
-    }
+import android.platform.test.microbenchmark.Microbenchmark;
+import android.platform.test.rule.DropCachesRule;
+import android.platform.test.rule.KillAppsRule;
+
+import org.junit.Rule;
+import org.junit.rules.RuleChain;
+import org.junit.runner.RunWith;
+
+@RunWith(Microbenchmark.class)
+public class ShowInterstitialAdMicrobenchmark extends ShowInterstitialAd {
+
+    @Rule(order = 0)
+    public RuleChain rules =
+            RuleChain.outerRule(new KillAppsRule(sPackageName)).around(new DropCachesRule());
 }

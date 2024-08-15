@@ -73,7 +73,7 @@ public class ClassifierInputManagerTest extends AdServicesExtendedMockitoTestCas
     @Mock private Resources mContextResources;
     @Mock private Context mApplicationContext;
     @Mock private Preprocessor mPreprocessor;
-    @Mock private Flags mFlags;
+    @Mock private Flags mMockFlags;
 
     @Before
     public void setup() throws Exception {
@@ -90,9 +90,11 @@ public class ClassifierInputManagerTest extends AdServicesExtendedMockitoTestCas
         doReturn(new Configuration()).when(mContextResources).getConfiguration();
 
         // Mock default flag values and return mocked flags from factory.
-        doReturn(DEFAULT_DESCRIPTION_MAX_LENGTH).when(mFlags).getClassifierDescriptionMaxLength();
-        doReturn(DEFAULT_DESCRIPTION_MAX_WORDS).when(mFlags).getClassifierDescriptionMaxWords();
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(DEFAULT_DESCRIPTION_MAX_LENGTH)
+                .when(mMockFlags)
+                .getClassifierDescriptionMaxLength();
+        doReturn(DEFAULT_DESCRIPTION_MAX_WORDS).when(mMockFlags).getClassifierDescriptionMaxWords();
+        mocker.mockGetFlags(mMockFlags);
 
         // Skip preprocessing by default.
         doAnswer(returnsFirstArg()).when(() -> Preprocessor.preprocessAppDescription(anyString()));

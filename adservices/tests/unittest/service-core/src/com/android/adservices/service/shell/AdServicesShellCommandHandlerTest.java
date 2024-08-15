@@ -45,6 +45,7 @@ import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.service.adselection.AuctionServerDataCompressor;
 import com.android.adservices.service.adselection.BuyerInputGenerator;
 import com.android.adservices.service.adselection.CompressedBuyerInputCreatorFactory;
+import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGenerator;
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
 import com.android.adservices.service.shell.adselection.ConsentedDebugShellCommand;
@@ -103,6 +104,8 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
     @Mock private EncodingExecutionLogHelper mEncodingExecutionLogHelper;
     @Mock private EncodingJobRunStatsLogger mEncodingJobRunStatsLogger;
     @Mock private EncoderLogicMetadataDao mEncoderLogicMetadataDao;
+    @Mock private ConsentedDebugConfigurationGenerator mConsentedDebugConfigurationGenerator;
+
     private ShellCommandFactorySupplier mShellCommandFactorySupplier;
 
     @Before
@@ -123,7 +126,8 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
                         mEncoderLogicHandler,
                         mEncodingExecutionLogHelper,
                         mEncodingJobRunStatsLogger,
-                        mEncoderLogicMetadataDao);
+                        mEncoderLogicMetadataDao,
+                        mConsentedDebugConfigurationGenerator);
         mCmd = new OneTimeCommand(expect, mShellCommandFactorySupplier, mAdServicesLogger, mClock);
     }
 

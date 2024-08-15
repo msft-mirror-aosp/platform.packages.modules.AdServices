@@ -25,7 +25,6 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_TIMEOUT;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
-import static com.android.adservices.mockito.MockitoExpectations.mockLogApiCallStats;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT;
 import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplFixture.BINDER_ELAPSED_TIMESTAMP;
@@ -1878,7 +1877,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         BINDER_ELAPSED_TIMESTAMP,
                         PERSIST_AD_SELECTION_RESULT_START_TIMESTAMP,
                         PERSIST_AD_SELECTION_RESULT_END_TIMESTAMP);
-        logApiCallStatsCallback = mockLogApiCallStats(mAdServicesLoggerSpy);
+        logApiCallStatsCallback = mocker.mockLogApiCallStats(mAdServicesLoggerSpy);
         mAdsRelevanceExecutionLogger =
                 mAdsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger();
         mPersistAdSelectionResultRunner =
