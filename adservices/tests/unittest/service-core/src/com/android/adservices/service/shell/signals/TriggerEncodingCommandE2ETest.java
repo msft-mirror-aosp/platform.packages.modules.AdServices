@@ -73,6 +73,8 @@ import com.android.adservices.service.devapi.AppPackageNameRetriever;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.signals.PeriodicEncodingJobRunner;
+import com.android.adservices.service.signals.ProtectedSignalsArgument;
+import com.android.adservices.service.signals.ProtectedSignalsArgumentFastImpl;
 import com.android.adservices.service.signals.ProtectedSignalsServiceImpl;
 import com.android.adservices.service.signals.SignalsProviderImpl;
 import com.android.adservices.service.signals.SignalsScriptEngine;
@@ -168,6 +170,7 @@ public class TriggerEncodingCommandE2ETest extends AdServicesExtendedMockitoTest
     private ProtectedSignalsServiceImpl mProtectedSignalsService;
     @Mock private ConsentManager mConsentManagerMock;
     private ProtectedSignalsDao mProtectedSignalsDao;
+    private ProtectedSignalsArgument mProtectedSignalsArgument;
 
     @Before
     public void setUp() throws Exception {
@@ -203,6 +206,7 @@ public class TriggerEncodingCommandE2ETest extends AdServicesExtendedMockitoTest
         final int maxJsFailures =
                 flags.getProtectedSignalsMaxJsFailureExecutionOnCertainVersionBeforeStop();
         final boolean jsIsolateMessagesInLogs = true;
+        mProtectedSignalsArgument = new ProtectedSignalsArgumentFastImpl();
         mTriggerEncodingCommand =
                 new TriggerEncodingCommand(
                         new PeriodicEncodingJobRunner(
@@ -217,7 +221,8 @@ public class TriggerEncodingCommandE2ETest extends AdServicesExtendedMockitoTest
                                 encoderLogicHandler,
                                 protectedSignalsDatabase.getEncodedPayloadDao(),
                                 AdServicesExecutors.getBackgroundExecutor(),
-                                AdServicesExecutors.getLightWeightExecutor()),
+                                AdServicesExecutors.getLightWeightExecutor(),
+                                mProtectedSignalsArgument),
                         encoderLogicHandler,
                         new EncodingExecutionLogHelperImpl(
                                 logger, Clock.getInstance(), EnrollmentDao.getInstance()),

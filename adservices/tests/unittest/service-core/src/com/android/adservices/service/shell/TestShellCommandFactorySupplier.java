@@ -31,6 +31,7 @@ import com.android.adservices.service.shell.adselection.AdSelectionShellCommandF
 import com.android.adservices.service.shell.customaudience.CustomAudienceShellCommandFactory;
 import com.android.adservices.service.shell.signals.SignalsShellCommandFactory;
 import com.android.adservices.service.signals.PeriodicEncodingJobRunner;
+import com.android.adservices.service.signals.ProtectedSignalsArgument;
 import com.android.adservices.service.stats.pas.EncodingExecutionLogHelper;
 import com.android.adservices.service.stats.pas.EncodingJobRunStatsLogger;
 
@@ -60,6 +61,7 @@ public class TestShellCommandFactorySupplier extends ShellCommandFactorySupplier
     private final EncodingJobRunStatsLogger mEncodingJobRunStatsLogger;
     private final EncoderLogicMetadataDao mEncoderLogicMetadataDao;
     private final ConsentedDebugConfigurationGenerator mConsentedDebugConfigurationGenerator;
+    private final ProtectedSignalsArgument mProtectedSignalsArgument;
 
     TestShellCommandFactorySupplier(
             boolean isCustomAudienceCLiEnabled,
@@ -76,7 +78,8 @@ public class TestShellCommandFactorySupplier extends ShellCommandFactorySupplier
             EncodingExecutionLogHelper encodingExecutionLogHelper,
             EncodingJobRunStatsLogger encodingJobRunStatsLogger,
             EncoderLogicMetadataDao encoderLogicMetadataDao,
-            ConsentedDebugConfigurationGenerator consentedDebugConfigurationGenerator) {
+            ConsentedDebugConfigurationGenerator consentedDebugConfigurationGenerator,
+            ProtectedSignalsArgument protectedSignalsArgument) {
         mIsCustomAudienceCliEnabled = isCustomAudienceCLiEnabled;
         mIsConsentedDebugCliEnabled = isConsentedDebugCliEnabled;
         mIsSignalsCliEnabled = isSignalsCliEnabled;
@@ -113,6 +116,9 @@ public class TestShellCommandFactorySupplier extends ShellCommandFactorySupplier
                 Objects.requireNonNull(
                         consentedDebugConfigurationGenerator,
                         "ConsentedDebugConfigurationGenerator cannot be null");
+        mProtectedSignalsArgument =
+                Objects.requireNonNull(
+                        protectedSignalsArgument, "ProtectedSignalsArgument cannot be null");
     }
 
     @Override
@@ -138,6 +144,7 @@ public class TestShellCommandFactorySupplier extends ShellCommandFactorySupplier
                         mEncoderLogicHandler,
                         mEncodingExecutionLogHelper,
                         mEncodingJobRunStatsLogger,
-                        mEncoderLogicMetadataDao));
+                        mEncoderLogicMetadataDao,
+                        mProtectedSignalsArgument));
     }
 }
