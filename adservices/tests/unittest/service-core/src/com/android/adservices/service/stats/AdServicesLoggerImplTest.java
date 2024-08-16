@@ -126,7 +126,6 @@ import android.adservices.adselection.ReportEventRequest;
 import com.android.adservices.cobalt.AppNameApiErrorLogger;
 import com.android.adservices.cobalt.MeasurementCobaltLogger;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppManifestConfigCall;
 import com.android.adservices.service.common.AppManifestConfigCall.ApiType;
@@ -162,7 +161,6 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
     private static final String TEST_ENROLLMENT_ID = "EnrollmentId";
 
     @Mock private StatsdAdServicesLogger mStatsdLoggerMock;
-    @Mock private Flags mMockFlags;
     @Mock private AppNameApiErrorLogger mMockAppNameApiErrorLogger;
     @Mock private MeasurementCobaltLogger mMeasurementCobaltLogger;
     private AdServicesLoggerImpl mAdservicesLogger;

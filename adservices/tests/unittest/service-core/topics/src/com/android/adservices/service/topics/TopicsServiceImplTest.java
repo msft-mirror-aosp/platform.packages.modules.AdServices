@@ -171,7 +171,6 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
     @Mock private EpochManager mMockEpochManager;
     @Mock private ConsentManager mConsentManager;
     @Mock private PackageManager mPackageManager;
-    @Mock private Flags mMockFlags;
     @Mock private Clock mClock;
     @Mock private Context mMockSdkContext;
     @Mock private Context mMockAppContext;

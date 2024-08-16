@@ -28,7 +28,6 @@ import static org.mockito.Mockito.when;
 import android.database.sqlite.SQLiteException;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
-import com.android.adservices.service.Flags;
 import com.android.adservices.shared.errorlogging.AdServicesErrorStats;
 import com.android.adservices.shared.errorlogging.ErrorCodeSampler;
 import com.android.adservices.shared.errorlogging.StatsdAdServicesErrorLogger;
@@ -48,7 +47,6 @@ public final class AdServicesErrorLoggerImplTest extends AdServicesMockitoTestCa
     private static final int LINE_NUMBER = 11;
     private static final String SQ_LITE_EXCEPTION = "SQLiteException";
 
-    @Mock private Flags mMockFlags;
     @Mock private StatsdAdServicesErrorLogger mStatsdLoggerMock;
     @Mock private ErrorCodeSampler mErrorCodeSampler;
 

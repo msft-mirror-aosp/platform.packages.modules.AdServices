@@ -28,12 +28,9 @@ import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
 
 @SpyStatic(FlagsFactory.class)
 public final class AdServicesShellCommandServiceTest extends AdServicesExtendedMockitoTestCase {
-
-    @Mock private Flags mMockFlags;
 
     private static final String ACTION_SHELL_COMMAND_SERVICE =
             "android.adservices.SHELL_COMMAND_SERVICE";

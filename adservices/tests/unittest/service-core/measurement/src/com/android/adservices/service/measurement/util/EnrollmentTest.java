@@ -28,7 +28,6 @@ import androidx.test.filters.SmallTest;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -53,8 +52,6 @@ public final class EnrollmentTest extends AdServicesExtendedMockitoTestCase {
                             List.of("https://origin1.test", "https://origin2.test"))
                     .build();
     @Mock private EnrollmentDao mEnrollmentDao;
-
-    @Mock private Flags mMockFlags;
 
     @Test
     public void testMaybeGetEnrollmentId_success() {

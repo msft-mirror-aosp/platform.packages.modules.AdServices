@@ -44,7 +44,6 @@ import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.topics.EncryptedTopic;
 import com.android.adservices.data.topics.Topic;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.encryptionkey.EncryptionKey;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
@@ -109,7 +108,6 @@ public final class EncryptionManagerTest extends AdServicesExtendedMockitoTestCa
     private EncryptionManager mEncryptionManager;
     @Mock private EnrollmentDao mEnrollmentDao;
     @Mock private EncryptionKeyDao mEncryptionKeyDao;
-    @Mock private Flags mMockFlags;
     @Mock private Encrypter mEncrypter;
 
     @Before

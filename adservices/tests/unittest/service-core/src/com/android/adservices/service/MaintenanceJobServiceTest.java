@@ -91,7 +91,6 @@ public final class MaintenanceJobServiceTest extends AdServicesJobServiceTestCas
     @Mock BlockedTopicsManager mBlockedTopicsManager;
     @Mock AppUpdateManager mMockAppUpdateManager;
     @Mock JobParameters mMockJobParameters;
-    @Mock Flags mMockFlags;
     @Mock JobScheduler mMockJobScheduler;
     @Mock private PackageManager mPackageManagerMock;
     @Mock private FledgeMaintenanceTasksWorker mFledgeMaintenanceTasksWorkerMock;

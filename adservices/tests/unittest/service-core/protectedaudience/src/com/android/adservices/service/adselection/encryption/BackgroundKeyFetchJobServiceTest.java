@@ -101,7 +101,6 @@ public final class BackgroundKeyFetchJobServiceTest extends AdServicesJobService
     @Mock private BackgroundKeyFetchWorker mBgFWorkerMock;
     @Mock private JobParameters mJobParametersMock;
     @Mock private ConsentManager mConsentManagerMock;
-    @Mock private Flags mMockFlags;
 
     @Before
     public void setup() {

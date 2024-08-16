@@ -52,7 +52,6 @@ import android.app.job.JobScheduler;
 import android.os.PersistableBundle;
 
 import com.android.adservices.common.AdServicesJobTestCase;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.shared.spe.framework.ExecutionResult;
 import com.android.adservices.shared.spe.framework.ExecutionRuntimeParameters;
@@ -94,7 +93,6 @@ public final class MddJobTest extends AdServicesJobTestCase {
     @Mock private EnrollmentDataDownloadManager mMockEnrollmentDataDownloadManager;
     @Mock private EncryptionDataDownloadManager mMockEncryptionDataDownloadManager;
     @Mock private ExecutionRuntimeParameters mMockParams;
-    @Mock private Flags mMockFlags;
     @Mock private JobScheduler mMockJobScheduler;
     @Mock private MddFlags mMockMddFlags;
 
