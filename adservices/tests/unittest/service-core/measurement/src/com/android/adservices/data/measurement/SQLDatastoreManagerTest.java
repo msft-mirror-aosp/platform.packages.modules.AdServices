@@ -29,41 +29,29 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.verify;
 
-import android.content.Context;
-
-import androidx.test.core.app.ApplicationProvider;
-
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.DbTestUtil;
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.quality.Strictness;
 
-public class SQLDatastoreManagerTest {
+@SpyStatic(LoggerFactory.class)
+@SpyStatic(FlagsFactory.class)
+public final class SQLDatastoreManagerTest extends AdServicesExtendedMockitoTestCase {
 
-    protected static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     @Mock private DatastoreManager.ThrowingCheckedFunction<Void> mFunction;
     @Mock private DatastoreManager.ThrowingCheckedConsumer mConsumer;
-    @Mock private Flags mFlags;
-    @Mock AdServicesErrorLogger mErrorLogger;
+    @Mock private Flags mMockFlags;
+    @Mock private AdServicesErrorLogger mErrorLogger;
     @Mock private LoggerFactory.Logger mLogger;
     private SQLDatastoreManager mSQLDatastoreManager;
-
-    @Rule
-    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder(this)
-                    .spyStatic(LoggerFactory.class)
-                    .spyStatic(FlagsFactory.class)
-                    .setStrictness(Strictness.LENIENT)
-                    .build();
 
     @Before
     public void setUp() {
@@ -75,8 +63,7 @@ public class SQLDatastoreManagerTest {
     }
 
     @Test
-    public void runInTransactionWithResult_throwsException_logsDbVersion()
-            throws DatastoreException {
+    public void runInTransactionWithResult_throwsException_logsDbVersion() throws Exception {
         // Setup
         doThrow(new IllegalArgumentException()).when(mFunction).apply(any());
         // Execution & assertion
@@ -101,11 +88,13 @@ public class SQLDatastoreManagerTest {
 
     @Test
     public void runInTransactionWithResult_throwsDataStoreExceptionExceptionDisable_logsDbVersion()
-            throws DatastoreException {
+            throws Exception {
         // Setup
         doThrow(new DatastoreException(null)).when(mFunction).apply(any());
-        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(false).when(mFlags).getMeasurementEnableDatastoreManagerThrowDatastoreException();
+        mocker.mockGetFlags(mMockFlags);
+        doReturn(false)
+                .when(mMockFlags)
+                .getMeasurementEnableDatastoreManagerThrowDatastoreException();
 
         // Execution
         mSQLDatastoreManager.runInTransactionWithResult(mFunction);
@@ -126,12 +115,14 @@ public class SQLDatastoreManagerTest {
 
     @Test
     public void runInTransactionWithResult_throwsDataStoreExceptionExceptionEnable_rethrows()
-            throws DatastoreException {
+            throws Exception {
         // Setup
         doThrow(new DatastoreException(null)).when(mFunction).apply(any());
-        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(true).when(mFlags).getMeasurementEnableDatastoreManagerThrowDatastoreException();
-        doReturn(1.0f).when(mFlags).getMeasurementThrowUnknownExceptionSamplingRate();
+        mocker.mockGetFlags(mMockFlags);
+        doReturn(true)
+                .when(mMockFlags)
+                .getMeasurementEnableDatastoreManagerThrowDatastoreException();
+        doReturn(1.0f).when(mMockFlags).getMeasurementThrowUnknownExceptionSamplingRate();
 
         // Execution
         try {
@@ -155,7 +146,7 @@ public class SQLDatastoreManagerTest {
     }
 
     @Test
-    public void runInTransaction_throwsException_logsDbVersion() throws DatastoreException {
+    public void runInTransaction_throwsException_logsDbVersion() throws Exception {
         // Setup
         doThrow(new IllegalArgumentException()).when(mConsumer).accept(any());
 
@@ -179,11 +170,13 @@ public class SQLDatastoreManagerTest {
 
     @Test
     public void runInTransaction_throwsDataStoreExceptionExceptionDisable_logsDbVersion()
-            throws DatastoreException {
+            throws Exception {
         // Setup
         doThrow(new DatastoreException(null)).when(mConsumer).accept(any());
-        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(false).when(mFlags).getMeasurementEnableDatastoreManagerThrowDatastoreException();
+        mocker.mockGetFlags(mMockFlags);
+        doReturn(false)
+                .when(mMockFlags)
+                .getMeasurementEnableDatastoreManagerThrowDatastoreException();
 
         // Execution
         mSQLDatastoreManager.runInTransaction(mConsumer);
@@ -204,12 +197,14 @@ public class SQLDatastoreManagerTest {
 
     @Test
     public void runInTransaction_throwsDataStoreExceptionSamplingDisabled_logsDbVersion()
-            throws DatastoreException {
+            throws Exception {
         // Setup
         doThrow(new DatastoreException(null)).when(mConsumer).accept(any());
-        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(true).when(mFlags).getMeasurementEnableDatastoreManagerThrowDatastoreException();
-        doReturn(0.0f).when(mFlags).getMeasurementThrowUnknownExceptionSamplingRate();
+        mocker.mockGetFlags(mMockFlags);
+        doReturn(true)
+                .when(mMockFlags)
+                .getMeasurementEnableDatastoreManagerThrowDatastoreException();
+        doReturn(0.0f).when(mMockFlags).getMeasurementThrowUnknownExceptionSamplingRate();
 
         // Execution
         mSQLDatastoreManager.runInTransaction(mConsumer);
@@ -230,12 +225,14 @@ public class SQLDatastoreManagerTest {
 
     @Test
     public void runInTransaction_throwsDataStoreExceptionExceptionEnable_logsDbVersion()
-            throws DatastoreException {
+            throws Exception {
         // Setup
         doThrow(new DatastoreException(null)).when(mConsumer).accept(any());
-        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(true).when(mFlags).getMeasurementEnableDatastoreManagerThrowDatastoreException();
-        doReturn(1.0f).when(mFlags).getMeasurementThrowUnknownExceptionSamplingRate();
+        mocker.mockGetFlags(mMockFlags);
+        doReturn(true)
+                .when(mMockFlags)
+                .getMeasurementEnableDatastoreManagerThrowDatastoreException();
+        doReturn(1.0f).when(mMockFlags).getMeasurementThrowUnknownExceptionSamplingRate();
 
         // Execution
         try {

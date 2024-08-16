@@ -16,11 +16,6 @@
 
 package com.android.adservices.service.measurement.reporting;
 
-import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
-import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobExecutionData;
-import static com.android.adservices.mockito.MockitoExpectations.verifyBackgroundJobsSkipLogged;
-import static com.android.adservices.mockito.MockitoExpectations.verifyJobFinishedLogged;
-import static com.android.adservices.mockito.MockitoExpectations.verifyLoggingNotHappened;
 import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_PERSISTED;
 import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
 import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
@@ -50,17 +45,16 @@ import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.content.Context;
 
-import com.android.adservices.common.AdServicesJobServiceTestCase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.KeyValueData;
+import com.android.adservices.service.measurement.MeasurementJobServiceTestCase;
 import com.android.adservices.service.measurement.attribution.AttributionJobService;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
@@ -87,20 +81,17 @@ import java.util.Optional;
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(AdServicesJobServiceLogger.class)
 @MockStatic(ServiceCompatUtils.class)
-public final class ReportingJobServiceTest extends AdServicesJobServiceTestCase {
+public final class ReportingJobServiceTest extends MeasurementJobServiceTestCase {
     private static final int MEASUREMENT_REPORTING_JOB_ID = MEASUREMENT_REPORTING_JOB.getJobId();
     private static final long WAIT_IN_MILLIS = 200L;
+
     @Mock private AdServicesErrorLogger mErrorLogger;
     @Mock private IMeasurementDao mMeasurementDao;
     @Mock private ITransaction mTransaction;
-    private DatastoreManager mMockDatastoreManager;
-    private JobScheduler mMockJobScheduler;
 
     private ReportingJobService mSpyService;
-    private Flags mMockFlags;
-    private AdServicesJobServiceLogger mSpyLogger;
 
-    private class FakeDatastoreManager extends DatastoreManager {
+    private final class FakeDatastoreManager extends DatastoreManager {
         private FakeDatastoreManager() {
             super(mErrorLogger);
         }
@@ -124,17 +115,13 @@ public final class ReportingJobServiceTest extends AdServicesJobServiceTestCase 
     @Before
     public void setUp() {
         mSpyService = spy(ReportingJobService.class);
-        mMockDatastoreManager = new FakeDatastoreManager();
-        mMockJobScheduler = spy(JobScheduler.class);
-        mMockFlags = mock(Flags.class);
-        mSpyLogger = getSpiedAdServicesJobServiceLogger(mContext, mMockFlags);
         doReturn(mContext.getPackageName()).when(mMockContext).getPackageName();
         doReturn(mContext.getPackageManager()).when(mMockContext).getPackageManager();
         doReturn(mMockJobScheduler).when(mMockContext).getSystemService(JobScheduler.class);
         doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
         doReturn(mMockContext).when(mSpyService).getApplicationContext();
         doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
-        ExtendedMockito.doReturn(mMockDatastoreManager)
+        ExtendedMockito.doReturn(new FakeDatastoreManager())
                 .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         doReturn(MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS)
@@ -533,7 +520,6 @@ public final class ReportingJobServiceTest extends AdServicesJobServiceTestCase 
     private void onStartJob_featureDisabled() throws Exception {
         // Setup
         disableFeature();
-        mMockDatastoreManager = mock(DatastoreManager.class);
         mockGettingNextExecutionTime(null);
 
         JobServiceCallback callback = new JobServiceCallback().expectJobFinished(mSpyService);
@@ -552,7 +538,6 @@ public final class ReportingJobServiceTest extends AdServicesJobServiceTestCase 
     private void onStartJob_featureEnabled() throws Exception {
         // Setup
         enableFeature();
-        mMockDatastoreManager = mock(DatastoreManager.class);
         doReturn(Optional.empty()).when(mMockDatastoreManager).runInTransactionWithResult(any());
         doReturn(true).when(mMockDatastoreManager).runInTransaction(any());
         ExtendedMockito.doReturn(mMockDatastoreManager)
@@ -581,7 +566,6 @@ public final class ReportingJobServiceTest extends AdServicesJobServiceTestCase 
 
     private void onStartJob_shouldDisableJobTrue() throws Exception {
         // Setup
-        mMockDatastoreManager = mock(DatastoreManager.class);
         doReturn(Optional.empty()).when(mMockDatastoreManager).runInTransactionWithResult(any());
         doReturn(true).when(mMockDatastoreManager).runInTransaction(any());
         ExtendedMockito.doReturn(mMockDatastoreManager)

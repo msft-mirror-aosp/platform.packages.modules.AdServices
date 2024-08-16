@@ -40,6 +40,7 @@ import android.util.Pair;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
@@ -51,9 +52,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -70,8 +69,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
-@RunWith(MockitoJUnitRunner.class)
-public class SourceTest {
+public final class SourceTest extends AdServicesMockitoTestCase {
 
     private static final UnsignedLong DEBUG_KEY_1 = new UnsignedLong(81786463L);
     private static final UnsignedLong DEBUG_KEY_2 = new UnsignedLong(23487834L);
@@ -90,11 +88,11 @@ public class SourceTest {
                             /* UnsignedLong dedupKey */ null,
                             /* UnsignedLong debugKey */ null,
                             /* boolean hasSourceDebugKey */ false));
-    @Mock private Flags mFlags;
+    @Mock private Flags mMockFlags;
 
     @Before
     public void setup() {
-        ExtendedMockito.doReturn(false).when(mFlags).getMeasurementEnableLookbackWindowFilter();
+        ExtendedMockito.doReturn(false).when(mMockFlags).getMeasurementEnableLookbackWindowFilter();
     }
 
     @Test
@@ -873,21 +871,21 @@ public class SourceTest {
                         .build();
         Trigger trigger = TriggerFixture.getValidTrigger();
 
-        assertNotNull(source.getAggregatableAttributionSource(trigger, mFlags).orElse(null));
+        assertNotNull(source.getAggregatableAttributionSource(trigger, mMockFlags).orElse(null));
         assertNotNull(
-                source.getAggregatableAttributionSource(trigger, mFlags)
+                source.getAggregatableAttributionSource(trigger, mMockFlags)
                         .get()
                         .getAggregatableSource());
         assertNotNull(
-                source.getAggregatableAttributionSource(trigger, mFlags).get().getFilterMap());
+                source.getAggregatableAttributionSource(trigger, mMockFlags).get().getFilterMap());
         assertEquals(
                 aggregatableSource,
-                source.getAggregatableAttributionSource(trigger, mFlags)
+                source.getAggregatableAttributionSource(trigger, mMockFlags)
                         .get()
                         .getAggregatableSource());
         assertEquals(
                 filterMap,
-                source.getAggregatableAttributionSource(trigger, mFlags)
+                source.getAggregatableAttributionSource(trigger, mMockFlags)
                         .get()
                         .getFilterMap()
                         .getAttributionFilterMap());
@@ -905,7 +903,7 @@ public class SourceTest {
 
     @Test
     public void testAggregatableAttributionSourceWithTrigger_addsLookbackWindow() throws Exception {
-        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
         JSONObject aggregatableSource = new JSONObject();
         aggregatableSource.put("campaignCounts", "0x159");
         aggregatableSource.put("geoValue", "0x5");
@@ -921,7 +919,7 @@ public class SourceTest {
 
         Trigger trigger = TriggerFixture.getValidTrigger();
         Optional<AggregatableAttributionSource> aggregatableAttributionSource =
-                source.getAggregatableAttributionSource(trigger, mFlags);
+                source.getAggregatableAttributionSource(trigger, mMockFlags);
         assertThat(aggregatableAttributionSource.isPresent()).isTrue();
         assertThat(aggregatableAttributionSource.get().getAggregatableSource())
                 .containsExactly(
@@ -996,7 +994,7 @@ public class SourceTest {
                         .setFilterDataString(filterMapJson.toString())
                         .build();
         Trigger trigger = TriggerFixture.getValidTrigger();
-        FilterMap filterMap = source.getFilterData(trigger, mFlags);
+        FilterMap filterMap = source.getFilterData(trigger, mMockFlags);
         assertEquals(filterMap.getAttributionFilterMap().size(), 3);
         assertEquals(Collections.singletonList("electronics"),
                 filterMap.getAttributionFilterMap().get("conversion"));
@@ -1009,7 +1007,7 @@ public class SourceTest {
 
     @Test
     public void testGetFilterData_withTrigger_addsLookbackWindow() throws JSONException {
-        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
         JSONObject filterMapJson = new JSONObject();
         filterMapJson.put("conversion", new JSONArray(List.of("electronics")));
         filterMapJson.put("product", new JSONArray(List.of("1234", "2345")));
@@ -1019,7 +1017,7 @@ public class SourceTest {
                         .setFilterDataString(filterMapJson.toString())
                         .build();
         Trigger trigger = TriggerFixture.getValidTrigger();
-        FilterMap filterMap = source.getFilterData(trigger, mFlags);
+        FilterMap filterMap = source.getFilterData(trigger, mMockFlags);
         assertThat(filterMap.getAttributionFilterMapWithLongValue())
                 .containsExactly(
                         "conversion",
@@ -1035,13 +1033,13 @@ public class SourceTest {
     @Test
     public void testGetFilterData_withTriggerAndEmptyData_addsLookbackWindow()
             throws JSONException {
-        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
                         .build();
         Trigger trigger = TriggerFixture.getValidTrigger();
-        FilterMap filterMap = source.getFilterData(trigger, mFlags);
+        FilterMap filterMap = source.getFilterData(trigger, mMockFlags);
         assertThat(filterMap.getAttributionFilterMapWithLongValue())
                 .containsExactly(
                         "source_type",
@@ -1052,7 +1050,7 @@ public class SourceTest {
 
     @Test
     public void testGetSharedFilterData_withLongValue_success() throws JSONException {
-        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
         JSONObject filterMapJson = new JSONObject();
         filterMapJson.put("conversion", new JSONArray(List.of("electronics")));
         filterMapJson.put("product", new JSONArray(List.of("1234", "2345")));
@@ -1064,14 +1062,14 @@ public class SourceTest {
                         .setSharedFilterDataKeys(sharedFilterDataKeys)
                         .build();
         Trigger trigger = TriggerFixture.getValidTrigger();
-        FilterMap filterMap = source.getSharedFilterData(trigger, mFlags);
+        FilterMap filterMap = source.getSharedFilterData(trigger, mMockFlags);
         assertThat(filterMap.getAttributionFilterMapWithLongValue())
                 .containsExactly("product", FilterValue.ofStringList(List.of("1234", "2345")));
     }
 
     @Test
     public void testGetSharedFilterData_success() throws JSONException {
-        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(false);
         JSONObject filterMapJson = new JSONObject();
         filterMapJson.put("conversion", new JSONArray(List.of("electronics")));
         filterMapJson.put("product", new JSONArray(List.of("1234", "2345")));
@@ -1083,7 +1081,7 @@ public class SourceTest {
                         .setSharedFilterDataKeys(sharedFilterDataKeys)
                         .build();
         Trigger trigger = TriggerFixture.getValidTrigger();
-        FilterMap filterMap = source.getSharedFilterData(trigger, mFlags);
+        FilterMap filterMap = source.getSharedFilterData(trigger, mMockFlags);
         assertThat(filterMap.getAttributionFilterMap())
                 .containsExactly("product", List.of("1234", "2345"));
     }
@@ -1095,7 +1093,7 @@ public class SourceTest {
                         .setSourceType(Source.SourceType.EVENT)
                         .build();
         Trigger trigger = TriggerFixture.getValidTrigger();
-        FilterMap filterMap = source.getFilterData(trigger, mFlags);
+        FilterMap filterMap = source.getFilterData(trigger, mMockFlags);
         assertEquals(filterMap.getAttributionFilterMap().size(), 1);
         assertEquals(Collections.singletonList("event"),
                 filterMap.getAttributionFilterMap().get("source_type"));
@@ -1109,7 +1107,7 @@ public class SourceTest {
                         .setFilterDataString("")
                         .build();
         Trigger trigger = TriggerFixture.getValidTrigger();
-        FilterMap filterMap = source.getFilterData(trigger, mFlags);
+        FilterMap filterMap = source.getFilterData(trigger, mMockFlags);
         assertEquals(filterMap.getAttributionFilterMap().size(), 1);
         assertEquals(Collections.singletonList("event"),
                 filterMap.getAttributionFilterMap().get("source_type"));
@@ -1134,7 +1132,7 @@ public class SourceTest {
                         .build();
         Trigger trigger = TriggerFixture.getValidTrigger();
         Optional<AggregatableAttributionSource> aggregatableAttributionSource =
-                source.getAggregatableAttributionSource(trigger, mFlags);
+                source.getAggregatableAttributionSource(trigger, mMockFlags);
         assertTrue(aggregatableAttributionSource.isPresent());
         AggregatableAttributionSource aggregateSource = aggregatableAttributionSource.get();
         assertEquals(aggregateSource.getAggregatableSource().size(), 2);
@@ -1865,10 +1863,10 @@ public class SourceTest {
     @Test
     public void hasValidInformationGain_fullFlex_enableEventLevelEpsilon_success()
             throws Exception {
-        when(mFlags.getMeasurementEnableEventLevelEpsilonInSource()).thenReturn(true);
-        when(mFlags.getMeasurementMaxReportStatesPerSourceRegistration())
+        when(mMockFlags.getMeasurementEnableEventLevelEpsilonInSource()).thenReturn(true);
+        when(mMockFlags.getMeasurementMaxReportStatesPerSourceRegistration())
                 .thenReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION);
-        when(mFlags.getMeasurementFlexApiMaxInformationGainEvent())
+        when(mMockFlags.getMeasurementFlexApiMaxInformationGainEvent())
                 .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT);
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2],"
@@ -1886,19 +1884,19 @@ public class SourceTest {
                         .setTriggerSpecs(
                                 new TriggerSpecs(triggerSpecsArray, maxEventLevelReports, null))
                         .build();
-        assertTrue(testSource.hasValidInformationGain(mFlags));
+        assertTrue(testSource.hasValidInformationGain(mMockFlags));
     }
 
     @Test
     public void hasValidInformationGain_flexLite_withEventLevelEpsilonAndAttributionScope_success()
             throws Exception {
-        when(mFlags.getMeasurementEnableEventLevelEpsilonInSource()).thenReturn(true);
-        when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
-        when(mFlags.getMeasurementMaxReportStatesPerSourceRegistration())
+        when(mMockFlags.getMeasurementEnableEventLevelEpsilonInSource()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
+        when(mMockFlags.getMeasurementMaxReportStatesPerSourceRegistration())
                 .thenReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION);
-        when(mFlags.getMeasurementFlexApiMaxInformationGainEvent())
+        when(mMockFlags.getMeasurementFlexApiMaxInformationGainEvent())
                 .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT);
-        when(mFlags.getMeasurementVtcConfigurableMaxEventReportsCount())
+        when(mMockFlags.getMeasurementVtcConfigurableMaxEventReportsCount())
                 .thenReturn(Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT);
         long baseTime = System.currentTimeMillis();
         Source testSource =
@@ -1918,16 +1916,16 @@ public class SourceTest {
                         .setMaxEventStates(10L)
                         .setAttributionScopes(List.of("1", "2"))
                         .build();
-        assertTrue(testSource.hasValidInformationGain(mFlags));
+        assertTrue(testSource.hasValidInformationGain(mMockFlags));
     }
 
     @Test
     public void testHasValidInformationGain_flexLite_enableEventLevelEpsilon_success()
             throws Exception {
-        when(mFlags.getMeasurementEnableEventLevelEpsilonInSource()).thenReturn(true);
-        when(mFlags.getMeasurementMaxReportStatesPerSourceRegistration())
+        when(mMockFlags.getMeasurementEnableEventLevelEpsilonInSource()).thenReturn(true);
+        when(mMockFlags.getMeasurementMaxReportStatesPerSourceRegistration())
                 .thenReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION);
-        when(mFlags.getMeasurementFlexApiMaxInformationGainEvent())
+        when(mMockFlags.getMeasurementFlexApiMaxInformationGainEvent())
                 .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT);
         long baseTime = System.currentTimeMillis();
         Source testSource =
@@ -1942,7 +1940,7 @@ public class SourceTest {
                                                 baseTime + TimeUnit.DAYS.toMillis(7),
                                                 baseTime + TimeUnit.DAYS.toMillis(30)))
                         .build();
-        assertTrue(testSource.hasValidInformationGain(mFlags));
+        assertTrue(testSource.hasValidInformationGain(mMockFlags));
     }
 
     @Test
@@ -2280,18 +2278,19 @@ public class SourceTest {
 
     @Test
     public void testGetConditionalEventLevelEpsilon() {
-        when(mFlags.getMeasurementEnableEventLevelEpsilonInSource()).thenReturn(false, true);
-        when(mFlags.getMeasurementPrivacyEpsilon())
+        when(mMockFlags.getMeasurementEnableEventLevelEpsilonInSource()).thenReturn(false, true);
+        when(mMockFlags.getMeasurementPrivacyEpsilon())
                 .thenReturn(Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON);
 
         Source withoutEpsilonConfigured = SourceFixture.getValidSource();
-        Double epsilonRetrieved = withoutEpsilonConfigured.getConditionalEventLevelEpsilon(mFlags);
+        Double epsilonRetrieved =
+                withoutEpsilonConfigured.getConditionalEventLevelEpsilon(mMockFlags);
         assertEquals(Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON, epsilonRetrieved, 0.0);
 
         Source withEpsilonConfigured =
                 SourceFixture.getValidSourceBuilder().setEventLevelEpsilon(10D).build();
         Double epsilonRetrievedConfigured =
-                withEpsilonConfigured.getConditionalEventLevelEpsilon(mFlags);
+                withEpsilonConfigured.getConditionalEventLevelEpsilon(mMockFlags);
         assertEquals(10D, epsilonRetrievedConfigured, 0.0);
     }
 }

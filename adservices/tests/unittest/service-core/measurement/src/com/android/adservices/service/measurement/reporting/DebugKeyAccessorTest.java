@@ -36,7 +36,7 @@ import static org.mockito.Mockito.when;
 import android.net.Uri;
 import android.util.Pair;
 
-import com.android.adservices.data.measurement.DatastoreException;
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.EventSurfaceType;
@@ -50,13 +50,10 @@ import com.android.adservices.service.stats.MsmtDebugKeysMatchStats;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
 
 /** Unit tests for {@link DebugKeyAccessor} */
-@RunWith(MockitoJUnitRunner.class)
-public class DebugKeyAccessorTest {
+public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
 
     public static final String TRIGGER_ID = "triggerId1";
     public static final long TRIGGER_TIME = 234324L;
@@ -74,29 +71,31 @@ public class DebugKeyAccessorTest {
             AdIdEncryption.encryptAdIdAndEnrollmentSha256(
                     TEST_ACTUAL_AD_ID_2, ValidTriggerParams.ENROLLMENT_ID);
 
-    @Mock private Flags mFlags;
+    @Mock private Flags mMockFlags;
     @Mock private AdServicesLogger mAdServicesLogger;
 
     @Mock private IMeasurementDao mMeasurementDao;
     private DebugKeyAccessor mDebugKeyAccessor;
 
     @Before
-    public void setup() throws DatastoreException {
-        mDebugKeyAccessor = new DebugKeyAccessor(mFlags, mAdServicesLogger, mMeasurementDao);
-        when(mFlags.getMeasurementDebugJoinKeyHashLimit()).thenReturn(DEFAULT_JOIN_KEY_HASH_LIMIT);
-        when(mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist())
+    public void setup() throws Exception {
+        mDebugKeyAccessor = new DebugKeyAccessor(mMockFlags, mAdServicesLogger, mMeasurementDao);
+        when(mMockFlags.getMeasurementDebugJoinKeyHashLimit())
+                .thenReturn(DEFAULT_JOIN_KEY_HASH_LIMIT);
+        when(mMockFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist())
                 .thenReturn(
                         ValidSourceParams.ENROLLMENT_ID + "," + ValidTriggerParams.ENROLLMENT_ID);
-        when(mFlags.getMeasurementPlatformDebugAdIdMatchingLimit())
+        when(mMockFlags.getMeasurementPlatformDebugAdIdMatchingLimit())
                 .thenReturn(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT);
-        when(mFlags.getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist()).thenReturn("");
-        when(mFlags.getMeasurementEnableEventLevelEpsilonInSource()).thenReturn(false);
-        when(mFlags.getMeasurementPrivacyEpsilon()).thenReturn(DEFAULT_MEASUREMENT_PRIVACY_EPSILON);
+        when(mMockFlags.getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist())
+                .thenReturn("");
+        when(mMockFlags.getMeasurementEnableEventLevelEpsilonInSource()).thenReturn(false);
+        when(mMockFlags.getMeasurementPrivacyEpsilon())
+                .thenReturn(DEFAULT_MEASUREMENT_PRIVACY_EPSILON);
     }
 
     @Test
-    public void getDebugKeys_appToAppWithAdIdPermission_debugKeysPresent()
-            throws DatastoreException {
+    public void getDebugKeys_appToAppWithAdIdPermission_debugKeysPresent() throws Exception {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP,
@@ -123,7 +122,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_appToAppNoAdIdPermission_debugKeysAbsent() throws DatastoreException {
+    public void getDebugKeys_appToAppNoAdIdPermission_debugKeysAbsent() throws Exception {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP,
@@ -151,7 +150,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeys_appToAppNoAdIdPermissionWithJoinKeys_debugKeysAbsent()
-            throws DatastoreException {
+            throws Exception {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP,
@@ -178,8 +177,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_appToAppWithSourceAdId_sourceDebugKeyPresent()
-            throws DatastoreException {
+    public void getDebugKeys_appToAppWithSourceAdId_sourceDebugKeyPresent() throws Exception {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP,
@@ -206,8 +204,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_appToAppWithTriggerAdId_triggerDebugKeyPresent()
-            throws DatastoreException {
+    public void getDebugKeys_appToAppWithTriggerAdId_triggerDebugKeyPresent() throws Exception {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP,
@@ -234,8 +231,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_webToWebWithSameRegistrant_debugKeysPresent()
-            throws DatastoreException {
+    public void getDebugKeys_webToWebWithSameRegistrant_debugKeysPresent() throws Exception {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.WEB,
@@ -263,7 +259,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeys_webToWebNoJoinKeysAndDifferentRegistrants_debugKeysAbsent()
-            throws DatastoreException {
+            throws Exception {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.WEB,
@@ -291,7 +287,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeys_webToWebDiffJoinKeysSameRegFalseArDebug_debugKeysAbsent()
-            throws DatastoreException {
+            throws Exception {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.WEB,
@@ -319,7 +315,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeys_webToWebSameJoinKeysAndDifferentRegistrants_debugKeysPresent()
-            throws DatastoreException {
+            throws Exception {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.WEB,
@@ -357,7 +353,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeys_webToWebOnlySourceJoinKeyAndDifferentRegistrants_debugKeysAbsent()
-            throws DatastoreException {
+            throws Exception {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.WEB,
@@ -385,7 +381,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeys_webToWebDiffJoinKeysAndDifferentRegistrants_debugKeysAbsent()
-            throws DatastoreException {
+            throws Exception {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.WEB,
@@ -423,7 +419,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeys_webToWebSameRegistrantWithArDebugOnSource_sourceDebugKeysPresent()
-            throws DatastoreException {
+            throws Exception {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.WEB,
@@ -450,7 +446,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_appToWebNoJoinKeys_debugKeysAbsent() throws DatastoreException {
+    public void getDebugKeys_appToWebNoJoinKeys_debugKeysAbsent() throws Exception {
         Source source =
                 createSource(
                         EventSurfaceType.APP,
@@ -477,7 +473,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_appToWebJoinKeysMatch_debugKeysPresent() throws DatastoreException {
+    public void getDebugKeys_appToWebJoinKeysMatch_debugKeysPresent() throws Exception {
         Source source =
                 createSource(
                         EventSurfaceType.APP,
@@ -514,8 +510,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_appToWebOnlyTriggerJoinKeyProvided_debugKeysAbsent()
-            throws DatastoreException {
+    public void getDebugKeys_appToWebOnlyTriggerJoinKeyProvided_debugKeysAbsent() throws Exception {
         Source source =
                 createSource(
                         EventSurfaceType.APP,
@@ -542,7 +537,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_appToWebJoinKeysMismatch_debugKeysAbsent() throws DatastoreException {
+    public void getDebugKeys_appToWebJoinKeysMismatch_debugKeysAbsent() throws Exception {
         Source source =
                 createSource(
                         EventSurfaceType.APP,
@@ -579,7 +574,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_webToAppNoJoinKeys_debugKeysAbsent() throws DatastoreException {
+    public void getDebugKeys_webToAppNoJoinKeys_debugKeysAbsent() throws Exception {
         Source source =
                 createSource(
                         EventSurfaceType.WEB,
@@ -606,7 +601,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_webToAppJoinKeysMatch_debugKeysPresent() throws DatastoreException {
+    public void getDebugKeys_webToAppJoinKeysMatch_debugKeysPresent() throws Exception {
         Source source =
                 createSource(
                         EventSurfaceType.WEB,
@@ -643,8 +638,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_webToAppOnlySourceJoinKeyProvided_debugKeysAbsent()
-            throws DatastoreException {
+    public void getDebugKeys_webToAppOnlySourceJoinKeyProvided_debugKeysAbsent() throws Exception {
         Source source =
                 createSource(
                         EventSurfaceType.WEB,
@@ -672,8 +666,8 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeys_webToAppJoinKeysMatchNotAllowListed_debugKeysAbsent()
-            throws DatastoreException {
-        when(mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist()).thenReturn("");
+            throws Exception {
+        when(mMockFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist()).thenReturn("");
         Source source =
                 createSource(
                         EventSurfaceType.WEB,
@@ -700,7 +694,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_webToAppJoinKeysMismatch_debugKeysAbsent() throws DatastoreException {
+    public void getDebugKeys_webToAppJoinKeysMismatch_debugKeysAbsent() throws Exception {
         Source source =
                 createSource(
                         EventSurfaceType.WEB,
@@ -738,8 +732,8 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeys_webToWebNotAllowListedDiffRegJoinKeysMatch_debugKeysAbsent()
-            throws DatastoreException {
-        when(mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist())
+            throws Exception {
+        when(mMockFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist())
                 .thenReturn("some_random_enrollment1,some_random_enrollment2");
         Source source =
                 createSource(
@@ -768,8 +762,8 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeys_appToWebJoinKeysMatchNotAllowListed_debugKeysAbsent()
-            throws DatastoreException {
-        when(mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist())
+            throws Exception {
+        when(mMockFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist())
                 .thenReturn("some_random_enrollment1,some_random_enrollment2");
         Source source =
                 createSource(
@@ -798,7 +792,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeysForVerbose_noSourceTriggerAdIdPermission_triggerDebugKeyPresent()
-            throws DatastoreException {
+            throws Exception {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP,
@@ -817,7 +811,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeysForVerbose_noSourceTriggerNoAdIdPermission_triggerDebugKeyAbsent()
-            throws DatastoreException {
+            throws Exception {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP,
@@ -836,7 +830,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeysForVerbose_noSourceTriggerArdebugPermission_triggerDebugKeyPresent()
-            throws DatastoreException {
+            throws Exception {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.WEB,
@@ -855,7 +849,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeysForVerbose_noSourceTriggerNoArdebugPermission_triggerDebugKeyAbsent()
-            throws DatastoreException {
+            throws Exception {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.WEB,
@@ -874,7 +868,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeysForVerbose_appToAppWithAdIdPermission_debugKeysPresent()
-            throws DatastoreException {
+            throws Exception {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP,
@@ -902,7 +896,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeysForVerbose_appToAppBothNoAdIdPermission_debugKeysAbsent()
-            throws DatastoreException {
+            throws Exception {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP,
@@ -929,8 +923,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeysForVerbose_appToAppNoTriggerAdId_debugKeysAbsent()
-            throws DatastoreException {
+    public void getDebugKeysForVerbose_appToAppNoTriggerAdId_debugKeysAbsent() throws Exception {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP,
@@ -958,7 +951,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeysForVerbose_appToAppNoSourceAdId_sourceDebugKeyAbsent()
-            throws DatastoreException {
+            throws Exception {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP,
@@ -986,7 +979,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeysForVerbose_appToAppBothNoAdIdWithJoinKeys_debugKeysAbsent()
-            throws DatastoreException {
+            throws Exception {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP,
@@ -1014,7 +1007,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeysForVerbose_webToWebWithSameRegistrant_debugKeysPresent()
-            throws DatastoreException {
+            throws Exception {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.WEB,
@@ -1042,7 +1035,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeysForVerbose_webToWebTriggerNoArDebugPermission_debugKeysAbsent()
-            throws DatastoreException {
+            throws Exception {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.WEB,
@@ -1071,7 +1064,7 @@ public class DebugKeyAccessorTest {
     @Test
     public void
             getDebugKeysForVerbose_webToWebSameJoinKeysAndDifferentRegistrants_debugKeysPresent()
-                    throws DatastoreException {
+                    throws Exception {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.WEB,
@@ -1109,7 +1102,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeysForVerbose_webToWebNoJoinKeyDiffRegistrants_sourceDebugKeyAbsent()
-            throws DatastoreException {
+            throws Exception {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.WEB,
@@ -1138,7 +1131,7 @@ public class DebugKeyAccessorTest {
     @Test
     public void
             getDebugKeysForVerbose_webToWebDiffJoinKeysDifferentRegistrants_sourceDebugKeyAbsent()
-                    throws DatastoreException {
+                    throws Exception {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.WEB,
@@ -1176,7 +1169,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeysForVerbose_webToWebSameRegistrantWithArDebug_debugKeysPresent()
-            throws DatastoreException {
+            throws Exception {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.WEB,
@@ -1205,8 +1198,8 @@ public class DebugKeyAccessorTest {
     @Test
     public void
             getDebugKeysForVerbose_webToWebNotAllowListDiffRegJoinKeysMatch_sourceDebugKeyAbsent()
-                    throws DatastoreException {
-        when(mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist())
+                    throws Exception {
+        when(mMockFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist())
                 .thenReturn("some_random_enrollment1,some_random_enrollment2");
         Source source =
                 createSource(
@@ -1235,7 +1228,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeysForVerbose_appToWebTriggerNoArDebugPermission_debugKeysAbsent()
-            throws DatastoreException {
+            throws Exception {
         Source source =
                 createSource(
                         EventSurfaceType.APP,
@@ -1262,8 +1255,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeysForVerbose_appToWebNoJoinKeys_sourceDebugKeysAbsent()
-            throws DatastoreException {
+    public void getDebugKeysForVerbose_appToWebNoJoinKeys_sourceDebugKeysAbsent() throws Exception {
         Source source =
                 createSource(
                         EventSurfaceType.APP,
@@ -1290,8 +1282,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeysForVerbose_appToWebJoinKeysMatch_debugKeysPresent()
-            throws DatastoreException {
+    public void getDebugKeysForVerbose_appToWebJoinKeysMatch_debugKeysPresent() throws Exception {
         Source source =
                 createSource(
                         EventSurfaceType.APP,
@@ -1329,7 +1320,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeysForVerbose_appToWebNoSourceJoinKey_sourceDebugKeyAbsent()
-            throws DatastoreException {
+            throws Exception {
         Source source =
                 createSource(
                         EventSurfaceType.APP,
@@ -1357,7 +1348,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeysForVerbose_appToWebJoinKeysMismatch_sourceDebugKeyAbsent()
-            throws DatastoreException {
+            throws Exception {
         Source source =
                 createSource(
                         EventSurfaceType.APP,
@@ -1395,8 +1386,8 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeysForVerbose_appToWebJoinKeysMatchNotAllowListed_sourceDebugKeyAbsent()
-            throws DatastoreException {
-        when(mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist())
+            throws Exception {
+        when(mMockFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist())
                 .thenReturn("some_random_enrollment1,some_random_enrollment2");
         Source source =
                 createSource(
@@ -1424,8 +1415,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeysForVerbose_webToAppTriggerNoAdid_debugKeysAbsent()
-            throws DatastoreException {
+    public void getDebugKeysForVerbose_webToAppTriggerNoAdid_debugKeysAbsent() throws Exception {
         Source source =
                 createSource(
                         EventSurfaceType.WEB,
@@ -1452,8 +1442,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeysForVerbose_webToAppNoJoinKeys_sourceDebugKeyAbsent()
-            throws DatastoreException {
+    public void getDebugKeysForVerbose_webToAppNoJoinKeys_sourceDebugKeyAbsent() throws Exception {
         Source source =
                 createSource(
                         EventSurfaceType.WEB,
@@ -1480,8 +1469,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeysForVerbose_webToAppJoinKeysMatch_debugKeysPresent()
-            throws DatastoreException {
+    public void getDebugKeysForVerbose_webToAppJoinKeysMatch_debugKeysPresent() throws Exception {
         Source source =
                 createSource(
                         EventSurfaceType.WEB,
@@ -1519,8 +1507,8 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeysForVerbose_webToAppJoinKeysMatchNotAllowListed_sourceDebugKeyAbsent()
-            throws DatastoreException {
-        when(mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist()).thenReturn("");
+            throws Exception {
+        when(mMockFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist()).thenReturn("");
         Source source =
                 createSource(
                         EventSurfaceType.WEB,
@@ -1548,7 +1536,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeysForVerbose_webToAppJoinKeysMismatch_sourceDebugKeyAbsent()
-            throws DatastoreException {
+            throws Exception {
         Source source =
                 createSource(
                         EventSurfaceType.WEB,
@@ -1585,8 +1573,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_adIdMatching_appToWeb_noAdIds_debugKeysAbsent()
-            throws DatastoreException {
+    public void getDebugKeys_adIdMatching_appToWeb_noAdIds_debugKeysAbsent() throws Exception {
         Source source =
                 createSource(
                         EventSurfaceType.APP,
@@ -1615,7 +1602,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeys_adIdMatching_appToWeb_nullPlatformAdId_debugKeysAbsent_logsMetric()
-            throws DatastoreException {
+            throws Exception {
         when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
 
         Source source =
@@ -1656,7 +1643,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeys_adIdMatching_appToWeb_matchingAdIds_debugKeysPresent()
-            throws DatastoreException {
+            throws Exception {
         when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
 
         Source source =
@@ -1697,7 +1684,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeys_encryptedAdIdMatching_appToWeb_matchingAdIds_debugKeysPresent()
-            throws DatastoreException {
+            throws Exception {
         when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
 
         Source source =
@@ -1738,7 +1725,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeys_adIdMatching_appToWeb_nonMatchingAdIds_debugKeysAbsent()
-            throws DatastoreException {
+            throws Exception {
         when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(2L);
 
         Source source =
@@ -1779,7 +1766,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeys_adIdMatching_appToWeb_failedMatch_doesNotMatchJoinKeys()
-            throws DatastoreException {
+            throws Exception {
         when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
 
         Source source =
@@ -1823,8 +1810,8 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeys_adIdMatching_appToWeb_blockedEnrollment_debugKeysAbsent()
-            throws DatastoreException {
-        when(mFlags.getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist())
+            throws Exception {
+        when(mMockFlags.getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist())
                 .thenReturn(ValidTriggerParams.ENROLLMENT_ID);
 
         Source source =
@@ -1855,8 +1842,9 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeys_adIdMatching_appToWeb_allEnrollmentsBlocked_debugKeysAbsent()
-            throws DatastoreException {
-        when(mFlags.getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist()).thenReturn("*");
+            throws Exception {
+        when(mMockFlags.getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist())
+                .thenReturn("*");
 
         Source source =
                 createSource(
@@ -1886,7 +1874,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeys_adIdMatching_appToWeb_uniqueAdIdLimitReached_debugKeysAbsent()
-            throws DatastoreException {
+            throws Exception {
         when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any()))
                 .thenReturn(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT);
 
@@ -1927,8 +1915,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_adIdMatching_webToApp_noAdIds_debugKeysAbsent()
-            throws DatastoreException {
+    public void getDebugKeys_adIdMatching_webToApp_noAdIds_debugKeysAbsent() throws Exception {
         Source source =
                 createSource(
                         EventSurfaceType.WEB,
@@ -1957,7 +1944,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeys_adIdMatching_webToApp_nullPlatformAdId_debugKeysAbsent_logsMetric()
-            throws DatastoreException {
+            throws Exception {
         when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
 
         Source source =
@@ -1998,7 +1985,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeys_adIdMatching_webToApp_matchingAdIds_debugKeysPresent()
-            throws DatastoreException {
+            throws Exception {
         when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
 
         Source source =
@@ -2039,7 +2026,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeys_encryptedAdIdMatching_webToApp_matchingAdIds_debugKeysPresent()
-            throws DatastoreException {
+            throws Exception {
         when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
 
         Source source =
@@ -2080,7 +2067,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeys_adIdMatching_webToApp_nonMatchingAdIds_debugKeysAbsent()
-            throws DatastoreException {
+            throws Exception {
         when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(2L);
 
         Source source =
@@ -2121,7 +2108,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeys_adIdMatching_webToApp_failedMatch_doesNotMatchJoinKeys()
-            throws DatastoreException {
+            throws Exception {
         when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(2L);
 
         Source source =
@@ -2165,8 +2152,8 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeys_adIdMatching_webToApp_blockedEnrollment_debugKeysAbsent()
-            throws DatastoreException {
-        when(mFlags.getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist())
+            throws Exception {
+        when(mMockFlags.getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist())
                 .thenReturn(ValidSourceParams.ENROLLMENT_ID);
 
         Source source =
@@ -2197,8 +2184,9 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeys_adIdMatching_webToApp_allEnrollmentsBlocked_debugKeysAbsent()
-            throws DatastoreException {
-        when(mFlags.getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist()).thenReturn("*");
+            throws Exception {
+        when(mMockFlags.getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist())
+                .thenReturn("*");
 
         Source source =
                 createSource(
@@ -2228,7 +2216,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeys_adIdMatching_webToApp_uniqueAdIdLimitReached_debugKeysAbsent()
-            throws DatastoreException {
+            throws Exception {
         when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any()))
                 .thenReturn(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT);
 
@@ -2270,7 +2258,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeysForVerbose_adIdAppToWeb_noAdIds_sourceDebugKeyAbsent()
-            throws DatastoreException {
+            throws Exception {
         Source source =
                 createSource(
                         EventSurfaceType.APP,
@@ -2300,7 +2288,7 @@ public class DebugKeyAccessorTest {
     @Test
     public void
             getDebugKeysForVerbose_adIdAppToWeb_nullPlatformAdId_sourceDebugKeyAbsent_logsMetric()
-                    throws DatastoreException {
+                    throws Exception {
         when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
 
         Source source =
@@ -2341,7 +2329,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeysForVerbose_adIdAppToWeb_matchingAdIds_sourceDebugKeyPresent()
-            throws DatastoreException {
+            throws Exception {
         when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
 
         Source source =
@@ -2382,7 +2370,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeysForVerbose_encryptedAdIdAppToWeb_matchingAdIds_sourceDebugKeyPresent()
-            throws DatastoreException {
+            throws Exception {
         when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
 
         Source source =
@@ -2423,7 +2411,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeysForVerbose_adIdAppToWeb_nonMatchingAdIds_sourceDebugKeyAbsent()
-            throws DatastoreException {
+            throws Exception {
         when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(2L);
 
         Source source =
@@ -2464,7 +2452,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeysForVerbose_adIdAppToWeb_failedMatch_sourceDebugKeyAbsent()
-            throws DatastoreException {
+            throws Exception {
         when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(2L);
 
         Source source =
@@ -2508,8 +2496,8 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeysForVerbose_adIdAppToWeb_blockedEnrollment_sourceDebugKeyAbsent()
-            throws DatastoreException {
-        when(mFlags.getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist())
+            throws Exception {
+        when(mMockFlags.getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist())
                 .thenReturn(ValidTriggerParams.ENROLLMENT_ID);
 
         Source source =
@@ -2540,8 +2528,9 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeysForVerbose_adIdAppToWeb_allEnrollmentsBlocked_sourceDebugKeyAbsent()
-            throws DatastoreException {
-        when(mFlags.getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist()).thenReturn("*");
+            throws Exception {
+        when(mMockFlags.getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist())
+                .thenReturn("*");
 
         Source source =
                 createSource(
@@ -2571,7 +2560,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeysForVerbose_adIdAppToWeb_uniqueAdIdLimitReached_sourceDebugKeyAbsent()
-            throws DatastoreException {
+            throws Exception {
         when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any()))
                 .thenReturn(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT);
 
@@ -2613,7 +2602,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeysForVerbose_adIdWebToApp_noAdIds_sourceDebugKeyAbsent()
-            throws DatastoreException {
+            throws Exception {
         Source source =
                 createSource(
                         EventSurfaceType.WEB,
@@ -2643,7 +2632,7 @@ public class DebugKeyAccessorTest {
     @Test
     public void
             getDebugKeysForVerbose_adIdWebToApp_nullPlatformAdId_sourceDebugKeyAbsent_logsMetric()
-                    throws DatastoreException {
+                    throws Exception {
         when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
 
         Source source =
@@ -2684,7 +2673,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeysForVerbose_adIdWebToApp_matchingAdIds_sourceDebugKeyPresent()
-            throws DatastoreException {
+            throws Exception {
         when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
 
         Source source =
@@ -2725,7 +2714,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeysForVerbose_encryptedAdIdWebToApp_matchingAdIds_sourceDebugKeyPresent()
-            throws DatastoreException {
+            throws Exception {
         when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
 
         Source source =
@@ -2766,7 +2755,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeysForVerbose_adIdWebToApp_nonMatchingAdIds_sourceDebugKeyAbsent()
-            throws DatastoreException {
+            throws Exception {
         when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(2L);
 
         Source source =
@@ -2807,7 +2796,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeysForVerbose_adIdWebToApp_failedMatch_sourceDebugKeyAbsent()
-            throws DatastoreException {
+            throws Exception {
         when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(2L);
 
         Source source =
@@ -2851,8 +2840,8 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeysForVerbose_adIdWebToApp_blockedEnrollment_sourceDebugKeyAbsent()
-            throws DatastoreException {
-        when(mFlags.getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist())
+            throws Exception {
+        when(mMockFlags.getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist())
                 .thenReturn(ValidSourceParams.ENROLLMENT_ID);
 
         Source source =
@@ -2883,8 +2872,9 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeysForVerbose_adIdWebToApp_allEnrollmentsBlocked_sourceDebugKeyAbsent()
-            throws DatastoreException {
-        when(mFlags.getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist()).thenReturn("*");
+            throws Exception {
+        when(mMockFlags.getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist())
+                .thenReturn("*");
 
         Source source =
                 createSource(
@@ -2914,7 +2904,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeysForVerbose_adIdWebToApp_uniqueAdIdLimitReached_sourceDebugKeyAbsent()
-            throws DatastoreException {
+            throws Exception {
         when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any()))
                 .thenReturn(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT);
 
@@ -2955,8 +2945,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_xnaAppToAppWithAdIdPermission_debugKeysPresent()
-            throws DatastoreException {
+    public void getDebugKeys_xnaAppToAppWithAdIdPermission_debugKeysPresent() throws Exception {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP,
@@ -2986,8 +2975,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_xnaAppToAppNoAdIdPermission_debugKeysAbsent()
-            throws DatastoreException {
+    public void getDebugKeys_xnaAppToAppNoAdIdPermission_debugKeysAbsent() throws Exception {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP,
@@ -3017,8 +3005,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_xnaWebToWebWithSameRegistrant_debugKeysPresent()
-            throws DatastoreException {
+    public void getDebugKeys_xnaWebToWebWithSameRegistrant_debugKeysPresent() throws Exception {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.WEB,
@@ -3049,7 +3036,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeys_xnaWebToWebSameJoinKeysAndDifferentRegistrants_debugKeysAbsent()
-            throws DatastoreException {
+            throws Exception {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.WEB,
@@ -3078,7 +3065,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_xnaAppToWebJoinKeysMatch_debugKeysAbsent() throws DatastoreException {
+    public void getDebugKeys_xnaAppToWebJoinKeysMatch_debugKeysAbsent() throws Exception {
         Source source =
                 Source.Builder.from(
                                 createSource(
@@ -3107,7 +3094,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_xnaWebToAppJoinKeysMatch_debugKeysAbsent() throws DatastoreException {
+    public void getDebugKeys_xnaWebToAppJoinKeysMatch_debugKeysAbsent() throws Exception {
         Source source =
                 Source.Builder.from(
                                 createSource(
@@ -3137,7 +3124,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeys_adIdMatching_xnaAppToWeb_matchingAdIds_debugKeysPresent()
-            throws DatastoreException {
+            throws Exception {
         when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
 
         Source source =
@@ -3181,7 +3168,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeys_adIdMatching_xnaWebToApp_matchingAdIds_debugKeysAbsent()
-            throws DatastoreException {
+            throws Exception {
         when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
 
         Source source =
@@ -3214,7 +3201,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeysForVerbose_xnaAppToAppWithAdIdPermission_debugKeysPresent()
-            throws DatastoreException {
+            throws Exception {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP,
@@ -3245,7 +3232,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeysForVerbose_xnaAppToWeb_matchingAdIds_debugKeysPresent()
-            throws DatastoreException {
+            throws Exception {
         when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
 
         Source source =
@@ -3289,7 +3276,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeysForVerbose_xnaAppToWebJoinKeysMatch_sourceDebugKeysAbsent()
-            throws DatastoreException {
+            throws Exception {
         Source source =
                 Source.Builder.from(
                                 createSource(
@@ -3319,7 +3306,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeysForVerbose_xnaWebToApp_matchingAdIds_sourceDebugKeyAbsent()
-            throws DatastoreException {
+            throws Exception {
         when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
 
         Source source =
@@ -3352,7 +3339,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeysForVerbose_xnaWebToAppJoinKeysMatch_sourceDebugKeysAbsent()
-            throws DatastoreException {
+            throws Exception {
         Source source =
                 Source.Builder.from(
                                 createSource(
@@ -3382,7 +3369,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeysForVerbose_xnaWebToWebWithSameRegistrant_debugKeysPresent()
-            throws DatastoreException {
+            throws Exception {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.WEB,
@@ -3413,7 +3400,7 @@ public class DebugKeyAccessorTest {
 
     @Test
     public void getDebugKeysForVerbose_xnaW2WSameJoinKeysAndDiffRegistrants_sourceDebugKeysAbsent()
-            throws DatastoreException {
+            throws Exception {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.WEB,

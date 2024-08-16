@@ -30,6 +30,7 @@ import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.EpochComputationGetTopTopicsStats;
+import com.android.adservices.shared.testing.SkipLoggingUsageRule;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -61,6 +62,8 @@ import java.util.stream.Collectors;
  */
 @SpyStatic(FlagsFactory.class)
 @RequiresSdkLevelAtLeastS
+// TODO (b/359964245): Remove after bug is resolved.
+@SkipLoggingUsageRule(reason = "b/359964245")
 public final class CommonClassifierHelperTest extends AdServicesExtendedMockitoTestCase {
     private static final String TEST_LABELS_FILE_PATH = "classifier/labels_test_topics.txt";
     private static final String TEST_PRECOMPUTED_FILE_PATH =
@@ -119,6 +122,7 @@ public final class CommonClassifierHelperTest extends AdServicesExtendedMockitoT
                         mMockFileStorage,
                         mMockDownloadedFiles);
 
+        // TODO (b/359964245): Delete after bug is resolved and use annotations to verify calls.
         doNothingOnErrorLogUtilError();
 
         testLabels = mTestModelManager.retrieveLabels();
