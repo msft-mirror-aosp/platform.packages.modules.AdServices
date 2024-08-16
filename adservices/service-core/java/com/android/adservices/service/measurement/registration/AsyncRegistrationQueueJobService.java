@@ -26,6 +26,7 @@ import android.app.job.JobScheduler;
 import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.Context;
+import android.os.Trace;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.LoggerFactory;
@@ -35,6 +36,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueRunner.ProcessingResult;
 import com.android.adservices.service.measurement.util.JobLockHolder;
+import com.android.adservices.spe.AdServicesJobInfo;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -59,8 +61,7 @@ public class AsyncRegistrationQueueJobService extends JobService {
             return skipAndCancelBackgroundJob(params, /* skipReason=*/ 0, /* doRecord=*/ false);
         }
 
-        AdServicesJobServiceLogger.getInstance()
-                .recordOnStartJob(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID);
+        AdServicesJobServiceLogger.getInstance().recordOnStartJob(params.getJobId());
 
         if (FlagsFactory.getFlags().getAsyncRegistrationJobQueueKillSwitch()) {
             LoggerFactory.getMeasurementLogger().e("AsyncRegistrationQueueJobService is disabled");
@@ -80,6 +81,10 @@ public class AsyncRegistrationQueueJobService extends JobService {
                 AdServicesExecutors.getBlockingExecutor()
                         .submit(
                                 () -> {
+                                    Trace.beginSection(
+                                            "AsyncRegistrationQueueJobService#onStartJob#executor");
+                                    cancelDeprecatedAsyncRegistrationJob(
+                                            AsyncRegistrationQueueJobService.this);
                                     ProcessingResult result = processAsyncRecords();
                                     LoggerFactory.getMeasurementLogger()
                                             .d(
@@ -94,9 +99,7 @@ public class AsyncRegistrationQueueJobService extends JobService {
                                             !ProcessingResult.THREAD_INTERRUPTED.equals(result);
                                     AdServicesJobServiceLogger.getInstance()
                                             .recordJobFinished(
-                                                    MEASUREMENT_ASYNC_REGISTRATION_JOB_ID,
-                                                    isSuccessful,
-                                                    shouldRetry);
+                                                    params.getJobId(), isSuccessful, shouldRetry);
 
                                     switch (result) {
                                         case SUCCESS_ALL_RECORDS_PROCESSED:
@@ -114,26 +117,22 @@ public class AsyncRegistrationQueueJobService extends JobService {
                                             // scheduled
                                             jobFinished(params, /* wantsReschedule= */ true);
                                     }
+                                    Trace.endSection();
                                 });
         return true;
     }
 
     @VisibleForTesting
     ProcessingResult processAsyncRecords() {
-        final JobLockHolder lock = JobLockHolder.getInstance(ASYNC_REGISTRATION_PROCESSING);
-        if (lock.tryLock()) {
-            try {
-                return AsyncRegistrationQueueRunner.getInstance(getApplicationContext())
-                        .runAsyncRegistrationQueueWorker();
-            } finally {
-                lock.unlock();
-            }
+        return JobLockHolder.getInstance(ASYNC_REGISTRATION_PROCESSING)
+                .callWithLock(
+                        "AsyncRegistrationQueueJobService",
+                        () ->
+                                AsyncRegistrationQueueRunner.getInstance(getApplicationContext())
+                                        .runAsyncRegistrationQueueWorker(),
+                        // Another thread is already processingasync registrations.
+                        ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED);
         }
-        LoggerFactory.getMeasurementLogger()
-                .d("AsyncRegistrationQueueJobService did not acquire the lock");
-        // Another thread is already processing async registrations.
-        return ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED;
-    }
 
     @Override
     public boolean onStopJob(JobParameters params) {
@@ -143,7 +142,7 @@ public class AsyncRegistrationQueueJobService extends JobService {
             shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
         }
         AdServicesJobServiceLogger.getInstance()
-                .recordOnStopJob(params, MEASUREMENT_ASYNC_REGISTRATION_JOB_ID, shouldRetry);
+                .recordOnStopJob(params, params.getJobId(), shouldRetry);
         return shouldRetry;
     }
 
@@ -158,7 +157,7 @@ public class AsyncRegistrationQueueJobService extends JobService {
                         new ComponentName(context, AsyncRegistrationQueueJobService.class))
                 .addTriggerContentUri(
                         new JobInfo.TriggerContentUri(
-                                AsyncRegistrationContentProvider.TRIGGER_URI,
+                                AsyncRegistrationContentProvider.getTriggerUri(),
                                 JobInfo.TriggerContentUri.FLAG_NOTIFY_FOR_DESCENDANTS))
                 .setTriggerContentUpdateDelay(
                         flags.getMeasurementAsyncRegistrationJobTriggerMinDelayMs())
@@ -204,6 +203,25 @@ public class AsyncRegistrationQueueJobService extends JobService {
         }
     }
 
+    /**
+     * {@link AsyncRegistrationQueueJobService} used to be periodic. We have this method to cancel
+     * the legacy job.
+     *
+     * @param context application context
+     */
+    private static void cancelDeprecatedAsyncRegistrationJob(Context context) {
+        JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
+        int deprecatedAsyncRegJobId =
+                AdServicesJobInfo.DEPRECATED_ASYNC_REGISTRATION_QUEUE_JOB.getJobId();
+        if (jobScheduler != null && jobScheduler.getPendingJob(deprecatedAsyncRegJobId) != null) {
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "Cancelling the deprecated async registration job; job_id=%d",
+                            deprecatedAsyncRegJobId);
+            jobScheduler.cancel(deprecatedAsyncRegJobId);
+        }
+    }
+
     @VisibleForTesting
     void scheduleImmediately(Context context) {
         Flags flags = FlagsFactory.getFlags();
@@ -236,12 +254,12 @@ public class AsyncRegistrationQueueJobService extends JobService {
             final JobParameters params, int skipReason, boolean doRecord) {
         final JobScheduler jobScheduler = this.getSystemService(JobScheduler.class);
         if (jobScheduler != null) {
-            jobScheduler.cancel(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID);
+            jobScheduler.cancel(params.getJobId());
         }
 
         if (doRecord) {
             AdServicesJobServiceLogger.getInstance()
-                    .recordJobSkipped(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID, skipReason);
+                    .recordJobSkipped(params.getJobId(), skipReason);
         }
 
         // Tell the JobScheduler that the job is done and does not need to be rescheduled

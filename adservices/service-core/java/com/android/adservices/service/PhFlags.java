@@ -77,6 +77,10 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ASYN
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_EVENT;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_NAVIGATION;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEBUG_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
@@ -87,6 +91,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELE
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_FAKE_REPORT_TRIGGER_TIME;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_REINSTALL_REATTRIBUTION;
@@ -113,6 +118,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REPO
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_TRIGGER_DEBUG_SIGNAL_PROBABILITY_FOR_FAKE_REPORTS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_ENCODING_JOB_IMPROVEMENTS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_EXTENDED_METRICS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_PRODUCT_METRICS_V1_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_SCRIPT_DOWNLOAD_CONNECTION_TIMEOUT_MS;
@@ -120,6 +126,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_PAS_SCRIPT_DOWNL
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_SCRIPT_EXECUTION_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_R_NOTIFICATION_DEFAULT_CONSENT_FIX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_SPE_ON_ASYNC_REGISTRATION_FALLBACK_JOB_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_SPE_ON_BACKGROUND_FETCH_JOB_ENABLED;
@@ -351,6 +358,20 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getTopicsJobSchedulerRescheduleEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_TOPICS_JOB_SCHEDULER_RESCHEDULE_ENABLED,
+                TOPICS_JOB_SCHEDULER_RESCHEDULE_ENABLED);
+    }
+
+    @Override
+    public boolean getTopicsEpochJobBatteryNotLowInsteadOfCharging() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_TOPICS_EPOCH_JOB_BATTERY_NOT_LOW_INSTEAD_OF_CHARGING,
+                TOPICS_EPOCH_JOB_BATTERY_NOT_LOW_INSTEAD_OF_CHARGING);
+    }
+
+    @Override
     public boolean getMsmtRegistrationCobaltLoggingEnabled() {
         return getCobaltLoggingEnabled()
                 && getDeviceConfigFlag(
@@ -454,6 +475,13 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MDD_COBALT_REGISTRY_MANIFEST_FILE_URL,
                 MDD_COBALT_REGISTRY_MANIFEST_FILE_URL);
+    }
+
+    @Override
+    public boolean getCobaltOperationalLoggingEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_COBALT_OPERATIONAL_LOGGING_ENABLED,
+                COBALT_OPERATIONAL_LOGGING_ENABLED);
     }
 
     @Override
@@ -2829,12 +2857,6 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getEnforceIsolateMaxHeapSize() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE, ENFORCE_ISOLATE_MAX_HEAP_SIZE);
-    }
-
-    @Override
     public long getIsolateMaxHeapSizeBytes() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_ISOLATE_MAX_HEAP_SIZE_BYTES, ISOLATE_MAX_HEAP_SIZE_BYTES);
@@ -3058,6 +3080,41 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public float getMeasurementAttributionScopeMaxInfoGainNavigation() {
+        return getDeviceConfigFlag(
+                KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION,
+                MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION);
+    }
+
+    @Override
+    public float getMeasurementAttributionScopeMaxInfoGainDualDestinationNavigation() {
+        return getDeviceConfigFlag(
+                KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_NAVIGATION,
+                MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_NAVIGATION);
+    }
+
+    @Override
+    public float getMeasurementAttributionScopeMaxInfoGainEvent() {
+        return getDeviceConfigFlag(
+                KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT,
+                MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT);
+    }
+
+    @Override
+    public float getMeasurementAttributionScopeMaxInfoGainDualDestinationEvent() {
+        return getDeviceConfigFlag(
+                KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_EVENT,
+                MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_EVENT);
+    }
+
+    @Override
+    public boolean getMeasurementEnableFakeReportTriggerTime() {
+        return getDeviceConfigFlag(
+                KEY_MEASUREMENT_ENABLE_FAKE_REPORT_TRIGGER_TIME,
+                MEASUREMENT_ENABLE_FAKE_REPORT_TRIGGER_TIME);
+    }
+
+    @Override
     public long getMeasurementMaxReportStatesPerSourceRegistration() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION,
@@ -3219,13 +3276,6 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK,
                 MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK);
-    }
-
-    @Override
-    public boolean getMeasurementEnableRedirectToWellKnownPath() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH,
-                MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH);
     }
 
     @Override
@@ -4307,7 +4357,11 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_ENABLE_EVENT_LEVEL_EPSILON_IN_SOURCE
                         + " = "
                         + getMeasurementEnableEventLevelEpsilonInSource());
-
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATE_VALUE_FILTERS
+                        + " = "
+                        + getMeasurementEnableAggregateValueFilters());
         writer.println(
                 "\t"
                         + FlagsConstants
@@ -4932,12 +4986,6 @@ public final class PhFlags implements Flags {
                         + getFledgeAuctionServerForceSearchWhenOwnerIsAbsentEnabled());
         writer.println(
                 "\t"
-                        + FlagsConstants.KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE
-                        + " = "
-                        + getEnforceIsolateMaxHeapSize());
-
-        writer.println(
-                "\t"
                         + FlagsConstants.KEY_ISOLATE_MAX_HEAP_SIZE_BYTES
                         + " = "
                         + getIsolateMaxHeapSizeBytes());
@@ -5458,6 +5506,31 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPES_PER_SOURCE
                         + " = "
                         + getMeasurementMaxAttributionScopesPerSource());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION
+                        + " = "
+                        + getMeasurementAttributionScopeMaxInfoGainNavigation());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_NAVIGATION
+                        + " = "
+                        + getMeasurementAttributionScopeMaxInfoGainDualDestinationNavigation());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT
+                        + " = "
+                        + getMeasurementAttributionScopeMaxInfoGainEvent());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_EVENT
+                        + " = "
+                        + getMeasurementAttributionScopeMaxInfoGainDualDestinationEvent());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENABLE_FAKE_REPORT_TRIGGER_TIME
+                        + " = "
+                        + getMeasurementEnableFakeReportTriggerTime());
         writer.println("\t" + KEY_APPSEARCH_WRITE_TIMEOUT_MS + " = " + getAppSearchWriteTimeout());
         writer.println("\t" + KEY_APPSEARCH_READ_TIMEOUT_MS + " = " + getAppSearchReadTimeout());
         writer.println("\t" + KEY_ADEXT_WRITE_TIMEOUT_MS + " = " + getAdExtWriteTimeoutMs());
@@ -6410,6 +6483,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getMeasurementEnableAggregateValueFilters() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATE_VALUE_FILTERS,
+                MEASUREMENT_ENABLE_AGGREGATE_VALUE_FILTERS);
+    }
+
+    @Override
     public String getMeasurementAppPackageNameLoggingAllowlist() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST, "");
@@ -6420,12 +6500,6 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED,
                 IS_U18_SUPERVISED_ACCOUNT_ENABLED_DEFAULT);
-    }
-
-    @Override
-    public boolean getAdIdCacheEnabled() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_AD_ID_CACHE_ENABLED, DEFAULT_ADID_CACHE_ENABLED);
     }
 
     @Override
@@ -6899,6 +6973,19 @@ public final class PhFlags implements Flags {
                 KEY_ENROLLMENT_PROTO_FILE_ENABLED, DEFAULT_ENROLLMENT_PROTO_FILE_ENABLED);
     }
 
+    @Override
+    public boolean getRNotificationDefaultConsentFixEnabled() {
+        return getDeviceConfigFlag(
+                KEY_R_NOTIFICATION_DEFAULT_CONSENT_FIX_ENABLED,
+                DEFAULT_R_NOTIFICATION_DEFAULT_CONSENT_FIX_ENABLED);
+    }
+
+    @Override
+    public boolean getPasEncodingJobImprovementsEnabled() {
+        return getDeviceConfigFlag(
+                KEY_PAS_ENCODING_JOB_IMPROVEMENTS_ENABLED, PAS_ENCODING_JOB_IMPROVEMENTS_ENABLED);
+    }
+
     // Do NOT add Flag / @Override methods below - it should only contain helpers
 
     /**
@@ -6915,5 +7002,11 @@ public final class PhFlags implements Flags {
     @VisibleForTesting
     static String getSystemPropertyName(String key) {
         return AdServicesCommon.SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + key;
+    }
+
+    @Override
+    public long getAdIdCacheTtlMs() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_AD_ID_CACHE_TTL_MS, DEFAULT_ADID_CACHE_TTL_MS);
     }
 }

@@ -93,6 +93,10 @@ public final class FlagsConstants {
             "topics_number_of_lookback_epochs";
     public static final String KEY_TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION =
             "topics_privacy_budget_for_topic_ids_distribution";
+    public static final String KEY_TOPICS_JOB_SCHEDULER_RESCHEDULE_ENABLED =
+            "topics_job_scheduler_reschedule_enabled";
+    public static final String KEY_TOPICS_EPOCH_JOB_BATTERY_NOT_LOW_INSTEAD_OF_CHARGING =
+            "topics_epoch_job_battery_not_low_instead_of_charging";
     public static final String KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY =
             "topics_number_of_epochs_to_keep_in_history";
     public static final String KEY_GLOBAL_BLOCKED_TOPIC_IDS = "topics_global_blocked_topic_ids";
@@ -139,6 +143,8 @@ public final class FlagsConstants {
     public static final String KEY_COBALT_LOGGING_ENABLED = "cobalt_logging_enabled";
     public static final String KEY_COBALT_REGISTRY_OUT_OF_BAND_UPDATE_ENABLED =
             "cobalt_registry_out_of_band_update_enabled";
+    public static final String KEY_COBALT_OPERATIONAL_LOGGING_ENABLED =
+            "cobalt_operational_logging_enabled";
 
     // Measurement keys
     public static final String KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS =
@@ -848,8 +854,6 @@ public final class FlagsConstants {
             "adid_enforce_foreground_status";
 
     // Fledge JS isolate setting keys
-    public static final String KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE =
-            "fledge_js_isolate_enforce_max_heap_size";
     public static final String KEY_ISOLATE_MAX_HEAP_SIZE_BYTES =
             "fledge_js_isolate_max_heap_size_bytes";
     // AppSetId invoking app status key.
@@ -1235,6 +1239,23 @@ public final class FlagsConstants {
             KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION =
                     "measurement_flex_api_max_information_gain_dual_destination_navigation";
 
+    public static final String KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION =
+            "measurement_attribution_scope_max_info_gain_navigation";
+
+    public static final String
+            KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_NAVIGATION =
+                    "measurement_attribution_scope_max_info_gain_dual_destination_navigation";
+
+    public static final String KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT =
+            "measurement_attribution_scope_max_info_gain_event";
+
+    public static final String
+            KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_EVENT =
+                    "measurement_attribution_scope_max_info_gain_dual_destination_event";
+
+    public static final String KEY_MEASUREMENT_ENABLE_FAKE_REPORT_TRIGGER_TIME =
+            "measurement_enable_fake_report_trigger_time";
+
     public static final String KEY_MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION =
             "measurement_max_report_states_per_source_registration";
 
@@ -1335,10 +1356,6 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK =
             "measurement_enable_api_status_allow_list_check";
-
-    public static final String KEY_MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH =
-            "measurement_enable_redirect_to_well_known_path";
-
     public static final String KEY_MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE =
             "measurement_enable_attribution_scope";
 
@@ -1366,6 +1383,9 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_ENABLE_EVENT_LEVEL_EPSILON_IN_SOURCE =
             "measurement_enable_event_level_epsilon_in_source";
+
+    public static final String KEY_MEASUREMENT_ENABLE_AGGREGATE_VALUE_FILTERS =
+            "measurement_enable_aggregate_value_filters";
 
     // Database Schema Version Flags
     public static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_8 =
@@ -1589,4 +1609,15 @@ public final class FlagsConstants {
     /** Key for enabling adservices apis v2. */
     public static final String KEY_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED =
             "adservices_consent_business_logic_migration_enabled";
+
+    /** Key for enabling R notification default consent fix. */
+    public static final String KEY_R_NOTIFICATION_DEFAULT_CONSENT_FIX_ENABLED =
+            "r_notification_default_consent_fix_enabled";
+
+    /** Key for the PAS encoding job performance improvements. */
+    public static final String KEY_PAS_ENCODING_JOB_IMPROVEMENTS_ENABLED =
+            "pas_encoding_job_improvements_enabled";
+
+    /** Key for ad id cache ttl. */
+    public static final String KEY_AD_ID_CACHE_TTL_MS = "ad_id_cache_ttl_ms";
 }

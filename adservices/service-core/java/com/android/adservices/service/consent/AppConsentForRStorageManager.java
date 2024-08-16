@@ -20,7 +20,7 @@ import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
-import com.android.adservices.data.common.BooleanFileDatastore;
+import com.android.adservices.data.common.AtomicFileDatastore;
 import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.service.extdata.AdServicesExtDataStorageServiceManager;
 import com.android.adservices.service.ui.data.UxStatesDao;
@@ -41,6 +41,7 @@ import java.io.IOException;
 public class AppConsentForRStorageManager extends AppConsentStorageManager {
 
     private final AdServicesExtDataStorageServiceManager mAdExtDataManager;
+
     /**
      * Constructor of AppConsentForRStorageManager
      *
@@ -49,7 +50,7 @@ public class AppConsentForRStorageManager extends AppConsentStorageManager {
      * @param uxStatesDao stores ux related data
      */
     public AppConsentForRStorageManager(
-            BooleanFileDatastore datastore,
+            AtomicFileDatastore datastore,
             AppConsentDao appConsentDao,
             UxStatesDao uxStatesDao,
             AdServicesExtDataStorageServiceManager adExtDataManager) {

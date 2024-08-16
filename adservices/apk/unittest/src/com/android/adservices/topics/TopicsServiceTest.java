@@ -16,12 +16,9 @@
 
 package com.android.adservices.topics;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilError;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static org.junit.Assert.assertNotNull;
@@ -37,10 +34,9 @@ import android.os.IBinder;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.download.MddJob;
-import com.android.adservices.errorlogging.ErrorLogUtil;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -78,24 +74,23 @@ public final class TopicsServiceTest extends AdServicesExtendedMockitoTestCase {
     @Mock private ConsentManager mMockConsentManager;
     @Mock private EnrollmentDao mMockEnrollmentDao;
     @Mock private AppImportanceFilter mMockAppImportanceFilter;
-    @Mock private Flags mMockFlags;
     @Mock private AdServicesApiConsent mMockAdServicesApiConsent;
 
     @Test
     public void testBindableTopicsService_killswitchOff() {
-            // Killswitch is off.
-            doReturn(false).when(mMockFlags).getTopicsKillSwitch();
+        // Killswitch is off.
+        doReturn(false).when(mMockFlags).getTopicsKillSwitch();
 
         mocker.mockGetFlags(mMockFlags);
 
         doReturn(mMockTopicsWorker).when(TopicsWorker::getInstance);
 
-            TopicsService spyTopicsService = spy(new TopicsService());
+        TopicsService spyTopicsService = spy(new TopicsService());
         doReturn(mMockConsentManager).when(() -> ConsentManager.getInstance());
         doReturn(true).when(mMockAdServicesApiConsent).isGiven();
-            doReturn(mMockAdServicesApiConsent)
-                    .when(mMockConsentManager)
-                    .getConsent(AdServicesApiType.TOPICS);
+        doReturn(mMockAdServicesApiConsent)
+                .when(mMockConsentManager)
+                .getConsent(AdServicesApiType.TOPICS);
 
         doReturn(true).when(() -> PackageChangedReceiver.enableReceiver(any(Context.class), any()));
         doReturn(true)
@@ -118,22 +113,19 @@ public final class TopicsServiceTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    @SpyStatic(ErrorLogUtil.class)
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
+            times = 2)
     public void testBindableTopicsService_killswitchOn() {
         // Killswitch is on.
         doReturn(true).when(mMockFlags).getTopicsKillSwitch();
-        doNothingOnErrorLogUtilError();
-
         mocker.mockGetFlags(mMockFlags);
 
         TopicsService topicsService = new TopicsService();
         topicsService.onCreate();
         IBinder binder = topicsService.onBind(getIntentForTopicsService());
         assertNull(binder);
-        verifyErrorLogUtilError(
-                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED,
-                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
-                times(2));
     }
 
     /**

@@ -19,7 +19,6 @@ package com.android.adservices.service;
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND_SERVICE;
 import static android.os.Build.VERSION.SDK_INT;
 
-import static com.android.adservices.shared.common.flags.FeatureFlag.Type.DEBUG;
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH;
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH_GLOBAL;
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH_RAMPED_UP;
@@ -164,6 +163,32 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns the privacy budget for logging topic ID distributions with randomized response. */
     default float getTopicsPrivacyBudgetForTopicIdDistribution() {
         return TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION;
+    }
+
+    /**
+     * Flag to enable rescheduling of Topics job scheduler tasks when modifications are made
+     * to the configuration of the background job.
+     */
+    @FeatureFlag boolean TOPICS_JOB_SCHEDULER_RESCHEDULE_ENABLED = false;
+
+    /** Returns the feature flag to enable rescheduling of Topics job scheduler. */
+    default boolean getTopicsJobSchedulerRescheduleEnabled() {
+        return TOPICS_JOB_SCHEDULER_RESCHEDULE_ENABLED;
+    }
+
+    /**
+     * This flag allows you to execute the job regardless of the device's charging status.
+     * By default, the Topics API background job scheduler requires the device to be in charging
+     * mode for job execution. The default value for this flag is false, indicating that the job
+     * should only be executed when the device is charging. By enabling this flag, the job can be
+     * executed when the battery level is not low.
+     */
+    @FeatureFlag boolean TOPICS_EPOCH_JOB_BATTERY_NOT_LOW_INSTEAD_OF_CHARGING = false;
+
+    /** Returns the feature flag to enable the device to be in batter not low mode for
+     * Topics API job execution.  */
+    default boolean getTopicsEpochJobBatteryNotLowInsteadOfCharging() {
+        return TOPICS_EPOCH_JOB_BATTERY_NOT_LOW_INSTEAD_OF_CHARGING;
     }
 
     /** Available types of classifier behaviours for the Topics API. */
@@ -329,7 +354,8 @@ public interface Flags extends ModuleSharedFlags {
      * The suffix that is appended to the aggregation coordinator origin for retrieving the
      * encryption keys.
      */
-    String MEASUREMENT_AGGREGATION_COORDINATOR_PATH = "v1alpha/publicKeys";
+    String MEASUREMENT_AGGREGATION_COORDINATOR_PATH =
+            ".well-known/aggregation-service/v1/public-keys";
 
     /** Returns the URL for fetching public encryption keys for aggregatable reports. */
     default String getMeasurementAggregationCoordinatorPath() {
@@ -348,7 +374,8 @@ public interface Flags extends ModuleSharedFlags {
      * keys for aggregatable reports.
      */
     String MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_LIST =
-            "https://publickeyservice.aws.privacysandboxservices.com";
+            "https://publickeyservice.msmt.aws.privacysandboxservices.com,"
+                    + "https://publickeyservice.msmt.gcp.privacysandboxservices.com";
 
     /**
      * Returns a string which is a comma separated list of origins used to fetch public encryption
@@ -361,7 +388,7 @@ public interface Flags extends ModuleSharedFlags {
     /* The list of origins for creating a URL used to fetch public encryption keys for
     aggregatable reports. AWS is the current default. */
     String MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN =
-            "https://publickeyservice.aws.privacysandboxservices.com";
+            "https://publickeyservice.msmt.aws.privacysandboxservices.com";
 
     /**
      * Returns the default origin for creating the URI used to fetch public encryption keys for
@@ -632,7 +659,7 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_MEASUREMENT_MAX_BYTES_PER_ATTRIBUTION_FILTER_STRING;
     }
 
-    int DEFAULT_MEASUREMENT_MAX_FILTER_MAPS_PER_FILTER_SET = 5;
+    int DEFAULT_MEASUREMENT_MAX_FILTER_MAPS_PER_FILTER_SET = 20;
 
     /** Maximum number of filter maps allowed in an attribution filter set. */
     default int getMeasurementMaxFilterMapsPerFilterSet() {
@@ -828,6 +855,47 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns max information gain for Flexible Event, dual destination Navigation sources */
     default float getMeasurementFlexApiMaxInformationGainDualDestinationNavigation() {
         return MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION;
+    }
+
+    @ConfigFlag float MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION = 11.55F;
+
+    /** Returns max information gain for navigation sources with attribution scopes. */
+    default float getMeasurementAttributionScopeMaxInfoGainNavigation() {
+        return MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION;
+    }
+
+    @ConfigFlag
+    float MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_NAVIGATION = 11.55F;
+
+    /**
+     * Returns max information gain for navigation sources with dual destination and attribution
+     * scopes.
+     */
+    default float getMeasurementAttributionScopeMaxInfoGainDualDestinationNavigation() {
+        return MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_NAVIGATION;
+    }
+
+    @ConfigFlag float MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT = 6.5F;
+
+    /** Returns max information gain for event sources with attribution scopes. */
+    default float getMeasurementAttributionScopeMaxInfoGainEvent() {
+        return MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT;
+    }
+
+    @ConfigFlag float MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_EVENT = 6.5F;
+
+    /**
+     * Returns max information gain for event sources with dual destination and attribution scopes.
+     */
+    default float getMeasurementAttributionScopeMaxInfoGainDualDestinationEvent() {
+        return MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_EVENT;
+    }
+
+    @FeatureFlag boolean MEASUREMENT_ENABLE_FAKE_REPORT_TRIGGER_TIME = false;
+
+    /** Returns true if fake report trigger time is enabled. */
+    default boolean getMeasurementEnableFakeReportTriggerTime() {
+        return MEASUREMENT_ENABLE_FAKE_REPORT_TRIGGER_TIME;
     }
 
     long MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION = (1L << 32) - 1L;
@@ -2017,39 +2085,23 @@ public interface Flags extends ModuleSharedFlags {
         return CONSENT_NOTIFICATION_MINIMAL_DELAY_BEFORE_INTERVAL_ENDS;
     }
 
-    @FeatureFlag(DEBUG)
-    boolean CONSENT_NOTIFICATION_DEBUG_MODE = false;
-
     default boolean getConsentNotificationDebugMode() {
         return DebugFlags.getInstance().getConsentNotificationDebugMode();
     }
-
-    /** The consent notification activity debug mode is off by default. */
-    @FeatureFlag(DEBUG)
-    boolean CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE = false;
 
     /** Returns the consent notification activity debug mode. */
     default boolean getConsentNotificationActivityDebugMode() {
         return DebugFlags.getInstance().getConsentNotificationActivityDebugMode();
     }
 
-    @FeatureFlag(DEBUG)
-    boolean CONSENT_NOTIFIED_DEBUG_MODE = false;
-
     /** Returns whether to suppress consent notified state. */
     default boolean getConsentNotifiedDebugMode() {
         return DebugFlags.getInstance().getConsentNotifiedDebugMode();
     }
 
-    @FeatureFlag(DEBUG)
-    boolean CONSENT_MANAGER_DEBUG_MODE = false;
-
     default boolean getConsentManagerDebugMode() {
         return DebugFlags.getInstance().getConsentManagerDebugMode();
     }
-
-    @FeatureFlag(DEBUG)
-    boolean DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE = false;
 
     /** When enabled, the device is treated as OTA device. */
     default boolean getConsentManagerOTADebugMode() {
@@ -3339,7 +3391,6 @@ public interface Flags extends ModuleSharedFlags {
         return WEB_CONTEXT_CLIENT_ALLOW_LIST;
     }
 
-    boolean ENFORCE_ISOLATE_MAX_HEAP_SIZE = true;
     long ISOLATE_MAX_HEAP_SIZE_BYTES = 10 * 1024 * 1024L; // 10 MB
     long MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES = 16 * 1024; // 16 kB
     long MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES = 250 * 1024; // 250 kB
@@ -3360,14 +3411,6 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns true when the new trigger registration header size limitation are applied. */
     default boolean getMeasurementEnableUpdateTriggerHeaderLimit() {
         return MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT;
-    }
-
-    /**
-     * Returns true if we enforce to check that JavaScriptIsolate supports limiting the max heap
-     * size
-     */
-    default boolean getEnforceIsolateMaxHeapSize() {
-        return ENFORCE_ISOLATE_MAX_HEAP_SIZE;
     }
 
     /** Returns size in bytes we bound the heap memory for JavaScript isolate */
@@ -4770,6 +4813,14 @@ public interface Flags extends ModuleSharedFlags {
         return MDD_COBALT_REGISTRY_MANIFEST_FILE_URL;
     }
 
+    /** Default value of whether Cobalt operational logging feature is enabled. */
+    @FeatureFlag boolean COBALT_OPERATIONAL_LOGGING_ENABLED = false;
+
+    /** Returns whether Cobalt operational logging is enabled. */
+    default boolean getCobaltOperationalLoggingEnabled() {
+        return COBALT_OPERATIONAL_LOGGING_ENABLED;
+    }
+
     /**
      * A feature flag to enable DB schema change to version 8 in Topics API. Version 8 is to add
      * logged_topic column to ReturnedTopic table.
@@ -4806,16 +4857,6 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns the flag to control which allow list to use in getMeasurementApiStatus. */
     default boolean getMsmtEnableApiStatusAllowListCheck() {
         return MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK;
-    }
-
-    /**
-     * Flag to control whether redirect registration urls should be modified to prefix the path
-     * string with .well-known
-     */
-    boolean MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH = false;
-
-    default boolean getMeasurementEnableRedirectToWellKnownPath() {
-        return MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH;
     }
 
     @ConfigFlag
@@ -4891,6 +4932,15 @@ public interface Flags extends ModuleSharedFlags {
 
     default boolean getMeasurementEnableSourceDestinationLimitAlgorithmField() {
         return MEASUREMENT_ENABLE_DESTINATION_LIMIT_ALGORITHM_FIELD;
+    }
+
+    @FeatureFlag boolean MEASUREMENT_ENABLE_AGGREGATE_VALUE_FILTERS = false;
+
+    /*
+     * Returns whether filtering in Trigger's AGGREGATABLE_VALUES is allowed.
+     */
+    default boolean getMeasurementEnableAggregateValueFilters() {
+        return MEASUREMENT_ENABLE_AGGREGATE_VALUE_FILTERS;
     }
 
     /**
@@ -4994,29 +5044,6 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns whether the U18 supervised account is enabled. */
     default boolean isU18SupervisedAccountEnabled() {
         return IS_U18_SUPERVISED_ACCOUNT_ENABLED_DEFAULT;
-    }
-
-    /**
-     * Default value to determine whether {@link
-     * com.android.adservices.service.adid.AdIdCacheManager} is enabled to read AdId from and for
-     * AdIdProvider to update AdId to.
-     */
-    boolean DEFAULT_ADID_CACHE_ENABLED = false;
-
-    /**
-     * Returns if {@link com.android.adservices.service.adid.AdIdCacheManager} is enabled to read
-     * AdId from and for AdIdProvider to update AdId to.
-     *
-     * <ul>
-     *   <li>When enabled, AdIdCacheManager will read AdId from the cache and AdIdProvider will
-     *       update the cache if AdId changes.
-     *   <li>When disabled, AdIdCacheManager will call AdIdProvider to get the AdId.
-     * </ul>
-     *
-     * Returns if {@link com.android.adservices.service.adid.AdIdCacheManager} is enabled.
-     */
-    default boolean getAdIdCacheEnabled() {
-        return DEFAULT_ADID_CACHE_ENABLED;
     }
 
     long DEFAULT_AD_ID_FETCHER_TIMEOUT_MS = 50;
@@ -5678,8 +5705,16 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED;
     }
 
+    /** Default value for the enablement the R notification default consent fix. */
+    @FeatureFlag boolean DEFAULT_R_NOTIFICATION_DEFAULT_CONSENT_FIX_ENABLED = false;
+
+    /** Returns the default value for the enablement the R notification default consent fix */
+    default boolean getRNotificationDefaultConsentFixEnabled() {
+        return DEFAULT_R_NOTIFICATION_DEFAULT_CONSENT_FIX_ENABLED;
+    }
+
     /** Enrollment Manifest File URL, used to provide proto file for MDD download. */
-    String MDD_DEFAULT_ENROLLMENT_MANIFEST_FILE_URL = "";
+    @ConfigFlag String MDD_DEFAULT_ENROLLMENT_MANIFEST_FILE_URL = "";
 
     /**
      * @return default Enrollment Manifest File URL
@@ -5698,6 +5733,44 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_ENROLLMENT_PROTO_FILE_ENABLED;
     }
 
+    /** Protected app signals encoding job performance improvements flag. */
+    @FeatureFlag boolean PAS_ENCODING_JOB_IMPROVEMENTS_ENABLED = false;
+
+    /** Returns whether the PAS encoding job performance improvements are enabled. */
+    default boolean getPasEncodingJobImprovementsEnabled() {
+        return PAS_ENCODING_JOB_IMPROVEMENTS_ENABLED;
+    }
+
+    /**
+     * Default value to determine whether {@link
+     * com.android.adservices.service.adid.AdIdCacheManager} cache is timeout.
+     */
+    @ConfigFlag long DEFAULT_ADID_CACHE_TTL_MS = 0;
+
+    /**
+     * Returns {@link com.android.adservices.service.adid.AdIdCacheManager} ttl(time to live) time.
+     * It will be used to expire the cached adid.
+     *
+     * <ul>
+     *   <li>if value is 0, the cache has no ttl.
+     *   <li>otherwise, check the stored time and current time inverval, if larger than the ttl,
+     *       refetch the adid.
+     * </ul>
+     *
+     * Returns ttl of {@link com.android.adservices.service.adid.AdIdCacheManager}.
+     */
+    default long getAdIdCacheTtlMs() {
+        return DEFAULT_ADID_CACHE_TTL_MS;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // NOTE: Add new getters either above this comment, or closer to the relevant getters         //
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
     /** Dump some debug info for the flags */
     default void dump(PrintWriter writer, @Nullable String[] args) {}
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // NOTE: do NOT add new getters down here                                                     //
+    ////////////////////////////////////////////////////////////////////////////////////////////////
 }

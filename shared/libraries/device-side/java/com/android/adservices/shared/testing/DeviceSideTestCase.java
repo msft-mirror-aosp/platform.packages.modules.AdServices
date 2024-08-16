@@ -16,10 +16,19 @@
 package com.android.adservices.shared.testing;
 
 import android.content.Context;
+import android.platform.test.ravenwood.RavenwoodRule;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.shared.testing.Logger.LogLevel;
+
+import com.google.common.annotations.VisibleForTesting;
+
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Rule;
+import org.junit.Test;
 
 /**
  * Superclass for all device-side tests, it contains just the bare minimum features used by all
@@ -27,21 +36,72 @@ import org.junit.Rule;
  */
 public abstract class DeviceSideTestCase extends SidelessTestCase {
 
-    /** Reference to the context of package being instrumented (target context). */
-    protected static final Context sContext =
-            InstrumentationRegistry.getInstrumentation().getTargetContext();
+    private static final String TAG = DeviceSideTestCase.class.getSimpleName();
 
-    /** Package name of the app being instrumented. */
-    protected static final String sPackageName = sContext.getPackageName();
-
-    /** Reference to the context of package being instrumented (target context). */
-    protected final Context mContext = sContext;
-
-    /** Package name of the app being instrumented. */
-    protected final String mPackageName = sPackageName;
+    // TODO(b/335935200): figure out if there is a way to read it from AndroidTest.xml
+    @VisibleForTesting static final String RAVENWOOD_PACKAGE_NAME = "I.am.Groot.I.mean.Ravenwood";
 
     /** {@code logcat} tag. */
     protected final String mTag = getClass().getSimpleName();
+
+    // NOTE: references below CANNOT be set when declared as the call to InstrumentationRegistry
+    // would fail when running on host / under Ravenwood
+
+    /**
+     * @deprecated use {@link #mContext}
+     */
+    @Deprecated protected static Context sContext;
+
+    /**
+     * @deprecated use {@link #mTargetContext}
+     */
+    @Deprecated protected static Context sTargetContext;
+
+    /**
+     * Package name of the app being instrumented.
+     *
+     * @deprecated use {@link #mPackageName} instead.
+     */
+    @Deprecated protected static String sPackageName;
+
+    @Deprecated protected static String sTargetPackageName;
+
+    /**
+     * Reference to the context of this test's instrumentation package (as defined by {@link
+     * android.app.Instrumentation#getContext()})
+     */
+    protected Context mContext;
+
+    /**
+     * Reference to the context of app being instrumented (as defined by {@link
+     * android.app.Instrumentation#getTargetContext()})
+     */
+    protected Context mTargetContext;
+
+    /**
+     * Package name of this test's instrumentation package (as defined by {@link
+     * android.app.Instrumentation#getContext()})
+     */
+    protected String mPackageName;
+
+    /**
+     * Package name of the app being instrumented (as defined by {@link
+     * android.app.Instrumentation#getTargetContext()})
+     */
+    protected String mTargetPackageName;
+
+    // TODO(b/355286824) - Used only to set the static context, it doesn't skip tests. There is a
+    // RavenwoodClassRule which skips tests, but it doesn't set the Context, so need to use
+    // RavenwoodRule both here and as an instance rule.
+    @ClassRule
+    public static final RavenwoodRule sRavenwood =
+            new RavenwoodRule.Builder()
+                    .setProvideMainThread(true)
+                    .setPackageName(RAVENWOOD_PACKAGE_NAME)
+                    .build();
+
+    // TODO(b/342639109): set proper order
+    @Rule public final RavenwoodRule ravenwood = sRavenwood;
 
     // TODO(b/342639109): make sure it's the right order
     @Rule(order = 0)
@@ -51,4 +111,73 @@ public abstract class DeviceSideTestCase extends SidelessTestCase {
     @Rule
     public final ProcessLifeguardRule processLifeguard =
             new ProcessLifeguardRule(ProcessLifeguardRule.Mode.IGNORE);
+
+    @BeforeClass
+    public static void setStaticFixtures() {
+        if (sContext != null) {
+            // TODO(b/335935200): remove this check once the static initialization is gone
+            return;
+        }
+        try {
+            sContext = InstrumentationRegistry.getInstrumentation().getContext();
+            sPackageName = sContext.getPackageName();
+            sTargetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
+            sTargetPackageName = sTargetContext.getPackageName();
+        } catch (Exception e) {
+            DynamicLogger.getInstance()
+                    .log(
+                            LogLevel.ERROR,
+                            TAG,
+                            e,
+                            "setStaticFixtures() failed (usually happens under Ravenwood). Setting"
+                                    + " sContext=%s, sPackageName=%s, sTargetContext=%s,"
+                                    + " sTargetPackageName=%s",
+                            sContext,
+                            sPackageName,
+                            sTargetContext,
+                            sTargetPackageName);
+        }
+    }
+
+    @Before
+    public final void setInstanceFixtures() {
+        mContext = sContext;
+        mPackageName = sPackageName;
+        mTargetContext = sTargetContext;
+        mTargetPackageName = sTargetPackageName;
+    }
+
+    @Test
+    public final void testDeviceSideTestCaseFixtures() throws Exception {
+        assertTestClassHasNoFieldsFromSuperclass(
+                DeviceSideTestCase.class,
+                "mContext",
+                "mTargetContext",
+                "mPackageName",
+                "mTargetPackageName",
+                "mTag",
+                "ravenwood",
+                "sdkLevel",
+                "processLifeGuard",
+                "sContext",
+                "sTargetContext",
+                "sPackageName",
+                "sTargetPackageName",
+                "sRavenWood",
+                "RAVENWOOD_PACKAGE_NAME");
+        assertTestClassHasNoSuchField("CONTEXT", "should use existing sContext instead");
+        assertTestClassHasNoSuchField("context", "should use existing mContext instead");
+    }
+
+    // TODO(b/335935200): temporary hac^H^H^Hworkaround to set context references before subclasses
+    // when the class or instance is initialized.
+    // In the long term, these tests must be refactored to use them "inside" the test (otherwise
+    // it would not work when running on host-side / ravenwood), then they can be removed.
+    static {
+        setStaticFixtures();
+    }
+
+    protected DeviceSideTestCase() {
+        setInstanceFixtures();
+    }
 }

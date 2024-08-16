@@ -68,6 +68,7 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.MeasurementAttributionStats;
 import com.android.adservices.service.stats.MeasurementDelayedSourceRegistrationStats;
+import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
 
@@ -306,23 +307,19 @@ class AttributionJobHandler {
                                 AttributionStatus.AttributionResult.NOT_ATTRIBUTED);
                         attributionStatus.setFailureType(
                                 AttributionStatus.FailureType.RATE_LIMIT_EXCEEDED);
+                        generateNullAggregateReportForNonAttributedTrigger(
+                                measurementDao, trigger, attributionStatus);
                         ignoreTrigger(trigger, measurementDao);
                         return;
                     }
 
                     TriggeringStatus aggregateTriggeringStatus =
                             maybeGenerateAggregateReport(
-                                    source,
-                                    trigger,
-                                    measurementDao,
-                                    attributionStatus);
+                                    source, trigger, measurementDao, attributionStatus);
 
                     TriggeringStatus eventTriggeringStatus =
                             maybeGenerateEventReport(
-                                    source,
-                                    trigger,
-                                    measurementDao,
-                                    attributionStatus);
+                                    source, trigger, measurementDao, attributionStatus);
 
                     if (aggregateTriggeringStatus == TriggeringStatus.DROPPED) {
                         generateNullAggregateReportForNonAttributedTrigger(
@@ -592,15 +589,14 @@ class AttributionJobHandler {
 
     @Nullable
     private Long getSourceRegistrationTime(Source source, Trigger trigger) {
-        Long sourceRegistrationTime = roundDownToDay(source.getEventTime());
         if (mFlags.getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled()
                 && Trigger.SourceRegistrationTimeConfig.EXCLUDE.equals(
                         trigger.getAggregatableSourceRegistrationTimeConfig())) {
             // A null source registration time implies source registration time should be excluded
             // from the report.
-            sourceRegistrationTime = null;
+            return null;
         }
-        return sourceRegistrationTime;
+        return source.getEventTime();
     }
 
     private void generateNullAggregateReportForNonAttributedTrigger(
@@ -611,7 +607,6 @@ class AttributionJobHandler {
                     || !getTriggerHasAggregatableData(trigger)) {
                 return;
             }
-
             if (Trigger.SourceRegistrationTimeConfig.EXCLUDE.equals(
                     trigger.getAggregatableSourceRegistrationTimeConfig())) {
                 generateNullAggregateReportExcludingSourceRegistrationTime(
@@ -630,15 +625,19 @@ class AttributionJobHandler {
         }
     }
 
+    @VisibleForTesting
+    public double getRandom() {
+        return Math.random();
+    }
+
     private void generateNullAggregateReportExcludingSourceRegistrationTime(
             IMeasurementDao measurementDao, Trigger trigger, AttributionStatus attributionStatus)
             throws DatastoreException, JSONException {
         float nullRate =
                 trigger.getTriggerContextId() == null
                         ? mFlags.getMeasurementNullAggReportRateExclSourceRegistrationTime()
-                        : 1;
-
-        if (Math.random() < nullRate) {
+                        : 1.0F;
+        if (getRandom() < nullRate) {
                 AggregateReport nullReport =
                         // Although the WICG spec states the trigger time should be used here, we
                         // pass null because the source_registration_time is intended for exclusion
@@ -649,28 +648,39 @@ class AttributionJobHandler {
         }
     }
 
+    @VisibleForTesting
+    public List<Long> getNullAggregatableReportsDays(long maxSourceExpiry, float nullRate) {
+        List<Long> nullAggregatableReportsDays = new ArrayList<>();
+        long totalDays = TimeUnit.MILLISECONDS.toDays(maxSourceExpiry);
+        for (long dayCount = 0L; dayCount <= totalDays; dayCount += 1L) {
+            if (Math.random() < nullRate) {
+                nullAggregatableReportsDays.add(dayCount);
+            }
+        }
+        return nullAggregatableReportsDays;
+    }
+
     private void generateNullAggregateReportsIncludingSourceRegistrationTime(
             Trigger trigger,
             @Nullable AggregateReport aggregateReport,
             IMeasurementDao measurementDao,
             AttributionStatus attributionStatus)
             throws DatastoreException, JSONException {
-        long maxSourceExpiry = getRoundedMaxSourceExpiry();
+        List<Long> nullAggregatableReportsDays = getNullAggregatableReportsDays(
+                getRoundedMaxSourceExpiry(),
+                mFlags.getMeasurementNullAggReportRateInclSourceRegistrationTime());
         Long roundedAttributedSourceTime =
-                aggregateReport == null ? null : aggregateReport.getSourceRegistrationTime();
-        float nullRate = mFlags.getMeasurementNullAggReportRateInclSourceRegistrationTime();
-        for (long daysInMillis = 0L;
-                daysInMillis <= maxSourceExpiry;
-                daysInMillis += TimeUnit.DAYS.toMillis(1)) {
-            long fakeSourceTime = trigger.getTriggerTime() - daysInMillis;
+                aggregateReport == null
+                        ? null
+                        : roundDownToDay(aggregateReport.getSourceRegistrationTime());
+        for (Long dayCount : nullAggregatableReportsDays) {
+            long fakeSourceTime = trigger.getTriggerTime() - TimeUnit.DAYS.toMillis(dayCount);
             if (Objects.equals(roundDownToDay(fakeSourceTime), roundedAttributedSourceTime)) {
                 continue;
             }
-            if (Math.random() < nullRate) {
-                AggregateReport nullReport = getNullAggregateReport(trigger, fakeSourceTime);
-                measurementDao.insertAggregateReport(nullReport);
-                incrementNullAggregateReportCountBy(attributionStatus, 1);
-            }
+            AggregateReport nullReport = getNullAggregateReport(trigger, fakeSourceTime);
+            measurementDao.insertAggregateReport(nullReport);
+            incrementNullAggregateReportCountBy(attributionStatus, 1);
         }
     }
 
@@ -1644,7 +1654,7 @@ class AttributionJobHandler {
         } else {
             LoggerFactory.getMeasurementLogger()
                     .d(
-                            "isEnrollmentWithinPrivacyBounds:"
+                            "isReportingOriginWithinPrivacyBounds:"
                                     + " getPublisherAndDestinationTopPrivateDomains failed. %s %s",
                             source.getPublisher(), trigger.getAttributionDestination());
             return true;

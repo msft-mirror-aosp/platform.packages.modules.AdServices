@@ -38,16 +38,17 @@ import com.android.cobalt.data.EventVector;
 import com.android.cobalt.data.ReportKey;
 import com.android.cobalt.data.TestOnlyDao;
 import com.android.cobalt.domain.Project;
+import com.android.cobalt.logging.CobaltOperationLogger;
 import com.android.cobalt.observations.PrivacyGenerator;
 import com.android.cobalt.system.SystemData;
 import com.android.cobalt.testing.crypto.NoOpEncrypter;
+import com.android.cobalt.testing.logging.FakeCobaltOperationLogger;
 import com.android.cobalt.testing.observations.ConstantFakeSecureRandom;
 import com.android.cobalt.testing.observations.ObservationFactory;
 import com.android.cobalt.testing.system.FakeSystemClock;
 import com.android.cobalt.testing.upload.NoOpUploader;
 
 import com.google.cobalt.Envelope;
-import com.google.cobalt.IndexHistogram;
 import com.google.cobalt.MetricDefinition;
 import com.google.cobalt.MetricDefinition.Metadata;
 import com.google.cobalt.MetricDefinition.MetricDimension;
@@ -57,19 +58,18 @@ import com.google.cobalt.Observation;
 import com.google.cobalt.ObservationBatch;
 import com.google.cobalt.ObservationMetadata;
 import com.google.cobalt.ObservationToEncrypt;
-import com.google.cobalt.PrivateIndexObservation;
 import com.google.cobalt.ReleaseStage;
 import com.google.cobalt.ReportDefinition;
 import com.google.cobalt.ReportDefinition.PrivacyMechanism;
 import com.google.cobalt.ReportDefinition.ReportType;
 import com.google.cobalt.ReportDefinition.ShuffledDifferentialPrivacyConfig;
-import com.google.cobalt.ReportParticipationObservation;
 import com.google.cobalt.StringHistogramObservation;
 import com.google.cobalt.SystemProfile;
 import com.google.cobalt.SystemProfileField;
 import com.google.cobalt.SystemProfileSelectionPolicy;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -248,6 +248,7 @@ public class CobaltPeriodicJobImplTest {
     private NoOpUploader mUploader;
     private Encrypter mEncrypter;
     private CobaltPeriodicJob mPeriodicJob;
+    private CobaltOperationLogger mOperationLogger;
     private boolean mEnabled = true;
 
     private static ImmutableList<String> apiKeysOf(ImmutableList<Envelope> envelopes) {
@@ -307,6 +308,7 @@ public class CobaltPeriodicJobImplTest {
                         ByteString.copyFrom(API_KEY.getBytes(UTF_8)),
                         UPLOAD_DONE_DELAY,
                         mEnabled);
+        mOperationLogger = new FakeCobaltOperationLogger();
 
         mClock.set(LOG_TIME);
         mDataService.loggerEnabled(ENABLED_TIME).get();
@@ -324,7 +326,7 @@ public class CobaltPeriodicJobImplTest {
     }
 
     @Test
-    public void generateAggregatedObservations_dayWasAlreadyGenerated_nothingUploaded()
+    public void testGenerateAggregatedObservations_dayWasAlreadyGenerated_nothingUploaded()
             throws Exception {
         // Setup the classes.
         manualSetUp();
@@ -340,7 +342,7 @@ public class CobaltPeriodicJobImplTest {
     }
 
     @Test
-    public void generateAggregatedObservations_noLoggedData_nothingUploaded() throws Exception {
+    public void testGenerateAggregatedObservations_noLoggedData_nothingUploaded() throws Exception {
         // Setup the classes.
         manualSetUp();
 
@@ -362,7 +364,8 @@ public class CobaltPeriodicJobImplTest {
     }
 
     @Test
-    public void generateAggregatedObservations_oneLoggedReport_observationSent() throws Exception {
+    public void testGenerateAggregatedObservations_oneLoggedReport_observationSent()
+            throws Exception {
         // Setup the classes.
         manualSetUp();
 
@@ -408,7 +411,66 @@ public class CobaltPeriodicJobImplTest {
     }
 
     @Test
-    public void generateAggregatedObservations_threeLoggedReports_oneEnvelopeSent()
+    public void
+            testGenerateAggregatedObservations_oneLoggedReportTooManyEventCodes_observationSent()
+                    throws Exception {
+        // Setup the classes.
+        manualSetUp();
+
+        EventVector eventVector =
+                EventVector.create(
+                        ImmutableList.<Integer>builder()
+                                .addAll(EVENT_VECTOR_1.eventCodes())
+                                .add(13)
+                                .build());
+
+        // Mark a Count report as having occurred on the previous day.
+        mDataService
+                .aggregateCount(
+                        REPORT_1,
+                        LOG_TIME_DAY,
+                        SYSTEM_PROFILE_1,
+                        eventVector,
+                        /* eventVectorBufferMax= */ 0,
+                        /* count= */ EVENT_COUNT_1)
+                .get();
+
+        // Trigger the CobaltPeriodicJob for the current day.
+        mClock.set(UPLOAD_TIME);
+        mPeriodicJob.generateAggregatedObservations().get();
+
+        // Verify the observations were all removed and the last sent day index updated.
+        assertThat(mTestOnlyDao.queryLastSentDayIndex(REPORT_1))
+                .isEqualTo(Optional.of(LOG_TIME_DAY));
+        assertThat(mTestOnlyDao.queryLastSentDayIndex(REPORT_2))
+                .isEqualTo(Optional.of(LOG_TIME_DAY));
+        assertThat(mTestOnlyDao.queryLastSentDayIndex(REPORT_3))
+                .isEqualTo(Optional.of(LOG_TIME_DAY));
+        assertThat(mTestOnlyDao.queryLastSentDayIndex(REPORT_4))
+                .isEqualTo(Optional.of(LOG_TIME_DAY));
+        assertThat(mTestOnlyDao.getObservationBatches()).isEmpty();
+
+        Observation observation =
+                ObservationFactory.createIntegerObservation(
+                        eventVector, EVENT_COUNT_1, RANDOM_BYTES);
+
+        // Verify the envelope containing the generated observation was passed to Clearcut.
+        ImmutableList<Envelope> sentEnvelopes = mUploader.getSentEnvelopes();
+        assertThat(sentEnvelopes).hasSize(1);
+        assertThat(apiKeysOf(sentEnvelopes)).containsExactly(API_KEY);
+        assertThat(getObservationsIn(sentEnvelopes.get(0)))
+                .containsExactly(
+                        REPORT_1_METADATA,
+                        ImmutableList.of(
+                                ObservationToEncrypt.newBuilder()
+                                        .setObservation(observation)
+                                        .setContributionId(RANDOM_BYTES)
+                                        .build()));
+        assertThat(mUploader.getUploadDoneCount()).isEqualTo(1);
+    }
+
+    @Test
+    public void testGenerateAggregatedObservations_threeLoggedReports_oneEnvelopeSent()
             throws Exception {
         // Setup the classes.
         manualSetUp();
@@ -631,7 +693,7 @@ public class CobaltPeriodicJobImplTest {
     }
 
     @Test
-    public void generateAggregatedObservations_eventVectorBufferMax_olderEventVectorsDropped()
+    public void testGenerateAggregatedObservations_eventVectorBufferMax_olderEventVectorsDropped()
             throws Exception {
         // 7-day report with event_vector_buffer_max set to 1.
         MetricDefinition metric =
@@ -706,8 +768,9 @@ public class CobaltPeriodicJobImplTest {
     }
 
     @Test
-    public void generateAggregatedObservations_oneFabricatedObservation_usesCurrentSystemProfile()
-            throws Exception {
+    public void
+            testGenerateAggregatedObservations_oneFabricatedObservation_usesCurrentSystemProfile()
+                    throws Exception {
         // Registry containing a single privacy-enabled report that will trigger a fabricated and
         // report participation observations.
         MetricDefinition metric =
@@ -769,28 +832,21 @@ public class CobaltPeriodicJobImplTest {
                         ImmutableList.of(
                                 ObservationToEncrypt.newBuilder()
                                         .setObservation(
-                                                Observation.newBuilder()
-                                                        .setPrivateIndex(
-                                                                PrivateIndexObservation.newBuilder()
-                                                                        .setIndex(0))
-                                                        .setRandomId(RANDOM_BYTES)
-                                                        .build())
+                                                ObservationFactory.createPrivateIndexObservation(
+                                                        /* privateIndex= */ 0, RANDOM_BYTES))
                                         .setContributionId(RANDOM_BYTES)
                                         .build(),
                                 ObservationToEncrypt.newBuilder()
                                         .setObservation(
-                                                Observation.newBuilder()
-                                                        .setReportParticipation(
-                                                                ReportParticipationObservation
-                                                                        .getDefaultInstance())
-                                                        .setRandomId(RANDOM_BYTES)
-                                                        .build())
+                                                ObservationFactory
+                                                        .createReportParticipationObservation(
+                                                                RANDOM_BYTES))
                                         .build()));
         assertThat(mUploader.getUploadDoneCount()).isEqualTo(1);
     }
 
     @Test
-    public void generateAggregatedObservations_loggerDisabled_loggedDataNotUploaded()
+    public void testGenerateAggregatedObservations_loggerDisabled_loggedDataNotUploaded()
             throws Exception {
         mEnabled = false;
 
@@ -838,7 +894,7 @@ public class CobaltPeriodicJobImplTest {
     }
 
     @Test
-    public void generateAggregatedObservations_afterMaxAggregationWindowPasses_oldDataRemoved()
+    public void testGenerateAggregatedObservations_afterMaxAggregationWindowPasses_oldDataRemoved()
             throws Exception {
         // Setup the classes.
         manualSetUp();
@@ -986,7 +1042,8 @@ public class CobaltPeriodicJobImplTest {
     }
 
     @Test
-    public void generateAggregatedObservations_stringCounts_observationsSent() throws Exception {
+    public void testGenerateAggregatedObservations_stringCounts_observationsSent()
+            throws Exception {
         // Create a registry with a STRING metric with 2 STRING_COUNTS reports: one with no system
         // profile fields and the other with the app version.
         ReportDefinition simpleReport =
@@ -1044,7 +1101,8 @@ public class CobaltPeriodicJobImplTest {
                             EVENT_VECTOR_1,
                             /* eventVectorBufferMax= */ 0,
                             /* stringBufferMax= */ 0,
-                            "STRING_A")
+                            "STRING_A",
+                            mOperationLogger)
                     .get();
             mDataService
                     .aggregateString(
@@ -1054,7 +1112,8 @@ public class CobaltPeriodicJobImplTest {
                             EVENT_VECTOR_1,
                             /* eventVectorBufferMax= */ 0,
                             /* stringBufferMax= */ 0,
-                            "STRING_A")
+                            "STRING_A",
+                            mOperationLogger)
                     .get();
         }
 
@@ -1068,7 +1127,8 @@ public class CobaltPeriodicJobImplTest {
                             EVENT_VECTOR_2,
                             /* eventVectorBufferMax= */ 0,
                             /* stringBufferMax= */ 0,
-                            "STRING_A")
+                            "STRING_A",
+                            mOperationLogger)
                     .get();
             mDataService
                     .aggregateString(
@@ -1078,7 +1138,8 @@ public class CobaltPeriodicJobImplTest {
                             EVENT_VECTOR_2,
                             /* eventVectorBufferMax= */ 0,
                             /* stringBufferMax= */ 0,
-                            "STRING_A")
+                            "STRING_A",
+                            mOperationLogger)
                     .get();
         }
 
@@ -1092,7 +1153,8 @@ public class CobaltPeriodicJobImplTest {
                             EVENT_VECTOR_1,
                             /* eventVectorBufferMax= */ 0,
                             /* stringBufferMax= */ 0,
-                            "STRING_B")
+                            "STRING_B",
+                            mOperationLogger)
                     .get();
             mDataService
                     .aggregateString(
@@ -1102,7 +1164,8 @@ public class CobaltPeriodicJobImplTest {
                             EVENT_VECTOR_1,
                             /* eventVectorBufferMax= */ 0,
                             /* stringBufferMax= */ 0,
-                            "STRING_B")
+                            "STRING_B",
+                            mOperationLogger)
                     .get();
 
             mDataService
@@ -1113,7 +1176,8 @@ public class CobaltPeriodicJobImplTest {
                             EVENT_VECTOR_1,
                             /* eventVectorBufferMax= */ 0,
                             /* stringBufferMax= */ 0,
-                            "STRING_B")
+                            "STRING_B",
+                            mOperationLogger)
                     .get();
             mDataService
                     .aggregateString(
@@ -1123,7 +1187,8 @@ public class CobaltPeriodicJobImplTest {
                             EVENT_VECTOR_1,
                             /* eventVectorBufferMax= */ 0,
                             /* stringBufferMax= */ 0,
-                            "STRING_B")
+                            "STRING_B",
+                            mOperationLogger)
                     .get();
         }
 
@@ -1153,35 +1218,30 @@ public class CobaltPeriodicJobImplTest {
                         .setDayIndex(LOG_TIME_DAY)
                         .build();
 
-        ByteString stringAHash =
-                ByteString.copyFrom(
-                        Hashing.farmHashFingerprint64().hashBytes("STRING_A".getBytes()).asBytes());
-        ByteString stringBHash =
-                ByteString.copyFrom(
-                        Hashing.farmHashFingerprint64().hashBytes("STRING_B".getBytes()).asBytes());
+        HashCode stringAHash = Hashing.farmHashFingerprint64().hashBytes("STRING_A".getBytes());
+        HashCode stringBHash = Hashing.farmHashFingerprint64().hashBytes("STRING_B".getBytes());
 
         // Both reports send the same histograms. The only difference is how system profiles are
         // reported.
         StringHistogramObservation stringHistogram =
-                StringHistogramObservation.newBuilder()
-                        .addStringHashesFf64(stringAHash)
-                        .addStringHashesFf64(stringBHash)
-                        .addStringHistograms(
-                                IndexHistogram.newBuilder()
-                                        .addAllEventCodes(EVENT_VECTOR_1.eventCodes())
-                                        // "STRING_A" was logged once.
-                                        .addBucketIndices(0)
-                                        .addBucketCounts(1)
-                                        // "STRING_B" was logged twice.
-                                        .addBucketIndices(1)
-                                        .addBucketCounts(2))
-                        .addStringHistograms(
-                                IndexHistogram.newBuilder()
-                                        .addAllEventCodes(EVENT_VECTOR_2.eventCodes())
-                                        // "STRING_A" was logged once.
-                                        .addBucketIndices(0)
-                                        .addBucketCounts(1))
-                        .build();
+                StringHistogramObservation.getDefaultInstance();
+        stringHistogram =
+                ObservationFactory.copyWithStringHashesFf64(
+                        stringHistogram, stringAHash, stringBHash);
+        stringHistogram =
+                ObservationFactory.copyWithStringHistograms(
+                        stringHistogram,
+                        // "STRING_A" was logged once and "STRING_B" was logged twice for
+                        // EVENT_VECTOR_1.
+                        ObservationFactory.createIndexHistogram(
+                                EVENT_VECTOR_1,
+                                /* index1= */ 0,
+                                /* count1= */ 1L,
+                                /* index2= */ 1,
+                                /* count2= */ 2L),
+                        // "STRING_A" was logged once for EVENT_VECTOR_2.
+                        ObservationFactory.createIndexHistogram(
+                                EVENT_VECTOR_2, /* index= */ 0, /* count= */ 1L));
 
         assertThat(getObservationsIn(sentEnvelopes.get(0)))
                 .containsExactly(
@@ -1192,9 +1252,8 @@ public class CobaltPeriodicJobImplTest {
                         ImmutableList.of(
                                 ObservationToEncrypt.newBuilder()
                                         .setObservation(
-                                                Observation.newBuilder()
-                                                        .setStringHistogram(stringHistogram)
-                                                        .setRandomId(RANDOM_BYTES))
+                                                ObservationFactory.createStringHistogramObservation(
+                                                        stringHistogram, RANDOM_BYTES))
                                         .setContributionId(RANDOM_BYTES)
                                         .build()),
                         baseMetadata.toBuilder()
@@ -1205,15 +1264,14 @@ public class CobaltPeriodicJobImplTest {
                         ImmutableList.of(
                                 ObservationToEncrypt.newBuilder()
                                         .setObservation(
-                                                Observation.newBuilder()
-                                                        .setStringHistogram(stringHistogram)
-                                                        .setRandomId(RANDOM_BYTES))
+                                                ObservationFactory.createStringHistogramObservation(
+                                                        stringHistogram, RANDOM_BYTES))
                                         .setContributionId(RANDOM_BYTES)
                                         .build()));
     }
 
     @Test
-    public void generateAggregatedObservations_multipleMetricTypes_observationsSent()
+    public void testGenerateAggregatedObservations_multipleMetricTypes_observationsSent()
             throws Exception {
         // Create a registry with an OCCURRENCE metric and a STRING metric. The OCCURRENCE metric
         // has a privacy enabled FLEETWIDE_OCCCURRENCE_COUNTS report and the string metric has a
@@ -1310,7 +1368,8 @@ public class CobaltPeriodicJobImplTest {
                             EVENT_VECTOR_2,
                             /* eventVectorBufferMax= */ 0,
                             /* stringBufferMax= */ 0,
-                            "STRING_A")
+                            "STRING_A",
+                            mOperationLogger)
                     .get();
         }
 
@@ -1339,22 +1398,19 @@ public class CobaltPeriodicJobImplTest {
                         .setDayIndex(LOG_TIME_DAY)
                         .build();
 
-        ByteString stringAHash =
-                ByteString.copyFrom(
-                        Hashing.farmHashFingerprint64().hashBytes("STRING_A".getBytes()).asBytes());
+        HashCode stringAHash = Hashing.farmHashFingerprint64().hashBytes("STRING_A".getBytes());
 
         // Both reports send the same histograms. The only difference is how system profiles are
         // reported.
         StringHistogramObservation stringHistogram =
-                StringHistogramObservation.newBuilder()
-                        .addStringHashesFf64(stringAHash)
-                        .addStringHistograms(
-                                IndexHistogram.newBuilder()
-                                        .addAllEventCodes(EVENT_VECTOR_2.eventCodes())
-                                        // "STRING_A" was logged once.
-                                        .addBucketIndices(0)
-                                        .addBucketCounts(1))
-                        .build();
+                StringHistogramObservation.getDefaultInstance();
+        stringHistogram = ObservationFactory.copyWithStringHashesFf64(stringHistogram, stringAHash);
+        stringHistogram =
+                ObservationFactory.copyWithStringHistograms(
+                        stringHistogram,
+                        // "STRING_A" was logged once for EVENT_VECTOR_2.
+                        ObservationFactory.createIndexHistogram(
+                                EVENT_VECTOR_2, /* index= */ 0, /* count= */ 1L));
 
         assertThat(getObservationsIn(sentEnvelopes.get(0)))
                 .containsExactly(
@@ -1368,30 +1424,22 @@ public class CobaltPeriodicJobImplTest {
                                 // Real observation.
                                 ObservationToEncrypt.newBuilder()
                                         .setObservation(
-                                                Observation.newBuilder()
-                                                        .setPrivateIndex(
-                                                                PrivateIndexObservation.newBuilder()
-                                                                        .setIndex(10))
-                                                        .setRandomId(RANDOM_BYTES))
+                                                ObservationFactory.createPrivateIndexObservation(
+                                                        /* privateIndex= */ 10, RANDOM_BYTES))
                                         .setContributionId(RANDOM_BYTES)
                                         .build(),
                                 // Fabricated observation.
                                 ObservationToEncrypt.newBuilder()
                                         .setObservation(
-                                                Observation.newBuilder()
-                                                        .setPrivateIndex(
-                                                                PrivateIndexObservation.newBuilder()
-                                                                        .setIndex(9))
-                                                        .setRandomId(RANDOM_BYTES))
+                                                ObservationFactory.createPrivateIndexObservation(
+                                                        /* privateIndex= */ 9, RANDOM_BYTES))
                                         .build(),
                                 // Report participation observation.
                                 ObservationToEncrypt.newBuilder()
                                         .setObservation(
-                                                Observation.newBuilder()
-                                                        .setReportParticipation(
-                                                                ReportParticipationObservation
-                                                                        .getDefaultInstance())
-                                                        .setRandomId(RANDOM_BYTES))
+                                                ObservationFactory
+                                                        .createReportParticipationObservation(
+                                                                RANDOM_BYTES))
                                         .build()),
                         baseMetadata.toBuilder()
                                 .setMetricId(stringMetric.getId())
@@ -1401,9 +1449,8 @@ public class CobaltPeriodicJobImplTest {
                         ImmutableList.of(
                                 ObservationToEncrypt.newBuilder()
                                         .setObservation(
-                                                Observation.newBuilder()
-                                                        .setStringHistogram(stringHistogram)
-                                                        .setRandomId(RANDOM_BYTES))
+                                                ObservationFactory.createStringHistogramObservation(
+                                                        stringHistogram, RANDOM_BYTES))
                                         .setContributionId(RANDOM_BYTES)
                                         .build()));
     }

@@ -62,6 +62,10 @@ public class DebugReportApi {
         String SOURCE_UNKNOWN_ERROR = "source-unknown-error";
         String SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR =
                 "source-flexible-event-report-value-error";
+        String SOURCE_MAX_EVENT_STATES_LIMIT = "source-max-event-states-limit";
+        String SOURCE_ATTRIBUTION_SCOPE_INFO_GAIN_LIMIT =
+                "source-attribution-scope-info-gain-limit";
+
         String TRIGGER_AGGREGATE_DEDUPLICATED = "trigger-aggregate-deduplicated";
         String TRIGGER_AGGREGATE_INSUFFICIENT_BUDGET = "trigger-aggregate-insufficient-budget";
         String TRIGGER_AGGREGATE_NO_CONTRIBUTIONS = "trigger-aggregate-no-contributions";
@@ -275,6 +279,43 @@ public class DebugReportApi {
                 dao);
     }
 
+    /** Schedules Source Attribution Scope Debug Report */
+    public void scheduleAttributionScopeDebugReport(
+            Source source, Source.AttributionScopeValidationResult result, IMeasurementDao dao) {
+        String type = null;
+        switch (result) {
+            case VALID -> {
+                // No-op.
+            }
+            case INVALID_MAX_EVENT_STATES_LIMIT -> {
+                type = Type.SOURCE_MAX_EVENT_STATES_LIMIT;
+            }
+            case INVALID_INFORMATION_GAIN_LIMIT -> {
+                type = Type.SOURCE_ATTRIBUTION_SCOPE_INFO_GAIN_LIMIT;
+            }
+        }
+        if (type == null) {
+            return;
+        }
+        if (isSourceDebugFlagDisabled(type)) {
+            return;
+        }
+        if (isAdTechNotOptIn(source.isDebugReporting(), type)) {
+            return;
+        }
+        if (!isSourcePermissionGranted(source)) {
+            LoggerFactory.getMeasurementLogger().d("Skipping debug report %s", type);
+            return;
+        }
+        scheduleReport(
+                type,
+                generateSourceDebugReportBody(source, null),
+                source.getEnrollmentId(),
+                source.getRegistrationOrigin(),
+                source.getRegistrant(),
+                dao);
+    }
+
     /** Schedules the Source Unknown Error Debug Report */
     public void scheduleSourceUnknownErrorDebugReport(Source source, IMeasurementDao dao) {
         if (isSourceDebugFlagDisabled(Type.SOURCE_UNKNOWN_ERROR)) {
@@ -419,24 +460,23 @@ public class DebugReportApi {
 
     /** Schedule header parsing and validation errors verbose debug reports. */
     public void scheduleHeaderErrorReport(
-            Uri registrationUri,
+            Uri topOrigin,
+            Uri registrationOrigin,
             Uri registrant,
             String headerName,
             String enrollmentId,
-            String errorMessage,
-            String originalHeader,
+            @Nullable String originalHeader,
             IMeasurementDao dao) {
         try {
             JSONObject body = new JSONObject();
-            body.put(Body.CONTEXT_SITE, registrationUri);
+            body.put(Body.CONTEXT_SITE, topOrigin);
             body.put(Body.HEADER, headerName);
-            body.put(Body.VALUE, originalHeader);
-            body.put(Body.ERROR, errorMessage);
+            body.put(Body.VALUE, originalHeader == null ? "null" : originalHeader);
             scheduleReport(
                     Type.HEADER_PARSING_ERROR,
                     body,
                     enrollmentId,
-                    registrationUri,
+                    registrationOrigin,
                     registrant,
                     dao);
         } catch (JSONException e) {

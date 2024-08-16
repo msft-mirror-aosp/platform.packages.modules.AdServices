@@ -16,9 +16,6 @@
 
 package com.android.adservices.download;
 
-import static android.net.NetworkCapabilities.NET_CAPABILITY_VALIDATED;
-import static android.net.NetworkCapabilities.TRANSPORT_WIFI;
-
 import static com.android.adservices.download.EnrollmentDataDownloadManager.DownloadStatus.SUCCESS;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
@@ -31,14 +28,12 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 import android.content.Context;
 import android.database.DatabaseUtils;
-import android.net.ConnectivityManager;
-import android.net.NetworkCapabilities;
 import android.os.SystemClock;
 
 import androidx.annotation.NonNull;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.encryptionkey.EncryptionKeyTables;
 import com.android.adservices.data.enrollment.EnrollmentDao;
@@ -54,6 +49,7 @@ import com.android.adservices.service.topics.classifier.CommonClassifierHelper;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.adservices.shared.testing.network.NetworkConnectionHelper;
 import com.android.adservices.shared.util.Clock;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -174,6 +170,7 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     public static final String ENROLLMENT_PROTO_FILE_GROUP_NAME = "adtech_enrollment_proto_data";
     public static final String UI_OTA_STRINGS_FILE_GROUP_NAME = "ui-ota-strings";
     public static final String COBALT_REGISTRY_FILE_GROUP_NAME = "rubidium-registry";
+
     private SynchronousFileStorage mFileStorage;
     private FileDownloader mFileDownloader;
     private SharedDbHelper mDbHelper;
@@ -188,7 +185,9 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     public void setUp() throws Exception {
         // The MDD integration tests require wifi connection. If the running device is not
         // connected to the Wifi, tests should be skipped.
-        Assume.assumeTrue("Device must have wifi connection", isWifiConnected());
+        Assume.assumeTrue(
+                "Device must have wifi connection",
+                NetworkConnectionHelper.isWifiConnected(mContext));
 
         mockMddFlags();
 
@@ -1036,19 +1035,6 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
         doReturn(Flags.ENCRYPTION_KEY_NETWORK_READ_TIMEOUT_MS)
                 .when(mMockFlags)
                 .getEncryptionKeyNetworkReadTimeoutMs();
-    }
-
-    /** Checks if the device is currently connected to an active WIFI network. */
-    // TODO(b/353723360): Move to a helper class under shared/ folder.
-    private boolean isWifiConnected() {
-        ConnectivityManager connectivityManager =
-                mContext.getSystemService(ConnectivityManager.class);
-        NetworkCapabilities networkCapabilities =
-                connectivityManager.getNetworkCapabilities(connectivityManager.getActiveNetwork());
-
-        return networkCapabilities != null
-                && networkCapabilities.hasTransport(TRANSPORT_WIFI)
-                && networkCapabilities.hasCapability(NET_CAPABILITY_VALIDATED);
     }
 
     private static void overridingMddLoggingLevel(String loggingLevel) {

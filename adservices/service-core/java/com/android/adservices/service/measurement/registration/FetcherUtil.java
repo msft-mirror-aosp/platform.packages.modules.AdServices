@@ -22,11 +22,13 @@ import android.annotation.Nullable;
 import android.net.Uri;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.measurement.FilterMap;
 import com.android.adservices.service.measurement.Source;
+import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.MeasurementRegistrationResponseStats;
@@ -238,8 +240,9 @@ public class FetcherUtil {
             Flags flags,
             boolean canIncludeLookbackWindow,
             boolean shouldCheckFilterSize) throws JSONException {
-        if (filterSet.length()
-                > FlagsFactory.getFlags().getMeasurementMaxFilterMapsPerFilterSet()) {
+        if (shouldCheckFilterSize
+                && filterSet.length()
+                        > FlagsFactory.getFlags().getMeasurementMaxFilterMapsPerFilterSet()) {
             return false;
         }
         for (int i = 0; i < filterSet.length(); i++) {
@@ -308,11 +311,15 @@ public class FetcherUtil {
             Flags flags,
             boolean canIncludeLookbackWindow,
             boolean shouldCheckFilterSize) throws JSONException {
-        if (filtersObj == null
-                || filtersObj.length()
+        if (filtersObj == null) {
+            return false;
+        }
+        if (shouldCheckFilterSize
+                && filtersObj.length()
                         > FlagsFactory.getFlags().getMeasurementMaxAttributionFilters()) {
             return false;
         }
+
         Iterator<String> keys = filtersObj.keys();
         while (keys.hasNext()) {
             String key = keys.next();
@@ -548,5 +555,31 @@ public class FetcherUtil {
         int FAILURE_TYPE_HEADER_SIZE_LIMIT_EXCEEDED = 7;
         int FAILURE_TYPE_SERVER_UNAVAILABLE = 8;
         int FAILURE_TYPE_INVALID_URL = 9;
+    }
+
+    /** Schedules an header error verbose debug report. */
+    public static void sendHeaderErrorDebugReport(
+            boolean isEnabled,
+            DebugReportApi debugReportApi,
+            DatastoreManager datastoreManager,
+            Uri topOrigin,
+            Uri registrationOrigin,
+            Uri registrant,
+            String headerName,
+            String enrollmentId,
+            @Nullable String originalHeaderString) {
+        if (isEnabled) {
+            datastoreManager.runInTransaction(
+                    (dao) -> {
+                        debugReportApi.scheduleHeaderErrorReport(
+                                topOrigin,
+                                registrationOrigin,
+                                registrant,
+                                headerName,
+                                enrollmentId,
+                                originalHeaderString,
+                                dao);
+                    });
+        }
     }
 }

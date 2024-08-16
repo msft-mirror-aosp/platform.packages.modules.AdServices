@@ -22,7 +22,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_SOURCE_O
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.PPAPI_AND_SYSTEM_SERVER;
-import static com.android.adservices.service.signals.ProtectedSignalsArgumentUtil.validateAndSerializeBase64;
+import static com.android.adservices.service.signals.ProtectedSignalsArgumentImpl.validateAndSerializeBase64;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -37,8 +37,6 @@ import android.net.Uri;
 
 import com.android.adservices.common.AdServicesShellCommandHelper;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.WebViewSupportUtil;
-import com.android.adservices.shared.testing.SupportedByConditionRule;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
@@ -72,10 +70,6 @@ public final class GenerateInputForEncodingShellCommandTest extends ForegroundDe
     public MockWebServerRule mMockWebServerRule =
             MockWebServerRule.forHttps(
                     sContext, "adservices_untrusted_test_server.p12", "adservices_test");
-
-    @Rule(order = 7)
-    public final SupportedByConditionRule webViewSupportsJSSandbox =
-            WebViewSupportUtil.createJSSandboxAvailableRule(sContext);
 
     @Before
     public void setUp() throws Exception {
