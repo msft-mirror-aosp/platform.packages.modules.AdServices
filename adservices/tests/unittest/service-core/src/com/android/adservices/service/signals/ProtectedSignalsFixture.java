@@ -42,12 +42,12 @@ public class ProtectedSignalsFixture {
 
         Map<String, List<ProtectedSignal>> protectedSignalsMap = new HashMap<>();
         for (String seed : seeds) {
-            String base64EncodedKey = generateKey(seed);
+            String base64EncodedKey = generateBase64Seed(seed);
             protectedSignalsMap.putIfAbsent(base64EncodedKey, new ArrayList<>());
             for (int i = 1; i <= count; i++) {
                 protectedSignalsMap
                         .get(base64EncodedKey)
-                        .add(generateProtectedSignal(seed, new byte[] {(byte) i}));
+                        .add(generateBase64ProtectedSignal(seed, new byte[] {(byte) i}));
             }
         }
 
@@ -59,7 +59,20 @@ public class ProtectedSignalsFixture {
      *     seed}, the creation time is the fixed {@code NOW} value and the signal value is the given
      *     value.
      */
-    public static ProtectedSignal generateProtectedSignal(String seed, byte[] value) {
+    public static ProtectedSignal generateHexProtectedSignal(String seed, byte[] value) {
+        return ProtectedSignal.builder()
+                .setCreationTime(NOW)
+                .setHexEncodedValue(getHexString(value))
+                .setPackageName(generatePackageName(seed))
+                .build();
+    }
+
+    /**
+     * @return a Protected signal instance where the package name starts with the given {@code
+     *     seed}, the creation time is the fixed {@code NOW} value and the signal value is the given
+     *     value.
+     */
+    public static ProtectedSignal generateBase64ProtectedSignal(String seed, byte[] value) {
         return ProtectedSignal.builder()
                 .setCreationTime(NOW)
                 .setBase64EncodedValue(Base64.getEncoder().encodeToString(value))
@@ -67,17 +80,33 @@ public class ProtectedSignalsFixture {
                 .build();
     }
 
-    private static String generateKey(String seed) {
+    private static String generateBase64Seed(String seed) {
         String key = "TestKey" + seed;
         return Base64.getEncoder().encodeToString(key.getBytes());
     }
 
-    private static String generateValue(String seed) {
-        String value = "TestValue" + seed;
-        return Base64.getEncoder().encodeToString(value.getBytes());
-    }
-
     private static String generatePackageName(String seed) {
         return PACKAGE_NAME_PREFIX + seed;
+    }
+
+    static String getHexString(String str) {
+        return getHexString(str.getBytes());
+    }
+
+    static String getHexString(byte[] binary) {
+        StringBuilder result = new StringBuilder(binary.length * 2);
+
+        for (byte b : binary) {
+            String hex = Integer.toHexString(b & 0b11111111);
+
+            // Add leading zero if needed
+            if (hex.length() != 2) {
+                hex = "0" + hex;
+            }
+
+            result.append(hex);
+        }
+
+        return result.toString().toUpperCase();
     }
 }

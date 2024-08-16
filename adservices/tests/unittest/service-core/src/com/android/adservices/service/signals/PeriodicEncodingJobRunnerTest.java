@@ -88,7 +88,7 @@ public class PeriodicEncodingJobRunnerTest {
                     "v1",
                     ImmutableList.of(
                             ProtectedSignal.builder()
-                                    .setBase64EncodedValue("valid value")
+                                    .setHexEncodedValue("valid value")
                                     .setCreationTime(Instant.now())
                                     .setPackageName("package name")
                                     .build()));
@@ -99,6 +99,7 @@ public class PeriodicEncodingJobRunnerTest {
     @Mock private EncoderLogicHandler mMockEncoderLogicHandler;
     @Mock private EncodedPayloadDao mMockEncodedPayloadDao;
     @Mock private ProtectedSignalsDao mMockProtectedSignalsDao;
+    @Mock private SignalsProviderAndArgumentFactory mMockSignalsProviderAndArgumentFactory;
     @Mock private SignalsProviderImpl mMockSignalStorageManager;
     @Mock private SignalsScriptEngine mMockScriptEngine;
     @Mock private EncodingExecutionLogHelper mMockEncodingExecutionLogger;
@@ -122,9 +123,13 @@ public class PeriodicEncodingJobRunnerTest {
 
     @Before
     public void setUp() {
+        when(mMockSignalsProviderAndArgumentFactory.getSignalsProvider())
+                .thenReturn(mMockSignalStorageManager);
+        when(mMockSignalsProviderAndArgumentFactory.getProtectedSignalsArgument())
+                .thenReturn(mMockProtectedSignalsArgument);
         mRunner =
                 new PeriodicEncodingJobRunner(
-                        mMockSignalStorageManager,
+                        mMockSignalsProviderAndArgumentFactory,
                         mMockProtectedSignalsDao,
                         mMockScriptEngine,
                         ENCODER_LOGIC_MAXIMUM_FAILURE,
@@ -132,8 +137,7 @@ public class PeriodicEncodingJobRunnerTest {
                         mMockEncoderLogicHandler,
                         mMockEncodedPayloadDao,
                         mBackgroundExecutor,
-                        mLightWeightExecutor,
-                        mMockProtectedSignalsArgument);
+                        mLightWeightExecutor);
     }
 
     @Test
@@ -156,7 +160,7 @@ public class PeriodicEncodingJobRunnerTest {
         int reallySmallMaxSizeLimit = 5;
         mRunner =
                 new PeriodicEncodingJobRunner(
-                        mMockSignalStorageManager,
+                        mMockSignalsProviderAndArgumentFactory,
                         mMockProtectedSignalsDao,
                         mMockScriptEngine,
                         ENCODER_LOGIC_MAXIMUM_FAILURE,
@@ -164,8 +168,7 @@ public class PeriodicEncodingJobRunnerTest {
                         mMockEncoderLogicHandler,
                         mMockEncodedPayloadDao,
                         mBackgroundExecutor,
-                        mLightWeightExecutor,
-                        mMockProtectedSignalsArgument);
+                        mLightWeightExecutor);
         int version = 1;
         assertThrows(
                 IllegalArgumentException.class,
@@ -259,6 +262,7 @@ public class PeriodicEncodingJobRunnerTest {
     @Test
     public void testEncodingPerBuyerFailedFuture() {
         String encoderLogic = "function fakeEncodeJs() {}";
+
         when(mMockEncoderLogicHandler.getEncoder(BUYER)).thenReturn(encoderLogic);
         when(mMockSignalStorageManager.getSignals(BUYER)).thenReturn(FAKE_SIGNALS);
 
@@ -303,8 +307,8 @@ public class PeriodicEncodingJobRunnerTest {
     @Test
     public void testEncodingPerBuyerFailedTimeout() throws InterruptedException {
         String encoderLogic = "function fakeEncodeJs() {}";
-        when(mMockEncoderLogicHandler.getEncoder(BUYER)).thenReturn(encoderLogic);
 
+        when(mMockEncoderLogicHandler.getEncoder(BUYER)).thenReturn(encoderLogic);
         when(mMockSignalStorageManager.getSignals(BUYER)).thenReturn(FAKE_SIGNALS);
 
         CountDownLatch stallEncodingLatch = new CountDownLatch(1);
