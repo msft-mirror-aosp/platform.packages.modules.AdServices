@@ -18,6 +18,9 @@ package com.android.adservices.shared.storage;
 
 import static com.android.adservices.shared.util.LogUtil.DEBUG;
 import static com.android.adservices.shared.util.LogUtil.VERBOSE;
+import static com.android.adservices.shared.util.Preconditions.checkState;
+import static com.android.internal.util.Preconditions.checkArgumentNonnegative;
+import static com.android.internal.util.Preconditions.checkStringNotEmpty;
 
 import android.annotation.Nullable;
 import android.os.PersistableBundle;
@@ -26,7 +29,6 @@ import android.util.AtomicFile;
 import com.android.adservices.shared.util.LogUtil;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
-import com.android.internal.util.Preconditions;
 import com.android.modules.utils.build.SdkLevel;
 
 import java.io.ByteArrayInputStream;
@@ -70,7 +72,7 @@ public class AtomicFileDatastore {
     private final Lock mWriteLock = mReadWriteLock.writeLock();
 
     private final AtomicFile mAtomicFile;
-    private final Map<String, Boolean> mLocalMap = new HashMap<>();
+    private final Map<String, Object> mLocalMap = new HashMap<>();
 
     private final String mVersionKey;
     private int mPreviousStoredVersion;
@@ -83,8 +85,7 @@ public class AtomicFileDatastore {
     public AtomicFileDatastore(File file, int datastoreVersion, String versionKey) {
         mAtomicFile = new AtomicFile(Objects.requireNonNull(file));
         mDatastoreVersion =
-                Preconditions.checkArgumentNonnegative(
-                        datastoreVersion, "Version must not be negative");
+                checkArgumentNonnegative(datastoreVersion, "Version must not be negative");
 
         mVersionKey = Objects.requireNonNull(versionKey);
     }
@@ -111,11 +112,11 @@ public class AtomicFileDatastore {
     // Writes the class member map to a PersistableBundle which is then written to file.
     @GuardedBy("mWriteLock")
     private void writeToFile() throws IOException {
-        final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        final PersistableBundle bundleToWrite = new PersistableBundle();
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        PersistableBundle bundleToWrite = new PersistableBundle();
 
-        for (Map.Entry<String, Boolean> entry : mLocalMap.entrySet()) {
-            bundleToWrite.putBoolean(entry.getKey(), entry.getValue());
+        for (Map.Entry<String, Object> entry : mLocalMap.entrySet()) {
+            addToBundle(bundleToWrite, entry.getKey(), entry.getValue());
         }
 
         // Version unused for now. May be needed in the future for handling migrations.
@@ -149,7 +150,7 @@ public class AtomicFileDatastore {
             bundleRead.remove(mVersionKey);
             mLocalMap.clear();
             for (String key : bundleRead.keySet()) {
-                mLocalMap.put(key, bundleRead.getBoolean(key));
+                mLocalMap.put(key, bundleRead.get(key));
             }
         } catch (FileNotFoundException e) {
             if (VERBOSE) {
@@ -175,8 +176,42 @@ public class AtomicFileDatastore {
      * @throws NullPointerException if {@code key} is null
      */
     public final void putBoolean(String key, boolean value) throws IOException {
+        put(key, value);
+    }
+
+    /**
+     * Stores an integer value to the datastore file.
+     *
+     * <p>This change is committed immediately to file.
+     *
+     * @param key A non-null, non-empty String key to store the {@code value} against
+     * @param value An integer to be stored
+     * @throws IllegalArgumentException if {@code key} is an empty string
+     * @throws IOException if file write fails
+     * @throws NullPointerException if {@code key} is null
+     */
+    public final void putInt(String key, int value) throws IOException {
+        put(key, value);
+    }
+
+    /**
+     * Stores a string value to the datastore file.
+     *
+     * <p>This change is committed immediately to file.
+     *
+     * @param key A non-null, non-empty String key to store the {@code value} against
+     * @param value A string to be stored
+     * @throws IllegalArgumentException if {@code key} is an empty string
+     * @throws IOException if file write fails
+     * @throws NullPointerException if {@code key} is null
+     */
+    public final void putString(String key, String value) throws IOException {
+        put(key, value);
+    }
+
+    private void put(String key, Object value) throws IOException {
         Objects.requireNonNull(key);
-        Preconditions.checkStringNotEmpty(key, "Key must not be empty");
+        checkStringNotEmpty(key, "Key must not be empty");
 
         mWriteLock.lock();
         try {
@@ -200,16 +235,53 @@ public class AtomicFileDatastore {
      * @throws NullPointerException if {@code key} is null
      */
     public final boolean putBooleanIfNew(String key, boolean value) throws IOException {
+        return putIfNew(key, value, Boolean.class);
+    }
+
+    /**
+     * Stores an integer value to the datastore file, but only if the key does not already exist.
+     *
+     * <p>If a change is made to the datastore, it is committed immediately to file.
+     *
+     * @param key A non-null, non-empty String key to store the {@code value} against
+     * @param value An integer to be stored
+     * @return the value that exists in the datastore after the operation completes
+     * @throws IllegalArgumentException if {@code key} is an empty string
+     * @throws IOException if file write fails
+     * @throws NullPointerException if {@code key} is null
+     */
+    public final int putIntIfNew(String key, int value) throws IOException {
+        return putIfNew(key, value, Integer.class);
+    }
+
+    /**
+     * Stores a String value to the datastore file, but only if the key does not already exist.
+     *
+     * <p>If a change is made to the datastore, it is committed immediately to file.
+     *
+     * @param key A non-null, non-empty String key to store the {@code value} against
+     * @param value A String to be stored
+     * @return the value that exists in the datastore after the operation completes
+     * @throws IllegalArgumentException if {@code key} is an empty string
+     * @throws IOException if file write fails
+     * @throws NullPointerException if {@code key} is null
+     */
+    public final String putStringIfNew(String key, String value) throws IOException {
+        return putIfNew(key, value, String.class);
+    }
+
+    private <T> T putIfNew(String key, T value, Class<T> valueType) throws IOException {
         Objects.requireNonNull(key);
-        Preconditions.checkStringNotEmpty(key, "Key must not be empty");
+        checkStringNotEmpty(key, "Key must not be empty");
 
         // Try not to block readers first before trying to write
         mReadLock.lock();
         try {
-            Boolean valueInLocalMap = mLocalMap.get(key);
+            Object valueInLocalMap = mLocalMap.get(key);
             if (valueInLocalMap != null) {
-                return valueInLocalMap;
+                return checkValueType(valueInLocalMap, valueType);
             }
+
         } finally {
             mReadLock.unlock();
         }
@@ -217,9 +289,9 @@ public class AtomicFileDatastore {
         // Double check that the key wasn't written after the first check
         mWriteLock.lock();
         try {
-            Boolean valueInLocalMap = mLocalMap.get(key);
+            Object valueInLocalMap = mLocalMap.get(key);
             if (valueInLocalMap != null) {
-                return valueInLocalMap;
+                return checkValueType(valueInLocalMap, valueType);
             } else {
                 mLocalMap.put(key, value);
                 writeToFile();
@@ -240,12 +312,47 @@ public class AtomicFileDatastore {
      */
     @Nullable
     public final Boolean getBoolean(String key) {
+        return get(key, Boolean.class);
+    }
+
+    /**
+     * Retrieves an integer value from the loaded datastore file.
+     *
+     * @param key A non-null, non-empty String key to fetch a value from
+     * @return The value stored against a {@code key}, or null if it doesn't exist
+     * @throws IllegalArgumentException if {@code key} is an empty string
+     * @throws NullPointerException if {@code key} is null
+     */
+    @Nullable
+    public final Integer getInt(String key) {
+        return get(key, Integer.class);
+    }
+
+    /**
+     * Retrieves a String value from the loaded datastore file.
+     *
+     * @param key A non-null, non-empty String key to fetch a value from
+     * @return The value stored against a {@code key}, or null if it doesn't exist
+     * @throws IllegalArgumentException if {@code key} is an empty string
+     * @throws NullPointerException if {@code key} is null
+     */
+    @Nullable
+    public final String getString(String key) {
+        return get(key, String.class);
+    }
+
+    @Nullable
+    private <T> T get(String key, Class<T> valueType) {
         Objects.requireNonNull(key);
-        Preconditions.checkStringNotEmpty(key, "Key must not be empty");
+        checkStringNotEmpty(key, "Key must not be empty");
 
         mReadLock.lock();
         try {
-            return mLocalMap.get(key);
+            if (mLocalMap.containsKey(key)) {
+                Object valueInLocalMap = mLocalMap.get(key);
+                return checkValueType(valueInLocalMap, valueType);
+            }
+            return null;
         } finally {
             mReadLock.unlock();
         }
@@ -256,25 +363,55 @@ public class AtomicFileDatastore {
      *
      * @param key A non-null, non-empty String key to fetch a value from
      * @param defaultValue Value to return if this key does not exist.
+     * @return The value stored against a {@code key}, or {@code defaultValue} if it doesn't exist
      * @throws IllegalArgumentException if {@code key} is an empty string
      * @throws NullPointerException if {@code key} is null
      */
-    @Nullable
-    public final Boolean getBoolean(String key, boolean defaultValue) {
+    public final boolean getBoolean(String key, boolean defaultValue) {
+        return get(key, defaultValue, Boolean.class);
+    }
+
+    /**
+     * Retrieves an integer value from the loaded datastore file.
+     *
+     * @param key A non-null, non-empty String key to fetch a value from
+     * @param defaultValue Value to return if this key does not exist.
+     * @return The value stored against a {@code key}, or {@code defaultValue} if it doesn't exist
+     * @throws IllegalArgumentException if {@code key} is an empty string
+     * @throws NullPointerException if {@code key} is null
+     */
+    public final int getInt(String key, int defaultValue) {
+        return get(key, defaultValue, Integer.class);
+    }
+
+    /**
+     * Retrieves a String value from the loaded datastore file.
+     *
+     * @param key A non-null, non-empty String key to fetch a value from
+     * @param defaultValue Value to return if this key does not exist.
+     * @return The value stored against a {@code key}, or {@code defaultValue} if it doesn't exist
+     * @throws IllegalArgumentException if {@code key} is an empty string
+     * @throws NullPointerException if {@code key} is null
+     */
+    public final String getString(String key, String defaultValue) {
+        return get(key, defaultValue, String.class);
+    }
+
+    private <T> T get(String key, T defaultValue, Class<T> valueType) {
         Objects.requireNonNull(key);
-        Preconditions.checkStringNotEmpty(key, "Key must not be empty");
+        checkStringNotEmpty(key, "Key must not be empty");
+        Objects.requireNonNull(defaultValue, "Default value must not be null");
 
         mReadLock.lock();
         try {
-            return mLocalMap.containsKey(key) ? mLocalMap.get(key) : defaultValue;
+            if (mLocalMap.containsKey(key)) {
+                Object valueInLocalMap = mLocalMap.get(key);
+                return checkValueType(valueInLocalMap, valueType);
+            }
+            return defaultValue;
         } finally {
             mReadLock.unlock();
         }
-    }
-
-    /** Returns the version that was written prior to the device starting. */
-    public final int getPreviousStoredVersion() {
-        return mPreviousStoredVersion;
     }
 
     /**
@@ -291,7 +428,7 @@ public class AtomicFileDatastore {
         }
     }
 
-    private Set<String> keySetFilter(boolean filter) {
+    private Set<String> keySetFilter(Object filter) {
         mReadLock.lock();
         try {
             return getSafeSetCopy(
@@ -322,11 +459,6 @@ public class AtomicFileDatastore {
         return keySetFilter(false);
     }
 
-    /** Gets the version key. */
-    public final String getVersionKey() {
-        return mVersionKey;
-    }
-
     /**
      * Clears all entries from the datastore file.
      *
@@ -348,7 +480,7 @@ public class AtomicFileDatastore {
         }
     }
 
-    private void clearByFilter(boolean filter) throws IOException {
+    private void clearByFilter(Object filter) throws IOException {
         mWriteLock.lock();
         try {
             mLocalMap.entrySet().removeIf(entry -> entry.getValue().equals(filter));
@@ -393,8 +525,7 @@ public class AtomicFileDatastore {
      * @throws NullPointerException if {@code key} is null
      */
     public void remove(String key) throws IOException {
-        Objects.requireNonNull(key);
-        Preconditions.checkStringNotEmpty(key, "Key must not be empty");
+        checkValidKey(key);
 
         mWriteLock.lock();
         try {
@@ -417,7 +548,7 @@ public class AtomicFileDatastore {
      */
     public void removeByPrefix(String prefix) throws IOException {
         Objects.requireNonNull(prefix);
-        Preconditions.checkStringNotEmpty(prefix, "Prefix must not be empty");
+        checkStringNotEmpty(prefix, "Prefix must not be empty");
 
         mWriteLock.lock();
         try {
@@ -447,6 +578,16 @@ public class AtomicFileDatastore {
         // an argument).
     }
 
+    /** Returns the version that was written prior to the device starting. */
+    public final int getPreviousStoredVersion() {
+        return mPreviousStoredVersion;
+    }
+
+    /** Gets the version key. */
+    public final String getVersionKey() {
+        return mVersionKey;
+    }
+
     /** For tests only */
     @VisibleForTesting
     public void tearDownForTesting() {
@@ -459,9 +600,30 @@ public class AtomicFileDatastore {
         }
     }
 
+    /**
+     * Helper method to support various data types. Equivalent to calling {@link
+     * android.os.BaseBundle#putObject(String, Object)}, which is hidden.
+     */
+    private void addToBundle(PersistableBundle bundle, String key, Object value) {
+        Objects.requireNonNull(value, String.format("Failed to insert null value for key %s", key));
+        if (value instanceof Boolean) {
+            bundle.putBoolean(key, (Boolean) value);
+        } else if (value instanceof Integer) {
+            bundle.putInt(key, (Integer) value);
+        } else if (value instanceof String) {
+            bundle.putString(key, (String) value);
+        } else {
+            throw new IllegalArgumentException(
+                    "Failed to insert unsupported type: "
+                            + value.getClass()
+                            + " value for key: "
+                            + key);
+        }
+    }
+
     private static File newFile(String parentPath, String filename) {
-        Preconditions.checkStringNotEmpty(parentPath, "parentPath must not be empty or null");
-        Preconditions.checkStringNotEmpty(filename, "filename must not be empty or null");
+        checkStringNotEmpty(parentPath, "parentPath must not be empty or null");
+        checkStringNotEmpty(filename, "filename must not be empty or null");
         File parent = new File(parentPath);
         if (!parent.exists()) {
             throw new IllegalArgumentException(
@@ -477,5 +639,18 @@ public class AtomicFileDatastore {
     // TODO(b/335869310): change it to using ImmutableSet.
     private static <T> Set<T> getSafeSetCopy(Set<T> sourceSet) {
         return new HashSet<>(sourceSet);
+    }
+
+    private void checkValidKey(String key) {
+        Objects.requireNonNull(key, "Key must not be null");
+        checkStringNotEmpty(key, "Key must not be empty");
+    }
+
+    private <T> T checkValueType(Object valueInLocalMap, Class<T> expectedType) {
+        checkState(
+                expectedType.isInstance(valueInLocalMap),
+                "Value returned is not of %s type",
+                expectedType.getSimpleName());
+        return expectedType.cast(valueInLocalMap);
     }
 }

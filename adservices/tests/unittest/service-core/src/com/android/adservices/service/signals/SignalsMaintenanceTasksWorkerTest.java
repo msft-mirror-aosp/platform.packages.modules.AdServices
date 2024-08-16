@@ -26,48 +26,43 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.content.pm.PackageManager;
 
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.EncoderLogicHandler;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.service.Flags;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
 
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 
-public class SignalsMaintenanceTasksWorkerTest {
+@RequiresSdkLevelAtLeastT
+public final class SignalsMaintenanceTasksWorkerTest extends AdServicesMockitoTestCase {
 
-    @Rule public final MockitoRule rule = MockitoJUnit.rule();
     @Mock private ProtectedSignalsDao mProtectedSignalsDaoMock;
     @Mock private EnrollmentDao mEnrollmentDaoMock;
     @Mock private EncoderLogicHandler mEncoderLogicHandlerMock;
     @Mock private EncodedPayloadDao mEncodedPayloadDaoMock;
-    @Mock private Flags mFlagsMock;
+    @Mock private Flags mMockFlags;
     @Mock private Clock mClockMock;
     @Mock private PackageManager mPackageManagerMock;
 
-    SignalsMaintenanceTasksWorker mSignalsMaintenanceTasksWorker;
-    Instant mNow;
-    Instant mExpirationTime;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
+    private SignalsMaintenanceTasksWorker mSignalsMaintenanceTasksWorker;
+    private Instant mNow;
+    private Instant mExpirationTime;
 
     @Before
     public void setup() {
         mSignalsMaintenanceTasksWorker =
                 new SignalsMaintenanceTasksWorker(
-                        mFlagsMock,
+                        mMockFlags,
                         mProtectedSignalsDaoMock,
                         mEncoderLogicHandlerMock,
                         mEncodedPayloadDaoMock,
@@ -81,13 +76,13 @@ public class SignalsMaintenanceTasksWorkerTest {
 
     @Test
     public void testClearInvalidSignalsEnrollmentEnabled() throws Exception {
-        when(mFlagsMock.getDisableFledgeEnrollmentCheck()).thenReturn(false);
+        when(mMockFlags.getDisableFledgeEnrollmentCheck()).thenReturn(false);
 
         mSignalsMaintenanceTasksWorker.clearInvalidSignals(mExpirationTime, mNow);
 
         verify(mProtectedSignalsDaoMock)
                 .deleteExpiredSignalsAndUpdateSignalsUpdateMetadata(mExpirationTime, mNow);
-        verify(mFlagsMock).getDisableFledgeEnrollmentCheck();
+        verify(mMockFlags).getDisableFledgeEnrollmentCheck();
         verify(mProtectedSignalsDaoMock).deleteDisallowedBuyerSignals(any());
         verify(mProtectedSignalsDaoMock)
                 .deleteAllDisallowedPackageSignalsAndUpdateSignalUpdateMetadata(
@@ -96,18 +91,18 @@ public class SignalsMaintenanceTasksWorkerTest {
 
     @Test
     public void testClearInvalidSignalsEnrollmentDisabled() throws Exception {
-        when(mFlagsMock.getDisableFledgeEnrollmentCheck()).thenReturn(true);
+        when(mMockFlags.getDisableFledgeEnrollmentCheck()).thenReturn(true);
 
         mSignalsMaintenanceTasksWorker.clearInvalidSignals(mExpirationTime, mNow);
 
         verify(mProtectedSignalsDaoMock)
                 .deleteExpiredSignalsAndUpdateSignalsUpdateMetadata(mExpirationTime, mNow);
-        verify(mFlagsMock).getDisableFledgeEnrollmentCheck();
+        verify(mMockFlags).getDisableFledgeEnrollmentCheck();
     }
 
     @Test
     public void testClearInvalidEncoderLogic() {
-        when(mFlagsMock.getDisableFledgeEnrollmentCheck()).thenReturn(false);
+        when(mMockFlags.getDisableFledgeEnrollmentCheck()).thenReturn(false);
         AdTechIdentifier buyer1 = AdTechIdentifier.fromString("buyer1");
         AdTechIdentifier buyer2 = AdTechIdentifier.fromString("buyer2");
         AdTechIdentifier buyer3 = AdTechIdentifier.fromString("buyer3");
@@ -129,7 +124,7 @@ public class SignalsMaintenanceTasksWorkerTest {
 
     @Test
     public void testClearInvalidEncoderLogicEnrollmentDisabled() {
-        when(mFlagsMock.getDisableFledgeEnrollmentCheck()).thenReturn(true);
+        when(mMockFlags.getDisableFledgeEnrollmentCheck()).thenReturn(true);
         AdTechIdentifier buyer1 = AdTechIdentifier.fromString("buyer1");
 
         // Marking buyer2 stale
@@ -144,7 +139,7 @@ public class SignalsMaintenanceTasksWorkerTest {
 
     @Test
     public void testClearInvalidEncodedPayloads() {
-        when(mFlagsMock.getDisableFledgeEnrollmentCheck()).thenReturn(false);
+        when(mMockFlags.getDisableFledgeEnrollmentCheck()).thenReturn(false);
         AdTechIdentifier buyer1 = AdTechIdentifier.fromString("buyer1");
         AdTechIdentifier buyer2 = AdTechIdentifier.fromString("buyer2");
 
@@ -161,7 +156,7 @@ public class SignalsMaintenanceTasksWorkerTest {
 
     @Test
     public void testClearInvalidEncodedPayloadsEnrollmentDisabled() {
-        when(mFlagsMock.getDisableFledgeEnrollmentCheck()).thenReturn(true);
+        when(mMockFlags.getDisableFledgeEnrollmentCheck()).thenReturn(true);
 
         mSignalsMaintenanceTasksWorker.clearInvalidEncodedPayloads(mExpirationTime);
         verifyZeroInteractions(mEnrollmentDaoMock);

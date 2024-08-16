@@ -33,6 +33,7 @@ import android.util.Log;
 
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.sdksandbox.verifier.SdkDexVerifier;
+import com.android.server.sdksandbox.verifier.SdkDexVerifier.VerificationResult;
 
 /**
  * Broadcast Receiver for receiving new Sdk install requests and verifying Sdk code before running
@@ -114,9 +115,9 @@ public class SdkSandboxVerifierReceiver extends BroadcastReceiver {
                                 apkPath,
                                 packageInfo.packageName,
                                 targetSdkVersion,
-                                new OutcomeReceiver<Void, Exception>() {
+                                new OutcomeReceiver<VerificationResult, Exception>() {
                                     @Override
-                                    public void onResult(Void result) {}
+                                    public void onResult(VerificationResult result) {}
 
                                     @Override
                                     public void onError(Exception e) {

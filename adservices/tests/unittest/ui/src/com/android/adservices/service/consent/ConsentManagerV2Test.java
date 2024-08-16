@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.consent;
 
+import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
 import static com.android.adservices.service.consent.ConsentConstants.CONSENT_KEY;
 import static com.android.adservices.service.consent.ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE;
 import static com.android.adservices.service.consent.ConsentConstants.MANUAL_INTERACTION_WITH_CONSENT_RECORDED;
@@ -27,8 +28,10 @@ import static com.android.adservices.service.consent.ConsentConstants.SHARED_PRE
 import static com.android.adservices.service.consent.ConsentManagerV2.MANUAL_INTERACTIONS_RECORDED;
 import static com.android.adservices.service.consent.ConsentManagerV2.UNKNOWN;
 import static com.android.adservices.service.consent.ConsentManagerV2.resetSharedPreference;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_SEARCH_DATA_MIGRATION_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_WHILE_GET_CONSENT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PRIVACY_SANDBOX_SAVE_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX;
 import static com.android.adservices.spe.AdServicesJobInfo.COBALT_LOGGING_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.CONSENT_NOTIFICATION_JOB;
@@ -103,7 +106,10 @@ import androidx.test.filters.SmallTest;
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.cobalt.CobaltJobService;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.common.DbTestUtil;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.common.AtomicFileDatastore;
@@ -115,7 +121,6 @@ import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.download.MddJob;
-import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
@@ -156,7 +161,6 @@ import com.android.adservices.service.ui.data.UxStatesDao;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
-import com.android.dx.mockito.inline.extended.MockedVoidMethod;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -193,7 +197,6 @@ import java.util.stream.Collectors;
 @SpyStatic(DeleteUninstalledJobService.class)
 @SpyStatic(DeviceRegionProvider.class)
 @SpyStatic(EpochJob.class)
-@SpyStatic(ErrorLogUtil.class)
 @SpyStatic(EventFallbackReportingJobService.class)
 @SpyStatic(EventReportingJobService.class)
 @SpyStatic(DebugReportingFallbackJobService.class)
@@ -207,6 +210,9 @@ import java.util.stream.Collectors;
 @SpyStatic(StatsdAdServicesLogger.class)
 @MockStatic(PackageManagerCompatUtils.class)
 @MockStatic(SdkLevel.class)
+@SetErrorLogUtilDefaultParams(
+        throwable = Any.class,
+        ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX)
 @SmallTest
 public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCase {
     public static final int UX_TYPE_COUNT = 5;
@@ -241,7 +247,6 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
     @Mock private EpochManager mMockEpochManager;
 
     @Mock private PackageManager mPackageManager;
-    @Mock private Flags mMockFlags;
     @Mock private JobScheduler mJobSchedulerMock;
     @Mock private IAdServicesManager mMockIAdServicesManager;
     @Mock private AppSearchConsentStorageManager mAppSearchConsentManagerMock;
@@ -2521,6 +2526,8 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE)
     public void testMigratePpApiConsentToSystemServiceWithUnSuccessfulConsentMigrationLogging()
             throws RemoteException, IOException {
         // Disable IPC calls
@@ -2535,7 +2542,6 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         doReturn(false).when(editor).commit();
         doReturn(sharedPreferences).when(mSpyContext).getSharedPreferences(anyString(), anyInt());
 
-        doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
         doNothing().when(mStatsdAdServicesLoggerMock).logConsentMigrationStats(any());
         ExtendedMockito.doReturn(false).when(() -> DeviceRegionProvider.isEuDevice(any()));
 
@@ -2573,7 +2579,6 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
                 .when(mMockIAdServicesManager)
                 .recordNotificationDisplayed(true);
 
-        doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
         doNothing().when(mStatsdAdServicesLoggerMock).logConsentMigrationStats(any());
         ExtendedMockito.doReturn(false).when(() -> DeviceRegionProvider.isEuDevice(any()));
 
@@ -2959,7 +2964,6 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         when(mAppSearchConsentManagerMock.getUserManualInteractionWithConsent())
                 .thenReturn(MANUAL_INTERACTIONS_RECORDED);
         when(mockEditor.commit()).thenReturn(false);
-        doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         ExtendedMockito.doReturn(false).when(() -> DeviceRegionProvider.isEuDevice(any()));
 
         ConsentManagerV2.handleConsentMigrationFromAppSearchIfNeeded(
@@ -2987,11 +2991,13 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            throwable = IOException.class,
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_SEARCH_DATA_MIGRATION_FAILURE)
     public void testHandleConsentMigrationFromAppSearchIfNeededThrowsException() throws Exception {
         when(mAppSearchConsentManagerMock.migrateConsentDataIfNeeded(any(), any(), any(), any()))
                 .thenThrow(IOException.class);
 
-        doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         doNothing().when(mStatsdAdServicesLoggerMock).logConsentMigrationStats(any());
 
         doReturn(false).when(() -> DeviceRegionProvider.isEuDevice(any()));
@@ -3127,9 +3133,10 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_WHILE_GET_CONSENT)
     public void testConsentPerApiIsGivenAfterEnabling_PpApiAndSystemServer()
-            throws RemoteException, IOException {
-        doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
+            throws RemoteException {
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
         doReturn(PrivacySandboxUxCollection.UNSUPPORTED_UX).when(mAdServicesStorageManager).getUx();
         boolean isGiven = true;
@@ -3153,12 +3160,6 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
                 .setPerApiConsentToSourceOfTruth(
                         eq(/* isGiven */ true), eq(AdServicesApiType.TOPICS));
         verify(spyConsentManager).resetTopicsAndBlockedTopics();
-        verify(
-                () ->
-                        ErrorLogUtil.e(
-                                any(Throwable.class),
-                                eq(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_WHILE_GET_CONSENT),
-                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX)));
     }
 
     @Test
@@ -3227,7 +3228,6 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
     @Test
     public void testFledgeConsentIsEnabled_userProfileIdIsClearedThanRecreated()
             throws RemoteException {
-        doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         doReturn(PrivacySandboxUxCollection.UNSUPPORTED_UX).when(mAdServicesStorageManager).getUx();
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
         boolean isGiven = true;
@@ -3245,7 +3245,6 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
 
     @Test
     public void testFledgeConsentIsDisabled_userProfileIdIsCleared() throws RemoteException {
-        doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
         doReturn(PrivacySandboxUxCollection.UNSUPPORTED_UX).when(mAdServicesStorageManager).getUx();
         boolean isGiven = false;
@@ -3662,6 +3661,8 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PRIVACY_SANDBOX_SAVE_FAILURE)
     public void testCurrentPrivacySandboxFeature_SystemServerOnly()
             throws RemoteException, IOException {
         int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
@@ -3671,19 +3672,10 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         ConsentManagerV2 spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
                         /* isGiven */ false, consentSourceOfTruth);
-        doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         assertThat(spyConsentManager.getCurrentPrivacySandboxFeature())
                 .isEqualTo(PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED);
         verify(mAdServicesStorageManager).getCurrentPrivacySandboxFeature();
 
-        int errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PRIVACY_SANDBOX_SAVE_FAILURE;
-        MockedVoidMethod mockedVoidMethod =
-                () ->
-                        ErrorLogUtil.e(
-                                any(),
-                                eq(errorCode),
-                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX));
-        verify(mockedVoidMethod);
         doReturn(PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT)
                 .when(mAdServicesStorageManager)
                 .getCurrentPrivacySandboxFeature();
@@ -3723,9 +3715,10 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PRIVACY_SANDBOX_SAVE_FAILURE)
     public void testCurrentPrivacySandboxFeature_PpApiAndSystemServer()
             throws RemoteException, IOException {
-        doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
         ConsentManagerV2 spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -3739,14 +3732,6 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
         doThrow(RuntimeException.class)
                 .when(mAdServicesStorageManager)
                 .getCurrentPrivacySandboxFeature();
-        int saveErrorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PRIVACY_SANDBOX_SAVE_FAILURE;
-        MockedVoidMethod mockedVoidMethod =
-                () ->
-                        ErrorLogUtil.e(
-                                any(),
-                                eq(saveErrorCode),
-                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX));
-        verify(mockedVoidMethod);
         doReturn(PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT)
                 .when(mAdServicesStorageManager)
                 .getCurrentPrivacySandboxFeature();

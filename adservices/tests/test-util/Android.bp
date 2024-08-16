@@ -94,35 +94,6 @@ android_library {
     plugins: ["auto_annotation_plugin"],
 }
 
-android_library {
-    name: "adservices-test-mockito-expectations",
-    sdk_version: "module_current",
-    min_sdk_version: "30",
-    srcs: [
-        "java/com/android/adservices/mockito/*MockitoExpectations.java",
-        ":adservices-service-core-phflags-sources",
-    ],
-    libs: [
-        "framework-adservices-lib",
-        "framework-annotations-lib",
-        "framework-configinfrastructure",
-    ],
-    static_libs: [
-        "adservices-service-core",
-        "adservices-shared-testing",
-        "adservices-test-utility",
-        "mockito-target-extended-minus-junit4",
-        "truth",
-    ],
-    apex_available: [
-        "com.android.adservices",
-        "com.android.extservices",
-    ],
-    lint: {
-        extra_check_modules: ["AdServicesTestLintChecker"],
-    },
-}
-
 java_library_host {
     name: "adservices-host-side-test-utility",
     srcs: [
@@ -144,8 +115,16 @@ java_library_host {
 filegroup {
     name: "adservices-extended-mockito-rule-sources",
     srcs: [
-        "java/com/android/adservices/mockito/AdServicesStaticMockitoMocker.java",
+        // Non-static - interface and implementation
+        "java/com/android/adservices/mockito/AdServicesPragmaticMocker.java",
+        "java/com/android/adservices/mockito/AdServicesMockitoMocker.java",
+        // Static - interface and implementation
+        "java/com/android/adservices/mockito/AdServicesStaticMocker.java",
         "java/com/android/adservices/mockito/AdServicesExtendedMockitoMocker.java",
+        // Job-related - interface and implementation
+        "java/com/android/adservices/mockito/AdServicesJobMocker.java",
+        // ... and implementation
+        "java/com/android/adservices/mockito/AdServicesMockitoJobMocker.java",
     ],
     path: "java",
     visibility: [

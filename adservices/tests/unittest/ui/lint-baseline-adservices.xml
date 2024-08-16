@@ -1,0 +1,2028 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 8.4.0-alpha08" type="baseline" client="" dependencies="true" name="" variant="all" version="8.4.0-alpha08">
+
+    <issue
+        id="ApplySharedPref"
+        message="Consider using `apply()` instead; `commit` writes its data to persistent storage immediately, whereas `apply` will handle it in the background"
+        errorLine1="        editor.commit();"
+        errorLine2="               ~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2583"
+            column="16"/>
+    </issue>
+
+    <issue
+        id="ApplySharedPref"
+        message="Consider using `apply()` instead; `commit` writes its data to persistent storage immediately, whereas `apply` will handle it in the background"
+        errorLine1="        editor.commit();"
+        errorLine2="               ~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2738"
+            column="16"/>
+    </issue>
+
+    <issue
+        id="ApplySharedPref"
+        message="Consider using `apply()` instead; `commit` writes its data to persistent storage immediately, whereas `apply` will handle it in the background"
+        errorLine1="        editor.commit();"
+        errorLine2="               ~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2507"
+            column="16"/>
+    </issue>
+
+    <issue
+        id="ApplySharedPref"
+        message="Consider using `apply()` instead; `commit` writes its data to persistent storage immediately, whereas `apply` will handle it in the background"
+        errorLine1="        editor.commit();"
+        errorLine2="               ~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2677"
+            column="16"/>
+    </issue>
+
+    <issue
+        id="CommitPrefEdits"
+        message="`SharedPreferences.edit()` without a corresponding `commit()` or `apply()` call"
+        errorLine1="        doReturn(editor).when(sharedPreferences).edit();"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2622"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="CommitPrefEdits"
+        message="`SharedPreferences.edit()` without a corresponding `commit()` or `apply()` call"
+        errorLine1="        doReturn(editor).when(sharedPreferences).edit();"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2550"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="CommitPrefEdits"
+        message="`SharedPreferences.edit()` without a corresponding `commit()` or `apply()` call"
+        errorLine1="        doReturn(mEditor).when(mSharedPreferences).edit();"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/ui/enrollment/ConsentNotificationResetChannelTest.java"
+            line="105"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="CommitPrefEdits"
+        message="`SharedPreferences.edit()` without a corresponding `commit()` or `apply()` call"
+        errorLine1="        doReturn(mEditor).when(mSharedPreferences).edit();"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/ui/enrollment/ConsentNotificationResetChannelTest.java"
+            line="121"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="CommitPrefEdits"
+        message="`SharedPreferences.edit()` without a corresponding `commit()` or `apply()` call"
+        errorLine1="        doReturn(mEditor).when(mSharedPreferences).edit();"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/ui/enrollment/ConsentNotificationResetChannelTest.java"
+            line="138"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="CommitPrefEdits"
+        message="`SharedPreferences.edit()` without a corresponding `commit()` or `apply()` call"
+        errorLine1="        doReturn(mEditor).when(mSharedPreferences).edit();"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/ui/util/UxEngineUtilTest.java"
+            line="234"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="CommitPrefEdits"
+        message="`SharedPreferences.edit()` without a corresponding `commit()` or `apply()` call"
+        errorLine1="        doReturn(mEditor).when(mSharedPreferences).edit();"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/ui/util/UxEngineUtilTest.java"
+            line="387"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="CommitPrefEdits"
+        message="`SharedPreferences.edit()` without a corresponding `commit()` or `apply()` call"
+        errorLine1="        doReturn(mEditor).when(mSharedPreferences).edit();"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/ui/util/UxEngineUtilTest.java"
+            line="454"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        mAdServicesManager = new AdServicesManager(mMockIAdServicesManager);"
+        errorLine2="                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/AdServicesStorageManagerTest.java"
+            line="103"
+            column="30"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                        new AdServicesStorageManager("
+        errorLine2="                        ^">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/AdServicesStorageManagerTest.java"
+            line="108"
+            column="25"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doReturn(uid).when(mAdServicesStorageManager).getUidForInstalledPackageName(packageName);"
+        errorLine2="                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/AdServicesStorageManagerTest.java"
+            line="377"
+            column="55"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .getUidForInstalledPackageName(packageName);"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/AdServicesStorageManagerTest.java"
+            line="387"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                        mSpyContext, AppConsentDao.DATASTORE_NAME, AppConsentDao.DATASTORE_VERSION);"
+        errorLine2="                                                   ~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/AppConsentForRStorageManagerTest.java"
+            line="68"
+            column="52"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                        mSpyContext, AppConsentDao.DATASTORE_NAME, AppConsentDao.DATASTORE_VERSION);"
+        errorLine2="                                                                                 ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/AppConsentForRStorageManagerTest.java"
+            line="68"
+            column="82"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                spy(new AppConsentDao(mAppDaoDatastore, mSpyContext.getPackageManager()));"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/AppConsentForRStorageManagerTest.java"
+            line="71"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                        mContextSpy, AppConsentDao.DATASTORE_NAME, AppConsentDao.DATASTORE_VERSION);"
+        errorLine2="                                                   ~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/AppConsentStorageManagerTest.java"
+            line="89"
+            column="52"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                        mContextSpy, AppConsentDao.DATASTORE_NAME, AppConsentDao.DATASTORE_VERSION);"
+        errorLine2="                                                                                 ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/AppConsentStorageManagerTest.java"
+            line="89"
+            column="82"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                spy(new AppConsentDao(mAppDaoDatastore, mContextSpy.getPackageManager()));"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/AppConsentStorageManagerTest.java"
+            line="92"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        verifyReadMethods(consentCompositeStorage.getConsentStorageList().get(0));"
+        errorLine2="                                                  ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentCompositeStorageTest.java"
+            line="90"
+            column="51"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        List&lt;IConsentStorage> storageList = consentCompositeStorage.getConsentStorageList();"
+        errorLine2="                                                                    ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentCompositeStorageTest.java"
+            line="118"
+            column="69"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                        mSpyContext, AppConsentDao.DATASTORE_NAME, AppConsentDao.DATASTORE_VERSION);"
+        errorLine2="                                                   ~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="267"
+            column="52"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                        mSpyContext, AppConsentDao.DATASTORE_NAME, AppConsentDao.DATASTORE_VERSION);"
+        errorLine2="                                                                                 ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="267"
+            column="82"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        mConsentDatastore = ConsentManager.createAndInitializeDataStore(mSpyContext);"
+        errorLine2="                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="270"
+            column="44"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        mAppConsentDaoSpy = spy(new AppConsentDao(mDatastore, mSpyContext.getPackageManager()));"
+        errorLine2="                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="271"
+            column="33"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                        new EnrollmentDao("
+        errorLine2="                        ^">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="274"
+            column="25"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        mAdServicesManager = new AdServicesManager(mMockIAdServicesManager);"
+        errorLine2="                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="276"
+            column="30"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        verify(spyConsentManager, times(0)).setConsentToPpApi(isGiven);"
+        errorLine2="                                            ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="445"
+            column="45"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        verify(spyConsentManager).setConsentToPpApi(isGiven);"
+        errorLine2="                                  ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="462"
+            column="35"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        verify(spyConsentManager, never()).resetByApi(eq(AdServicesApiType.MEASUREMENTS));"
+        errorLine2="                                           ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="487"
+            column="44"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        verify(spyConsentManager).resetByApi(eq(AdServicesApiType.MEASUREMENTS));"
+        errorLine2="                                  ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="510"
+            column="35"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManager.clearPpApiConsent(mSpyContext, mConsentDatastore);"
+        errorLine2="                       ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2521"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManager.clearPpApiConsent(mSpyContext, mConsentDatastore);"
+        errorLine2="                       ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2531"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManager.resetSharedPreference(mSpyContext, SHARED_PREFS_KEY_PPAPI_HAS_CLEARED);"
+        errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2536"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManager.migratePpApiConsentToSystemService("
+        errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2550"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManager.migratePpApiConsentToSystemService("
+        errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2557"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManager.resetSharedPreference(mSpyContext, SHARED_PREFS_KEY_HAS_MIGRATED);"
+        errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2563"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManager.migratePpApiConsentToSystemService("
+        errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2586"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManager.resetSharedPreference(mSpyContext, SHARED_PREFS_KEY_HAS_MIGRATED);"
+        errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2605"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManager.resetSharedPreference(mSpyContext, SHARED_PREFS_KEY_APPSEARCH_HAS_MIGRATED);"
+        errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2606"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManager.migratePpApiConsentToSystemService("
+        errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2629"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManager.resetSharedPreference(mSpyContext, SHARED_PREFS_KEY_HAS_MIGRATED);"
+        errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2649"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManager.migratePpApiConsentToSystemService("
+        errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2663"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManager.resetSharedPreference(mSpyContext, SHARED_PREFS_KEY_HAS_MIGRATED);"
+        errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2680"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManager.handleConsentMigrationIfNeeded("
+        errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2689"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManager.handleConsentMigrationFromAppSearchIfNeeded("
+        errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2706"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        resetSharedPreference(mSpyContext, SHARED_PREFS_KEY_PPAPI_HAS_CLEARED);"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2749"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        resetSharedPreference(mSpyContext, SHARED_PREFS_KEY_HAS_MIGRATED);"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2750"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                                ConsentManager.resetSharedPreference("
+        errorLine2="                                               ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2764"
+            column="48"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                                ConsentManager.migratePpApiConsentToSystemService("
+        errorLine2="                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2769"
+            column="48"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doNothing().when(() -> ConsentManager.clearPpApiConsent(mSpyContext, mConsentDatastore));"
+        errorLine2="                                              ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2774"
+            column="47"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManager.handleConsentMigrationIfNeeded("
+        errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2777"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                        ConsentManager.resetSharedPreference("
+        errorLine2="                                       ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2786"
+            column="40"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                        ConsentManager.migratePpApiConsentToSystemService("
+        errorLine2="                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2790"
+            column="40"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        verify(() -> ConsentManager.clearPpApiConsent(mSpyContext, mConsentDatastore), never());"
+        errorLine2="                                    ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2796"
+            column="37"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                                ConsentManager.resetSharedPreference("
+        errorLine2="                                               ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2805"
+            column="48"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                                ConsentManager.migratePpApiConsentToSystemService("
+        errorLine2="                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2810"
+            column="48"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doNothing().when(() -> ConsentManager.clearPpApiConsent(mSpyContext, mConsentDatastore));"
+        errorLine2="                                              ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2815"
+            column="47"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManager.handleConsentMigrationIfNeeded("
+        errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2818"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                        ConsentManager.resetSharedPreference("
+        errorLine2="                                       ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2827"
+            column="40"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                        ConsentManager.migratePpApiConsentToSystemService("
+        errorLine2="                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2832"
+            column="40"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        verify(() -> ConsentManager.clearPpApiConsent(mSpyContext, mConsentDatastore));"
+        errorLine2="                                    ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2837"
+            column="37"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                                ConsentManager.resetSharedPreference("
+        errorLine2="                                               ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2846"
+            column="48"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                                ConsentManager.migratePpApiConsentToSystemService("
+        errorLine2="                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2851"
+            column="48"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doNothing().when(() -> ConsentManager.clearPpApiConsent(mSpyContext, mConsentDatastore));"
+        errorLine2="                                              ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2856"
+            column="47"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManager.handleConsentMigrationIfNeeded("
+        errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2859"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                        ConsentManager.resetSharedPreference("
+        errorLine2="                                       ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2868"
+            column="40"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                        ConsentManager.migratePpApiConsentToSystemService("
+        errorLine2="                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2873"
+            column="40"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        verify(() -> ConsentManager.clearPpApiConsent(mSpyContext, mConsentDatastore), never());"
+        errorLine2="                                    ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2878"
+            column="37"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                                ConsentManager.resetSharedPreference("
+        errorLine2="                                               ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2887"
+            column="48"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                                ConsentManager.migratePpApiConsentToSystemService("
+        errorLine2="                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2892"
+            column="48"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doNothing().when(() -> ConsentManager.clearPpApiConsent(mSpyContext, mConsentDatastore));"
+        errorLine2="                                              ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2897"
+            column="47"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManager.handleConsentMigrationIfNeeded("
+        errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2900"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                        ConsentManager.resetSharedPreference("
+        errorLine2="                                       ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2909"
+            column="40"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                        ConsentManager.migratePpApiConsentToSystemService("
+        errorLine2="                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2914"
+            column="40"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        verify(() -> ConsentManager.clearPpApiConsent(mSpyContext, mConsentDatastore), never());"
+        errorLine2="                                    ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2920"
+            column="37"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManager.handleConsentMigrationFromAppSearchIfNeeded("
+        errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2935"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManager.handleConsentMigrationFromAppSearchIfNeeded("
+        errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="2974"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManager.handleConsentMigrationFromAppSearchIfNeeded("
+        errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="3053"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManager.handleConsentMigrationFromAppSearchIfNeeded("
+        errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="3091"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within protected scope"
+        errorLine1="                        new TopicsWorker("
+        errorLine2="                        ^">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="3120"
+            column="25"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .setConsentPerApiToPpApi(eq(AdServicesApiType.TOPICS), eq(/* isGiven */ true));"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="3196"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .setConsentPerApiToPpApi(eq(AdServicesApiType.TOPICS), eq(/* isGiven */ true));"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="3246"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .setPerApiConsentToSourceOfTruth(eq(/* isGiven */ true), eq(apiType));"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="3262"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        when(mAppSearchConsentManagerMock.getConsent(AdServicesApiType.CONSENT_TOPICS))"
+        errorLine2="                                                                       ~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="3265"
+            column="72"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .setPerApiConsentToSourceOfTruth(eq(/* isGiven */ true), eq(apiType));"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="3283"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .setPerApiConsentToSourceOfTruth(eq(/* isGiven */ false), eq(apiType));"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="3302"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .setConsentPerApiToPpApi(eq(AdServicesApiType.TOPICS), eq(/* isGiven */ true));"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="3587"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .setConsentPerApiToPpApi(eq(AdServicesApiType.FLEDGE), eq(/* isGiven */ true));"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="3589"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .setConsentPerApiToPpApi("
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="3591"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        verify(spyConsentManager, times(3)).setAggregatedConsentToPpApi();"
+        errorLine2="                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="3593"
+            column="45"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .setConsentPerApiToPpApi(eq(AdServicesApiType.TOPICS), eq(/* isGiven */ true));"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="3616"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .setConsentPerApiToPpApi(eq(AdServicesApiType.FLEDGE), eq(/* isGiven */ true));"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="3618"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .setConsentPerApiToPpApi("
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="3620"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        verify(spyConsentManager, times(3)).setAggregatedConsentToPpApi();"
+        errorLine2="                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="3622"
+            column="45"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doNothing().when(() -> ConsentManager.setConsentToSystemServer(any(), anyBoolean()));"
+        errorLine2="                                              ~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="3809"
+            column="47"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        verify(consentManager, verificationMode(hasWrittenToPpApi)).setConsentToPpApi(isGiven);"
+        errorLine2="                                                                    ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="3861"
+            column="69"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                () -> ConsentManager.setConsentToSystemServer(any(), eq(isGiven)),"
+        errorLine2="                                     ~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerTest.java"
+            line="3863"
+            column="38"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                                AppConsentDao.DATASTORE_NAME,"
+        errorLine2="                                              ~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="274"
+            column="47"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                                AppConsentDao.DATASTORE_VERSION));"
+        errorLine2="                                              ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="275"
+            column="47"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        mConsentDatastore = spy(ConsentManagerV2.createAndInitializeDataStore(mSpyContext));"
+        errorLine2="                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="278"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        mAppConsentDaoSpy = spy(new AppConsentDao(mDatastore, mSpyContext.getPackageManager()));"
+        errorLine2="                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="279"
+            column="33"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                        new EnrollmentDao("
+        errorLine2="                        ^">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="282"
+            column="25"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        mAdServicesManager = new AdServicesManager(mMockIAdServicesManager);"
+        errorLine2="                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="296"
+            column="30"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                spy(new AdServicesStorageManager(mAdServicesManager, mPackageManager));"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="301"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        verify(spyConsentManager, times(0)).setConsentToSourceOfTruth(isGiven);"
+        errorLine2="                                            ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="461"
+            column="45"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        verify(spyConsentManager).setConsentToSourceOfTruth(isGiven);"
+        errorLine2="                                  ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="478"
+            column="35"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        spyConsentManager.setPerApiConsentToSourceOfTruth(true, AdServicesApiType.ALL_API);"
+        errorLine2="                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="494"
+            column="27"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        verify(spyConsentManager, never()).resetByApi(eq(AdServicesApiType.MEASUREMENTS));"
+        errorLine2="                                           ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="497"
+            column="44"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        verify(spyConsentManager).resetByApi(eq(AdServicesApiType.MEASUREMENTS));"
+        errorLine2="                                  ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="515"
+            column="35"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        mConsentManager.setConsentToSourceOfTruth(true);"
+        errorLine2="                        ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="1587"
+            column="25"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManagerV2.clearPpApiConsent(mSpyContext, mConsentDatastore);"
+        errorLine2="                         ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2439"
+            column="26"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManagerV2.clearPpApiConsent(mSpyContext, mConsentDatastore);"
+        errorLine2="                         ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2449"
+            column="26"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManagerV2.resetSharedPreference(mSpyContext, SHARED_PREFS_KEY_PPAPI_HAS_CLEARED);"
+        errorLine2="                         ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2454"
+            column="26"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManagerV2.migratePpApiConsentToSystemService("
+        errorLine2="                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2468"
+            column="26"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManagerV2.migratePpApiConsentToSystemService("
+        errorLine2="                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2478"
+            column="26"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManagerV2.resetSharedPreference(mSpyContext, SHARED_PREFS_KEY_HAS_MIGRATED);"
+        errorLine2="                         ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2487"
+            column="26"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManagerV2.migratePpApiConsentToSystemService("
+        errorLine2="                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2510"
+            column="26"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManagerV2.resetSharedPreference(mSpyContext, SHARED_PREFS_KEY_HAS_MIGRATED);"
+        errorLine2="                         ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2532"
+            column="26"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManagerV2.resetSharedPreference("
+        errorLine2="                         ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2533"
+            column="26"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManagerV2.migratePpApiConsentToSystemService("
+        errorLine2="                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2557"
+            column="26"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManagerV2.resetSharedPreference(mSpyContext, SHARED_PREFS_KEY_HAS_MIGRATED);"
+        errorLine2="                         ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2580"
+            column="26"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManagerV2.migratePpApiConsentToSystemService("
+        errorLine2="                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2594"
+            column="26"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManagerV2.resetSharedPreference(mSpyContext, SHARED_PREFS_KEY_HAS_MIGRATED);"
+        errorLine2="                         ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2614"
+            column="26"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManagerV2.handleConsentMigrationIfNeeded("
+        errorLine2="                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2623"
+            column="26"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManagerV2.handleConsentMigrationFromAppSearchIfNeeded("
+        errorLine2="                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2644"
+            column="26"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        resetSharedPreference(mSpyContext, SHARED_PREFS_KEY_PPAPI_HAS_CLEARED);"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2688"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        resetSharedPreference(mSpyContext, SHARED_PREFS_KEY_HAS_MIGRATED);"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2689"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                                ConsentManagerV2.resetSharedPreference("
+        errorLine2="                                                 ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2705"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                                ConsentManagerV2.migratePpApiConsentToSystemService("
+        errorLine2="                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2710"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doNothing().when(() -> ConsentManagerV2.clearPpApiConsent(mSpyContext, mConsentDatastore));"
+        errorLine2="                                                ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2715"
+            column="49"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManagerV2.handleConsentMigrationIfNeeded("
+        errorLine2="                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2718"
+            column="26"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                        ConsentManagerV2.resetSharedPreference("
+        errorLine2="                                         ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2727"
+            column="42"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                        ConsentManagerV2.migratePpApiConsentToSystemService("
+        errorLine2="                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2731"
+            column="42"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        verify(() -> ConsentManagerV2.clearPpApiConsent(mSpyContext, mConsentDatastore), never());"
+        errorLine2="                                      ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2737"
+            column="39"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                                ConsentManagerV2.resetSharedPreference("
+        errorLine2="                                                 ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2746"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                                ConsentManagerV2.migratePpApiConsentToSystemService("
+        errorLine2="                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2751"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doNothing().when(() -> ConsentManagerV2.clearPpApiConsent(mSpyContext, mConsentDatastore));"
+        errorLine2="                                                ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2756"
+            column="49"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManagerV2.handleConsentMigrationIfNeeded("
+        errorLine2="                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2759"
+            column="26"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                        ConsentManagerV2.resetSharedPreference("
+        errorLine2="                                         ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2768"
+            column="42"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                        ConsentManagerV2.migratePpApiConsentToSystemService("
+        errorLine2="                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2773"
+            column="42"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        verify(() -> ConsentManagerV2.clearPpApiConsent(mSpyContext, mConsentDatastore));"
+        errorLine2="                                      ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2778"
+            column="39"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                                ConsentManagerV2.resetSharedPreference("
+        errorLine2="                                                 ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2787"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                                ConsentManagerV2.migratePpApiConsentToSystemService("
+        errorLine2="                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2792"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doNothing().when(() -> ConsentManagerV2.clearPpApiConsent(mSpyContext, mConsentDatastore));"
+        errorLine2="                                                ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2797"
+            column="49"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManagerV2.handleConsentMigrationIfNeeded("
+        errorLine2="                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2800"
+            column="26"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                        ConsentManagerV2.resetSharedPreference("
+        errorLine2="                                         ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2809"
+            column="42"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                        ConsentManagerV2.migratePpApiConsentToSystemService("
+        errorLine2="                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2814"
+            column="42"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        verify(() -> ConsentManagerV2.clearPpApiConsent(mSpyContext, mConsentDatastore), never());"
+        errorLine2="                                      ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2819"
+            column="39"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                                ConsentManagerV2.resetSharedPreference("
+        errorLine2="                                                 ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2828"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                                ConsentManagerV2.migratePpApiConsentToSystemService("
+        errorLine2="                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2833"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        doNothing().when(() -> ConsentManagerV2.clearPpApiConsent(mSpyContext, mConsentDatastore));"
+        errorLine2="                                                ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2838"
+            column="49"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManagerV2.handleConsentMigrationIfNeeded("
+        errorLine2="                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2841"
+            column="26"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                        ConsentManagerV2.resetSharedPreference("
+        errorLine2="                                         ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2850"
+            column="42"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                        ConsentManagerV2.migratePpApiConsentToSystemService("
+        errorLine2="                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2855"
+            column="42"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        verify(() -> ConsentManagerV2.clearPpApiConsent(mSpyContext, mConsentDatastore), never());"
+        errorLine2="                                      ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2861"
+            column="39"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManagerV2.handleConsentMigrationFromAppSearchIfNeeded("
+        errorLine2="                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2876"
+            column="26"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManagerV2.handleConsentMigrationFromAppSearchIfNeeded("
+        errorLine2="                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2910"
+            column="26"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManagerV2.handleConsentMigrationFromAppSearchIfNeeded("
+        errorLine2="                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="2978"
+            column="26"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        ConsentManagerV2.handleConsentMigrationFromAppSearchIfNeeded("
+        errorLine2="                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="3014"
+            column="26"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within protected scope"
+        errorLine1="                        new TopicsWorker("
+        errorLine2="                        ^">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="3043"
+            column="25"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .setPerApiConsentToSourceOfTruth("
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="3120"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .setPerApiConsentToSourceOfTruth("
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="3169"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .setPerApiConsentToSourceOfTruth(eq(/* isGiven */ true), eq(apiType));"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="3188"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .setPerApiConsentToSourceOfTruth(eq(/* isGiven */ true), eq(apiType));"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="3208"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .setPerApiConsentToSourceOfTruth(eq(/* isGiven */ false), eq(apiType));"
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="3228"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .setPerApiConsentToSourceOfTruth("
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="3289"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .setPerApiConsentToSourceOfTruth("
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="3292"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .setPerApiConsentToSourceOfTruth("
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="3295"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .setPerApiConsentToSourceOfTruth("
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="3321"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .setPerApiConsentToSourceOfTruth("
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="3324"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .setPerApiConsentToSourceOfTruth("
+        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/consent/ConsentManagerV2Test.java"
+            line="3327"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                        mContext, UxStatesDao.TEST_DATASTORE_NAME, UxStatesDao.DATASTORE_VERSION);"
+        errorLine2="                                              ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/ui/data/UxStatesDaoTest.java"
+            line="43"
+            column="47"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                        mContext, UxStatesDao.TEST_DATASTORE_NAME, UxStatesDao.DATASTORE_VERSION);"
+        errorLine2="                                                                               ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/ui/data/UxStatesDaoTest.java"
+            line="43"
+            column="80"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        mUxStatesDao = new UxStatesDao(atomicFileDatastore);"
+        errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/ui/data/UxStatesDaoTest.java"
+            line="44"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="MissingVersion"
+        message="Should set `android:versionCode` to specify the application version"
+        errorLine1="&lt;manifest xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
+        errorLine2=" ~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/unittest/ui/AdServicesUIUnitTests/android_common/manifest_merger/AndroidManifest.xml"
+            line="17"
+            column="2"/>
+    </issue>
+
+    <issue
+        id="MissingVersion"
+        message="Should set `android:versionName` to specify the application version"
+        errorLine1="&lt;manifest xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
+        errorLine2=" ~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/unittest/ui/AdServicesUIUnitTests/android_common/manifest_merger/AndroidManifest.xml"
+            line="17"
+            column="2"/>
+    </issue>
+
+    <issue
+        id="HardcodedDebugMode"
+        message="Avoid hardcoding the debug mode; leaving it out allows debug and release builds to automatically assign one"
+        errorLine1="        android:debuggable=&quot;true&quot;"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/unittest/ui/AdServicesUIUnitTests/android_common/manifest_merger/AndroidManifest.xml"
+            line="57"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="QueryAllPackagesPermission"
+        message="A `&lt;queries>` declaration should generally be used instead of QUERY_ALL_PACKAGES; see https://g.co/dev/packagevisibility for details"
+        errorLine1="    &lt;uses-permission android:name=&quot;android.permission.QUERY_ALL_PACKAGES&quot; />"
+        errorLine2="                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/unittest/ui/AdServicesUIUnitTests/android_common/manifest_merger/AndroidManifest.xml"
+            line="31"
+            column="22"/>
+    </issue>
+
+    <issue
+        id="ObsoleteSdkInt"
+        message="Unnecessary; SDK_INT is always >= 31"
+        errorLine1="@RequiresApi(Build.VERSION_CODES.S)"
+        errorLine2="~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/ui/src/com/android/adservices/service/ui/enrollment/PasReconsentNotificationChannelTest.java"
+            line="56"
+            column="1"/>
+    </issue>
+
+    <issue
+        id="MissingApplicationIcon"
+        message="Should explicitly set `android:icon`, there is no default"
+        errorLine1="    &lt;application"
+        errorLine2="     ~~~~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/unittest/ui/AdServicesUIUnitTests/android_common/manifest_merger/AndroidManifest.xml"
+            line="55"
+            column="6"/>
+    </issue>
+
+</issues>

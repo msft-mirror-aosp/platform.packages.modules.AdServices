@@ -17,8 +17,8 @@
 package com.android.adservices.service.shell.signals;
 
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.TAG;
-import static com.android.adservices.service.shell.signals.GenerateInputForEncodingArgs.ARG_PARSE_START_INDEX;
-import static com.android.adservices.service.shell.signals.GenerateInputForEncodingArgs.BUYER;
+import static com.android.adservices.service.shell.signals.SignalsShellCommandArgs.ARG_PARSE_START_INDEX;
+import static com.android.adservices.service.shell.signals.SignalsShellCommandArgs.BUYER;
 import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_APP_SIGNALS_GENERATE_INPUT_FOR_ENCODING;
 
 import android.adservices.common.AdTechIdentifier;
@@ -30,6 +30,7 @@ import com.android.adservices.service.shell.AbstractShellCommand;
 import com.android.adservices.service.shell.ShellCommandArgParserHelper;
 import com.android.adservices.service.shell.ShellCommandResult;
 import com.android.adservices.service.signals.ProtectedSignal;
+import com.android.adservices.service.signals.ProtectedSignalsArgument;
 import com.android.adservices.service.signals.SignalsDriverLogicGenerator;
 import com.android.adservices.service.signals.SignalsProvider;
 import com.android.adservices.service.stats.ShellCommandStats;
@@ -65,9 +66,12 @@ public final class GenerateInputForEncodingCommand extends AbstractShellCommand 
             Flags.PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES;
 
     private final SignalsProvider mSignalsProvider;
+    private final ProtectedSignalsArgument mProtectedSignalsArgument;
 
-    public GenerateInputForEncodingCommand(SignalsProvider signalsProvider) {
+    public GenerateInputForEncodingCommand(
+            SignalsProvider signalsProvider, ProtectedSignalsArgument protectedSignalsArgument) {
         mSignalsProvider = signalsProvider;
+        mProtectedSignalsArgument = protectedSignalsArgument;
     }
 
     @Override
@@ -100,7 +104,7 @@ public final class GenerateInputForEncodingCommand extends AbstractShellCommand 
         try {
             String driverLogicWithRawSignals =
                     SignalsDriverLogicGenerator.getDriverLogicWithArguments(
-                            rawSignalsMap, MAX_SIZE_IN_BYTES);
+                            rawSignalsMap, MAX_SIZE_IN_BYTES, mProtectedSignalsArgument);
             sLogger.v("generated code for buyer: " + driverLogicWithRawSignals);
             out.write(driverLogicWithRawSignals);
         } catch (JSONException e) {
