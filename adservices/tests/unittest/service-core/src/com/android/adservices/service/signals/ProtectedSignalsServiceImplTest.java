@@ -16,8 +16,6 @@
 
 package com.android.adservices.service.signals;
 
-
-import static com.android.adservices.mockito.MockitoExpectations.mockLogApiCallStats;
 import static com.android.adservices.service.common.Throttler.ApiKey.PROTECTED_SIGNAL_API_UPDATE_SIGNALS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JSON_PROCESSING_STATUS_OTHER_ERROR;
@@ -44,12 +42,10 @@ import android.adservices.common.CommonFixture;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.signals.UpdateSignalsCallback;
 import android.adservices.signals.UpdateSignalsInput;
-import android.content.Context;
 import android.net.Uri;
 import android.os.LimitExceededException;
 
-import androidx.test.core.app.ApplicationProvider;
-
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.CallingAppUidSupplier;
@@ -62,27 +58,23 @@ import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
-import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
 import java.util.concurrent.ExecutorService;
 
-public class ProtectedSignalsServiceImplTest {
+@MockStatic(PeriodicEncodingJobService.class)
+public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMockitoTestCase {
 
     private static final int API_NAME = AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS;
     private static final int UID = 42;
@@ -91,8 +83,6 @@ public class ProtectedSignalsServiceImplTest {
     private static final String PACKAGE = CommonFixture.TEST_PACKAGE_NAME_1;
     private static final String EXCEPTION_MESSAGE = "message";
 
-    private MockitoSession mStaticMockSession = null;
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final ExecutorService DIRECT_EXECUTOR = MoreExecutors.newDirectExecutorService();
     @Mock private UpdateSignalsOrchestrator mUpdateSignalsOrchestratorMock;
     @Mock private FledgeAuthorizationFilter mFledgeAuthorizationFilterMock;
@@ -110,44 +100,29 @@ public class ProtectedSignalsServiceImplTest {
     private ProtectedSignalsServiceImpl mProtectedSignalsService;
     private DevContext mDevContext;
     private UpdateSignalsInput mInput;
-    private Flags mFlags;
+    private Flags mFakeFlags;
     private ResultSyncCallback<ApiCallStats> logApiCallStatsCallback;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Before
     public void setup() {
-
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .mockStatic(PeriodicEncodingJobService.class)
-                        .strictness(Strictness.LENIENT)
-                        .initMocks(this)
-                        .startMocking();
-
-        mFlags = new ProtectedSignalsServiceImplTestFlags();
-        logApiCallStatsCallback = mockLogApiCallStats(mAdServicesLoggerMock);
+        mFakeFlags = new ProtectedSignalsServiceImplTestFlags();
+        logApiCallStatsCallback = mocker.mockLogApiCallStats(mAdServicesLoggerMock);
 
         mProtectedSignalsService =
                 new ProtectedSignalsServiceImpl(
-                        CONTEXT,
+                        mContext,
                         mUpdateSignalsOrchestratorMock,
                         mFledgeAuthorizationFilterMock,
                         mConsentManagerMock,
                         mDevContextFilterMock,
                         DIRECT_EXECUTOR,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFakeFlags,
                         mCallingAppUidSupplierMock,
                         mProtectedSignalsServiceFilterMock,
                         mEnrollmentDaoMock);
 
-        mDevContext =
-                DevContext.builder()
-                        .setDevOptionsEnabled(false)
-                        .setCallingAppPackageName(PACKAGE)
-                        .build();
+        mDevContext = DevContext.builder(PACKAGE).setDevOptionsEnabled(false).build();
         mInput = new UpdateSignalsInput.Builder(URI, PACKAGE).build();
 
         // Set up the mocks for a success flow -- indivual tests that want a failure can overwrite
@@ -181,13 +156,6 @@ public class ProtectedSignalsServiceImplTest {
                                         any(), any(), anyBoolean()));
     }
 
-    @After
-    public void teardown() {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
-    }
-
     @SuppressWarnings("FutureReturnValueIgnored")
     @Test
     public void testUpdateSignalsSuccess() throws Exception {
@@ -195,7 +163,7 @@ public class ProtectedSignalsServiceImplTest {
 
         verify(mFledgeAuthorizationFilterMock)
                 .assertAppDeclaredPermission(
-                        eq(CONTEXT),
+                        eq(mContext),
                         eq(PACKAGE),
                         eq(API_NAME),
                         eq(AdServicesPermissions.ACCESS_ADSERVICES_PROTECTED_SIGNALS));

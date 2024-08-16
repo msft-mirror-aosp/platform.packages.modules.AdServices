@@ -37,7 +37,7 @@ import android.os.LimitExceededException;
 import android.os.Process;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
-import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
@@ -370,10 +370,7 @@ public final class AdSelectionServiceFilterTest extends AdServicesMockitoTestCas
                 MY_UID,
                 API_NAME,
                 Throttler.ApiKey.UNKNOWN,
-                DevContext.builder()
-                        .setDevOptionsEnabled(true)
-                        .setCallingAppPackageName(CALLER_PACKAGE_NAME)
-                        .build());
+                DevContext.builder(CALLER_PACKAGE_NAME).setDevOptionsEnabled(true).build());
     }
 
     @Test
@@ -396,10 +393,7 @@ public final class AdSelectionServiceFilterTest extends AdServicesMockitoTestCas
                 MY_UID,
                 API_NAME,
                 Throttler.ApiKey.UNKNOWN,
-                DevContext.builder()
-                        .setDevOptionsEnabled(true)
-                        .setCallingAppPackageName(CALLER_PACKAGE_NAME)
-                        .build());
+                DevContext.builder(CALLER_PACKAGE_NAME).setDevOptionsEnabled(true).build());
 
         verify(mFledgeAuthorizationFilterSpy, never())
                 .assertAdTechAllowed(any(), anyString(), any(), anyInt(), anyInt());

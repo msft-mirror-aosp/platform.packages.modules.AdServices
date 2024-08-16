@@ -32,11 +32,12 @@ import android.platform.test.option.StringOption;
 import android.platform.test.rule.CleanPackageRule;
 import android.platform.test.rule.KillAppsRule;
 import android.platform.test.scenario.annotation.Scenario;
-import android.provider.DeviceConfig;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.service.FlagsConstants;
 
 import com.google.common.io.BaseEncoding;
 
@@ -124,6 +125,13 @@ public class PtbM11RampServerAuctionSimulationTest extends ServerAuctionE2ETestB
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
     }
 
+    @Rule
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.newInstance()
+                    .setFlag(
+                            FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI,
+                            getCoordinator());
+
     /**
      * Warm up servers to reduce flakiness.
      *
@@ -132,11 +140,6 @@ public class PtbM11RampServerAuctionSimulationTest extends ServerAuctionE2ETestB
      */
     @Before
     public void warmup() throws Exception {
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                "fledge_auction_server_auction_key_fetch_uri",
-                getCoordinator(),
-                false);
 
         makeWarmUpNetworkCall(getCoordinator());
 

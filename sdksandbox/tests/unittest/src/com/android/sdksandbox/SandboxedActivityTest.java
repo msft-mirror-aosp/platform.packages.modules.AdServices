@@ -36,6 +36,7 @@ import android.os.IBinder;
 import android.os.Looper;
 
 import com.android.modules.utils.build.SdkLevel;
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -45,7 +46,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
 @RunWith(JUnit4.class)
-public class SandboxedActivityTest {
+public class SandboxedActivityTest extends DeviceSupportedBaseTest {
 
     private static final String SDK_NAME = "SDK_NAME";
     private SandboxedSdkContext mSdkContext;

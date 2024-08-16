@@ -16,8 +16,6 @@
 
 package android.adservices.test.scenario.adservices.fledge;
 
-import static android.adservices.test.scenario.adservices.utils.SelectAdsFlagRule.TEST_COORDINATOR;
-
 import android.Manifest;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.adselection.GetAdSelectionDataOutcome;
@@ -78,8 +76,6 @@ public class ServerAuctionKAnonE2ETest extends ServerAuctionE2ETestBase {
     private static final String CUSTOM_AUDIENCE_TWO_BUYERS_MULTIPLE_CA =
             "CustomAudienceServerAuctionTwoBuyersMultipleCa.json";
     private static final String SELLER = "ba-seller-5jyy5ulagq-uc.a.run.app";
-    private static final String SFE_ADDRESS =
-            "https://seller1-patest.sfe.ppapi.gcp.pstest.dev/v1/selectAd";
     private static final boolean SERVER_RESPONSE_LOGGING_ENABLED = true;
     private static final DateTimeFormatter LOG_TIME_FORMATTER =
             DateTimeFormatter.ofPattern("MM-dd HH:mm:ss.SSS").withZone(ZoneId.systemDefault());
@@ -139,7 +135,15 @@ public class ServerAuctionKAnonE2ETest extends ServerAuctionE2ETestBase {
     public static StringOption getChallengeUrlOption =
             new StringOption("get-challenge-url").setRequired(true).setDefault("");
 
-    @Rule(order = 8)
+    @ClassRule(order = 8)
+    public static StringOption serverUrlOption =
+            new StringOption("server-url").setRequired(true).setDefault("");
+
+    @ClassRule(order = 9)
+    public static StringOption coordinatorUrlOption =
+            new StringOption("coordinator-url").setRequired(true).setDefault("");
+
+    @Rule(order = 10)
     public final AdServicesFlagsSetterRule flags =
             AdServicesFlagsSetterRule.forKAnonEnabledTests()
                     .setFlag(FlagsConstants.KEY_FLEDGE_KANON_JOIN_URL, joinUrlOption.get())
@@ -158,14 +162,24 @@ public class ServerAuctionKAnonE2ETest extends ServerAuctionE2ETestBase {
                     .setFlag(
                             FlagsConstants.KEY_FLEDGE_KANON_JOIN_URL_AUTHORIY,
                             joinAuthorityOption.get())
+                    .setFlag(FlagsConstants.KEY_ANON_GET_CHALLENGE_URl, getChallengeUrlOption.get())
                     .setFlag(
-                            FlagsConstants.KEY_ANON_GET_CHALLENGE_URl, getChallengeUrlOption.get());
+                            FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI,
+                            getCoordinator());
 
     @BeforeClass
     public static void setupBeforeClass() {
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
+    }
+
+    private String getCoordinator() {
+        return coordinatorUrlOption.get();
+    }
+
+    private String getServer() {
+        return serverUrlOption.get();
     }
 
     /**
@@ -175,8 +189,9 @@ public class ServerAuctionKAnonE2ETest extends ServerAuctionE2ETestBase {
      * calls should greatly reduce this flakiness.
      */
     private void warmupClientAndServer() throws Exception {
+        // warm up the b&a encryption key fetch URL
+        makeWarmUpNetworkCall(getCoordinator());
 
-        makeWarmUpNetworkCall(TEST_COORDINATOR);
         makeWarmUpNetworkCall(keyFetchUrlOption.get());
 
         // The first warm up call brings ups the sfe
@@ -185,7 +200,7 @@ public class ServerAuctionKAnonE2ETest extends ServerAuctionE2ETestBase {
                         CUSTOM_AUDIENCE_TWO_BUYERS_MULTIPLE_CA,
                         SELLER,
                         CONTEXTUAL_SIGNALS_TWO_BUYERS,
-                        SFE_ADDRESS,
+                        getServer(),
                         SERVER_RESPONSE_LOGGING_ENABLED);
 
         // Wait for a couple of seconds before test execution
@@ -195,7 +210,7 @@ public class ServerAuctionKAnonE2ETest extends ServerAuctionE2ETestBase {
         runServerAuction(
                 CONTEXTUAL_SIGNALS_TWO_BUYERS,
                 getAdSelectionData,
-                SFE_ADDRESS,
+                getServer(),
                 SERVER_RESPONSE_LOGGING_ENABLED);
 
         // Wait for a couple of seconds before test execution
@@ -236,7 +251,7 @@ public class ServerAuctionKAnonE2ETest extends ServerAuctionE2ETestBase {
                 FakeAdExchangeServer.runServerAuction(
                         CONTEXTUAL_SIGNALS_ONE_BUYER,
                         outcome.getAdSelectionData(),
-                        SFE_ADDRESS,
+                        getServer(),
                         SERVER_RESPONSE_LOGGING_ENABLED);
 
         PersistAdSelectionResultRequest persistAdSelectionResultRequest =

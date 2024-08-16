@@ -46,6 +46,7 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.dx.mockito.inline.extended.StaticMockitoSession;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.sdksandbox.flags.Flags;
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 
 import org.junit.After;
 import org.junit.Before;
@@ -57,9 +58,9 @@ import org.mockito.Mockito;
 import org.mockito.quality.Strictness;
 
 @RunWith(JUnit4.class)
-public class SdkSandboxActivityAuthorityTest {
+public class SdkSandboxActivityAuthorityTest extends DeviceSupportedBaseTest {
 
-    @Rule
+    @Rule(order = 0)
     public final CheckFlagsRule mCheckFlagsRule = DeviceFlagsValueProvider.createCheckFlagsRule();
 
     private SdkSandboxActivityRegistry mRegistry;

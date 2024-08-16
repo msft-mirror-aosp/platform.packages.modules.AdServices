@@ -45,7 +45,6 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.SmallTest;
 
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
@@ -55,7 +54,6 @@ import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.service.FakeFlagsFactory;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.consent.ConsentManager;
@@ -87,14 +85,12 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 /** Unit test for {@link com.android.adservices.service.common.PackageChangedReceiver}. */
-@SmallTest
 @SpyStatic(AdServicesLoggerImpl.class)
 @SpyStatic(TopicsWorker.class)
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(MeasurementImpl.class)
 @SpyStatic(ConsentManager.class)
 public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoTestCase {
-    private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final String SAMPLE_PACKAGE = "com.example.measurement.sampleapp";
     private static final String PACKAGE_SCHEME = "package:";
     private static final int BACKGROUND_THREAD_TIMEOUT_MS = 500;
@@ -110,7 +106,6 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
     @Mock private AppInstallDao mAppInstallDaoMock;
     @Mock private FrequencyCapDao mFrequencyCapDaoMock;
     @Mock private ConsentManager mConsentManager;
-    @Mock private Flags mMockFlags;
 
     private TopicsWorker mSpyTopicsWorker;
 
@@ -1048,5 +1043,25 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
 
         verify(spyReceiver).consentOnPackageFullyRemoved(any(), any(), eq(DEFAULT_PACKAGE_UID));
         verify(mConsentManager, never()).clearConsentForUninstalledApp(anyString());
+    }
+
+    @Test
+    public void testPackageAdded_OnS() {
+        Assume.assumeTrue(SdkLevel.isAtLeastS());
+        Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_ADDED);
+        doReturn(mConsentManager).when(ConsentManager::getInstance);
+
+        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+        when(FlagsFactory.getFlags()).thenReturn(mMockFlags);
+
+        // Mock static method MeasurementImpl.getInstance that executes on a separate thread
+        MeasurementImpl mockMeasurementImpl = mock(MeasurementImpl.class);
+        doReturn(mockMeasurementImpl).when(() -> MeasurementImpl.getInstance(any()));
+
+        // Initialize package receiver meant for Measurement
+        PackageChangedReceiver spyReceiver = createSpyPackageReceiverForMeasurement();
+        spyReceiver.onReceive(sContext, intent);
+
+        verify(spyReceiver).measurementOnPackageAdded(any(), any());
     }
 }

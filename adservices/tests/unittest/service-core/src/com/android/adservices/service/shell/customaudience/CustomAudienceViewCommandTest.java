@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.shell.customaudience;
 
+import static android.adservices.customaudience.CustomAudienceFixture.CUSTOM_AUDIENCE_ACTIVE_FETCH_WINDOW_MS;
+
 import static com.android.adservices.service.shell.customaudience.CustomAudienceHelper.getCustomAudienceBackgroundFetchDataFromJson;
 import static com.android.adservices.service.shell.customaudience.CustomAudienceHelper.getCustomAudienceFromJson;
 import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_CUSTOM_AUDIENCE_VIEW;
@@ -26,6 +28,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.when;
 
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 
 import com.android.adservices.customaudience.DBCustomAudienceBackgroundFetchDataFixture;
@@ -39,14 +42,16 @@ import org.json.JSONObject;
 import org.junit.Test;
 import org.mockito.Mock;
 
+import java.time.Clock;
 import java.util.List;
+import java.util.TimeZone;
 
 public final class CustomAudienceViewCommandTest
         extends ShellCommandTestCase<CustomAudienceViewCommand> {
 
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("example.com");
     private static final String CA_NAME = CustomAudienceFixture.VALID_NAME;
-    public static final String OWNER = CustomAudienceFixture.VALID_OWNER;
+    private static final String OWNER = CustomAudienceFixture.VALID_OWNER;
     private static final DBCustomAudience CUSTOM_AUDIENCE_1 =
             DBCustomAudienceFixture.getValidBuilderByBuyer(BUYER, CA_NAME)
                     .setOwner(OWNER)
@@ -59,13 +64,15 @@ public final class CustomAudienceViewCommandTest
                             .setIsDebuggable(CUSTOM_AUDIENCE_1.isDebuggable())
                             .build();
     @Command private static final int EXPECTED_COMMAND = COMMAND_CUSTOM_AUDIENCE_VIEW;
-
     @Mock private CustomAudienceDao mCustomAudienceDao;
+    private final Clock mClock =
+            Clock.fixed(CommonFixture.FIXED_NOW, TimeZone.getDefault().toZoneId());
 
     @Test
-    public void testRun_missingArgument_returnsHelp() throws Exception {
+    public void testRun_missingArgument_returnsHelp() {
         runAndExpectInvalidArgument(
-                new CustomAudienceViewCommand(mCustomAudienceDao),
+                new CustomAudienceViewCommand(
+                        mCustomAudienceDao, mClock, CUSTOM_AUDIENCE_ACTIVE_FETCH_WINDOW_MS),
                 CustomAudienceViewCommand.HELP,
                 EXPECTED_COMMAND,
                 CustomAudienceShellCommandFactory.COMMAND_PREFIX,
@@ -94,6 +101,66 @@ public final class CustomAudienceViewCommandTest
                 .isEqualTo(CUSTOM_AUDIENCE_1);
         assertThat(getCustomAudienceBackgroundFetchDataFromJson(new JSONObject(actualResult.mOut)))
                 .isEqualTo(CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA_1);
+    }
+
+    @Test
+    public void testRun_eligibleForOnDeviceAuction_correctValueIsTrue() throws Exception {
+        when(mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()))
+                .thenReturn(CUSTOM_AUDIENCE_1);
+        when(mCustomAudienceDao.getDebuggableCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()))
+                .thenReturn(CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA_1);
+        when(mCustomAudienceDao.getActiveCustomAudienceByBuyers(
+                        List.of(CUSTOM_AUDIENCE_1.getBuyer()),
+                        mClock.instant(),
+                        CUSTOM_AUDIENCE_ACTIVE_FETCH_WINDOW_MS))
+                .thenReturn(List.of(CUSTOM_AUDIENCE_1));
+
+        Result actualResult = runCommandAndGetResult();
+
+        expectSuccess(actualResult, EXPECTED_COMMAND);
+        assertThat(getCustomAudienceFromJson(new JSONObject(actualResult.mOut)))
+                .isEqualTo(CUSTOM_AUDIENCE_1);
+        JSONObject jsonObject = new JSONObject(actualResult.mOut);
+        assertThat(getCustomAudienceBackgroundFetchDataFromJson(jsonObject))
+                .isEqualTo(CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA_1);
+        assertThat(jsonObject.getBoolean(CustomAudienceHelper.IS_ELIGIBLE_FOR_ON_DEVICE_AUCTION))
+                .isEqualTo(true);
+    }
+
+    @Test
+    public void testRun_ineligibleForOnDeviceAuction_correctValueIsFalse() throws Exception {
+        when(mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()))
+                .thenReturn(CUSTOM_AUDIENCE_1);
+        when(mCustomAudienceDao.getDebuggableCustomAudienceBackgroundFetchDataByPrimaryKey(
+                        CUSTOM_AUDIENCE_1.getOwner(),
+                        CUSTOM_AUDIENCE_1.getBuyer(),
+                        CUSTOM_AUDIENCE_1.getName()))
+                .thenReturn(CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA_1);
+        when(mCustomAudienceDao.getActiveCustomAudienceByBuyers(
+                        List.of(CUSTOM_AUDIENCE_1.getBuyer()),
+                        mClock.instant(),
+                        CUSTOM_AUDIENCE_ACTIVE_FETCH_WINDOW_MS))
+                .thenReturn(List.of());
+
+        Result actualResult = runCommandAndGetResult();
+
+        expectSuccess(actualResult, EXPECTED_COMMAND);
+        assertThat(getCustomAudienceFromJson(new JSONObject(actualResult.mOut)))
+                .isEqualTo(CUSTOM_AUDIENCE_1);
+        JSONObject jsonObject = new JSONObject(actualResult.mOut);
+        assertThat(getCustomAudienceBackgroundFetchDataFromJson(jsonObject))
+                .isEqualTo(CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA_1);
+        assertThat(jsonObject.getBoolean(CustomAudienceHelper.IS_ELIGIBLE_FOR_ON_DEVICE_AUCTION))
+                .isEqualTo(false);
     }
 
     @Test
@@ -151,19 +218,30 @@ public final class CustomAudienceViewCommandTest
 
     @Test
     public void test_getCommandName() {
-        assertThat(new CustomAudienceViewCommand(mCustomAudienceDao).getCommandName())
+        assertThat(
+                        new CustomAudienceViewCommand(
+                                        mCustomAudienceDao,
+                                        mClock,
+                                        CUSTOM_AUDIENCE_ACTIVE_FETCH_WINDOW_MS)
+                                .getCommandName())
                 .isEqualTo(CustomAudienceViewCommand.CMD);
     }
 
     @Test
     public void test_getCommandHelp() {
-        assertThat(new CustomAudienceViewCommand(mCustomAudienceDao).getCommandHelp())
+        assertThat(
+                        new CustomAudienceViewCommand(
+                                        mCustomAudienceDao,
+                                        mClock,
+                                        CUSTOM_AUDIENCE_ACTIVE_FETCH_WINDOW_MS)
+                                .getCommandHelp())
                 .isEqualTo(CustomAudienceViewCommand.HELP);
     }
 
     private Result runCommandAndGetResult() {
         return run(
-                new CustomAudienceViewCommand(mCustomAudienceDao),
+                new CustomAudienceViewCommand(
+                        mCustomAudienceDao, mClock, CUSTOM_AUDIENCE_ACTIVE_FETCH_WINDOW_MS),
                 CustomAudienceShellCommandFactory.COMMAND_PREFIX,
                 CustomAudienceViewCommand.CMD,
                 "--owner",

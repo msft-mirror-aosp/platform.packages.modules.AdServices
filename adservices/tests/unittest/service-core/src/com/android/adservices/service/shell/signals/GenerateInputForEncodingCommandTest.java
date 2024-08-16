@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.shell.signals;
 
-import static com.android.adservices.service.signals.ProtectedSignalsArgumentUtil.validateAndSerializeBase64;
+import static com.android.adservices.service.signals.ProtectedSignalsArgumentImpl.validateAndSerializeBase64;
 import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_APP_SIGNALS_GENERATE_INPUT_FOR_ENCODING;
 import static com.android.adservices.service.stats.ShellCommandStats.RESULT_GENERIC_ERROR;
 
@@ -35,18 +35,20 @@ import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.shell.ShellCommandTestCase;
 import com.android.adservices.service.signals.ProtectedSignal;
+import com.android.adservices.service.signals.ProtectedSignalsArgument;
+import com.android.adservices.service.signals.ProtectedSignalsArgumentFastImpl;
+import com.android.adservices.service.signals.ProtectedSignalsArgumentImpl;
 import com.android.adservices.service.signals.ProtectedSignalsFixture;
 import com.android.adservices.service.signals.SignalsProvider;
 import com.android.adservices.service.stats.ShellCommandStats;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
 
-import org.json.JSONException;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 
-import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -55,6 +57,7 @@ import java.util.concurrent.TimeoutException;
 
 public final class GenerateInputForEncodingCommandTest
         extends ShellCommandTestCase<GenerateInputForEncodingCommand> {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private static final AdTechIdentifier BUYER = CommonFixture.VALID_BUYER_1;
 
     @ShellCommandStats.Command
@@ -66,12 +69,12 @@ public final class GenerateInputForEncodingCommandTest
     public static final String VALID_SIGNAL_KEY = "someKey";
 
     @Mock private SignalsProvider mSignalsProvider;
+    @Mock private ProtectedSignalsArgument mProtectedSignalsArgument;
 
     // For executing the generated script after the command runs.
     private JSScriptEngine mJSScriptEngine;
     private final IsolateSettings mIsolateSettings =
             IsolateSettings.builder()
-                    .setEnforceMaxHeapSizeFeature(true)
                     .setMaxHeapSizeBytes(50000)
                     .setIsolateConsoleMessageInLogsEnabled(true)
                     .build();
@@ -81,13 +84,34 @@ public final class GenerateInputForEncodingCommandTest
             WebViewSupportUtil.createJSSandboxAvailableRule(sContext);
 
     @Before
-    public void setUp() {
-        this.mJSScriptEngine = JSScriptEngine.getInstance(LoggerFactory.getFledgeLogger());
+    public void killAndRecreateJavascriptSandboxIsolate()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        if (mJSScriptEngine == null) {
+            mJSScriptEngine = JSScriptEngine.getInstance(sContext, sLogger);
+        }
+        // Kill the JSScriptEngine to ensure it re-creates the JavascriptEngine isolate.
+        mJSScriptEngine.shutdown().get(JS_SCRIPT_ENGINE_TIMEOUT_SEC, TimeUnit.SECONDS);
+    }
+
+    @After
+    public void tearDown() throws ExecutionException, InterruptedException, TimeoutException {
+        if (mJSScriptEngine != null) {
+            mJSScriptEngine.shutdown().get(JS_SCRIPT_ENGINE_TIMEOUT_SEC, TimeUnit.SECONDS);
+        }
     }
 
     @Test
-    public void testRun_happyPath_returnsSuccess()
-            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+    public void testRun_happyPathWithOGImpl_returnsSuccess() {
+        testRun_happyPath_returnsSuccess(new ProtectedSignalsArgumentImpl());
+    }
+
+    @Test
+    public void testRun_happyPathWithFastImpl_returnsSuccess() {
+        testRun_happyPath_returnsSuccess(new ProtectedSignalsArgumentFastImpl());
+    }
+
+    private void testRun_happyPath_returnsSuccess(
+            ProtectedSignalsArgument protectedSignalsArgument) {
         List<ProtectedSignal> signals =
                 List.of(
                         ProtectedSignalsFixture.generateProtectedSignal(
@@ -96,7 +120,7 @@ public final class GenerateInputForEncodingCommandTest
                                 SIGNAL_GENERATION_SEED_2, new byte[] {(byte) 0xA2}));
         when(mSignalsProvider.getSignals(BUYER)).thenReturn(Map.of(VALID_SIGNAL_KEY, signals));
 
-        Result actualResult = runCommandAndGetResult(BUYER);
+        Result actualResult = runCommandAndGetResult(BUYER, protectedSignalsArgument);
         expectSuccess(actualResult, EXPECTED_COMMAND);
         String jsScript = actualResult.mOut;
         Exception exception =
@@ -111,12 +135,10 @@ public final class GenerateInputForEncodingCommandTest
                                         .get(JS_SCRIPT_ENGINE_TIMEOUT_SEC, TimeUnit.SECONDS));
 
         // We expect that ad techs need to define the encodeSignals() logic for this to
-        // execute, but
-        // there should be no parsing errors.
+        // execute, but there should be no parsing errors.
         assertThat(exception.getMessage())
                 .contains("Uncaught ReferenceError: encodeSignals is not defined");
         assertThat(jsScript).contains(ProtectedSignalsFixture.PACKAGE_NAME_PREFIX);
-        Base64.Encoder encoder = Base64.getEncoder();
         assertThat(jsScript)
                 .contains(validateAndSerializeBase64(signals.get(0).getBase64EncodedValue()));
         assertThat(jsScript)
@@ -127,7 +149,7 @@ public final class GenerateInputForEncodingCommandTest
     public void testRun_withEmptyDb_returnsEmpty() {
         when(mSignalsProvider.getSignals(BUYER)).thenReturn(Map.of());
 
-        Result actualResult = runCommandAndGetResult(BUYER);
+        Result actualResult = runCommandAndGetResult(BUYER, mProtectedSignalsArgument);
 
         expectFailure(actualResult, "no signals found.", EXPECTED_COMMAND, RESULT_GENERIC_ERROR);
     }
@@ -136,7 +158,8 @@ public final class GenerateInputForEncodingCommandTest
     public void testRun_withoutBuyerParam_throwsException() {
         Result actualResult =
                 run(
-                        new GenerateInputForEncodingCommand(mSignalsProvider),
+                        new GenerateInputForEncodingCommand(
+                                mSignalsProvider, mProtectedSignalsArgument),
                         SignalsShellCommandFactory.COMMAND_PREFIX,
                         GenerateInputForEncodingCommand.CMD);
 
@@ -147,9 +170,10 @@ public final class GenerateInputForEncodingCommandTest
                 RESULT_GENERIC_ERROR);
     }
 
-    private Result runCommandAndGetResult(AdTechIdentifier buyer) {
+    private Result runCommandAndGetResult(
+            AdTechIdentifier buyer, ProtectedSignalsArgument protectedSignalsArgument) {
         return run(
-                new GenerateInputForEncodingCommand(mSignalsProvider),
+                new GenerateInputForEncodingCommand(mSignalsProvider, protectedSignalsArgument),
                 SignalsShellCommandFactory.COMMAND_PREFIX,
                 GenerateInputForEncodingCommand.CMD,
                 "--buyer",

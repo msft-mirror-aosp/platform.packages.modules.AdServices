@@ -20,7 +20,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.common.AdServicesCommonManager;
 import android.adservices.common.AdServicesStates;
-import android.content.Context;
 import android.os.OutcomeReceiver;
 
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -50,23 +49,21 @@ public final class U18UxDetentionChannelTest
 
     private UiDevice mDevice;
     private OutcomeReceiver<Boolean, Exception> mCallback;
-    private static final Context sContext =
-            InstrumentationRegistry.getInstrumentation().getContext();
 
     @Before
     public void setUp() throws Exception {
-        UiUtils.setBinderTimeout();
-        AdservicesTestHelper.killAdservicesProcess(sContext);
-        UiUtils.resetAdServicesConsentData(sContext);
+        UiUtils.setBinderTimeout(flags);
+        AdservicesTestHelper.killAdservicesProcess(mContext);
+        UiUtils.resetAdServicesConsentData(mContext, flags);
         UiUtils.enableNotificationPermission();
-        UiUtils.enableGa();
-        UiUtils.disableNotificationFlowV2();
-        UiUtils.disableOtaStrings();
+        UiUtils.enableGa(flags);
+        UiUtils.disableNotificationFlowV2(flags);
+        UiUtils.disableOtaStrings(flags);
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
-        mCommonManager = AdServicesCommonManager.get(sContext);
+        mCommonManager = AdServicesCommonManager.get(mContext);
 
-        UiUtils.enableU18();
+        UiUtils.enableU18(flags);
 
         // General purpose callback used for expected success calls.
         mCallback =
@@ -83,7 +80,7 @@ public final class U18UxDetentionChannelTest
                 };
 
         // Reset consent and thereby AdServices data before each test.
-        UiUtils.refreshConsentResetToken();
+        UiUtils.refreshConsentResetToken(flags);
 
         SettableFuture<Boolean> responseFuture = SettableFuture.create();
 
@@ -123,8 +120,8 @@ public final class U18UxDetentionChannelTest
 
     @Test
     public void testGaUxU18DetentionChannel() throws Exception {
-        UiUtils.enableGa();
-        UiUtils.setAsRowDevice();
+        UiUtils.enableGa(flags);
+        UiUtils.setAsRowDevice(flags);
 
         AdServicesStates adServicesAdultStates =
                 new AdServicesStates.Builder()
@@ -138,7 +135,7 @@ public final class U18UxDetentionChannelTest
         mCommonManager.enableAdServices(adServicesAdultStates, CALLBACK_EXECUTOR, mCallback);
 
         AdservicesWorkflows.verifyNotification(
-                sContext,
+                mContext,
                 mDevice,
                 /* isDisplayed= */ true,
                 /* isEuTest= */ false,
@@ -157,7 +154,7 @@ public final class U18UxDetentionChannelTest
 
         // Verify no U18 UX notification can be triggered.
         AdservicesWorkflows.verifyNotification(
-                sContext,
+                mContext,
                 mDevice,
                 /* isDisplayed= */ false,
                 /* isEuTest= */ false,

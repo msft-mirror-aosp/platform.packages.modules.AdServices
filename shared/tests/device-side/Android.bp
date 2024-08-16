@@ -17,12 +17,43 @@ package {
 
 android_test {
     name: "AdServicesSharedLibrariesUnitTests",
+    defaults: [
+        "AdServicesSharedLibrariesUnitTests-defaults",
+        "adservices-shared-extended-mockito-defaults",
+    ],
+    test_suites: [
+        "general-tests",
+        "mts-adservices",
+    ],
+}
+
+android_ravenwood_test {
+    name: "AdServicesSharedLibrariesUnitTestsRavenwood",
+    srcs: [
+        // Needed because it's not exposed as library, but in
+        // adservices-shared-extended-mockito-defaults
+        ":adservices-shared-extended-mockito-rule-sources",
+    ],
+    defaults: ["AdServicesSharedLibrariesUnitTests-defaults"],
+    static_libs: [
+        // Needed by ExtendedMockitoRule references like SpyStatic / MockStatic
+        // (not on AdServicesSharedLibrariesUnitTests-defaults because
+        // AdServicesSharedLibrariesUnitTests gets it from adservices-shared-extended-mockito-defaults
+        "modules-utils-testable-device-config",
+    ],
+    auto_gen_config: true,
+    // TODO(b/335935200): add test_suites once stable
+}
+
+// Common stuff used by both the regular and Ravenwood targets
+java_defaults {
+    name: "AdServicesSharedLibrariesUnitTests-defaults",
     srcs: [
         "java/**/*.java",
+        ":adservices-shared-device-side-meta-testing-sources",
         ":adservices-shared-sideless-meta-testing-sources",
         ":adservices-shared-sideless-tests-sources",
     ],
-    defaults: ["adservices-shared-extended-mockito-defaults"],
     static_libs: [
         "adservices-shared-common",
         "adservices-shared-error-logging",
@@ -39,10 +70,9 @@ android_test {
         "auto_value_annotations",
         "truth",
     ],
+    libs: [
+        "framework-connectivity",
+    ],
     plugins: ["auto_annotation_plugin"],
     min_sdk_version: "30",
-    test_suites: [
-        "general-tests",
-        "mts-adservices",
-    ],
 }

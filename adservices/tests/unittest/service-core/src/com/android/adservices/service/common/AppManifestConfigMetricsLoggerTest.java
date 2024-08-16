@@ -16,10 +16,8 @@
 
 package com.android.adservices.service.common;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockErrorLogUtilWithThrowable;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockErrorLogUtilWithoutThrowable;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilError;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilErrorWithAnyException;
+import static com.android.adservices.common.logging.ErrorLogUtilCallback.mockErrorLogUtilWithThrowable;
+import static com.android.adservices.common.logging.ErrorLogUtilCallback.mockErrorLogUtilWithoutThrowable;
 import static com.android.adservices.service.common.AppManifestConfigCall.API_ATTRIBUTION;
 import static com.android.adservices.service.common.AppManifestConfigCall.API_TOPICS;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_ALLOWED_APP_ALLOWS_ALL;
@@ -28,13 +26,13 @@ import static com.android.adservices.service.common.AppManifestConfigCall.RESULT
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_UNSPECIFIED;
 import static com.android.adservices.service.common.AppManifestConfigCall.apiToString;
 import static com.android.adservices.service.common.AppManifestConfigCall.resultToString;
-import static com.android.adservices.service.common.AppManifestConfigMetricsLogger.dump;
 import static com.android.adservices.service.common.AppManifestConfigMetricsLogger.PREFS_KEY_TEMPLATE;
 import static com.android.adservices.service.common.AppManifestConfigMetricsLogger.PREFS_NAME;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_MANIFEST_CONFIG_LOGGING_ERROR;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
+import static com.android.adservices.shared.testing.concurrency.DeviceSideConcurrencyHelper.sleep;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
 import static com.google.common.truth.Truth.assertWithMessage;
@@ -46,17 +44,17 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import android.content.Context;
 import android.util.Log;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.errorlogging.ErrorLogUtil;
-import com.android.adservices.mockito.ExtendedMockitoExpectations.ErrorLogUtilCallback;
-import com.android.adservices.service.Flags;
+import com.android.adservices.common.logging.ErrorLogUtilCallback;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppManifestConfigCall.ApiType;
 import com.android.adservices.service.common.AppManifestConfigCall.Result;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
+import com.android.adservices.shared.testing.SkipLoggingUsageRule;
 import com.android.adservices.shared.testing.common.DumpHelper;
 import com.android.adservices.shared.testing.common.FakeSharedPreferences;
 import com.android.adservices.shared.testing.concurrency.SyncOnSharedPreferenceChangeListener;
@@ -72,9 +70,9 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
-@SpyStatic(ErrorLogUtil.class)
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(StatsdAdServicesLogger.class)
+@SetErrorLogUtilDefaultParams(ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON)
 public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtendedMockitoTestCase {
 
     private static final String PKG_NAME = "pkg.I.am";
@@ -86,14 +84,9 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
     private static final String KEY_PKG_NAME_API =
             String.format(Locale.US, PREFS_KEY_TEMPLATE, PKG_NAME, API);
 
-    @Mock private Context mMockContext;
-    @Mock private Flags mMockFlags;
     @Mock private StatsdAdServicesLogger mStatsdLogger;
 
     private final FakeSharedPreferences mPrefs = new FakeSharedPreferences();
-
-    private ErrorLogUtilCallback mErrorLogUtilWithThrowableCallback;
-    private ErrorLogUtilCallback mErrorLogUtilWithoutThrowableCallback;
 
     @Before
     public void setExpectations() {
@@ -102,30 +95,29 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
         mockGetStatsdAdServicesLogger();
 
         when(mMockContext.getSharedPreferences(any(String.class), anyInt())).thenReturn(mPrefs);
-        mErrorLogUtilWithThrowableCallback = mockErrorLogUtilWithThrowable();
-        mErrorLogUtilWithoutThrowableCallback = mockErrorLogUtilWithoutThrowable();
     }
 
     @Test
-    public void testLogUsage_nullArgs() throws Exception {
+    public void testLogUsage_nullArgs() {
         assertThrows(
                 NullPointerException.class,
-                () -> logUsageAndDontWait(/* packageName= */ null, API, RESULT_ALLOWED_APP_ALLOWS_ALL));
+                () ->
+                        logUsageAndDontWait(
+                                /* packageName= */ null, API, RESULT_ALLOWED_APP_ALLOWS_ALL));
 
         assertNoMetricsLogged();
     }
 
     @Test
-    public void testLogUsage_callWithInvalidResult() throws Exception {
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_MANIFEST_CONFIG_LOGGING_ERROR)
+    public void testLogUsage_callWithInvalidResult() {
         AppManifestConfigCall call = new AppManifestConfigCall(PKG_NAME, API);
         call.result = RESULT_UNSPECIFIED;
         mPrefs.onEditThrows(); // will throw if edit() is called
 
         AppManifestConfigMetricsLogger.logUsage(call);
 
-        verifyErrorLogUtilError(
-                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_MANIFEST_CONFIG_LOGGING_ERROR,
-                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
         assertEditNotCalled();
         assertNoMetricsLogged();
     }
@@ -192,7 +184,13 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
     }
 
     @Test
+    // TODO (b/355696393): Enhance rule to verify log calls that happen in the background.
+    @SkipLoggingUsageRule(reason = "Using ErrorLogUtilCallback as logging happens in background.")
     public void testLogUsage_handlesRuntimeException() throws Exception {
+        // Do not move this into setup as it will conflict with ErrorLogUtil mocking behavior
+        // required by the AdServicesLoggingUsageRule.
+        ErrorLogUtilCallback mErrorLogUtilWithThrowableCallback = mockErrorLogUtilWithThrowable();
+
         RuntimeException exception = new RuntimeException("D'OH!");
 
         when(mMockContext.getSharedPreferences(any(String.class), anyInt())).thenThrow(exception);
@@ -208,7 +206,13 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
     }
 
     @Test
+    // TODO (b/355696393): Enhance rule to verify log calls that happen in the background.
+    @SkipLoggingUsageRule(reason = "Using ErrorLogUtilCallback as logging happens in background.")
     public void testLogUsage_commitFailed() throws Exception {
+        // Do not move this into setup as it will conflict with ErrorLogUtil mocking behavior
+        // required by the AdServicesLoggingUsageRule.
+        ErrorLogUtilCallback mErrorLogUtilWithoutThrowableCallback =
+                mockErrorLogUtilWithoutThrowable();
         mPrefs.onCommitReturns(/* result= */ false);
 
         logUsageAndDontWait(PKG_NAME, API, RESULT_ALLOWED_APP_ALLOWS_ALL);
@@ -351,17 +355,14 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
         AppManifestConfigMetricsLogger.logUsage(call);
     }
 
-    // Must call mPrefs.onEditThrows() first
+    // Must call mPrefs.onEditThrows() first. No need to explicitly check whether ErrorLogUtil
+    // has been invoked, as the AdServicesLoggingUsageRule will automatically fail the test if
+    // logging is not verified.
     private void assertEditNotCalled() {
         sleep(
                 1_000,
                 "waiting to make sure edit() was not called in the background (which would "
                         + "have thrown an exception)");
-
-        verifyErrorLogUtilErrorWithAnyException(
-                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_EXCEPTION,
-                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON,
-                never());
     }
 
     private void assertMetricsLogged(String pkgName, @ApiType int api, @Result int result) {

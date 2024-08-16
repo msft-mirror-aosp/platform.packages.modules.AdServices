@@ -117,6 +117,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
+import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
@@ -125,7 +126,6 @@ import android.adservices.adselection.ReportEventRequest;
 import com.android.adservices.cobalt.AppNameApiErrorLogger;
 import com.android.adservices.cobalt.MeasurementCobaltLogger;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppManifestConfigCall;
 import com.android.adservices.service.common.AppManifestConfigCall.ApiType;
@@ -148,6 +148,7 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 
+import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.List;
 
@@ -160,7 +161,6 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
     private static final String TEST_ENROLLMENT_ID = "EnrollmentId";
 
     @Mock private StatsdAdServicesLogger mStatsdLoggerMock;
-    @Mock private Flags mMockFlags;
     @Mock private AppNameApiErrorLogger mMockAppNameApiErrorLogger;
     @Mock private MeasurementCobaltLogger mMeasurementCobaltLogger;
     private AdServicesLoggerImpl mAdservicesLogger;
@@ -202,6 +202,18 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                 .logFledgeApiCallStats(apiName, appPackageName, resultCode, latencyMs);
 
         callback.assertCalled();
+    }
+
+    @Test
+    public void testLogFledgeApiCallStatsWithAppPackageName_nullPackageName() throws Exception {
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        mAdservicesLogger.logFledgeApiCallStats(
+                                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                                /* appPackageName= */ null,
+                                STATUS_SUCCESS,
+                                /* latencyMs= */ 42));
     }
 
     @Test
@@ -543,6 +555,31 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
     }
 
     @Test
+    public void testLogApiCallStats_invalidArguments() throws Exception {
+        assertThrows(NullPointerException.class, () -> mAdservicesLogger.logApiCallStats(null));
+
+        // cannot use Builder as it checks for null
+        Constructor<ApiCallStats> constructor = ApiCallStats.class.getDeclaredConstructor();
+        constructor.setAccessible(true);
+        ApiCallStats packageNamelessStats = constructor.newInstance();
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> mAdservicesLogger.logApiCallStats(packageNamelessStats));
+    }
+
+    @Test
+    public void testCobaltLogAppNameApiError_nullPackageName() {
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        mAdservicesLogger.cobaltLogAppNameApiError(
+                                null,
+                                AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS,
+                                STATUS_SUCCESS));
+    }
+
+    @Test
     public void testLogUIStats() {
         UIStats stats =
                 new UIStats.Builder()
@@ -601,7 +638,9 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                                 TEST_SOURCE_REGISTRATION,
                                 retryCount,
                                 /* isRedirectOnly= */ false,
-                                /* isPARequest= */ false)
+                                /* isPARequest= */ false,
+                                /* num entities deleted */ 5,
+                                /* isEventLevelEpsilonEnabled= */ false)
                         .setAdTechDomain(null)
                         .build();
         mAdservicesLogger.logMeasurementRegistrationsResponseSize(stats);
@@ -622,6 +661,8 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
         expect.that(loggedStats.isPARequest()).isFalse();
         expect.that(loggedStats.isRedirectOnly()).isFalse();
         expect.that(loggedStats.getAdTechDomain()).isNull();
+        expect.that(loggedStats.getNumDeletedEntities()).isEqualTo(5);
+        expect.that(loggedStats.isEventLevelEpsilonEnabled()).isFalse();
         callback.assertCalled();
     }
 
