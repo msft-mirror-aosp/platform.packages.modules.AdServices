@@ -198,6 +198,8 @@ public class Throttler {
         mRateLimitPerApiMap.put(ApiKey.FLEDGE_API_SELECT_ADS, defaultPermitsPerSecond);
         mRateLimitPerApiMap.put(ApiKey.FLEDGE_API_GET_AD_SELECTION_DATA, defaultPermitsPerSecond);
         mRateLimitPerApiMap.put(
+                ApiKey.FLEDGE_API_PERSIST_AD_SELECTION_RESULT, defaultPermitsPerSecond);
+        mRateLimitPerApiMap.put(
                 ApiKey.FLEDGE_API_UPDATE_AD_COUNTER_HISTOGRAM, defaultPermitsPerSecond);
 
         mRateLimitPerApiMap.put(

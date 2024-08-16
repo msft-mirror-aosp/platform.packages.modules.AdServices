@@ -137,7 +137,6 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
         mAdsScoreGenerator =
                 new AdsScoreGeneratorImpl(
                         new AdSelectionScriptEngine(
-                                flags::getEnforceIsolateMaxHeapSize,
                                 flags::getIsolateMaxHeapSizeBytes,
                                 mAdCounterKeyCopier,
                                 mDebugReporting.getScriptStrategy(),
@@ -517,7 +516,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 debugReports.add(adScoringOutcome.getDebugReport());
             }
             double score = adScoringOutcome.getAdWithScore().getScore();
-            if (score <= 0) {
+            if (score <= 0L) {
                 continue;
             }
             if (score > winningAdScore) {
@@ -528,6 +527,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 winningAdScore = score;
             } else if (score > secondHighestAdScore) {
                 secondHighestScoredAd = adScoringOutcome;
+                secondHighestAdScore = score;
             }
         }
         if (Objects.isNull(winningAd)) {

@@ -19,15 +19,12 @@ package com.android.adservices.common.logging.annotations;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-import com.android.adservices.common.logging.ErrorLogUtilCall;
-
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-/** Container annotation for wrapping multiple invocation variants of {@link ErrorLogUtilCall}. */
+/** Container annotation for multiple usages of {@link ExpectErrorLogUtilCall}. */
 @Retention(RUNTIME)
 @Target(METHOD)
 public @interface ExpectErrorLogUtilCalls {
-    /** Expected {@link ErrorLogUtilCall} invocations. */
     ExpectErrorLogUtilCall[] value();
 }

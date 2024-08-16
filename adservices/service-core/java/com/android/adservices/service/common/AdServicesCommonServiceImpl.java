@@ -25,7 +25,6 @@ import static android.adservices.common.AdServicesPermissions.UPDATE_PRIVILEGED_
 import static android.adservices.common.AdServicesStatusUtils.STATUS_ADSERVICES_ACTIVITY_DISABLED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 import static android.adservices.common.ConsentStatus.SERVICE_NOT_ENABLED;
@@ -53,6 +52,8 @@ import static com.android.adservices.service.ui.constants.DebugMessages.UNAUTHOR
 import android.adservices.adid.AdId;
 import android.adservices.common.AdServicesCommonStates;
 import android.adservices.common.AdServicesCommonStatesResponse;
+import android.adservices.common.AdServicesModuleState;
+import android.adservices.common.AdServicesModuleUserChoice;
 import android.adservices.common.AdServicesStates;
 import android.adservices.common.CallerMetadata;
 import android.adservices.common.ConsentStatus;
@@ -62,8 +63,11 @@ import android.adservices.common.IAdServicesCommonCallback;
 import android.adservices.common.IAdServicesCommonService;
 import android.adservices.common.IAdServicesCommonStatesCallback;
 import android.adservices.common.IEnableAdServicesCallback;
+import android.adservices.common.ISetAdServicesModuleOverridesCallback;
+import android.adservices.common.ISetAdServicesModuleUserChoicesCallback;
 import android.adservices.common.IUpdateAdIdCallback;
 import android.adservices.common.IsAdServicesEnabledResult;
+import android.adservices.common.NotificationTypeParams;
 import android.adservices.common.UpdateAdIdRequest;
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
@@ -93,6 +97,7 @@ import com.android.adservices.service.ui.UxEngine;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.shared.util.Clock;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
@@ -380,12 +385,6 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
         sBackgroundExecutor.execute(
                 () -> {
                     try {
-                        if (!mFlags.getAdIdCacheEnabled()) {
-                            LogUtil.w("notifyAdIdChange() is disabled.");
-                            callback.onFailure(STATUS_KILLSWITCH_ENABLED);
-                            return;
-                        }
-
                         if (!authorizedCaller) {
                             LogUtil.w(
                                     "Caller %d is not authorized to update AdId Cache!", callerUid);
@@ -506,6 +505,25 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                                         .build());
                     }
                 });
+    }
+
+    /** Sets AdServices feature states. */
+    @Override
+    @RequiresPermission(anyOf = {ACCESS_ADSERVICES_STATE, ACCESS_ADSERVICES_STATE_COMPAT})
+    public void setAdServicesModuleOverrides(
+            List<AdServicesModuleState> adServicesModuleStateList,
+            NotificationTypeParams notificationType,
+            ISetAdServicesModuleOverridesCallback callback) {
+        // TODO: Add implementation
+    }
+
+    /** Sets AdServices feature user choices. */
+    @Override
+    @RequiresPermission(anyOf = {ACCESS_ADSERVICES_STATE, ACCESS_ADSERVICES_STATE_COMPAT})
+    public void setAdServicesModuleUserChoices(
+            List<AdServicesModuleUserChoice> adServicesFeatureUserChoiceList,
+            ISetAdServicesModuleUserChoicesCallback callback) {
+        // TODO: Add implementation
     }
 
     private int getLatency(CallerMetadata metadata, long serviceStartTime) {

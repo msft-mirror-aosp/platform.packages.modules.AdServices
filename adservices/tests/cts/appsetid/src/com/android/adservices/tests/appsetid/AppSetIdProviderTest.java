@@ -15,6 +15,8 @@
  */
 package com.android.adservices.tests.appsetid;
 
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import android.adservices.appsetid.AppSetId;
 import android.adservices.appsetid.AppSetIdProviderService;
 import android.adservices.appsetid.GetAppSetIdResult;
@@ -22,27 +24,19 @@ import android.adservices.appsetid.IAppSetIdProviderService;
 import android.adservices.appsetid.IGetAppSetIdProviderCallback;
 import android.content.Intent;
 import android.os.IBinder;
-import android.os.OutcomeReceiver;
 
-import androidx.test.runner.AndroidJUnit4;
+import com.android.adservices.shared.testing.concurrency.FailableOnResultSyncCallback;
 
-import org.junit.Assert;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-import java.io.IOException;
-import java.util.concurrent.CompletableFuture;
-
-@RunWith(AndroidJUnit4.class)
-public class AppSetIdProviderTest {
+public final class AppSetIdProviderTest extends CtsAppSetIdEndToEndTestCase {
 
     private static final String DEFAULT_APP_SET_ID = "00000000-0000-0000-0000-000000000000";
     private static final int DEFAULT_SCOPE = 1;
 
     private static final class AppSetIdProviderServiceProxy extends AppSetIdProviderService {
-
         @Override
-        public AppSetId onGetAppSetId(int clientUid, String clientPackageName) throws IOException {
+        public AppSetId onGetAppSetId(int clientUid, String clientPackageName) {
             return new AppSetId(DEFAULT_APP_SET_ID, DEFAULT_SCOPE);
         }
     }
@@ -54,41 +48,25 @@ public class AppSetIdProviderTest {
         Intent intent = new Intent();
         intent.setAction(AppSetIdProviderService.SERVICE_INTERFACE);
         IBinder remoteObject = proxy.onBind(intent);
-        Assert.assertNotNull(remoteObject);
+        assertWithMessage("remoteObject").that(remoteObject).isNotNull();
 
         IAppSetIdProviderService service = IAppSetIdProviderService.Stub.asInterface(remoteObject);
-        Assert.assertNotNull(service);
+        assertWithMessage("service").that(service).isNotNull();
 
-        CompletableFuture<AppSetId> future = new CompletableFuture<>();
-        OutcomeReceiver<AppSetId, Exception> callback =
-                new OutcomeReceiver<AppSetId, Exception>() {
-                    @Override
-                    public void onResult(AppSetId appSetId) {
-                        future.complete(appSetId);
-                    }
+        SyncGetAppSetIdProviderCallback callback = new SyncGetAppSetIdProviderCallback();
+        service.getAppSetId(/* testAppUId */ 0, "testPackageName", callback);
+        GetAppSetIdResult appSetIdResult = callback.assertResultReceived();
+        assertWithMessage("appSetIdResult").that(appSetIdResult).isNotNull();
+        expect.that(appSetIdResult.getAppSetId()).isEqualTo(DEFAULT_APP_SET_ID);
+        expect.that(appSetIdResult.getAppSetIdScope()).isEqualTo(DEFAULT_SCOPE);
+    }
 
-                    @Override
-                    public void onError(Exception error) {
-                        Assert.fail();
-                    }
-                };
-        service.getAppSetId(
-                /* testAppUId */ 0,
-                "testPackageName",
-                new IGetAppSetIdProviderCallback.Stub() {
-                    @Override
-                    public void onResult(GetAppSetIdResult result) {
-                        callback.onResult(
-                                new AppSetId(result.getAppSetId(), result.getAppSetIdScope()));
-                    }
-
-                    @Override
-                    public void onError(String errorMessage) {
-                        Assert.fail();
-                    }
-                });
-        AppSetId resultAppSetId = future.get();
-        Assert.assertEquals(DEFAULT_APP_SET_ID, resultAppSetId.getId());
-        Assert.assertEquals(DEFAULT_SCOPE, resultAppSetId.getScope());
+    private static final class SyncGetAppSetIdProviderCallback
+            extends FailableOnResultSyncCallback<GetAppSetIdResult, String>
+            implements IGetAppSetIdProviderCallback {
+        @Override
+        public void onError(String errorMessage) {
+            onFailure(errorMessage);
+        }
     }
 }

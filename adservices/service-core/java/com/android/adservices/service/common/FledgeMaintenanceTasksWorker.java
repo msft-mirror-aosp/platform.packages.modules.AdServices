@@ -100,8 +100,7 @@ public class FledgeMaintenanceTasksWorker {
                 AdSelectionServerDatabase.getInstance(context).encryptionContextDao();
         mClock = Clock.systemUTC();
         mAdSelectionDebugReportDao =
-                AdSelectionDebugReportingDatabase.getInstance(context)
-                        .getAdSelectionDebugReportDao();
+                AdSelectionDebugReportingDatabase.getInstance().getAdSelectionDebugReportDao();
         mAdServicesLogger = StatsdAdServicesLogger.getInstance();
         mKAnonMessageDao = KAnonDatabase.getInstance(context).kAnonMessageDao();
     }

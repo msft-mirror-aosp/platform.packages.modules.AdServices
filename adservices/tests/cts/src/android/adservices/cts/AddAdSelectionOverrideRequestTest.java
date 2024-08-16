@@ -16,7 +16,6 @@
 
 package android.adservices.cts;
 
-import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
@@ -26,15 +25,15 @@ import android.adservices.adselection.PerBuyerDecisionLogic;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.CommonFixture;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import com.google.common.collect.ImmutableMap;
 
-import org.junit.Rule;
 import org.junit.Test;
 
 /** Adds tests for {@link AddAdSelectionOverrideRequest}. */
-public final class AddAdSelectionOverrideRequestTest {
+@RequiresSdkLevelAtLeastS
+public final class AddAdSelectionOverrideRequestTest extends CtsAdServicesDeviceTestCase {
     private static final AdSelectionConfig AD_SELECTION_CONFIG =
             AdSelectionConfigFixture.anAdSelectionConfig();
     private static final String DECISION_LOGIC_JS = "function test() { return \"hello world\"; }";
@@ -53,11 +52,8 @@ public final class AddAdSelectionOverrideRequestTest {
                             CommonFixture.VALID_BUYER_2,
                             DECISION_LOGIC));
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Test
-    public void testBuildsAddAdSelectionOverrideRequest() throws Exception {
+    public void testBuildsAddAdSelectionOverrideRequest() {
         AddAdSelectionOverrideRequest request =
                 new AddAdSelectionOverrideRequest(
                         AD_SELECTION_CONFIG,
@@ -65,9 +61,9 @@ public final class AddAdSelectionOverrideRequestTest {
                         TRUSTED_SCORING_SIGNALS,
                         BUYERS_DECISION_LOGIC);
 
-        assertThat(request.getDecisionLogicJs()).isEqualTo(DECISION_LOGIC_JS);
-        assertThat(request.getAdSelectionConfig()).isEqualTo(AD_SELECTION_CONFIG);
-        assertThat(request.getTrustedScoringSignals()).isEqualTo(TRUSTED_SCORING_SIGNALS);
-        assertThat(request.getPerBuyerDecisionLogic()).isEqualTo(BUYERS_DECISION_LOGIC);
+        expect.that(request.getDecisionLogicJs()).isEqualTo(DECISION_LOGIC_JS);
+        expect.that(request.getAdSelectionConfig()).isEqualTo(AD_SELECTION_CONFIG);
+        expect.that(request.getTrustedScoringSignals()).isEqualTo(TRUSTED_SCORING_SIGNALS);
+        expect.that(request.getPerBuyerDecisionLogic()).isEqualTo(BUYERS_DECISION_LOGIC);
     }
 }

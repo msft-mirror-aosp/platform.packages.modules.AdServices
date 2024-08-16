@@ -355,6 +355,7 @@ public class SdkSandboxStorageManager {
         PackageInfoHolder pmInfoHolder = new PackageInfoHolder(mContext, userId);
         reconcileSdkDataPackageDirs(userId, /*isCeData=*/ true, pmInfoHolder);
         reconcileSdkDataPackageDirs(userId, /*isCeData=*/ false, pmInfoHolder);
+        LogUtil.d(TAG, "Reconciliation of sdk data package directories complete for " + userId);
     }
 
     @GuardedBy("mLock")
