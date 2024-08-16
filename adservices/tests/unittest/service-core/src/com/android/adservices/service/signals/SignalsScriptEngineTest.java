@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.signals;
 
+import static com.android.adservices.service.signals.ProtectedSignalsFixture.getHexString;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OTHER_FAILURE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OUTPUT_NON_ZERO_RESULT;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OUTPUT_SYNTAX_ERROR;
@@ -123,31 +124,95 @@ public final class SignalsScriptEngineTest extends AdServicesMockitoTestCase {
     @Test
     public void test_encodeSignals_signalsAreRepresentedAsAMapInJSOGImpl_returnsSuccess()
             throws ExecutionException, InterruptedException, TimeoutException {
-        encodeSignalsSignalsAreAMapInJS(new ProtectedSignalsArgumentImpl());
-    }
-
-    @Test
-    public void test_encodeSignals_signalsAreRepresentedAsAMapInJSFastImpl_returnsSuccess()
-            throws ExecutionException, InterruptedException, TimeoutException {
-        encodeSignalsSignalsAreAMapInJS(new ProtectedSignalsArgumentFastImpl());
-    }
-
-    private void encodeSignalsSignalsAreAMapInJS(ProtectedSignalsArgument protectedSignalsArgument)
-            throws ExecutionException, InterruptedException, TimeoutException {
         Map<String, List<ProtectedSignal>> rawSignalsMap = new HashMap<>();
         rawSignalsMap.put(
                 Base64.getEncoder().encodeToString(new byte[] {0x00}),
                 List.of(
-                        ProtectedSignalsFixture.generateProtectedSignal(
+                        ProtectedSignalsFixture.generateBase64ProtectedSignal(
                                 "", new byte[] {(byte) 0xA0})));
 
         rawSignalsMap.put(
                 Base64.getEncoder().encodeToString(new byte[] {0x01}),
                 List.of(
-                        ProtectedSignalsFixture.generateProtectedSignal(
+                        ProtectedSignalsFixture.generateBase64ProtectedSignal(
                                 "", new byte[] {(byte) 0xA1}),
-                        ProtectedSignalsFixture.generateProtectedSignal(
+                        ProtectedSignalsFixture.generateBase64ProtectedSignal(
                                 "", new byte[] {(byte) 0xA2})));
+
+        ProtectedSignalsArgument protectedSignalsArgument = new ProtectedSignalsArgumentImpl();
+
+        // Assumes keys and values are 1 byte long
+        // Generates an array with the following structure
+        // [signals.size() signal0.key #signal0.values.size() signal0.values[0] signal0.values[2]
+        //                 signal1.key ... ]
+        String encodeSignalsJS =
+                "function encodeSignals(signals, maxSize) {\n"
+                        + "  let result = new Uint8Array(maxSize);\n"
+                        + "  // first entry will contain the total size\n"
+                        + "  let size = 1;\n"
+                        + "  let keys = 0;\n"
+                        + "  \n"
+                        + "  for (const [key, values] of signals.entries()) {\n"
+                        + "    keys++;\n"
+                        + "    // Assuming all data are 1 byte only\n"
+                        + "    console.log(\"key \" + keys + \" is \" + key)\n"
+                        + "    result[size++] = key[0];\n"
+                        + "    result[size++] = values.length;\n"
+                        + "    for(const value of values) {\n"
+                        + "      result[size++] = value.signal_value[0];\n"
+                        + "    }\n"
+                        + "  }\n"
+                        + "  result[0] = keys;\n"
+                        + "  \n"
+                        + "  return { 'status': 0, 'results': result.subarray(0, size)};\n"
+                        + "}\n";
+        ListenableFuture<byte[]> jsOutcome =
+                mSignalsScriptEngine.encodeSignals(
+                        encodeSignalsJS,
+                        rawSignalsMap,
+                        10,
+                        mEncodingExecutionLoggerMock,
+                        protectedSignalsArgument);
+        byte[] result = jsOutcome.get(5, TimeUnit.SECONDS);
+
+        assertEquals(
+                "Encoded result has wrong count of signal keys",
+                (byte) rawSignalsMap.size(),
+                result[0]);
+        int offset = 1;
+        for (int i = 0; i < rawSignalsMap.size(); i++) {
+            byte signalKey = result[offset++];
+            assertTrue(signalKey == 0x00 || signalKey == 0x01);
+            if (signalKey == 0x00) {
+                assertEquals("Wrong signal values length", 0x01, result[offset++]);
+                assertEquals("Wrong signal values", (byte) 0xA0, result[offset++]);
+            } else {
+                assertEquals("Wrong signal values length", 0x02, result[offset++]);
+                assertEquals("Wrong signal values", (byte) 0xA1, result[offset++]);
+                assertEquals("Wrong signal values", (byte) 0xA2, result[offset++]);
+            }
+        }
+    }
+
+    @Test
+    public void test_encodeSignals_signalsAreRepresentedAsAMapInJSFastImpl_returnsSuccess()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        Map<String, List<ProtectedSignal>> rawSignalsMap = new HashMap<>();
+        rawSignalsMap.put(
+                getHexString(new byte[] {0x00}),
+                List.of(
+                        ProtectedSignalsFixture.generateHexProtectedSignal(
+                                "", new byte[] {(byte) 0xA0})));
+
+        rawSignalsMap.put(
+                getHexString(new byte[] {0x01}),
+                List.of(
+                        ProtectedSignalsFixture.generateHexProtectedSignal(
+                                "", new byte[] {(byte) 0xA1}),
+                        ProtectedSignalsFixture.generateHexProtectedSignal(
+                                "", new byte[] {(byte) 0xA2})));
+
+        ProtectedSignalsArgument protectedSignalsArgument = new ProtectedSignalsArgumentFastImpl();
 
         // Assumes keys and values are 1 byte long
         // Generates an array with the following structure
@@ -219,7 +284,7 @@ public final class SignalsScriptEngineTest extends AdServicesMockitoTestCase {
             throws ExecutionException, InterruptedException, TimeoutException {
         Map<String, List<ProtectedSignal>> rawSignalsMap = new HashMap<>();
         ProtectedSignal signalValue =
-                ProtectedSignalsFixture.generateProtectedSignal("", new byte[] {(byte) 0xA0});
+                ProtectedSignalsFixture.generateBase64ProtectedSignal("", new byte[] {(byte) 0xA0});
         rawSignalsMap.put(
                 Base64.getEncoder().encodeToString(new byte[] {0x00}), List.of(signalValue));
 
@@ -274,7 +339,7 @@ public final class SignalsScriptEngineTest extends AdServicesMockitoTestCase {
             throws ExecutionException, InterruptedException, TimeoutException {
         Map<String, List<ProtectedSignal>> rawSignalsMap = new HashMap<>();
         ProtectedSignal signalValue =
-                ProtectedSignalsFixture.generateProtectedSignal("", new byte[] {(byte) 0xA0});
+                ProtectedSignalsFixture.generateBase64ProtectedSignal("", new byte[] {(byte) 0xA0});
         rawSignalsMap.put(
                 Base64.getEncoder().encodeToString(new byte[] {0x00}), List.of(signalValue));
 

@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.shell.signals;
 
+import static org.mockito.Mockito.when;
+
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.data.signals.EncoderLogicHandler;
 import com.android.adservices.data.signals.EncoderLogicMetadataDao;
@@ -25,6 +27,7 @@ import com.android.adservices.service.shell.ShellCommand;
 import com.android.adservices.service.shell.ShellCommandFactory;
 import com.android.adservices.service.signals.PeriodicEncodingJobRunner;
 import com.android.adservices.service.signals.ProtectedSignalsArgument;
+import com.android.adservices.service.signals.SignalsProviderAndArgumentFactory;
 import com.android.adservices.service.stats.pas.EncodingExecutionLogHelper;
 import com.android.adservices.service.stats.pas.EncodingJobRunStatsLogger;
 
@@ -46,19 +49,21 @@ public class SignalsShellCommandFactoryTest extends AdServicesMockitoTestCase {
     @Mock private EncodingJobRunStatsLogger mMockEncodingJobRunStatsLogger;
     @Mock private EncoderLogicMetadataDao mMockEncoderLogicMetadataDao;
     @Mock private ProtectedSignalsArgument mMockProtectedSignalsArgument;
+    @Mock private SignalsProviderAndArgumentFactory mMockSignalsProviderAndArgumentFactory;
 
     @Before
     public void setup() {
+        when(mMockSignalsProviderAndArgumentFactory.getProtectedSignalsArgument())
+                .thenReturn(mMockProtectedSignalsArgument);
         mFactory =
                 new SignalsShellCommandFactory(
                         SIGNALS_CLI_ENABLED,
-                        mMockProtectedSignalsDao,
+                        mMockSignalsProviderAndArgumentFactory,
                         mMockPeriodicEncodingJobRunner,
                         mMockEncoderLogicHandler,
                         mMockEncodingExecutionLogHelper,
                         mMockEncodingJobRunStatsLogger,
-                        mMockEncoderLogicMetadataDao,
-                        mMockProtectedSignalsArgument);
+                        mMockEncoderLogicMetadataDao);
     }
 
     @Test
@@ -90,13 +95,12 @@ public class SignalsShellCommandFactoryTest extends AdServicesMockitoTestCase {
         mFactory =
                 new SignalsShellCommandFactory(
                         false,
-                        mMockProtectedSignalsDao,
+                        mMockSignalsProviderAndArgumentFactory,
                         mMockPeriodicEncodingJobRunner,
                         mMockEncoderLogicHandler,
                         mMockEncodingExecutionLogHelper,
                         mMockEncodingJobRunStatsLogger,
-                        mMockEncoderLogicMetadataDao,
-                        mMockProtectedSignalsArgument);
+                        mMockEncoderLogicMetadataDao);
         ShellCommand shellCommand = mFactory.getShellCommand(GenerateInputForEncodingCommand.CMD);
         Truth.assertThat(shellCommand).isInstanceOf(NoOpShellCommand.class);
     }
@@ -106,13 +110,12 @@ public class SignalsShellCommandFactoryTest extends AdServicesMockitoTestCase {
         mFactory =
                 new SignalsShellCommandFactory(
                         false,
-                        mMockProtectedSignalsDao,
+                        mMockSignalsProviderAndArgumentFactory,
                         mMockPeriodicEncodingJobRunner,
                         mMockEncoderLogicHandler,
                         mMockEncodingExecutionLogHelper,
                         mMockEncodingJobRunStatsLogger,
-                        mMockEncoderLogicMetadataDao,
-                        mMockProtectedSignalsArgument);
+                        mMockEncoderLogicMetadataDao);
         ShellCommand shellCommand = mFactory.getShellCommand("invalid");
         Truth.assertThat(shellCommand).isNull();
     }
@@ -122,13 +125,12 @@ public class SignalsShellCommandFactoryTest extends AdServicesMockitoTestCase {
         mFactory =
                 new SignalsShellCommandFactory(
                         SIGNALS_CLI_ENABLED,
-                        mMockProtectedSignalsDao,
+                        mMockSignalsProviderAndArgumentFactory,
                         mMockPeriodicEncodingJobRunner,
                         mMockEncoderLogicHandler,
                         mMockEncodingExecutionLogHelper,
                         mMockEncodingJobRunStatsLogger,
-                        mMockEncoderLogicMetadataDao,
-                        mMockProtectedSignalsArgument);
+                        mMockEncoderLogicMetadataDao);
 
         Truth.assertThat(Sets.newHashSet(mFactory.getAllCommandsHelp()))
                 .containsExactlyElementsIn(
