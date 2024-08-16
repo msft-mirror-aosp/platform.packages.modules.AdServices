@@ -5076,6 +5076,34 @@ public class MeasurementDaoTest {
     }
 
     @Test
+    public void testInsertAggregateReport_withTriggerTime() {
+        AggregateReport.Builder builder = AggregateReportFixture.getValidAggregateReportBuilder();
+        builder.setTriggerTime(1L);
+        AggregateReport aggregateReportWithTriggerTime = builder.build();
+        mDatastoreManager.runInTransaction(
+                (dao) -> dao.insertAggregateReport(aggregateReportWithTriggerTime));
+
+        try (Cursor cursor =
+                MeasurementDbHelper.getInstance(sContext)
+                        .getReadableDatabase()
+                        .query(
+                                MeasurementTables.AggregateReport.TABLE,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null)) {
+            assertTrue(cursor.moveToNext());
+            AggregateReport aggregateReport = SqliteObjectMapper.constructAggregateReport(cursor);
+            assertNotNull(aggregateReport);
+            assertNotNull(aggregateReport.getId());
+            assertNotNull(aggregateReport.getTriggerTime());
+            assertEquals(aggregateReportWithTriggerTime, aggregateReport);
+        }
+    }
+
+    @Test
     public void testDeleteAllMeasurementDataWithEmptyList() {
         SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
 
