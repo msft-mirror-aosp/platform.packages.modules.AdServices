@@ -696,6 +696,8 @@ public class JSScriptEngine {
      * <p>Throws error in case, we have enforced max heap memory restrictions and isolate does not
      * support that feature
      */
+    @SuppressWarnings("UnclosedTrace")
+    // This is false-positives lint result. The trace is closed in finally.
     private JavaScriptIsolate createIsolate(
             JavaScriptSandbox jsSandbox, IsolateSettings isolateSettings) {
         Trace.beginSection(Tracing.JSSCRIPTENGINE_CREATE_ISOLATE);
