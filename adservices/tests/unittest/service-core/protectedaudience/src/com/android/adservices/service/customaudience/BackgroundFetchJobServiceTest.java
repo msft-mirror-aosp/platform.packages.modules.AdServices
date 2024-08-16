@@ -115,35 +115,12 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
     }
 
     @Test
-    public void testOnStartJobFlagDisabled_withoutLogging() throws Exception {
-        Flags mFlagsWithDisabledBgFWithoutLogging =
-                new FlagsWithDisabledBgF() {
-                    @Override
-                    public boolean getBackgroundJobsLoggingKillSwitch() {
-                        return true;
-                    }
-                };
-        doReturn(mFlagsWithDisabledBgFWithoutLogging).when(FlagsFactory::getFlags);
-        AdServicesJobServiceLogger logger =
-                mockAdServicesJobServiceLogger(mContext, mFlagsWithDisabledBgFWithoutLogging);
-
-        testOnStartJobFlagDisabled();
-
-        verifyLoggingNotHappened(logger);
-    }
-
-    @Test
     public void testOnStartJobFlagDisabled_withLogging() throws Exception {
-        Flags mFlagsWithDisabledBgFWithLogging =
-                new FlagsWithDisabledBgF() {
-                    @Override
-                    public boolean getBackgroundJobsLoggingKillSwitch() {
-                        return false;
-                    }
-                };
-        doReturn(mFlagsWithDisabledBgFWithLogging).when(FlagsFactory::getFlags);
+        Flags mFlagsWithDisabledBgF = new FlagsWithDisabledBgF();
+        mocker.mockGetFlags(mFlagsWithDisabledBgF);
+
         AdServicesJobServiceLogger logger =
-                mockAdServicesJobServiceLogger(mContext, mFlagsWithDisabledBgFWithLogging);
+                mockAdServicesJobServiceLogger(mContext, mFlagsWithDisabledBgF);
         JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);
         JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
@@ -182,22 +159,10 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
     }
 
     @Test
-    public void testOnStartJobConsentRevokedGaUxEnabled_withoutLogging() throws Exception {
-        FlagsWithEnabledBgFGaUxEnabledWithoutLogging flags =
-                new FlagsWithEnabledBgFGaUxEnabledWithoutLogging();
-        doReturn(flags).when(FlagsFactory::getFlags);
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(mContext, flags);
-
-        testOnStartJobConsentRevokedGaUxEnabled();
-
-        verifyLoggingNotHappened(logger);
-    }
-
-    @Test
     public void testOnStartJobConsentRevokedGaUxEnabled_withLogging() throws Exception {
-        FlagsWithEnabledBgFGaUxEnabledWithLogging flags =
-                new FlagsWithEnabledBgFGaUxEnabledWithLogging();
-        doReturn(flags).when(FlagsFactory::getFlags);
+        FlagsWithEnabledBgFGaUxEnabled flags = new FlagsWithEnabledBgFGaUxEnabled();
+        mocker.mockGetFlags(flags);
+
         AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(mContext, flags);
         JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
@@ -232,27 +197,13 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
     }
 
     @Test
-    public void testOnStartJobUpdateSuccess_withoutLogging() throws Exception {
-        Flags flagsWithEnabledBgFGaUxDisabledWithoutLogging =
-                new FlagsWithEnabledBgFGaUxDisabledWithoutLogging();
-        doReturn(flagsWithEnabledBgFGaUxDisabledWithoutLogging).when(FlagsFactory::getFlags);
+    public void testOnStartJobUpdateSuccess_withLogging()
+            throws Exception {
+        Flags flagsWithEnabledBgFGaUxDisabled = new FlagsWithEnabledBgFGaUxDisabled();
+        mocker.mockGetFlags(flagsWithEnabledBgFGaUxDisabled);
+
         AdServicesJobServiceLogger logger =
-                mockAdServicesJobServiceLogger(
-                        mContext, flagsWithEnabledBgFGaUxDisabledWithoutLogging);
-
-        testOnStartJobUpdateSuccess();
-
-        verifyLoggingNotHappened(logger);
-    }
-
-    @Test
-    public void testOnStartJobUpdateSuccess_withLogging() throws Exception {
-        Flags flagsWithEnabledBgFGaUxDisabledWithLogging =
-                new FlagsWithEnabledBgFGaUxDisabledWithLogging();
-        doReturn(flagsWithEnabledBgFGaUxDisabledWithLogging).when(FlagsFactory::getFlags);
-        AdServicesJobServiceLogger logger =
-                mockAdServicesJobServiceLogger(
-                        mContext, flagsWithEnabledBgFGaUxDisabledWithLogging);
+                mockAdServicesJobServiceLogger(mContext, flagsWithEnabledBgFGaUxDisabled);
         JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);
         JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
@@ -262,27 +213,12 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
     }
 
     @Test
-    public void testOnStartJobUpdateTimeoutHandled_withoutLogging() throws Exception {
-        Flags flagsWithEnabledBgFGaUxDisabledWithoutLogging =
-                new FlagsWithEnabledBgFGaUxDisabledWithoutLogging();
-        doReturn(flagsWithEnabledBgFGaUxDisabledWithoutLogging).when(FlagsFactory::getFlags);
-        AdServicesJobServiceLogger logger =
-                mockAdServicesJobServiceLogger(
-                        mContext, flagsWithEnabledBgFGaUxDisabledWithoutLogging);
-
-        testOnStartJobUpdateTimeoutHandled();
-
-        verifyLoggingNotHappened(logger);
-    }
-
-    @Test
     public void testOnStartJobUpdateTimeoutHandled_withLogging() throws Exception {
-        Flags flagsWithEnabledBgFGaUxDisabledWithLogging =
-                new FlagsWithEnabledBgFGaUxDisabledWithLogging();
-        doReturn(flagsWithEnabledBgFGaUxDisabledWithLogging).when(FlagsFactory::getFlags);
+        Flags flagsWithEnabledBgFGaUxDisabled = new FlagsWithEnabledBgFGaUxDisabled();
+        mocker.mockGetFlags(flagsWithEnabledBgFGaUxDisabled);
+
         AdServicesJobServiceLogger logger =
-                mockAdServicesJobServiceLogger(
-                        mContext, flagsWithEnabledBgFGaUxDisabledWithLogging);
+                mockAdServicesJobServiceLogger(mContext, flagsWithEnabledBgFGaUxDisabled);
         JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);
         JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
@@ -357,19 +293,8 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
     }
 
     @Test
-    public void testOnStopJobCallsStopWork_withoutLogging() {
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, true);
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(mContext, mMockFlags);
-
-        testOnStopJobCallsStopWork();
-
-        verifyLoggingNotHappened(logger);
-    }
-
-    @Test
-    public void testOnStopJob_withLogging() throws Exception {
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, false);
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(mContext, mMockFlags);
+    public void testOnStopJob() throws InterruptedException {
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(mContext);
         JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
         testOnStopJobCallsStopWork();
@@ -447,28 +372,6 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
     }
 
     @Test
-    public void testOnStartJob_shouldDisableJobTrue_withoutLogging() throws Exception {
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, true);
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(mContext, mMockFlags);
-
-        testOnStartJobShouldDisableJobTrue();
-
-        verifyLoggingNotHappened(logger);
-    }
-
-    @Test
-    public void testOnStartJob_shouldDisableJobTrue_withLoggingEnabled() throws Exception {
-        mocker.mockGetFlags(mMockFlags);
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(mContext, mMockFlags);
-
-        testOnStartJobShouldDisableJobTrue();
-
-        // Verify logging has not happened even though logging is enabled because this field is not
-        // logged
-        verifyLoggingNotHappened(logger);
-    }
-
-    @Test
     public void testOnStartJobCustomAudienceKillSwitchOff() throws Exception {
         mocker.mockGetFlags(mFlagsWithCustomAudienceServiceKillSwitchOff);
         doReturn(mConsentManagerMock).when(ConsentManager::getInstance);
@@ -498,7 +401,10 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
         verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
     }
 
-    private void testOnStartJobShouldDisableJobTrue() throws Exception {
+    @Test
+    public void testOnStartJobShouldDisableJobTrue() {
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(mContext);
+
         doReturn(true)
                 .when(
                         () ->
@@ -523,6 +429,10 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
         verify(mBgFWorkerMock, never()).runBackgroundFetch();
         verify(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
         verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
+
+        // Verify logging has not happened even though logging is enabled because this field is not
+        // logged
+        verifyLoggingNotHappened(logger);
     }
 
     private void testOnStartJobFlagDisabled() throws Exception {
@@ -664,22 +574,6 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
         }
     }
 
-    private static class FlagsWithEnabledBgFGaUxDisabledWithoutLogging
-            extends FlagsWithEnabledBgFGaUxDisabled {
-        @Override
-        public boolean getBackgroundJobsLoggingKillSwitch() {
-            return true;
-        }
-    }
-
-    private static class FlagsWithEnabledBgFGaUxDisabledWithLogging
-            extends FlagsWithEnabledBgFGaUxDisabled {
-        @Override
-        public boolean getBackgroundJobsLoggingKillSwitch() {
-            return false;
-        }
-    }
-
     private static class FlagsWithEnabledBgFGaUxEnabled implements Flags {
         @Override
         public boolean getFledgeBackgroundFetchEnabled() {
@@ -699,22 +593,6 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
         // By default, do not use SPE.
         @Override
         public boolean getSpeOnBackgroundFetchJobEnabled() {
-            return false;
-        }
-    }
-
-    private static class FlagsWithEnabledBgFGaUxEnabledWithoutLogging
-            extends FlagsWithEnabledBgFGaUxEnabled {
-        @Override
-        public boolean getBackgroundJobsLoggingKillSwitch() {
-            return true;
-        }
-    }
-
-    private static class FlagsWithEnabledBgFGaUxEnabledWithLogging
-            extends FlagsWithEnabledBgFGaUxEnabled {
-        @Override
-        public boolean getBackgroundJobsLoggingKillSwitch() {
             return false;
         }
     }

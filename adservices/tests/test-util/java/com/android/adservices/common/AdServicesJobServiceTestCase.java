@@ -65,19 +65,6 @@ public abstract class AdServicesJobServiceTestCase extends AdServicesExtendedMoc
     // mMockFlags instance)
 
     /**
-     * Convenience helper to call {@code
-     * AdServicesPragmaticMocker.mockGetBackgroundJobsLoggingKillSwitch()} using {@code mocker}.
-     */
-    protected final void mockBackgroundJobsLoggingKillSwitch(Flags unusedFlags, boolean value) {
-        if (!mMockFlags.equals(unusedFlags)) {
-            throw new IllegalArgumentException(
-                    "Flags argument is not used anymore and will be removed, you should be passing"
-                            + " mMockFlags");
-        }
-        mocker.mockGetBackgroundJobsLoggingKillSwitch(value);
-    }
-
-    /**
      * Convenience helper to call {@link
      * AdServicesJobMocker#mockGetAdServicesJobServiceLogger(AdServicesJobServiceLogger)} using
      * {@code jobMocker}.
@@ -104,6 +91,15 @@ public abstract class AdServicesJobServiceTestCase extends AdServicesExtendedMoc
     protected final AdServicesJobServiceLogger mockAdServicesJobServiceLogger(
             Context context, Flags flags) {
         return jobMocker.mockNoOpAdServicesJobServiceLogger(context, flags);
+    }
+
+    /**
+     * Convenience helper to call {@link
+     * AdServicesJobMocker#mockNoOpAdServicesJobServiceLogger(Context, Flags)} using {@code
+     * jobMocker}, with {@code mMockFlags}.
+     */
+    protected final AdServicesJobServiceLogger mockAdServicesJobServiceLogger(Context context) {
+        return jobMocker.mockNoOpAdServicesJobServiceLogger(context, mMockFlags);
     }
 
     // TODO(b/296945680): methods below were moved "as is" from MockitoExpectations. They should
