@@ -35,11 +35,11 @@ import android.adservices.measurement.DeletionParam;
 import android.adservices.measurement.DeletionRequest;
 import android.net.Uri;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.EventReport;
@@ -54,20 +54,15 @@ import com.android.adservices.service.measurement.aggregation.AggregateReportFix
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.junit.MockitoJUnitRunner;
-import org.mockito.quality.Strictness;
 
 import java.math.BigInteger;
 import java.time.Instant;
@@ -78,8 +73,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-@RunWith(MockitoJUnitRunner.class)
-public class MeasurementDataDeleterTest {
+@SpyStatic(FlagsFactory.class)
+public final class MeasurementDataDeleterTest extends AdServicesExtendedMockitoTestCase {
     private static final List<AggregateHistogramContribution> CONTRIBUTIONS_1 =
             Arrays.asList(
                     new AggregateHistogramContribution.Builder()
@@ -152,18 +147,11 @@ public class MeasurementDataDeleterTest {
     @Mock private AggregateReport mAggregateReport3;
     @Mock private List<Uri> mOriginUris;
     @Mock private List<Uri> mDomainUris;
-    @Mock private Flags mFlags;
+    @Mock private Flags mMockFlags;
     @Mock private AdServicesErrorLogger mErrorLogger;
     @Mock private AdServicesLogger mLogger;
 
     private MeasurementDataDeleter mMeasurementDataDeleter;
-
-    @Rule
-    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder(this)
-                    .spyStatic(FlagsFactory.class)
-                    .setStrictness(Strictness.WARN)
-                    .build();
 
     private class FakeDatastoreManager extends DatastoreManager {
         private FakeDatastoreManager() {
@@ -188,12 +176,11 @@ public class MeasurementDataDeleterTest {
 
     @Before
     public void setup() throws Exception {
-        MockitoAnnotations.initMocks(this);
-        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
-        when(mFlags.getMeasurementEnableAraDeduplicationAlignmentV1()).thenReturn(true);
-        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(false);
+        mocker.mockGetFlags(mMockFlags);
+        when(mMockFlags.getMeasurementEnableAraDeduplicationAlignmentV1()).thenReturn(true);
+        when(mMockFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(false);
         mMeasurementDataDeleter =
-                spy(new MeasurementDataDeleter(new FakeDatastoreManager(), mFlags, mLogger));
+                spy(new MeasurementDataDeleter(new FakeDatastoreManager(), mMockFlags, mLogger));
     }
 
     @Test
@@ -351,7 +338,7 @@ public class MeasurementDataDeleterTest {
         when(mMeasurementDao.getSource(source1.getId())).thenReturn(source1);
         when(mMeasurementDao.getSource(source2.getId())).thenReturn(source2);
 
-        when(mFlags.getMeasurementEnableAraDeduplicationAlignmentV1()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableAraDeduplicationAlignmentV1()).thenReturn(false);
 
         // Execution
         mMeasurementDataDeleter.resetDedupKeys(
@@ -390,7 +377,7 @@ public class MeasurementDataDeleterTest {
         when(mEventReport1.getSourceId()).thenReturn(null);
         when(mEventReport1.getTriggerDedupKey()).thenReturn(new UnsignedLong("1")); // S1 - T1
 
-        when(mFlags.getMeasurementEnableAraDeduplicationAlignmentV1()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableAraDeduplicationAlignmentV1()).thenReturn(false);
 
         // Execution
         mMeasurementDataDeleter.resetDedupKeys(mMeasurementDao, List.of(mEventReport1));
@@ -486,7 +473,7 @@ public class MeasurementDataDeleterTest {
     public void deleteAppUninstalledData_reinstallWindowDisabled_undoInstallAttributionCalled()
             throws DatastoreException {
         // Setup
-        when(mFlags.getMeasurementEnableReinstallReattribution()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableReinstallReattribution()).thenReturn(false);
 
         // Execution
         mMeasurementDataDeleter.deleteAppUninstalledData(
@@ -500,7 +487,7 @@ public class MeasurementDataDeleterTest {
     public void deleteAppUninstalledData_reinstallWindowEnabled_undoInstallAttributionNotCalled()
             throws DatastoreException {
         // Setup
-        when(mFlags.getMeasurementEnableReinstallReattribution()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableReinstallReattribution()).thenReturn(true);
 
         // Execution
         mMeasurementDataDeleter.deleteAppUninstalledData(
@@ -710,7 +697,7 @@ public class MeasurementDataDeleterTest {
         when(mMeasurementDao.getSource(source4.getId())).thenReturn(source4);
 
         // Flex API
-        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+        when(mMockFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
         when(mMeasurementDao.fetchFlexSourceIdsFor(triggerIds))
                 .thenReturn(extendedSourceIds1);
 

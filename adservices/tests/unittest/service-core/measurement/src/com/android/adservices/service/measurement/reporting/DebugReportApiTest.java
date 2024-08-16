@@ -26,16 +26,11 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import android.content.Context;
 import android.net.Uri;
 
-import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.SmallTest;
-
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.measurement.IMeasurementDao;
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
-import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.EventSurfaceType;
@@ -46,28 +41,24 @@ import com.android.adservices.service.measurement.TriggerFixture;
 import com.android.adservices.service.measurement.reporting.DebugReportApi.Type;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.junit.MockitoJUnitRunner;
-import org.mockito.quality.Strictness;
 
 import java.util.Arrays;
 import java.util.Map;
 
 /** Unit tests for {@link DebugReport} */
-@RunWith(MockitoJUnitRunner.class)
-@SmallTest
-public final class DebugReportApiTest {
+@SpyStatic(VerboseDebugReportingJobService.class)
+@SpyStatic(FlagsFactory.class)
+public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase {
 
     private static final UnsignedLong SOURCE_EVENT_ID = new UnsignedLong("7213872");
     private static final UnsignedLong TRIGGER_DATA = new UnsignedLong(1L);
@@ -80,39 +71,30 @@ public final class DebugReportApiTest {
     private static final String TEST_HEADER_CONTENT = "header-content";
 
     private static final String LIMIT = "100";
-    private final Context mContext = ApplicationProvider.getApplicationContext();
+
     private DebugReportApi mDebugReportApi;
     @Mock private IMeasurementDao mMeasurementDao;
-    @Mock private Flags mFlags;
-
-    @Rule
-    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder(this)
-                    .spyStatic(VerboseDebugReportingJobService.class)
-                    .spyStatic(FlagsFactory.class)
-                    .setStrictness(Strictness.LENIENT)
-                    .build();
+    @Mock private Flags mMockFlags;
 
     @Before
     public void setup() {
-        MockitoAnnotations.initMocks(this);
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.schedule(any(), any()));
-        ExtendedMockito.doReturn(FakeFlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
-        mDebugReportApi = spy(new DebugReportApi(mContext, mFlags));
+        mocker.mockGetFlagsForTesting();
+        mDebugReportApi = spy(new DebugReportApi(mContext, mMockFlags));
 
-        when(mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist())
+        when(mMockFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist())
                 .thenReturn(SourceFixture.ValidSourceParams.ENROLLMENT_ID);
-        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(true);
-        when(mFlags.getMeasurementEnableSourceDebugReport()).thenReturn(true);
-        when(mFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(true);
-        when(mFlags.getMeasurementVtcConfigurableMaxEventReportsCount())
+        when(mMockFlags.getMeasurementEnableDebugReport()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableSourceDebugReport()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(true);
+        when(mMockFlags.getMeasurementVtcConfigurableMaxEventReportsCount())
                 .thenReturn(Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT);
-        when(mFlags.getMeasurementEventReportsVtcEarlyReportingWindows())
+        when(mMockFlags.getMeasurementEventReportsVtcEarlyReportingWindows())
                 .thenReturn(Flags.MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS);
-        when(mFlags.getMeasurementEventReportsCtcEarlyReportingWindows())
+        when(mMockFlags.getMeasurementEventReportsCtcEarlyReportingWindows())
                 .thenReturn(Flags.MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS);
-        when(mFlags.getMeasurementMaxReportStatesPerSourceRegistration())
+        when(mMockFlags.getMeasurementMaxReportStatesPerSourceRegistration())
                 .thenReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION);
     }
 
@@ -304,7 +286,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleSourceSuccessDebugReport_debugFlagDisabled_dontSchedule()
             throws Exception {
-        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
@@ -324,7 +306,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleSourceSuccessDebugReport_sourceFlagDisabled_dontSchedule()
             throws Exception {
-        when(mFlags.getMeasurementEnableSourceDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableSourceDebugReport()).thenReturn(false);
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
@@ -500,7 +482,7 @@ public final class DebugReportApiTest {
     @Test
     public void scheduleSourceDestinationLimitDebugReport_debugFlagDisabled_dontSchedule()
             throws Exception {
-        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         Source source = SourceFixture.getValidSource();
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
@@ -513,7 +495,7 @@ public final class DebugReportApiTest {
     public void
             scheduleSourceDestinationPerMinuteRateLimitDebugReport_debugFlagDisabled_dontSchedule()
                     throws Exception {
-        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         Source source = SourceFixture.getValidSource();
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
@@ -526,7 +508,7 @@ public final class DebugReportApiTest {
     @Test
     public void scheduleSourceDestinationPerDayRateLimitDebugReport_debugFlagDisabled_dontSchedule()
             throws Exception {
-        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         Source source = SourceFixture.getValidSource();
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
@@ -539,7 +521,7 @@ public final class DebugReportApiTest {
     @Test
     public void scheduleSourceDestinationLimitDebugReport_sourceFlagDisabled_dontSchedule()
             throws Exception {
-        when(mFlags.getMeasurementEnableSourceDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableSourceDebugReport()).thenReturn(false);
         Source source = SourceFixture.getValidSource();
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
@@ -552,7 +534,7 @@ public final class DebugReportApiTest {
     public void
             scheduleSourceDestinationPerMinuteRateLimitDebugReport_sourceFlagDisabled_dontSchedule()
                     throws Exception {
-        when(mFlags.getMeasurementEnableSourceDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableSourceDebugReport()).thenReturn(false);
         Source source = SourceFixture.getValidSource();
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
@@ -566,7 +548,7 @@ public final class DebugReportApiTest {
     public void
             scheduleSourceDestinationPerDayRateLimitDebugReport_sourceFlagDisabled_dontSchedule()
                     throws Exception {
-        when(mFlags.getMeasurementEnableSourceDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableSourceDebugReport()).thenReturn(false);
         Source source = SourceFixture.getValidSource();
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
@@ -729,7 +711,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleSourceNoisedDebugReport_debugFlagDisabled_dontSchedule()
             throws Exception {
-        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
@@ -746,7 +728,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleSourceNoisedDebugReport_sourceFlagDisabled_dontSchedule()
             throws Exception {
-        when(mFlags.getMeasurementEnableSourceDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableSourceDebugReport()).thenReturn(false);
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
@@ -834,7 +816,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleSourceStorageLimitDebugReport_debugFlagDisabled_dontSchedule()
             throws Exception {
-        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
@@ -851,7 +833,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleSourceStorageLimitDebugReport_sourceFlagDisabled_dontSchedule()
             throws Exception {
-        when(mFlags.getMeasurementEnableSourceDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableSourceDebugReport()).thenReturn(false);
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
@@ -963,7 +945,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleSourceUnknownErrorDebugReport_debugFlagDisabled_dontSchedule()
             throws Exception {
-        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
@@ -983,7 +965,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleSourceUnknownErrorDebugReport_sourceFlagDisabled_dontSchedule()
             throws Exception {
-        when(mFlags.getMeasurementEnableSourceDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableSourceDebugReport()).thenReturn(false);
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
@@ -1113,7 +1095,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleTriggerNoMatchingSourceDebugReport_debugFlagDisabled_dontSchedule()
             throws Exception {
-        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
                         .setIsDebugReporting(true)
@@ -1130,7 +1112,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleTriggerNoMatchingSourceDebugReport_triggerFlagDisabled_dontSchedule()
             throws Exception {
-        when(mFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
                         .setIsDebugReporting(true)
@@ -1190,7 +1172,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleTriggerUnknownErrorDebugReport_debugFlagDisabled_dontSchedule()
             throws Exception {
-        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
                         .setIsDebugReporting(true)
@@ -1207,7 +1189,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleTriggerUnknownErrorDebugReport_triggerFlagDisabled_dontSchedule()
             throws Exception {
-        when(mFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
                         .setIsDebugReporting(true)
@@ -1353,7 +1335,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleTriggerNoMatchingFilterDataDebugReport_debugFlagDisabled_dontSchedule()
             throws Exception {
-        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
@@ -1381,7 +1363,7 @@ public final class DebugReportApiTest {
     public void
             testScheduleTriggerNoMatchingFilterDataDebugReport_triggerFlagDisabled_dontSchedule()
                     throws Exception {
-        when(mFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
@@ -1552,7 +1534,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleTriggerEventNoMatchingConfigDebugReport_debugFlagDisabled_dontSchedule()
             throws Exception {
-        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
@@ -1580,7 +1562,7 @@ public final class DebugReportApiTest {
     public void
             testScheduleTriggerEventNoMatchingConfigDebugReport_triggerFlagDisabled_dontSchedule()
                     throws Exception {
-        when(mFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
@@ -1748,7 +1730,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleTriggerEventLowPriorityDebugReport_debugFlagDisabled_dontSchedule()
             throws Exception {
-        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
@@ -1775,7 +1757,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleTriggerEventLowPriorityDebugReport_triggerFlagDisabled_dontSchedule()
             throws Exception {
-        when(mFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
@@ -1943,7 +1925,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleTriggerEventExcessiveReportsDebugReport_debugFlagDisabled_dontSchedule()
             throws Exception {
-        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
@@ -1971,7 +1953,7 @@ public final class DebugReportApiTest {
     public void
             testScheduleTriggerEventExcessiveReportsDebugReport_triggerFlagDisabled_dontSchedule()
                     throws Exception {
-        when(mFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
@@ -2141,7 +2123,7 @@ public final class DebugReportApiTest {
     public void
             testScheduleTriggerAttriPerSourceDesLimitDebugReport_debugFlagDisabled_dontSchedule()
                     throws Exception {
-        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
@@ -2169,7 +2151,7 @@ public final class DebugReportApiTest {
     public void
             testScheduleTriggerAttriPerSourceDesLimitDebugReport_triggerFlagDisabled_dontSchedule()
                     throws Exception {
-        when(mFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
@@ -2336,7 +2318,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleTriggerEventWindowPassedDebugReport_debugFlagDisabled_dontSchedule()
             throws Exception {
-        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
@@ -2363,7 +2345,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleTriggerEventWindowPassedDebugReport_triggerFlagDisabled_dontSchedule()
             throws Exception {
-        when(mFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
@@ -2529,7 +2511,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleTriggerReportingOriginLimitDebugReport_debugFlagDisabled_dontSchedule()
             throws Exception {
-        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
@@ -2557,7 +2539,7 @@ public final class DebugReportApiTest {
     public void
             testScheduleTriggerReportingOriginLimitDebugReport_triggerFlagDisabled_dontSchedule()
                     throws Exception {
-        when(mFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
@@ -2724,7 +2706,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleTriggerEventNoiseDebugReport_debugFlagDisabled_dontSchedule()
             throws Exception {
-        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
@@ -2751,7 +2733,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleTriggerEventNoiseDebugReport_triggerFlagDisabled_dontSchedule()
             throws Exception {
-        when(mFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
@@ -2917,7 +2899,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleTriggerEventStorageLimitDebugReport_debugFlagDisabled_dontSchedule()
             throws Exception {
-        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
@@ -2944,7 +2926,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleTriggerEventStorageLimitDebugReport_triggerFlagDisabled_dontSchedule()
             throws Exception {
-        when(mFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
@@ -3111,7 +3093,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleTriggerAggregateWindowPassedDebugReport_debugFlagDisabled_dontSchedule()
             throws Exception {
-        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
@@ -3139,7 +3121,7 @@ public final class DebugReportApiTest {
     public void
             testScheduleTriggerAggregateWindowPassedDebugReport_triggerFlagDisabled_dontSchedule()
                     throws Exception {
-        when(mFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
@@ -3300,7 +3282,7 @@ public final class DebugReportApiTest {
     public void
             testScheduleTriggerAggreInsufficientBudgetDebugReport_debugFlagDisabled_dontSchedule()
                     throws Exception {
-        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
@@ -3328,7 +3310,7 @@ public final class DebugReportApiTest {
     public void
             testScheduleTriggerAggreInsufficientBudgetDebugReport_triggerFlagDisabled_dontSchedule()
                     throws Exception {
-        when(mFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
@@ -3489,7 +3471,7 @@ public final class DebugReportApiTest {
     public void
             testScheduleTriggerAggregateNoContributionDebugReport_debugFlagDisabled_dontSchedule()
                     throws Exception {
-        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
@@ -3517,7 +3499,7 @@ public final class DebugReportApiTest {
     public void
             testScheduleTriggerAggregateNoContributionDebugReport_triggerFlagDisabled_dontSchedule()
                     throws Exception {
-        when(mFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
@@ -3677,7 +3659,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleTriggerAggregateStorageLimitDebugReport_debugFlagDisabled_dontSchedule()
             throws Exception {
-        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
@@ -3705,7 +3687,7 @@ public final class DebugReportApiTest {
     public void
             testScheduleTriggerAggregateStorageLimitDebugReport_triggerFlagDisabled_dontSchedule()
                     throws Exception {
-        when(mFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
@@ -3865,7 +3847,7 @@ public final class DebugReportApiTest {
     @Test
     public void testScheduleTriggerEventWindowNotStartedDebugReport_debugFlagDisabled_dontSchedule()
             throws Exception {
-        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         Source source =
                 SourceFixture.getValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
@@ -3893,7 +3875,7 @@ public final class DebugReportApiTest {
     public void
             testScheduleTriggerEventWindowNotStartedDebugReport_triggerFlagDisabled_dontSchedule()
                     throws Exception {
-        when(mFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
         Source source =
                 SourceFixture.getValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
@@ -4054,7 +4036,7 @@ public final class DebugReportApiTest {
     public void
             scheduleTriggerEventNoMatchingTriggerDataDebugReport_debugFlagDisabled_dontSchedule()
                     throws Exception {
-        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         Source source =
                 SourceFixture.getValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
@@ -4082,7 +4064,7 @@ public final class DebugReportApiTest {
     public void
             scheduleTriggerEventNoMatchingTriggerDataDebugReport_triggerFlagDisabled_dontSchedule()
                     throws Exception {
-        when(mFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
         Source source =
                 SourceFixture.getValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)

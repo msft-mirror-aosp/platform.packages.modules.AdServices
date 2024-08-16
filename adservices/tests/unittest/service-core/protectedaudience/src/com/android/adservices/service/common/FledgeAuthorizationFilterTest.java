@@ -94,7 +94,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
     @Mock private PackageManager mPackageManagerMock;
     @Mock private EnrollmentDao mEnrollmentDaoMock;
     @Mock private EnrollmentUtil mEnrollmentUtilMock;
-    @Mock private Flags mFlags;
+    @Mock private Flags mMockFlags;
 
     private final AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
@@ -103,7 +103,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
 
     @Before
     public void setup() {
-        mocker.mockGetFlags(mFlags);
+        mocker.mockGetFlags(mMockFlags);
 
         mChecker =
                 new FledgeAuthorizationFilter(
@@ -754,7 +754,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
         when(AppManifestConfigHelper.isAllowedCustomAudiencesAccess(PACKAGE_NAME, ENROLLMENT_ID))
                 .thenReturn(true);
         // Add ENROLLMENT_ID to blocklist.
-        when(mFlags.isEnrollmentBlocklisted(ENROLLMENT_ID)).thenReturn(true);
+        when(mMockFlags.isEnrollmentBlocklisted(ENROLLMENT_ID)).thenReturn(true);
 
         assertThrows(
                 SecurityException.class,
@@ -891,7 +891,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
         when(mEnrollmentDaoMock.getEnrollmentDataForFledgeByAdTechIdentifier(
                         CommonFixture.VALID_BUYER_1))
                 .thenReturn(ENROLLMENT_DATA);
-        when(mFlags.isEnrollmentBlocklisted(ENROLLMENT_ID)).thenReturn(true);
+        when(mMockFlags.isEnrollmentBlocklisted(ENROLLMENT_ID)).thenReturn(true);
 
         assertThrows(
                 FledgeAuthorizationFilter.AdTechNotAllowedException.class,
@@ -1019,7 +1019,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                         () ->
                                 AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
                                         PACKAGE_NAME, ENROLLMENT_ID));
-        when(mFlags.isEnrollmentBlocklisted(ENROLLMENT_ID)).thenReturn(false);
+        when(mMockFlags.isEnrollmentBlocklisted(ENROLLMENT_ID)).thenReturn(false);
 
         assertThrows(
                 FledgeAuthorizationFilter.AdTechNotAllowedException.class,
@@ -1070,7 +1070,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                         () ->
                                 AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
                                         PACKAGE_NAME, ENROLLMENT_ID));
-        when(mFlags.isEnrollmentBlocklisted(ENROLLMENT_ID)).thenReturn(true);
+        when(mMockFlags.isEnrollmentBlocklisted(ENROLLMENT_ID)).thenReturn(true);
 
         assertThrows(
                 FledgeAuthorizationFilter.AdTechNotAllowedException.class,
@@ -1091,7 +1091,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                 () ->
                         AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
                                 PACKAGE_NAME, ENROLLMENT_ID));
-        verify(mFlags).isEnrollmentBlocklisted(ENROLLMENT_ID);
+        verify(mMockFlags).isEnrollmentBlocklisted(ENROLLMENT_ID);
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(API_NAME_LOGGING_ID),
@@ -1124,7 +1124,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                         () ->
                                 AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
                                         PACKAGE_NAME, ENROLLMENT_ID));
-        when(mFlags.isEnrollmentBlocklisted(ENROLLMENT_ID)).thenReturn(false);
+        when(mMockFlags.isEnrollmentBlocklisted(ENROLLMENT_ID)).thenReturn(false);
 
         AdTechIdentifier returnedAdTechIdentifier =
                 mChecker.getAndAssertAdTechFromUriAllowed(
@@ -1145,7 +1145,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                 () ->
                         AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
                                 PACKAGE_NAME, ENROLLMENT_ID));
-        verify(mFlags).isEnrollmentBlocklisted(ENROLLMENT_ID);
+        verify(mMockFlags).isEnrollmentBlocklisted(ENROLLMENT_ID);
         verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
     }
 
@@ -1162,7 +1162,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                         () ->
                                 AppManifestConfigHelper.isAllowedProtectedSignalsAccess(
                                         PACKAGE_NAME, ENROLLMENT_ID));
-        when(mFlags.isEnrollmentBlocklisted(ENROLLMENT_ID)).thenReturn(false);
+        when(mMockFlags.isEnrollmentBlocklisted(ENROLLMENT_ID)).thenReturn(false);
 
         AdTechIdentifier returnedAdTechIdentifier =
                 mChecker.getAndAssertAdTechFromUriAllowed(
@@ -1183,7 +1183,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                 () ->
                         AppManifestConfigHelper.isAllowedProtectedSignalsAccess(
                                 PACKAGE_NAME, ENROLLMENT_ID));
-        verify(mFlags).isEnrollmentBlocklisted(ENROLLMENT_ID);
+        verify(mMockFlags).isEnrollmentBlocklisted(ENROLLMENT_ID);
         verifyZeroInteractions(mPackageManagerMock, mEnrollmentDaoMock, mAdServicesLoggerMock);
     }
 
@@ -1286,7 +1286,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
         when(mEnrollmentDaoMock.getEnrollmentDataForFledgeByMatchingAdTechIdentifier(
                         URI_FOR_AD_TECH))
                 .thenReturn(new Pair<>(CommonFixture.VALID_BUYER_1, ENROLLMENT_DATA));
-        when(mFlags.isEnrollmentBlocklisted(ENROLLMENT_ID)).thenReturn(true);
+        when(mMockFlags.isEnrollmentBlocklisted(ENROLLMENT_ID)).thenReturn(true);
 
         assertThrows(
                 FledgeAuthorizationFilter.AdTechNotAllowedException.class,
@@ -1308,7 +1308,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
         when(mEnrollmentDaoMock.getEnrollmentDataForFledgeByMatchingAdTechIdentifier(
                         URI_FOR_AD_TECH))
                 .thenReturn(new Pair<>(CommonFixture.VALID_BUYER_1, ENROLLMENT_DATA));
-        when(mFlags.isEnrollmentBlocklisted(ENROLLMENT_ID)).thenReturn(true);
+        when(mMockFlags.isEnrollmentBlocklisted(ENROLLMENT_ID)).thenReturn(true);
 
         assertThrows(
                 FledgeAuthorizationFilter.AdTechNotAllowedException.class,

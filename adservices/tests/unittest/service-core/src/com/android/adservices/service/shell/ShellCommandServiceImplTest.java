@@ -63,12 +63,16 @@ import com.android.adservices.service.adselection.CompressedBuyerInputCreatorFac
 import com.android.adservices.service.adselection.CompressedBuyerInputCreatorHelper;
 import com.android.adservices.service.adselection.CompressedBuyerInputCreatorNoOptimizations;
 import com.android.adservices.service.adselection.FrequencyCapAdFiltererNoOpImpl;
+import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGenerator;
+import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGeneratorFactory;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
 import com.android.adservices.service.shell.adselection.AdSelectionShellCommandFactory;
 import com.android.adservices.service.shell.adselection.ConsentedDebugShellCommand;
 import com.android.adservices.service.shell.customaudience.CustomAudienceListCommand;
 import com.android.adservices.service.shell.customaudience.CustomAudienceShellCommandFactory;
 import com.android.adservices.service.signals.PeriodicEncodingJobRunner;
+import com.android.adservices.service.signals.ProtectedSignalsArgumentFastImpl;
+import com.android.adservices.service.signals.ProtectedSignalsArgumentImpl;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.CustomAudienceLoggerFactory;
 import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
@@ -177,6 +181,10 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
                         new AdFilteringFeatureFactory(appInstallDao, frequencyCapDao, mFlags)
                                 .getAppInstallAdFilterer(),
                         mMockCompressedBuyerInputCreatorFactory);
+        ConsentedDebugConfigurationGenerator consentedDebugConfigurationGenerator =
+                new ConsentedDebugConfigurationGeneratorFactory(
+                                CONSENTED_DEBUG_CLI_ENABLED, consentedDebugConfigurationDao)
+                        .create();
         ShellCommandFactorySupplier adServicesShellCommandHandlerFactory =
                 new TestShellCommandFactorySupplier(
                         CUSTOM_AUDIENCE_CLI_ENABLED,
@@ -192,7 +200,11 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
                         mEncoderLogicHandler,
                         mEncodingExecutionLogHelper,
                         mEncodingJobRunStatsLogger,
-                        mEncoderLogicMetadataDao);
+                        mEncoderLogicMetadataDao,
+                        consentedDebugConfigurationGenerator,
+                        mFlags.getPasEncodingJobImprovementsEnabled()
+                                ? new ProtectedSignalsArgumentFastImpl()
+                                : new ProtectedSignalsArgumentImpl());
         mShellCommandService =
                 new ShellCommandServiceImpl(
                         adServicesShellCommandHandlerFactory,

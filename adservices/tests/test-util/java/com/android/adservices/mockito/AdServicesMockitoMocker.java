@@ -23,6 +23,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
+import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
 
 import java.util.Objects;
 
@@ -68,6 +69,25 @@ public final class AdServicesMockitoMocker extends AbstractMocker
     public ResultSyncCallback<ApiCallStats> mockLogApiCallStats(AdServicesLogger adServicesLogger) {
         ResultSyncCallback<ApiCallStats> callback = new ResultSyncCallback<>();
         logV("mockLogApiCallStats(%s): will return %s", adServicesLogger, callback);
+        mockLogApiCallStats(callback, adServicesLogger);
+        return callback;
+    }
+
+    @Override
+    public ResultSyncCallback<ApiCallStats> mockLogApiCallStats(
+            AdServicesLogger adServicesLogger, long timeoutMs) {
+        ResultSyncCallback<ApiCallStats> callback =
+                new ResultSyncCallback<>(
+                        SyncCallbackFactory.newSettingsBuilder()
+                                .setMaxTimeoutMs(timeoutMs)
+                                .build());
+        mockLogApiCallStats(callback, adServicesLogger);
+        logV("mockLogApiCallStats(%s, %d): will return %s", adServicesLogger, timeoutMs, callback);
+        return callback;
+    }
+
+    private void mockLogApiCallStats(
+            ResultSyncCallback<ApiCallStats> callback, AdServicesLogger adServicesLogger) {
         Objects.requireNonNull(adServicesLogger, "adServicesLogger cannot be null");
         doAnswer(
                         inv -> {
@@ -78,7 +98,6 @@ public final class AdServicesMockitoMocker extends AbstractMocker
                         })
                 .when(adServicesLogger)
                 .logApiCallStats(any());
-        return callback;
     }
 
     private static Flags nonNull(Flags flags) {
