@@ -25,11 +25,13 @@ import com.android.adservices.data.signals.EncoderLogicMetadataDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.service.adselection.AuctionServerDataCompressor;
 import com.android.adservices.service.adselection.BuyerInputGenerator;
+import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGenerator;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
 import com.android.adservices.service.shell.adselection.AdSelectionShellCommandFactory;
 import com.android.adservices.service.shell.customaudience.CustomAudienceShellCommandFactory;
 import com.android.adservices.service.shell.signals.SignalsShellCommandFactory;
 import com.android.adservices.service.signals.PeriodicEncodingJobRunner;
+import com.android.adservices.service.signals.ProtectedSignalsArgument;
 import com.android.adservices.service.stats.pas.EncodingExecutionLogHelper;
 import com.android.adservices.service.stats.pas.EncodingJobRunStatsLogger;
 
@@ -58,6 +60,8 @@ public class TestShellCommandFactorySupplier extends ShellCommandFactorySupplier
     private final EncodingExecutionLogHelper mEncodingExecutionLogHelper;
     private final EncodingJobRunStatsLogger mEncodingJobRunStatsLogger;
     private final EncoderLogicMetadataDao mEncoderLogicMetadataDao;
+    private final ConsentedDebugConfigurationGenerator mConsentedDebugConfigurationGenerator;
+    private final ProtectedSignalsArgument mProtectedSignalsArgument;
 
     TestShellCommandFactorySupplier(
             boolean isCustomAudienceCLiEnabled,
@@ -73,7 +77,9 @@ public class TestShellCommandFactorySupplier extends ShellCommandFactorySupplier
             EncoderLogicHandler encoderLogicHandler,
             EncodingExecutionLogHelper encodingExecutionLogHelper,
             EncodingJobRunStatsLogger encodingJobRunStatsLogger,
-            EncoderLogicMetadataDao encoderLogicMetadataDao) {
+            EncoderLogicMetadataDao encoderLogicMetadataDao,
+            ConsentedDebugConfigurationGenerator consentedDebugConfigurationGenerator,
+            ProtectedSignalsArgument protectedSignalsArgument) {
         mIsCustomAudienceCliEnabled = isCustomAudienceCLiEnabled;
         mIsConsentedDebugCliEnabled = isConsentedDebugCliEnabled;
         mIsSignalsCliEnabled = isSignalsCliEnabled;
@@ -106,6 +112,13 @@ public class TestShellCommandFactorySupplier extends ShellCommandFactorySupplier
         mEncoderLogicMetadataDao =
                 Objects.requireNonNull(
                         encoderLogicMetadataDao, "EncoderLogicMetadataDao cannot be null");
+        mConsentedDebugConfigurationGenerator =
+                Objects.requireNonNull(
+                        consentedDebugConfigurationGenerator,
+                        "ConsentedDebugConfigurationGenerator cannot be null");
+        mProtectedSignalsArgument =
+                Objects.requireNonNull(
+                        protectedSignalsArgument, "ProtectedSignalsArgument cannot be null");
     }
 
     @Override
@@ -122,7 +135,8 @@ public class TestShellCommandFactorySupplier extends ShellCommandFactorySupplier
                         true,
                         mConsentedDebugConfigurationDao,
                         mBuyerInputGenerator,
-                        mAuctionServerDataCompressor),
+                        mAuctionServerDataCompressor,
+                        mConsentedDebugConfigurationGenerator),
                 new SignalsShellCommandFactory(
                         mIsSignalsCliEnabled,
                         mProtectedSignalsDao,
@@ -130,6 +144,7 @@ public class TestShellCommandFactorySupplier extends ShellCommandFactorySupplier
                         mEncoderLogicHandler,
                         mEncodingExecutionLogHelper,
                         mEncodingJobRunStatsLogger,
-                        mEncoderLogicMetadataDao));
+                        mEncoderLogicMetadataDao,
+                        mProtectedSignalsArgument));
     }
 }

@@ -154,12 +154,25 @@ public abstract class AdServicesPragmaticMockerTestCase<T extends AdServicesPrag
     @Test
     public final void testMockLogApiCallStats_null() {
         assertThrows(NullPointerException.class, () -> getMocker().mockLogApiCallStats(null));
+        assertThrows(NullPointerException.class, () -> getMocker().mockLogApiCallStats(null, 42));
     }
 
     @Test
-    public final void testMockLogApiCallStats() throws Exception {
+    public final void testMockLogApiCallStats_defaultTimeout() throws Exception {
         ResultSyncCallback<ApiCallStats> callback =
                 getMocker().mockLogApiCallStats(mMockAdServicesLogger);
+        assertWithMessage("mockLogApiCallStats()").that(callback).isNotNull();
+
+        runAsync(/* delayMs= */ 10, () -> mMockAdServicesLogger.logApiCallStats(mApiCallStats));
+
+        ApiCallStats stats = callback.assertResultReceived();
+        assertWithMessage("callback result").that(stats).isSameInstanceAs(mApiCallStats);
+    }
+
+    @Test
+    public final void testMockLogApiCallStats_customTimeout() throws Exception {
+        ResultSyncCallback<ApiCallStats> callback =
+                getMocker().mockLogApiCallStats(mMockAdServicesLogger, /* timeoutMs= */ 42);
         assertWithMessage("mockLogApiCallStats()").that(callback).isNotNull();
 
         runAsync(/* delayMs= */ 10, () -> mMockAdServicesLogger.logApiCallStats(mApiCallStats));

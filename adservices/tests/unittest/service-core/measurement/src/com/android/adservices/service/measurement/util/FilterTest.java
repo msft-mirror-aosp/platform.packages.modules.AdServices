@@ -21,6 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.FilterMap;
 
@@ -29,9 +30,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -39,13 +38,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@RunWith(MockitoJUnitRunner.class)
-public class FilterTest {
-    @Mock private Flags mFlags;
+public final class FilterTest extends AdServicesMockitoTestCase {
+
+    @Mock private Flags mMockFlags;
 
     @Before
     public void setup() {
-        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(false);
     }
 
     @Test
@@ -75,7 +74,7 @@ public class FilterTest {
                 new FilterMap.Builder().setAttributionFilterMap(triggerFilterMap2).build();
 
         assertTrue(
-                new Filter(mFlags)
+                new Filter(mMockFlags)
                         .isFilterMatch(
                                 sourceFilter, List.of(triggerFilter1, triggerFilter2), true));
     }
@@ -98,7 +97,8 @@ public class FilterTest {
         FilterMap triggerFilter =
                 new FilterMap.Builder().setAttributionFilterMap(triggerFilterMap).build();
 
-        assertTrue(new Filter(mFlags).isFilterMatch(sourceFilter, List.of(triggerFilter), true));
+        assertTrue(
+                new Filter(mMockFlags).isFilterMatch(sourceFilter, List.of(triggerFilter), true));
     }
 
     @Test
@@ -119,8 +119,9 @@ public class FilterTest {
                         .addLongValue(FilterMap.LOOKBACK_WINDOW, 200L)
                         .build();
 
-        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
-        assertTrue(new Filter(mFlags).isFilterMatch(sourceFilter, List.of(triggerFilter), true));
+        when(mMockFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        assertTrue(
+                new Filter(mMockFlags).isFilterMatch(sourceFilter, List.of(triggerFilter), true));
     }
 
     @Test
@@ -137,8 +138,9 @@ public class FilterTest {
                         .addLongValue(FilterMap.LOOKBACK_WINDOW, 200L)
                         .build();
 
-        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
-        assertTrue(new Filter(mFlags).isFilterMatch(sourceFilter, List.of(triggerFilter), true));
+        when(mMockFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        assertTrue(
+                new Filter(mMockFlags).isFilterMatch(sourceFilter, List.of(triggerFilter), true));
     }
 
     @Test
@@ -159,8 +161,9 @@ public class FilterTest {
                         .addLongValue(FilterMap.LOOKBACK_WINDOW, 10L)
                         .build();
 
-        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
-        assertFalse(new Filter(mFlags).isFilterMatch(sourceFilter, List.of(triggerFilter), true));
+        when(mMockFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        assertFalse(
+                new Filter(mMockFlags).isFilterMatch(sourceFilter, List.of(triggerFilter), true));
     }
 
     @Test
@@ -192,7 +195,7 @@ public class FilterTest {
                 new FilterMap.Builder().setAttributionFilterMap(triggerFilterMap2).build();
 
         assertFalse(
-                new Filter(mFlags)
+                new Filter(mMockFlags)
                         .isFilterMatch(
                                 sourceFilter, List.of(triggerFilter1, triggerFilter2), true));
     }
@@ -216,7 +219,8 @@ public class FilterTest {
         FilterMap triggerFilter =
                 new FilterMap.Builder().setAttributionFilterMap(triggerFilterMap).build();
 
-        assertFalse(new Filter(mFlags).isFilterMatch(sourceFilter, List.of(triggerFilter), true));
+        assertFalse(
+                new Filter(mMockFlags).isFilterMatch(sourceFilter, List.of(triggerFilter), true));
     }
 
     @Test
@@ -247,7 +251,7 @@ public class FilterTest {
                 new FilterMap.Builder().setAttributionFilterMap(triggerFilterMap2).build();
 
         assertTrue(
-                new Filter(mFlags)
+                new Filter(mMockFlags)
                         .isFilterMatch(
                                 sourceFilter, List.of(triggerFilter1, triggerFilter2), true));
     }
@@ -270,7 +274,8 @@ public class FilterTest {
         FilterMap triggerFilter =
                 new FilterMap.Builder().setAttributionFilterMap(triggerFilterMap).build();
 
-        assertTrue(new Filter(mFlags).isFilterMatch(sourceFilter, List.of(triggerFilter), true));
+        assertTrue(
+                new Filter(mMockFlags).isFilterMatch(sourceFilter, List.of(triggerFilter), true));
     }
 
     @Test
@@ -302,7 +307,7 @@ public class FilterTest {
                 new FilterMap.Builder().setAttributionFilterMap(triggerFilterMap2).build();
 
         assertFalse(
-                new Filter(mFlags)
+                new Filter(mMockFlags)
                         .isFilterMatch(
                                 sourceFilter, List.of(triggerFilter1, triggerFilter2), true));
     }
@@ -326,7 +331,8 @@ public class FilterTest {
         FilterMap triggerFilter =
                 new FilterMap.Builder().setAttributionFilterMap(triggerFilterMap).build();
 
-        assertFalse(new Filter(mFlags).isFilterMatch(sourceFilter, List.of(triggerFilter), true));
+        assertFalse(
+                new Filter(mMockFlags).isFilterMatch(sourceFilter, List.of(triggerFilter), true));
     }
 
     @Test
@@ -357,7 +363,7 @@ public class FilterTest {
                 new FilterMap.Builder().setAttributionFilterMap(triggerFilterMap2).build();
 
         assertTrue(
-                new Filter(mFlags)
+                new Filter(mMockFlags)
                         .isFilterMatch(
                                 sourceFilter, List.of(triggerFilter1, triggerFilter2), false));
     }
@@ -379,8 +385,9 @@ public class FilterTest {
                         .addLongValue(FilterMap.LOOKBACK_WINDOW, 10L)
                         .build();
 
-        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
-        assertTrue(new Filter(mFlags).isFilterMatch(sourceFilter, List.of(triggerFilter), false));
+        when(mMockFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        assertTrue(
+                new Filter(mMockFlags).isFilterMatch(sourceFilter, List.of(triggerFilter), false));
     }
 
     @Test
@@ -400,8 +407,9 @@ public class FilterTest {
                         .addLongValue(FilterMap.LOOKBACK_WINDOW, 200L)
                         .build();
 
-        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
-        assertFalse(new Filter(mFlags).isFilterMatch(sourceFilter, List.of(triggerFilter), false));
+        when(mMockFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        assertFalse(
+                new Filter(mMockFlags).isFilterMatch(sourceFilter, List.of(triggerFilter), false));
     }
 
     @Test
@@ -428,7 +436,7 @@ public class FilterTest {
                 new FilterMap.Builder().setAttributionFilterMap(triggerFilterMap2).build();
 
         assertFalse(
-                new Filter(mFlags)
+                new Filter(mMockFlags)
                         .isFilterMatch(
                                 sourceFilter, List.of(triggerFilter1, triggerFilter2), false));
     }
@@ -451,7 +459,8 @@ public class FilterTest {
         FilterMap triggerFilter =
                 new FilterMap.Builder().setAttributionFilterMap(triggerFilterMap).build();
 
-        assertFalse(new Filter(mFlags).isFilterMatch(sourceFilter, List.of(triggerFilter), false));
+        assertFalse(
+                new Filter(mMockFlags).isFilterMatch(sourceFilter, List.of(triggerFilter), false));
     }
 
     @Test
@@ -478,7 +487,7 @@ public class FilterTest {
                 new FilterMap.Builder().setAttributionFilterMap(triggerFilterMap2).build();
 
         assertTrue(
-                new Filter(mFlags)
+                new Filter(mMockFlags)
                         .isFilterMatch(
                                 sourceFilter, List.of(triggerFilter1, triggerFilter2), false));
     }
@@ -501,7 +510,8 @@ public class FilterTest {
         FilterMap triggerFilter =
                 new FilterMap.Builder().setAttributionFilterMap(triggerFilterMap).build();
 
-        assertTrue(new Filter(mFlags).isFilterMatch(sourceFilter, List.of(triggerFilter), false));
+        assertTrue(
+                new Filter(mMockFlags).isFilterMatch(sourceFilter, List.of(triggerFilter), false));
     }
 
     @Test
@@ -531,7 +541,7 @@ public class FilterTest {
                 new FilterMap.Builder().setAttributionFilterMap(triggerFilterMap2).build();
 
         assertFalse(
-                new Filter(mFlags)
+                new Filter(mMockFlags)
                         .isFilterMatch(
                                 sourceFilter, List.of(triggerFilter1, triggerFilter2), false));
     }
@@ -555,7 +565,8 @@ public class FilterTest {
         FilterMap triggerFilter =
                 new FilterMap.Builder().setAttributionFilterMap(triggerFilterMap).build();
 
-        assertFalse(new Filter(mFlags).isFilterMatch(sourceFilter, List.of(triggerFilter), false));
+        assertFalse(
+                new Filter(mMockFlags).isFilterMatch(sourceFilter, List.of(triggerFilter), false));
     }
 
     @Test
@@ -578,7 +589,7 @@ public class FilterTest {
 
         // Execution
         JSONArray jsonArray = new JSONArray(Arrays.asList(map1Json, map2Json));
-        List<FilterMap> actualFilterMaps = new Filter(mFlags).deserializeFilterSet(jsonArray);
+        List<FilterMap> actualFilterMaps = new Filter(mMockFlags).deserializeFilterSet(jsonArray);
 
         // Assertion
         assertEquals(Arrays.asList(filterMap1, filterMap2), actualFilterMaps);
@@ -601,11 +612,11 @@ public class FilterTest {
                         .addStringListValue("product", List.of("1", "2"))
                         .addLongValue(FilterMap.LOOKBACK_WINDOW, 200L)
                         .build();
-        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
 
         JSONArray actualFilterMaps =
-                new Filter(mFlags).serializeFilterSet(Arrays.asList(filterMap1, filterMap2));
-        List<FilterMap> filterMaps = new Filter(mFlags).deserializeFilterSet(actualFilterMaps);
+                new Filter(mMockFlags).serializeFilterSet(Arrays.asList(filterMap1, filterMap2));
+        List<FilterMap> filterMaps = new Filter(mMockFlags).deserializeFilterSet(actualFilterMaps);
 
         // Assertion
         assertEquals(Arrays.asList(filterMap1, filterMap2), filterMaps);
@@ -629,8 +640,8 @@ public class FilterTest {
 
         // Execution
         JSONArray actualFilterMaps =
-                new Filter(mFlags).serializeFilterSet(Arrays.asList(filterMap1, filterMap2));
-        List<FilterMap> filterMaps = new Filter(mFlags).deserializeFilterSet(actualFilterMaps);
+                new Filter(mMockFlags).serializeFilterSet(Arrays.asList(filterMap1, filterMap2));
+        List<FilterMap> filterMaps = new Filter(mMockFlags).deserializeFilterSet(actualFilterMaps);
 
         // Assertion
         assertEquals(Arrays.asList(filterMap1, filterMap2), filterMaps);

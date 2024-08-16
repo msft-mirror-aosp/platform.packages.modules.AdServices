@@ -25,8 +25,8 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.doReturn;
 
 import android.adservices.common.AdServicesStatusUtils;
-import android.content.Context;
 
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.measurement.CachedFlags;
@@ -34,26 +34,23 @@ import com.android.adservices.service.measurement.CachedFlags;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
-public class ConsentNotifiedAccessResolverTest {
+public final class ConsentNotifiedAccessResolverTest extends AdServicesMockitoTestCase {
     @Mock private ConsentManager mConsentManager;
     @Mock private UserConsentAccessResolver mUserConsentAccessResolver;
-    @Mock private Context mContext;
-    @Mock private Flags mFlags;
+    @Mock private Flags mMockFlags;
 
     private ConsentNotifiedAccessResolver mConsentNotifiedAccessResolver;
 
     @Before
     public void setup() {
-        MockitoAnnotations.initMocks(this);
         mConsentNotifiedAccessResolver =
                 new ConsentNotifiedAccessResolver(
-                        mConsentManager, new CachedFlags(mFlags), mUserConsentAccessResolver);
-        doReturn(false).when(mFlags).getConsentNotifiedDebugMode();
+                        mConsentManager, new CachedFlags(mMockFlags), mUserConsentAccessResolver);
+        doReturn(false).when(mMockFlags).getConsentNotifiedDebugMode();
         doReturn(new AccessInfo(false, STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET))
                 .when(mUserConsentAccessResolver)
-                .getAccessInfo(mContext);
+                .getAccessInfo(mMockContext);
         doReturn(false).when(mConsentManager).wasNotificationDisplayed();
         doReturn(false).when(mConsentManager).wasU18NotificationDisplayed();
         doReturn(false).when(mConsentManager).wasGaUxNotificationDisplayed();
@@ -72,7 +69,7 @@ public class ConsentNotifiedAccessResolverTest {
         doReturn(true).when(mConsentManager).wasGaUxNotificationDisplayed();
 
         // Assertion
-        assertTrue(mConsentNotifiedAccessResolver.getAccessInfo(mContext).isAllowedAccess());
+        assertTrue(mConsentNotifiedAccessResolver.getAccessInfo(mMockContext).isAllowedAccess());
     }
 
     @Test
@@ -81,22 +78,22 @@ public class ConsentNotifiedAccessResolverTest {
         doReturn(true).when(mConsentManager).wasU18NotificationDisplayed();
 
         // Assertion
-        assertTrue(mConsentNotifiedAccessResolver.getAccessInfo(mContext).isAllowedAccess());
+        assertTrue(mConsentNotifiedAccessResolver.getAccessInfo(mMockContext).isAllowedAccess());
     }
 
     @Test
     public void isAllowed_returnsTrueInDebugMode() {
         // Setup
-        doReturn(true).when(mFlags).getConsentNotifiedDebugMode();
+        doReturn(true).when(mMockFlags).getConsentNotifiedDebugMode();
 
         // Assertion
-        assertTrue(mConsentNotifiedAccessResolver.getAccessInfo(mContext).isAllowedAccess());
+        assertTrue(mConsentNotifiedAccessResolver.getAccessInfo(mMockContext).isAllowedAccess());
     }
 
     @Test
     public void isAllowed_returnsFalseWhenNotificationWasNotDisplayed() {
         // Assertion
-        AccessInfo accessInfo = mConsentNotifiedAccessResolver.getAccessInfo(mContext);
+        AccessInfo accessInfo = mConsentNotifiedAccessResolver.getAccessInfo(mMockContext);
         assertFalse(accessInfo.isAllowedAccess());
         assertEquals(
                 AdServicesStatusUtils.STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET,
@@ -108,9 +105,9 @@ public class ConsentNotifiedAccessResolverTest {
         // Setup
         doReturn(new AccessInfo(true, STATUS_SUCCESS))
                 .when(mUserConsentAccessResolver)
-                .getAccessInfo(mContext);
+                .getAccessInfo(mMockContext);
 
         // Assertion
-        assertTrue(mConsentNotifiedAccessResolver.getAccessInfo(mContext).isAllowedAccess());
+        assertTrue(mConsentNotifiedAccessResolver.getAccessInfo(mMockContext).isAllowedAccess());
     }
 }

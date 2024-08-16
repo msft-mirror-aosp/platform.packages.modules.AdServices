@@ -95,7 +95,7 @@ public final class AdServicesExtDataStorageServiceManagerTest
     private final AdServicesLogger mAdServicesLogger = spy(AdServicesLoggerImpl.getInstance());
 
     @Mock private AdServicesExtDataStorageServiceWorker mMockWorker;
-    @Mock private Flags mFlags;
+    @Mock private Flags mMockFlags;
     @Captor private ArgumentCaptor<AdServicesExtDataParams> mParamsCaptor;
     @Captor private ArgumentCaptor<int[]> mFieldsCaptor;
 
@@ -104,19 +104,19 @@ public final class AdServicesExtDataStorageServiceManagerTest
     @Before
     public void setup() {
         // mock the device config read for checking debug proxy
-        doReturn(false).when(mFlags).getEnableAdExtServiceDebugProxy();
+        doReturn(false).when(mMockFlags).getEnableAdExtServiceDebugProxy();
 
         // Mock timeouts
-        doReturn(INVOCATION_TIMEOUT).when(mFlags).getAdExtReadTimeoutMs();
-        doReturn(INVOCATION_TIMEOUT).when(mFlags).getAdExtWriteTimeoutMs();
-        mocker.mockGetFlags(mFlags);
+        doReturn(INVOCATION_TIMEOUT).when(mMockFlags).getAdExtReadTimeoutMs();
+        doReturn(INVOCATION_TIMEOUT).when(mMockFlags).getAdExtWriteTimeoutMs();
+        mocker.mockGetFlags(mMockFlags);
 
         doReturn(mMockWorker)
                 .when(() -> AdServicesExtDataStorageServiceWorker.getInstance(mContext));
         doReturn(mAdServicesLogger).when(AdServicesLoggerImpl::getInstance);
         mManager = AdServicesExtDataStorageServiceManager.getInstance(mContext);
 
-        mocker.mockAllCobaltLoggingFlags(mFlags, false);
+        mocker.mockAllCobaltLoggingFlags(mMockFlags, false);
     }
 
     @Test

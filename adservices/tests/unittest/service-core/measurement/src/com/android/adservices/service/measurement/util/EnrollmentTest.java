@@ -54,18 +54,19 @@ public final class EnrollmentTest extends AdServicesExtendedMockitoTestCase {
                     .build();
     @Mock private EnrollmentDao mEnrollmentDao;
 
-    @Mock private Flags mFlags;
+    @Mock private Flags mMockFlags;
+
     @Test
     public void testMaybeGetEnrollmentId_success() {
         when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(eq(REGISTRATION_URI)))
                 .thenReturn(ENROLLMENT);
-        when(mFlags.isEnrollmentBlocklisted(any())).thenReturn(false);
+        when(mMockFlags.isEnrollmentBlocklisted(any())).thenReturn(false);
         mockIsAllowedAttributionAccess(/* allowed= */ true);
 
         assertEquals(
                 Optional.of(ENROLLMENT.getEnrollmentId()),
                 Enrollment.getValidEnrollmentId(
-                        REGISTRATION_URI, PACKAGE_NAME, mEnrollmentDao, sContext, mFlags));
+                        REGISTRATION_URI, PACKAGE_NAME, mEnrollmentDao, sContext, mMockFlags));
     }
 
     @Test
@@ -73,13 +74,13 @@ public final class EnrollmentTest extends AdServicesExtendedMockitoTestCase {
         // Simulating failure
         when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(eq(REGISTRATION_URI)))
                 .thenReturn(null);
-        when(mFlags.isEnrollmentBlocklisted(any())).thenReturn(false);
+        when(mMockFlags.isEnrollmentBlocklisted(any())).thenReturn(false);
         mockIsAllowedAttributionAccess(/* allowed= */ true);
 
         assertEquals(
                 Optional.empty(),
                 Enrollment.getValidEnrollmentId(
-                        REGISTRATION_URI, PACKAGE_NAME, mEnrollmentDao, sContext, mFlags));
+                        REGISTRATION_URI, PACKAGE_NAME, mEnrollmentDao, sContext, mMockFlags));
     }
 
     @Test
@@ -87,27 +88,27 @@ public final class EnrollmentTest extends AdServicesExtendedMockitoTestCase {
         when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(eq(REGISTRATION_URI)))
                 .thenReturn(ENROLLMENT);
         // Simulating failure
-        when(mFlags.isEnrollmentBlocklisted(any())).thenReturn(true);
+        when(mMockFlags.isEnrollmentBlocklisted(any())).thenReturn(true);
         mockIsAllowedAttributionAccess(/* allowed= */ true);
 
         assertEquals(
                 Optional.empty(),
                 Enrollment.getValidEnrollmentId(
-                        REGISTRATION_URI, PACKAGE_NAME, mEnrollmentDao, sContext, mFlags));
+                        REGISTRATION_URI, PACKAGE_NAME, mEnrollmentDao, sContext, mMockFlags));
     }
 
     @Test
     public void testMaybeGetEnrollmentId_packageManifestCheckFailure() {
         when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(eq(REGISTRATION_URI)))
                 .thenReturn(ENROLLMENT);
-        when(mFlags.isEnrollmentBlocklisted(any())).thenReturn(false);
+        when(mMockFlags.isEnrollmentBlocklisted(any())).thenReturn(false);
         // Simulating failure
         mockIsAllowedAttributionAccess(/* allowed= */ false);
 
         assertEquals(
                 Optional.empty(),
                 Enrollment.getValidEnrollmentId(
-                        REGISTRATION_URI, PACKAGE_NAME, mEnrollmentDao, sContext, mFlags));
+                        REGISTRATION_URI, PACKAGE_NAME, mEnrollmentDao, sContext, mMockFlags));
     }
 
     @Test
@@ -122,32 +123,47 @@ public final class EnrollmentTest extends AdServicesExtendedMockitoTestCase {
         assertEquals(
                 Optional.of(Enrollment.LOCALHOST_ENROLLMENT_ID),
                 Enrollment.getValidEnrollmentId(
-                        Uri.parse(localhost), PACKAGE_NAME, mEnrollmentDao, sContext, mFlags));
+                        Uri.parse(localhost), PACKAGE_NAME, mEnrollmentDao, sContext, mMockFlags));
         assertEquals(
                 Optional.of(Enrollment.LOCALHOST_ENROLLMENT_ID),
                 Enrollment.getValidEnrollmentId(
-                        Uri.parse(localhostWithPort), PACKAGE_NAME, mEnrollmentDao, sContext,
-                        mFlags));
+                        Uri.parse(localhostWithPort),
+                        PACKAGE_NAME,
+                        mEnrollmentDao,
+                        sContext,
+                        mMockFlags));
         assertEquals(
                 Optional.of(Enrollment.LOCALHOST_ENROLLMENT_ID),
                 Enrollment.getValidEnrollmentId(
-                        Uri.parse(localhostWithPortAndPath), PACKAGE_NAME, mEnrollmentDao, sContext,
-                        mFlags));
+                        Uri.parse(localhostWithPortAndPath),
+                        PACKAGE_NAME,
+                        mEnrollmentDao,
+                        sContext,
+                        mMockFlags));
         assertEquals(
                 Optional.of(Enrollment.LOCALHOST_ENROLLMENT_ID),
                 Enrollment.getValidEnrollmentId(
-                        Uri.parse(localhostWithPortAndPathAndParams), PACKAGE_NAME, mEnrollmentDao,
-                        sContext, mFlags));
+                        Uri.parse(localhostWithPortAndPathAndParams),
+                        PACKAGE_NAME,
+                        mEnrollmentDao,
+                        sContext,
+                        mMockFlags));
         assertEquals(
                 Optional.of(Enrollment.LOCALHOST_ENROLLMENT_ID),
                 Enrollment.getValidEnrollmentId(
-                        Uri.parse(localhostWithPath), PACKAGE_NAME, mEnrollmentDao, sContext,
-                        mFlags));
+                        Uri.parse(localhostWithPath),
+                        PACKAGE_NAME,
+                        mEnrollmentDao,
+                        sContext,
+                        mMockFlags));
         assertEquals(
                 Optional.of(Enrollment.LOCALHOST_ENROLLMENT_ID),
                 Enrollment.getValidEnrollmentId(
-                        Uri.parse(localhostWithPathAndParams), PACKAGE_NAME, mEnrollmentDao,
-                        sContext, mFlags));
+                        Uri.parse(localhostWithPathAndParams),
+                        PACKAGE_NAME,
+                        mEnrollmentDao,
+                        sContext,
+                        mMockFlags));
     }
 
     @Test
@@ -162,32 +178,51 @@ public final class EnrollmentTest extends AdServicesExtendedMockitoTestCase {
         assertEquals(
                 Optional.of(Enrollment.LOCALHOST_IP_ENROLLMENT_ID),
                 Enrollment.getValidEnrollmentId(
-                        Uri.parse(localhostIp), PACKAGE_NAME, mEnrollmentDao, sContext, mFlags));
+                        Uri.parse(localhostIp),
+                        PACKAGE_NAME,
+                        mEnrollmentDao,
+                        sContext,
+                        mMockFlags));
         assertEquals(
                 Optional.of(Enrollment.LOCALHOST_IP_ENROLLMENT_ID),
                 Enrollment.getValidEnrollmentId(
-                        Uri.parse(localhostIpWithPort), PACKAGE_NAME, mEnrollmentDao, sContext,
-                        mFlags));
+                        Uri.parse(localhostIpWithPort),
+                        PACKAGE_NAME,
+                        mEnrollmentDao,
+                        sContext,
+                        mMockFlags));
         assertEquals(
                 Optional.of(Enrollment.LOCALHOST_IP_ENROLLMENT_ID),
                 Enrollment.getValidEnrollmentId(
-                        Uri.parse(localhostIpWithPortAndPath), PACKAGE_NAME, mEnrollmentDao,
-                        sContext, mFlags));
+                        Uri.parse(localhostIpWithPortAndPath),
+                        PACKAGE_NAME,
+                        mEnrollmentDao,
+                        sContext,
+                        mMockFlags));
         assertEquals(
                 Optional.of(Enrollment.LOCALHOST_IP_ENROLLMENT_ID),
                 Enrollment.getValidEnrollmentId(
-                        Uri.parse(localhostIpWithPortAndPathAndParams), PACKAGE_NAME,
-                        mEnrollmentDao, sContext, mFlags));
+                        Uri.parse(localhostIpWithPortAndPathAndParams),
+                        PACKAGE_NAME,
+                        mEnrollmentDao,
+                        sContext,
+                        mMockFlags));
         assertEquals(
                 Optional.of(Enrollment.LOCALHOST_IP_ENROLLMENT_ID),
                 Enrollment.getValidEnrollmentId(
-                        Uri.parse(localhostIpWithPath), PACKAGE_NAME, mEnrollmentDao, sContext,
-                        mFlags));
+                        Uri.parse(localhostIpWithPath),
+                        PACKAGE_NAME,
+                        mEnrollmentDao,
+                        sContext,
+                        mMockFlags));
         assertEquals(
                 Optional.of(Enrollment.LOCALHOST_IP_ENROLLMENT_ID),
                 Enrollment.getValidEnrollmentId(
-                        Uri.parse(localhostIpWithPathAndParams), PACKAGE_NAME, mEnrollmentDao,
-                        sContext, mFlags));
+                        Uri.parse(localhostIpWithPathAndParams),
+                        PACKAGE_NAME,
+                        mEnrollmentDao,
+                        sContext,
+                        mMockFlags));
     }
 
     private void mockIsAllowedAttributionAccess(boolean allowed) {

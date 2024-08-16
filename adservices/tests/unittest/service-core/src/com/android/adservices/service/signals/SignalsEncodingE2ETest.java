@@ -158,6 +158,7 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
     private SignalsProviderImpl mSignalStorageManager;
     private PeriodicEncodingJobWorker mPeriodicEncodingJobWorker;
     private SignalsScriptEngine mScriptEngine;
+    private ProtectedSignalsArgument mProtectedSignalsArgument;
 
     private AdTechUriValidator mAdtechUriValidator;
     private FledgeAuthorizationFilter mFledgeAuthorizationFilter;
@@ -277,6 +278,7 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
                         ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_ENABLED
                                 ::getIsolateConsoleMessageInLogsEnabled);
         mClock = Clock.getInstance();
+        mProtectedSignalsArgument = new ProtectedSignalsArgumentImpl();
         mPeriodicEncodingJobWorker =
                 new PeriodicEncodingJobWorker(
                         mEncoderLogicHandler,
@@ -290,7 +292,8 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
                         mFlagsWithProtectedSignalsAndEncodingEnabled,
                         mEnrollmentDao,
                         mClock,
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        mProtectedSignalsArgument);
 
         doNothing()
                 .when(
@@ -661,7 +664,8 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
                         flagsWithLargeUpdateWindow,
                         mEnrollmentDao,
                         mClock,
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        mProtectedSignalsArgument);
 
         // Manually trigger encoding job worker to validate encoding gets done
         jobWorkerWithLargeTimeWindow.encodeProtectedSignals().get(5, TimeUnit.SECONDS);
@@ -699,7 +703,8 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
                         flagsWithTinyUpdateWindow,
                         mEnrollmentDao,
                         mClock,
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        mProtectedSignalsArgument);
 
         // Manually trigger encoding job worker to validate encoding gets done
         jobWorkerWithTinyTimeWindow.encodeProtectedSignals().get(5, TimeUnit.SECONDS);

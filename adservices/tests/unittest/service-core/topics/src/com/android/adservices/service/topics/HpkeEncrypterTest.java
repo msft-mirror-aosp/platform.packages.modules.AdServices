@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.topics;
 
+import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ENCRYPTION_INVALID_KEY_LENGTH;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
 import static com.android.adservices.service.topics.EncryptionManagerTest.DECODED_PRIVATE_KEY;
@@ -31,6 +32,8 @@ import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.HpkeJni;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
@@ -41,6 +44,9 @@ import java.nio.charset.StandardCharsets;
 
 /** Unit tests for {@link HpkeEncrypter}. */
 @RequiresSdkLevelAtLeastS
+@SetErrorLogUtilDefaultParams(
+        throwable = Any.class,
+        ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS)
 public final class HpkeEncrypterTest extends AdServicesExtendedMockitoTestCase {
     private final HpkeEncrypter mHpkeEncrypter = new HpkeEncrypter();
 
@@ -70,8 +76,10 @@ public final class HpkeEncrypterTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ENCRYPTION_INVALID_KEY_LENGTH)
     public void testEncryption_invalidKeyLength_returnsEmpty() {
-        doNothingOnErrorLogUtilError();
         Topic topic = Topic.create(/* topic */ 5, /* taxonomyVersion */ 6L, /* modelVersion */ 7L);
         byte[] plainText = generateTopicsPlainText(topic);
 
@@ -84,9 +92,6 @@ public final class HpkeEncrypterTest extends AdServicesExtendedMockitoTestCase {
 
         // Verify cipher text is null.
         assertThat(cipherText).isNull();
-        verifyErrorLogUtilError(
-                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ENCRYPTION_INVALID_KEY_LENGTH,
-                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
     }
 
     @Test
