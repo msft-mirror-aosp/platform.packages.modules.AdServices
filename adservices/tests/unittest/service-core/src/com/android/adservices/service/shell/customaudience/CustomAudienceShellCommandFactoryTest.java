@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.shell.customaudience;
 
+import static android.adservices.customaudience.CustomAudienceFixture.CUSTOM_AUDIENCE_ACTIVE_FETCH_WINDOW_MS;
+
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
@@ -30,6 +32,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
+import java.time.Clock;
+
 public final class CustomAudienceShellCommandFactoryTest extends AdServicesMockitoTestCase {
     private static final boolean CUSTOM_AUDIENCE_CLI_ENABLED = true;
     @Mock private CustomAudienceDao mCustomAudienceDao;
@@ -40,7 +44,11 @@ public final class CustomAudienceShellCommandFactoryTest extends AdServicesMocki
     public void setup() {
         mFactory =
                 new CustomAudienceShellCommandFactory(
-                        CUSTOM_AUDIENCE_CLI_ENABLED, mBackgroundFetchRunner, mCustomAudienceDao);
+                        CUSTOM_AUDIENCE_CLI_ENABLED,
+                        mBackgroundFetchRunner,
+                        mCustomAudienceDao,
+                        Clock.systemUTC(),
+                        CUSTOM_AUDIENCE_ACTIVE_FETCH_WINDOW_MS);
     }
 
     @Test
@@ -83,7 +91,11 @@ public final class CustomAudienceShellCommandFactoryTest extends AdServicesMocki
     public void test_cliDisabled() {
         mFactory =
                 new CustomAudienceShellCommandFactory(
-                        false, mBackgroundFetchRunner, mCustomAudienceDao);
+                        false,
+                        mBackgroundFetchRunner,
+                        mCustomAudienceDao,
+                        Clock.systemUTC(),
+                        CUSTOM_AUDIENCE_ACTIVE_FETCH_WINDOW_MS);
         ShellCommand shellCommand = mFactory.getShellCommand(CustomAudienceListCommand.CMD);
         Truth.assertThat(shellCommand).isInstanceOf(NoOpShellCommand.class);
     }
@@ -92,7 +104,11 @@ public final class CustomAudienceShellCommandFactoryTest extends AdServicesMocki
     public void test_invalidCmdCLIDisabled() {
         mFactory =
                 new CustomAudienceShellCommandFactory(
-                        false, mBackgroundFetchRunner, mCustomAudienceDao);
+                        false,
+                        mBackgroundFetchRunner,
+                        mCustomAudienceDao,
+                        Clock.systemUTC(),
+                        CUSTOM_AUDIENCE_ACTIVE_FETCH_WINDOW_MS);
         ShellCommand shellCommand = mFactory.getShellCommand("invalid");
         Truth.assertThat(shellCommand).isNull();
     }
@@ -101,7 +117,11 @@ public final class CustomAudienceShellCommandFactoryTest extends AdServicesMocki
     public void test_getAllCommandsHelp() {
         mFactory =
                 new CustomAudienceShellCommandFactory(
-                        CUSTOM_AUDIENCE_CLI_ENABLED, mBackgroundFetchRunner, mCustomAudienceDao);
+                        CUSTOM_AUDIENCE_CLI_ENABLED,
+                        mBackgroundFetchRunner,
+                        mCustomAudienceDao,
+                        Clock.systemUTC(),
+                        CUSTOM_AUDIENCE_ACTIVE_FETCH_WINDOW_MS);
 
         Truth.assertThat(Sets.newHashSet(mFactory.getAllCommandsHelp()))
                 .containsExactlyElementsIn(

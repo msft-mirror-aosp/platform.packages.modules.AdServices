@@ -1417,6 +1417,34 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         }
     }
 
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public String getModuleEnrollmentState() {
+        return executeGetter(
+                /* defaultReturn= */ "",
+                (userId) ->
+                        mUserInstanceManager
+                                .getOrCreateUserConsentManagerInstance(userId)
+                                .getModuleEnrollmentState());
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void setModuleEnrollmentState(String enrollmentState) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("setModuleEnrollmentState() for User Identifier %d", userIdentifier);
+
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .setModuleEnrollmentState(enrollmentState);
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to call setModuleEnrollmentState().");
+        }
+    }
+
     @FunctionalInterface
     interface ThrowableGetter<R> {
         R apply(int userId) throws IOException;

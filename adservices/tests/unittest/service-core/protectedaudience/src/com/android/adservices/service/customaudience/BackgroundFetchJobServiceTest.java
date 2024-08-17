@@ -16,15 +16,6 @@
 
 package com.android.adservices.service.customaudience;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdServicesJobServiceLogger;
-import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
-import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
-import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobExecutionData;
-import static com.android.adservices.mockito.MockitoExpectations.verifyBackgroundJobsSkipLogged;
-import static com.android.adservices.mockito.MockitoExpectations.verifyJobFinishedLogged;
-import static com.android.adservices.mockito.MockitoExpectations.verifyLoggingNotHappened;
-import static com.android.adservices.mockito.MockitoExpectations.verifyOnStartJobLogged;
-import static com.android.adservices.mockito.MockitoExpectations.verifyOnStopJobLogged;
 import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_SKIPPED;
 import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_SUCCESSFUL;
 import static com.android.adservices.spe.AdServicesJobInfo.FLEDGE_BACKGROUND_FETCH_JOB;
@@ -54,7 +45,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.pm.PackageManager;
 
-import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.AdServicesJobServiceTestCase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
@@ -91,7 +82,7 @@ import java.util.concurrent.TimeoutException;
 @SpyStatic(BackgroundFetchWorker.class)
 @SpyStatic(AdServicesJobServiceLogger.class)
 @MockStatic(ServiceCompatUtils.class)
-public final class BackgroundFetchJobServiceTest extends AdServicesExtendedMockitoTestCase {
+public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTestCase {
     private static final int FLEDGE_BACKGROUND_FETCH_JOB_ID =
             FLEDGE_BACKGROUND_FETCH_JOB.getJobId();
     private static final JobScheduler JOB_SCHEDULER = sContext.getSystemService(JobScheduler.class);

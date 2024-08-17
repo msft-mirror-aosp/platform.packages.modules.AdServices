@@ -53,7 +53,6 @@ import android.content.res.XmlResourceParser;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.exception.XmlParseException;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
@@ -105,7 +104,6 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
     @Mock private AssetManager mMockAssetManager;
     @Mock private Resources mMockResources;
     @Mock private XmlResourceParser mMockParser;
-    @Mock private Flags mMockFlags;
 
     @Before
     public void setCommonExpectations() {

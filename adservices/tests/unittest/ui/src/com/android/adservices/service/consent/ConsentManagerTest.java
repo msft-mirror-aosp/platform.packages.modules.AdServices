@@ -243,7 +243,6 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     @Mock private CacheManager mCacheManagerMock;
     @Mock private BlockedTopicsManager mBlockedTopicsManagerMock;
     @Mock private EpochManager mMockEpochManager;
-    @Mock private Flags mMockFlags;
     @Mock private JobScheduler mJobSchedulerMock;
     @Mock private IAdServicesManager mMockIAdServicesManager;
     @Mock private AppSearchConsentManager mAppSearchConsentManagerMock;

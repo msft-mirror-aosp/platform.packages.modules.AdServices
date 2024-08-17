@@ -52,6 +52,8 @@ public final class TriggerEncodingCommandTest extends ShellCommandTestCase<Trigg
     @ShellCommandStats.Command
     private static final int EXPECTED_COMMAND = COMMAND_APP_SIGNALS_TRIGGER_ENCODING;
 
+    public static final String ADSERVICES_PACKAGE = "com.google.android.adservices.api";
+
     @Mock private PeriodicEncodingJobRunner mPeriodicEncodingJobRunner;
     @Mock private EncoderLogicHandler mEncoderLogicHandler;
     @Mock private EncodingExecutionLogHelper mEncodingExecutionLogHelper;
@@ -60,8 +62,7 @@ public final class TriggerEncodingCommandTest extends ShellCommandTestCase<Trigg
 
     @Test
     public void testRun_happyPath_returnsSuccess() {
-        when(mEncoderLogicHandler.downloadAndUpdate(
-                        BUYER, DevContext.createForDevOptionsDisabled()))
+        when(mEncoderLogicHandler.downloadAndUpdate(BUYER, DevContext.createForDevIdentity()))
                 .thenReturn(FluentFuture.from(Futures.immediateFuture(true)));
         when(mPeriodicEncodingJobRunner.runEncodingPerBuyer(any(), anyInt(), any(), any()))
                 .thenReturn(FluentFuture.from(Futures.immediateVoidFuture()));
@@ -93,9 +94,18 @@ public final class TriggerEncodingCommandTest extends ShellCommandTestCase<Trigg
 
     @Test
     public void testRun_withFailedDownload_returnsFailure() {
-        when(mEncoderLogicHandler.downloadAndUpdate(
-                        BUYER, DevContext.createForDevOptionsDisabled()))
+        when(mEncoderLogicHandler.downloadAndUpdate(BUYER, DevContext.createForDevIdentity()))
                 .thenReturn(FluentFuture.from(Futures.immediateFuture(false)));
+        when(mPeriodicEncodingJobRunner.runEncodingPerBuyer(any(), anyInt(), any(), any()))
+                .thenReturn(FluentFuture.from(Futures.immediateVoidFuture()));
+        when(mEncoderLogicMetadataDao.getMetadata(BUYER))
+                .thenReturn(
+                        DBEncoderLogicMetadata.builder()
+                                .setBuyer(BUYER)
+                                .setCreationTime(Instant.now())
+                                .setVersion(1)
+                                .setFailedEncodingCount(0)
+                                .build());
 
         Result actualResult =
                 run(
@@ -112,21 +122,20 @@ public final class TriggerEncodingCommandTest extends ShellCommandTestCase<Trigg
 
         expectFailure(
                 actualResult,
-                TriggerEncodingCommand.ERROR_FAIL_TO_DOWNLOAD_AND_UPDATE,
+                TriggerEncodingCommand.ERROR_FAIL_TO_ENCODE_SIGNALS,
                 EXPECTED_COMMAND,
                 RESULT_GENERIC_ERROR);
     }
 
     @Test
-    public void testRun_withFailedUpdate_returnsFailure() {
-        when(mEncoderLogicHandler.downloadAndUpdate(
-                        BUYER, DevContext.createForDevOptionsDisabled()))
-                .thenReturn(FluentFuture.from(Futures.immediateFuture(true)));
-        when(mPeriodicEncodingJobRunner.runEncodingPerBuyer(any(), anyInt(), any(), any()))
+    public void testRun_withDownloadFailure_returnsFailure() {
+        when(mEncoderLogicHandler.downloadAndUpdate(BUYER, DevContext.createForDevIdentity()))
                 .thenAnswer(
                         i -> {
                             throw new IllegalStateException("some failure");
                         });
+        when(mPeriodicEncodingJobRunner.runEncodingPerBuyer(any(), anyInt(), any(), any()))
+                .thenReturn(FluentFuture.from(Futures.immediateVoidFuture()));
 
         Result actualResult =
                 run(

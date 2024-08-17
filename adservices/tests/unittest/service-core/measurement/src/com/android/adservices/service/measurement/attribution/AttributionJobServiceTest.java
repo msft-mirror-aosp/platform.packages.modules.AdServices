@@ -16,14 +16,6 @@
 
 package com.android.adservices.service.measurement.attribution;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdServicesJobServiceLogger;
-import static com.android.adservices.mockito.MockitoExpectations.getSpiedAdServicesJobServiceLogger;
-import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
-import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
-import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobExecutionData;
-import static com.android.adservices.mockito.MockitoExpectations.verifyBackgroundJobsSkipLogged;
-import static com.android.adservices.mockito.MockitoExpectations.verifyJobFinishedLogged;
-import static com.android.adservices.mockito.MockitoExpectations.verifyLoggingNotHappened;
 import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_ATTRIBUTION_JOB;
 
 import static org.junit.Assert.assertEquals;
@@ -54,12 +46,10 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
+import com.android.adservices.service.measurement.MeasurementJobServiceTestCase;
 import com.android.adservices.service.measurement.reporting.DebugReportingJobService;
 import com.android.adservices.service.measurement.reporting.ImmediateAggregateReportingJobService;
 import com.android.adservices.service.measurement.reporting.ReportingJobService;
@@ -90,28 +80,18 @@ import java.util.concurrent.TimeUnit;
 @SpyStatic(FlagsFactory.class)
 @MockStatic(ServiceCompatUtils.class)
 @SpyStatic(AdServicesJobServiceLogger.class)
-public final class AttributionJobServiceTest extends AdServicesExtendedMockitoTestCase {
+public final class AttributionJobServiceTest extends MeasurementJobServiceTestCase {
     private static final long WAIT_IN_MILLIS = 1_000L;
     private static final long JOB_DELAY_MS = TimeUnit.MINUTES.toMillis(2);
     private static final int MEASUREMENT_ATTRIBUTION_JOB_ID =
             MEASUREMENT_ATTRIBUTION_JOB.getJobId();
 
-    private DatastoreManager mMockDatastoreManager;
-    private JobScheduler mMockJobScheduler;
-
     private AttributionJobService mSpyService;
-
-    private Flags mMockFlags;
-    private AdServicesJobServiceLogger mSpyLogger;
 
     @Before
     public void setUp() {
         mSpyService = spy(new AttributionJobService());
-        mMockDatastoreManager = mock(DatastoreManager.class);
-        mMockJobScheduler = mock(JobScheduler.class);
 
-        mMockFlags = mock(Flags.class);
-        mSpyLogger = getSpiedAdServicesJobServiceLogger(sContext, mMockFlags);
         when(mMockFlags.getMeasurementAttributionJobTriggeringDelayMs()).thenReturn(JOB_DELAY_MS);
     }
 
@@ -719,7 +699,6 @@ public final class AttributionJobServiceTest extends AdServicesExtendedMockitoTe
 
     private void runWithMocks(TestUtils.RunnableWithThrow execute) throws Exception {
         // Setup mock everything in job
-        mMockDatastoreManager = mock(DatastoreManager.class);
         doReturn(Optional.empty()).when(mMockDatastoreManager).runInTransactionWithResult(any());
         doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
         doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);

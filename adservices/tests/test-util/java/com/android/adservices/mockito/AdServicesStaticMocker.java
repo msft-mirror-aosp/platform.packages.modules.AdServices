@@ -69,9 +69,4 @@ public interface AdServicesStaticMocker {
      */
     void mockAdServicesLoggerImpl(AdServicesLoggerImpl mockedAdServicesLoggerImpl);
 
-    // TODO(b/314969513): workaround because ExtendedMockitoExpectationsMockerTest always returns
-    // the same mocker (ExtendedMockitoExpectations.mocker) - should be removed once that class is
-    // gone
-    /** Gets the {@link StaticClassChecker} associated with the mocker. */
-    StaticClassChecker getStaticClassChecker();
 }
