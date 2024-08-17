@@ -25,7 +25,6 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.topics.Topic;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -46,7 +45,6 @@ public final class TopicsViewModelTest extends AdServicesExtendedMockitoTestCase
     private TopicsViewModel mTopicsViewModel;
     private BlockedTopicsViewModel mBlockedTopicsViewModel;
     @Mock private ConsentManager mConsentManager;
-    @Mock private Flags mMockFlags;
 
     /** Setup needed before every test in this class. */
     @Before

@@ -36,7 +36,6 @@ import android.content.res.Configuration;
 import android.content.res.Resources;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.topics.classifier.ClassifierInputConfig.ClassifierInputField;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
@@ -73,7 +72,6 @@ public class ClassifierInputManagerTest extends AdServicesExtendedMockitoTestCas
     @Mock private Resources mContextResources;
     @Mock private Context mApplicationContext;
     @Mock private Preprocessor mPreprocessor;
-    @Mock private Flags mMockFlags;
 
     @Before
     public void setup() throws Exception {

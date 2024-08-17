@@ -104,7 +104,6 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
     private static final String UNUSED_AD_ID = "unused_ad_id";
 
     private AdServicesCommonServiceImpl mCommonService;
-    @Mock private Flags mMockFlags;
     @Mock private PackageManager mPackageManager;
     @Mock private UxEngine mUxEngine;
     @Mock private UxStatesManager mUxStatesManager;

@@ -19,7 +19,6 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.modules.utils.testing.ExtendedMockitoRule;
 
@@ -28,14 +27,12 @@ import com.google.common.io.BaseEncoding;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 
 @ExtendedMockitoRule.SpyStatic(FlagsFactory.class)
 public class OhttpJniWrapperTest extends AdServicesExtendedMockitoTestCase {
-    @Mock private Flags mMockFlags;
 
     private static final String SERVER_PUBLIC_KEY =
             "6d21cfe09fbea5122f9ebc2eb2a69fcc4f06408cd54aac934f012e76fcdcef62";

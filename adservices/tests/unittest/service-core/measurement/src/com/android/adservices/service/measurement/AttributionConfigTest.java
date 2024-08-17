@@ -28,14 +28,12 @@ import static org.mockito.Mockito.when;
 import android.util.Pair;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
-import com.android.adservices.service.Flags;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -47,8 +45,6 @@ import java.util.Set;
 public final class AttributionConfigTest extends AdServicesMockitoTestCase {
 
     private static final String SOURCE_AD_TECH = "AdTech1-Ads";
-
-    @Mock private Flags mMockFlags;
 
     @Before
     public void setup() {

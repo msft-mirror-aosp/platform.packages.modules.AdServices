@@ -205,7 +205,6 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     @Mock private ContentProviderClient mMockContentProviderClient;
     @Mock private DebugReportApi mDebugReportApi;
     @Mock private HttpsURLConnection mUrlConnection;
-    @Mock private Flags mMockFlags;
     @Mock private AdServicesLogger mLogger;
     @Mock private AdServicesErrorLogger mErrorLogger;
     @Mock private SourceNoiseHandler mSourceNoiseHandler;
@@ -3844,7 +3843,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 TimeUnit.DAYS.toSeconds(30))
                         + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "
-                                + "11, 12, 13, 14, 15, 16, 17, 18, 19, 20]}]";
+                        + "11, 12, 13, 14, 15, 16, 17, 18, 19, 20]}]";
         TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
         int maxEventLevelReports = 20;
         Source testSource =
@@ -3890,30 +3889,30 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         String triggerSpecsString =
                 "["
                         + "{\"trigger_data\": [0, 1, 2, 3],"
-                                + "\"event_report_windows\": { "
-                                + "\"start_time\": \"0\", "
-                                + String.format(
-                                        "\"end_times\": [%s, %s, %s, %s, %s]}, ",
-                                        TimeUnit.DAYS.toSeconds(2),
-                                        TimeUnit.DAYS.toSeconds(5),
-                                        TimeUnit.DAYS.toSeconds(7),
-                                        TimeUnit.DAYS.toSeconds(11),
-                                        TimeUnit.DAYS.toSeconds(30))
-                                + "\"summary_operator\": \"count\", "
-                                + "\"summary_buckets\": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "
-                                        + "11, 12, 13, 14, 15, 16, 17, 18, 19, 20]},"
+                        + "\"event_report_windows\": { "
+                        + "\"start_time\": \"0\", "
+                        + String.format(
+                                "\"end_times\": [%s, %s, %s, %s, %s]}, ",
+                                TimeUnit.DAYS.toSeconds(2),
+                                TimeUnit.DAYS.toSeconds(5),
+                                TimeUnit.DAYS.toSeconds(7),
+                                TimeUnit.DAYS.toSeconds(11),
+                                TimeUnit.DAYS.toSeconds(30))
+                        + "\"summary_operator\": \"count\", "
+                        + "\"summary_buckets\": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "
+                        + "11, 12, 13, 14, 15, 16, 17, 18, 19, 20]},"
                         + "{\"trigger_data\": [4, 5, 6, 7],"
-                                + "\"event_report_windows\": { "
-                                + "\"start_time\": \"0\", "
-                                + String.format(
-                                        "\"end_times\": [%s, %s, %s, %s]}, ",
-                                        TimeUnit.DAYS.toSeconds(5),
-                                        TimeUnit.DAYS.toSeconds(7),
-                                        TimeUnit.DAYS.toSeconds(11),
-                                        TimeUnit.DAYS.toSeconds(30))
-                                + "\"summary_operator\": \"count\", "
-                                + "\"summary_buckets\": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "
-                                        + "11, 12, 13, 14, 15, 16, 17, 18, 19]}]";
+                        + "\"event_report_windows\": { "
+                        + "\"start_time\": \"0\", "
+                        + String.format(
+                                "\"end_times\": [%s, %s, %s, %s]}, ",
+                                TimeUnit.DAYS.toSeconds(5),
+                                TimeUnit.DAYS.toSeconds(7),
+                                TimeUnit.DAYS.toSeconds(11),
+                                TimeUnit.DAYS.toSeconds(30))
+                        + "\"summary_operator\": \"count\", "
+                        + "\"summary_buckets\": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "
+                        + "11, 12, 13, 14, 15, 16, 17, 18, 19]}]";
         TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
         int maxEventLevelReports = 20;
         Source testSource =
@@ -5360,8 +5359,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 getSpyAsyncRegistrationQueueRunner();
 
         // Execution
-        when(mMeasurementDao.getNavigationAttributionScopesForRegistration(
-                        any(), any(), anyInt(), any()))
+        when(mMeasurementDao.getNavigationAttributionScopesForRegistration(any(), any()))
                 .thenReturn(Set.of("1", "2", "3"));
 
         Source source =
@@ -5387,7 +5385,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
 
         // Assertions
         verify(mMeasurementDao, times(1))
-                .getNavigationAttributionScopesForRegistration(any(), any(), anyInt(), any());
+                .getNavigationAttributionScopesForRegistration(any(), any());
     }
 
     @Test
@@ -5403,8 +5401,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 getSpyAsyncRegistrationQueueRunner();
 
         // Execution
-        when(mMeasurementDao.getNavigationAttributionScopesForRegistration(
-                        any(), any(), anyInt(), any()))
+        when(mMeasurementDao.getNavigationAttributionScopesForRegistration(any(), any()))
                 .thenReturn(Set.of("1", "2", "3"));
 
         Source source =
@@ -5430,7 +5427,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
 
         // Assertions
         verify(mMeasurementDao, times(1))
-                .getNavigationAttributionScopesForRegistration(any(), any(), anyInt(), any());
+                .getNavigationAttributionScopesForRegistration(any(), any());
     }
 
     @Test

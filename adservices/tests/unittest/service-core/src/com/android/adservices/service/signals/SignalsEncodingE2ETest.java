@@ -168,7 +168,7 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
     private ListeningExecutorService mLightweightExecutorService;
     private ListeningExecutorService mBackgroundExecutorService;
     private AdServicesHttpsClient mAdServicesHttpsClient;
-    private Flags mFlags;
+    private Flags mFakeFlags;
     private EnrollmentDao mEnrollmentDao;
     private Clock mClock;
 
@@ -203,7 +203,7 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
 
         mAdServicesHttpsClient =
                 new AdServicesHttpsClient(mBackgroundExecutorService, 2000, 2000, 10000);
-        mFlags = FakeFlagsFactory.getFlagsForTest();
+        mFakeFlags = FakeFlagsFactory.getFlagsForTest();
         mEncoderLogicHandler =
                 new EncoderLogicHandler(
                         mEncoderPersistenceDao,
@@ -213,7 +213,7 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
                         mAdServicesHttpsClient,
                         mBackgroundExecutorService,
                         mAdServicesLoggerMock,
-                        mFlags);
+                        mFakeFlags);
         mUpdateEncoderEventHandler =
                 new UpdateEncoderEventHandler(mEncoderEndpointsDao, mEncoderLogicHandler);
         mSignalEvictionController = new SignalEvictionController(ImmutableList.of(), 0, 0);

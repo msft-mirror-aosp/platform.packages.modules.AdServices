@@ -73,7 +73,6 @@ public final class CobaltJobServiceTest extends AdServicesJobServiceTestCase {
 
     @Spy private CobaltJobService mSpyCobaltJobService;
 
-    @Mock Flags mMockFlags;
     @Mock CobaltPeriodicJob mMockCobaltPeriodicJob;
     @Mock JobParameters mMockJobParameters;
 

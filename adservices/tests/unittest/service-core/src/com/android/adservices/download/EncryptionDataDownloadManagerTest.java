@@ -36,7 +36,6 @@ import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultP
 import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.encryptionkey.EncryptionKeyTables;
 import com.android.adservices.data.shared.SharedDbHelper;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.encryptionkey.EncryptionKey;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
@@ -79,7 +78,6 @@ public final class EncryptionDataDownloadManagerTest extends AdServicesExtendedM
     @Mock private ClientConfigProto.ClientFile mMockFile;
 
     @Mock private MobileDataDownload mMockMdd;
-    @Mock private Flags mMockFlags;
     @Mock private Clock mMockClock;
 
     @Before

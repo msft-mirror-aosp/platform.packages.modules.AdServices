@@ -538,7 +538,8 @@ class AttributionJobHandler {
                             .setSourceId(source.getId())
                             .setTriggerId(trigger.getId())
                             .setRegistrationOrigin(trigger.getRegistrationOrigin())
-                            .setTriggerContextId(trigger.getTriggerContextId());
+                            .setTriggerContextId(trigger.getTriggerContextId())
+                            .setTriggerTime(trigger.getTriggerTime());
             if (trigger.getAggregationCoordinatorOrigin() != null) {
                 aggregateReportBuilder.setAggregationCoordinatorOrigin(
                         trigger.getAggregationCoordinatorOrigin());

@@ -386,7 +386,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
     private static final int BUYER_DESTINATION =
             ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER;
 
-    private Flags mFlags;
+    private Flags mFakeFlags;
     private ExecutorService mLightweightExecutorService;
     private ExecutorService mBackgroundExecutorService;
     private ScheduledThreadPoolExecutor mScheduledExecutor;
@@ -423,7 +423,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
 
     @Before
     public void setup() throws InvalidKeySpecException, UnsupportedHpkeAlgorithmException {
-        mFlags = new PersistAdSelectionResultRunnerTestFlags();
+        mFakeFlags = new PersistAdSelectionResultRunnerTestFlags();
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mScheduledExecutor = AdServicesExecutors.getScheduler();
@@ -435,7 +435,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
         mPayloadFormatter =
                 AuctionServerPayloadFormatterFactory.createPayloadFormatter(
                         AuctionServerPayloadFormatterV0.VERSION,
-                        mFlags.getFledgeAuctionServerPayloadBucketSizes());
+                        mFakeFlags.getFledgeAuctionServerPayloadBucketSizes());
         mDataCompressor = new AuctionServerDataCompressorGzip();
 
         mOverallTimeout = FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS;
@@ -443,14 +443,16 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
         mReportingLimits =
                 PersistAdSelectionResultRunner.ReportingRegistrationLimits.builder()
                         .setMaxRegisteredAdBeaconsTotalCount(
-                                mFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount())
+                                mFakeFlags
+                                        .getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount())
                         .setMaxInteractionKeySize(
-                                mFlags
+                                mFakeFlags
                                         .getFledgeReportImpressionRegisteredAdBeaconsMaxInteractionKeySizeB())
                         .setMaxInteractionReportingUriSize(
-                                mFlags.getFledgeReportImpressionMaxInteractionReportingUriSizeB())
+                                mFakeFlags
+                                        .getFledgeReportImpressionMaxInteractionReportingUriSizeB())
                         .setMaxRegisteredAdBeaconsPerAdTechCount(
-                                mFlags
+                                mFakeFlags
                                         .getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount())
                         .build();
         mAuctionResultValidator =
@@ -463,7 +465,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         sCallerMetadata,
                         mFledgeAuctionServerExecutionLoggerClockMock,
                         mAdServicesLoggerSpy,
-                        mFlags,
+                        mFakeFlags,
                         AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT);
         mAdsRelevanceExecutionLogger =
                 mAdsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger();
@@ -483,7 +485,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mReportingLimits,
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
-                        mFlags,
+                        mFakeFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
@@ -492,7 +494,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
 
     @Test
     public void testRunner_persistRemarketingResult_success() throws Exception {
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
 
         // Uses ArgumentCaptor to capture the logs in the tests.
         ArgumentCaptor<DestinationRegisteredBeaconsReportedStats> argumentCaptor =
@@ -605,7 +607,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
 
     @Test
     public void testRunner_persistAppInstallResult_success() throws Exception {
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
 
         // Uses ArgumentCaptor to capture the logs in the tests.
         ArgumentCaptor<DestinationRegisteredBeaconsReportedStats> argumentCaptor =
@@ -719,7 +721,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
     @Test
     public void testRunner_persistRemarketingResult_withInvalidSellerReportingUriSuccess()
             throws Exception {
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
 
         // Uses ArgumentCaptor to capture the logs in the tests.
         ArgumentCaptor<DestinationRegisteredBeaconsReportedStats> argumentCaptor =
@@ -826,7 +828,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
     @Test
     public void testRunner_persistAppInstallResult_withInvalidSellerReportingUriSuccess()
             throws Exception {
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
         mockPersistAdSelectionResultWithFledgeAuctionServerExecutionLogger();
 
         // Uses ArgumentCaptor to capture the logs in the tests.
@@ -932,7 +934,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
     @Test
     public void testRunner_persistRemarketingResult_withInvalidBuyerReportingUriSuccess()
             throws Exception {
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
         mockPersistAdSelectionResultWithFledgeAuctionServerExecutionLogger();
 
         // Uses ArgumentCaptor to capture the logs in the tests.
@@ -1039,7 +1041,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
     @Test
     public void testRunner_persistRemarketingResult_forceOnAbsentOwnerFalseSkipsValidation()
             throws Exception {
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
 
         // Uses ArgumentCaptor to capture the logs in the tests.
         ArgumentCaptor<DestinationRegisteredBeaconsReportedStats> argumentCaptor =
@@ -1071,7 +1073,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mReportingLimits,
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
-                        mFlags,
+                        mFakeFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
@@ -1135,7 +1137,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
     @Test
     public void testRunner_persistRemarketingResult_forceOnAbsentOwnerFalseFuzzySearch()
             throws Exception {
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
 
         // Uses ArgumentCaptor to capture the logs in the tests.
         ArgumentCaptor<DestinationRegisteredBeaconsReportedStats> argumentCaptor =
@@ -1170,7 +1172,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mReportingLimits,
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
-                        mFlags,
+                        mFakeFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
@@ -1233,7 +1235,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
 
     @Test
     public void testRunner_persistChaffResult_nothingPersisted() throws Exception {
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
         mockPersistAdSelectionResultWithFledgeAuctionServerExecutionLogger();
 
         doReturn(prepareDecryptedAuctionResultForRemarketingAd(AUCTION_RESULT_CHAFF))
@@ -1284,7 +1286,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
 
     @Test
     public void testRunner_persistResultWithError_throwsException() throws Exception {
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
 
         mockPersistAdSelectionResultWithFledgeAuctionServerExecutionLogger();
 
@@ -1317,7 +1319,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
 
     @Test
     public void testRunner_persistTimesOut_throwsException() throws Exception {
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
 
         mockPersistAdSelectionResultWithFledgeAuctionServerExecutionLogger();
 
@@ -1349,7 +1351,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mReportingLimits,
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
-                        mFlags,
+                        mFakeFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
@@ -1373,7 +1375,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
 
     @Test
     public void testRunner_revokedUserConsent_returnsEmptyResult() throws InterruptedException {
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
 
         doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
                 .when(mAdSelectionServiceFilterMock)
@@ -1433,7 +1435,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
 
     @Test
     public void testRunner_persistResultWithWrongSeller_throwsException() throws Exception {
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
         mockPersistAdSelectionResultWithFledgeAuctionServerExecutionLogger();
 
         doReturn(prepareDecryptedAuctionResultForRemarketingAd(AUCTION_RESULT))
@@ -1473,7 +1475,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
 
     @Test
     public void testRunner_persistResultWithWrongCallerPackage_throwsException() throws Exception {
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
         mockPersistAdSelectionResultWithFledgeAuctionServerExecutionLogger();
 
         doReturn(prepareDecryptedAuctionResultForRemarketingAd(AUCTION_RESULT))
@@ -1514,7 +1516,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
     @Test
     public void testRunner_persistResultWithLongInteractionKeyAndUri_throwsException()
             throws Exception {
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
         mockPersistAdSelectionResultWithFledgeAuctionServerExecutionLogger();
 
         // Uses ArgumentCaptor to capture the logs in the tests.
@@ -1545,7 +1547,8 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
         PersistAdSelectionResultRunner.ReportingRegistrationLimits reportingLimits =
                 PersistAdSelectionResultRunner.ReportingRegistrationLimits.builder()
                         .setMaxRegisteredAdBeaconsTotalCount(
-                                mFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount())
+                                mFakeFlags
+                                        .getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount())
                         .setMaxInteractionKeySize(
                                 SELLER_INTERACTION_KEY_EXCEEDS_MAX.getBytes(StandardCharsets.UTF_8)
                                                 .length
@@ -1555,7 +1558,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                                                 .length
                                         - 1)
                         .setMaxRegisteredAdBeaconsPerAdTechCount(
-                                mFlags
+                                mFakeFlags
                                         .getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount())
                         .build();
 
@@ -1575,7 +1578,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         reportingLimits,
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
-                        mFlags,
+                        mFakeFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
@@ -1896,7 +1899,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mReportingLimits,
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
-                        mFlags,
+                        mFakeFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);

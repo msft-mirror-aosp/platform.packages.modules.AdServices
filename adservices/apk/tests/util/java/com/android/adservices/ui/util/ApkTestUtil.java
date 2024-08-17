@@ -120,14 +120,19 @@ public class ApkTestUtil {
 
     public static UiObject2 scrollTo(UiDevice device, int resId) {
         String targetStr = getString(resId);
-        assertWithMessage("getString(resId=%s)", resId).that(targetStr).isNotNull();
+        if (targetStr == null) {
+            assertWithMessage("scrollTo() didn't find string with resource id %s)", resId).fail();
+        }
         UiObject2 uiObject2 =
                 scrollToFindElement(
                         device, By.text(Pattern.compile(targetStr, Pattern.CASE_INSENSITIVE)));
 
-        assertWithMessage("scrollToFindElement(resId=%s, text=\"%s\")", resId, targetStr)
-                .that(uiObject2)
-                .isNotNull();
+        if (uiObject2 == null) {
+            assertWithMessage(
+                            "scrollTo() didn't find element with text \"%s\" (resId=%s)",
+                            targetStr, resId)
+                    .fail();
+        }
         return uiObject2;
     }
 
@@ -135,7 +140,12 @@ public class ApkTestUtil {
         UiObject2 uiObject2 =
                 scrollToFindElement(
                         device, By.res(Pattern.compile(regexStr, Pattern.CASE_INSENSITIVE)));
-        assertWithMessage("scrollToFindElement(regexStr=%s)", regexStr).that(uiObject2).isNotNull();
+        if (uiObject2 == null) {
+            assertWithMessage(
+                            "scrollTo() didn't find element whose text matches regex \"%s\")",
+                            regexStr)
+                    .fail();
+        }
         return uiObject2;
     }
 
