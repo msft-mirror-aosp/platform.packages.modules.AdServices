@@ -43,7 +43,6 @@ import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBScheduledCustomAudienceUpdate;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.CustomAudienceServiceFilter;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
@@ -76,7 +75,6 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
     @Captor private ArgumentCaptor<List<PartialCustomAudience>> mListArgumentCaptor;
     private ListeningExecutorService mBackgroundExecutorService;
     private int mCallingAppUid;
-    @Mock private Flags mMockFlags;
     @Mock private ConsentManager mConsentManagerMock;
     @Mock private AdServicesLogger mAdServicesLoggerMock;
     @Mock private CustomAudienceServiceFilter mCustomAudienceServiceFilterMock;

@@ -41,7 +41,6 @@ import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.common.AtomicFileDatastore;
 import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.topics.Topic;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.common.feature.PrivacySandboxFeatureType;
@@ -80,7 +79,6 @@ public final class AppSearchConsentManagerTest extends AdServicesExtendedMockito
 
     private AppSearchConsentManager mAppSearchConsentManager;
     @Mock private AppSearchConsentWorker mAppSearchConsentWorker;
-    @Mock private Flags mMockFlags;
     @Mock private AdServicesManager mAdServicesManager;
     @Mock private AtomicFileDatastore mDatastore;
     @Mock private SharedPreferences mSharedPrefs;

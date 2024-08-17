@@ -49,7 +49,6 @@ import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.modules.utils.build.SdkLevel;
@@ -94,7 +93,6 @@ public class AdServicesBackCompatInitTest extends AdServicesExtendedMockitoTestC
                     "com.android.adservices.topics.TopicsService",
                     "com.android.adservices.appsetid.AppSetIdService");
 
-    @Mock private Flags mMockFlags;
     @Mock private PackageManager mPackageManager;
     @Mock private JobScheduler mJobScheduler;
 

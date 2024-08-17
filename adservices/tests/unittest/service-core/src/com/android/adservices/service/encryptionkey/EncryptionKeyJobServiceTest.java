@@ -43,7 +43,6 @@ import com.android.adservices.common.AdServicesJobServiceTestCase;
 import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.AdServicesConfig;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
@@ -70,7 +69,6 @@ public final class EncryptionKeyJobServiceTest extends AdServicesJobServiceTestC
     private static final int ENCRYPTION_KEY_JOB_ID = ENCRYPTION_KEY_PERIODIC_JOB.getJobId();
     private static final long WAIT_IN_MILLIS = 1_000L;
 
-    @Mock private Flags mMockFlags;
     @Mock private JobScheduler mMockJobScheduler;
     @Mock private JobParameters mMockJobParameters;
     @Mock private JobInfo mMockJobInfo;

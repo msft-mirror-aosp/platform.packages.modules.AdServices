@@ -88,7 +88,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public final class BackgroundKeyFetchWorkerTest extends AdServicesMockitoTestCase {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
-    private final Flags mFlags =
+    private final Flags mFakeFlags =
             new BackgroundKeyFetchWorkerTest.BackgroundKeyFetchWorkerTestFlags();
     private final ExecutorService mExecutorService = Executors.newFixedThreadPool(8);
 
@@ -128,7 +128,7 @@ public final class BackgroundKeyFetchWorkerTest extends AdServicesMockitoTestCas
                 Mockito.spy(
                         new AdSelectionEncryptionKeyManager(
                                 mEncryptionKeyDao,
-                                mFlags,
+                                mFakeFlags,
                                 mAdServicesHttpsClientMock,
                                 mExecutorService,
                                 mAdServicesLoggerMock));
@@ -137,7 +137,7 @@ public final class BackgroundKeyFetchWorkerTest extends AdServicesMockitoTestCas
 
         mBackgroundKeyFetchWorker =
                 new BackgroundKeyFetchWorker(
-                        mKeyManagerSpy, mDevContext, mFlags, mClockMock, mAdServicesLoggerMock);
+                        mKeyManagerSpy, mDevContext, mFakeFlags, mClockMock, mAdServicesLoggerMock);
         mEncryptionKeyDao.insertAllKeys(
                 DBEncryptionKeyFixture.getKeysExpiringInTtl(CommonFixture.FIXED_NOW, 1L));
         mProtectedServersEncryptionConfigDao.insertKeys(

@@ -23,12 +23,10 @@ import static org.junit.Assert.assertNotEquals;
 import static org.mockito.Mockito.when;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
-import com.android.adservices.service.Flags;
 
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -39,7 +37,6 @@ import java.util.Set;
 
 /** Unit tests for {@link FilterMap} */
 public final class FilterMapTest extends AdServicesMockitoTestCase {
-    @Mock private Flags mMockFlags;
 
     @Before
     public void setup() {

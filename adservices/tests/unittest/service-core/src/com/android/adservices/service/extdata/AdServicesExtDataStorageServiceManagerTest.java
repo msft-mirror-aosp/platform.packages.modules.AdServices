@@ -54,7 +54,6 @@ import android.adservices.extdata.AdServicesExtDataParams;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -95,7 +94,6 @@ public final class AdServicesExtDataStorageServiceManagerTest
     private final AdServicesLogger mAdServicesLogger = spy(AdServicesLoggerImpl.getInstance());
 
     @Mock private AdServicesExtDataStorageServiceWorker mMockWorker;
-    @Mock private Flags mMockFlags;
     @Captor private ArgumentCaptor<AdServicesExtDataParams> mParamsCaptor;
     @Captor private ArgumentCaptor<int[]> mFieldsCaptor;
 

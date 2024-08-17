@@ -37,7 +37,6 @@ import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.download.MddJob;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -75,7 +74,6 @@ public final class TopicsServiceTest extends AdServicesExtendedMockitoTestCase {
     @Mock private ConsentManager mMockConsentManager;
     @Mock private EnrollmentDao mMockEnrollmentDao;
     @Mock private AppImportanceFilter mMockAppImportanceFilter;
-    @Mock private Flags mMockFlags;
     @Mock private AdServicesApiConsent mMockAdServicesApiConsent;
 
     @Test

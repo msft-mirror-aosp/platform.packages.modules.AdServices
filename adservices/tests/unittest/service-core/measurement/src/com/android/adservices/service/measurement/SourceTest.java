@@ -29,7 +29,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -52,7 +51,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -88,7 +86,6 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                             /* UnsignedLong dedupKey */ null,
                             /* UnsignedLong debugKey */ null,
                             /* boolean hasSourceDebugKey */ false));
-    @Mock private Flags mMockFlags;
 
     @Before
     public void setup() {
@@ -109,7 +106,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void testEqualsPass() throws JSONException {
+    public void testEqualsPass() throws Exception {
         assertEquals(
                 SourceFixture.getMinimalValidSourceBuilder().build(),
                 SourceFixture.getMinimalValidSourceBuilder().build());
@@ -250,7 +247,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void testEqualsFail() throws JSONException {
+    public void testEqualsFail() throws Exception {
         assertNotEquals(
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(new UnsignedLong(1L))
@@ -984,7 +981,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void testGetFilterData_nonEmpty() throws JSONException {
+    public void testGetFilterData_nonEmpty() throws Exception {
         JSONObject filterMapJson = new JSONObject();
         filterMapJson.put("conversion", new JSONArray(Collections.singletonList("electronics")));
         filterMapJson.put("product", new JSONArray(Arrays.asList("1234", "2345")));
@@ -1006,7 +1003,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void testGetFilterData_withTrigger_addsLookbackWindow() throws JSONException {
+    public void testGetFilterData_withTrigger_addsLookbackWindow() throws Exception {
         when(mMockFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
         JSONObject filterMapJson = new JSONObject();
         filterMapJson.put("conversion", new JSONArray(List.of("electronics")));
@@ -1031,8 +1028,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void testGetFilterData_withTriggerAndEmptyData_addsLookbackWindow()
-            throws JSONException {
+    public void testGetFilterData_withTriggerAndEmptyData_addsLookbackWindow() throws Exception {
         when(mMockFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -1049,7 +1045,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void testGetSharedFilterData_withLongValue_success() throws JSONException {
+    public void testGetSharedFilterData_withLongValue_success() throws Exception {
         when(mMockFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
         JSONObject filterMapJson = new JSONObject();
         filterMapJson.put("conversion", new JSONArray(List.of("electronics")));
@@ -1068,7 +1064,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void testGetSharedFilterData_success() throws JSONException {
+    public void testGetSharedFilterData_success() throws Exception {
         when(mMockFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(false);
         JSONObject filterMapJson = new JSONObject();
         filterMapJson.put("conversion", new JSONArray(List.of("electronics")));
@@ -1087,7 +1083,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void testGetFilterData_nullFilterData() throws JSONException {
+    public void testGetFilterData_nullFilterData() throws Exception {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
@@ -1100,7 +1096,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void testGetFilterData_emptyFilterData() throws JSONException {
+    public void testGetFilterData_emptyFilterData() throws Exception {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
@@ -1114,7 +1110,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void testParseAggregateSource() throws JSONException {
+    public void testParseAggregateSource() throws Exception {
         JSONObject aggregatableSource = new JSONObject();
         aggregatableSource.put("campaignCounts", "0x159");
         aggregatableSource.put("geoValue", "0x5");
@@ -1152,7 +1148,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void setSharedDebugKey_success() throws JSONException {
+    public void setSharedDebugKey_success() throws Exception {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSharedDebugKey(SHARED_DEBUG_KEY_1)
@@ -1162,7 +1158,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
 
     @Test
     public void attributedTriggersToJson_buildAttributedTriggers_encodesAndDecodes()
-            throws JSONException {
+            throws Exception {
         JSONArray existingAttributes = new JSONArray();
         JSONObject triggerRecord1 = new JSONObject();
         triggerRecord1.put("trigger_id", "100");
@@ -1224,7 +1220,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
 
     @Test
     public void attributedTriggersToJsonFlexApi_buildAttributedTriggers_encodesAndDecodes()
-            throws JSONException {
+            throws Exception {
         JSONArray existingAttributes = new JSONArray();
         JSONObject triggerRecord1 = new JSONObject();
         triggerRecord1.put("trigger_id", "100");
@@ -1292,7 +1288,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
 
     @Test
     public void buildAttributedTriggers_multipleCalls_doesNotParseAttributionStatus()
-            throws JSONException {
+            throws Exception {
         JSONArray existingAttributes = new JSONArray();
         JSONObject triggerRecord = new JSONObject();
         triggerRecord.put("trigger_id", "100");
@@ -1318,7 +1314,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void triggerSpecs_encodingDecoding_equal() throws JSONException {
+    public void triggerSpecs_encodingDecoding_equal() throws Exception {
         // Setup
         Source validSource = SourceFixture.getValidSourceWithFlexEventReport();
         TriggerSpecs originalTriggerSpecs = validSource.getTriggerSpecs();
@@ -1411,11 +1407,12 @@ public final class SourceTest extends AdServicesMockitoTestCase {
 
     @Test
     public void validateAndSetNumReportStates_flexLiteValid_returnsTrue() {
-        Flags flags = mock(Flags.class);
         doReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION)
-                .when(flags).getMeasurementMaxReportStatesPerSourceRegistration();
+                .when(mMockFlags)
+                .getMeasurementMaxReportStatesPerSourceRegistration();
         doReturn(Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT)
-                .when(flags).getMeasurementVtcConfigurableMaxEventReportsCount();
+                .when(mMockFlags)
+                .getMeasurementVtcConfigurableMaxEventReportsCount();
         long baseTime = System.currentTimeMillis();
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -1430,24 +1427,23 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                                                 baseTime + TimeUnit.DAYS.toMillis(30)))
                         .setMaxEventLevelReports(2)
                         .build();
-        assertTrue(source.validateAndSetNumReportStates(flags));
+        assertTrue(source.validateAndSetNumReportStates(mMockFlags));
     }
 
     @Test
     public void validateAttributionScopeValues_attributionScopeEnabledValid_returnsTrue() {
-        Flags flags = mock(Flags.class);
-        doReturn(true).when(flags).getMeasurementEnableAttributionScope();
+        doReturn(true).when(mMockFlags).getMeasurementEnableAttributionScope();
         doReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION)
-                .when(flags)
+                .when(mMockFlags)
                 .getMeasurementMaxReportStatesPerSourceRegistration();
         doReturn(Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT)
-                .when(flags)
+                .when(mMockFlags)
                 .getMeasurementVtcConfigurableMaxEventReportsCount();
         doReturn(Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION)
-                .when(flags)
+                .when(mMockFlags)
                 .getMeasurementAttributionScopeMaxInfoGainNavigation();
         doReturn(Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT)
-                .when(flags)
+                .when(mMockFlags)
                 .getMeasurementAttributionScopeMaxInfoGainEvent();
         long baseTime = System.currentTimeMillis();
         Source source =
@@ -1467,25 +1463,24 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                         .setAttributionScopeLimit(2L)
                         .setMaxEventStates(15L)
                         .build();
-        assertThat(source.validateAttributionScopeValues(flags))
+        assertThat(source.validateAttributionScopeValues(mMockFlags))
                 .isEqualTo(Source.AttributionScopeValidationResult.VALID);
     }
 
     @Test
     public void validateAttributionScopeValues_infoGainTooHigh_returnsFalse() {
-        Flags flags = mock(Flags.class);
-        doReturn(true).when(flags).getMeasurementEnableAttributionScope();
+        doReturn(true).when(mMockFlags).getMeasurementEnableAttributionScope();
         doReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION)
-                .when(flags)
+                .when(mMockFlags)
                 .getMeasurementMaxReportStatesPerSourceRegistration();
         doReturn(Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT)
-                .when(flags)
+                .when(mMockFlags)
                 .getMeasurementVtcConfigurableMaxEventReportsCount();
         doReturn(Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION)
-                .when(flags)
+                .when(mMockFlags)
                 .getMeasurementAttributionScopeMaxInfoGainNavigation();
         doReturn(Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT)
-                .when(flags)
+                .when(mMockFlags)
                 .getMeasurementAttributionScopeMaxInfoGainEvent();
         long baseTime = System.currentTimeMillis();
         Source source =
@@ -1505,25 +1500,24 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                         .setAttributionScopeLimit(4L)
                         .setMaxEventStates(1000L)
                         .build();
-        assertThat(source.validateAttributionScopeValues(flags))
+        assertThat(source.validateAttributionScopeValues(mMockFlags))
                 .isEqualTo(Source.AttributionScopeValidationResult.INVALID_INFORMATION_GAIN_LIMIT);
     }
 
     @Test
     public void validateAttributionScopeValues_infoGainValid_returnsTrue() {
-        Flags flags = mock(Flags.class);
-        doReturn(true).when(flags).getMeasurementEnableAttributionScope();
+        doReturn(true).when(mMockFlags).getMeasurementEnableAttributionScope();
         doReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION)
-                .when(flags)
+                .when(mMockFlags)
                 .getMeasurementMaxReportStatesPerSourceRegistration();
         doReturn(Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT)
-                .when(flags)
+                .when(mMockFlags)
                 .getMeasurementVtcConfigurableMaxEventReportsCount();
         doReturn(Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION)
-                .when(flags)
+                .when(mMockFlags)
                 .getMeasurementAttributionScopeMaxInfoGainNavigation();
         doReturn(Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT)
-                .when(flags)
+                .when(mMockFlags)
                 .getMeasurementAttributionScopeMaxInfoGainEvent();
         long baseTime = System.currentTimeMillis();
         Source source =
@@ -1543,19 +1537,18 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                         .setAttributionScopeLimit(3L)
                         .setMaxEventStates(1000L)
                         .build();
-        assertThat(source.validateAttributionScopeValues(flags))
+        assertThat(source.validateAttributionScopeValues(mMockFlags))
                 .isEqualTo(Source.AttributionScopeValidationResult.VALID);
     }
 
     @Test
     public void validateAttributionScopeValues_maxEventStatesNullNonDefaultVtc_returnsFalse() {
-        Flags flags = mock(Flags.class);
-        doReturn(true).when(flags).getMeasurementEnableAttributionScope();
+        doReturn(true).when(mMockFlags).getMeasurementEnableAttributionScope();
         doReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION)
-                .when(flags)
+                .when(mMockFlags)
                 .getMeasurementMaxReportStatesPerSourceRegistration();
         doReturn(Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT)
-                .when(flags)
+                .when(mMockFlags)
                 .getMeasurementVtcConfigurableMaxEventReportsCount();
         long baseTime = System.currentTimeMillis();
         // Source with numStates = 15.
@@ -1575,25 +1568,24 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                         .setAttributionScopeLimit(3L)
                         .setMaxEventStates(3L)
                         .build();
-        assertThat(source.validateAttributionScopeValues(flags))
+        assertThat(source.validateAttributionScopeValues(mMockFlags))
                 .isEqualTo(Source.AttributionScopeValidationResult.INVALID_MAX_EVENT_STATES_LIMIT);
     }
 
     @Test
     public void validateAttributionScopeValues_maxEventStatesNullNavigation_returnsFalse() {
-        Flags flags = mock(Flags.class);
-        doReturn(true).when(flags).getMeasurementEnableAttributionScope();
+        doReturn(true).when(mMockFlags).getMeasurementEnableAttributionScope();
         doReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION)
-                .when(flags)
+                .when(mMockFlags)
                 .getMeasurementMaxReportStatesPerSourceRegistration();
         doReturn(Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT)
-                .when(flags)
+                .when(mMockFlags)
                 .getMeasurementVtcConfigurableMaxEventReportsCount();
         doReturn(Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION)
-                .when(flags)
+                .when(mMockFlags)
                 .getMeasurementAttributionScopeMaxInfoGainNavigation();
         doReturn(Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT)
-                .when(flags)
+                .when(mMockFlags)
                 .getMeasurementAttributionScopeMaxInfoGainEvent();
         long baseTime = System.currentTimeMillis();
         // Source with numStates = 15.
@@ -1613,20 +1605,19 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                         .setAttributionScopeLimit(3L)
                         .setMaxEventStates(3L)
                         .build();
-        assertThat(source.validateAttributionScopeValues(flags))
+        assertThat(source.validateAttributionScopeValues(mMockFlags))
                 .isEqualTo(Source.AttributionScopeValidationResult.VALID);
         assertThat(source.getMaxEventStates()).isEqualTo(DEFAULT_MAX_EVENT_STATES);
     }
 
     @Test
     public void validateAttributionScopeValues_maxEventStatesTooLow_maxEventStatesLimit() {
-        Flags flags = mock(Flags.class);
-        doReturn(true).when(flags).getMeasurementEnableAttributionScope();
+        doReturn(true).when(mMockFlags).getMeasurementEnableAttributionScope();
         doReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION)
-                .when(flags)
+                .when(mMockFlags)
                 .getMeasurementMaxReportStatesPerSourceRegistration();
         doReturn(Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT)
-                .when(flags)
+                .when(mMockFlags)
                 .getMeasurementVtcConfigurableMaxEventReportsCount();
         long baseTime = System.currentTimeMillis();
         Source source =
@@ -1645,17 +1636,18 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                         .setAttributionScopeLimit(5L)
                         .setMaxEventStates(3L)
                         .build();
-        assertThat(source.validateAttributionScopeValues(flags))
+        assertThat(source.validateAttributionScopeValues(mMockFlags))
                 .isEqualTo(Source.AttributionScopeValidationResult.INVALID_MAX_EVENT_STATES_LIMIT);
     }
 
     @Test
     public void validateAndSetNumReportStates_flexLiteInvalid_returnsFalse() {
-        Flags flags = mock(Flags.class);
         doReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION)
-                .when(flags).getMeasurementMaxReportStatesPerSourceRegistration();
+                .when(mMockFlags)
+                .getMeasurementMaxReportStatesPerSourceRegistration();
         doReturn(Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT)
-                .when(flags).getMeasurementVtcConfigurableMaxEventReportsCount();
+                .when(mMockFlags)
+                .getMeasurementVtcConfigurableMaxEventReportsCount();
         long baseTime = System.currentTimeMillis();
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -1672,17 +1664,18 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                                         baseTime + TimeUnit.DAYS.toMillis(30)))
                         .setMaxEventLevelReports(20)
                         .build();
-        assertFalse(source.validateAndSetNumReportStates(flags));
+        assertFalse(source.validateAndSetNumReportStates(mMockFlags));
     }
 
     @Test
-    public void validateAndSetNumReportStates_fullFlexValid_returnsTrue() throws JSONException {
-        Flags flags = mock(Flags.class);
+    public void validateAndSetNumReportStates_fullFlexValid_returnsTrue() throws Exception {
         doReturn(Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT)
-                .when(flags).getMeasurementVtcConfigurableMaxEventReportsCount();
-        doReturn(true).when(flags).getMeasurementFlexibleEventReportingApiEnabled();
+                .when(mMockFlags)
+                .getMeasurementVtcConfigurableMaxEventReportsCount();
+        doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION)
-                .when(flags).getMeasurementMaxReportStatesPerSourceRegistration();
+                .when(mMockFlags)
+                .getMeasurementMaxReportStatesPerSourceRegistration();
         // setup
         String triggerSpecsString =
                 "[{\"trigger_data\": [0, 1],"
@@ -1711,18 +1704,19 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                         .setTriggerSpecs(new TriggerSpecs(
                                 triggerSpecsArray, maxEventLevelReports, null))
                         .build();
-        assertTrue(testSource.validateAndSetNumReportStates(flags));
+        assertTrue(testSource.validateAndSetNumReportStates(mMockFlags));
     }
 
     @Test
     public void validateAndSetNumReportStates_fullFlexArithmeticInvalid_returnsFalse()
-            throws JSONException {
-        Flags flags = mock(Flags.class);
+            throws Exception {
         doReturn(Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT)
-                .when(flags).getMeasurementVtcConfigurableMaxEventReportsCount();
-        doReturn(true).when(flags).getMeasurementFlexibleEventReportingApiEnabled();
+                .when(mMockFlags)
+                .getMeasurementVtcConfigurableMaxEventReportsCount();
+        doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION)
-                .when(flags).getMeasurementMaxReportStatesPerSourceRegistration();
+                .when(mMockFlags)
+                .getMeasurementMaxReportStatesPerSourceRegistration();
         // setup
         String triggerSpecsString =
                 "[{\"trigger_data\": [0, 1, 2, 3, 4, 5, 6, 7],"
@@ -1756,18 +1750,19 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                         .setTriggerSpecs(new TriggerSpecs(
                                 triggerSpecsArray, maxEventLevelReports, null))
                         .build();
-        assertFalse(testSource.validateAndSetNumReportStates(flags));
+        assertFalse(testSource.validateAndSetNumReportStates(mMockFlags));
     }
 
     @Test
     public void validateAndSetNumReportStates_fullFlexIterativeInvalid_returnsFalse()
-            throws JSONException {
-        Flags flags = mock(Flags.class);
+            throws Exception {
         doReturn(Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT)
-                .when(flags).getMeasurementVtcConfigurableMaxEventReportsCount();
-        doReturn(true).when(flags).getMeasurementFlexibleEventReportingApiEnabled();
+                .when(mMockFlags)
+                .getMeasurementVtcConfigurableMaxEventReportsCount();
+        doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION)
-                .when(flags).getMeasurementMaxReportStatesPerSourceRegistration();
+                .when(mMockFlags)
+                .getMeasurementMaxReportStatesPerSourceRegistration();
         // setup
         String triggerSpecsString =
                 "["
@@ -1813,18 +1808,17 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                         .setTriggerSpecs(new TriggerSpecs(
                                 triggerSpecsArray, maxEventLevelReports, null))
                         .build();
-        assertFalse(testSource.validateAndSetNumReportStates(flags));
+        assertFalse(testSource.validateAndSetNumReportStates(mMockFlags));
     }
 
     @Test
     public void
             validateAttributionScopeValues_fullFlexAttributionScopeMaxEventStatesNull_returnsFalse()
-                    throws JSONException {
-        Flags flags = mock(Flags.class);
-        doReturn(true).when(flags).getMeasurementEnableAttributionScope();
-        doReturn(true).when(flags).getMeasurementFlexibleEventReportingApiEnabled();
+                    throws Exception {
+        doReturn(true).when(mMockFlags).getMeasurementEnableAttributionScope();
+        doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION)
-                .when(flags)
+                .when(mMockFlags)
                 .getMeasurementMaxReportStatesPerSourceRegistration();
         // setup
         String triggerSpecsString =
@@ -1856,7 +1850,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                         .setAttributionScopeLimit(3L)
                         .setMaxEventStates(3L)
                         .build();
-        assertThat(testSource.validateAttributionScopeValues(flags))
+        assertThat(testSource.validateAttributionScopeValues(mMockFlags))
                 .isEqualTo(Source.AttributionScopeValidationResult.INVALID_MAX_EVENT_STATES_LIMIT);
     }
 
@@ -1944,22 +1938,22 @@ public final class SourceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void isFlexEventApiValueValid_eventSource_true() throws JSONException {
-        Flags flags = mock(Flags.class);
+    public void isFlexEventApiValueValid_eventSource_true() throws Exception {
         doReturn(Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT)
-                .when(flags).getMeasurementVtcConfigurableMaxEventReportsCount();
-        doReturn(true).when(flags).getMeasurementFlexibleEventReportingApiEnabled();
+                .when(mMockFlags)
+                .getMeasurementVtcConfigurableMaxEventReportsCount();
+        doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT)
-                .when(flags)
+                .when(mMockFlags)
                 .getMeasurementFlexApiMaxInformationGainEvent();
         doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION)
-                .when(flags)
+                .when(mMockFlags)
                 .getMeasurementFlexApiMaxInformationGainNavigation();
         doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT)
-                .when(flags)
+                .when(mMockFlags)
                 .getMeasurementFlexApiMaxInformationGainDualDestinationEvent();
         doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION)
-                .when(flags)
+                .when(mMockFlags)
                 .getMeasurementFlexApiMaxInformationGainDualDestinationNavigation();
         // setup
         String triggerSpecsString =
@@ -1988,25 +1982,26 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                         .setTriggerSpecs(new TriggerSpecs(
                                 triggerSpecsArray, maxEventLevelReports, null))
                         .build();
-        assertTrue(testSource.isFlexEventApiValueValid(flags));
+        assertTrue(testSource.isFlexEventApiValueValid(mMockFlags));
     }
 
     @Test
-    public void isFlexEventApiValueValid_eventSource_false() throws JSONException {
-        Flags flags = mock(Flags.class);
+    public void isFlexEventApiValueValid_eventSource_false() throws Exception {
         doReturn(Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT)
-                .when(flags).getMeasurementVtcConfigurableMaxEventReportsCount();
-        doReturn(true).when(flags).getMeasurementFlexibleEventReportingApiEnabled();
+                .when(mMockFlags)
+                .getMeasurementVtcConfigurableMaxEventReportsCount();
+        doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION)
-                .when(flags).getMeasurementMaxReportStatesPerSourceRegistration();
+                .when(mMockFlags)
+                .getMeasurementMaxReportStatesPerSourceRegistration();
         doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT)
-                .when(flags)
+                .when(mMockFlags)
                 .getMeasurementFlexApiMaxInformationGainEvent();
         doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION)
-                .when(flags)
+                .when(mMockFlags)
                 .getMeasurementFlexApiMaxInformationGainNavigation();
         doReturn(Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON)
-                .when(flags)
+                .when(mMockFlags)
                 .getMeasurementPrivacyEpsilon();
         // setup
         String triggerSpecsString =
@@ -2039,20 +2034,20 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                         .setTriggerSpecs(new TriggerSpecs(
                                 triggerSpecsArray, maxEventLevelReports, null))
                         .build();
-        assertFalse(testSource.isFlexEventApiValueValid(flags));
+        assertFalse(testSource.isFlexEventApiValueValid(mMockFlags));
     }
 
     @Test
-    public void isFlexEventApiValueValid_navigationSource_true() throws JSONException {
-        Flags flags = mock(Flags.class);
+    public void isFlexEventApiValueValid_navigationSource_true() throws Exception {
         doReturn(Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT)
-                .when(flags).getMeasurementVtcConfigurableMaxEventReportsCount();
-        doReturn(true).when(flags).getMeasurementFlexibleEventReportingApiEnabled();
+                .when(mMockFlags)
+                .getMeasurementVtcConfigurableMaxEventReportsCount();
+        doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT)
-                .when(flags)
+                .when(mMockFlags)
                 .getMeasurementFlexApiMaxInformationGainEvent();
         doReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION)
-                .when(flags)
+                .when(mMockFlags)
                 .getMeasurementFlexApiMaxInformationGainNavigation();
         // setup
         String triggerSpecsString =
@@ -2083,11 +2078,11 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                         .setTriggerSpecs(new TriggerSpecs(
                                 triggerSpecsArray, maxEventLevelReports, null))
                         .build();
-        assertTrue(testSource.isFlexEventApiValueValid(flags));
+        assertTrue(testSource.isFlexEventApiValueValid(mMockFlags));
     }
 
     @Test
-    public void buildTriggerSpecs_validParams_pass() throws JSONException {
+    public void buildTriggerSpecs_validParams_pass() throws Exception {
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2, 3],"
                         + "\"event_report_windows\": { "
@@ -2113,7 +2108,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void buildTriggerSpecs_invalidParamsSyntaxError_throws() throws JSONException {
+    public void buildTriggerSpecs_invalidParamsSyntaxError_throws() throws Exception {
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2, 3,"
                         + "\"event_report_windows\": { "
@@ -2161,17 +2156,13 @@ public final class SourceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void getOrDefaultEventReportWindowsForFlex() throws JSONException {
-        Flags flags = mock(Flags.class);
+    public void getOrDefaultEventReportWindowsForFlex() throws Exception {
         JSONObject windowsObj = new JSONObject("{'start_time': '2000000', 'end_times': "
                 + "[3600000, 86400000, 172000000]}");
         // Provided Windows
         List<Pair<Long, Long>> eventReportWindows =
                 Source.getOrDefaultEventReportWindowsForFlex(
-                        windowsObj,
-                        Source.SourceType.EVENT,
-                        8640000,
-                        flags);
+                        windowsObj, Source.SourceType.EVENT, 8640000, mMockFlags);
         assertNotNull(eventReportWindows);
         assertEquals(eventReportWindows.size(), 3);
         assertEquals(new Pair<>(2000000L, 3600000L), eventReportWindows.get(0));
@@ -2179,12 +2170,12 @@ public final class SourceTest extends AdServicesMockitoTestCase {
         assertEquals(new Pair<>(86400000L, 172000000L), eventReportWindows.get(2));
 
         // Default Windows - Event
-        when(flags.getMeasurementEventReportsVtcEarlyReportingWindows()).thenReturn("86400");
-        when(flags.getMeasurementEventReportsCtcEarlyReportingWindows())
+        when(mMockFlags.getMeasurementEventReportsVtcEarlyReportingWindows()).thenReturn("86400");
+        when(mMockFlags.getMeasurementEventReportsCtcEarlyReportingWindows())
                 .thenReturn("172800,604800");
         eventReportWindows =
                 Source.getOrDefaultEventReportWindowsForFlex(
-                        null, Source.SourceType.EVENT, TimeUnit.DAYS.toMillis(15), flags);
+                        null, Source.SourceType.EVENT, TimeUnit.DAYS.toMillis(15), mMockFlags);
         assertNotNull(eventReportWindows);
         assertEquals(2, eventReportWindows.size());
         assertEquals(new Pair<>(0L, 86400000L), eventReportWindows.get(0));
@@ -2193,7 +2184,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
         // Default Windows - Navigation
         eventReportWindows =
                 Source.getOrDefaultEventReportWindowsForFlex(
-                        null, Source.SourceType.NAVIGATION, TimeUnit.DAYS.toMillis(15), flags);
+                        null, Source.SourceType.NAVIGATION, TimeUnit.DAYS.toMillis(15), mMockFlags);
         assertNotNull(eventReportWindows);
         assertEquals(3, eventReportWindows.size());
         assertEquals(new Pair<>(0L, 172800000L), eventReportWindows.get(0));
@@ -2231,20 +2222,21 @@ public final class SourceTest extends AdServicesMockitoTestCase {
 
     @Test
     public void getOrDefaultMaxEventLevelReports() {
-        Flags flags = mock(Flags.class);
-        when(flags.getMeasurementVtcConfigurableMaxEventReportsCount()).thenReturn(2);
+        when(mMockFlags.getMeasurementVtcConfigurableMaxEventReportsCount()).thenReturn(2);
         // null, Default for EVENT
         assertEquals(
                 Integer.valueOf(2),
-                Source.getOrDefaultMaxEventLevelReports(Source.SourceType.EVENT, null, flags));
+                Source.getOrDefaultMaxEventLevelReports(Source.SourceType.EVENT, null, mMockFlags));
         // null, Default for NAVIGATION
         assertEquals(
                 Integer.valueOf(3),
-                Source.getOrDefaultMaxEventLevelReports(Source.SourceType.NAVIGATION, null, flags));
+                Source.getOrDefaultMaxEventLevelReports(
+                        Source.SourceType.NAVIGATION, null, mMockFlags));
         // Valid value provided
         assertEquals(
                 Integer.valueOf(7),
-                Source.getOrDefaultMaxEventLevelReports(Source.SourceType.NAVIGATION, 7, flags));
+                Source.getOrDefaultMaxEventLevelReports(
+                        Source.SourceType.NAVIGATION, 7, mMockFlags));
     }
 
     @Test

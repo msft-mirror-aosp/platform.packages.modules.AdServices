@@ -35,7 +35,6 @@ import android.view.VerifiedMotionEvent;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.FakeFlagsFactory;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.MeasurementClickVerificationStats;
@@ -51,7 +50,6 @@ public final class ClickVerifierTest extends AdServicesExtendedMockitoTestCase {
     private static final String SOURCE_REGISTRANT = "source_registrant";
 
     @Mock private InputManager mInputManager;
-    @Mock private Flags mMockFlags;
 
     @Mock private AdServicesLogger mAdServicesLogger;
 

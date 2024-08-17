@@ -99,7 +99,6 @@ import static org.mockito.Mockito.when;
 import android.adservices.adselection.ReportEventRequest;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AppManifestConfigCall;
 import com.android.adservices.service.common.AppManifestConfigCall.ApiType;
 import com.android.adservices.service.common.AppManifestConfigCall.Result;
@@ -128,7 +127,6 @@ import com.google.common.collect.ImmutableList;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
 
 import java.util.Arrays;
 import java.util.List;
@@ -178,7 +176,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
             ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
 
     private StatsdAdServicesLogger mLogger;
-    @Mock private Flags mMockFlags;
 
     @Before
     public void setUp() {

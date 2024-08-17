@@ -27,7 +27,6 @@ import android.util.Pair;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.common.AdServicesMockitoTestCase;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.AttributionConfig;
 import com.android.adservices.service.measurement.FilterMap;
 import com.android.adservices.service.measurement.Source;
@@ -42,7 +41,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -57,7 +55,6 @@ public final class XnaSourceCreatorTest extends AdServicesMockitoTestCase {
     private static final String JOIN_KEY = "join-abc-def-ghi";
     private static final long LOOKBACK_WINDOW_VALUE = 10L;
 
-    @Mock private Flags mMockFlags;
     private Filter mFilter;
 
     @Before

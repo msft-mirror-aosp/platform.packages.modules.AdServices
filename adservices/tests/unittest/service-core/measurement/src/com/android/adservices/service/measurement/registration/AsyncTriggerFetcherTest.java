@@ -201,7 +201,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     @Mock private HttpsURLConnection mUrlConnection;
     @Mock private HttpsURLConnection mUrlConnection1;
     @Mock private EnrollmentDao mEnrollmentDao;
-    @Mock private Flags mMockFlags;
     @Mock private AdServicesLogger mLogger;
     @Mock private AdServicesErrorLogger mErrorLogger;
     @Mock private DebugReportApi mDebugReportApi;

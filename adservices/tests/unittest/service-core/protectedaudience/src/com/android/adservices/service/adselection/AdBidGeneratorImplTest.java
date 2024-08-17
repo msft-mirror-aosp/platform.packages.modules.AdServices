@@ -344,7 +344,7 @@ public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
     private CustomAudienceBiddingInfo mCustomAudienceBiddingInfo;
     private DevContext mDevContext;
     private CustomAudienceDao mCustomAudienceDao;
-    private Flags mFlags;
+    private Flags mFakeFlags;
     private MockWebServerRule.RequestMatcher<String> mRequestMatcherExactMatch;
     private IsolateSettings mIsolateSettings;
     private RunAdBiddingPerCAExecutionLogger mRunAdBiddingPerCAExecutionLogger;
@@ -368,7 +368,7 @@ public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
 
     @Before
     public void setUp() throws Exception {
-        mFlags = new AdBidGeneratorImplTestFlags();
+        mFakeFlags = new AdBidGeneratorImplTestFlags();
         mDevContext = DevContext.createForDevOptionsDisabled();
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
@@ -383,7 +383,7 @@ public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
                         mAdServicesHttpsClient,
-                        mFlags,
+                        mFakeFlags,
                         mDevContext);
 
         mDecisionLogicUri = mMockWebServerRule.uriForPath(FETCH_JAVA_SCRIPT_PATH);
@@ -427,7 +427,7 @@ public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
         when(mRunAdBiddingPerCAClockMock.elapsedRealtime()).thenReturn(START_ELAPSED_TIMESTAMP);
         mRunAdBiddingPerCAExecutionLogger =
                 new RunAdBiddingPerCAExecutionLogger(
-                        mRunAdBiddingPerCAClockMock, mAdServicesLoggerMock, mFlags);
+                        mRunAdBiddingPerCAClockMock, mAdServicesLoggerMock, mFakeFlags);
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(
                                 ApplicationProvider.getApplicationContext(),
@@ -456,7 +456,7 @@ public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
                         mAdSelectionScriptEngine,
                         customAudienceDevOverridesHelper,
                         AD_COUNTER_KEY_COPIER_NO_OP,
-                        mFlags,
+                        mFakeFlags,
                         mIsolateSettings,
                         mJsFetcher,
                         mDebugReporting,
@@ -567,7 +567,7 @@ public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
                         mAdSelectionScriptEngine,
                         customAudienceDevOverridesHelper,
                         AD_COUNTER_KEY_COPIER_NO_OP,
-                        mFlags,
+                        mFakeFlags,
                         mIsolateSettings,
                         mJsFetcher,
                         mDebugReporting,
@@ -685,7 +685,7 @@ public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
                         mAdSelectionScriptEngine,
                         customAudienceDevOverridesHelper,
                         AD_COUNTER_KEY_COPIER_NO_OP,
-                        mFlags,
+                        mFakeFlags,
                         mIsolateSettings,
                         mJsFetcher,
                         mDebugReporting,
@@ -801,7 +801,7 @@ public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
                         mAdSelectionScriptEngine,
                         customAudienceDevOverridesHelper,
                         AD_COUNTER_KEY_COPIER_NO_OP,
-                        mFlags,
+                        mFakeFlags,
                         mIsolateSettings,
                         mJsFetcher,
                         mDebugReporting,
@@ -905,7 +905,7 @@ public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
                         mAdSelectionScriptEngine,
                         customAudienceDevOverridesHelper,
                         AD_COUNTER_KEY_COPIER_NO_OP,
-                        mFlags,
+                        mFakeFlags,
                         mIsolateSettings,
                         mJsFetcher,
                         mDebugReporting,
@@ -1010,7 +1010,7 @@ public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
                         mAdSelectionScriptEngine,
                         customAudienceDevOverridesHelper,
                         AD_COUNTER_KEY_COPIER_NO_OP,
-                        mFlags,
+                        mFakeFlags,
                         mIsolateSettings,
                         mJsFetcher,
                         mDebugReporting,
@@ -1123,7 +1123,7 @@ public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
                         mAdSelectionScriptEngine,
                         customAudienceDevOverridesHelper,
                         AD_COUNTER_KEY_COPIER_NO_OP,
-                        mFlags,
+                        mFakeFlags,
                         mIsolateSettings,
                         mJsFetcher,
                         mDebugReporting,
@@ -1227,7 +1227,7 @@ public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
                         mAdSelectionScriptEngine,
                         customAudienceDevOverridesHelper,
                         AD_COUNTER_KEY_COPIER,
-                        mFlags,
+                        mFakeFlags,
                         mIsolateSettings,
                         mJsFetcher,
                         mDebugReporting,
@@ -1347,7 +1347,7 @@ public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
                         mAdSelectionScriptEngine,
                         customAudienceDevOverridesHelper,
                         AD_COUNTER_KEY_COPIER,
-                        mFlags,
+                        mFakeFlags,
                         mIsolateSettings,
                         mJsFetcher,
                         mDebugReporting,
@@ -1444,7 +1444,7 @@ public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
                         mAdSelectionScriptEngine,
                         customAudienceDevOverridesHelper,
                         AD_COUNTER_KEY_COPIER_NO_OP,
-                        mFlags,
+                        mFakeFlags,
                         mIsolateSettings,
                         mJsFetcher,
                         mDebugReporting,
@@ -1543,7 +1543,7 @@ public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
                         mAdSelectionScriptEngine,
                         customAudienceDevOverridesHelper,
                         AD_COUNTER_KEY_COPIER_NO_OP,
-                        mFlags,
+                        mFakeFlags,
                         mIsolateSettings,
                         mJsFetcher,
                         mDebugReporting,
@@ -1654,7 +1654,7 @@ public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
                         mAdSelectionScriptEngine,
                         customAudienceDevOverridesHelper,
                         AD_COUNTER_KEY_COPIER_NO_OP,
-                        mFlags,
+                        mFakeFlags,
                         mIsolateSettings,
                         mJsFetcher,
                         mDebugReporting,
@@ -1869,7 +1869,7 @@ public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
                         mAdSelectionScriptEngine,
                         customAudienceDevOverridesHelper,
                         AD_COUNTER_KEY_COPIER,
-                        mFlags,
+                        mFakeFlags,
                         mIsolateSettings,
                         mJsFetcher,
                         mDebugReporting,
@@ -1971,7 +1971,7 @@ public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
                         mAdSelectionScriptEngine,
                         customAudienceDevOverridesHelper,
                         AD_COUNTER_KEY_COPIER,
-                        mFlags,
+                        mFakeFlags,
                         mIsolateSettings,
                         mJsFetcher,
                         mDebugReporting,
@@ -2065,7 +2065,7 @@ public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
                         mAdSelectionScriptEngine,
                         customAudienceDevOverridesHelper,
                         AD_COUNTER_KEY_COPIER_NO_OP,
-                        mFlags,
+                        mFakeFlags,
                         mIsolateSettings,
                         mJsFetcher,
                         mDebugReporting,
@@ -2147,7 +2147,7 @@ public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
                         mAdSelectionScriptEngine,
                         customAudienceDevOverridesHelper,
                         AD_COUNTER_KEY_COPIER_NO_OP,
-                        mFlags,
+                        mFakeFlags,
                         mIsolateSettings,
                         mJsFetcher,
                         mDebugReporting,
@@ -2263,7 +2263,7 @@ public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
                         mAdServicesHttpsClient,
-                        mFlags,
+                        mFakeFlags,
                         mDevContext);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
@@ -2273,7 +2273,7 @@ public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
                         mAdSelectionScriptEngine,
                         customAudienceDevOverridesHelper,
                         AD_COUNTER_KEY_COPIER_NO_OP,
-                        mFlags,
+                        mFakeFlags,
                         mIsolateSettings,
                         mJsFetcher,
                         mDebugReporting,
@@ -2370,7 +2370,7 @@ public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
                         mAdSelectionScriptEngine,
                         customAudienceDevOverridesHelper,
                         AD_COUNTER_KEY_COPIER_NO_OP,
-                        mFlags,
+                        mFakeFlags,
                         mIsolateSettings,
                         mJsFetcher,
                         mDebugReporting,
@@ -2461,7 +2461,7 @@ public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
                         mAdSelectionScriptEngine,
                         customAudienceDevOverridesHelper,
                         AD_COUNTER_KEY_COPIER_NO_OP,
-                        mFlags,
+                        mFakeFlags,
                         mIsolateSettings,
                         mJsFetcher,
                         mDebugReporting,
@@ -2717,7 +2717,7 @@ public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
                         mAdSelectionScriptEngine,
                         customAudienceDevOverridesHelper,
                         AD_COUNTER_KEY_COPIER_NO_OP,
-                        mFlags,
+                        mFakeFlags,
                         mIsolateSettings,
                         mJsFetcher,
                         mDebugReporting,
@@ -2787,7 +2787,7 @@ public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
                         mAdSelectionScriptEngine,
                         customAudienceDevOverridesHelper,
                         AD_COUNTER_KEY_COPIER_NO_OP,
-                        mFlags,
+                        mFakeFlags,
                         mIsolateSettings,
                         mJsFetcher,
                         mDebugReporting,
@@ -2891,7 +2891,7 @@ public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
                         mAdSelectionScriptEngine,
                         customAudienceDevOverridesHelper,
                         AD_COUNTER_KEY_COPIER_NO_OP,
-                        mFlags,
+                        mFakeFlags,
                         mIsolateSettings,
                         mJsFetcher,
                         mDebugReporting,
@@ -2991,7 +2991,7 @@ public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
                         mAdSelectionScriptEngine,
                         customAudienceDevOverridesHelper,
                         AD_COUNTER_KEY_COPIER_NO_OP,
-                        mFlags,
+                        mFakeFlags,
                         mIsolateSettings,
                         mJsFetcher,
                         mDebugReporting,
@@ -3049,7 +3049,7 @@ public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
                         mAdSelectionScriptEngine,
                         customAudienceDevOverridesHelper,
                         AD_COUNTER_KEY_COPIER_NO_OP,
-                        mFlags,
+                        mFakeFlags,
                         mIsolateSettings,
                         mJsFetcher,
                         mDebugReporting,
@@ -3106,7 +3106,7 @@ public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
                         mAdSelectionScriptEngine,
                         customAudienceDevOverridesHelper,
                         AD_COUNTER_KEY_COPIER_NO_OP,
-                        mFlags,
+                        mFakeFlags,
                         mIsolateSettings,
                         mJsFetcher,
                         mDebugReporting,
