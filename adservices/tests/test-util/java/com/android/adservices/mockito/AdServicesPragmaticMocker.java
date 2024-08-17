@@ -17,6 +17,9 @@
 package com.android.adservices.mockito;
 
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.ApiCallStats;
+import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 
 /**
  * Helper interface providing common expectations for "regular" (non static or final) methods on
@@ -55,4 +58,19 @@ public interface AdServicesPragmaticMocker {
      * for the testing release stage.
      */
     void mockGetAdservicesReleaseStageForCobalt(Flags flags, String stage);
+
+    /**
+     * Mocks a call to {@link AdServicesLogger#logApiCallStats(ApiCallStats)} and returns a callback
+     * object that blocks until that call is made.
+     */
+    ResultSyncCallback<ApiCallStats> mockLogApiCallStats(AdServicesLogger adServicesLogger);
+
+    /**
+     * Mocks a call to {@link AdServicesLogger#logApiCallStats(ApiCallStats)} and returns a callback
+     * object that blocks until that call is made.
+     *
+     * <p>This method allows to pass in a customizedtimeout.
+     */
+    ResultSyncCallback<ApiCallStats> mockLogApiCallStats(
+            AdServicesLogger adServicesLogger, long timeoutMs);
 }

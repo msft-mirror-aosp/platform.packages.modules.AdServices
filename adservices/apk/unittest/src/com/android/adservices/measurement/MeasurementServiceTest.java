@@ -35,7 +35,6 @@ import android.os.IBinder;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.PackageChangedReceiver;
 import com.android.adservices.service.consent.AdServicesApiConsent;
@@ -55,7 +54,6 @@ import org.mockito.Mock;
 @SpyStatic(PackageChangedReceiver.class)
 public final class MeasurementServiceTest extends AdServicesExtendedMockitoTestCase {
     @Mock private ConsentManager mMockConsentManager;
-    @Mock private Flags mMockFlags;
     @Mock private MeasurementServiceImpl mSpyServiceImpl;
     private MeasurementService mSpyService;
 

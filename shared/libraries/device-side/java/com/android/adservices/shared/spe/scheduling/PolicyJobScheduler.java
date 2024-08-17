@@ -186,13 +186,13 @@ public class PolicyJobScheduler<T extends AbstractJobService> {
             builder.setExtras(extras);
         }
 
+        // By default, use the default JobPolicy from the binary.
+        JobPolicy mergedJobPolicy = JobPolicy.newBuilder(defaultJobPolicy).build();
         try {
             // Merge default JobPolicy and JobPolicy synced from server side. Note values from
             // server side will prevail if a field is set in both JobPolicies.
-            JobPolicy mergedJobPolicy =
+            mergedJobPolicy =
                     PolicyProcessor.mergeTwoJobPolicies(defaultJobPolicy, serverJobPolicy);
-
-            return PolicyProcessor.applyPolicyToJobInfo(builder, mergedJobPolicy);
         } catch (IllegalArgumentException e) {
             LogUtil.e(e, ERROR_MESSAGE_POLICY_JOB_SCHEDULER_INVALID_JOB_INFO, jobName);
             mErrorLogger.logErrorWithExceptionInfo(
@@ -201,7 +201,7 @@ public class PolicyJobScheduler<T extends AbstractJobService> {
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
         }
 
-        return builder.build();
+        return PolicyProcessor.applyPolicyToJobInfo(builder, mergedJobPolicy);
     }
 
     // Get the JobPolicy from the Flag Server. Returns null if the policy doesn't exist or the
