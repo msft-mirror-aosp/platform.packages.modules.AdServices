@@ -33,6 +33,7 @@ import com.android.adservices.service.signals.ProtectedSignal;
 import com.android.adservices.service.signals.ProtectedSignalsArgument;
 import com.android.adservices.service.signals.SignalsDriverLogicGenerator;
 import com.android.adservices.service.signals.SignalsProvider;
+import com.android.adservices.service.signals.SignalsProviderAndArgumentFactory;
 import com.android.adservices.service.stats.ShellCommandStats;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -69,9 +70,9 @@ public final class GenerateInputForEncodingCommand extends AbstractShellCommand 
     private final ProtectedSignalsArgument mProtectedSignalsArgument;
 
     public GenerateInputForEncodingCommand(
-            SignalsProvider signalsProvider, ProtectedSignalsArgument protectedSignalsArgument) {
-        mSignalsProvider = signalsProvider;
-        mProtectedSignalsArgument = protectedSignalsArgument;
+            SignalsProviderAndArgumentFactory signalsProviderAndArgumentFactory) {
+        mSignalsProvider = signalsProviderAndArgumentFactory.getSignalsProvider();
+        mProtectedSignalsArgument = signalsProviderAndArgumentFactory.getProtectedSignalsArgument();
     }
 
     @Override

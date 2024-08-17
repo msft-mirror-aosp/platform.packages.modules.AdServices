@@ -16,9 +16,13 @@
 
 package com.android.adservices.service.signals;
 
+import static com.android.adservices.service.signals.HexEncodingUtil.binaryToHex;
+import static com.android.adservices.service.signals.HexEncodingUtil.hexToBinary;
+
 import com.google.auto.value.AutoValue;
 
 import java.time.Instant;
+import java.util.Base64;
 
 /** Internal representation of a custom protected signal's value and metadata. */
 @AutoValue
@@ -28,9 +32,17 @@ public abstract class ProtectedSignal {
     public static final int EXPIRATION_SECONDS = 60 * 24 * 60 * 60;
 
     /**
-     * @return The value of this signal in the form of base 64 encoded string
+     * @return The value of this signal encoded in a Hex string
      */
-    public abstract String getBase64EncodedValue();
+    public abstract String getHexEncodedValue();
+
+    /**
+     * @return The value of this signal encoded in a Base64 string
+     */
+    public String getBase64EncodedValue() {
+        byte[] binary = hexToBinary(getHexEncodedValue());
+        return Base64.getEncoder().encodeToString(binary);
+    }
 
     /**
      * @return The time the signal was creation
@@ -48,7 +60,15 @@ public abstract class ProtectedSignal {
 
     @AutoValue.Builder
     abstract static class Builder {
-        abstract Builder setBase64EncodedValue(String value);
+        abstract Builder setHexEncodedValue(String value);
+
+        /**
+         * @throws IllegalArgumentException If {@code value} is not Base64 encoded
+         */
+        Builder setBase64EncodedValue(String value) {
+            byte[] binary = Base64.getDecoder().decode(value);
+            return setHexEncodedValue(binaryToHex(binary));
+        }
 
         abstract Builder setCreationTime(Instant creationTime);
 

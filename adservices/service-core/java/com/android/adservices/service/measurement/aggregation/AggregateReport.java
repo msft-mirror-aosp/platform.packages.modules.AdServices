@@ -28,7 +28,6 @@ import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -69,6 +68,7 @@ public class AggregateReport {
     private Uri mAggregationCoordinatorOrigin;
     private boolean mIsFakeReport;
     @Nullable private String mTriggerContextId;
+    private long mTriggerTime;
 
     @IntDef(value = {Status.PENDING, Status.DELIVERED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -108,6 +108,7 @@ public class AggregateReport {
         mRegistrationOrigin = null;
         mAggregationCoordinatorOrigin = null;
         mTriggerContextId = null;
+        mTriggerTime = 0L;
     }
 
     @Override
@@ -137,7 +138,8 @@ public class AggregateReport {
                         mAggregationCoordinatorOrigin,
                         aggregateReport.mAggregationCoordinatorOrigin)
                 && mIsFakeReport == aggregateReport.mIsFakeReport
-                && Objects.equals(mTriggerContextId, aggregateReport.mTriggerContextId);
+                && Objects.equals(mTriggerContextId, aggregateReport.mTriggerContextId)
+                && mTriggerTime == aggregateReport.mTriggerTime;
     }
 
     @Override
@@ -161,7 +163,8 @@ public class AggregateReport {
                 mRegistrationOrigin,
                 mAggregationCoordinatorOrigin,
                 mIsFakeReport,
-                mTriggerContextId);
+                mTriggerContextId,
+                mTriggerTime);
     }
 
     /**
@@ -278,6 +281,11 @@ public class AggregateReport {
     @Nullable
     public String getTriggerContextId() {
         return mTriggerContextId;
+    }
+
+    /** TriggerTime of the associated {@link Trigger}. */
+    public long getTriggerTime() {
+        return mTriggerTime;
     }
 
     /**
@@ -487,6 +495,12 @@ public class AggregateReport {
             return this;
         }
 
+        /** See {@link AggregateReport#getTriggerTime()} */
+        public Builder setTriggerTime(long triggerTime) {
+            mAttributionReport.mTriggerTime = triggerTime;
+            return this;
+        }
+
         /**
          * Given a {@link Trigger} trigger, source registration time, reporting delay, and the api
          * version, initialize an {@link AggregateReport.Builder} builder that builds a null
@@ -527,6 +541,7 @@ public class AggregateReport {
             mAttributionReport.mIsFakeReport = true;
             mAttributionReport.mTriggerId = trigger.getId();
             mAttributionReport.mTriggerContextId = trigger.getTriggerContextId();
+            mAttributionReport.mTriggerTime = trigger.getTriggerTime();
 
             if (trigger.getAggregationCoordinatorOrigin() != null) {
                 mAttributionReport.mAggregationCoordinatorOrigin =

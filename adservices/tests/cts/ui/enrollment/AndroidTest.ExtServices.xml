@@ -43,6 +43,11 @@
         <option name="check-min-sdk" value="true"/>
     </target_preparer>
 
+    <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
+        <option name="run-command"
+                value="pm grant com.android.adextservices.api android.permission.POST_NOTIFICATIONS" />
+    </target_preparer>
+
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">
         <option name="package" value="com.android.adextservices.tests.enrollment"/>
     </test>

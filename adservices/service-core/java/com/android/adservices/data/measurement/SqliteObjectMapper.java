@@ -399,6 +399,8 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.AggregateReport.TRIGGER_CONTEXT_ID,
                 builder::setTriggerContextId);
+        setLongColumn(
+                cursor, MeasurementTables.AggregateReport.TRIGGER_TIME, builder::setTriggerTime);
         return builder.build();
     }
 

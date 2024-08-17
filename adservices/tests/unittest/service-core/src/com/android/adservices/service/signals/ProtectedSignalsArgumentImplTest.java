@@ -166,25 +166,6 @@ public class ProtectedSignalsArgumentImplTest {
         assertEquals(INVALID_BASE64_SIGNAL, exception.getMessage());
     }
 
-    @Test
-    public void test_marshalToJson_invalidBase64Value_throwsException() {
-        ProtectedSignal signal =
-                ProtectedSignal.builder()
-                        .setBase64EncodedValue("non_base64_string")
-                        .setCreationTime(FIXED_NOW)
-                        .setPackageName(PACKAGE)
-                        .build();
-        mSignals.put(getBase64String("base64_string"), List.of(signal));
-
-        IllegalStateException exception =
-                assertThrows(
-                        IllegalStateException.class,
-                        () -> {
-                            ProtectedSignalsArgumentImpl.marshalToJson(mSignals);
-                        });
-        assertEquals(INVALID_BASE64_SIGNAL, exception.getMessage());
-    }
-
     private ProtectedSignal generateSignal(String value) {
         return ProtectedSignal.builder()
                 .setBase64EncodedValue(getBase64String(value))

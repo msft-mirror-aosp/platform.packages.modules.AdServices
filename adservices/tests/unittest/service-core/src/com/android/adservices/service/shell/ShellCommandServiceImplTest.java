@@ -71,8 +71,7 @@ import com.android.adservices.service.shell.adselection.ConsentedDebugShellComma
 import com.android.adservices.service.shell.customaudience.CustomAudienceListCommand;
 import com.android.adservices.service.shell.customaudience.CustomAudienceShellCommandFactory;
 import com.android.adservices.service.signals.PeriodicEncodingJobRunner;
-import com.android.adservices.service.signals.ProtectedSignalsArgumentFastImpl;
-import com.android.adservices.service.signals.ProtectedSignalsArgumentImpl;
+import com.android.adservices.service.signals.SignalsProviderAndArgumentFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.CustomAudienceLoggerFactory;
 import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
@@ -117,6 +116,7 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
     private ShellCommandServiceImpl mShellCommandService;
     private final SyncIShellCommandCallback mSyncIShellCommandCallback =
             new SyncIShellCommandCallback();
+    private SignalsProviderAndArgumentFactory mSignalsProviderAndArgumentFactory;
 
     @Before
     public void setup() {
@@ -186,6 +186,9 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
                 new ConsentedDebugConfigurationGeneratorFactory(
                                 CONSENTED_DEBUG_CLI_ENABLED, consentedDebugConfigurationDao)
                         .create();
+        mSignalsProviderAndArgumentFactory =
+                new SignalsProviderAndArgumentFactory(
+                        protectedSignalsDao, mFakeFlags.getPasEncodingJobImprovementsEnabled());
         ShellCommandFactorySupplier adServicesShellCommandHandlerFactory =
                 new TestShellCommandFactorySupplier(
                         CUSTOM_AUDIENCE_CLI_ENABLED,
@@ -194,7 +197,7 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
                         backgroundFetchRunner,
                         customAudienceDao,
                         consentedDebugConfigurationDao,
-                        protectedSignalsDao,
+                        mSignalsProviderAndArgumentFactory,
                         buyerInputGenerator,
                         auctionServerDataCompressor,
                         mEncodingJobRunner,
@@ -202,10 +205,7 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
                         mEncodingExecutionLogHelper,
                         mEncodingJobRunStatsLogger,
                         mEncoderLogicMetadataDao,
-                        consentedDebugConfigurationGenerator,
-                        mFakeFlags.getPasEncodingJobImprovementsEnabled()
-                                ? new ProtectedSignalsArgumentFastImpl()
-                                : new ProtectedSignalsArgumentImpl());
+                        consentedDebugConfigurationGenerator);
         mShellCommandService =
                 new ShellCommandServiceImpl(
                         adServicesShellCommandHandlerFactory,

@@ -31,6 +31,12 @@
         <option name="test-file-name" value="CtsAdServicesEnrollmentTest.apk"/>
     </target_preparer>
 
+    <!-- Grant notification permission for adservices in aosp -->
+    <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
+        <option name="run-command"
+                value="pm grant com.android.adservices.api android.permission.POST_NOTIFICATIONS" />
+    </target_preparer>
+
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">
         <option name="package" value="com.android.adservices.tests.enrollment"/>
     </test>

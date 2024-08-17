@@ -60,7 +60,8 @@ public class PeriodicEncodingJobRunner {
     /**
      * Create a periodic encoding job runner.
      *
-     * @param signalsProvider Provider to access signals data stored on the device.
+     * @param signalsProviderAndArgumentFactory Factory which allows access to signals data stored
+     *     on the device.
      * @param protectedSignalsDao DAO for underlying raw signals tables.
      * @param scriptEngine Wrapper over JSScriptEngine for evaluating user-defined scripts.
      * @param encoderLogicMaximumFailure Maximum number of tolerable failures in encoding logic.
@@ -72,7 +73,7 @@ public class PeriodicEncodingJobRunner {
      * @param lightWeightExecutor Executor for lightweight tasks.
      */
     public PeriodicEncodingJobRunner(
-            SignalsProvider signalsProvider,
+            SignalsProviderAndArgumentFactory signalsProviderAndArgumentFactory,
             ProtectedSignalsDao protectedSignalsDao,
             SignalsScriptEngine scriptEngine,
             int encoderLogicMaximumFailure,
@@ -80,9 +81,8 @@ public class PeriodicEncodingJobRunner {
             EncoderLogicHandler encoderLogicHandler,
             EncodedPayloadDao encodedPayloadDao,
             ListeningExecutorService backgroundExecutor,
-            ListeningExecutorService lightWeightExecutor,
-            ProtectedSignalsArgument protectedSignalsArgument) {
-        mSignalsProvider = signalsProvider;
+            ListeningExecutorService lightWeightExecutor) {
+        mSignalsProvider = signalsProviderAndArgumentFactory.getSignalsProvider();
         mProtectedSignalsDao = protectedSignalsDao;
         mScriptEngine = scriptEngine;
         mEncoderLogicMaximumFailure = encoderLogicMaximumFailure;
@@ -91,7 +91,7 @@ public class PeriodicEncodingJobRunner {
         mEncodedPayloadDao = encodedPayloadDao;
         mBackgroundExecutor = backgroundExecutor;
         mLightWeightExecutor = lightWeightExecutor;
-        mProtectedSignalsArgument = protectedSignalsArgument;
+        mProtectedSignalsArgument = signalsProviderAndArgumentFactory.getProtectedSignalsArgument();
     }
 
     /**

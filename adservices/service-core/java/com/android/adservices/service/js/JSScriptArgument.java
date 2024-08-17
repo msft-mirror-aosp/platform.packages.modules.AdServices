@@ -80,6 +80,33 @@ public abstract class JSScriptArgument {
     }
 
     /**
+     * @return a JS array object with the given {@code name} and {@code values} obtained by
+     *     marshaling each value using the {@code valueMarshaller}. It does not validate input.
+     */
+    public static <T> JSScriptJsonArrayArgument jsonArrayArgNoValidation(
+            String name, Iterable<T> values, AccumulatingJsonMarshaller<T> valueMarshaller) {
+        Trace.beginSection(Tracing.JS_ARRAY_ARG_NO_VALIDATION);
+        StringBuilder sb = new StringBuilder();
+        sb.append("[");
+
+        for (T item : values) {
+            valueMarshaller.serializeEntryToJson(item, sb);
+            sb.append(",");
+        }
+
+        // Delete the last comma
+        if (sb.length() > 1) {
+            sb.deleteCharAt(sb.length() - 1);
+        }
+
+        sb.append("]");
+
+        JSScriptJsonArrayArgument result = new JSScriptJsonArrayArgument(name, sb.toString());
+        Trace.endSection();
+        return result;
+    }
+
+    /**
      * @return a JS object with the given {@code name} and value obtained parsing the given {@code
      *     value}.
      * @throws JSONException if {@code value} doesn't represent a valid JSON object
