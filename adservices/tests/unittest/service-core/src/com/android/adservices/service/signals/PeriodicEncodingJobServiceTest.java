@@ -41,7 +41,6 @@ import android.content.Context;
 import android.util.Log;
 
 import com.android.adservices.common.AdServicesJobServiceTestCase;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiConsent;
@@ -90,7 +89,6 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesJobServiceTe
     @Mock private PeriodicEncodingJobWorker mMockPeriodicEncodingJobWorker;
     @Mock private JobParameters mMockJobParameters;
     @Mock private ConsentManager mMockConsentManager;
-    @Mock private Flags mMockFlags;
 
     @Before
     public void setup() {

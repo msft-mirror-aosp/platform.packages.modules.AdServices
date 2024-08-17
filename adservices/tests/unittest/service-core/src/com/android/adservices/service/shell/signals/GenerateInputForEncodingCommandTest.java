@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.shell.signals;
 
-import static com.android.adservices.service.signals.ProtectedSignalsArgumentUtil.validateAndSerializeBase64;
+import static com.android.adservices.service.signals.ProtectedSignalsArgumentImpl.validateAndSerializeBase64;
 import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_APP_SIGNALS_GENERATE_INPUT_FOR_ENCODING;
 import static com.android.adservices.service.stats.ShellCommandStats.RESULT_GENERIC_ERROR;
 
@@ -35,12 +35,14 @@ import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.shell.ShellCommandTestCase;
 import com.android.adservices.service.signals.ProtectedSignal;
+import com.android.adservices.service.signals.ProtectedSignalsArgument;
+import com.android.adservices.service.signals.ProtectedSignalsArgumentFastImpl;
+import com.android.adservices.service.signals.ProtectedSignalsArgumentImpl;
 import com.android.adservices.service.signals.ProtectedSignalsFixture;
 import com.android.adservices.service.signals.SignalsProvider;
 import com.android.adservices.service.stats.ShellCommandStats;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
 
-import org.json.JSONException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -67,6 +69,7 @@ public final class GenerateInputForEncodingCommandTest
     public static final String VALID_SIGNAL_KEY = "someKey";
 
     @Mock private SignalsProvider mSignalsProvider;
+    @Mock private ProtectedSignalsArgument mProtectedSignalsArgument;
 
     // For executing the generated script after the command runs.
     private JSScriptEngine mJSScriptEngine;
@@ -98,8 +101,17 @@ public final class GenerateInputForEncodingCommandTest
     }
 
     @Test
-    public void testRun_happyPath_returnsSuccess()
-            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+    public void testRun_happyPathWithOGImpl_returnsSuccess() {
+        testRun_happyPath_returnsSuccess(new ProtectedSignalsArgumentImpl());
+    }
+
+    @Test
+    public void testRun_happyPathWithFastImpl_returnsSuccess() {
+        testRun_happyPath_returnsSuccess(new ProtectedSignalsArgumentFastImpl());
+    }
+
+    private void testRun_happyPath_returnsSuccess(
+            ProtectedSignalsArgument protectedSignalsArgument) {
         List<ProtectedSignal> signals =
                 List.of(
                         ProtectedSignalsFixture.generateProtectedSignal(
@@ -108,7 +120,7 @@ public final class GenerateInputForEncodingCommandTest
                                 SIGNAL_GENERATION_SEED_2, new byte[] {(byte) 0xA2}));
         when(mSignalsProvider.getSignals(BUYER)).thenReturn(Map.of(VALID_SIGNAL_KEY, signals));
 
-        Result actualResult = runCommandAndGetResult(BUYER);
+        Result actualResult = runCommandAndGetResult(BUYER, protectedSignalsArgument);
         expectSuccess(actualResult, EXPECTED_COMMAND);
         String jsScript = actualResult.mOut;
         Exception exception =
@@ -137,7 +149,7 @@ public final class GenerateInputForEncodingCommandTest
     public void testRun_withEmptyDb_returnsEmpty() {
         when(mSignalsProvider.getSignals(BUYER)).thenReturn(Map.of());
 
-        Result actualResult = runCommandAndGetResult(BUYER);
+        Result actualResult = runCommandAndGetResult(BUYER, mProtectedSignalsArgument);
 
         expectFailure(actualResult, "no signals found.", EXPECTED_COMMAND, RESULT_GENERIC_ERROR);
     }
@@ -146,7 +158,8 @@ public final class GenerateInputForEncodingCommandTest
     public void testRun_withoutBuyerParam_throwsException() {
         Result actualResult =
                 run(
-                        new GenerateInputForEncodingCommand(mSignalsProvider),
+                        new GenerateInputForEncodingCommand(
+                                mSignalsProvider, mProtectedSignalsArgument),
                         SignalsShellCommandFactory.COMMAND_PREFIX,
                         GenerateInputForEncodingCommand.CMD);
 
@@ -157,9 +170,10 @@ public final class GenerateInputForEncodingCommandTest
                 RESULT_GENERIC_ERROR);
     }
 
-    private Result runCommandAndGetResult(AdTechIdentifier buyer) {
+    private Result runCommandAndGetResult(
+            AdTechIdentifier buyer, ProtectedSignalsArgument protectedSignalsArgument) {
         return run(
-                new GenerateInputForEncodingCommand(mSignalsProvider),
+                new GenerateInputForEncodingCommand(mSignalsProvider, protectedSignalsArgument),
                 SignalsShellCommandFactory.COMMAND_PREFIX,
                 GenerateInputForEncodingCommand.CMD,
                 "--buyer",

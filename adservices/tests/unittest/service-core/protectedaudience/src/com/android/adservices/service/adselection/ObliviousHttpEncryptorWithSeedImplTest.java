@@ -34,7 +34,6 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.EncryptionContextDao;
 import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.encryption.AdSelectionEncryptionKeyManager;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
@@ -57,7 +56,6 @@ import java.util.concurrent.ExecutorService;
 @RequiresSdkLevelAtLeastS
 public final class ObliviousHttpEncryptorWithSeedImplTest
         extends AdServicesExtendedMockitoTestCase {
-    @Mock private Flags mMockFlags;
     private static final String SERVER_PUBLIC_KEY =
             "6d21cfe09fbea5122f9ebc2eb2a69fcc4f06408cd54aac934f012e76fcdcef62";
 

@@ -42,7 +42,6 @@ import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.registration.AsyncRegistration;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.MeasurementOdpRegistrationStats;
@@ -73,7 +72,6 @@ public class OdpDelegationWrapperImplTest extends AdServicesExtendedMockitoTestC
 
     @Mock private AdServicesLogger mLogger;
     @Mock private OnDevicePersonalizationSystemEventManager mOdpSystemEventManager;
-    @Mock private Flags mMockFlags;
 
     @Before
     public void setup() {

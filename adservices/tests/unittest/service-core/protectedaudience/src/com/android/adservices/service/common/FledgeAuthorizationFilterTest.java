@@ -53,7 +53,6 @@ import android.util.Pair;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.enrollment.EnrollmentStatus;
@@ -94,7 +93,6 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
     @Mock private PackageManager mPackageManagerMock;
     @Mock private EnrollmentDao mEnrollmentDaoMock;
     @Mock private EnrollmentUtil mEnrollmentUtilMock;
-    @Mock private Flags mMockFlags;
 
     private final AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);

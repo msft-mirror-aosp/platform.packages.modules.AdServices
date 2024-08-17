@@ -22,7 +22,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_SOURCE_O
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.PPAPI_AND_SYSTEM_SERVER;
-import static com.android.adservices.service.signals.ProtectedSignalsArgumentUtil.validateAndSerializeBase64;
+import static com.android.adservices.service.signals.ProtectedSignalsArgumentImpl.validateAndSerializeBase64;
 
 import static com.google.common.truth.Truth.assertThat;
 

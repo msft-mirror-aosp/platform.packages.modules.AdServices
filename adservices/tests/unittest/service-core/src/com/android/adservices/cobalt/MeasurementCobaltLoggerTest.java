@@ -61,7 +61,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.cobalt.CobaltLogger;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -155,7 +154,6 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
     private static final String APP_PACKAGE_NAME = "test.app.name";
 
     @Mock private CobaltLogger mMockCobaltLogger;
-    @Mock private Flags mMockFlags;
 
     @Before
     public void setUp() {

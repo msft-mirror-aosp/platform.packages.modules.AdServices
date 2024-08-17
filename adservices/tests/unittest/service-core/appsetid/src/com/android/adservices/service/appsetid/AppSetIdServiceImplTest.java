@@ -57,7 +57,6 @@ import com.android.adservices.NoOpServiceBinder;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
@@ -100,7 +99,6 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
     private GetAppSetIdParam mRequest;
 
     @Mock private PackageManager mPackageManager;
-    @Mock private Flags mMockFlags;
     @Mock private Clock mClock;
     @Mock private Context mMockSdkContext;
     @Mock private Throttler mMockThrottler;

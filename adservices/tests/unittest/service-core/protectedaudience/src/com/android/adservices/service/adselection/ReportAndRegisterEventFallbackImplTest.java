@@ -32,6 +32,7 @@ import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
 import static com.android.adservices.service.adselection.EventReporter.INTERACTION_DATA_SIZE_MAX_EXCEEDED;
 import static com.android.adservices.service.adselection.EventReporter.INTERACTION_KEY_SIZE_MAX_EXCEEDED;
+import static com.android.adservices.service.common.AppManifestConfigCall.API_AD_SELECTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
@@ -649,8 +650,10 @@ public class ReportAndRegisterEventFallbackImplTest {
         doNothing()
                 .doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
                 .when(mFledgeAuthorizationFilterMock)
-                .assertAdTechEnrolled(
-                        AD_TECH, AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION);
+                .assertAdTechFromUriEnrolled(
+                        any(Uri.class),
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(API_AD_SELECTION));
 
         // Mock server to report the event in addition to being registered by measurement.
         MockWebServer server =
@@ -716,8 +719,10 @@ public class ReportAndRegisterEventFallbackImplTest {
         // Filter the call.
         doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
                 .when(mFledgeAuthorizationFilterMock)
-                .assertAdTechEnrolled(
-                        AD_TECH, AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION);
+                .assertAdTechFromUriEnrolled(
+                        any(Uri.class),
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(API_AD_SELECTION));
 
         // Mock server to report the event in addition to being registered by measurement.
         mMockWebServerRule.startMockWebServer(

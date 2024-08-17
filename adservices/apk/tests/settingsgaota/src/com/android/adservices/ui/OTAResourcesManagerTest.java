@@ -68,8 +68,6 @@ public final class OTAResourcesManagerTest extends AdServicesExtendedMockitoTest
     @Mock
     MobileDataDownload mMockMdd;
     @Mock
-    Flags mMockFlags;
-    @Mock
     ParcelFileDescriptor mMockParcelFileDescriptor;
 
     @Before

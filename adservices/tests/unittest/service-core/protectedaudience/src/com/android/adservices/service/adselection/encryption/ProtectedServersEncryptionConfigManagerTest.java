@@ -101,12 +101,13 @@ public final class ProtectedServersEncryptionConfigManagerTest extends AdService
 
     @Spy private Clock mClock = Clock.systemUTC();
     private ProtectedServersEncryptionConfigDao mProtectedServersEncryptionConfigDao;
-    private Flags mFlags = new ProtectedServersEncryptionConfigManagerTestFlags();
+    private Flags mFakeFlags = new ProtectedServersEncryptionConfigManagerTestFlags();
 
     private ExecutorService mLightweightExecutor;
     private AuctionEncryptionKeyParser mAuctionEncryptionKeyParser =
-            new AuctionEncryptionKeyParser(mFlags);
-    private JoinEncryptionKeyParser mJoinEncryptionKeyParser = new JoinEncryptionKeyParser(mFlags);
+            new AuctionEncryptionKeyParser(mFakeFlags);
+    private JoinEncryptionKeyParser mJoinEncryptionKeyParser =
+            new JoinEncryptionKeyParser(mFakeFlags);
     private ProtectedServersEncryptionConfigManager mKeyManager;
     private DevContext mDevContext;
 
@@ -120,7 +121,7 @@ public final class ProtectedServersEncryptionConfigManagerTest extends AdService
         mKeyManager =
                 new ProtectedServersEncryptionConfigManager(
                         mProtectedServersEncryptionConfigDao,
-                        mFlags,
+                        mFakeFlags,
                         mClock,
                         mAuctionEncryptionKeyParser,
                         mJoinEncryptionKeyParser,

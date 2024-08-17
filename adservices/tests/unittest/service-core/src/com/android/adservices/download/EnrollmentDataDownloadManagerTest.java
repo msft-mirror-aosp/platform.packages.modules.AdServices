@@ -94,8 +94,6 @@ public final class EnrollmentDataDownloadManagerTest extends AdServicesExtendedM
     @Mock private EncryptionKeyDao mMockEncryptionKeyDao;
     @Mock private EncryptionKeyFetcher mEncryptionKeyFetcher;
 
-    @Mock private Flags mMockFlags;
-
     @After
     public void cleanup() {
         mContext.getSharedPreferences("enrollment_data_read_status", 0).edit().clear().commit();

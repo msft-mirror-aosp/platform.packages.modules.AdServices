@@ -16,11 +16,15 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_NETWORK_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_PARSING_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_UNKNOWN_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -31,74 +35,53 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.adservices.common.AdServicesStatusUtils;
-import android.content.Context;
 import android.net.Uri;
 
-import androidx.test.core.app.ApplicationProvider;
-
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.WebUtil;
-import com.android.adservices.data.measurement.DatastoreException;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
-import com.android.adservices.errorlogging.ErrorLogUtil;
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
-import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.MeasurementReportsStats;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
-import org.mockito.quality.Strictness;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.util.Collections;
 import java.util.List;
 
+// NOTE: this test doesn't use ExtendedMockito directly, but through the ErrorLogUtil integration
 /** Unit test for {@link DebugReportingJobHandler} */
-@RunWith(MockitoJUnitRunner.class)
-public class DebugReportingJobHandlerTest {
+@SetErrorLogUtilDefaultParams(ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT)
+public final class DebugReportingJobHandlerTest extends AdServicesExtendedMockitoTestCase {
 
     private static final Uri REGISTRATION_URI = WebUtil.validUri("https://subdomain.example.test");
     private static final Uri SOURCE_REGISTRANT = Uri.parse("android-app://com.example.abc");
 
-    protected static final Context sContext = ApplicationProvider.getApplicationContext();
-    DatastoreManager mDatastoreManager;
+    private final DatastoreManager mDatastoreManager = new FakeDatasoreManager();
 
     @Mock private IMeasurementDao mMeasurementDao;
-
     @Mock private ITransaction mTransaction;
-
-    @Mock private Flags mFlags;
     @Mock private AdServicesLogger mLogger;
     @Mock private AdServicesErrorLogger mErrorLogger;
 
-    DebugReportingJobHandler mDebugReportingJobHandler;
-    DebugReportingJobHandler mSpyDebugReportingJobHandler;
+    private DebugReportingJobHandler mDebugReportingJobHandler;
+    private DebugReportingJobHandler mSpyDebugReportingJobHandler;
 
-    @Rule
-    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder(this)
-                    .spyStatic(FlagsFactory.class)
-                    .spyStatic(ErrorLogUtil.class)
-                    .setStrictness(Strictness.LENIENT)
-                    .build();
-
-    class FakeDatasoreManager extends DatastoreManager {
+    private final class FakeDatasoreManager extends DatastoreManager {
         FakeDatasoreManager() {
             super(mErrorLogger);
         }
@@ -121,18 +104,13 @@ public class DebugReportingJobHandlerTest {
 
     @Before
     public void setUp() {
-        mDatastoreManager = new FakeDatasoreManager();
-        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
-        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
-
         mDebugReportingJobHandler =
-                new DebugReportingJobHandler(mDatastoreManager, mFlags, mLogger, sContext);
+                new DebugReportingJobHandler(mDatastoreManager, mMockFlags, mLogger, mContext);
         mSpyDebugReportingJobHandler = Mockito.spy(mDebugReportingJobHandler);
     }
 
     @Test
-    public void testSendDebugReportForSuccess()
-            throws DatastoreException, IOException, JSONException {
+    public void testSendDebugReportForSuccess() throws Exception {
         DebugReport debugReport = createDebugReport1();
         JSONArray debugReportPayload = new JSONArray();
         debugReportPayload.put(debugReport.toPayloadJson());
@@ -152,14 +130,13 @@ public class DebugReportingJobHandlerTest {
                 mSpyDebugReportingJobHandler.performReport(
                         debugReport.getId(), new ReportingStatus()));
 
-        verify(mMeasurementDao, times(1)).deleteDebugReport(any());
+        verify(mMeasurementDao).deleteDebugReport(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
     }
 
     @Test
-    public void testSendDebugReportForFailure()
-            throws DatastoreException, IOException, JSONException {
+    public void testSendDebugReportForFailure() throws Exception {
         DebugReport debugReport = createDebugReport1();
         JSONArray debugReportPayload = new JSONArray();
         debugReportPayload.put(debugReport.toPayloadJson());
@@ -177,13 +154,12 @@ public class DebugReportingJobHandlerTest {
                         debugReport.getId(), new ReportingStatus()));
 
         verify(mMeasurementDao, never()).deleteDebugReport(any());
-        verify(mTransaction, times(1)).begin();
-        verify(mTransaction, times(1)).end();
+        verify(mTransaction).begin();
+        verify(mTransaction).end();
     }
 
     @Test
-    public void testPerformScheduledReportsForMultipleReports()
-            throws DatastoreException, IOException, JSONException {
+    public void testPerformScheduledReportsForMultipleReports() throws Exception {
         DebugReport debugReport1 = createDebugReport1();
         JSONArray debugReportPayload1 = new JSONArray();
         debugReportPayload1.put(debugReport1.toPayloadJson());
@@ -213,8 +189,7 @@ public class DebugReportingJobHandlerTest {
     }
 
     @Test
-    public void testPerformScheduledReports_ThreadInterrupted()
-            throws DatastoreException, IOException, JSONException {
+    public void testPerformScheduledReports_ThreadInterrupted() throws Exception {
         DebugReport debugReport1 = createDebugReport1();
         JSONArray debugReportPayload1 = new JSONArray();
         debugReportPayload1.put(debugReport1.toPayloadJson());
@@ -240,21 +215,20 @@ public class DebugReportingJobHandlerTest {
         mSpyDebugReportingJobHandler.performScheduledPendingReports();
 
         // 0 reports processed, since the thread exits early.
-        verify(mMeasurementDao, times(0)).deleteDebugReport(any());
+        verify(mMeasurementDao, never()).deleteDebugReport(any());
 
         // 1 transaction for initial retrieval of pending report ids.
-        verify(mTransaction, times(1)).begin();
-        verify(mTransaction, times(1)).end();
+        verify(mTransaction).begin();
+        verify(mTransaction).end();
     }
 
     @Test
-    public void testPerformScheduledReports_LogZeroRetryCount()
-            throws DatastoreException, IOException, JSONException {
+    public void testPerformScheduledReports_LogZeroRetryCount() throws Exception {
         DebugReport debugReport1 = createDebugReport1();
         JSONArray debugReportPayload1 = new JSONArray();
         debugReportPayload1.put(debugReport1.toPayloadJson());
 
-        doReturn(true).when(mFlags).getMeasurementEnableAppPackageNameLogging();
+        doReturn(true).when(mMockFlags).getMeasurementEnableAppPackageNameLogging();
         when(mMeasurementDao.getDebugReportIds()).thenReturn(List.of(debugReport1.getId()));
         when(mMeasurementDao.getDebugReport(debugReport1.getId())).thenReturn(debugReport1);
         doReturn(HttpURLConnection.HTTP_OK)
@@ -287,8 +261,7 @@ public class DebugReportingJobHandlerTest {
     }
 
     @Test
-    public void testPerformScheduledReports_LogReportNotFound()
-            throws DatastoreException, JSONException {
+    public void testPerformScheduledReports_LogReportNotFound() throws Exception {
         DebugReport debugReport1 = createDebugReport1();
         JSONArray debugReportPayload1 = new JSONArray();
         debugReportPayload1.put(debugReport1.toPayloadJson());
@@ -318,8 +291,10 @@ public class DebugReportingJobHandlerTest {
     }
 
     @Test
-    public void performReport_throwsIOException_logsReportingStatus()
-            throws DatastoreException, IOException, JSONException {
+    @ExpectErrorLogUtilWithExceptionCall(
+            throwable = IOException.class,
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_NETWORK_ERROR)
+    public void performReport_throwsIOException_logsReportingStatus() throws Exception {
         DebugReport debugReport = createDebugReport1();
 
         when(mMeasurementDao.getDebugReport(debugReport.getId())).thenReturn(debugReport);
@@ -336,19 +311,24 @@ public class DebugReportingJobHandlerTest {
                         debugReport.getId(), new ReportingStatus()));
 
         verify(mMeasurementDao, never()).deleteDebugReport(anyString());
-        verify(mSpyDebugReportingJobHandler, times(1))
+        verify(mSpyDebugReportingJobHandler)
                 .makeHttpPostRequest(Mockito.eq(REGISTRATION_URI), Mockito.any());
-        verify(mTransaction, times(1)).begin();
-        verify(mTransaction, times(1)).end();
+        verify(mTransaction).begin();
+        verify(mTransaction).end();
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            throwable = JSONException.class,
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_PARSING_ERROR)
     public void performReport_throwsJsonDisabledToThrow_logsAndSwallowsException()
-            throws DatastoreException, IOException, JSONException {
+            throws Exception {
         DebugReport debugReport = createDebugReport1();
 
-        doReturn(false).when(mFlags).getMeasurementEnableReportDeletionOnUnrecoverableException();
-        doReturn(false).when(mFlags).getMeasurementEnableReportingJobsThrowJsonException();
+        doReturn(false)
+                .when(mMockFlags)
+                .getMeasurementEnableReportDeletionOnUnrecoverableException();
+        doReturn(false).when(mMockFlags).getMeasurementEnableReportingJobsThrowJsonException();
         doReturn(debugReport).when(mMeasurementDao).getDebugReport(debugReport.getId());
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyDebugReportingJobHandler)
@@ -362,18 +342,23 @@ public class DebugReportingJobHandlerTest {
                 mSpyDebugReportingJobHandler.performReport(
                         debugReport.getId(), new ReportingStatus()));
         verify(mMeasurementDao, never()).deleteDebugReport(anyString());
-        verify(mTransaction, times(1)).begin();
-        verify(mTransaction, times(1)).end();
+        verify(mTransaction).begin();
+        verify(mTransaction).end();
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            throwable = JSONException.class,
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_PARSING_ERROR)
     public void performReport_throwsJsonEnabledToThrow_marksReportDeletedAndRethrowsException()
-            throws DatastoreException, IOException, JSONException {
+            throws Exception {
         DebugReport debugReport = createDebugReport1();
 
-        doReturn(true).when(mFlags).getMeasurementEnableReportDeletionOnUnrecoverableException();
-        doReturn(true).when(mFlags).getMeasurementEnableReportingJobsThrowJsonException();
-        doReturn(1.0f).when(mFlags).getMeasurementThrowUnknownExceptionSamplingRate();
+        doReturn(true)
+                .when(mMockFlags)
+                .getMeasurementEnableReportDeletionOnUnrecoverableException();
+        doReturn(true).when(mMockFlags).getMeasurementEnableReportingJobsThrowJsonException();
+        doReturn(1.0f).when(mMockFlags).getMeasurementThrowUnknownExceptionSamplingRate();
         doReturn(debugReport).when(mMeasurementDao).getDebugReport(debugReport.getId());
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyDebugReportingJobHandler)
@@ -396,13 +381,18 @@ public class DebugReportingJobHandlerTest {
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            throwable = JSONException.class,
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_PARSING_ERROR)
     public void performReport_throwsJsonEnabledToThrowNoSampling_logsAndSwallowsException()
-            throws DatastoreException, IOException, JSONException {
+            throws Exception {
         DebugReport debugReport = createDebugReport1();
 
-        doReturn(true).when(mFlags).getMeasurementEnableReportDeletionOnUnrecoverableException();
-        doReturn(true).when(mFlags).getMeasurementEnableReportingJobsThrowJsonException();
-        doReturn(0.0f).when(mFlags).getMeasurementThrowUnknownExceptionSamplingRate();
+        doReturn(true)
+                .when(mMockFlags)
+                .getMeasurementEnableReportDeletionOnUnrecoverableException();
+        doReturn(true).when(mMockFlags).getMeasurementEnableReportingJobsThrowJsonException();
+        doReturn(0.0f).when(mMockFlags).getMeasurementThrowUnknownExceptionSamplingRate();
         doReturn(debugReport).when(mMeasurementDao).getDebugReport(debugReport.getId());
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyDebugReportingJobHandler)
@@ -421,11 +411,16 @@ public class DebugReportingJobHandlerTest {
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            throwable = RuntimeException.class,
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_UNKNOWN_ERROR)
     public void performReport_throwsUnknownExceptionDisabledToThrow_logsAndSwallowsException()
-            throws DatastoreException, IOException, JSONException {
+            throws Exception {
         DebugReport debugReport = createDebugReport1();
 
-        doReturn(false).when(mFlags).getMeasurementEnableReportingJobsThrowUnaccountedException();
+        doReturn(false)
+                .when(mMockFlags)
+                .getMeasurementEnableReportingJobsThrowUnaccountedException();
         doReturn(debugReport).when(mMeasurementDao).getDebugReport(debugReport.getId());
         doThrow(new RuntimeException("unknown exception"))
                 .when(mSpyDebugReportingJobHandler)
@@ -439,16 +434,21 @@ public class DebugReportingJobHandlerTest {
                 mSpyDebugReportingJobHandler.performReport(
                         debugReport.getId(), new ReportingStatus()));
         verify(mMeasurementDao, never()).deleteDebugReport(anyString());
-        verify(mTransaction, times(1)).begin();
-        verify(mTransaction, times(1)).end();
+        verify(mTransaction).begin();
+        verify(mTransaction).end();
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            throwable = RuntimeException.class,
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_UNKNOWN_ERROR)
     public void performReport_throwsUnknownExceptionEnabledToThrow_rethrowsException()
-            throws DatastoreException, IOException, JSONException {
+            throws Exception {
         DebugReport debugReport = createDebugReport1();
 
-        doReturn(true).when(mFlags).getMeasurementEnableReportingJobsThrowUnaccountedException();
+        doReturn(true)
+                .when(mMockFlags)
+                .getMeasurementEnableReportingJobsThrowUnaccountedException();
         doReturn(debugReport).when(mMeasurementDao).getDebugReport(debugReport.getId());
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyDebugReportingJobHandler)
@@ -456,7 +456,7 @@ public class DebugReportingJobHandlerTest {
         doThrow(new RuntimeException("unknown exception"))
                 .when(mSpyDebugReportingJobHandler)
                 .createReportJsonPayload(Mockito.any());
-        doReturn(1.0f).when(mFlags).getMeasurementThrowUnknownExceptionSamplingRate();
+        doReturn(1.0f).when(mMockFlags).getMeasurementThrowUnknownExceptionSamplingRate();
 
         try {
             mSpyDebugReportingJobHandler.performReport(debugReport.getId(), new ReportingStatus());
@@ -465,16 +465,21 @@ public class DebugReportingJobHandlerTest {
             assertEquals("unknown exception", e.getMessage());
         }
 
-        verify(mTransaction, times(1)).begin();
-        verify(mTransaction, times(1)).end();
+        verify(mTransaction).begin();
+        verify(mTransaction).end();
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            throwable = RuntimeException.class,
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_UNKNOWN_ERROR)
     public void performReport_throwsUnknownExceptionEnabledToThrowNoSampling_swallowsException()
-            throws DatastoreException, IOException, JSONException {
+            throws Exception {
         DebugReport debugReport = createDebugReport1();
 
-        doReturn(true).when(mFlags).getMeasurementEnableReportingJobsThrowUnaccountedException();
+        doReturn(true)
+                .when(mMockFlags)
+                .getMeasurementEnableReportingJobsThrowUnaccountedException();
         doReturn(debugReport).when(mMeasurementDao).getDebugReport(debugReport.getId());
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyDebugReportingJobHandler)
@@ -482,15 +487,15 @@ public class DebugReportingJobHandlerTest {
         doThrow(new RuntimeException("unknown exception"))
                 .when(mSpyDebugReportingJobHandler)
                 .createReportJsonPayload(Mockito.any());
-        doReturn(0.0f).when(mFlags).getMeasurementThrowUnknownExceptionSamplingRate();
+        doReturn(0.0f).when(mMockFlags).getMeasurementThrowUnknownExceptionSamplingRate();
 
         assertEquals(
                 AdServicesStatusUtils.STATUS_UNKNOWN_ERROR,
                 mSpyDebugReportingJobHandler.performReport(
                         debugReport.getId(), new ReportingStatus()));
         verify(mMeasurementDao, never()).deleteDebugReport(anyString());
-        verify(mTransaction, times(1)).begin();
-        verify(mTransaction, times(1)).end();
+        verify(mTransaction).begin();
+        verify(mTransaction).end();
     }
 
     private DebugReport createDebugReport1() {
