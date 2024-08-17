@@ -177,7 +177,6 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
     @Mock private DebugReportApi mDebugReportApi;
     @Mock private HttpsURLConnection mUrlConnection;
     @Mock private EnrollmentDao mEnrollmentDao;
-    @Mock private Flags mMockFlags;
     @Mock private AdServicesLogger mLogger;
 
     @Before
@@ -6453,8 +6452,9 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + "  \"destination\": \"android-app://com"
                                                 + ".myapps\","
                                                 + "  \"priority\": \"123\","
-                                                + "  \"expiry\": \"" + TimeUnit.DAYS.toSeconds(3)
-                                                        + "\","
+                                                + "  \"expiry\": \""
+                                                + TimeUnit.DAYS.toSeconds(3)
+                                                + "\","
                                                 + "  \"source_event_id\": \"987654321\","
                                                 + "  \"install_attribution_window\": \"272800\","
                                                 + "  \"trigger_specs\": "
@@ -6521,10 +6521,12 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + "  \"destination\": \"android-app://com"
                                                 + ".myapps\","
                                                 + "  \"priority\": \"123\","
-                                                + "  \"expiry\": \"" + TimeUnit.DAYS.toSeconds(5)
-                                                        + "\","
+                                                + "  \"expiry\": \""
+                                                + TimeUnit.DAYS.toSeconds(5)
+                                                + "\","
                                                 + "  \"event_report_window\": \""
-                                                        + TimeUnit.DAYS.toSeconds(4) + "\","
+                                                + TimeUnit.DAYS.toSeconds(4)
+                                                + "\","
                                                 + "  \"source_event_id\": \"987654321\","
                                                 + "  \"install_attribution_window\": \"272800\","
                                                 + "  \"trigger_specs\": "
@@ -6656,8 +6658,9 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + "  \"destination\": \"android-app://com"
                                                 + ".myapps\","
                                                 + "  \"priority\": \"123\","
-                                                + "  \"expiry\": \"" + TimeUnit.DAYS.toSeconds(4)
-                                                        + "\","
+                                                + "  \"expiry\": \""
+                                                + TimeUnit.DAYS.toSeconds(4)
+                                                + "\","
                                                 + "  \"source_event_id\": \"987654321\","
                                                 + "  \"install_attribution_window\": \"272800\","
                                                 + "  \"trigger_specs\": "
@@ -6723,10 +6726,12 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + "  \"destination\": \"android-app://com"
                                                 + ".myapps\","
                                                 + "  \"priority\": \"123\","
-                                                + "  \"expiry\": \"" + TimeUnit.DAYS.toSeconds(4)
-                                                        + "\","
+                                                + "  \"expiry\": \""
+                                                + TimeUnit.DAYS.toSeconds(4)
+                                                + "\","
                                                 + "  \"event_report_window\": \""
-                                                        + TimeUnit.DAYS.toSeconds(2) + "\","
+                                                + TimeUnit.DAYS.toSeconds(2)
+                                                + "\","
                                                 + "  \"source_event_id\": \"987654321\","
                                                 + "  \"install_attribution_window\": \"272800\","
                                                 + "  \"trigger_specs\": "
@@ -6871,8 +6876,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
     }
 
     @Test
-    public void fetchSource_topLevelTriggerData_parsingError()
-            throws Exception {
+    public void fetchSource_topLevelTriggerData_parsingError() throws Exception {
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
@@ -6920,8 +6924,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
     }
 
     @Test
-    public void fetchSource_topLevelEmptyTriggerData_returnsEmptyTriggerData()
-            throws Exception {
+    public void fetchSource_topLevelEmptyTriggerData_returnsEmptyTriggerData() throws Exception {
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
@@ -7028,11 +7031,14 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 "[{"
                         + "\"trigger_data\": [1, 2, 3],"
                         + "\"event_report_windows\": { "
-                                + "\"start_time\": 0,"
-                                + "\"end_times\": ["
-                                        + TimeUnit.DAYS.toSeconds(2) + ","
-                                        + TimeUnit.DAYS.toSeconds(7) + ","
-                                        + TimeUnit.DAYS.toSeconds(20) + "]}"
+                        + "\"start_time\": 0,"
+                        + "\"end_times\": ["
+                        + TimeUnit.DAYS.toSeconds(2)
+                        + ","
+                        + TimeUnit.DAYS.toSeconds(7)
+                        + ","
+                        + TimeUnit.DAYS.toSeconds(20)
+                        + "]}"
                         + "}],";
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
@@ -7133,7 +7139,9 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + "  \"destination\": \"android-app://com"
                                                 + ".myapps\","
                                                 + "  \"priority\": \"123\","
-                                                + "  \"expiry\":\"" + String.valueOf(expiry) + "\","
+                                                + "  \"expiry\":\""
+                                                + String.valueOf(expiry)
+                                                + "\","
                                                 + "  \"source_event_id\": \"987654321\","
                                                 + "  \"install_attribution_window\": \"272800\","
                                                 + "  \"trigger_specs\": "
@@ -7224,9 +7232,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 "[{\"trigger_data\": [1, 2, 3],"
                         + "\"event_report_windows\": { "
                         + "\"start_time\": 0,"
-                        + String.format(
-                                "\"end_times\": [%s]}, ",
-                                TimeUnit.MINUTES.toSeconds(38))
+                        + String.format("\"end_times\": [%s]}, ", TimeUnit.MINUTES.toSeconds(38))
                         + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3]}], \n";
         RegistrationRequest request =
@@ -7868,8 +7874,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
     }
 
     @Test
-    public void fetchSource_exactTopLevelTriggerDataMatchingNonContiguous_pass()
-            throws Exception {
+    public void fetchSource_exactTopLevelTriggerDataMatchingNonContiguous_pass() throws Exception {
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
@@ -9329,8 +9334,11 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
             throws Exception {
         long expiry = 2592000L;
         // 1st window ends < 1 hour
-        String eventReportWindows = "{\"start_time\":1,\"end_times\":"
-                + "[3599,8400," + String.valueOf(expiry + 2500L) + "]}";
+        String eventReportWindows =
+                "{\"start_time\":1,\"end_times\":"
+                        + "[3599,8400,"
+                        + String.valueOf(expiry + 2500L)
+                        + "]}";
 
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
@@ -9346,7 +9354,9 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + "  \"destination\": \"android-app://com"
                                                 + ".myapps\","
                                                 + "  \"priority\": \"123\","
-                                                + "  \"expiry\":\"" + String.valueOf(expiry) + "\","
+                                                + "  \"expiry\":\""
+                                                + String.valueOf(expiry)
+                                                + "\","
                                                 + "  \"source_event_id\": \"987654321\","
                                                 + "  \"max_event_level_reports\": 4,"
                                                 + "\"event_report_windows\":"

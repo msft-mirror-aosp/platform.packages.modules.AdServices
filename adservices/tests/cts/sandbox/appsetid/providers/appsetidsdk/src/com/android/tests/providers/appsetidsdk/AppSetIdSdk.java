@@ -45,9 +45,10 @@ public class AppSetIdSdk extends SandboxedSdkProvider {
             appSetIdManager.getAppSetId(CALLBACK_EXECUTOR, callback);
 
             AppSetId resultAppSetId = callback.assertResultReceived();
-            String resultAppSetIdString = resultAppSetId.getId();
 
-            if (resultAppSetIdString != null && !resultAppSetIdString.isEmpty()) {
+            if (resultAppSetId != null
+                    && resultAppSetId.getId() != null
+                    && !resultAppSetId.getId().isEmpty()) {
                 // Successfully called the getAppSetId
                 Log.d(
                         TAG,
@@ -56,7 +57,8 @@ public class AppSetIdSdk extends SandboxedSdkProvider {
                 return new SandboxedSdk(new Binder());
             } else {
                 // Failed to call the getAppSetId
-                Log.e(TAG, "Failed to call the getAppSetId");
+                Exception exception = callback.getError();
+                Log.e(TAG, "Failed to call the getAppSetId with exception: " + exception);
                 throw new LoadSdkException(new Exception("AppSetId failed."), new Bundle());
             }
         } catch (Exception e) {

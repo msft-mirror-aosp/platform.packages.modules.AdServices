@@ -36,7 +36,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.android.adservices.common.AdServicesJobTestCase;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.shared.proto.JobPolicy;
 import com.android.adservices.shared.spe.framework.ExecutionResult;
@@ -63,7 +62,6 @@ import org.mockito.Spy;
 @MockStatic(FlagsFactory.class)
 public final class AsyncRegistrationFallbackJobTest extends AdServicesJobTestCase {
     @Spy AsyncRegistrationFallbackJob mSpyAsyncRegistrationFallbackJob;
-    @Mock private Flags mMockFlags;
     @Mock private ExecutionRuntimeParameters mMockParams;
     @Mock private AdServicesJobScheduler mMockAdServicesJobScheduler;
     @Mock private AdServicesJobServiceFactory mMockAdServicesJobServiceFactory;

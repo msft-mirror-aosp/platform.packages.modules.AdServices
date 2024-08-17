@@ -265,6 +265,7 @@ public final class MeasurementTables {
         String AGGREGATION_COORDINATOR_ORIGIN = "aggregation_coordinator_origin";
         String IS_FAKE_REPORT = "is_fake_report";
         String TRIGGER_CONTEXT_ID = "trigger_context_id";
+        String TRIGGER_TIME = "trigger_time";
     }
 
     /** Contract for aggregate encryption key. */
@@ -996,6 +997,8 @@ public final class MeasurementTables {
                     + " INTEGER, "
                     + AggregateReport.TRIGGER_CONTEXT_ID
                     + " TEXT, "
+                    + AggregateReport.TRIGGER_TIME
+                    + " INTEGER, "
                     + "FOREIGN KEY ("
                     + AggregateReport.SOURCE_ID
                     + ") REFERENCES "

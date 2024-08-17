@@ -20,7 +20,6 @@ import android.app.job.JobScheduler;
 
 import com.android.adservices.common.AdServicesJobServiceTestCase;
 import com.android.adservices.data.measurement.DatastoreManager;
-import com.android.adservices.service.Flags;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 
 import org.junit.Before;
@@ -28,8 +27,6 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 public abstract class MeasurementJobServiceTestCase extends AdServicesJobServiceTestCase {
-
-    @Mock protected Flags mMockFlags;
 
     // TODO(b/354932043): move to superclass
     @Mock protected JobScheduler mMockJobScheduler;

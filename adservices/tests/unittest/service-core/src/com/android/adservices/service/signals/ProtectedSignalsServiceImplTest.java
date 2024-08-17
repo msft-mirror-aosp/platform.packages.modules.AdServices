@@ -100,12 +100,12 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
     private ProtectedSignalsServiceImpl mProtectedSignalsService;
     private DevContext mDevContext;
     private UpdateSignalsInput mInput;
-    private Flags mFlags;
+    private Flags mFakeFlags;
     private ResultSyncCallback<ApiCallStats> logApiCallStatsCallback;
 
     @Before
     public void setup() {
-        mFlags = new ProtectedSignalsServiceImplTestFlags();
+        mFakeFlags = new ProtectedSignalsServiceImplTestFlags();
         logApiCallStatsCallback = mocker.mockLogApiCallStats(mAdServicesLoggerMock);
 
         mProtectedSignalsService =
@@ -117,7 +117,7 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
                         mDevContextFilterMock,
                         DIRECT_EXECUTOR,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFakeFlags,
                         mCallingAppUidSupplierMock,
                         mProtectedSignalsServiceFilterMock,
                         mEnrollmentDaoMock);

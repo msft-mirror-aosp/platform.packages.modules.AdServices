@@ -22,7 +22,6 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.FilterMap;
 
 import org.json.JSONArray;
@@ -30,7 +29,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -39,8 +37,6 @@ import java.util.List;
 import java.util.Map;
 
 public final class FilterTest extends AdServicesMockitoTestCase {
-
-    @Mock private Flags mMockFlags;
 
     @Before
     public void setup() {
