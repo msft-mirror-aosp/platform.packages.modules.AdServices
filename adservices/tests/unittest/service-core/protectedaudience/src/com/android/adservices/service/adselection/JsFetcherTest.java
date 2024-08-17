@@ -121,14 +121,14 @@ public final class JsFetcherTest extends AdServicesExtendedMockitoTestCase {
     @Mock private RunAdBiddingPerCAExecutionLogger mRunAdBiddingPerCAExecutionLoggerMock;
     private Uri mFetchJsUri;
     private AdServicesHttpClientRequest mFetchJsRequest;
-    private Flags mFlags;
+    private Flags mFakeFlags;
     private JsFetcher mJsFetcher;
 
     @Before
     public void setUp() throws Exception {
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
-        mFlags = new JsFetcherTestFlags(true);
+        mFakeFlags = new JsFetcherTestFlags(true);
         mWebClient =
                 new AdServicesHttpsClient(
                         AdServicesExecutors.getBlockingExecutor(),
@@ -178,7 +178,7 @@ public final class JsFetcherTest extends AdServicesExtendedMockitoTestCase {
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
                         mWebClient,
-                        mFlags,
+                        mFakeFlags,
                         mDevContext);
     }
 

@@ -70,7 +70,6 @@ import androidx.test.uiautomator.Until;
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
@@ -122,7 +121,6 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
     @Mock private NotificationManagerCompat mNotificationManagerCompat;
     @Mock private ConsentManager mConsentManager;
     @Mock private UxStatesManager mMockUxStatesManager;
-    @Mock private Flags mMockFlags;
 
     @Before
     public void setUp() {

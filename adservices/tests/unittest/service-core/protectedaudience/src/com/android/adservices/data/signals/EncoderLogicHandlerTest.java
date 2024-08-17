@@ -90,7 +90,7 @@ public final class EncoderLogicHandlerTest extends AdServicesMockitoTestCase {
     private final ListeningExecutorService mExecutorService =
             MoreExecutors.newDirectExecutorService();
     private final ExecutorService mService = Executors.newFixedThreadPool(5);
-    private final Flags mFlags = new EncoderLogicHandlerTestFlags();
+    private final Flags mFakeFlags = new EncoderLogicHandlerTestFlags();
 
     private EncoderLogicHandler mEncoderLogicHandler;
 
@@ -105,7 +105,7 @@ public final class EncoderLogicHandlerTest extends AdServicesMockitoTestCase {
                         mAdServicesHttpsClient,
                         mExecutorService,
                         mAdServicesLogger,
-                        mFlags);
+                        mFakeFlags);
     }
 
     @Test

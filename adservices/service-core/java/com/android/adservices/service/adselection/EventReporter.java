@@ -20,6 +20,7 @@ import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_D
 import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
 import static android.adservices.adselection.ReportEventRequest.REPORT_EVENT_MAX_INTERACTION_DATA_SIZE_B;
 
+import static com.android.adservices.service.common.AppManifestConfigCall.API_AD_SELECTION;
 import static com.android.adservices.service.common.FledgeAuthorizationFilter.AdTechNotAllowedException;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION;
 
@@ -29,7 +30,6 @@ import android.adservices.adselection.ReportEventRequest;
 import android.adservices.adselection.ReportInteractionCallback;
 import android.adservices.adselection.ReportInteractionInput;
 import android.adservices.common.AdServicesStatusUtils;
-import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
 import android.annotation.NonNull;
 import android.net.Uri;
@@ -225,9 +225,8 @@ public abstract class EventReporter {
 
                                 for (Uri uri : reportingUris) {
                                     try {
-                                        mFledgeAuthorizationFilter.assertAdTechEnrolled(
-                                                AdTechIdentifier.fromString(uri.getHost()),
-                                                LOGGING_API_NAME);
+                                        mFledgeAuthorizationFilter.assertAdTechFromUriEnrolled(
+                                                uri, LOGGING_API_NAME, API_AD_SELECTION);
                                         validatedUris.add(uri);
                                     } catch (AdTechNotAllowedException exception) {
                                         sLogger.d(

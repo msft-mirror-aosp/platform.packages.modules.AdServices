@@ -110,7 +110,6 @@ public final class MddJobServiceTest extends AdServicesJobServiceTestCase {
 
     @Mock private JobParameters mMockJobParameters;
     @Mock private MobileDataDownload mMockMdd;
-    @Mock private Flags mMockFlags;
     @Mock private MddFlags mMockMddFlags;
     @Mock private StatsdAdServicesLogger mMockStatsdLogger;
     @Mock private MobileDataDownload mSpyMobileDataDownload;

@@ -42,7 +42,6 @@ import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.annotations.SetAllLogcatTags;
 import com.android.adservices.data.topics.Topic;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.BackgroundJobsManager;
 import com.android.adservices.service.consent.AdServicesApiConsent;
@@ -78,8 +77,6 @@ public final class DialogFragmentTest extends AdServicesExtendedMockitoTestCase 
 
     @Mock
     private ConsentManager mConsentManager;
-    @Mock
-    private Flags mMockFlags;
 
     @Before
     public void setup() throws Exception {

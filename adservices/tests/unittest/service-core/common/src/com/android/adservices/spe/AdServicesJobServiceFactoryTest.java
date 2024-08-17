@@ -35,7 +35,6 @@ import static org.mockito.Mockito.times;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.download.MddJob;
 import com.android.adservices.download.MddJobService;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.customaudience.BackgroundFetchJob;
 import com.android.adservices.service.customaudience.BackgroundFetchJobService;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationFallbackJob;
@@ -75,8 +74,6 @@ public final class AdServicesJobServiceFactoryTest extends AdServicesExtendedMoc
     @Mock private ModuleJobPolicy mMockModuleJobPolicy;
 
     @Mock private AdServicesErrorLogger mMockErrorLogger;
-
-    @Mock private Flags mMockFlags;
 
     @Before
     public void setup() {

@@ -56,7 +56,6 @@ import android.app.job.JobScheduler;
 import com.android.adservices.cobalt.CobaltJobService;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.download.MddJob;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
 import com.android.adservices.service.adselection.DebugReportSenderJobService;
@@ -105,8 +104,6 @@ import org.mockito.Mock;
 @SpyStatic(CobaltJobService.class)
 @SpyStatic(DebugReportSenderJobService.class)
 public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTestCase {
-
-    @Mock private Flags mMockFlags;
 
     @Mock private JobScheduler mJobScheduler;
 

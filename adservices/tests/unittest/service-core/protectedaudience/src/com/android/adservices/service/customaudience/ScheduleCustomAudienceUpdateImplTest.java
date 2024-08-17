@@ -43,7 +43,6 @@ import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBScheduledCustomAudienceUpdate;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.CustomAudienceServiceFilter;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
@@ -76,7 +75,6 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
     @Captor private ArgumentCaptor<List<PartialCustomAudience>> mListArgumentCaptor;
     private ListeningExecutorService mBackgroundExecutorService;
     private int mCallingAppUid;
-    @Mock private Flags mFlagsMock;
     @Mock private ConsentManager mConsentManagerMock;
     @Mock private AdServicesLogger mAdServicesLoggerMock;
     @Mock private CustomAudienceServiceFilter mCustomAudienceServiceFilterMock;
@@ -88,7 +86,7 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
     public void setup() {
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mCallingAppUid = CallingAppUidSupplierProcessImpl.create().getCallingAppUid();
-        when(mFlagsMock.getFledgeScheduleCustomAudienceUpdateEnabled()).thenReturn(true);
+        when(mMockFlags.getFledgeScheduleCustomAudienceUpdateEnabled()).thenReturn(true);
         when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(eq(PACKAGE)))
                 .thenReturn(false);
         mDevContext = DevContext.builder(PACKAGE).setDevOptionsEnabled(false).build();
@@ -108,14 +106,14 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
                         mContext,
                         mConsentManagerMock,
                         mCallingAppUid,
-                        mFlagsMock,
+                        mMockFlags,
                         mAdServicesLoggerMock,
                         mBackgroundExecutorService,
                         mCustomAudienceServiceFilterMock,
                         mCustomAudienceDaoMock);
 
-        when(mFlagsMock.getDisableFledgeEnrollmentCheck()).thenReturn(false);
-        when(mFlagsMock.getEnforceForegroundStatusForSignals()).thenReturn(true);
+        when(mMockFlags.getDisableFledgeEnrollmentCheck()).thenReturn(false);
+        when(mMockFlags.getEnforceForegroundStatusForSignals()).thenReturn(true);
 
         doNothing()
                 .when(
@@ -266,7 +264,7 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
                         mContext,
                         mConsentManagerMock,
                         mCallingAppUid,
-                        mFlagsMock,
+                        mMockFlags,
                         mAdServicesLoggerMock,
                         mBackgroundExecutorService,
                         mCustomAudienceServiceFilterMock,
@@ -309,7 +307,7 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
                         mContext,
                         mConsentManagerMock,
                         mCallingAppUid,
-                        mFlagsMock,
+                        mMockFlags,
                         mAdServicesLoggerMock,
                         mBackgroundExecutorService,
                         mCustomAudienceServiceFilterMock,

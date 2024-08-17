@@ -133,6 +133,7 @@ public class LogUtil {
     }
 
     /** Log the message as ERROR. Return The number of bytes written */
+    @SuppressWarnings("LogTagMismatch") // it's checking 2 levels, but lint doesn't realize it
     public static int e(Throwable tr, String msg) {
         if (Log.isLoggable(TAG, Log.ERROR)) {
             if (Log.isLoggable(TAG, Log.DEBUG)) {
@@ -154,6 +155,7 @@ public class LogUtil {
 
     /** Log the message as WARNING. Return The number of bytes written */
     @FormatMethod
+    @SuppressWarnings("LogTagMismatch") // it's checking 2 levels, but lint doesn't realize it
     public static int w(Throwable tr, @FormatString String format, Object... params) {
         if (Log.isLoggable(TAG, Log.WARN)) {
             if (Log.isLoggable(TAG, Log.DEBUG)) {

@@ -55,6 +55,7 @@ public class PeriodicEncodingJobRunner {
     private final EncodedPayloadDao mEncodedPayloadDao;
     private final ListeningExecutorService mBackgroundExecutor;
     private final ListeningExecutorService mLightWeightExecutor;
+    private final ProtectedSignalsArgument mProtectedSignalsArgument;
 
     /**
      * Create a periodic encoding job runner.
@@ -79,7 +80,8 @@ public class PeriodicEncodingJobRunner {
             EncoderLogicHandler encoderLogicHandler,
             EncodedPayloadDao encodedPayloadDao,
             ListeningExecutorService backgroundExecutor,
-            ListeningExecutorService lightWeightExecutor) {
+            ListeningExecutorService lightWeightExecutor,
+            ProtectedSignalsArgument protectedSignalsArgument) {
         mSignalsProvider = signalsProvider;
         mProtectedSignalsDao = protectedSignalsDao;
         mScriptEngine = scriptEngine;
@@ -89,6 +91,7 @@ public class PeriodicEncodingJobRunner {
         mEncodedPayloadDao = encodedPayloadDao;
         mBackgroundExecutor = backgroundExecutor;
         mLightWeightExecutor = lightWeightExecutor;
+        mProtectedSignalsArgument = protectedSignalsArgument;
     }
 
     /**
@@ -165,7 +168,11 @@ public class PeriodicEncodingJobRunner {
         sLogger.v("runEncodingPerBuyer: beginning encoding of signals");
         return FluentFuture.from(
                         mScriptEngine.encodeSignals(
-                                encodingLogic, signals, mEncodedPayLoadMaxSizeBytes, logHelper))
+                                encodingLogic,
+                                signals,
+                                mEncodedPayLoadMaxSizeBytes,
+                                logHelper,
+                                mProtectedSignalsArgument))
                 .transform(
                         encodedPayload -> {
                             sLogger.v("runEncodingPerBuyer: completed encoding of signals");

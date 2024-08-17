@@ -70,7 +70,9 @@ public final class AdServicesShellCommandTest extends AdServicesExtendedMockitoT
     private final PrintWriter mOut = new PrintWriter(mOutStringWriter);
     private final PrintWriter mErr = new PrintWriter(mErrStringWriter);
 
-    @Mock private Flags mFlags;
+    // TODO(b/358120731): create an AdServicesServerExtendedMockitoTestCase class instead, which
+    // contains a mMockFlags
+    @Mock private Flags mMockServerFlags;
     @Mock private IShellCommand mIShellCommand;
 
     private AdServicesShellCommand mShellCmd;
@@ -92,7 +94,7 @@ public final class AdServicesShellCommandTest extends AdServicesExtendedMockitoT
                     }
                 };
         mShellCmd =
-                new AdServicesShellCommand(mInjector, mFlags, mMockContext) {
+                new AdServicesShellCommand(mInjector, mMockServerFlags, mMockContext) {
                     @Override
                     public PrintWriter getOutPrintWriter() {
                         return mOut;
@@ -136,7 +138,7 @@ public final class AdServicesShellCommandTest extends AdServicesExtendedMockitoT
                                                         return 42;
                                                     }
                                                 },
-                                                mFlags,
+                                                mMockServerFlags,
                                                 mMockContext)
                                         .onCommand("D'OH"));
         assertThat(e)
@@ -476,7 +478,7 @@ public final class AdServicesShellCommandTest extends AdServicesExtendedMockitoT
 
     // TODO(b/294423183): use AdServicesFlagSetter (if / when it supports mocking unit tests)
     private void mockAdServicesSystemServiceEnabled(boolean value) {
-        when(mFlags.getAdServicesSystemServiceEnabled()).thenReturn(value);
+        when(mMockServerFlags.getAdServicesSystemServiceEnabled()).thenReturn(value);
     }
 
     private void mockRunShellCommand(

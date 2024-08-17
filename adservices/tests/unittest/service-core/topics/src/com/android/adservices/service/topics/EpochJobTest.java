@@ -37,7 +37,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
 import com.android.adservices.common.AdServicesJobTestCase;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.shared.proto.JobPolicy;
 import com.android.adservices.shared.spe.framework.ExecutionResult;
@@ -64,7 +63,6 @@ public final class EpochJobTest extends AdServicesJobTestCase {
     private final EpochJob mEpochJob = new EpochJob();
 
     @Mock private TopicsWorker mMockTopicsWorker;
-    @Mock private Flags mMockFlags;
     @Mock private ExecutionRuntimeParameters mMockParams;
     @Mock private AdServicesJobScheduler mMockAdServicesJobScheduler;
     @Mock private AdServicesJobServiceFactory mMockAdServicesJobServiceFactory;

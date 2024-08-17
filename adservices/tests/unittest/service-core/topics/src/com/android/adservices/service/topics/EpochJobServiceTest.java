@@ -82,7 +82,6 @@ public class EpochJobServiceTest extends AdServicesJobServiceTestCase {
     @Spy private EpochJobService mSpyEpochJobService;
     @Mock private TopicsWorker mMockTopicsWorker;
     @Mock private JobParameters mMockJobParameters;
-    @Mock private Flags mMockFlags;
     @Mock private JobScheduler mMockJobScheduler;
     @Mock private AdServicesJobScheduler mMockAdServicesJobScheduler;
 

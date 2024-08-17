@@ -20,7 +20,6 @@ import static com.android.adservices.ohttp.ObliviousHttpTestFixtures.getTestVect
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.ohttp.algorithms.UnsupportedHpkeAlgorithmException;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.modules.utils.testing.ExtendedMockitoRule;
 
@@ -30,7 +29,6 @@ import com.google.common.truth.Truth;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -39,7 +37,6 @@ import java.util.List;
 
 @ExtendedMockitoRule.SpyStatic(FlagsFactory.class)
 public class ObliviousHttpClientTest extends AdServicesExtendedMockitoTestCase {
-    @Mock private Flags mMockFlags;
 
     @Before
     public void setExpectations() {

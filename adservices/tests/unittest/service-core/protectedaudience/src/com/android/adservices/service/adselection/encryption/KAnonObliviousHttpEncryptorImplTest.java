@@ -28,7 +28,6 @@ import static org.mockito.Mockito.when;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.modules.utils.testing.ExtendedMockitoRule;
@@ -46,7 +45,6 @@ import java.util.concurrent.ExecutorService;
 
 @ExtendedMockitoRule.SpyStatic(FlagsFactory.class)
 public class KAnonObliviousHttpEncryptorImplTest extends AdServicesExtendedMockitoTestCase {
-    @Mock private Flags mMockFlags;
 
     private static final String SERVER_PUBLIC_KEY =
             "6d21cfe09fbea5122f9ebc2eb2a69fcc4f06408cd54aac934f012e76fcdcef62";

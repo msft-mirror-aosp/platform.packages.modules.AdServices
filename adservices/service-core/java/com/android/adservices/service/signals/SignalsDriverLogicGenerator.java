@@ -139,11 +139,13 @@ public class SignalsDriverLogicGenerator {
      * @throws JSONException if the signals could not be properly marshalled into arguments.
      */
     public static String getDriverLogicWithArguments(
-            @NonNull Map<String, List<ProtectedSignal>> rawSignals, int maxSizeInBytes)
+            @NonNull Map<String, List<ProtectedSignal>> rawSignals,
+            int maxSizeInBytes,
+            ProtectedSignalsArgument protectedSignalsArgument)
             throws JSONException {
         return ENCODE_SIGNALS_DRIVER_JS
                 + JSScriptEngineCommonCodeGenerator.generateEntryPointCallingCode(
-                        ProtectedSignalsArgumentUtil.getArgumentsFromRawSignalsAndMaxSize(
+                        protectedSignalsArgument.getArgumentsFromRawSignalsAndMaxSize(
                                 rawSignals, maxSizeInBytes),
                         ENCODE_SIGNALS_DRIVER_FUNCTION_NAME,
                         false);

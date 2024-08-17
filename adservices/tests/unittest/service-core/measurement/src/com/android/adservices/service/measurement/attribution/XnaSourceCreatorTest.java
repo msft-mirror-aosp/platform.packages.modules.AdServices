@@ -26,7 +26,7 @@ import static org.mockito.Mockito.when;
 import android.util.Pair;
 
 import com.android.adservices.LogUtil;
-import com.android.adservices.service.Flags;
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.service.measurement.AttributionConfig;
 import com.android.adservices.service.measurement.FilterMap;
 import com.android.adservices.service.measurement.Source;
@@ -41,9 +41,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -52,25 +49,23 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-@RunWith(MockitoJUnitRunner.class)
-public class XnaSourceCreatorTest {
+public final class XnaSourceCreatorTest extends AdServicesMockitoTestCase {
     private static final UnsignedLong SHARED_DEBUG_KEY_1 = new UnsignedLong(1786463L);
     private static final String AD_ID = "abc-def-ghi";
     private static final String JOIN_KEY = "join-abc-def-ghi";
     private static final long LOOKBACK_WINDOW_VALUE = 10L;
 
-    @Mock private Flags mFlags;
     private Filter mFilter;
 
     @Before
     public void setup() {
-        doReturn(true).when(mFlags).getMeasurementEnableSharedSourceDebugKey();
-        doReturn(true).when(mFlags).getMeasurementEnableSharedFilterDataKeysXNA();
-        when(mFlags.getMeasurementMinReportingRegisterSourceExpirationInSeconds())
+        doReturn(true).when(mMockFlags).getMeasurementEnableSharedSourceDebugKey();
+        doReturn(true).when(mMockFlags).getMeasurementEnableSharedFilterDataKeysXNA();
+        when(mMockFlags.getMeasurementMinReportingRegisterSourceExpirationInSeconds())
                 .thenReturn(MEASUREMENT_MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
-        when(mFlags.getMeasurementMaxReportingRegisterSourceExpirationInSeconds())
+        when(mMockFlags.getMeasurementMaxReportingRegisterSourceExpirationInSeconds())
                 .thenReturn(MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
-        mFilter = new Filter(mFlags);
+        mFilter = new Filter(mMockFlags);
     }
 
     @Test
@@ -130,10 +125,10 @@ public class XnaSourceCreatorTest {
         String attributionConfigsArray =
                 new JSONArray(
                                 Arrays.asList(
-                                        attributionConfig1.serializeAsJson(mFlags),
-                                        attributionConfig2.serializeAsJson(mFlags),
+                                        attributionConfig1.serializeAsJson(mMockFlags),
+                                        attributionConfig2.serializeAsJson(mMockFlags),
                                         // This ensures that already consumed sources aren't reused
-                                        attributionConfig1_copy.serializeAsJson(mFlags)))
+                                        attributionConfig1_copy.serializeAsJson(mMockFlags)))
                         .toString();
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
@@ -171,7 +166,7 @@ public class XnaSourceCreatorTest {
                         .setFilterDataString(
                                 attributionConfig1
                                         .getFilterData()
-                                        .serializeAsJson(mFlags)
+                                        .serializeAsJson(mMockFlags)
                                         .toString())
                         .setExpiryTime(source1Matches.getExpiryTime())
                         .setInstallCooldownWindow(
@@ -209,7 +204,7 @@ public class XnaSourceCreatorTest {
                         .setFilterDataString(
                                 attributionConfig1
                                         .getFilterData()
-                                        .serializeAsJson(mFlags)
+                                        .serializeAsJson(mMockFlags)
                                         .toString())
                         .setExpiryTime(source2Matches.getExpiryTime())
                         .setInstallCooldownWindow(
@@ -290,7 +285,7 @@ public class XnaSourceCreatorTest {
         expectedDerivedSources.sort(sorter);
 
         // Execution
-        XnaSourceCreator xnaSourceCreator = new XnaSourceCreator(mFlags);
+        XnaSourceCreator xnaSourceCreator = new XnaSourceCreator(mMockFlags);
         List<Source> parentSources =
                 Arrays.asList(
                         source1Matches,
@@ -313,7 +308,7 @@ public class XnaSourceCreatorTest {
     public void generateDerivedSources_sharedDebugKeyDisabled_doesntAddDebugKeyToDerivedSource()
             throws JSONException {
         // Setup
-        doReturn(false).when(mFlags).getMeasurementEnableSharedSourceDebugKey();
+        doReturn(false).when(mMockFlags).getMeasurementEnableSharedSourceDebugKey();
         String enrollment1 = "enrollment1";
         JSONArray filters =
                 new JSONArray(
@@ -334,7 +329,9 @@ public class XnaSourceCreatorTest {
                         .setSourcePriorityRange(new Pair<>(1L, 100L))
                         .build();
         String attributionConfigsArray =
-                new JSONArray(Collections.singletonList(attributionConfig1.serializeAsJson(mFlags)))
+                new JSONArray(
+                                Collections.singletonList(
+                                        attributionConfig1.serializeAsJson(mMockFlags)))
                         .toString();
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
@@ -372,7 +369,7 @@ public class XnaSourceCreatorTest {
                         .setFilterDataString(
                                 attributionConfig1
                                         .getFilterData()
-                                        .serializeAsJson(mFlags)
+                                        .serializeAsJson(mMockFlags)
                                         .toString())
                         .setExpiryTime(source1Matches.getExpiryTime())
                         .setInstallCooldownWindow(
@@ -392,7 +389,7 @@ public class XnaSourceCreatorTest {
         List<Source> expectedDerivedSources = Collections.singletonList(expectedDerivedSource1);
 
         // Execution
-        XnaSourceCreator xnaSourceCreator = new XnaSourceCreator(mFlags);
+        XnaSourceCreator xnaSourceCreator = new XnaSourceCreator(mMockFlags);
         List<Source> parentSources = Collections.singletonList(source1Matches);
         List<Source> actualDerivedSources =
                 xnaSourceCreator.generateDerivedSources(trigger, parentSources);
@@ -405,7 +402,7 @@ public class XnaSourceCreatorTest {
     public void generateDerivedSources_withSharedFilterDataKeys_filtersAndGeneratesSources()
             throws JSONException {
         // Setup
-        doReturn(false).when(mFlags).getMeasurementEnableSharedSourceDebugKey();
+        doReturn(false).when(mMockFlags).getMeasurementEnableSharedSourceDebugKey();
         String enrollment1 = "enrollment1";
 
         JSONArray filters =
@@ -427,7 +424,9 @@ public class XnaSourceCreatorTest {
                         .setSourcePriorityRange(new Pair<>(1L, 100L))
                         .build();
         String attributionConfigsArray =
-                new JSONArray(Collections.singletonList(attributionConfig1.serializeAsJson(mFlags)))
+                new JSONArray(
+                                Collections.singletonList(
+                                        attributionConfig1.serializeAsJson(mMockFlags)))
                         .toString();
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
@@ -467,7 +466,7 @@ public class XnaSourceCreatorTest {
                         .setFilterDataString(
                                 attributionConfig1
                                         .getFilterData()
-                                        .serializeAsJson(mFlags)
+                                        .serializeAsJson(mMockFlags)
                                         .toString())
                         .setExpiryTime(source1Matches.getExpiryTime())
                         .setInstallCooldownWindow(
@@ -489,7 +488,7 @@ public class XnaSourceCreatorTest {
         List<Source> expectedDerivedSources = Collections.singletonList(expectedDerivedSource1);
 
         // Execution
-        XnaSourceCreator xnaSourceCreator = new XnaSourceCreator(mFlags);
+        XnaSourceCreator xnaSourceCreator = new XnaSourceCreator(mMockFlags);
         List<Source> parentSources = Collections.singletonList(source1Matches);
         List<Source> actualDerivedSources =
                 xnaSourceCreator.generateDerivedSources(trigger, parentSources);
@@ -502,7 +501,7 @@ public class XnaSourceCreatorTest {
     public void generateDerivedSources_lookbackWindow_filtersAndGeneratesSources()
             throws JSONException {
         // Setup
-        doReturn(true).when(mFlags).getMeasurementEnableLookbackWindowFilter();
+        doReturn(true).when(mMockFlags).getMeasurementEnableLookbackWindowFilter();
         String enrollment1 = "enrollment1";
 
         JSONArray filters =
@@ -527,7 +526,9 @@ public class XnaSourceCreatorTest {
                         .setSourcePriorityRange(new Pair<>(1L, 100L))
                         .build();
         String attributionConfigsArray =
-                new JSONArray(Collections.singletonList(attributionConfig1.serializeAsJson(mFlags)))
+                new JSONArray(
+                                Collections.singletonList(
+                                        attributionConfig1.serializeAsJson(mMockFlags)))
                         .toString();
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
@@ -606,7 +607,7 @@ public class XnaSourceCreatorTest {
         List<Source> expectedDerivedSources = Collections.singletonList(expectedDerivedSource1);
 
         // Execution
-        XnaSourceCreator xnaSourceCreator = new XnaSourceCreator(mFlags);
+        XnaSourceCreator xnaSourceCreator = new XnaSourceCreator(mMockFlags);
         List<Source> parentSources =
                 Arrays.asList(sourceWithinLookbackWindow, sourceOutsideLookbackWindow);
         List<Source> actualDerivedSources =

@@ -21,6 +21,7 @@ import android.content.pm.ResolveInfo;
 
 import com.android.adservices.mockito.AndroidMocker;
 import com.android.adservices.mockito.AndroidMockitoMocker;
+import com.android.adservices.service.Flags;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -37,6 +38,8 @@ import org.mockito.quality.Strictness;
 public abstract class AdServicesMockitoTestCase extends AdServicesUnitTestCase {
 
     @Mock protected Context mMockContext;
+
+    @Mock protected Flags mMockFlags;
 
     /** Spy the {@link AdServicesUnitTestCase#mContext} */
     @Spy protected final Context mSpyContext = mContext;

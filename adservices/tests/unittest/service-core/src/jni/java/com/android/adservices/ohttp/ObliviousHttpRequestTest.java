@@ -19,7 +19,6 @@ package com.android.adservices.ohttp;
 import static com.android.adservices.service.adselection.encryption.AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.modules.utils.testing.ExtendedMockitoRule;
 
@@ -28,7 +27,6 @@ import com.google.common.io.BaseEncoding;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -36,7 +34,6 @@ import java.security.spec.InvalidKeySpecException;
 
 @ExtendedMockitoRule.SpyStatic(FlagsFactory.class)
 public class ObliviousHttpRequestTest extends AdServicesExtendedMockitoTestCase {
-    @Mock private Flags mMockFlags;
 
     @Before
     public void setExpectations() {

@@ -28,7 +28,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.cobalt.CobaltLogger;
 import com.android.cobalt.domain.Project;
@@ -57,7 +56,6 @@ public final class AppNameApiErrorLoggerTest extends AdServicesExtendedMockitoTe
     private static final String APP_PACKAGE_NAME = "test.app.name";
 
     @Mock private CobaltLogger mMockCobaltLogger;
-    @Mock private Flags mMockFlags;
 
     @Before
     public void setUp() {

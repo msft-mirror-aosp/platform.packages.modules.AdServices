@@ -22,7 +22,6 @@ import static com.android.adservices.service.consent.ConsentManager.MANUAL_INTER
 import static org.mockito.Mockito.doReturn;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.UiStatsLogger;
@@ -46,7 +45,6 @@ public final class AlreadyEnrolledChannelTest extends AdServicesExtendedMockitoT
     @Mock private PrivacySandboxUxCollection mPrivacySandboxUxCollection;
     @Mock private UxStatesManager mUxStatesManager;
     @Mock private ConsentManager mConsentManager;
-    @Mock private Flags mMockFlags;
 
     @Before
     public void setup() throws IOException {

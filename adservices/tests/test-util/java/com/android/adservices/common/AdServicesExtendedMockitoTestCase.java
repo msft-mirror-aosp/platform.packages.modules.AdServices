@@ -87,6 +87,8 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
 
     @Mock protected Context mMockContext;
 
+    @Mock protected Flags mMockFlags;
+
     /** Spy the {@link AdServicesUnitTestCase#mContext} */
     @Spy protected final Context mSpyContext = mContext;
 
@@ -167,12 +169,22 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
                 "errorLogUtilUsageRule",
                 "mocker",
                 "sInlineCleaner",
-                "sSpyContext");
+                "sSpyContext",
+                "mMockFlags");
         testInstance.assertTestClassHasNoSuchField(
                 "mContextMock", "should use existing mMockContext instead");
         testInstance.assertTestClassHasNoSuchField(
                 "mContextSpy", "should use existing mSpyContext instead");
         testInstance.assertTestClassHasNoSuchField("mockito", "already taken care by @Rule");
+        testInstance.assertTestClassHasNoSuchField(
+                "mFlagsMock", "should use existing mMockFlags instead");
+        testInstance.assertTestClassHasNoSuchField(
+                "mFlags",
+                superclass.getSimpleName()
+                        + " already define a mMockFlags, and often subclasses define a @Mock"
+                        + " mFlags; to avoid confusion, either use the existing mMockFlags, or"
+                        + " create a non-mock instance like mFakeFlags");
+
         // Listed below are existing names for the extended mockito session on test classes that
         // don't use the rule / superclass:
         testInstance.assertTestClassHasNoSuchField(

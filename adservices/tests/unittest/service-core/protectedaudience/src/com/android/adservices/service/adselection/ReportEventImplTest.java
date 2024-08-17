@@ -30,7 +30,9 @@ import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
 import static com.android.adservices.service.adselection.EventReporter.INTERACTION_DATA_SIZE_MAX_EXCEEDED;
 import static com.android.adservices.service.adselection.EventReporter.INTERACTION_KEY_SIZE_MAX_EXCEEDED;
+import static com.android.adservices.service.common.AppManifestConfigCall.API_AD_SELECTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
@@ -681,8 +683,10 @@ public class ReportEventImplTest {
         doNothing()
                 .doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
                 .when(mFledgeAuthorizationFilterMock)
-                .assertAdTechEnrolled(
-                        mAdTech, AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION);
+                .assertAdTechFromUriEnrolled(
+                        any(Uri.class),
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(API_AD_SELECTION));
 
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(
@@ -764,8 +768,10 @@ public class ReportEventImplTest {
 
         doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
                 .when(mFledgeAuthorizationFilterMock)
-                .assertAdTechEnrolled(
-                        mAdTech, AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION);
+                .assertAdTechFromUriEnrolled(
+                        any(Uri.class),
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(API_AD_SELECTION));
 
         mMockWebServerRule.startMockWebServer(
                 new Dispatcher() {

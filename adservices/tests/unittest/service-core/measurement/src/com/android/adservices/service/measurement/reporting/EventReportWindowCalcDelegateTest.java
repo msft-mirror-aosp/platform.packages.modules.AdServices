@@ -22,6 +22,7 @@ import static org.mockito.Mockito.doReturn;
 
 import android.util.Pair;
 
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.PrivacyParams;
@@ -40,14 +41,10 @@ import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.concurrent.TimeUnit;
 
-@RunWith(MockitoJUnitRunner.class)
-public class EventReportWindowCalcDelegateTest {
+public final class EventReportWindowCalcDelegateTest extends AdServicesMockitoTestCase {
     private static final String MALFORMED_WINDOW_CONFIG = "malformedCfg1,malformedCfg2";
     private static final String VALID_1H_1D_WINDOW_CONFIG = "3600,86400";
     private static final String VALID_2H_2D_WINDOW_CONFIG = "7200,172800";
@@ -70,19 +67,20 @@ public class EventReportWindowCalcDelegateTest {
             "{'start_time': 86400000, 'end_times': [172800000, 432000000, 604800000, 864000000,"
                     + " 1728000000]}";
 
-    @Mock private Flags mFlags;
-
-    EventReportWindowCalcDelegate mEventReportWindowCalcDelegate;
+    private EventReportWindowCalcDelegate mEventReportWindowCalcDelegate;
 
     @Before
     public void setup() {
         doReturn(Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT)
-                .when(mFlags).getMeasurementVtcConfigurableMaxEventReportsCount();
+                .when(mMockFlags)
+                .getMeasurementVtcConfigurableMaxEventReportsCount();
         doReturn(Flags.MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS)
-                .when(mFlags).getMeasurementEventReportsVtcEarlyReportingWindows();
+                .when(mMockFlags)
+                .getMeasurementEventReportsVtcEarlyReportingWindows();
         doReturn(Flags.MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS)
-                .when(mFlags).getMeasurementEventReportsCtcEarlyReportingWindows();
-        mEventReportWindowCalcDelegate = new EventReportWindowCalcDelegate(mFlags);
+                .when(mMockFlags)
+                .getMeasurementEventReportsCtcEarlyReportingWindows();
+        mEventReportWindowCalcDelegate = new EventReportWindowCalcDelegate(mMockFlags);
     }
 
     @Test
@@ -275,7 +273,8 @@ public class EventReportWindowCalcDelegateTest {
     @Test
     public void testMaxReportCount() {
         doReturn(Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT)
-                .when(mFlags).getMeasurementVtcConfigurableMaxEventReportsCount();
+                .when(mMockFlags)
+                .getMeasurementVtcConfigurableMaxEventReportsCount();
 
         Source eventSourceInstallNotAttributed =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -321,7 +320,7 @@ public class EventReportWindowCalcDelegateTest {
     @Test
     public void getMaxReportCount_configuredConversionsNonInstall_returnsConfiguredCount() {
         // Setup
-        doReturn(3).when(mFlags).getMeasurementVtcConfigurableMaxEventReportsCount();
+        doReturn(3).when(mMockFlags).getMeasurementVtcConfigurableMaxEventReportsCount();
         Source nonInstallEventSource =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
@@ -336,7 +335,7 @@ public class EventReportWindowCalcDelegateTest {
     @Test
     public void getMaxReportCount_configuredConversionsInstallCase_returnsConfiguredCount() {
         // Setup
-        doReturn(2).when(mFlags).getMeasurementVtcConfigurableMaxEventReportsCount();
+        doReturn(2).when(mMockFlags).getMeasurementVtcConfigurableMaxEventReportsCount();
         Source installEventSource =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
@@ -351,7 +350,7 @@ public class EventReportWindowCalcDelegateTest {
     @Test
     public void getMaxReportCount_configuredConversionsToOneInstallCase_incrementConfiguredCount() {
         // Setup
-        doReturn(1).when(mFlags).getMeasurementVtcConfigurableMaxEventReportsCount();
+        doReturn(1).when(mMockFlags).getMeasurementVtcConfigurableMaxEventReportsCount();
         Source installEventSource =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.EVENT)
@@ -367,7 +366,7 @@ public class EventReportWindowCalcDelegateTest {
     @Test
     public void getMaxReportCount_configuredConversionsToOneInstallCase_noEffectOnCtc() {
         // Setup
-        doReturn(2).when(mFlags).getMeasurementVtcConfigurableMaxEventReportsCount();
+        doReturn(2).when(mMockFlags).getMeasurementVtcConfigurableMaxEventReportsCount();
         Source navigationSource =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setSourceType(Source.SourceType.NAVIGATION)
@@ -565,10 +564,10 @@ public class EventReportWindowCalcDelegateTest {
     @Test
     public void getReportingTimeForNoising_eventSrcWithConfiguredReportingWindows() {
         doReturn(VALID_1H_1D_WINDOW_CONFIG)
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementEventReportsVtcEarlyReportingWindows();
         doReturn(VALID_2H_2D_WINDOW_CONFIG)
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementEventReportsCtcEarlyReportingWindows();
         long eventTime = System.currentTimeMillis();
 
@@ -599,10 +598,10 @@ public class EventReportWindowCalcDelegateTest {
         // Addition another window for install attribution is ignored when configurable windows
         // are applied.
         doReturn(VALID_1H_1D_WINDOW_CONFIG)
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementEventReportsVtcEarlyReportingWindows();
         doReturn(VALID_2H_2D_WINDOW_CONFIG)
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementEventReportsCtcEarlyReportingWindows();
         long eventTime = System.currentTimeMillis();
 
@@ -635,10 +634,10 @@ public class EventReportWindowCalcDelegateTest {
         // Addition another window for install attribution is ignored when configurable windows
         // are applied.
         doReturn(VALID_1H_1D_WINDOW_CONFIG)
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementEventReportsVtcEarlyReportingWindows();
         doReturn(VALID_2H_2D_WINDOW_CONFIG)
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementEventReportsCtcEarlyReportingWindows();
         long eventTime = System.currentTimeMillis();
 
@@ -669,10 +668,10 @@ public class EventReportWindowCalcDelegateTest {
         // Addition another window for install attribution is ignored when configurable windows
         // are applied.
         doReturn(VALID_1H_1D_WINDOW_CONFIG)
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementEventReportsVtcEarlyReportingWindows();
         doReturn(VALID_2H_2D_WINDOW_CONFIG)
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementEventReportsCtcEarlyReportingWindows();
         long eventTime = System.currentTimeMillis();
 
@@ -877,8 +876,8 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void getReportingTime_emptyWindowConfigNavigationSourceTriggerNextHour() {
-        doReturn("").when(mFlags).getMeasurementEventReportsVtcEarlyReportingWindows();
-        doReturn("").when(mFlags).getMeasurementEventReportsCtcEarlyReportingWindows();
+        doReturn("").when(mMockFlags).getMeasurementEventReportsVtcEarlyReportingWindows();
+        doReturn("").when(mMockFlags).getMeasurementEventReportsCtcEarlyReportingWindows();
         long triggerTime = System.currentTimeMillis();
         long sourceExpiryTime = triggerTime + TimeUnit.DAYS.toMillis(25);
         long sourceEventTime = triggerTime - TimeUnit.HOURS.toMillis(1);
@@ -897,8 +896,8 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void getReportingTime_emptyWindowConfigEventSrcTriggerNextHour() {
-        doReturn("").when(mFlags).getMeasurementEventReportsVtcEarlyReportingWindows();
-        doReturn("").when(mFlags).getMeasurementEventReportsCtcEarlyReportingWindows();
+        doReturn("").when(mMockFlags).getMeasurementEventReportsVtcEarlyReportingWindows();
+        doReturn("").when(mMockFlags).getMeasurementEventReportsCtcEarlyReportingWindows();
         long triggerTime = System.currentTimeMillis();
         long sourceExpiryTime = triggerTime + TimeUnit.DAYS.toMillis(25);
         long sourceEventTime = triggerTime - TimeUnit.HOURS.toMillis(1);
@@ -919,8 +918,8 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void getReportingTime_emptyWindowConfigEventSrcInstallAttTriggerNextHour() {
-        doReturn("").when(mFlags).getMeasurementEventReportsVtcEarlyReportingWindows();
-        doReturn("").when(mFlags).getMeasurementEventReportsCtcEarlyReportingWindows();
+        doReturn("").when(mMockFlags).getMeasurementEventReportsVtcEarlyReportingWindows();
+        doReturn("").when(mMockFlags).getMeasurementEventReportsCtcEarlyReportingWindows();
         long triggerTime = System.currentTimeMillis();
         long sourceExpiryTime = triggerTime + TimeUnit.DAYS.toMillis(25);
         long sourceEventTime = triggerTime - TimeUnit.HOURS.toMillis(1);
@@ -942,8 +941,8 @@ public class EventReportWindowCalcDelegateTest {
 
     @Test
     public void getReportingTime_emptyWindowConfigNavigationSrcInstallAttTriggerNextHour() {
-        doReturn("").when(mFlags).getMeasurementEventReportsVtcEarlyReportingWindows();
-        doReturn("").when(mFlags).getMeasurementEventReportsCtcEarlyReportingWindows();
+        doReturn("").when(mMockFlags).getMeasurementEventReportsVtcEarlyReportingWindows();
+        doReturn("").when(mMockFlags).getMeasurementEventReportsCtcEarlyReportingWindows();
         long triggerTime = System.currentTimeMillis();
         long sourceExpiryTime = triggerTime + TimeUnit.DAYS.toMillis(25);
         long sourceEventTime = triggerTime - TimeUnit.HOURS.toMillis(1);
@@ -966,10 +965,10 @@ public class EventReportWindowCalcDelegateTest {
     @Test
     public void getReportingTime_MalformedWindowConfigEventSourceAppDestination_returnsDefault() {
         doReturn(MALFORMED_WINDOW_CONFIG)
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementEventReportsVtcEarlyReportingWindows();
         doReturn(MALFORMED_WINDOW_CONFIG)
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementEventReportsCtcEarlyReportingWindows();
         long triggerTime = System.currentTimeMillis();
         long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
@@ -990,10 +989,10 @@ public class EventReportWindowCalcDelegateTest {
     @Test
     public void getReportingTime_MalformedWindowConfigEventSrcInstallAttAppDestTrigger1stWindow() {
         doReturn(MALFORMED_WINDOW_CONFIG)
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementEventReportsVtcEarlyReportingWindows();
         doReturn(VALID_1H_1D_WINDOW_CONFIG)
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementEventReportsCtcEarlyReportingWindows();
         long triggerTime = System.currentTimeMillis();
         long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
@@ -1016,10 +1015,10 @@ public class EventReportWindowCalcDelegateTest {
     @Test
     public void getReportingTime_MalformedWindowConfigEventSrcInstallAttAppDestTrigger2ndWindow() {
         doReturn(MALFORMED_WINDOW_CONFIG)
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementEventReportsVtcEarlyReportingWindows();
         doReturn(VALID_1H_1D_WINDOW_CONFIG)
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementEventReportsCtcEarlyReportingWindows();
         long triggerTime = System.currentTimeMillis();
         long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
@@ -1041,10 +1040,10 @@ public class EventReportWindowCalcDelegateTest {
     @Test
     public void getReportingTime_MalformedWindowConfigEventSrcInstallAttWebDestTrigger1stWindow() {
         doReturn(MALFORMED_WINDOW_CONFIG)
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementEventReportsVtcEarlyReportingWindows();
         doReturn(VALID_1H_1D_WINDOW_CONFIG)
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementEventReportsCtcEarlyReportingWindows();
         long triggerTime = System.currentTimeMillis();
         long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
@@ -1066,10 +1065,10 @@ public class EventReportWindowCalcDelegateTest {
     @Test
     public void getReportingTime_MalformedWindowConfigEventSrcInstallAttWebDestTrigger2ndWindow() {
         doReturn(MALFORMED_WINDOW_CONFIG)
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementEventReportsVtcEarlyReportingWindows();
         doReturn(VALID_1H_1D_WINDOW_CONFIG)
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementEventReportsCtcEarlyReportingWindows();
         long triggerTime = System.currentTimeMillis();
         long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
@@ -1091,10 +1090,10 @@ public class EventReportWindowCalcDelegateTest {
     @Test
     public void getReportingTime_MalformedWindowConfigEventSourceWebDestination() {
         doReturn(MALFORMED_WINDOW_CONFIG)
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementEventReportsVtcEarlyReportingWindows();
         doReturn(VALID_1H_1D_WINDOW_CONFIG)
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementEventReportsCtcEarlyReportingWindows();
         long triggerTime = System.currentTimeMillis();
         long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
@@ -1115,10 +1114,10 @@ public class EventReportWindowCalcDelegateTest {
     @Test
     public void getReportingTime_MalformedWindowConfigNavigationSourceTriggerInFirstWindow() {
         doReturn(VALID_1H_1D_WINDOW_CONFIG)
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementEventReportsVtcEarlyReportingWindows();
         doReturn(MALFORMED_WINDOW_CONFIG)
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementEventReportsCtcEarlyReportingWindows();
         long triggerTime = System.currentTimeMillis();
         long sourceExpiryTime = triggerTime + TimeUnit.DAYS.toMillis(25);
@@ -1140,10 +1139,10 @@ public class EventReportWindowCalcDelegateTest {
     @Test
     public void getReportingTime_MalformedWindowConfigNavigationSourceTriggerInSecondWindow() {
         doReturn(VALID_1H_1D_WINDOW_CONFIG)
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementEventReportsVtcEarlyReportingWindows();
         doReturn(MALFORMED_WINDOW_CONFIG)
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementEventReportsCtcEarlyReportingWindows();
         long triggerTime = System.currentTimeMillis();
         long sourceExpiryTime = triggerTime + TimeUnit.DAYS.toMillis(25);
@@ -1165,10 +1164,10 @@ public class EventReportWindowCalcDelegateTest {
     @Test
     public void getReportingTime_MalformedWindowConfigNavigationSecondExpiry_fallbackToDefault() {
         doReturn(VALID_1H_1D_WINDOW_CONFIG)
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementEventReportsVtcEarlyReportingWindows();
         doReturn(MALFORMED_WINDOW_CONFIG)
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementEventReportsCtcEarlyReportingWindows();
         long triggerTime = System.currentTimeMillis();
         long sourceExpiryTime = triggerTime + TimeUnit.DAYS.toMillis(2);
@@ -1189,10 +1188,10 @@ public class EventReportWindowCalcDelegateTest {
     @Test
     public void getReportingTime_MalformedWindowConfigNavigationLast_fallbackToDefault() {
         doReturn(VALID_1H_1D_WINDOW_CONFIG)
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementEventReportsVtcEarlyReportingWindows();
         doReturn(MALFORMED_WINDOW_CONFIG)
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementEventReportsCtcEarlyReportingWindows();
         long triggerTime = System.currentTimeMillis();
         long sourceExpiryTime = triggerTime + TimeUnit.DAYS.toMillis(1);
@@ -1213,10 +1212,10 @@ public class EventReportWindowCalcDelegateTest {
     @Test
     public void getReportingTime_validWindowConfigEventSourceTriggerIn1stWindow() {
         doReturn(VALID_1H_1D_WINDOW_CONFIG)
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementEventReportsVtcEarlyReportingWindows();
         doReturn(VALID_2H_2D_WINDOW_CONFIG)
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementEventReportsCtcEarlyReportingWindows();
         long triggerTime = System.currentTimeMillis();
         long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
@@ -1237,10 +1236,10 @@ public class EventReportWindowCalcDelegateTest {
     @Test
     public void getReportingTime_validWindowConfigEventSourceTriggerIn2ndWindow() {
         doReturn(VALID_1H_1D_WINDOW_CONFIG)
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementEventReportsVtcEarlyReportingWindows();
         doReturn(VALID_2H_2D_WINDOW_CONFIG)
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementEventReportsCtcEarlyReportingWindows();
         long triggerTime = System.currentTimeMillis();
         long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
@@ -1261,10 +1260,10 @@ public class EventReportWindowCalcDelegateTest {
     @Test
     public void getReportingTime_validWindowConfigEventSourceTriggerInLastWindow() {
         doReturn(VALID_1H_1D_WINDOW_CONFIG)
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementEventReportsVtcEarlyReportingWindows();
         doReturn(MALFORMED_WINDOW_CONFIG)
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementEventReportsCtcEarlyReportingWindows();
         long triggerTime = System.currentTimeMillis();
         long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(20);
@@ -1286,10 +1285,10 @@ public class EventReportWindowCalcDelegateTest {
     @Test
     public void getReportingTime_validWindowConfigNavigationSourceTriggerIn1stWindow() {
         doReturn(VALID_1H_1D_WINDOW_CONFIG)
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementEventReportsVtcEarlyReportingWindows();
         doReturn(VALID_2H_2D_WINDOW_CONFIG)
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementEventReportsCtcEarlyReportingWindows();
         long triggerTime = System.currentTimeMillis();
         long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
@@ -1310,10 +1309,10 @@ public class EventReportWindowCalcDelegateTest {
     @Test
     public void getReportingTime_validWindowConfigNavigationSourceTriggerIn2ndWindow() {
         doReturn(VALID_1H_1D_WINDOW_CONFIG)
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementEventReportsVtcEarlyReportingWindows();
         doReturn(VALID_2H_2D_WINDOW_CONFIG)
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementEventReportsCtcEarlyReportingWindows();
         long triggerTime = System.currentTimeMillis();
         long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(20);
@@ -1334,10 +1333,10 @@ public class EventReportWindowCalcDelegateTest {
     @Test
     public void getReportingTime_validWindowConfigNavigationSourceTriggerInLastWindow() {
         doReturn(MALFORMED_WINDOW_CONFIG)
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementEventReportsVtcEarlyReportingWindows();
         doReturn(VALID_2H_2D_WINDOW_CONFIG)
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementEventReportsCtcEarlyReportingWindows();
         long triggerTime = System.currentTimeMillis();
         long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(20);
@@ -1359,10 +1358,10 @@ public class EventReportWindowCalcDelegateTest {
     @Test
     public void getReportingTime_invalidWindowConfigEventSourceTriggerIn1stWindow() {
         doReturn(INVALID_1H_1D_2D_WINDOW_CONFIG)
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementEventReportsVtcEarlyReportingWindows();
         doReturn(VALID_2H_2D_WINDOW_CONFIG)
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementEventReportsCtcEarlyReportingWindows();
         long triggerTime = System.currentTimeMillis();
         long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(10);
@@ -1383,10 +1382,10 @@ public class EventReportWindowCalcDelegateTest {
     @Test
     public void getReportingTime_invalidWindowConfigNavigationSourceTriggerIn1stWindow() {
         doReturn(VALID_1H_1D_WINDOW_CONFIG)
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementEventReportsVtcEarlyReportingWindows();
         doReturn(INVALID_1H_1D_2D_WINDOW_CONFIG)
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementEventReportsCtcEarlyReportingWindows();
         long triggerTime = System.currentTimeMillis();
         long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(10);
@@ -1758,7 +1757,8 @@ public class EventReportWindowCalcDelegateTest {
     @Test
     public void getMaxReportCount_flexLiteApi() {
         doReturn(Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT)
-                .when(mFlags).getMeasurementVtcConfigurableMaxEventReportsCount();
+                .when(mMockFlags)
+                .getMeasurementVtcConfigurableMaxEventReportsCount();
         long sourceTime = System.currentTimeMillis();
         Source source10Reports =
                 SourceFixture.getMinimalValidSourceBuilder()

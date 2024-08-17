@@ -40,7 +40,6 @@ public final class DeviceRegionProviderTest extends AdServicesExtendedMockitoTes
 
     @Mock private TelephonyManager mTelephonyManager;
     @Mock private PackageManager mPackageManager;
-    @Mock private Flags mMockFlags;
 
     @Before
     public void setup() {

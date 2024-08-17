@@ -634,7 +634,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
     private final AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
-    private Flags mFlags = new AdSelectionE2ETestFlags();
+    private Flags mFakeFlags = new AdSelectionE2ETestFlags();
 
     // Every test in this class requires that the JS Sandbox be available. The JS Sandbox
     // availability depends on an external component (the system webview) being higher than a
@@ -661,7 +661,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                     new FledgeAuthorizationFilter(
                             mSpyContext.getPackageManager(),
                             new EnrollmentDao(
-                                    mSpyContext, DbTestUtil.getSharedDbHelperForTest(), mFlags),
+                                    mSpyContext, DbTestUtil.getSharedDbHelperForTest(), mFakeFlags),
                             mAdServicesLoggerMock));
 
     private ExecutorService mLightweightExecutorService;
@@ -714,7 +714,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         mEncryptionKeyDao = EncryptionKeyDao.getInstance();
         mEnrollmentDao = EnrollmentDao.getInstance();
         mAdFilteringFeatureFactory =
-                new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, mFlags);
+                new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, mFakeFlags);
         mMultiCloudSupportStrategy =
                 MultiCloudTestStrategyFactory.getDisabledTestStrategy(mObliviousHttpEncryptor);
 
@@ -779,7 +779,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mScheduledExecutor,
                         mSpyContext,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFakeFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
@@ -1903,8 +1903,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testRunAdSelectionSuccess_flagToPreV3_preV3BiddingLogic() throws Exception {
-        mFlags = new AdSelectionE2ETestFlags(2, false);
-        mocker.mockGetFlags(mFlags);
+        mFakeFlags = new AdSelectionE2ETestFlags(2, false);
+        mocker.mockGetFlags(mFakeFlags);
         mAdSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDaoSpy,
@@ -1921,7 +1921,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mScheduledExecutor,
                         mSpyContext,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFakeFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
@@ -3225,7 +3225,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mScheduledExecutor,
                         mSpyContext,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFakeFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
@@ -4140,7 +4140,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mScheduledExecutor,
                         mSpyContext,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFakeFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
@@ -4263,7 +4263,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mScheduledExecutor,
                         mSpyContext,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFakeFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
@@ -4365,7 +4365,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                                 mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
                         .build();
 
-        HttpCache cache = CacheProviderFactory.create(mSpyContext, mFlags);
+        HttpCache cache = CacheProviderFactory.create(mSpyContext, mFakeFlags);
         cache.addObserver(mCacheObserver);
 
         // Creating client which has caching
@@ -4388,7 +4388,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mScheduledExecutor,
                         mSpyContext,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFakeFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
@@ -4493,7 +4493,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                                 mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
                         .build();
 
-        HttpCache cache = CacheProviderFactory.create(mSpyContext, mFlags);
+        HttpCache cache = CacheProviderFactory.create(mSpyContext, mFakeFlags);
         cache.addObserver(mCacheObserver);
 
         // Creating client which has caching
@@ -4516,7 +4516,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mScheduledExecutor,
                         mSpyContext,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFakeFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
@@ -4641,7 +4641,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mScheduledExecutor,
                         mSpyContext,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFakeFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
@@ -4782,7 +4782,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mScheduledExecutor,
                         mSpyContext,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFakeFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
@@ -5992,7 +5992,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         CONSOLE_MESSAGE_IN_LOGS_ENABLED);
 
         String jsWaitMoreThanAllowedForBiddingPerCa =
-                insertJsWait(2 * mFlags.getAdSelectionBiddingTimeoutPerCaMs());
+                insertJsWait(2 * mFakeFlags.getAdSelectionBiddingTimeoutPerCaMs());
         String readBidFromAdMetadataWithDelayJs =
                 "function generateBid(ad, auction_signals, per_buyer_signals,"
                         + " trusted_bidding_signals, contextual_signals,"
@@ -6709,7 +6709,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         CONSOLE_MESSAGE_IN_LOGS_ENABLED);
 
         String jsWaitMoreThanAllowedForScoring =
-                insertJsWait(2 * mFlags.getAdSelectionScoringTimeoutMs());
+                insertJsWait(2 * mFakeFlags.getAdSelectionScoringTimeoutMs());
         String useBidAsScoringWithDelayJs =
                 "function scoreAd(ad, bid, auction_config, seller_signals, "
                         + "trusted_scoring_signals, contextual_signal, user_signal, "

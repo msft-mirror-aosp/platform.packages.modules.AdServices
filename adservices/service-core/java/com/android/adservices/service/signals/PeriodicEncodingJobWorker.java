@@ -103,7 +103,8 @@ public final class PeriodicEncodingJobWorker {
             Flags flags,
             EnrollmentDao enrollmentDao,
             Clock clock,
-            AdServicesLogger adServicesLogger) {
+            AdServicesLogger adServicesLogger,
+            ProtectedSignalsArgument protectedSignalsArgument) {
         mEncoderLogicHandler = encoderLogicHandler;
         mEncoderLogicMetadataDao = encoderLogicMetadataDao;
         mEncodedPayloadDao = encodedPayloadDao;
@@ -125,7 +126,8 @@ public final class PeriodicEncodingJobWorker {
                         mEncoderLogicHandler,
                         mEncodedPayloadDao,
                         mBackgroundExecutor,
-                        mLightWeightExecutor);
+                        mLightWeightExecutor,
+                        protectedSignalsArgument);
     }
 
     /**
@@ -150,6 +152,10 @@ public final class PeriodicEncodingJobWorker {
                                     AdServicesExecutors.getLightWeightExecutor())
                             .createRetryStrategy(
                                     flags.getAdServicesJsScriptEngineMaxRetryAttempts());
+            ProtectedSignalsArgument protectedSignalsArgument =
+                    flags.getPasEncodingJobImprovementsEnabled()
+                            ? new ProtectedSignalsArgumentFastImpl()
+                            : new ProtectedSignalsArgumentImpl();
             return new PeriodicEncodingJobWorker(
                     new EncoderLogicHandler(context),
                     signalsDatabase.getEncoderLogicMetadataDao(),
@@ -167,7 +173,8 @@ public final class PeriodicEncodingJobWorker {
                     flags,
                     EnrollmentDao.getInstance(),
                     Clock.getInstance(),
-                    AdServicesLoggerImpl.getInstance());
+                    AdServicesLoggerImpl.getInstance(),
+                    protectedSignalsArgument);
         }
     }
 

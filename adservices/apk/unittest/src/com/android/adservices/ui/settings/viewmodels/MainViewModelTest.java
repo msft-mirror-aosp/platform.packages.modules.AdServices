@@ -28,7 +28,6 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
@@ -46,7 +45,6 @@ public final class MainViewModelTest extends AdServicesExtendedMockitoTestCase {
 
     private MainViewModel mMainViewModel;
     @Mock private ConsentManager mConsentManager;
-    @Mock private Flags mMockFlags;
 
     /** Setup needed before every test in this class. */
     @Before

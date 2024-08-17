@@ -52,7 +52,6 @@ import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.data.shared.SharedDbHelper;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.enrollment.EnrollmentStatus;
 import com.android.adservices.service.enrollment.EnrollmentUtil;
@@ -76,7 +75,6 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
     private SharedDbHelper mDbHelper;
     private EnrollmentDao mEnrollmentDao;
 
-    @Mock private Flags mMockFlags;
     @Mock private AdServicesLogger mLogger;
     @Mock private EnrollmentUtil mEnrollmentUtil;
     @Mock private SharedDbHelper mMockDbHelper;

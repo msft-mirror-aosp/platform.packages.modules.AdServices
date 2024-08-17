@@ -44,7 +44,6 @@ import android.app.job.JobScheduler;
 import android.content.ComponentName;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.shared.spe.logging.JobServiceLogger;
@@ -66,7 +65,6 @@ public final class AdServicesJobServiceTest extends AdServicesExtendedMockitoTes
     @Mock JobServiceLogger mMockLogger;
     @Mock JobParameters mMockParameters;
     @Mock AdServicesJobServiceFactory mMockJobServiceFactory;
-    @Mock Flags mMockFlags;
 
     @Before
     public void setup() {

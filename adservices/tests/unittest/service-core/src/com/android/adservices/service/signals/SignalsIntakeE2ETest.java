@@ -147,7 +147,7 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
     private EncoderPersistenceDao mEncoderPersistenceDao;
     private ExecutorService mLightweightExecutorService;
     private ListeningExecutorService mBackgroundExecutorService;
-    private Flags mFlags;
+    private Flags mFakeFlags;
     private EnrollmentDao mEnrollmentDao;
 
     @Before
@@ -178,7 +178,7 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mUpdateProcessorSelector = new UpdateProcessorSelector();
         mEncoderPersistenceDao = EncoderPersistenceDao.getInstance(mSpyContext);
-        mFlags = FakeFlagsFactory.getFlagsForTest();
+        mFakeFlags = FakeFlagsFactory.getFlagsForTest();
         mEncoderLogicHandler =
                 new EncoderLogicHandler(
                         mEncoderPersistenceDao,
@@ -188,7 +188,7 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
                         mAdServicesHttpsClientMock,
                         mBackgroundExecutorService,
                         mAdServicesLoggerMock,
-                        mFlags);
+                        mFakeFlags);
         mUpdateEncoderEventHandler =
                 new UpdateEncoderEventHandler(mEncoderEndpointsDao, mEncoderLogicHandler);
         int oversubscriptionBytesLimit =

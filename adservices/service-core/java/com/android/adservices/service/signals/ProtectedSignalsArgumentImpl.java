@@ -34,7 +34,7 @@ import java.util.List;
 import java.util.Map;
 
 /** Creates an {@link JSScriptArgument} for raw protected signals */
-public class ProtectedSignalsArgumentUtil {
+public class ProtectedSignalsArgumentImpl implements ProtectedSignalsArgument {
 
     public static final String VALUE_KEY_NAME = "val";
     public static final String CREATION_TIME_KEY_NAME = "time";
@@ -48,8 +48,7 @@ public class ProtectedSignalsArgumentUtil {
      *     signals
      * @return an {@link JSScriptArgument}
      */
-    @VisibleForTesting
-    static JSScriptArgument asScriptArgument(
+    public static JSScriptArgument asScriptArgument(
             String name, Map<String, List<ProtectedSignal>> rawSignals) throws JSONException {
         return JSScriptArgument.jsonArrayArg(name, marshalToJson(rawSignals));
     }
@@ -65,27 +64,27 @@ public class ProtectedSignalsArgumentUtil {
         StringBuilder sb = new StringBuilder();
         sb.append("[");
         for (Map.Entry<String, List<ProtectedSignal>> signalsPerKey : rawSignals.entrySet()) {
-            serializeEntryToJson(sb, signalsPerKey);
+            String json = serializeEntryToJson(signalsPerKey);
+            sb.append(json);
             sb.append(",");
         }
         if (rawSignals.size() > 0) {
             // Remove extra ','
             sb.deleteCharAt(sb.length() - 1);
         }
+        sb.append("]");
 
-        String result = sb.append("]").toString();
+        String result = sb.toString();
         Trace.endSection();
-
         return result;
     }
 
-    private static void serializeEntryToJson(
-            StringBuilder jsonBuilder, Map.Entry<String, List<ProtectedSignal>> entry) {
+    @VisibleForTesting
+    static String serializeEntryToJson(Map.Entry<String, List<ProtectedSignal>> entry) {
         Trace.beginSection(Tracing.SERIALIZE_TO_JSON);
-
-        String hexKey = validateAndSerializeBase64(entry.getKey());
+        StringBuilder jsonBuilder = new StringBuilder();
         jsonBuilder.append("{");
-        jsonBuilder.append("\"").append(hexKey).append("\":[");
+        jsonBuilder.append("\"").append(validateAndSerializeBase64(entry.getKey())).append("\":[");
 
         List<ProtectedSignal> protectedSignals = entry.getValue();
         for (int i = 0; i < protectedSignals.size(); i++) {
@@ -109,11 +108,16 @@ public class ProtectedSignalsArgumentUtil {
             }
         }
 
-        jsonBuilder.append("]}");
+        jsonBuilder.append("]");
+        jsonBuilder.append("}");
+
+        String result = jsonBuilder.toString();
         Trace.endSection();
+        return result;
     }
 
     // TODO(b/294900378) Avoid second serialization
+    /** Validates a Base64 encoded string, and converts it to Hex */
     @VisibleForTesting
     public static String validateAndSerializeBase64(String base64String) {
         try {
@@ -131,17 +135,8 @@ public class ProtectedSignalsArgumentUtil {
         }
     }
 
-    /**
-     * Convert a buyer's {@link ProtectedSignal} and maximum payload size allowed to a list of
-     * {@link JSScriptArgument} in order to pass to a JS isolate.
-     *
-     * @param rawSignals A map of the buyer's {@link ProtectedSignal}, where each key is the base64
-     *     encoded key for that signal, and the values are all the signals with that key.
-     * @param maxSizeInBytes The max payload size for the buyer.
-     * @return A {@link JSScriptArgument} list.
-     * @throws JSONException If the JSON we created isn't valid JSON.
-     */
-    static ImmutableList<JSScriptArgument> getArgumentsFromRawSignalsAndMaxSize(
+    @Override
+    public ImmutableList<JSScriptArgument> getArgumentsFromRawSignalsAndMaxSize(
             Map<String, List<ProtectedSignal>> rawSignals, int maxSizeInBytes)
             throws JSONException {
         return ImmutableList.<JSScriptArgument>builder()

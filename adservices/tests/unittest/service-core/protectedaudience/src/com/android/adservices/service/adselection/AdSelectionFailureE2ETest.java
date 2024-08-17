@@ -221,7 +221,7 @@ public final class AdSelectionFailureE2ETest extends AdServicesExtendedMockitoTe
     @Mock private AdSelectionServiceFilter mMockAdSelectionServiceFilter;
     @Mock private ObliviousHttpEncryptor mMockObliviousHttpEncryptor;
 
-    private Flags mFlags;
+    private Flags mFakeFlags;
     private FledgeAuthorizationFilter mFledgeAuthorizationFilter;
     private AdServicesLogger mAdServicesLogger;
     private ExecutorService mLightweightExecutorService;
@@ -252,8 +252,8 @@ public final class AdSelectionFailureE2ETest extends AdServicesExtendedMockitoTe
         assumeFalse(
                 "JavaScriptSandbox is available on the device, skipping test",
                 WebViewSupportUtil.isJSSandboxAvailable(mContext));
-        mFlags = new AdSelectionFailureE2ETestFlags();
-        mocker.mockGetFlags(mFlags);
+        mFakeFlags = new AdSelectionFailureE2ETestFlags();
+        mocker.mockGetFlags(mFakeFlags);
         mAdSelectionEntryDao =
                 Room.inMemoryDatabaseBuilder(mSpyContext, AdSelectionDatabase.class)
                         .build()
@@ -284,12 +284,12 @@ public final class AdSelectionFailureE2ETest extends AdServicesExtendedMockitoTe
 
         SharedDbHelper dbHelper = DbTestUtil.getSharedDbHelperForTest();
         mEncryptionKeyDao = new EncryptionKeyDao(dbHelper, mAdServicesLogger);
-        mEnrollmentDao = new EnrollmentDao(mSpyContext, dbHelper, mFlags);
+        mEnrollmentDao = new EnrollmentDao(mSpyContext, dbHelper, mFakeFlags);
         mFledgeAuthorizationFilter =
                 new FledgeAuthorizationFilter(
                         mSpyContext.getPackageManager(), mEnrollmentDao, mAdServicesLogger);
         mAdFilteringFeatureFactory =
-                new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, mFlags);
+                new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, mFakeFlags);
         mMultiCloudSupportStrategy =
                 MultiCloudTestStrategyFactory.getDisabledTestStrategy(mMockObliviousHttpEncryptor);
 
@@ -434,7 +434,7 @@ public final class AdSelectionFailureE2ETest extends AdServicesExtendedMockitoTe
                         mScheduledExecutor,
                         mSpyContext,
                         mAdServicesLogger,
-                        mFlags,
+                        mFakeFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mMockAdSelectionServiceFilter,
@@ -525,7 +525,7 @@ public final class AdSelectionFailureE2ETest extends AdServicesExtendedMockitoTe
                         mScheduledExecutor,
                         mContext,
                         mAdServicesLogger,
-                        mFlags,
+                        mFakeFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mMockAdSelectionServiceFilter,

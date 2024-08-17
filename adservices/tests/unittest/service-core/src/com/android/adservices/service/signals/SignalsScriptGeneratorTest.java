@@ -67,10 +67,26 @@ public class SignalsScriptGeneratorTest extends AdServicesUnitTestCase {
     }
 
     @Test
-    public void getDriverLogicWithArguments_noArguments_isNotValidSyntax() throws JSONException {
+    public void test_getDriverLogicWithArguments_noArgumentsAndOGImpl_isNotValidSyntax()
+            throws JSONException {
+        getDriverLogicWithArguments_noArguments_isNotValidSyntax(
+                new ProtectedSignalsArgumentImpl());
+    }
+
+    @Test
+    public void test_getDriverLogicWithArguments_noArgumentsAndFastImpl_isNotValidSyntax()
+            throws JSONException {
+        getDriverLogicWithArguments_noArguments_isNotValidSyntax(
+                new ProtectedSignalsArgumentFastImpl());
+    }
+
+    private void getDriverLogicWithArguments_noArguments_isNotValidSyntax(
+            ProtectedSignalsArgument protectedSignalsArgument) throws JSONException {
         Map<String, List<ProtectedSignal>> signals = Map.of();
 
-        String generatedCode = SignalsDriverLogicGenerator.getDriverLogicWithArguments(signals, 1);
+        String generatedCode =
+                SignalsDriverLogicGenerator.getDriverLogicWithArguments(
+                        signals, 1, protectedSignalsArgument);
 
         assertThrows(
                 ExecutionException.class,
@@ -85,7 +101,19 @@ public class SignalsScriptGeneratorTest extends AdServicesUnitTestCase {
     }
 
     @Test
-    public void getDriverLogicWithArguments_happyPath_isValidSyntax()
+    public void test_getDriverLogicWithArguments_happyPathAndOGImpl_isValidSyntax()
+            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+        getDriverLogicWithArguments_happyPath_isValidSyntax(new ProtectedSignalsArgumentImpl());
+    }
+
+    @Test
+    public void test_getDriverLogicWithArguments_happyPathAndFastImpl_isValidSyntax()
+            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+        getDriverLogicWithArguments_happyPath_isValidSyntax(new ProtectedSignalsArgumentFastImpl());
+    }
+
+    private void getDriverLogicWithArguments_happyPath_isValidSyntax(
+            ProtectedSignalsArgument protectedSignalsArgument)
             throws JSONException, ExecutionException, InterruptedException, TimeoutException {
         List<String> seeds = List.of("SignalsA", "SignalsB");
         Map<String, List<ProtectedSignal>> rawSignalsMap =
@@ -93,7 +121,7 @@ public class SignalsScriptGeneratorTest extends AdServicesUnitTestCase {
 
         String generatedCode =
                 SignalsDriverLogicGenerator.getDriverLogicWithArguments(
-                        rawSignalsMap, MAX_SIZE_IN_BYTES);
+                        rawSignalsMap, MAX_SIZE_IN_BYTES, protectedSignalsArgument);
         String output =
                 mJSScriptEngine
                         .evaluate(

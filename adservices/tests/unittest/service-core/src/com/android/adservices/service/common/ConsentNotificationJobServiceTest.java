@@ -47,7 +47,6 @@ import android.os.PersistableBundle;
 
 import com.android.adservices.common.AdServicesJobServiceTestCase;
 import com.android.adservices.errorlogging.ErrorLogUtil;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.consent.ConsentManager;
@@ -93,7 +92,6 @@ public final class ConsentNotificationJobServiceTest extends AdServicesJobServic
     @Mock private AdServicesSyncUtil mAdservicesSyncUtil;
     @Mock private PersistableBundle mPersistableBundle;
     @Mock private JobScheduler mMockJobScheduler;
-    @Mock private Flags mMockFlags;
     @Mock private SharedPreferences mSharedPreferences;
     @Mock private SharedPreferences.Editor mEditor;
     @Mock UxStatesManager mUxStatesManager;

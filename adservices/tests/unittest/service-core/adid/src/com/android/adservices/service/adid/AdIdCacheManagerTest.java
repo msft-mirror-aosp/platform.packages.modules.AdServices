@@ -45,7 +45,6 @@ import android.os.RemoteException;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.shared.testing.IntFailureSyncCallback;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -53,7 +52,6 @@ import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
 
 /** Unit test for {@link AdIdCacheManager}. */
 @SpyStatic(FlagsFactory.class)
@@ -73,8 +71,6 @@ public final class AdIdCacheManagerTest extends AdServicesExtendedMockitoTestCas
 
     private IAdIdProviderService mAdIdProviderService;
     private AdIdCacheManager mAdIdCacheManager;
-
-    @Mock private Flags mMockFlags;
 
     @Before
     public void setup() {

@@ -27,18 +27,13 @@ import static org.mockito.Mockito.when;
 
 import android.util.Pair;
 
-import androidx.test.filters.SmallTest;
-
-import com.android.adservices.service.Flags;
+import com.android.adservices.common.AdServicesMockitoTestCase;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -47,17 +42,16 @@ import java.util.Map;
 import java.util.Set;
 
 /** Unit tests for {@link AttributionConfig} */
-@SmallTest
-@RunWith(MockitoJUnitRunner.class)
-public final class AttributionConfigTest {
+public final class AttributionConfigTest extends AdServicesMockitoTestCase {
+
     private static final String SOURCE_AD_TECH = "AdTech1-Ads";
-    @Mock private Flags mFlags;
 
     @Before
     public void setup() {
-        when(mFlags.getMeasurementMaxReportingRegisterSourceExpirationInSeconds())
+        when(mMockFlags.getMeasurementMaxReportingRegisterSourceExpirationInSeconds())
                 .thenReturn(MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
     }
+
     @Test
     public void testCreation() throws Exception {
         AttributionConfig attributionConfig = createExample();
@@ -148,20 +142,21 @@ public final class AttributionConfigTest {
     }
 
     @Test
-    public void build_nonEmptyAttributionConfig_parseSuccess() throws JSONException {
+    public void build_nonEmptyAttributionConfig_parseSuccess() throws Exception {
         // Setup
         AttributionConfig expected = createExampleAttributionConfig();
 
         // Action
         AttributionConfig actual =
-                new AttributionConfig.Builder(createExampleAttributionConfigJson(), mFlags).build();
+                new AttributionConfig.Builder(createExampleAttributionConfigJson(), mMockFlags)
+                        .build();
 
         // Assertion
         assertEquals(expected, actual);
     }
 
     @Test
-    public void build_missingSourceAdTech_throwsJsonException() throws JSONException {
+    public void build_missingSourceAdTech_throwsJsonException() throws Exception {
         // Setup
         JSONObject attributionConfigJson = createExampleAttributionConfigJson();
         attributionConfigJson.remove(AttributionConfig.AttributionConfigContract.SOURCE_NETWORK);
@@ -169,11 +164,11 @@ public final class AttributionConfigTest {
         // Assertion
         assertThrows(
                 JSONException.class,
-                () -> new AttributionConfig.Builder(attributionConfigJson, mFlags).build());
+                () -> new AttributionConfig.Builder(attributionConfigJson, mMockFlags).build());
     }
 
     @Test
-    public void build_withOnlySourceAdTechField_success() throws JSONException {
+    public void build_withOnlySourceAdTechField_success() throws Exception {
         // Setup
         JSONObject attributionConfigJson = new JSONObject();
         attributionConfigJson.put("source_network", SOURCE_AD_TECH);
@@ -181,21 +176,22 @@ public final class AttributionConfigTest {
         // Assertion
         assertEquals(
                 new AttributionConfig.Builder().setSourceAdtech(SOURCE_AD_TECH).build(),
-                new AttributionConfig.Builder(attributionConfigJson, mFlags).build());
+                new AttributionConfig.Builder(attributionConfigJson, mMockFlags).build());
     }
 
     @Test
-    public void serializeAsJson_success() throws JSONException {
+    public void serializeAsJson_success() throws Exception {
         // Setup
         AttributionConfig attributionConfig = createExample();
         // Assertion
         assertEquals(
                 attributionConfig,
-                new AttributionConfig.Builder(attributionConfig.serializeAsJson(mFlags), mFlags)
+                new AttributionConfig.Builder(
+                                attributionConfig.serializeAsJson(mMockFlags), mMockFlags)
                         .build());
     }
 
-    private JSONObject createExampleAttributionConfigJson() throws JSONException {
+    private JSONObject createExampleAttributionConfigJson() throws Exception {
         JSONObject attributionConfig = new JSONObject();
         attributionConfig.put("source_network", SOURCE_AD_TECH);
         JSONObject sourcePriorityRangeJson = new JSONObject();
@@ -224,7 +220,7 @@ public final class AttributionConfigTest {
         return attributionConfig;
     }
 
-    private AttributionConfig createExampleAttributionConfig() throws JSONException {
+    private AttributionConfig createExampleAttributionConfig() throws Exception {
         JSONObject sourceFiltersMap = new JSONObject();
         Pair<Long, Long> sourcePriorityRange = new Pair<>(100L, 1000L);
         sourceFiltersMap.put("source_type", new JSONArray(Collections.singletonList("navigation")));
