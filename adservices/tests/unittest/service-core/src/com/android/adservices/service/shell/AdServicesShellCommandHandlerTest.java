@@ -58,6 +58,7 @@ import com.android.adservices.service.shell.signals.GenerateInputForEncodingComm
 import com.android.adservices.service.shell.signals.TriggerEncodingCommand;
 import com.android.adservices.service.signals.PeriodicEncodingJobRunner;
 import com.android.adservices.service.signals.ProtectedSignalsArgument;
+import com.android.adservices.service.signals.SignalsProviderAndArgumentFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ShellCommandStats;
 import com.android.adservices.service.stats.pas.EncodingExecutionLogHelper;
@@ -107,12 +108,15 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
     @Mock private EncoderLogicMetadataDao mEncoderLogicMetadataDao;
     @Mock private ConsentedDebugConfigurationGenerator mConsentedDebugConfigurationGenerator;
     @Mock private ProtectedSignalsArgument mProtectedSignalsArgument;
+    @Mock private SignalsProviderAndArgumentFactory mSignalsProviderAndArgumentFactory;
 
     private ShellCommandFactorySupplier mShellCommandFactorySupplier;
 
     @Before
     public void setup() {
         doNothing().when(mAdServicesLogger).logShellCommandStats(any());
+        when(mSignalsProviderAndArgumentFactory.getProtectedSignalsArgument())
+                .thenReturn(mProtectedSignalsArgument);
         mShellCommandFactorySupplier =
                 new TestShellCommandFactorySupplier(
                         CUSTOM_AUDIENCE_CLI_ENABLED,
@@ -121,7 +125,7 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
                         mBackgroundFetchRunner,
                         mCustomAudienceDao,
                         mConsentedDebugConfigurationDao,
-                        mProtectedSignalsDao,
+                        mSignalsProviderAndArgumentFactory,
                         mBuyerInputGenerator,
                         mAuctionServerDataCompressor,
                         mEncodingJobRunner,
@@ -129,8 +133,7 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
                         mEncodingExecutionLogHelper,
                         mEncodingJobRunStatsLogger,
                         mEncoderLogicMetadataDao,
-                        mConsentedDebugConfigurationGenerator,
-                        mProtectedSignalsArgument);
+                        mConsentedDebugConfigurationGenerator);
         mCmd = new OneTimeCommand(expect, mShellCommandFactorySupplier, mAdServicesLogger, mClock);
     }
 

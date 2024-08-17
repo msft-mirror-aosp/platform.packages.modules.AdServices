@@ -27,9 +27,6 @@ import com.android.adservices.service.profiling.Tracing;
 
 import com.google.common.collect.ImmutableList;
 
-import org.json.JSONException;
-
-import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
@@ -39,9 +36,6 @@ public class ProtectedSignalsArgumentFastImpl implements ProtectedSignalsArgumen
     public static final String VALUE_KEY_NAME = "val";
     public static final String CREATION_TIME_KEY_NAME = "time";
     public static final String PACKAGE_KEY_NAME = "app";
-    public static final String HEX = "%02X";
-
-    public static final String INVALID_BASE64_SIGNAL = "Signals have invalid base64 key or values";
 
     /**
      * @param rawSignals map of {@link ProtectedSignal}, where map key is the base64 encoded key for
@@ -50,42 +44,20 @@ public class ProtectedSignalsArgumentFastImpl implements ProtectedSignalsArgumen
      */
     @VisibleForTesting
     static JSScriptArgument asScriptArgument(
-            String name, Map<String, List<ProtectedSignal>> rawSignals) throws JSONException {
-        return JSScriptArgument.jsonArrayArg(name, marshalToJson(rawSignals));
+            String name, Map<String, List<ProtectedSignal>> rawSignals) {
+        return JSScriptArgument.jsonArrayArgNoValidation(
+                name,
+                rawSignals.entrySet(),
+                ProtectedSignalsArgumentFastImpl::serializeEntryToJson);
     }
 
     @VisibleForTesting
-    static String marshalToJson(Map<String, List<ProtectedSignal>> rawSignals) {
-        Trace.beginSection(Tracing.MARSHAL_TO_JSON);
-        /**
-         * We analyzed various JSON building approaches, turns out using StringBuilder is orders of
-         * magnitude faster. Also, given the signals have base64 encoded strings initially fetched
-         * as JSON, using string builder is also a safe choice.
-         */
-        StringBuilder sb = new StringBuilder();
-        sb.append("[");
-        for (Map.Entry<String, List<ProtectedSignal>> signalsPerKey : rawSignals.entrySet()) {
-            serializeEntryToJson(sb, signalsPerKey);
-            sb.append(",");
-        }
-        if (rawSignals.size() > 0) {
-            // Remove extra ','
-            sb.deleteCharAt(sb.length() - 1);
-        }
-
-        String result = sb.append("]").toString();
-        Trace.endSection();
-
-        return result;
-    }
-
-    private static void serializeEntryToJson(
-            StringBuilder jsonBuilder, Map.Entry<String, List<ProtectedSignal>> entry) {
+    public static void serializeEntryToJson(
+            Map.Entry<String, List<ProtectedSignal>> entry, StringBuilder jsonBuilder) {
         Trace.beginSection(Tracing.SERIALIZE_TO_JSON);
 
-        String hexKey = validateAndSerializeBase64(entry.getKey());
         jsonBuilder.append("{");
-        jsonBuilder.append("\"").append(hexKey).append("\":[");
+        jsonBuilder.append("\"").append(entry.getKey()).append("\":[");
 
         List<ProtectedSignal> protectedSignals = entry.getValue();
         for (int i = 0; i < protectedSignals.size(); i++) {
@@ -93,7 +65,7 @@ public class ProtectedSignalsArgumentFastImpl implements ProtectedSignalsArgumen
             jsonBuilder.append("{");
             jsonBuilder
                     .append("\"" + VALUE_KEY_NAME + "\":\"")
-                    .append(validateAndSerializeBase64(protectedSignal.getBase64EncodedValue()))
+                    .append(protectedSignal.getHexEncodedValue())
                     .append("\",");
             jsonBuilder
                     .append("\"" + CREATION_TIME_KEY_NAME + "\":")
@@ -113,29 +85,9 @@ public class ProtectedSignalsArgumentFastImpl implements ProtectedSignalsArgumen
         Trace.endSection();
     }
 
-    // TODO(b/294900378) Avoid second serialization
-    /** Validates a Base64 encoded string, and converts it to Hex */
-    @VisibleForTesting
-    public static String validateAndSerializeBase64(String base64String) {
-        try {
-            Trace.beginSection(Tracing.SERIALIZE_BASE_64);
-            byte[] bytes = Base64.getDecoder().decode(base64String);
-            StringBuilder sb = new StringBuilder(bytes.length * 2);
-            for (byte b : bytes) {
-                sb.append(String.format(HEX, b));
-            }
-            return sb.toString();
-        } catch (IllegalArgumentException e) {
-            throw new IllegalStateException(INVALID_BASE64_SIGNAL);
-        } finally {
-            Trace.endSection();
-        }
-    }
-
     @Override
     public ImmutableList<JSScriptArgument> getArgumentsFromRawSignalsAndMaxSize(
-            Map<String, List<ProtectedSignal>> rawSignals, int maxSizeInBytes)
-            throws JSONException {
+            Map<String, List<ProtectedSignal>> rawSignals, int maxSizeInBytes) {
         return ImmutableList.<JSScriptArgument>builder()
                 .add(asScriptArgument(SignalsDriverLogicGenerator.SIGNALS_ARG_NAME, rawSignals))
                 .add(
