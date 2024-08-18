@@ -174,6 +174,18 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 
+import private_join_and_compute.anonymous_counting_tokens.ClientParameters;
+import private_join_and_compute.anonymous_counting_tokens.GeneratedTokensRequestProto;
+import private_join_and_compute.anonymous_counting_tokens.GetKeyAttestationChallengeResponse;
+import private_join_and_compute.anonymous_counting_tokens.GetServerPublicParamsResponse;
+import private_join_and_compute.anonymous_counting_tokens.GetTokensRequest;
+import private_join_and_compute.anonymous_counting_tokens.GetTokensResponse;
+import private_join_and_compute.anonymous_counting_tokens.RegisterClientRequest;
+import private_join_and_compute.anonymous_counting_tokens.RegisterClientResponse;
+import private_join_and_compute.anonymous_counting_tokens.ServerPublicParameters;
+import private_join_and_compute.anonymous_counting_tokens.TokensSet;
+import private_join_and_compute.anonymous_counting_tokens.Transcript;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -193,18 +205,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import private_join_and_compute.anonymous_counting_tokens.ClientParameters;
-import private_join_and_compute.anonymous_counting_tokens.GeneratedTokensRequestProto;
-import private_join_and_compute.anonymous_counting_tokens.GetKeyAttestationChallengeResponse;
-import private_join_and_compute.anonymous_counting_tokens.GetServerPublicParamsResponse;
-import private_join_and_compute.anonymous_counting_tokens.GetTokensRequest;
-import private_join_and_compute.anonymous_counting_tokens.GetTokensResponse;
-import private_join_and_compute.anonymous_counting_tokens.RegisterClientRequest;
-import private_join_and_compute.anonymous_counting_tokens.RegisterClientResponse;
-import private_join_and_compute.anonymous_counting_tokens.ServerPublicParameters;
-import private_join_and_compute.anonymous_counting_tokens.TokensSet;
-import private_join_and_compute.anonymous_counting_tokens.Transcript;
 
 @SuppressWarnings("UnusedVariable")
 @RequiresSdkLevelAtLeastS()
@@ -401,7 +401,8 @@ public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
         mPayloadFormatter =
                 AuctionServerPayloadFormatterFactory.createPayloadFormatter(
                         mFakeFlags.getFledgeAuctionServerPayloadFormatVersion(),
-                        mFakeFlags.getFledgeAuctionServerPayloadBucketSizes());
+                        mFakeFlags.getFledgeAuctionServerPayloadBucketSizes(),
+                        /* sellerConfiguration= */ null);
         mPayloadExtractor =
                 AuctionServerPayloadFormatterFactory.createPayloadExtractor(
                         mFakeFlags.getFledgeAuctionServerPayloadFormatVersion(),

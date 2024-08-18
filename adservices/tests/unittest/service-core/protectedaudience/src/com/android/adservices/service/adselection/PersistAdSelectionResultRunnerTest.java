@@ -435,7 +435,8 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
         mPayloadFormatter =
                 AuctionServerPayloadFormatterFactory.createPayloadFormatter(
                         AuctionServerPayloadFormatterV0.VERSION,
-                        mFakeFlags.getFledgeAuctionServerPayloadBucketSizes());
+                        mFakeFlags.getFledgeAuctionServerPayloadBucketSizes(),
+                        /* sellerConfiguration= */ null);
         mDataCompressor = new AuctionServerDataCompressorGzip();
 
         mOverallTimeout = FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS;
