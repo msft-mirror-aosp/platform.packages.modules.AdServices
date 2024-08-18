@@ -29,7 +29,7 @@ import org.junit.Test;
 
 public final class CommonDebugFlagsTest extends AdServicesExtendedMockitoTestCase {
 
-    private final CommonDebugFlags mFlags = new CommonDebugFlags() {};
+    private final CommonDebugFlags mCommonDebugFlags = new CommonDebugFlags() {};
 
     @Override
     protected AdServicesExtendedMockitoRule getAdServicesExtendedMockitoRule() {
@@ -51,11 +51,11 @@ public final class CommonDebugFlagsTest extends AdServicesExtendedMockitoTestCas
             Boolean defaultValue,
             Flaginator<CommonDebugFlags, Boolean> flaginator) {
         // Without any overriding, the value is the hard coded constant.
-        expect.that(flaginator.getFlagValue(mFlags)).isEqualTo(defaultValue);
+        expect.that(flaginator.getFlagValue(mCommonDebugFlags)).isEqualTo(defaultValue);
 
         boolean phOverridingValue = !defaultValue;
         setSystemProperty(flagName, String.valueOf(phOverridingValue));
-        expect.that(flaginator.getFlagValue(mFlags)).isEqualTo(phOverridingValue);
+        expect.that(flaginator.getFlagValue(mCommonDebugFlags)).isEqualTo(phOverridingValue);
     }
 
     private void setSystemProperty(String name, String value) {

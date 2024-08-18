@@ -16,14 +16,6 @@
 
 package com.android.adservices.service.measurement.reporting;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdServicesJobServiceLogger;
-import static com.android.adservices.mockito.MockitoExpectations.getSpiedAdServicesJobServiceLogger;
-import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
-import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
-import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobExecutionData;
-import static com.android.adservices.mockito.MockitoExpectations.verifyBackgroundJobsSkipLogged;
-import static com.android.adservices.mockito.MockitoExpectations.verifyJobFinishedLogged;
-import static com.android.adservices.mockito.MockitoExpectations.verifyLoggingNotHappened;
 import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_PERSISTED;
 import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
 import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
@@ -44,7 +36,6 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -54,68 +45,53 @@ import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.content.Context;
 
-import androidx.test.core.app.ApplicationProvider;
-
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.KeyValueData;
+import com.android.adservices.service.measurement.MeasurementJobServiceTestCase;
 import com.android.adservices.service.measurement.attribution.AttributionJobService;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
 import com.android.adservices.shared.testing.concurrency.JobServiceCallback;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.internal.stubbing.answers.AnswersWithDelay;
 import org.mockito.internal.stubbing.answers.CallsRealMethods;
-import org.mockito.quality.Strictness;
 
 import java.util.Optional;
 
 /** Unit test for {@link ReportingJobService} */
-public class ReportingJobServiceTest {
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
+@SpyStatic(ReportingJobService.class)
+@SpyStatic(DatastoreManagerFactory.class)
+@SpyStatic(EnrollmentDao.class)
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(AdServicesJobServiceLogger.class)
+@MockStatic(ServiceCompatUtils.class)
+public final class ReportingJobServiceTest extends MeasurementJobServiceTestCase {
     private static final int MEASUREMENT_REPORTING_JOB_ID = MEASUREMENT_REPORTING_JOB.getJobId();
     private static final long WAIT_IN_MILLIS = 200L;
+
     @Mock private AdServicesErrorLogger mErrorLogger;
     @Mock private IMeasurementDao mMeasurementDao;
     @Mock private ITransaction mTransaction;
-    private DatastoreManager mMockDatastoreManager;
-    private JobScheduler mMockJobScheduler;
 
     private ReportingJobService mSpyService;
-    private Flags mMockFlags;
-    private AdServicesJobServiceLogger mSpyLogger;
 
-    @Rule
-    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder(this)
-                    .spyStatic(ReportingJobService.class)
-                    .spyStatic(DatastoreManagerFactory.class)
-                    .spyStatic(EnrollmentDao.class)
-                    .spyStatic(FlagsFactory.class)
-                    .spyStatic(AdServicesJobServiceLogger.class)
-                    .mockStatic(ServiceCompatUtils.class)
-                    .setStrictness(Strictness.LENIENT)
-                    .build();
-
-    private Context mContext;
-
-    private class FakeDatastoreManager extends DatastoreManager {
+    private final class FakeDatastoreManager extends DatastoreManager {
         private FakeDatastoreManager() {
             super(mErrorLogger);
         }
@@ -139,18 +115,13 @@ public class ReportingJobServiceTest {
     @Before
     public void setUp() {
         mSpyService = spy(ReportingJobService.class);
-        mMockDatastoreManager = new FakeDatastoreManager();
-        mMockJobScheduler = spy(JobScheduler.class);
-        mMockFlags = mock(Flags.class);
-        mSpyLogger = getSpiedAdServicesJobServiceLogger(CONTEXT, mMockFlags);
-        mContext = mock(Context.class);
-        doReturn(CONTEXT.getPackageName()).when(mContext).getPackageName();
-        doReturn(CONTEXT.getPackageManager()).when(mContext).getPackageManager();
-        doReturn(mMockJobScheduler).when(mContext).getSystemService(JobScheduler.class);
+        doReturn(mContext.getPackageName()).when(mMockContext).getPackageName();
+        doReturn(mContext.getPackageManager()).when(mMockContext).getPackageManager();
+        doReturn(mMockJobScheduler).when(mMockContext).getSystemService(JobScheduler.class);
         doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
-        doReturn(mContext).when(mSpyService).getApplicationContext();
+        doReturn(mMockContext).when(mSpyService).getApplicationContext();
         doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
-        ExtendedMockito.doReturn(mMockDatastoreManager)
+        ExtendedMockito.doReturn(new FakeDatastoreManager())
                 .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         doReturn(MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS)
@@ -184,11 +155,11 @@ public class ReportingJobServiceTest {
         mockGettingLastExecutionTime(Long.MIN_VALUE);
         mockGettingNextExecutionTime(null);
         // Execute
-        ReportingJobService.scheduleIfNeeded(mContext, false);
+        ReportingJobService.scheduleIfNeeded(mMockContext, false);
 
         // Validate
         ArgumentCaptor<JobInfo> jobInfoArgumentCaptor = ArgumentCaptor.forClass(JobInfo.class);
-        verify(mMockJobScheduler, times(1)).schedule(jobInfoArgumentCaptor.capture());
+        verify(mMockJobScheduler).schedule(jobInfoArgumentCaptor.capture());
 
         JobInfo scheduledJob = jobInfoArgumentCaptor.getValue();
         long minLatencyMs = scheduledJob.getMinLatencyMillis();
@@ -215,7 +186,7 @@ public class ReportingJobServiceTest {
         JobInfo pendingJob =
                 new JobInfo.Builder(
                                 MEASUREMENT_REPORTING_JOB_ID,
-                                new ComponentName(mContext, AttributionJobService.class))
+                                new ComponentName(mMockContext, AttributionJobService.class))
                         .setMinimumLatency(
                                 MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS + 1)
                         .setPersisted(true)
@@ -226,11 +197,11 @@ public class ReportingJobServiceTest {
                 now + MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS + 1);
 
         // Execute
-        ReportingJobService.scheduleIfNeeded(mContext, false);
+        ReportingJobService.scheduleIfNeeded(mMockContext, false);
 
         // Validate
         ArgumentCaptor<JobInfo> jobInfoArgumentCaptor = ArgumentCaptor.forClass(JobInfo.class);
-        verify(mMockJobScheduler, times(1)).schedule(jobInfoArgumentCaptor.capture());
+        verify(mMockJobScheduler).schedule(jobInfoArgumentCaptor.capture());
 
         JobInfo scheduledJob = jobInfoArgumentCaptor.getValue();
         long minLatencyMs = scheduledJob.getMinLatencyMillis();
@@ -266,7 +237,7 @@ public class ReportingJobServiceTest {
         JobInfo pendingJob =
                 new JobInfo.Builder(
                                 MEASUREMENT_REPORTING_JOB_ID,
-                                new ComponentName(mContext, AttributionJobService.class))
+                                new ComponentName(mMockContext, AttributionJobService.class))
                         // in reality, this invocation doesn't affect the test, but we set it
                         // anyway to create a consistent setup.
                         .setMinimumLatency(timeToNextReport)
@@ -275,7 +246,7 @@ public class ReportingJobServiceTest {
         when(mMockJobScheduler.getPendingJob(MEASUREMENT_REPORTING_JOB_ID)).thenReturn(pendingJob);
 
         // Execute
-        ReportingJobService.scheduleIfNeeded(mContext, false);
+        ReportingJobService.scheduleIfNeeded(mMockContext, false);
 
         // Validate
         verify(mMockJobScheduler, never()).schedule(any());
@@ -301,11 +272,11 @@ public class ReportingJobServiceTest {
         mockGettingNextExecutionTime(null);
 
         // Execute
-        ReportingJobService.scheduleIfNeeded(mContext, false);
+        ReportingJobService.scheduleIfNeeded(mMockContext, false);
 
         // Validate
         ArgumentCaptor<JobInfo> jobInfoArgumentCaptor = ArgumentCaptor.forClass(JobInfo.class);
-        verify(mMockJobScheduler, times(1)).schedule(jobInfoArgumentCaptor.capture());
+        verify(mMockJobScheduler).schedule(jobInfoArgumentCaptor.capture());
 
         JobInfo scheduledJob = jobInfoArgumentCaptor.getValue();
         long minLatencyMs = scheduledJob.getMinLatencyMillis();
@@ -329,12 +300,12 @@ public class ReportingJobServiceTest {
         mockGettingLastExecutionTime(Long.MIN_VALUE);
         mockGettingNextExecutionTime(null);
         // Execute
-        ReportingJobService.scheduleIfNeeded(mContext, false);
+        ReportingJobService.scheduleIfNeeded(mMockContext, false);
 
         // Validate. Because the report was scheduled in the past, we schedule the job for near
         // immediate delivery.
         ArgumentCaptor<JobInfo> jobInfoArgumentCaptor = ArgumentCaptor.forClass(JobInfo.class);
-        verify(mMockJobScheduler, times(1)).schedule(jobInfoArgumentCaptor.capture());
+        verify(mMockJobScheduler).schedule(jobInfoArgumentCaptor.capture());
         JobInfo scheduledJob = jobInfoArgumentCaptor.getValue();
         assertEquals(0, scheduledJob.getMinLatencyMillis());
     }
@@ -364,11 +335,11 @@ public class ReportingJobServiceTest {
         mockGettingNextExecutionTime(null);
 
         // Execute
-        ReportingJobService.scheduleIfNeeded(mContext, true);
+        ReportingJobService.scheduleIfNeeded(mMockContext, true);
 
         // Validate
         ArgumentCaptor<JobInfo> jobInfoArgumentCaptor = ArgumentCaptor.forClass(JobInfo.class);
-        verify(mMockJobScheduler, times(1)).schedule(jobInfoArgumentCaptor.capture());
+        verify(mMockJobScheduler).schedule(jobInfoArgumentCaptor.capture());
 
         JobInfo scheduledJob = jobInfoArgumentCaptor.getValue();
         long minLatencyMs = scheduledJob.getMinLatencyMillis();
@@ -404,11 +375,11 @@ public class ReportingJobServiceTest {
         mockGettingLastExecutionTime(Long.MIN_VALUE);
         mockGettingNextExecutionTime(null);
         // Execute
-        ReportingJobService.scheduleIfNeeded(mContext, false);
+        ReportingJobService.scheduleIfNeeded(mMockContext, false);
 
         // Validate
         ArgumentCaptor<JobInfo> jobInfoArgumentCaptor = ArgumentCaptor.forClass(JobInfo.class);
-        verify(mMockJobScheduler, times(1)).schedule(jobInfoArgumentCaptor.capture());
+        verify(mMockJobScheduler).schedule(jobInfoArgumentCaptor.capture());
 
         JobInfo scheduledJob = jobInfoArgumentCaptor.getValue();
         long minLatencyMs = scheduledJob.getMinLatencyMillis();
@@ -430,7 +401,7 @@ public class ReportingJobServiceTest {
                 .thenReturn(null);
         mockGettingLastExecutionTime(Long.MIN_VALUE);
         // Execute
-        ReportingJobService.scheduleIfNeeded(mContext, false);
+        ReportingJobService.scheduleIfNeeded(mMockContext, false);
 
         // Validate. No reports are left in the queue.
         verify(mMockJobScheduler, never()).schedule(any());
@@ -445,7 +416,7 @@ public class ReportingJobServiceTest {
                 .thenReturn(null);
         mockGettingLastExecutionTime(Long.MIN_VALUE);
         // Execute
-        ReportingJobService.scheduleIfNeeded(mContext, true);
+        ReportingJobService.scheduleIfNeeded(mMockContext, true);
 
         // Validate. No reports are left in the queue.
         verify(mMockJobScheduler, never()).schedule(any());
@@ -457,7 +428,7 @@ public class ReportingJobServiceTest {
         disableFeature();
 
         // Execute
-        ReportingJobService.scheduleIfNeeded(mContext, false);
+        ReportingJobService.scheduleIfNeeded(mMockContext, false);
 
         // Validate
         ExtendedMockito.verify(() -> ReportingJobService.schedule(any(), any()), never());
@@ -549,7 +520,6 @@ public class ReportingJobServiceTest {
     private void onStartJob_featureDisabled() throws Exception {
         // Setup
         disableFeature();
-        mMockDatastoreManager = mock(DatastoreManager.class);
         mockGettingNextExecutionTime(null);
 
         JobServiceCallback callback = new JobServiceCallback().expectJobFinished(mSpyService);
@@ -562,19 +532,18 @@ public class ReportingJobServiceTest {
 
         callback.assertJobFinished();
         verify(mMockDatastoreManager, never()).runInTransactionWithResult(any());
-        verify(mSpyService, times(1)).jobFinished(any(), eq(false));
+        verify(mSpyService).jobFinished(any(), eq(false));
     }
 
     private void onStartJob_featureEnabled() throws Exception {
         // Setup
         enableFeature();
-        mMockDatastoreManager = mock(DatastoreManager.class);
         doReturn(Optional.empty()).when(mMockDatastoreManager).runInTransactionWithResult(any());
         doReturn(true).when(mMockDatastoreManager).runInTransaction(any());
         ExtendedMockito.doReturn(mMockDatastoreManager)
                 .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
         // Return a null job scheduler to short circuit scheduling
-        doReturn(null).when(mContext).getSystemService(JobScheduler.class);
+        doReturn(null).when(mMockContext).getSystemService(JobScheduler.class);
 
         JobServiceCallback callback = new JobServiceCallback().expectJobFinished(mSpyService);
 
@@ -590,14 +559,13 @@ public class ReportingJobServiceTest {
 
         callback.assertJobFinished();
 
-        verify(mSpyService, times(1)).jobFinished(any(), anyBoolean());
+        verify(mSpyService).jobFinished(any(), anyBoolean());
         ExtendedMockito.verify(() -> ReportingJobService.scheduleIfNeeded(any(), eq(false)));
         verify(mMockJobScheduler, never()).cancel(eq(MEASUREMENT_REPORTING_JOB_ID));
     }
 
     private void onStartJob_shouldDisableJobTrue() throws Exception {
         // Setup
-        mMockDatastoreManager = mock(DatastoreManager.class);
         doReturn(Optional.empty()).when(mMockDatastoreManager).runInTransactionWithResult(any());
         doReturn(true).when(mMockDatastoreManager).runInTransaction(any());
         ExtendedMockito.doReturn(mMockDatastoreManager)
@@ -617,7 +585,7 @@ public class ReportingJobServiceTest {
         assertFalse(result);
 
         callback.assertJobFinished();
-        verify(mSpyService, times(1)).jobFinished(any(), eq(false));
+        verify(mSpyService).jobFinished(any(), eq(false));
     }
 
     private void mockGettingLastExecutionTime(long time) throws DatastoreException {

@@ -632,6 +632,19 @@ public final class ConsentManager {
         setValueWithLock(IS_PA_DATA_RESET, isPaDataReset, /* callerName */ "isPaDataReset");
     }
 
+    @VisibleForTesting static final String MODULE_ENROLLMENT_STATE = "MODULE_ENROLLMENT_STATE";
+
+    /** Returns the enrollmentState. */
+    public String getModuleEnrollmentState() {
+        return getStringValueWithLock(MODULE_ENROLLMENT_STATE);
+    }
+
+    /** Set enrollmentState in system server. */
+    public void setModuleEnrollmentState(String enrollmentState) throws IOException {
+        setStringValueWithLock(
+                MODULE_ENROLLMENT_STATE, enrollmentState, /* callerName */ "enrollmentState");
+    }
+
     private boolean getValueWithLock(String key) {
         mReadWriteLock.readLock().lock();
         try {
@@ -653,6 +666,31 @@ public final class ConsentManager {
         mReadWriteLock.writeLock().lock();
         try {
             mDatastore.putBoolean(key, value);
+        } catch (IOException e) {
+            LogUtil.e(
+                    e,
+                    callerName
+                            + " operation failed due to IOException thrown by Datastore: "
+                            + e.getMessage());
+        } finally {
+            mReadWriteLock.writeLock().unlock();
+        }
+    }
+
+    private String getStringValueWithLock(String key) {
+        mReadWriteLock.readLock().lock();
+        try {
+            String value = mDatastore.getString(key);
+            return value != null ? value : "";
+        } finally {
+            mReadWriteLock.readLock().unlock();
+        }
+    }
+
+    private void setStringValueWithLock(String key, String value, String callerName) {
+        mReadWriteLock.writeLock().lock();
+        try {
+            mDatastore.putString(key, value);
         } catch (IOException e) {
             LogUtil.e(
                     e,

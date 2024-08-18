@@ -67,7 +67,6 @@ import com.google.common.util.concurrent.MoreExecutors;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 
 import java.util.Arrays;
@@ -94,7 +93,6 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
     private final List<Topic> mTopics = Arrays.asList(TOPIC1, TOPIC2, TOPIC3);
     private final ListeningExecutorService mExecutorService =
             MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
-    @Mock private Flags mMockFlags;
 
     @Before
     public void setup() {

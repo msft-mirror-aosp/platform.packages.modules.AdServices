@@ -24,7 +24,6 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZE
 import static com.android.adservices.data.common.AdservicesEntryPointConstant.ADSERVICES_ENTRY_POINT_STATUS_DISABLE;
 import static com.android.adservices.data.common.AdservicesEntryPointConstant.ADSERVICES_ENTRY_POINT_STATUS_ENABLE;
 import static com.android.adservices.data.common.AdservicesEntryPointConstant.KEY_ADSERVICES_ENTRY_POINT_STATUS;
-import static com.android.adservices.mockito.MockitoExpectations.mockLogApiCallStats;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IAPC_UPDATE_AD_ID_API_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID;
 import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.GA_UX;
@@ -105,7 +104,6 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
     private static final String UNUSED_AD_ID = "unused_ad_id";
 
     private AdServicesCommonServiceImpl mCommonService;
-    @Mock private Flags mFlags;
     @Mock private PackageManager mPackageManager;
     @Mock private UxEngine mUxEngine;
     @Mock private UxStatesManager mUxStatesManager;
@@ -135,15 +133,15 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
         mCommonService =
                 new AdServicesCommonServiceImpl(
                         mMockContext,
-                        mFlags,
+                        mMockFlags,
                         mUxEngine,
                         mUxStatesManager,
                         mMockAdIdWorker,
                         mAdServicesLogger,
                         mClock);
-        mLogApiCallStatsCallback = mockLogApiCallStats(mAdServicesLogger);
-        mocker.mockGetFlags(mFlags);
-        doReturn(true).when(mFlags).getAdServicesEnabled();
+        mLogApiCallStatsCallback = mocker.mockLogApiCallStats(mAdServicesLogger);
+        mocker.mockGetFlags(mMockFlags);
+        doReturn(true).when(mMockFlags).getAdServicesEnabled();
 
         ExtendedMockito.doNothing()
                 .when(() -> BackgroundJobsManager.scheduleAllBackgroundJobs(any(Context.class)));
@@ -168,7 +166,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
         ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
 
         // Set device to EU
-        doReturn(Flags.UI_EEA_COUNTRIES).when(mFlags).getUiEeaCountries();
+        doReturn(Flags.UI_EEA_COUNTRIES).when(mMockFlags).getUiEeaCountries();
         doReturn("pl").when(mTelephonyManager).getSimCountryIso();
         doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
         doReturn(mPackageManager).when(mMockContext).getPackageManager();
@@ -180,11 +178,11 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
     @Test
     public void isAdServiceEnabledTest_userNotEnrolledEntryPointLogicV1() throws Exception {
         doReturn(false).when(mUxStatesManager).isEnrolledUser(mMockContext);
-        doReturn(false).when(mFlags).getEnableAdServicesSystemApi();
+        doReturn(false).when(mMockFlags).getEnableAdServicesSystemApi();
         mCommonService =
                 new AdServicesCommonServiceImpl(
                         mMockContext,
-                        mFlags,
+                        mMockFlags,
                         mUxEngine,
                         mUxStatesManager,
                         mMockAdIdWorker,
@@ -201,13 +199,13 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
     @Test
     public void isAdServiceEnabledTest_userNotEnrolledEntryPointLogicV2() throws Exception {
         doReturn(false).when(mUxStatesManager).isEnrolledUser(mMockContext);
-        doReturn(true).when(mFlags).getEnableAdServicesSystemApi();
+        doReturn(true).when(mMockFlags).getEnableAdServicesSystemApi();
         doReturn(GA_UX).when(mConsentManager).getUx();
 
         mCommonService =
                 new AdServicesCommonServiceImpl(
                         mMockContext,
-                        mFlags,
+                        mMockFlags,
                         mUxEngine,
                         mUxStatesManager,
                         mMockAdIdWorker,
@@ -220,11 +218,11 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
 
     @Test
     public void getAdserviceStatusTest() throws Exception {
-        doReturn(false).when(mFlags).getGaUxFeatureEnabled();
+        doReturn(false).when(mMockFlags).getGaUxFeatureEnabled();
         mCommonService =
                 new AdServicesCommonServiceImpl(
                         mMockContext,
-                        mFlags,
+                        mMockFlags,
                         mUxEngine,
                         mUxStatesManager,
                         mMockAdIdWorker,
@@ -235,7 +233,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
         assertThat(getAdservicesStatusResult.getAdServicesEnabled()).isTrue();
 
         // Set the flag to false
-        doReturn(false).when(mFlags).getAdServicesEnabled();
+        doReturn(false).when(mMockFlags).getAdServicesEnabled();
 
         // Calling again, expect to false
         getAdservicesStatusResult = getStatusResult();
@@ -244,13 +242,13 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
 
     @Test
     public void getAdserviceStatusWithCheckActivityTest() throws Exception {
-        doReturn(true).when(mFlags).isBackCompatActivityFeatureEnabled();
+        doReturn(true).when(mMockFlags).isBackCompatActivityFeatureEnabled();
 
-        doReturn(false).when(mFlags).getGaUxFeatureEnabled();
+        doReturn(false).when(mMockFlags).getGaUxFeatureEnabled();
         mCommonService =
                 new AdServicesCommonServiceImpl(
                         mMockContext,
-                        mFlags,
+                        mMockFlags,
                         mUxEngine,
                         mUxStatesManager,
                         mMockAdIdWorker,
@@ -276,7 +274,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
     public void isAdservicesEnabledReconsentTest_happycase() throws Exception {
         // Happy case
         // Calling get adservice status, init set the flag to true, expect to return true
-        doReturn(true).when(mFlags).getGaUxFeatureEnabled();
+        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
         doReturn(false).when(mConsentManager).wasGaUxNotificationDisplayed();
         doReturn(AdServicesApiConsent.getConsent(true)).when(mConsentManager).getConsent();
 
@@ -292,7 +290,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
     @Test
     public void isAdservicesEnabledReconsentTest_gaUxFeatureDisabled() throws Exception {
         // GA UX feature disable, should not execute scheduler
-        doReturn(false).when(mFlags).getGaUxFeatureEnabled();
+        doReturn(false).when(mMockFlags).getGaUxFeatureEnabled();
         doReturn(false).when(mConsentManager).wasGaUxNotificationDisplayed();
         doReturn(AdServicesApiConsent.getConsent(true)).when(mConsentManager).getConsent();
 
@@ -308,7 +306,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
     @Test
     public void isAdservicesEnabledReconsentTest_deviceNotEu() throws Exception {
         // GA UX feature enable, set device to not EU, not execute scheduler
-        doReturn(true).when(mFlags).getGaUxFeatureEnabled();
+        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
         doReturn(false).when(mConsentManager).wasGaUxNotificationDisplayed();
         doReturn("us").when(mTelephonyManager).getSimCountryIso();
         doReturn(AdServicesApiConsent.getConsent(true)).when(mConsentManager).getConsent();
@@ -325,7 +323,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
     @Test
     public void isAdservicesEnabledReconsentTest_gaUxNotificationDisplayed() throws Exception {
         // GA UX feature enabled, device set to EU, GA UX notification set to displayed
-        doReturn(true).when(mFlags).getGaUxFeatureEnabled();
+        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
         doReturn("pl").when(mTelephonyManager).getSimCountryIso();
         doReturn(true).when(mConsentManager).wasGaUxNotificationDisplayed();
         doReturn(AdServicesApiConsent.getConsent(true)).when(mConsentManager).getConsent();
@@ -342,7 +340,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
     @Test
     public void isAdservicesEnabledReconsentTest_sharedPreferenceNotContain() throws Exception {
         // GA UX notification set to not displayed, sharedpreference set to not contains
-        doReturn(true).when(mFlags).getGaUxFeatureEnabled();
+        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
         doReturn(false).when(mConsentManager).wasGaUxNotificationDisplayed();
         doReturn(false).when(mSharedPreferences).contains(anyString());
         doReturn(AdServicesApiConsent.getConsent(true)).when(mConsentManager).getConsent();
@@ -359,7 +357,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
     @Test
     public void isAdservicesEnabledReconsentTest_userConsentRevoked() throws Exception {
         // Sharedpreference set to contains, user consent set to revoke
-        doReturn(true).when(mFlags).getGaUxFeatureEnabled();
+        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
         doReturn(false).when(mConsentManager).wasGaUxNotificationDisplayed();
         doReturn(AdServicesApiConsent.getConsent(false)).when(mConsentManager).getConsent();
 
@@ -375,7 +373,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
     @Test
     public void setAdservicesEntryPointStatusTest() throws Exception {
         // Not reconsent, as not ROW devices, Not first Consent, as notification displayed is true
-        doReturn(true).when(mFlags).getGaUxFeatureEnabled();
+        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
         doReturn(false).when(mConsentManager).wasGaUxNotificationDisplayed();
         doReturn(true).when(mConsentManager).wasNotificationDisplayed();
         doReturn(AdServicesApiConsent.getConsent(true)).when(mConsentManager).getConsent();
@@ -416,7 +414,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
     @Test
     public void setAdservicesEnabledConsentTest_happycase() throws Exception {
         // Set device to ROW
-        doReturn(true).when(mFlags).getGaUxFeatureEnabled();
+        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
         doReturn(false).when(mConsentManager).wasGaUxNotificationDisplayed();
         doReturn(true).when(mConsentManager).wasNotificationDisplayed();
         doReturn("us").when(mTelephonyManager).getSimCountryIso();
@@ -438,7 +436,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
         doReturn("us").when(mTelephonyManager).getSimCountryIso();
         doReturn(false).when(mConsentManager).wasGaUxNotificationDisplayed();
         doReturn(true).when(mConsentManager).wasNotificationDisplayed();
-        doReturn(false).when(mFlags).getGaUxFeatureEnabled();
+        doReturn(false).when(mMockFlags).getGaUxFeatureEnabled();
         doReturn(AdServicesApiConsent.getConsent(true)).when(mConsentManager).getConsent();
         mCommonService.setAdServicesEnabled(true, false);
         Thread.sleep(1000);
@@ -453,7 +451,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
     @Test
     public void setAdservicesEnabledConsentTest_ReconsentEUDevice() throws Exception {
         // enable GA UX feature, but EU device
-        doReturn(true).when(mFlags).getGaUxFeatureEnabled();
+        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
         doReturn(false).when(mConsentManager).wasGaUxNotificationDisplayed();
         doReturn(true).when(mConsentManager).wasNotificationDisplayed();
         doReturn(AdServicesApiConsent.getConsent(true)).when(mConsentManager).getConsent();
@@ -471,7 +469,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
     public void setAdservicesEnabledConsentTest_ReconsentGaUxNotificationDisplayed()
             throws InterruptedException {
         // ROW device, GA UX notification displayed
-        doReturn(true).when(mFlags).getGaUxFeatureEnabled();
+        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
         doReturn(true).when(mConsentManager).wasNotificationDisplayed();
         doReturn("us").when(mTelephonyManager).getSimCountryIso();
         doReturn(true).when(mConsentManager).wasGaUxNotificationDisplayed();
@@ -491,7 +489,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
             throws InterruptedException {
         // GA UX notification not displayed, notification not displayed, this also trigger
         // first consent case, but we verify here for reconsentStatus as true
-        doReturn(true).when(mFlags).getGaUxFeatureEnabled();
+        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
         doReturn("us").when(mTelephonyManager).getSimCountryIso();
         doReturn(false).when(mConsentManager).wasGaUxNotificationDisplayed();
         doReturn(false).when(mConsentManager).wasNotificationDisplayed();
@@ -510,7 +508,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
     public void setAdservicesEnabledConsentTest_ReconsentUserConsentRevoked()
             throws InterruptedException {
         // Notification displayed, user consent is revoked
-        doReturn(true).when(mFlags).getGaUxFeatureEnabled();
+        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
         doReturn("us").when(mTelephonyManager).getSimCountryIso();
         doReturn(false).when(mConsentManager).wasGaUxNotificationDisplayed();
         doReturn(true).when(mConsentManager).wasNotificationDisplayed();
@@ -529,7 +527,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
     public void setAdservicesEnabledConsentTest_FirstConsentHappycase()
             throws InterruptedException {
         // First Consent happy case, should be executed
-        doReturn(true).when(mFlags).getGaUxFeatureEnabled();
+        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
         doReturn(false).when(mConsentManager).wasGaUxNotificationDisplayed();
         doReturn(false).when(mConsentManager).wasNotificationDisplayed();
         doReturn(AdServicesApiConsent.getConsent(true)).when(mConsentManager).getConsent();
@@ -547,7 +545,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
     public void setAdservicesEnabledConsentTest_FirstConsentGaUxNotificationDisplayed()
             throws InterruptedException {
         // GA UX notification was displayed
-        doReturn(true).when(mFlags).getGaUxFeatureEnabled();
+        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
         doReturn(true).when(mConsentManager).wasNotificationDisplayed();
         doReturn(true).when(mConsentManager).wasGaUxNotificationDisplayed();
         doReturn(AdServicesApiConsent.getConsent(true)).when(mConsentManager).getConsent();
@@ -565,7 +563,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
     public void setAdservicesEnabledConsentTest_FirstConsentNotificationDisplayed()
             throws InterruptedException {
         // Notification was displayed
-        doReturn(true).when(mFlags).getGaUxFeatureEnabled();
+        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
         doReturn(false).when(mConsentManager).wasGaUxNotificationDisplayed();
         doReturn(true).when(mConsentManager).wasNotificationDisplayed();
         doReturn(AdServicesApiConsent.getConsent(true)).when(mConsentManager).getConsent();
@@ -590,7 +588,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
         callback.assertFailed(STATUS_UNAUTHORIZED);
 
         ExtendedMockito.verify(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
-        verify(mFlags, never()).getEnableAdServicesSystemApi();
+        verify(mMockFlags, never()).getEnableAdServicesSystemApi();
         verify(mUxEngine, never()).start(any());
     }
 
@@ -601,13 +599,13 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
                 new SyncIEnableAdServicesCallback(BINDER_CONNECTION_TIMEOUT_MS);
         ExtendedMockito.doReturn(true)
                 .when(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
-        doReturn(false).when(mFlags).getEnableAdServicesSystemApi();
+        doReturn(false).when(mMockFlags).getEnableAdServicesSystemApi();
 
         mCommonService.enableAdServices(new AdServicesStates.Builder().build(), callback);
         assertThat(callback.assertSuccess().isApiEnabled()).isFalse();
 
         ExtendedMockito.verify(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
-        verify(mFlags).getEnableAdServicesSystemApi();
+        verify(mMockFlags).getEnableAdServicesSystemApi();
         verify(mUxEngine, never()).start(any());
     }
 
@@ -617,7 +615,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
                 new SyncIEnableAdServicesCallback(BINDER_CONNECTION_TIMEOUT_MS);
         ExtendedMockito.doReturn(true)
                 .when(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
-        doReturn(true).when(mFlags).getEnableAdServicesSystemApi();
+        doReturn(true).when(mMockFlags).getEnableAdServicesSystemApi();
 
         mCommonService.enableAdServices(new AdServicesStates.Builder().build(), callback);
         EnableAdServicesResponse response = callback.assertSuccess();
@@ -625,7 +623,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
         assertThat(response.isSuccess()).isTrue();
 
         ExtendedMockito.verify(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
-        verify(mFlags).getEnableAdServicesSystemApi();
+        verify(mMockFlags).getEnableAdServicesSystemApi();
         verify(mUxEngine).start(any());
     }
 
@@ -640,11 +638,11 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
         mocker.mockIsAtLeastT(false);
         ExtendedMockito.doReturn(true)
                 .when(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
-        doReturn(true).when(mFlags).getEnableAdServicesSystemApi();
-        doReturn(true).when(mFlags).getEnableBackCompatInit();
-        doReturn(true).when(mFlags).getEnableBackCompat();
-        doReturn(true).when(mFlags).getAdServicesEnabled();
-        doReturn(false).when(mFlags).getGlobalKillSwitch();
+        doReturn(true).when(mMockFlags).getEnableAdServicesSystemApi();
+        doReturn(true).when(mMockFlags).getEnableBackCompatInit();
+        doReturn(true).when(mMockFlags).getEnableBackCompat();
+        doReturn(true).when(mMockFlags).getAdServicesEnabled();
+        doReturn(false).when(mMockFlags).getGlobalKillSwitch();
 
         doReturn(EXT_SERVICES_APK_PKG_SUFFIX).when(mMockContext).getPackageName();
         spyBackCompatInit();
@@ -657,7 +655,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
         assertThat(response.isSuccess()).isTrue();
 
         ExtendedMockito.verify(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
-        verify(mFlags).getEnableBackCompatInit();
+        verify(mMockFlags).getEnableBackCompatInit();
         verify(mSpyBackCompatInit).initializeComponents();
     }
 
@@ -669,8 +667,8 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
                 new SyncIEnableAdServicesCallback(BINDER_CONNECTION_TIMEOUT_MS);
         ExtendedMockito.doReturn(true)
                 .when(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
-        doReturn(true).when(mFlags).getEnableAdServicesSystemApi();
-        doReturn(true).when(mFlags).getEnableBackCompatInit();
+        doReturn(true).when(mMockFlags).getEnableAdServicesSystemApi();
+        doReturn(true).when(mMockFlags).getEnableBackCompatInit();
         doReturn(AD_SERVICES_APK_PKG_SUFFIX).when(mMockContext).getPackageName();
         spyBackCompatInit();
         ExtendedMockito.doReturn(true)
@@ -682,7 +680,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
         assertThat(response.isSuccess()).isTrue();
 
         ExtendedMockito.verify(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
-        verify(mFlags).getEnableBackCompatInit();
+        verify(mMockFlags).getEnableBackCompatInit();
         verify(mSpyBackCompatInit).initializeComponents();
         verify(mPackageManager, never())
                 .setComponentEnabledSetting(
@@ -697,8 +695,8 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
                 new SyncIEnableAdServicesCallback(BINDER_CONNECTION_TIMEOUT_MS);
         ExtendedMockito.doReturn(true)
                 .when(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
-        doReturn(true).when(mFlags).getEnableAdServicesSystemApi();
-        doReturn(true).when(mFlags).getEnableBackCompatInit();
+        doReturn(true).when(mMockFlags).getEnableAdServicesSystemApi();
+        doReturn(true).when(mMockFlags).getEnableBackCompatInit();
         spyBackCompatInit();
         ExtendedMockito.doReturn(false)
                 .when(() -> PackageManagerCompatUtils.isAdServicesActivityEnabled(any()));
@@ -707,7 +705,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
         callback.assertFailed(STATUS_ADSERVICES_ACTIVITY_DISABLED);
 
         ExtendedMockito.verify(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
-        verify(mFlags).getEnableBackCompatInit();
+        verify(mMockFlags).getEnableBackCompatInit();
         verify(mSpyBackCompatInit).initializeComponents();
         verify(mUxEngine, never()).start(any());
     }
@@ -719,8 +717,8 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
                 new SyncIEnableAdServicesCallback(BINDER_CONNECTION_TIMEOUT_MS);
         ExtendedMockito.doReturn(true)
                 .when(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
-        doReturn(true).when(mFlags).getEnableAdServicesSystemApi();
-        doReturn(true).when(mFlags).getEnableBackCompatInit();
+        doReturn(true).when(mMockFlags).getEnableAdServicesSystemApi();
+        doReturn(true).when(mMockFlags).getEnableBackCompatInit();
         spyBackCompatInit();
         ExtendedMockito.doReturn(true)
                 .when(() -> PackageManagerCompatUtils.isAdServicesActivityEnabled(any()));
@@ -731,7 +729,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
         assertThat(response.isSuccess()).isTrue();
 
         ExtendedMockito.verify(() -> PermissionHelper.hasModifyAdServicesStatePermission(any()));
-        verify(mFlags).getEnableBackCompatInit();
+        verify(mMockFlags).getEnableBackCompatInit();
         verify(mSpyBackCompatInit).initializeComponents();
         verify(mUxEngine).start(any());
     }
@@ -805,7 +803,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
 
         ExtendedMockito.verify(
                 () -> PermissionHelper.hasAccessAdServicesCommonStatePermission(any(), any()));
-        verify(mFlags, never()).isGetAdServicesCommonStatesApiEnabled();
+        verify(mMockFlags, never()).isGetAdServicesCommonStatesApiEnabled();
         ApiCallStats apiCallStats = mLogApiCallStatsCallback.assertResultReceived();
         assertThat(apiCallStats.getAppPackageName()).isEqualTo(TEST_APP_PACKAGE_NAME);
         assertThat(apiCallStats.getSdkPackageName()).isEqualTo(SOME_SDK_NAME);
@@ -823,19 +821,19 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
                                 PermissionHelper.hasAccessAdServicesCommonStatePermission(
                                         any(), any()));
         ResultSyncCallback<ApiCallStats> logApiCallStatsCallback =
-                mockLogApiCallStats(mAdServicesLogger);
+                mocker.mockLogApiCallStats(mAdServicesLogger);
         when(mClock.elapsedRealtime()).thenReturn(150L, 200L);
         GetAdServicesCommonStatesParams params =
                 new GetAdServicesCommonStatesParams.Builder(TEST_APP_PACKAGE_NAME, SOME_SDK_NAME)
                         .build();
         CallerMetadata metadata = new CallerMetadata.Builder().setBinderElapsedTimestamp(0).build();
-        doReturn(INVALID_PACKAGE_NAME).when(mFlags).getAdServicesCommonStatesAllowList();
+        doReturn(INVALID_PACKAGE_NAME).when(mMockFlags).getAdServicesCommonStatesAllowList();
         mCommonService.getAdServicesCommonStates(params, metadata, callback);
         callback.assertFailed(STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST);
 
         ExtendedMockito.verify(
                 () -> PermissionHelper.hasAccessAdServicesCommonStatePermission(any(), any()));
-        verify(mFlags, never()).isGetAdServicesCommonStatesApiEnabled();
+        verify(mMockFlags, never()).isGetAdServicesCommonStatesApiEnabled();
         ApiCallStats apiCallStats = logApiCallStatsCallback.assertResultReceived();
         assertThat(apiCallStats.getResultCode())
                 .isEqualTo(STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST);
@@ -850,9 +848,9 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
                         () ->
                                 PermissionHelper.hasAccessAdServicesCommonStatePermission(
                                         any(), any()));
-        doReturn(true).when(mFlags).isGetAdServicesCommonStatesApiEnabled();
+        doReturn(true).when(mMockFlags).isGetAdServicesCommonStatesApiEnabled();
         doReturn("com.android.adservices.servicecoretest")
-                .when(mFlags)
+                .when(mMockFlags)
                 .getAdServicesCommonStatesAllowList();
         ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
         doReturn(true).when(mConsentManager).isPasMeasurementConsentGiven();
@@ -890,9 +888,9 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
                         () ->
                                 PermissionHelper.hasAccessAdServicesCommonStatePermission(
                                         any(), any()));
-        doReturn(true).when(mFlags).isGetAdServicesCommonStatesApiEnabled();
+        doReturn(true).when(mMockFlags).isGetAdServicesCommonStatesApiEnabled();
         doReturn("com.android.adservices.servicecoretest")
-                .when(mFlags)
+                .when(mMockFlags)
                 .getAdServicesCommonStatesAllowList();
         ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
         doReturn(true).when(mConsentManager).isPasMeasurementConsentGiven();
@@ -932,9 +930,9 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
                         () ->
                                 PermissionHelper.hasAccessAdServicesCommonStatePermission(
                                         any(), any()));
-        doReturn(false).when(mFlags).isGetAdServicesCommonStatesApiEnabled();
+        doReturn(false).when(mMockFlags).isGetAdServicesCommonStatesApiEnabled();
         doReturn("com.android.adservices.servicecoretest")
-                .when(mFlags)
+                .when(mMockFlags)
                 .getAdServicesCommonStatesAllowList();
         ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
         doReturn(true).when(mConsentManager).isMeasurementDataReset();

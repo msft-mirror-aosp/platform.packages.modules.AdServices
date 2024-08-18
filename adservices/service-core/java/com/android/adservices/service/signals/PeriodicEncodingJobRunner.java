@@ -55,9 +55,25 @@ public class PeriodicEncodingJobRunner {
     private final EncodedPayloadDao mEncodedPayloadDao;
     private final ListeningExecutorService mBackgroundExecutor;
     private final ListeningExecutorService mLightWeightExecutor;
+    private final ProtectedSignalsArgument mProtectedSignalsArgument;
 
-    PeriodicEncodingJobRunner(
-            SignalsProvider signalsProvider,
+    /**
+     * Create a periodic encoding job runner.
+     *
+     * @param signalsProviderAndArgumentFactory Factory which allows access to signals data stored
+     *     on the device.
+     * @param protectedSignalsDao DAO for underlying raw signals tables.
+     * @param scriptEngine Wrapper over JSScriptEngine for evaluating user-defined scripts.
+     * @param encoderLogicMaximumFailure Maximum number of tolerable failures in encoding logic.
+     * @param encodedPayLoadMaxSizeBytes Maximum size of an encoded payload.
+     * @param encoderLogicHandler Handler for downloading, updating and deleting user-defined
+     *     scripts.
+     * @param encodedPayloadDao DAO for encoded payload tables.
+     * @param backgroundExecutor Executor for background tasks.
+     * @param lightWeightExecutor Executor for lightweight tasks.
+     */
+    public PeriodicEncodingJobRunner(
+            SignalsProviderAndArgumentFactory signalsProviderAndArgumentFactory,
             ProtectedSignalsDao protectedSignalsDao,
             SignalsScriptEngine scriptEngine,
             int encoderLogicMaximumFailure,
@@ -66,7 +82,7 @@ public class PeriodicEncodingJobRunner {
             EncodedPayloadDao encodedPayloadDao,
             ListeningExecutorService backgroundExecutor,
             ListeningExecutorService lightWeightExecutor) {
-        mSignalsProvider = signalsProvider;
+        mSignalsProvider = signalsProviderAndArgumentFactory.getSignalsProvider();
         mProtectedSignalsDao = protectedSignalsDao;
         mScriptEngine = scriptEngine;
         mEncoderLogicMaximumFailure = encoderLogicMaximumFailure;
@@ -75,6 +91,7 @@ public class PeriodicEncodingJobRunner {
         mEncodedPayloadDao = encodedPayloadDao;
         mBackgroundExecutor = backgroundExecutor;
         mLightWeightExecutor = lightWeightExecutor;
+        mProtectedSignalsArgument = signalsProviderAndArgumentFactory.getProtectedSignalsArgument();
     }
 
     /**
@@ -92,6 +109,7 @@ public class PeriodicEncodingJobRunner {
             int timeout,
             EncodingExecutionLogHelper logHelper,
             EncodingJobRunStatsLogger encodingJobRunStatsLogger) {
+        sLogger.v("entering runEncodingPerBuyer");
         int traceCookie = Tracing.beginAsyncSection(Tracing.RUN_ENCODING_PER_BUYER);
         AdTechIdentifier buyer = encoderLogicMetadata.getBuyer();
 
@@ -100,6 +118,7 @@ public class PeriodicEncodingJobRunner {
         Trace.endSection();
 
         if (signals.isEmpty()) {
+            sLogger.v("runEncodingPerBuyer: no signals present on device");
             mEncoderLogicHandler.deleteEncoderForBuyer(buyer);
             Tracing.endAsyncSection(Tracing.RUN_ENCODING_PER_BUYER, traceCookie);
             return FluentFuture.from(Futures.immediateFuture(null));
@@ -115,6 +134,8 @@ public class PeriodicEncodingJobRunner {
         Trace.endSection();
 
         if (signalsUpdateMetadata != null && existingPayload != null) {
+            sLogger.v(
+                    "runEncodingPerBuyer: existing payload or signals update is present on device");
             boolean isNoNewSignalUpdateAfterLastEncoding =
                     signalsUpdateMetadata
                             .getLastSignalsUpdatedTime()
@@ -124,6 +145,7 @@ public class PeriodicEncodingJobRunner {
                             .getCreationTime()
                             .isBefore(existingPayload.getCreationTime());
             if (isNoNewSignalUpdateAfterLastEncoding && isEncoderLogicNotUpdatedAfterLastEncoding) {
+                sLogger.v("runEncodingPerBuyer: no new signal update or encoder update");
                 encodingJobRunStatsLogger.addOneSignalEncodingSkips();
                 Tracing.endAsyncSection(Tracing.RUN_ENCODING_PER_BUYER, traceCookie);
                 return FluentFuture.from(Futures.immediateFuture(null));
@@ -132,6 +154,9 @@ public class PeriodicEncodingJobRunner {
 
         int failedCount = encoderLogicMetadata.getFailedEncodingCount();
         if (failedCount >= mEncoderLogicMaximumFailure) {
+            sLogger.v(
+                    "runEncodingPerBuyer: failure count %d is more than maximum allowed %d",
+                    failedCount, mEncoderLogicMaximumFailure);
             Tracing.endAsyncSection(Tracing.RUN_ENCODING_PER_BUYER, traceCookie);
             return FluentFuture.from(Futures.immediateFuture(null));
         }
@@ -140,11 +165,17 @@ public class PeriodicEncodingJobRunner {
 
         logHelper.setAdtech(buyer);
 
+        sLogger.v("runEncodingPerBuyer: beginning encoding of signals");
         return FluentFuture.from(
                         mScriptEngine.encodeSignals(
-                                encodingLogic, signals, mEncodedPayLoadMaxSizeBytes, logHelper))
+                                encodingLogic,
+                                signals,
+                                mEncodedPayLoadMaxSizeBytes,
+                                logHelper,
+                                mProtectedSignalsArgument))
                 .transform(
                         encodedPayload -> {
+                            sLogger.v("runEncodingPerBuyer: completed encoding of signals");
                             validateAndPersistPayload(
                                     encoderLogicMetadata, encodedPayload, version);
                             logHelper.setStatus(AdsRelevanceStatusUtils.JS_RUN_STATUS_SUCCESS);
