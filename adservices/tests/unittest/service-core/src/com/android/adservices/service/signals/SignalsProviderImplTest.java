@@ -59,7 +59,7 @@ public class SignalsProviderImplTest {
     }
 
     @Test
-    public void testEmptySignalsGet() {
+    public void test_getSignals_noSignalsForBuyer_returnsEmptyMap() {
         Mockito.when(mProtectedSignalsDao.getSignalsByBuyer(BUYER))
                 .thenReturn(Collections.emptyList());
 
@@ -68,7 +68,7 @@ public class SignalsProviderImplTest {
     }
 
     @Test
-    public void testSingleSignalGet() {
+    public void test_getSignals_oneSignal_returnsSignal() {
         String seed = "seed";
 
         List<DBProtectedSignal> dbProtectedSignalList =
@@ -90,7 +90,7 @@ public class SignalsProviderImplTest {
     }
 
     @Test
-    public void testSingleMultipleSignalsGet() {
+    public void test_getSignals_multipleSignals_returnsSignals() {
         String seed1 = "seed1";
         String seed2 = "seed2";
 

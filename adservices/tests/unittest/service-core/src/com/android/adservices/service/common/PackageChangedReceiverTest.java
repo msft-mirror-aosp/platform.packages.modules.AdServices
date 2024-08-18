@@ -54,7 +54,6 @@ import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.service.FakeFlagsFactory;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.consent.ConsentManager;
@@ -107,7 +106,6 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
     @Mock private AppInstallDao mAppInstallDaoMock;
     @Mock private FrequencyCapDao mFrequencyCapDaoMock;
     @Mock private ConsentManager mConsentManager;
-    @Mock private Flags mMockFlags;
 
     private TopicsWorker mSpyTopicsWorker;
 

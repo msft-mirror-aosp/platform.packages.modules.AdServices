@@ -95,7 +95,6 @@ public final class PeriodicEncodingJobWorker {
             EncoderLogicHandler encoderLogicHandler,
             EncoderLogicMetadataDao encoderLogicMetadataDao,
             EncodedPayloadDao encodedPayloadDao,
-            SignalsProviderImpl signalStorageManager,
             ProtectedSignalsDao protectedSignalsDao,
             SignalsScriptEngine scriptEngine,
             ListeningExecutorService backgroundExecutor,
@@ -117,7 +116,8 @@ public final class PeriodicEncodingJobWorker {
         mPerBuyerEncodingTimeoutMs = mFlags.getPasScriptExecutionTimeoutMs();
         mPeriodicEncodingJobRunner =
                 new PeriodicEncodingJobRunner(
-                        signalStorageManager,
+                        new SignalsProviderAndArgumentFactory(
+                                protectedSignalsDao, flags.getPasEncodingJobImprovementsEnabled()),
                         protectedSignalsDao,
                         scriptEngine,
                         mFlags.getProtectedSignalsMaxJsFailureExecutionOnCertainVersionBeforeStop(),
@@ -154,7 +154,6 @@ public final class PeriodicEncodingJobWorker {
                     new EncoderLogicHandler(context),
                     signalsDatabase.getEncoderLogicMetadataDao(),
                     signalsDatabase.getEncodedPayloadDao(),
-                    new SignalsProviderImpl(signalsDatabase.protectedSignalsDao()),
                     signalsDatabase.protectedSignalsDao(),
                     new SignalsScriptEngine(
                             flags::getIsolateMaxHeapSizeBytes,

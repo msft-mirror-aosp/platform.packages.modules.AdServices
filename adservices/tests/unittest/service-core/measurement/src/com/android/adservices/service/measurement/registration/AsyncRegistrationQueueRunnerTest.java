@@ -15,6 +15,9 @@
  */
 package com.android.adservices.service.measurement.registration;
 
+import static com.android.adservices.service.Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION;
+import static com.android.adservices.service.Flags.MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW;
+import static com.android.adservices.service.Flags.MEASUREMENT_MAX_REPORTING_ORIGINS_PER_SOURCE_REPORTING_SITE_PER_WINDOW;
 import static com.android.adservices.service.measurement.registration.AsyncRegistrationQueueRunner.ATTRIBUTION_FAKE_REPORT_ID;
 import static com.android.adservices.service.measurement.registration.AsyncRegistrationQueueRunner.InsertSourcePermission;
 import static com.android.adservices.service.measurement.registration.AsyncRegistrationQueueRunner.isTriggerAllowedToInsert;
@@ -202,7 +205,6 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     @Mock private ContentProviderClient mMockContentProviderClient;
     @Mock private DebugReportApi mDebugReportApi;
     @Mock private HttpsURLConnection mUrlConnection;
-    @Mock private Flags mFlags;
     @Mock private AdServicesLogger mLogger;
     @Mock private AdServicesErrorLogger mErrorLogger;
     @Mock private SourceNoiseHandler mSourceNoiseHandler;
@@ -244,7 +246,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
 
     @Before
     public void before() throws Exception {
-        mocker.mockGetFlags(mFlags);
+        mocker.mockGetFlags(mMockFlags);
         mDatastoreManager =
                 spy(
                         new SQLDatastoreManager(
@@ -260,54 +262,50 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         when(mContentResolver.acquireContentProviderClient(triggerUri))
                 .thenReturn(mMockContentProviderClient);
         when(mMockContentProviderClient.insert(any(), any())).thenReturn(triggerUri);
-        when(mFlags.getMeasurementMaxRegistrationRedirects()).thenReturn(20);
-        when(mFlags.getMeasurementMaxRegistrationsPerJobInvocation()).thenReturn(1);
-        when(mFlags.getMeasurementMaxRetriesPerRegistrationRequest()).thenReturn(5);
-        when(mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist()).thenReturn("");
-        when(mFlags.getMeasurementMaxSourcesPerPublisher())
+        when(mMockFlags.getMeasurementMaxRegistrationRedirects()).thenReturn(20);
+        when(mMockFlags.getMeasurementMaxRegistrationsPerJobInvocation()).thenReturn(1);
+        when(mMockFlags.getMeasurementMaxRetriesPerRegistrationRequest()).thenReturn(5);
+        when(mMockFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist()).thenReturn("");
+        when(mMockFlags.getMeasurementMaxSourcesPerPublisher())
                 .thenReturn(Flags.MEASUREMENT_MAX_SOURCES_PER_PUBLISHER);
-        when(mFlags.getMeasurementMaxTriggersPerDestination())
+        when(mMockFlags.getMeasurementMaxTriggersPerDestination())
                 .thenReturn(Flags.MEASUREMENT_MAX_TRIGGERS_PER_DESTINATION);
-        when(mFlags.getMeasurementMaxDistinctReportingOriginsInAttribution())
+        when(mMockFlags.getMeasurementMaxDistinctReportingOriginsInAttribution())
                 .thenReturn(Flags.MEASUREMENT_MAX_DISTINCT_REPORTING_ORIGINS_IN_ATTRIBUTION);
-        when(mFlags.getMeasurementMaxDistinctDestinationsInActiveSource())
+        when(mMockFlags.getMeasurementMaxDistinctDestinationsInActiveSource())
                 .thenReturn(Flags.MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE);
-        when(mFlags.getMeasurementMaxReportingOriginsPerSourceReportingSitePerWindow())
-                .thenReturn(Flags
-                        .MEASUREMENT_MAX_REPORTING_ORIGINS_PER_SOURCE_REPORTING_SITE_PER_WINDOW);
-        when(mFlags.getMeasurementMaxDistinctRepOrigPerPublXDestInSource())
+        when(mMockFlags.getMeasurementMaxReportingOriginsPerSourceReportingSitePerWindow())
+                .thenReturn(MEASUREMENT_MAX_REPORTING_ORIGINS_PER_SOURCE_REPORTING_SITE_PER_WINDOW);
+        when(mMockFlags.getMeasurementMaxDistinctRepOrigPerPublXDestInSource())
                 .thenReturn(Flags.MEASUREMENT_MAX_DISTINCT_REP_ORIG_PER_PUBLISHER_X_DEST_IN_SOURCE);
-        when(mFlags.getMeasurementEnableDestinationRateLimit())
+        when(mMockFlags.getMeasurementEnableDestinationRateLimit())
                 .thenReturn(Flags.MEASUREMENT_ENABLE_DESTINATION_RATE_LIMIT);
-        when(mFlags.getMeasurementMaxDestinationsPerPublisherPerRateLimitWindow())
-                .thenReturn(Flags
-                        .MEASUREMENT_MAX_DESTINATIONS_PER_PUBLISHER_PER_RATE_LIMIT_WINDOW);
-        when(mFlags.getMeasurementMaxDestPerPublisherXEnrollmentPerRateLimitWindow())
-                .thenReturn(Flags
-                        .MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW);
-        when(mFlags.getMeasurementDestinationRateLimitWindow())
+        when(mMockFlags.getMeasurementMaxDestinationsPerPublisherPerRateLimitWindow())
+                .thenReturn(Flags.MEASUREMENT_MAX_DESTINATIONS_PER_PUBLISHER_PER_RATE_LIMIT_WINDOW);
+        when(mMockFlags.getMeasurementMaxDestPerPublisherXEnrollmentPerRateLimitWindow())
+                .thenReturn(MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW);
+        when(mMockFlags.getMeasurementDestinationRateLimitWindow())
                 .thenReturn(Flags.MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW);
-        when(mFlags.getMeasurementFlexApiMaxInformationGainEvent())
+        when(mMockFlags.getMeasurementFlexApiMaxInformationGainEvent())
                 .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT);
-        when(mFlags.getMeasurementFlexApiMaxInformationGainNavigation())
+        when(mMockFlags.getMeasurementFlexApiMaxInformationGainNavigation())
                 .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION);
-        when(mFlags.getMeasurementFlexApiMaxInformationGainDualDestinationEvent())
+        when(mMockFlags.getMeasurementFlexApiMaxInformationGainDualDestinationEvent())
                 .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT);
-        when(mFlags.getMeasurementFlexApiMaxInformationGainDualDestinationNavigation())
-                .thenReturn(Flags
-                        .MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION);
-        when(mFlags.getMeasurementMaxReportStatesPerSourceRegistration())
+        when(mMockFlags.getMeasurementFlexApiMaxInformationGainDualDestinationNavigation())
+                .thenReturn(MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION);
+        when(mMockFlags.getMeasurementMaxReportStatesPerSourceRegistration())
                 .thenReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION);
-        when(mFlags.getMeasurementVtcConfigurableMaxEventReportsCount())
+        when(mMockFlags.getMeasurementVtcConfigurableMaxEventReportsCount())
                 .thenReturn(Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT);
-        when(mFlags.getMeasurementEventReportsVtcEarlyReportingWindows())
+        when(mMockFlags.getMeasurementEventReportsVtcEarlyReportingWindows())
                 .thenReturn(Flags.MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS);
-        when(mFlags.getMeasurementEventReportsCtcEarlyReportingWindows())
+        when(mMockFlags.getMeasurementEventReportsCtcEarlyReportingWindows())
                 .thenReturn(Flags.MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS);
-        when(mFlags.getMeasurementEnableUpdateTriggerHeaderLimit()).thenReturn(false);
-        when(mFlags.getMaxResponseBasedRegistrationPayloadSizeBytes())
+        when(mMockFlags.getMeasurementEnableUpdateTriggerHeaderLimit()).thenReturn(false);
+        when(mMockFlags.getMaxResponseBasedRegistrationPayloadSizeBytes())
                 .thenReturn(Flags.MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES);
-        when(mFlags.getMeasurementPrivacyEpsilon())
+        when(mMockFlags.getMeasurementPrivacyEpsilon())
                 .thenReturn(Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON);
         when(mMeasurementDao.insertSource(any())).thenReturn(DEFAULT_SOURCE_ID);
         when(mSpyContext.getPackageManager()).thenReturn(mPackageManager);
@@ -1145,7 +1143,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     public void runAsyncRegistrationQueueWorker_appInstalled_markToBeDeleted()
             throws DatastoreException, PackageManager.NameNotFoundException {
         // Setup
-        when(mFlags.getMeasurementEnablePreinstallCheck()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnablePreinstallCheck()).thenReturn(true);
         setUpApplicationStatus(List.of("com.destination", "com.destination2"), List.of());
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 new AsyncRegistrationQueueRunner(
@@ -1156,7 +1154,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         new FakeDatastoreManager(),
                         mDebugReportApi,
                         mSourceNoiseHandler,
-                        mFlags,
+                        mMockFlags,
                         mLogger);
 
         AsyncRegistration validAsyncRegistration = createAsyncRegistrationForAppSource();
@@ -1209,7 +1207,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     public void runAsyncRegistrationQueueWorker_appNotInstalled_markAsActive()
             throws DatastoreException, PackageManager.NameNotFoundException {
         // Setup
-        when(mFlags.getMeasurementEnablePreinstallCheck()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnablePreinstallCheck()).thenReturn(true);
         setUpApplicationStatus(List.of(), List.of("com.destination", "com.destination2"));
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 new AsyncRegistrationQueueRunner(
@@ -1220,7 +1218,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         new FakeDatastoreManager(),
                         mDebugReportApi,
                         mSourceNoiseHandler,
-                        mFlags,
+                        mMockFlags,
                         mLogger);
 
         AsyncRegistration validAsyncRegistration = createAsyncRegistrationForAppSource();
@@ -1272,7 +1270,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     public void runAsyncRegistrationQueueWorker_notDropSourceIfInstalled_markAsActive()
             throws DatastoreException, PackageManager.NameNotFoundException {
         // Setup
-        when(mFlags.getMeasurementEnablePreinstallCheck()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnablePreinstallCheck()).thenReturn(true);
         setUpApplicationStatus(List.of("com.destination2"), List.of("com.destination"));
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 new AsyncRegistrationQueueRunner(
@@ -1283,7 +1281,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         new FakeDatastoreManager(),
                         mDebugReportApi,
                         mSourceNoiseHandler,
-                        mFlags,
+                        mMockFlags,
                         mLogger);
 
         AsyncRegistration validAsyncRegistration = createAsyncRegistrationForAppSource();
@@ -1336,7 +1334,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
             runAsyncRegistrationQueueWorker_notDropSourceIfInstalledAndAppInstalled_markAsActive()
                     throws DatastoreException, PackageManager.NameNotFoundException {
         // Setup
-        when(mFlags.getMeasurementEnablePreinstallCheck()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnablePreinstallCheck()).thenReturn(true);
         setUpApplicationStatus(List.of("com.destination"), List.of("com.destination2"));
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 new AsyncRegistrationQueueRunner(
@@ -1347,7 +1345,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         new FakeDatastoreManager(),
                         mDebugReportApi,
                         mSourceNoiseHandler,
-                        mFlags,
+                        mMockFlags,
                         mLogger);
 
         AsyncRegistration validAsyncRegistration = createAsyncRegistrationForAppSource();
@@ -3050,9 +3048,9 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 getSpyAsyncRegistrationQueueRunner();
         int perDayRateLimit = 100;
-        when(mFlags.getMeasurementEnableDestinationPerDayRateLimitWindow()).thenReturn(true);
-        when(mFlags.getMeasurementDestinationPerDayRateLimit()).thenReturn(perDayRateLimit);
-        when(mFlags.getMeasurementDestinationPerDayRateLimitWindowInMs())
+        when(mMockFlags.getMeasurementEnableDestinationPerDayRateLimitWindow()).thenReturn(true);
+        when(mMockFlags.getMeasurementDestinationPerDayRateLimit()).thenReturn(perDayRateLimit);
+        when(mMockFlags.getMeasurementDestinationPerDayRateLimitWindowInMs())
                 .thenReturn(TimeUnit.DAYS.toMillis(1));
 
         // Execution
@@ -3145,9 +3143,9 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 getSpyAsyncRegistrationQueueRunner();
         int perDayRateLimit = 100;
-        when(mFlags.getMeasurementEnableDestinationPerDayRateLimitWindow()).thenReturn(true);
-        when(mFlags.getMeasurementDestinationPerDayRateLimit()).thenReturn(perDayRateLimit);
-        when(mFlags.getMeasurementDestinationPerDayRateLimitWindowInMs())
+        when(mMockFlags.getMeasurementEnableDestinationPerDayRateLimitWindow()).thenReturn(true);
+        when(mMockFlags.getMeasurementDestinationPerDayRateLimit()).thenReturn(perDayRateLimit);
+        when(mMockFlags.getMeasurementDestinationPerDayRateLimitWindowInMs())
                 .thenReturn(TimeUnit.DAYS.toMillis(1));
 
         // Execution
@@ -3249,9 +3247,9 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 getSpyAsyncRegistrationQueueRunner();
         int perDayRateLimit = 100;
-        when(mFlags.getMeasurementEnableDestinationPerDayRateLimitWindow()).thenReturn(false);
-        when(mFlags.getMeasurementDestinationPerDayRateLimit()).thenReturn(perDayRateLimit);
-        when(mFlags.getMeasurementDestinationPerDayRateLimitWindowInMs())
+        when(mMockFlags.getMeasurementEnableDestinationPerDayRateLimitWindow()).thenReturn(false);
+        when(mMockFlags.getMeasurementDestinationPerDayRateLimit()).thenReturn(perDayRateLimit);
+        when(mMockFlags.getMeasurementDestinationPerDayRateLimitWindowInMs())
                 .thenReturn(TimeUnit.DAYS.toMillis(1));
 
         // Execution
@@ -3334,7 +3332,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
                         any(), anyInt(), any(), any(), anyLong(), anyLong()))
                 .thenReturn(0);
-        when(mFlags.getMeasurementMaxDestPerPublisherXEnrollmentPerRateLimitWindow())
+        when(mMockFlags.getMeasurementMaxDestPerPublisherXEnrollmentPerRateLimitWindow())
                 .thenReturn(200);
 
         // Assert
@@ -3637,7 +3635,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         new AsyncSourceFetcher(
                                 sContext,
                                 mEnrollmentDao,
-                                mFlags,
+                                mMockFlags,
                                 mDatastoreManager,
                                 mDebugReportApi));
         WebSourceRegistrationRequest request =
@@ -3646,7 +3644,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         WEB_TOP_ORIGIN.toString(),
                         DEFAULT_OS_DESTINATION,
                         DEFAULT_WEB_DESTINATION);
-        when(mFlags.getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist()).thenReturn("");
+        when(mMockFlags.getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist())
+                .thenReturn("");
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
@@ -3676,7 +3675,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 mDatastoreManager,
                                 mDebugReportApi,
                                 mSourceNoiseHandler,
-                                mFlags,
+                                mMockFlags,
                                 mLogger));
         ArgumentCaptor<DatastoreManager.ThrowingCheckedConsumer> consumerArgCaptor =
                 ArgumentCaptor.forClass(DatastoreManager.ThrowingCheckedConsumer.class);
@@ -3714,7 +3713,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     @Test
     public void isSourceAllowedToInsert_flexEventApiValidNav_pass()
             throws DatastoreException, JSONException {
-        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+        when(mMockFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
         // setup
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2, 3, 4],"
@@ -3779,7 +3778,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     public void areValidSourcePrivacyParameters_flexEventApiInvalidEventExceedMaxInfoGain_fail()
             throws DatastoreException, JSONException {
         // setup
-        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+        when(mMockFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2, 3, 4, 5, 6, 7, 8],"
                         + "\"event_report_windows\": { "
@@ -3820,12 +3819,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
 
         // Execution
         assertFalse(
-                asyncRegistrationQueueRunner
-                        .areValidSourcePrivacyParameters(
-                                testSource,
-                                mDebugReportApi,
-                                mMeasurementDao,
-                                mFlags));
+                asyncRegistrationQueueRunner.areValidSourcePrivacyParameters(
+                        testSource, mDebugReportApi, mMeasurementDao, mMockFlags));
     }
 
     @Test
@@ -3833,7 +3828,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
             areValidSourcePrivacyParameters_flexEventApiInvalidEventExceedNumStatesArithmetic_fail()
                    throws DatastoreException, JSONException {
         // setup
-        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+        when(mMockFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
         // Info gain is effectively zero, the failure is for exceeding the number of report states.
         String triggerSpecsString =
                 "[{\"trigger_data\": [0, 1, 2, 3, 4, 5, 6, 7],"
@@ -3848,7 +3843,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 TimeUnit.DAYS.toSeconds(30))
                         + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "
-                                + "11, 12, 13, 14, 15, 16, 17, 18, 19, 20]}]";
+                        + "11, 12, 13, 14, 15, 16, 17, 18, 19, 20]}]";
         TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
         int maxEventLevelReports = 20;
         Source testSource =
@@ -3878,12 +3873,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
 
         // Execution
         assertFalse(
-                asyncRegistrationQueueRunner
-                        .areValidSourcePrivacyParameters(
-                                testSource,
-                                mDebugReportApi,
-                                mMeasurementDao,
-                                mFlags));
+                asyncRegistrationQueueRunner.areValidSourcePrivacyParameters(
+                        testSource, mDebugReportApi, mMeasurementDao, mMockFlags));
     }
 
     @Test
@@ -3891,37 +3882,37 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
             areValidSourcePrivacyParameters_flexEventApiInvalidEventExceedNumStatesIterative_fail()
                     throws DatastoreException, JSONException {
         // setup
-        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+        when(mMockFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
         // Info gain is effectively zero, the failure is for exceeding the number of report states.
         // Different report caps and/or windows for different trigger data obliges the iterative
         // state calculation method.
         String triggerSpecsString =
                 "["
                         + "{\"trigger_data\": [0, 1, 2, 3],"
-                                + "\"event_report_windows\": { "
-                                + "\"start_time\": \"0\", "
-                                + String.format(
-                                        "\"end_times\": [%s, %s, %s, %s, %s]}, ",
-                                        TimeUnit.DAYS.toSeconds(2),
-                                        TimeUnit.DAYS.toSeconds(5),
-                                        TimeUnit.DAYS.toSeconds(7),
-                                        TimeUnit.DAYS.toSeconds(11),
-                                        TimeUnit.DAYS.toSeconds(30))
-                                + "\"summary_operator\": \"count\", "
-                                + "\"summary_buckets\": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "
-                                        + "11, 12, 13, 14, 15, 16, 17, 18, 19, 20]},"
+                        + "\"event_report_windows\": { "
+                        + "\"start_time\": \"0\", "
+                        + String.format(
+                                "\"end_times\": [%s, %s, %s, %s, %s]}, ",
+                                TimeUnit.DAYS.toSeconds(2),
+                                TimeUnit.DAYS.toSeconds(5),
+                                TimeUnit.DAYS.toSeconds(7),
+                                TimeUnit.DAYS.toSeconds(11),
+                                TimeUnit.DAYS.toSeconds(30))
+                        + "\"summary_operator\": \"count\", "
+                        + "\"summary_buckets\": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "
+                        + "11, 12, 13, 14, 15, 16, 17, 18, 19, 20]},"
                         + "{\"trigger_data\": [4, 5, 6, 7],"
-                                + "\"event_report_windows\": { "
-                                + "\"start_time\": \"0\", "
-                                + String.format(
-                                        "\"end_times\": [%s, %s, %s, %s]}, ",
-                                        TimeUnit.DAYS.toSeconds(5),
-                                        TimeUnit.DAYS.toSeconds(7),
-                                        TimeUnit.DAYS.toSeconds(11),
-                                        TimeUnit.DAYS.toSeconds(30))
-                                + "\"summary_operator\": \"count\", "
-                                + "\"summary_buckets\": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "
-                                        + "11, 12, 13, 14, 15, 16, 17, 18, 19]}]";
+                        + "\"event_report_windows\": { "
+                        + "\"start_time\": \"0\", "
+                        + String.format(
+                                "\"end_times\": [%s, %s, %s, %s]}, ",
+                                TimeUnit.DAYS.toSeconds(5),
+                                TimeUnit.DAYS.toSeconds(7),
+                                TimeUnit.DAYS.toSeconds(11),
+                                TimeUnit.DAYS.toSeconds(30))
+                        + "\"summary_operator\": \"count\", "
+                        + "\"summary_buckets\": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "
+                        + "11, 12, 13, 14, 15, 16, 17, 18, 19]}]";
         TriggerSpec[] triggerSpecsArray = TriggerSpecsUtil.triggerSpecArrayFrom(triggerSpecsString);
         int maxEventLevelReports = 20;
         Source testSource =
@@ -3951,12 +3942,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
 
         // Execution
         assertFalse(
-                asyncRegistrationQueueRunner
-                        .areValidSourcePrivacyParameters(
-                                testSource,
-                                mDebugReportApi,
-                                mMeasurementDao,
-                                mFlags));
+                asyncRegistrationQueueRunner.areValidSourcePrivacyParameters(
+                        testSource, mDebugReportApi, mMeasurementDao, mMockFlags));
     }
 
     @Test
@@ -3964,9 +3951,9 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
             areValidSourcePrivacyParameters_fullFlexHighBoundStateCountIterative_catchesException()
                     throws DatastoreException, JSONException {
         // setup
-        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+        when(mMockFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
         // Allow the iterative calculation to overflow
-        when(mFlags.getMeasurementMaxReportStatesPerSourceRegistration())
+        when(mMockFlags.getMeasurementMaxReportStatesPerSourceRegistration())
                 .thenReturn(Long.MAX_VALUE - 1L);
         // Info gain is effectively zero, the failure is for exceeding the number of report states.
         // Different report caps and/or windows for different trigger data obliges the iterative
@@ -4029,12 +4016,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
 
         // Execution
         assertFalse(
-                asyncRegistrationQueueRunner
-                        .areValidSourcePrivacyParameters(
-                                testSource,
-                                mDebugReportApi,
-                                mMeasurementDao,
-                                mFlags));
+                asyncRegistrationQueueRunner.areValidSourcePrivacyParameters(
+                        testSource, mDebugReportApi, mMeasurementDao, mMockFlags));
     }
 
     @Test
@@ -4068,12 +4051,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
 
         // Execution
         assertFalse(
-                asyncRegistrationQueueRunner
-                        .areValidSourcePrivacyParameters(
-                                testSource,
-                                mDebugReportApi,
-                                mMeasurementDao,
-                                mFlags));
+                asyncRegistrationQueueRunner.areValidSourcePrivacyParameters(
+                        testSource, mDebugReportApi, mMeasurementDao, mMockFlags));
     }
 
     @Test
@@ -4129,7 +4108,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     public void areValidSourcePrivacyParameters_flexEventApiValidV1ParamsNavExceedMaxInfoGain_fail()
             throws DatastoreException, JSONException {
         // setup
-        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+        when(mMockFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2, 3, 4, 5, 6, 7, 8],"
                         + "\"event_report_windows\": { "
@@ -4169,12 +4148,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
 
         // Execution
         assertFalse(
-                asyncRegistrationQueueRunner
-                        .areValidSourcePrivacyParameters(
-                                testSource,
-                                mDebugReportApi,
-                                mMeasurementDao,
-                                mFlags));
+                asyncRegistrationQueueRunner.areValidSourcePrivacyParameters(
+                        testSource, mDebugReportApi, mMeasurementDao, mMockFlags));
     }
 
     @Test
@@ -4182,7 +4157,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
             areValidSourcePrivacyParameters_flexEventApiValidV1NavNearBoundaryDualDestination_fail()
                     throws DatastoreException, JSONException {
         // setup
-        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+        when(mMockFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2, 3, 4, 5, 6, 7, 8],"
                         + "\"event_report_windows\": { "
@@ -4223,19 +4198,15 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
 
         // Execution
         assertFalse(
-                asyncRegistrationQueueRunner
-                        .areValidSourcePrivacyParameters(
-                                testSource,
-                                mDebugReportApi,
-                                mMeasurementDao,
-                                mFlags));
+                asyncRegistrationQueueRunner.areValidSourcePrivacyParameters(
+                        testSource, mDebugReportApi, mMeasurementDao, mMockFlags));
     }
 
     @Test
     public void isSourceAllowedToInsert_flexEventApiValidV1NavNearBoundary_pass()
             throws DatastoreException, JSONException {
         // setup
-        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+        when(mMockFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2, 3, 4, 5, 6, 7, 8],"
                         + "\"event_report_windows\": { "
@@ -4297,7 +4268,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     public void isSourceAllowedToInsert_flexEventApiV1ParamEventNearBoundary_pass()
             throws DatastoreException, JSONException {
         // setup
-        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+        when(mMockFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
         String triggerSpecsString =
                 "[{\"trigger_data\": [1, 2],"
                         + "\"event_report_windows\": { "
@@ -4356,7 +4327,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     public void isSourceAllowedToInsert_existsNavigationWithSameReportingOrigin_returnsFalse()
             throws DatastoreException {
         // setup
-        when(mFlags.getMeasurementEnableNavigationReportingOriginCheck()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableNavigationReportingOriginCheck()).thenReturn(true);
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 getSpyAsyncRegistrationQueueRunner();
 
@@ -4398,8 +4369,9 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         anyLong()))
                 .thenReturn(0);
         when(mMeasurementDao.getNumSourcesPerPublisher(any(), anyInt())).thenReturn(0L);
-        when(mFlags.getMeasurementEnableFifoDestinationsDeleteAggregateReports()).thenReturn(true);
-        when(mFlags.getMeasurementMaxDistinctDestinationsInActiveSource()).thenReturn(5);
+        when(mMockFlags.getMeasurementEnableFifoDestinationsDeleteAggregateReports())
+                .thenReturn(true);
+        when(mMockFlags.getMeasurementMaxDistinctDestinationsInActiveSource()).thenReturn(5);
         when(mMeasurementDao.countNavigationSourcesPerReportingOrigin(any(), any())).thenReturn(1L);
         // For app destination
         when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
@@ -4482,8 +4454,9 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         anyLong()))
                 .thenReturn(0);
         when(mMeasurementDao.getNumSourcesPerPublisher(any(), anyInt())).thenReturn(0L);
-        when(mFlags.getMeasurementEnableFifoDestinationsDeleteAggregateReports()).thenReturn(true);
-        when(mFlags.getMeasurementMaxDistinctDestinationsInActiveSource()).thenReturn(5);
+        when(mMockFlags.getMeasurementEnableFifoDestinationsDeleteAggregateReports())
+                .thenReturn(true);
+        when(mMockFlags.getMeasurementMaxDistinctDestinationsInActiveSource()).thenReturn(5);
         when(mMeasurementDao.countNavigationSourcesPerReportingOrigin(any(), any())).thenReturn(1L);
         // For app destination
         when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
@@ -4562,8 +4535,9 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         anyLong()))
                 .thenReturn(0);
         when(mMeasurementDao.getNumSourcesPerPublisher(any(), anyInt())).thenReturn(0L);
-        when(mFlags.getMeasurementEnableFifoDestinationsDeleteAggregateReports()).thenReturn(true);
-        when(mFlags.getMeasurementMaxDistinctDestinationsInActiveSource()).thenReturn(5);
+        when(mMockFlags.getMeasurementEnableFifoDestinationsDeleteAggregateReports())
+                .thenReturn(true);
+        when(mMockFlags.getMeasurementMaxDistinctDestinationsInActiveSource()).thenReturn(5);
         when(mMeasurementDao.countNavigationSourcesPerReportingOrigin(any(), any())).thenReturn(1L);
         // For app destination
         when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
@@ -4670,8 +4644,9 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         anyLong()))
                 .thenReturn(0);
         when(mMeasurementDao.getNumSourcesPerPublisher(any(), anyInt())).thenReturn(0L);
-        when(mFlags.getMeasurementEnableFifoDestinationsDeleteAggregateReports()).thenReturn(false);
-        when(mFlags.getMeasurementMaxDistinctDestinationsInActiveSource()).thenReturn(5);
+        when(mMockFlags.getMeasurementEnableFifoDestinationsDeleteAggregateReports())
+                .thenReturn(false);
+        when(mMockFlags.getMeasurementMaxDistinctDestinationsInActiveSource()).thenReturn(5);
         when(mMeasurementDao.countNavigationSourcesPerReportingOrigin(any(), any())).thenReturn(1L);
         // For app destination
         when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
@@ -4762,7 +4737,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         new FakeDatastoreManager(),
                         mDebugReportApi,
                         mSourceNoiseHandler,
-                        mFlags,
+                        mMockFlags,
                         mLogger);
         Source sourceToInsert =
                 SourceFixture.getValidSourceBuilder()
@@ -4791,9 +4766,10 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         anyLong()))
                 .thenReturn(0);
         when(mMeasurementDao.getNumSourcesPerPublisher(any(), anyInt())).thenReturn(0L);
-        when(mFlags.getMeasurementEnableFifoDestinationsDeleteAggregateReports()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableFifoDestinationsDeleteAggregateReports())
+                .thenReturn(true);
         // Destinations are 4 vs the limit is 3
-        when(mFlags.getMeasurementMaxDistinctDestinationsInActiveSource()).thenReturn(3);
+        when(mMockFlags.getMeasurementMaxDistinctDestinationsInActiveSource()).thenReturn(3);
         when(mMeasurementDao.countNavigationSourcesPerReportingOrigin(any(), any())).thenReturn(1L);
 
         // Execution
@@ -4833,9 +4809,10 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         anyLong()))
                 .thenReturn(0);
         when(mMeasurementDao.getNumSourcesPerPublisher(any(), anyInt())).thenReturn(0L);
-        when(mFlags.getMeasurementEnableFifoDestinationsDeleteAggregateReports()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableFifoDestinationsDeleteAggregateReports())
+                .thenReturn(true);
         // 1 app destination vs the limit = 100
-        when(mFlags.getMeasurementMaxDistinctDestinationsInActiveSource()).thenReturn(100);
+        when(mMockFlags.getMeasurementMaxDistinctDestinationsInActiveSource()).thenReturn(100);
         when(mMeasurementDao.countNavigationSourcesPerReportingOrigin(any(), any())).thenReturn(1L);
         when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                         eq(sourceToInsert.getPublisher()),
@@ -4899,9 +4876,10 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         anyLong()))
                 .thenReturn(0);
         when(mMeasurementDao.getNumSourcesPerPublisher(any(), anyInt())).thenReturn(0L);
-        when(mFlags.getMeasurementEnableFifoDestinationsDeleteAggregateReports()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableFifoDestinationsDeleteAggregateReports())
+                .thenReturn(true);
         // Destinations are 4 vs the limit is 100
-        when(mFlags.getMeasurementMaxDistinctDestinationsInActiveSource()).thenReturn(100);
+        when(mMockFlags.getMeasurementMaxDistinctDestinationsInActiveSource()).thenReturn(100);
         when(mMeasurementDao.countNavigationSourcesPerReportingOrigin(any(), any())).thenReturn(1L);
         when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
                         eq(sourceToInsert.getPublisher()),
@@ -4964,8 +4942,10 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         anyLong()))
                 .thenReturn(0);
         when(mMeasurementDao.getNumSourcesPerPublisher(any(), anyInt())).thenReturn(0L);
-        when(mFlags.getMeasurementEnableFifoDestinationsDeleteAggregateReports()).thenReturn(true);
-        when(mFlags.getMeasurementMaxDistinctDestinationsInActiveSource()).thenReturn(fifoLimit);
+        when(mMockFlags.getMeasurementEnableFifoDestinationsDeleteAggregateReports())
+                .thenReturn(true);
+        when(mMockFlags.getMeasurementMaxDistinctDestinationsInActiveSource())
+                .thenReturn(fifoLimit);
         when(mMeasurementDao.countNavigationSourcesPerReportingOrigin(any(), any())).thenReturn(1L);
         // For app destination
         when(mMeasurementDao.countDistinctDestinationsPerPubXEnrollmentInUnexpiredSource(
@@ -5036,7 +5016,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     public void isSourceAllowedToInsert_existsEventWithSameReportingOrigin_returnsTrue()
             throws DatastoreException {
         // setup
-        when(mFlags.getMeasurementEnableNavigationReportingOriginCheck()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableNavigationReportingOriginCheck()).thenReturn(true);
         when(mMeasurementDao.countNavigationSourcesPerReportingOrigin(any(), any())).thenReturn(1L);
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 new AsyncRegistrationQueueRunner(
@@ -5047,7 +5027,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         new FakeDatastoreManager(),
                         mDebugReportApi,
                         mSourceNoiseHandler,
-                        mFlags,
+                        mMockFlags,
                         mLogger);
 
         // Execution
@@ -5067,10 +5047,10 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     public void areValidSourcePrivacyParameters_maxEventStatesTooSmall_fail()
             throws DatastoreException {
         // setup
-        when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
-        when(mFlags.getMeasurementAttributionScopeMaxInfoGainNavigation())
+        when(mMockFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
+        when(mMockFlags.getMeasurementAttributionScopeMaxInfoGainNavigation())
                 .thenReturn(Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION);
-        when(mFlags.getMeasurementAttributionScopeMaxInfoGainEvent())
+        when(mMockFlags.getMeasurementAttributionScopeMaxInfoGainEvent())
                 .thenReturn(Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT);
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 getSpyAsyncRegistrationQueueRunner();
@@ -5094,12 +5074,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         .setMaxEventStates(2L)
                         .build();
         assertFalse(
-                asyncRegistrationQueueRunner
-                        .areValidSourcePrivacyParameters(
-                                source,
-                                mDebugReportApi,
-                                mMeasurementDao,
-                                mFlags));
+                asyncRegistrationQueueRunner.areValidSourcePrivacyParameters(
+                        source, mDebugReportApi, mMeasurementDao, mMockFlags));
 
         // Assertions
         verify(mDebugReportApi)
@@ -5112,10 +5088,10 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     @Test
     public void isSourceAllowedToInsert_maxEventStatesValid_pass() throws DatastoreException {
         // setup
-        when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
-        when(mFlags.getMeasurementAttributionScopeMaxInfoGainNavigation())
+        when(mMockFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
+        when(mMockFlags.getMeasurementAttributionScopeMaxInfoGainNavigation())
                 .thenReturn(Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION);
-        when(mFlags.getMeasurementAttributionScopeMaxInfoGainEvent())
+        when(mMockFlags.getMeasurementAttributionScopeMaxInfoGainEvent())
                 .thenReturn(Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT);
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 getSpyAsyncRegistrationQueueRunner();
@@ -5173,10 +5149,10 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     public void areValidSourcePrivacyParameters_eventMaxEventStatesValidInfoGainTooHigh_fail()
             throws DatastoreException {
         // setup
-        when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
-        when(mFlags.getMeasurementAttributionScopeMaxInfoGainNavigation())
+        when(mMockFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
+        when(mMockFlags.getMeasurementAttributionScopeMaxInfoGainNavigation())
                 .thenReturn(Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION);
-        when(mFlags.getMeasurementAttributionScopeMaxInfoGainEvent())
+        when(mMockFlags.getMeasurementAttributionScopeMaxInfoGainEvent())
                 .thenReturn(Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT);
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 getSpyAsyncRegistrationQueueRunner();
@@ -5203,12 +5179,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
 
         // Assertions
         assertFalse(
-                asyncRegistrationQueueRunner
-                        .areValidSourcePrivacyParameters(
-                                source,
-                                mDebugReportApi,
-                                mMeasurementDao,
-                                mFlags));
+                asyncRegistrationQueueRunner.areValidSourcePrivacyParameters(
+                        source, mDebugReportApi, mMeasurementDao, mMockFlags));
         verify(mDebugReportApi)
                 .scheduleAttributionScopeDebugReport(
                         any(),
@@ -5220,10 +5192,10 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     public void areValidSourcePrivacyParameters_navigationMaxEventStatesValidInfoGainTooHigh_fail()
             throws DatastoreException {
         // setup
-        when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
-        when(mFlags.getMeasurementAttributionScopeMaxInfoGainNavigation())
+        when(mMockFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
+        when(mMockFlags.getMeasurementAttributionScopeMaxInfoGainNavigation())
                 .thenReturn(Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION);
-        when(mFlags.getMeasurementAttributionScopeMaxInfoGainEvent())
+        when(mMockFlags.getMeasurementAttributionScopeMaxInfoGainEvent())
                 .thenReturn(Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT);
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 getSpyAsyncRegistrationQueueRunner();
@@ -5248,12 +5220,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         .setMaxEventStates(6L)
                         .build();
         assertFalse(
-                asyncRegistrationQueueRunner
-                        .areValidSourcePrivacyParameters(
-                                source,
-                                mDebugReportApi,
-                                mMeasurementDao,
-                                mFlags));
+                asyncRegistrationQueueRunner.areValidSourcePrivacyParameters(
+                        source, mDebugReportApi, mMeasurementDao, mMockFlags));
 
         // Assertions
         verify(mDebugReportApi)
@@ -5267,12 +5235,12 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     public void areValidSourcePrivacyParameters_navigationDualDestinationInfoGainTooHigh_fail()
             throws DatastoreException {
         // setup
-        when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
-        when(mFlags.getMeasurementFlexApiMaxInformationGainDualDestinationNavigation())
+        when(mMockFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
+        when(mMockFlags.getMeasurementFlexApiMaxInformationGainDualDestinationNavigation())
                 .thenReturn(14.5f);
-        when(mFlags.getMeasurementAttributionScopeMaxInfoGainDualDestinationNavigation())
+        when(mMockFlags.getMeasurementAttributionScopeMaxInfoGainDualDestinationNavigation())
                 .thenReturn(14.5f);
-        when(mFlags.getMeasurementAttributionScopeMaxInfoGainDualDestinationEvent())
+        when(mMockFlags.getMeasurementAttributionScopeMaxInfoGainDualDestinationEvent())
                 .thenReturn(
                         Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_EVENT);
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
@@ -5300,12 +5268,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         .setMaxEventStates(1000L)
                         .build();
         assertFalse(
-                asyncRegistrationQueueRunner
-                        .areValidSourcePrivacyParameters(
-                                source,
-                                mDebugReportApi,
-                                mMeasurementDao,
-                                mFlags));
+                asyncRegistrationQueueRunner.areValidSourcePrivacyParameters(
+                        source, mDebugReportApi, mMeasurementDao, mMockFlags));
 
         // Assertions
         verify(mDebugReportApi)
@@ -5319,12 +5283,12 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     public void isSourceAllowedToInsert_navigationDualDestinationValidInfoGain_pass()
             throws DatastoreException {
         // setup
-        when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
-        when(mFlags.getMeasurementFlexApiMaxInformationGainDualDestinationNavigation())
+        when(mMockFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
+        when(mMockFlags.getMeasurementFlexApiMaxInformationGainDualDestinationNavigation())
                 .thenReturn(14.5f);
-        when(mFlags.getMeasurementAttributionScopeMaxInfoGainDualDestinationNavigation())
+        when(mMockFlags.getMeasurementAttributionScopeMaxInfoGainDualDestinationNavigation())
                 .thenReturn(14.5f);
-        when(mFlags.getMeasurementAttributionScopeMaxInfoGainDualDestinationEvent())
+        when(mMockFlags.getMeasurementAttributionScopeMaxInfoGainDualDestinationEvent())
                 .thenReturn(
                         Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_EVENT);
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
@@ -5386,17 +5350,16 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     public void areValidSourcePrivacyParameters_newAttributionScopesSameRegistration_fail()
             throws DatastoreException {
         // setup
-        when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
-        when(mFlags.getMeasurementAttributionScopeMaxInfoGainNavigation())
+        when(mMockFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
+        when(mMockFlags.getMeasurementAttributionScopeMaxInfoGainNavigation())
                 .thenReturn(Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION);
-        when(mFlags.getMeasurementAttributionScopeMaxInfoGainEvent())
+        when(mMockFlags.getMeasurementAttributionScopeMaxInfoGainEvent())
                 .thenReturn(Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT);
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 getSpyAsyncRegistrationQueueRunner();
 
         // Execution
-        when(mMeasurementDao.getNavigationAttributionScopesForRegistration(
-                        any(), any(), anyInt(), any()))
+        when(mMeasurementDao.getNavigationAttributionScopesForRegistration(any(), any()))
                 .thenReturn(Set.of("1", "2", "3"));
 
         Source source =
@@ -5417,33 +5380,28 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         .setMaxEventStates(3L)
                         .build();
         assertFalse(
-                asyncRegistrationQueueRunner
-                        .areValidSourcePrivacyParameters(
-                                source,
-                                mDebugReportApi,
-                                mMeasurementDao,
-                                mFlags));
+                asyncRegistrationQueueRunner.areValidSourcePrivacyParameters(
+                        source, mDebugReportApi, mMeasurementDao, mMockFlags));
 
         // Assertions
         verify(mMeasurementDao, times(1))
-                .getNavigationAttributionScopesForRegistration(any(), any(), anyInt(), any());
+                .getNavigationAttributionScopesForRegistration(any(), any());
     }
 
     @Test
     public void areValidSourcePrivacyParameters_existingAttributionScopesSameRegistration_pass()
             throws DatastoreException {
         // setup
-        when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
-        when(mFlags.getMeasurementAttributionScopeMaxInfoGainNavigation())
+        when(mMockFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
+        when(mMockFlags.getMeasurementAttributionScopeMaxInfoGainNavigation())
                 .thenReturn(Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION);
-        when(mFlags.getMeasurementAttributionScopeMaxInfoGainEvent())
+        when(mMockFlags.getMeasurementAttributionScopeMaxInfoGainEvent())
                 .thenReturn(Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT);
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 getSpyAsyncRegistrationQueueRunner();
 
         // Execution
-        when(mMeasurementDao.getNavigationAttributionScopesForRegistration(
-                        any(), any(), anyInt(), any()))
+        when(mMeasurementDao.getNavigationAttributionScopesForRegistration(any(), any()))
                 .thenReturn(Set.of("1", "2", "3"));
 
         Source source =
@@ -5464,26 +5422,22 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         .setMaxEventStates(3L)
                         .build();
         assertTrue(
-                asyncRegistrationQueueRunner
-                        .areValidSourcePrivacyParameters(
-                                source,
-                                mDebugReportApi,
-                                mMeasurementDao,
-                                mFlags));
+                asyncRegistrationQueueRunner.areValidSourcePrivacyParameters(
+                        source, mDebugReportApi, mMeasurementDao, mMockFlags));
 
         // Assertions
         verify(mMeasurementDao, times(1))
-                .getNavigationAttributionScopesForRegistration(any(), any(), anyInt(), any());
+                .getNavigationAttributionScopesForRegistration(any(), any());
     }
 
     @Test
     public void runAsyncRegistrationQueueWorker_attributionScopeEnabled_updateSources()
             throws DatastoreException {
         // Setup
-        when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
-        when(mFlags.getMeasurementAttributionScopeMaxInfoGainNavigation())
+        when(mMockFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
+        when(mMockFlags.getMeasurementAttributionScopeMaxInfoGainNavigation())
                 .thenReturn(Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION);
-        when(mFlags.getMeasurementAttributionScopeMaxInfoGainEvent())
+        when(mMockFlags.getMeasurementAttributionScopeMaxInfoGainEvent())
                 .thenReturn(Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT);
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 getSpyAsyncRegistrationQueueRunner();
@@ -5545,7 +5499,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     public void runAsyncRegistrationQueueWorker_attributionScopeDisabled_doNotUpdateSources()
             throws DatastoreException {
         // Setup
-        when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableAttributionScope()).thenReturn(false);
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 getSpyAsyncRegistrationQueueRunner();
 
@@ -5606,8 +5560,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
             throws DatastoreException {
         // Setup
         int limit = 5;
-        when(mFlags.getMeasurementMaxDistinctDestinationsInActiveSource()).thenReturn(limit);
-        when(mFlags.getMeasurementEnableSourceDestinationLimitPriority()).thenReturn(true);
+        when(mMockFlags.getMeasurementMaxDistinctDestinationsInActiveSource()).thenReturn(limit);
+        when(mMockFlags.getMeasurementEnableSourceDestinationLimitPriority()).thenReturn(true);
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 getSpyAsyncRegistrationQueueRunner();
         doReturn(InsertSourcePermission.ALLOWED_FIFO_SUCCESS)
@@ -5635,8 +5589,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
             throws DatastoreException {
         // Setup
         int limit = 5;
-        when(mFlags.getMeasurementMaxDistinctDestinationsInActiveSource()).thenReturn(limit);
-        when(mFlags.getMeasurementEnableSourceDestinationLimitPriority()).thenReturn(false);
+        when(mMockFlags.getMeasurementMaxDistinctDestinationsInActiveSource()).thenReturn(limit);
+        when(mMockFlags.getMeasurementEnableSourceDestinationLimitPriority()).thenReturn(false);
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 getSpyAsyncRegistrationQueueRunner();
         // It's infeasible that isSourceAllowedToInsert returns ALLOWED_FIFO_SUCCESS when FIFO is
@@ -5664,7 +5618,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
             throws DatastoreException {
         // Setup
         int limit = 5;
-        when(mFlags.getMeasurementMaxDistinctDestinationsInActiveSource()).thenReturn(limit);
+        when(mMockFlags.getMeasurementMaxDistinctDestinationsInActiveSource()).thenReturn(limit);
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 getSpyAsyncRegistrationQueueRunner();
         doReturn(InsertSourcePermission.ALLOWED)
@@ -5768,7 +5722,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         x ->
                                 new Source.FakeReport(
                                         new UnsignedLong(0L),
-                                        new EventReportWindowCalcDelegate(mFlags)
+                                        new EventReportWindowCalcDelegate(mMockFlags)
                                                 .getReportingTimeForNoising(source, 0),
                                         source.getEventTime(),
                                         destinations,
@@ -5862,7 +5816,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         new FakeDatastoreManager(),
                         mDebugReportApi,
                         mSourceNoiseHandler,
-                        mFlags,
+                        mMockFlags,
                         mLogger));
     }
 

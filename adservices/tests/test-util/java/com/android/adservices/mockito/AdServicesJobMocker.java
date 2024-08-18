@@ -38,4 +38,20 @@ public interface AdServicesJobMocker {
 
     /** Gets a spied instance of {@link AdServicesJobServiceLogger}. */
     AdServicesJobServiceLogger getSpiedAdServicesJobServiceLogger(Context context, Flags flags);
+
+    /**
+     * Mocks {@link AdServicesJobServiceLogger#getInstance()} to return a mocked logger.
+     *
+     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
+     *     equivalent annotations) on {@link AdServicesJobServiceLogger}.
+     */
+    void mockGetAdServicesJobServiceLogger(AdServicesJobServiceLogger logger);
+
+    /**
+     * Mocks {@link AdServicesJobServiceLogger} to not actually log the stats to server.
+     *
+     * @throws IllegalStateException if test didn't call {@code spyStatic} / {@code mockStatic} (or
+     *     equivalent annotations) on {@link AdServicesJobServiceLogger}.
+     */
+    AdServicesJobServiceLogger mockNoOpAdServicesJobServiceLogger(Context context, Flags flags);
 }

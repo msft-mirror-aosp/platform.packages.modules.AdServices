@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.signals;
 
-import static com.android.adservices.mockito.MockitoExpectations.mockLogApiCallStats;
 import static com.android.adservices.service.common.Throttler.ApiKey.PROTECTED_SIGNAL_API_UPDATE_SIGNALS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JSON_PROCESSING_STATUS_OTHER_ERROR;
@@ -101,13 +100,13 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
     private ProtectedSignalsServiceImpl mProtectedSignalsService;
     private DevContext mDevContext;
     private UpdateSignalsInput mInput;
-    private Flags mFlags;
+    private Flags mFakeFlags;
     private ResultSyncCallback<ApiCallStats> logApiCallStatsCallback;
 
     @Before
     public void setup() {
-        mFlags = new ProtectedSignalsServiceImplTestFlags();
-        logApiCallStatsCallback = mockLogApiCallStats(mAdServicesLoggerMock);
+        mFakeFlags = new ProtectedSignalsServiceImplTestFlags();
+        logApiCallStatsCallback = mocker.mockLogApiCallStats(mAdServicesLoggerMock);
 
         mProtectedSignalsService =
                 new ProtectedSignalsServiceImpl(
@@ -118,7 +117,7 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
                         mDevContextFilterMock,
                         DIRECT_EXECUTOR,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFakeFlags,
                         mCallingAppUidSupplierMock,
                         mProtectedSignalsServiceFilterMock,
                         mEnrollmentDaoMock);

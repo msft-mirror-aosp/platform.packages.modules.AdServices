@@ -28,6 +28,8 @@ import java.util.concurrent.ThreadLocalRandom;
 public final class Tracing {
     public static final String DB_CUSTOM_AUDIENCE_TO_JSON = "DBCustomAudience#toJson";
     public static final String DB_CUSTOM_AUDIENCE_FROM_JSON = "DBCustomAudience#fromJson";
+    public static final String AD_SELECTION_SERVICE_FILTER =
+            "AdSelectionServiceFilter#filterRequest";
     public static final String FILTERER_FILTER_CA = "FrequencyCapAdFilterer#FilterCustomAudiences";
     public static final String FILTERER_FOR_EACH_CA =
             "FrequencyCapAdFilterer#ForEachCustomAudience";
@@ -119,6 +121,8 @@ public final class Tracing {
     public static final String CONVERT_JS_OUTPUT_TO_BINARY =
             "SignalsScriptEngine#handleEncodingOutput";
     public static final String JS_ARRAY_ARG = "JSScriptArgument#jsonArrayArg";
+    public static final String JS_ARRAY_ARG_NO_VALIDATION =
+            "JSScriptArgument#jsonArrayArgNoValidation";
     public static final String GET_ALL_ENCODERS = "EncoderLogicHandler#getAllRegisteredEncoders";
     public static final String GET_ENCODER_FOR_BUYER = "EncoderLogicHandler#getEncoder";
     public static final String UPDATE_FAILED_ENCODING =

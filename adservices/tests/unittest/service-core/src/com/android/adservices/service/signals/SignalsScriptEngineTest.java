@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.signals;
 
+import static com.android.adservices.service.signals.ProtectedSignalsFixture.getHexString;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OTHER_FAILURE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OUTPUT_NON_ZERO_RESULT;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OUTPUT_SYNTAX_ERROR;
@@ -81,7 +82,20 @@ public final class SignalsScriptEngineTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void testEncodeSignals()
+    public void test_encodeSignals_executesJSScriptWithFastImpl_returnsJSScriptObject()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        encodeSignals_executesJSScript_returnsJSScriptObject(
+                new ProtectedSignalsArgumentFastImpl());
+    }
+
+    @Test
+    public void test_encodeSignals_executesJSScriptWithOGImpl_returnsJSScriptObject()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        encodeSignals_executesJSScript_returnsJSScriptObject(new ProtectedSignalsArgumentImpl());
+    }
+
+    private void encodeSignals_executesJSScript_returnsJSScriptObject(
+            ProtectedSignalsArgument protectedSignalsArgument)
             throws ExecutionException, InterruptedException, TimeoutException {
         List<String> seeds = List.of("SignalsA", "SignalsB");
         Map<String, List<ProtectedSignal>> rawSignalsMap =
@@ -94,7 +108,11 @@ public final class SignalsScriptEngineTest extends AdServicesMockitoTestCase {
                         + "}\n";
         ListenableFuture<byte[]> jsOutcome =
                 mSignalsScriptEngine.encodeSignals(
-                        encodeSignalsJS, rawSignalsMap, 10, mEncodingExecutionLoggerMock);
+                        encodeSignalsJS,
+                        rawSignalsMap,
+                        10,
+                        mEncodingExecutionLoggerMock,
+                        protectedSignalsArgument);
         byte[] result = jsOutcome.get(5, TimeUnit.SECONDS);
 
         assertArrayEquals(
@@ -104,22 +122,24 @@ public final class SignalsScriptEngineTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void testEncodeSignalsSignalsAreRepresentedAsAMapInJS()
+    public void test_encodeSignals_signalsAreRepresentedAsAMapInJSOGImpl_returnsSuccess()
             throws ExecutionException, InterruptedException, TimeoutException {
         Map<String, List<ProtectedSignal>> rawSignalsMap = new HashMap<>();
         rawSignalsMap.put(
                 Base64.getEncoder().encodeToString(new byte[] {0x00}),
                 List.of(
-                        ProtectedSignalsFixture.generateProtectedSignal(
+                        ProtectedSignalsFixture.generateBase64ProtectedSignal(
                                 "", new byte[] {(byte) 0xA0})));
 
         rawSignalsMap.put(
                 Base64.getEncoder().encodeToString(new byte[] {0x01}),
                 List.of(
-                        ProtectedSignalsFixture.generateProtectedSignal(
+                        ProtectedSignalsFixture.generateBase64ProtectedSignal(
                                 "", new byte[] {(byte) 0xA1}),
-                        ProtectedSignalsFixture.generateProtectedSignal(
+                        ProtectedSignalsFixture.generateBase64ProtectedSignal(
                                 "", new byte[] {(byte) 0xA2})));
+
+        ProtectedSignalsArgument protectedSignalsArgument = new ProtectedSignalsArgumentImpl();
 
         // Assumes keys and values are 1 byte long
         // Generates an array with the following structure
@@ -148,7 +168,11 @@ public final class SignalsScriptEngineTest extends AdServicesMockitoTestCase {
                         + "}\n";
         ListenableFuture<byte[]> jsOutcome =
                 mSignalsScriptEngine.encodeSignals(
-                        encodeSignalsJS, rawSignalsMap, 10, mEncodingExecutionLoggerMock);
+                        encodeSignalsJS,
+                        rawSignalsMap,
+                        10,
+                        mEncodingExecutionLoggerMock,
+                        protectedSignalsArgument);
         byte[] result = jsOutcome.get(5, TimeUnit.SECONDS);
 
         assertEquals(
@@ -171,11 +195,96 @@ public final class SignalsScriptEngineTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void testEncodeSignalsSignalsAreRepresentedAsAMapInJS_timestampIsCorrect()
+    public void test_encodeSignals_signalsAreRepresentedAsAMapInJSFastImpl_returnsSuccess()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        Map<String, List<ProtectedSignal>> rawSignalsMap = new HashMap<>();
+        rawSignalsMap.put(
+                getHexString(new byte[] {0x00}),
+                List.of(
+                        ProtectedSignalsFixture.generateBase64ProtectedSignal(
+                                "", new byte[] {(byte) 0xA0})));
+
+        rawSignalsMap.put(
+                getHexString(new byte[] {0x01}),
+                List.of(
+                        ProtectedSignalsFixture.generateBase64ProtectedSignal(
+                                "", new byte[] {(byte) 0xA1}),
+                        ProtectedSignalsFixture.generateBase64ProtectedSignal(
+                                "", new byte[] {(byte) 0xA2})));
+
+        // Assumes keys and values are 1 byte long
+        // Generates an array with the following structure
+        // [signals.size() signal0.key #signal0.values.size() signal0.values[0] signal0.values[2]
+        //                 signal1.key ... ]
+        String encodeSignalsJS =
+                "function encodeSignals(signals, maxSize) {\n"
+                        + "  let result = new Uint8Array(maxSize);\n"
+                        + "  // first entry will contain the total size\n"
+                        + "  let size = 1;\n"
+                        + "  let keys = 0;\n"
+                        + "  \n"
+                        + "  for (const [key, values] of signals.entries()) {\n"
+                        + "    keys++;\n"
+                        + "    // Assuming all data are 1 byte only\n"
+                        + "    console.log(\"key \" + keys + \" is \" + key)\n"
+                        + "    result[size++] = key[0];\n"
+                        + "    result[size++] = values.length;\n"
+                        + "    for(const value of values) {\n"
+                        + "      result[size++] = value.signal_value[0];\n"
+                        + "    }\n"
+                        + "  }\n"
+                        + "  result[0] = keys;\n"
+                        + "  \n"
+                        + "  return { 'status': 0, 'results': result.subarray(0, size)};\n"
+                        + "}\n";
+
+        ProtectedSignalsArgument protectedSignalsArgument = new ProtectedSignalsArgumentFastImpl();
+        ListenableFuture<byte[]> jsOutcome =
+                mSignalsScriptEngine.encodeSignals(
+                        encodeSignalsJS,
+                        rawSignalsMap,
+                        10,
+                        mEncodingExecutionLoggerMock,
+                        protectedSignalsArgument);
+        byte[] result = jsOutcome.get(5, TimeUnit.SECONDS);
+
+        assertEquals(
+                "Encoded result has wrong count of signal keys",
+                (byte) rawSignalsMap.size(),
+                result[0]);
+        int offset = 1;
+        for (int i = 0; i < rawSignalsMap.size(); i++) {
+            byte signalKey = result[offset++];
+            assertTrue(signalKey == 0x00 || signalKey == 0x01);
+            if (signalKey == 0x00) {
+                assertEquals("Wrong signal values length", 0x01, result[offset++]);
+                assertEquals("Wrong signal values", (byte) 0xA0, result[offset++]);
+            } else {
+                assertEquals("Wrong signal values length", 0x02, result[offset++]);
+                assertEquals("Wrong signal values", (byte) 0xA1, result[offset++]);
+                assertEquals("Wrong signal values", (byte) 0xA2, result[offset++]);
+            }
+        }
+    }
+
+    @Test
+    public void test_encodeSignals_signalsAreAMapInJSAndTimestampIsCorrectOGImpl_returnsSuccess()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        encodeSignalsSignalsAreAMapInJS_timestampIsCorrect(new ProtectedSignalsArgumentImpl());
+    }
+
+    @Test
+    public void test_encodeSignals_signalsAreAMapInJSAndTimestampIsCorrectFastImpl_returnsSuccess()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        encodeSignalsSignalsAreAMapInJS_timestampIsCorrect(new ProtectedSignalsArgumentFastImpl());
+    }
+
+    private void encodeSignalsSignalsAreAMapInJS_timestampIsCorrect(
+            ProtectedSignalsArgument protectedSignalsArgument)
             throws ExecutionException, InterruptedException, TimeoutException {
         Map<String, List<ProtectedSignal>> rawSignalsMap = new HashMap<>();
         ProtectedSignal signalValue =
-                ProtectedSignalsFixture.generateProtectedSignal("", new byte[] {(byte) 0xA0});
+                ProtectedSignalsFixture.generateBase64ProtectedSignal("", new byte[] {(byte) 0xA0});
         rawSignalsMap.put(
                 Base64.getEncoder().encodeToString(new byte[] {0x00}), List.of(signalValue));
 
@@ -197,7 +306,11 @@ public final class SignalsScriptEngineTest extends AdServicesMockitoTestCase {
                         signalValue.getCreationTime().getEpochSecond());
         ListenableFuture<byte[]> jsOutcome =
                 mSignalsScriptEngine.encodeSignals(
-                        encodeSignalsJS, rawSignalsMap, 10, mEncodingExecutionLoggerMock);
+                        encodeSignalsJS,
+                        rawSignalsMap,
+                        10,
+                        mEncodingExecutionLoggerMock,
+                        protectedSignalsArgument);
         byte[] result = jsOutcome.get(5, TimeUnit.SECONDS);
 
         assertArrayEquals(
@@ -208,11 +321,25 @@ public final class SignalsScriptEngineTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void testEncodeSignalsSignalsAreRepresentedAsAMapInJS_packageNameIsCorrect()
+    public void test_encodeSignals_signalsAreAMapInJSAndPackageNameIsCorrectOGImpl_returnsSuccess()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        encodeSignalsSignalsAreAMapInJS_packageNameIsCorrect(new ProtectedSignalsArgumentImpl());
+    }
+
+    @Test
+    public void
+            test_encodeSignals_signalsAreAMapInJSAndPackageNameIsCorrectFastImpl_returnsSuccess()
+                    throws ExecutionException, InterruptedException, TimeoutException {
+        encodeSignalsSignalsAreAMapInJS_packageNameIsCorrect(
+                new ProtectedSignalsArgumentFastImpl());
+    }
+
+    private void encodeSignalsSignalsAreAMapInJS_packageNameIsCorrect(
+            ProtectedSignalsArgument protectedSignalsArgument)
             throws ExecutionException, InterruptedException, TimeoutException {
         Map<String, List<ProtectedSignal>> rawSignalsMap = new HashMap<>();
         ProtectedSignal signalValue =
-                ProtectedSignalsFixture.generateProtectedSignal("", new byte[] {(byte) 0xA0});
+                ProtectedSignalsFixture.generateBase64ProtectedSignal("", new byte[] {(byte) 0xA0});
         rawSignalsMap.put(
                 Base64.getEncoder().encodeToString(new byte[] {0x00}), List.of(signalValue));
 
@@ -233,7 +360,11 @@ public final class SignalsScriptEngineTest extends AdServicesMockitoTestCase {
                         signalValue.getPackageName());
         ListenableFuture<byte[]> jsOutcome =
                 mSignalsScriptEngine.encodeSignals(
-                        encodeSignalsJS, rawSignalsMap, 10, mEncodingExecutionLoggerMock);
+                        encodeSignalsJS,
+                        rawSignalsMap,
+                        10,
+                        mEncodingExecutionLoggerMock,
+                        protectedSignalsArgument);
         byte[] result = jsOutcome.get(5, TimeUnit.SECONDS);
 
         assertArrayEquals(
@@ -244,7 +375,18 @@ public final class SignalsScriptEngineTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void testEncodeEmptySignals()
+    public void test_encodeSignals_emptySignalsWithOGImpl_returnsEmptyEncodedSignals()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        encodeEmptySignals(new ProtectedSignalsArgumentImpl());
+    }
+
+    @Test
+    public void test_encodeSignals_emptySignalsWithFastImpl_returnsEmptyEncodedSignals()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        encodeEmptySignals(new ProtectedSignalsArgumentFastImpl());
+    }
+
+    private void encodeEmptySignals(ProtectedSignalsArgument protectedSignalsArgument)
             throws ExecutionException, InterruptedException, TimeoutException {
         String encodeSignalsJS =
                 "function encodeSignals(signals, maxSize) {\n"
@@ -252,7 +394,11 @@ public final class SignalsScriptEngineTest extends AdServicesMockitoTestCase {
                         + "}\n";
         ListenableFuture<byte[]> jsOutcome =
                 mSignalsScriptEngine.encodeSignals(
-                        encodeSignalsJS, Collections.EMPTY_MAP, 10, mEncodingExecutionLoggerMock);
+                        encodeSignalsJS,
+                        Collections.EMPTY_MAP,
+                        10,
+                        mEncodingExecutionLoggerMock,
+                        protectedSignalsArgument);
         byte[] result = jsOutcome.get(5, TimeUnit.SECONDS);
         verify(mEncodingExecutionLoggerMock).startClock();
         verify(mEncodingExecutionLoggerMock).setStatus(JS_RUN_STATUS_OTHER_FAILURE);
@@ -262,7 +408,7 @@ public final class SignalsScriptEngineTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void testHandleEncodingEmptyOutput() {
+    public void test_handleEncodingOutput_emptyOutput_throwsException() {
         IllegalStateException exception =
                 assertThrows(
                         IllegalStateException.class,
@@ -279,7 +425,7 @@ public final class SignalsScriptEngineTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void testHandleEncodingOutputFailedStatus() {
+    public void test_handleEncodingOutput_failedStatus_throwsException() {
         int status = 1;
         String result = "unused";
 
@@ -303,7 +449,7 @@ public final class SignalsScriptEngineTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void testHandleEncodingOutputMissingResult() {
+    public void test_handleEncodingOutput_missingResult_throwsException() {
         int status = 1;
         String result = "unused";
 
