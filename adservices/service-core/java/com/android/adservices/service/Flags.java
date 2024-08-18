@@ -4968,6 +4968,14 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_ENABLE_AGGREGATE_VALUE_FILTERS;
     }
 
+    /** Flag for enabling measurement aggregate debug reporting */
+    @FeatureFlag boolean MEASUREMENT_ENABLE_AGGREGATE_DEBUG_REPORTING = false;
+
+    /** Returns whether measurement aggregate debug reporting is enabled. */
+    default boolean getMeasurementEnableAggregateDebugReporting() {
+        return MEASUREMENT_ENABLE_AGGREGATE_DEBUG_REPORTING;
+    }
+
     /**
      * Default whether to limit logging for enrollment metrics to avoid performance issues. This
      * includes not logging data that requires database queries and downloading MDD files.

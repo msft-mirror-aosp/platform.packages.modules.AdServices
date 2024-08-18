@@ -4516,6 +4516,11 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING
                         + " = "
                         + getMeasurementEnableFlexibleContributionFiltering());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATE_DEBUG_REPORTING
+                        + " = "
+                        + getMeasurementEnableAggregateDebugReporting());
 
         writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
         writer.println(
@@ -6696,6 +6701,13 @@ public final class PhFlags implements Flags {
                 && getDeviceConfigFlag(
                         KEY_MEASUREMENT_REPORTING_JOB_SERVICE_ENABLED,
                         MEASUREMENT_REPORTING_JOB_ENABLED);
+    }
+
+    @Override
+    public boolean getMeasurementEnableAggregateDebugReporting() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATE_DEBUG_REPORTING,
+                MEASUREMENT_ENABLE_AGGREGATE_DEBUG_REPORTING);
     }
 
     @Override

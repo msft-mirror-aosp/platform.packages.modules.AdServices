@@ -960,6 +960,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetMeasurementEnableAggregateDebugReporting() {
+        testFeatureFlag(
+                "MEASUREMENT_ENABLE_AGGREGATE_DEBUG_REPORTING",
+                Flags::getMeasurementEnableAggregateDebugReporting);
+    }
+
+    @Test
     public void testGetFledgeGetAdSelectionDataBuyerInputCreatorVersion() {
         testFlag(
                 "getFledgeGetAdSelectionDataBuyerInputCreatorVersion",
