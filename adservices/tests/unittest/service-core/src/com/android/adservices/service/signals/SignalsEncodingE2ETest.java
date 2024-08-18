@@ -155,7 +155,6 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
     private UpdateEncoderEventHandler mUpdateEncoderEventHandler;
     private SignalEvictionController mSignalEvictionController;
     private EncodedPayloadDao mEncodedPayloadDao;
-    private SignalsProviderImpl mSignalStorageManager;
     private PeriodicEncodingJobWorker mPeriodicEncodingJobWorker;
     private SignalsScriptEngine mScriptEngine;
 
@@ -167,7 +166,7 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
     private ListeningExecutorService mLightweightExecutorService;
     private ListeningExecutorService mBackgroundExecutorService;
     private AdServicesHttpsClient mAdServicesHttpsClient;
-    private Flags mFlags;
+    private Flags mFakeFlags;
     private EnrollmentDao mEnrollmentDao;
     private Clock mClock;
 
@@ -202,7 +201,7 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
 
         mAdServicesHttpsClient =
                 new AdServicesHttpsClient(mBackgroundExecutorService, 2000, 2000, 10000);
-        mFlags = FakeFlagsFactory.getFlagsForTest();
+        mFakeFlags = FakeFlagsFactory.getFlagsForTest();
         mEncoderLogicHandler =
                 new EncoderLogicHandler(
                         mEncoderPersistenceDao,
@@ -212,7 +211,7 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
                         mAdServicesHttpsClient,
                         mBackgroundExecutorService,
                         mAdServicesLoggerMock,
-                        mFlags);
+                        mFakeFlags);
         mUpdateEncoderEventHandler =
                 new UpdateEncoderEventHandler(mEncoderEndpointsDao, mEncoderLogicHandler);
         mSignalEvictionController = new SignalEvictionController(ImmutableList.of(), 0, 0);
@@ -268,7 +267,6 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
                         mProtectedSignalsServiceFilter,
                         mEnrollmentDao);
 
-        mSignalStorageManager = new SignalsProviderImpl(mSignalsDao);
         RetryStrategy retryStrategy = new NoOpRetryStrategyImpl();
         mScriptEngine =
                 new SignalsScriptEngine(
@@ -282,7 +280,6 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
                         mEncoderLogicHandler,
                         mEncoderLogicMetadataDao,
                         mEncodedPayloadDao,
-                        mSignalStorageManager,
                         mSignalsDao,
                         mScriptEngine,
                         mBackgroundExecutorService,
@@ -653,7 +650,6 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
                         mEncoderLogicHandler,
                         mEncoderLogicMetadataDao,
                         mEncodedPayloadDao,
-                        mSignalStorageManager,
                         mSignalsDao,
                         mScriptEngine,
                         mBackgroundExecutorService,
@@ -691,7 +687,6 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
                         mEncoderLogicHandler,
                         mEncoderLogicMetadataDao,
                         mEncodedPayloadDao,
-                        mSignalStorageManager,
                         mSignalsDao,
                         mScriptEngine,
                         mBackgroundExecutorService,

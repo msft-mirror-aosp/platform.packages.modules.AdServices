@@ -17,6 +17,7 @@
 package android.adservices.debuggablects;
 
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_HTTP_CACHE_ENABLE;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED;
 
@@ -57,6 +58,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 @SetFlagDisabled(KEY_FLEDGE_HTTP_CACHE_ENABLE)
+@SetFlagDisabled(KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED)
 public final class AdSelectionTest extends FledgeDebuggableScenarioTest {
 
     /**
@@ -282,6 +284,33 @@ public final class AdSelectionTest extends FledgeDebuggableScenarioTest {
                 setupDispatcher(
                         ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
                                 "scenarios/remarketing-cuj-164.json"));
+        AdSelectionConfig adSelectionConfig =
+                makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
+
+        try {
+            joinCustomAudience(SHOES_CA);
+            joinCustomAudience(SHIRTS_CA);
+            setDebugReportingEnabledForTesting(true);
+            AdSelectionOutcome result = doSelectAds(adSelectionConfig);
+            assertThat(result.hasOutcome()).isTrue();
+        } finally {
+            setDebugReportingEnabledForTesting(false);
+            leaveCustomAudience(SHOES_CA);
+            joinCustomAudience(SHIRTS_CA);
+        }
+
+        assertThat(dispatcher.getCalledPaths())
+                .containsAtLeastElementsIn(dispatcher.getVerifyCalledPaths());
+    }
+
+    /** Test that buyer and seller receive win and loss debug reports for bids = 0.0. */
+    @Test
+    public void testAdSelection_withDebugReportingIsSentForZeroBid() throws Exception {
+        assumeTrue(isAdIdSupported());
+        ScenarioDispatcher dispatcher =
+                setupDispatcher(
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-debug-reporting-zero-bid.json"));
         AdSelectionConfig adSelectionConfig =
                 makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
 

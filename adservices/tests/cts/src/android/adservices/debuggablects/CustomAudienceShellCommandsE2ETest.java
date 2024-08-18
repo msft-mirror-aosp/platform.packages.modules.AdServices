@@ -146,6 +146,8 @@ public final class CustomAudienceShellCommandsE2ETest extends ForegroundDebuggab
         assertThat(customAudience).hasValidActivationTime();
         assertThat(customAudience).hasValidationFailures(0);
         assertThat(customAudience).hasTimeoutFailures(0);
+        assertThat(customAudience.getBoolean("is_eligible_for_on_device_auction")).isEqualTo(true);
+        assertThat(customAudience.getBoolean("is_eligible_for_server_auction")).isEqualTo(false);
     }
 
     @Test

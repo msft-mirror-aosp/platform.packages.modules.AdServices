@@ -76,9 +76,17 @@ final class CustomAudienceHelper {
     @VisibleForTesting
     public static final String DAILY_UPDATE_NUM_TIMEOUT_FAILURES = "num_timeout_failures";
 
+    @VisibleForTesting
+    public static final String IS_ELIGIBLE_FOR_ON_DEVICE_AUCTION =
+            "is_eligible_for_on_device_auction";
+
+    @VisibleForTesting
+    public static final String IS_ELIGIBLE_FOR_SERVER_AUCTION = "is_eligible_for_server_auction";
+
     static JSONObject toJson(
-            @NonNull DBCustomAudience customAudience,
-            @NonNull DBCustomAudienceBackgroundFetchData customAudienceBackgroundFetchData)
+            DBCustomAudience customAudience,
+            DBCustomAudienceBackgroundFetchData customAudienceBackgroundFetchData,
+            CustomAudienceEligibilityInfo customAudienceEligibilityInfo)
             throws JSONException {
         Objects.requireNonNull(customAudience);
         Objects.requireNonNull(customAudienceBackgroundFetchData);
@@ -109,7 +117,13 @@ final class CustomAudienceHelper {
                 .put(UPDATED_TIME, customAudience.getLastAdsAndBiddingDataUpdatedTime())
                 .put(BIDDING_LOGIC_URI, customAudience.getBiddingLogicUri().toString())
                 .put(USER_BIDDING_SIGNALS, customAudience.getUserBiddingSignals())
-                .put(DAILY_UPDATE_URI, Uri.EMPTY) // TODO(b/322976190): Remove call to Uri.EMPTY.
+                .put(
+                        IS_ELIGIBLE_FOR_ON_DEVICE_AUCTION,
+                        customAudienceEligibilityInfo.isEligibleForOnDeviceAuction())
+                .put(
+                        IS_ELIGIBLE_FOR_SERVER_AUCTION,
+                        customAudienceEligibilityInfo.isEligibleForServerAuction())
+                .put(DAILY_UPDATE_URI, customAudienceBackgroundFetchData.getDailyUpdateUri())
                 .put(
                         TRUSTED_BIDDING_DATA,
                         getJsonFromTrustedBiddingData(customAudience.getTrustedBiddingData()))
@@ -259,4 +273,5 @@ final class CustomAudienceHelper {
         }
         return builder.build();
     }
+
 }
