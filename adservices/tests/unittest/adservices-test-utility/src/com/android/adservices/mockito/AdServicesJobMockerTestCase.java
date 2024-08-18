@@ -22,20 +22,20 @@ import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.mockito.AbstractStaticMocker.ClassNotSpiedOrMockedException;
 import com.android.adservices.service.Flags;
 import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
 import com.android.adservices.spe.AdServicesJobServiceFactory;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
-import org.mockito.quality.Strictness;
 
 // NOTE: ErrorProne complains that mock objects should not be called directly, but in this test
 // they need to, as the test verifies that they would return what is set by the mock
@@ -49,12 +49,23 @@ import org.mockito.quality.Strictness;
 public abstract class AdServicesJobMockerTestCase<T extends AdServicesJobMocker>
         extends AdServicesUnitTestCase {
 
+    // Used by assertNoOp to make sure a methods was mocked to do nothing
+    private final UnsupportedOperationException mUnsupportedOperation =
+            new UnsupportedOperationException("D'OH!");
+
     @Mock private Flags mMockFlags;
     @Mock private AdServicesJobServiceFactory mMockFactory;
+    @Mock private AdServicesJobServiceLogger mAdServicesJobServiceLogger;
 
-    @Rule public final MockitoRule mockito = MockitoJUnit.rule().strictness(Strictness.LENIENT);
+    @Rule(order = 11)
+    public final AdServicesExtendedMockitoRule extendedMockito =
+            new AdServicesExtendedMockitoRule.Builder(this).build();
 
-    protected abstract T getMocker();
+    protected abstract T getMocker(StaticClassChecker checker);
+
+    private T getMocker() {
+        return getMocker(extendedMockito);
+    }
 
     @Before
     public final void verifyMocker() {
@@ -99,5 +110,81 @@ public abstract class AdServicesJobMockerTestCase<T extends AdServicesJobMocker>
 
         JobSchedulingLogger fromFactory = mMockFactory.getJobSchedulingLogger();
         expect.withMessage("logger from factory").that(fromFactory).isSameInstanceAs(logger);
+    }
+
+    @Test
+    public final void testMockGetAdServicesJobServiceLogger_null() {
+        assertThrows(
+                NullPointerException.class,
+                () -> getMocker().mockGetAdServicesJobServiceLogger(null));
+    }
+
+    @Test
+    public final void testMockGetAdServicesJobServiceLogger_staticClassNotMocked() {
+        assertThrows(
+                ClassNotSpiedOrMockedException.class,
+                () -> getMocker().mockGetAdServicesJobServiceLogger(mAdServicesJobServiceLogger));
+    }
+
+    @Test
+    @MockStatic(AdServicesJobServiceLogger.class)
+    public final void testMockGetAdServicesJobServiceLogger() {
+        getMocker().mockGetAdServicesJobServiceLogger(mAdServicesJobServiceLogger);
+
+        expect.withMessage("AdServicesJobServiceLogger.getInstance()")
+                .that(AdServicesJobServiceLogger.getInstance())
+                .isSameInstanceAs(mAdServicesJobServiceLogger);
+    }
+
+    @Test
+    public void testMockNoOpAdServicesJobServiceLogger_null() {
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        getMocker()
+                                .mockNoOpAdServicesJobServiceLogger(
+                                        /* context= */ null, mMockFlags));
+        assertThrows(
+                NullPointerException.class,
+                () -> getMocker().mockNoOpAdServicesJobServiceLogger(mContext, /* flags= */ null));
+    }
+
+    @Test
+    public void testMockNoOpAdServicesJobServiceLogger_staticClassNotMocked() {
+        assertThrows(
+                ClassNotSpiedOrMockedException.class,
+                () -> getMocker().mockNoOpAdServicesJobServiceLogger(mContext, mMockFlags));
+    }
+
+    @Test
+    @MockStatic(AdServicesJobServiceLogger.class)
+    public void testMockNoOpAdServicesJobServiceLogger() {
+        var logger = getMocker().mockNoOpAdServicesJobServiceLogger(mContext, mMockFlags);
+
+        expect.withMessage("AdServicesJobServiceLogger.getInstance()")
+                .that(AdServicesJobServiceLogger.getInstance())
+                .isSameInstanceAs(logger);
+
+        // There's no real way to assert the logger does nothing other than forcing its real methods
+        // them to throw an exception, so we need to "leak" some implementation detail in order to
+        // do so - in this case, we're mocking the guarding flag to throw...
+        when(mMockFlags.getBackgroundJobsLoggingEnabled()).thenThrow(mUnsupportedOperation);
+
+        assertNoOp("recordOnStartJob()", () -> logger.recordOnStartJob(42));
+        assertNoOp("recordOnStopJob()", () -> logger.recordOnStopJob(null, 666, true));
+        assertNoOp("recordJobSkipped()", () -> logger.recordJobSkipped(42, 666));
+        assertNoOp("recordJobFinished()", () -> logger.recordJobFinished(42, true, true));
+    }
+
+    private void assertNoOp(String methodName, Runnable runnable) {
+        try {
+            runnable.run();
+        } catch (Exception e) {
+            if (e.equals(mUnsupportedOperation)) {
+                expect.withMessage("%s is not mocked", methodName).fail();
+            } else {
+                expect.withMessage("%s failed with %s", methodName, e).fail();
+            }
+        }
     }
 }

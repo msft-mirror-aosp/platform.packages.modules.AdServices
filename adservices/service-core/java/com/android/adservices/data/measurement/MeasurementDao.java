@@ -289,10 +289,7 @@ class MeasurementDao implements IMeasurementDao {
 
     @Override
     public Set<String> getNavigationAttributionScopesForRegistration(
-            @NonNull String registrationId,
-            @NonNull String registrationOrigin,
-            @EventSurfaceType int destinationType,
-            @NonNull String destination)
+            @NonNull String registrationId, @NonNull String registrationOrigin)
             throws DatastoreException {
         // Joins Source, SourceDestination and SourceAttributionScope tables on source id.
         String joinString =
@@ -303,13 +300,7 @@ class MeasurementDao implements IMeasurementDao {
                         + " a ON s."
                         + SourceContract.ID
                         + " = a."
-                        + SourceAttributionScopeContract.SOURCE_ID
-                        + " INNER JOIN "
-                        + SourceDestination.TABLE
-                        + " d ON s."
-                        + SourceContract.ID
-                        + " = d."
-                        + SourceDestination.SOURCE_ID;
+                        + SourceAttributionScopeContract.SOURCE_ID;
 
         String sourceWhereStatement =
                 mergeConditions(
@@ -324,11 +315,7 @@ class MeasurementDao implements IMeasurementDao {
                                         String.valueOf(Source.SourceType.NAVIGATION)),
                         SourceContract.REGISTRATION_ORIGIN
                                 + " = "
-                                + DatabaseUtils.sqlEscapeString(registrationOrigin),
-                        SourceDestination.DESTINATION_TYPE + " = " + destinationType,
-                        SourceDestination.DESTINATION
-                                + " = "
-                                + DatabaseUtils.sqlEscapeString(destination));
+                                + DatabaseUtils.sqlEscapeString(registrationOrigin));
 
         String query =
                 String.format(
@@ -2789,6 +2776,8 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.AggregateReport.TRIGGER_CONTEXT_ID,
                 aggregateReport.getTriggerContextId());
+        values.put(
+                MeasurementTables.AggregateReport.TRIGGER_TIME, aggregateReport.getTriggerTime());
         long rowId =
                 mSQLTransaction
                         .getDatabase()

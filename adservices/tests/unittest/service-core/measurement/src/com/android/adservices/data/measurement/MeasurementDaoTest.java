@@ -4816,31 +4816,21 @@ public class MeasurementDaoTest {
                                     dao.getNavigationAttributionScopesForRegistration(
                                             SourceFixture.ValidSourceParams.REGISTRATION_ID,
                                             SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN
-                                                    .toString(),
-                                            EventSurfaceType.WEB,
-                                            WEB_ONE_DESTINATION.toString()))
+                                                    .toString()))
                             .containsExactly("1", "2");
                     assertThat(
                                     dao.getNavigationAttributionScopesForRegistration(
-                                            REGISTRATION_ID2,
-                                            REGISTRATION_ORIGIN_2.toString(),
-                                            EventSurfaceType.WEB,
-                                            WEB_ONE_DESTINATION.toString()))
+                                            REGISTRATION_ID2, REGISTRATION_ORIGIN_2.toString()))
                             .containsExactly("3");
                     assertThat(
                                     dao.getNavigationAttributionScopesForRegistration(
                                             SourceFixture.ValidSourceParams.REGISTRATION_ID,
                                             SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN
-                                                    .toString(),
-                                            EventSurfaceType.APP,
-                                            APP_ONE_DESTINATION.toString()))
+                                                    .toString()))
                             .containsExactly("1", "2");
                     assertThat(
                                     dao.getNavigationAttributionScopesForRegistration(
-                                            REGISTRATION_ID2,
-                                            REGISTRATION_ORIGIN_2.toString(),
-                                            EventSurfaceType.APP,
-                                            APP_ONE_DESTINATION.toString()))
+                                            REGISTRATION_ID2, REGISTRATION_ORIGIN_2.toString()))
                             .containsExactly("3");
                 });
     }
@@ -5082,6 +5072,34 @@ public class MeasurementDaoTest {
             assertNotNull(aggregateReport);
             assertNotNull(aggregateReport.getId());
             assertEquals(aggregateReportWithNullSourceRegistrationTime, aggregateReport);
+        }
+    }
+
+    @Test
+    public void testInsertAggregateReport_withTriggerTime() {
+        AggregateReport.Builder builder = AggregateReportFixture.getValidAggregateReportBuilder();
+        builder.setTriggerTime(1L);
+        AggregateReport aggregateReportWithTriggerTime = builder.build();
+        mDatastoreManager.runInTransaction(
+                (dao) -> dao.insertAggregateReport(aggregateReportWithTriggerTime));
+
+        try (Cursor cursor =
+                MeasurementDbHelper.getInstance(sContext)
+                        .getReadableDatabase()
+                        .query(
+                                MeasurementTables.AggregateReport.TABLE,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null)) {
+            assertTrue(cursor.moveToNext());
+            AggregateReport aggregateReport = SqliteObjectMapper.constructAggregateReport(cursor);
+            assertNotNull(aggregateReport);
+            assertNotNull(aggregateReport.getId());
+            assertNotNull(aggregateReport.getTriggerTime());
+            assertEquals(aggregateReportWithTriggerTime, aggregateReport);
         }
     }
 

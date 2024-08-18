@@ -39,7 +39,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
 import com.android.adservices.common.AdServicesJobTestCase;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.shared.proto.JobPolicy;
@@ -74,7 +73,6 @@ public final class BackgroundFetchJobTest extends AdServicesJobTestCase {
 
     @Mock private BackgroundFetchWorker mMockBackgroundFetchWorker;
     @Mock private ConsentManager mMockConsentManager;
-    @Mock private Flags mMockFlags;
     @Mock private ExecutionRuntimeParameters mMockParams;
     @Mock private AdServicesJobScheduler mMockAdServicesJobScheduler;
     @Mock private AdServicesJobServiceFactory mMockAdServicesJobServiceFactory;

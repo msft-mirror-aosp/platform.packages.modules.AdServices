@@ -32,7 +32,7 @@ import java.util.Map;
 /** Reads signals from Signals DB and collects them into a map with base64 encoded String keys */
 public class SignalsProviderImpl implements SignalsProvider {
 
-    @NonNull private ProtectedSignalsDao mProtectedSignalsDao;
+    private final ProtectedSignalsDao mProtectedSignalsDao;
 
     public SignalsProviderImpl(@NonNull ProtectedSignalsDao protectedSignalsDao) {
         mProtectedSignalsDao = protectedSignalsDao;
