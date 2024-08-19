@@ -83,6 +83,7 @@ import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.TriggerFixture;
 import com.android.adservices.service.measurement.TriggerSpecs;
+import com.android.adservices.service.measurement.aggregation.AggregateDebugReportRecord;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.aggregation.AggregateReportFixture;
@@ -197,6 +198,9 @@ public class MeasurementDaoTest {
             WebUtil.validUri("https://subdomain_4.example.test");
     public static final Uri REGISTRATION_ORIGIN_5 =
             WebUtil.validUri("https://subdomain_5.example.test");
+
+    public static final Uri TOP_LEVEL_REGISTRANT_1 = Uri.parse("android-app://com.example1.sample");
+    public static final Uri TOP_LEVEL_REGISTRANT_2 = Uri.parse("android-app://com.example2.sample");
 
     @Rule
     public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
@@ -441,6 +445,182 @@ public class MeasurementDaoTest {
         assertThat(attributionScopes).isEmpty();
     }
 
+    @Test
+    public void testInsertSource_aggregateDebugReportingEnabled_success() {
+        mFlags = mock(Flags.class);
+        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(true).when(mFlags).getMeasurementEnableAggregateDebugReporting();
+        doReturn(MEASUREMENT_DB_SIZE_LIMIT).when(mFlags).getMeasurementDbSizeLimit();
+
+        Source validSource =
+                SourceFixture.getValidSourceBuilder()
+                        .setEventReportWindows("{'start_time': 1, 'end_times': ['3600', '7200']}")
+                        .setStatus(Source.Status.MARKED_TO_DELETE)
+                        .setTriggerDataMatching(Source.TriggerDataMatching.EXACT)
+                        .setTriggerData(Set.of(new UnsignedLong(23L), new UnsignedLong(1L)))
+                        .build();
+        mDatastoreManager.runInTransaction((dao) -> dao.insertSource(validSource));
+
+        String sourceId = getFirstSourceIdFromDatastore();
+        Source source =
+                mDatastoreManager
+                        .runInTransactionWithResult(
+                                measurementDao -> measurementDao.getSource(sourceId))
+                        .get();
+
+        assertThat(source).isNotNull();
+        assertThat(source.getId()).isNotNull();
+        assertThat(source.getAppDestinations()).isNull();
+        assertThat(source.getWebDestinations()).isNull();
+        assertThat(validSource.getEnrollmentId()).isEqualTo(source.getEnrollmentId());
+        assertThat(validSource.getRegistrant()).isEqualTo(source.getRegistrant());
+        assertThat(validSource.getEventTime()).isEqualTo(source.getEventTime());
+        assertThat(validSource.getExpiryTime()).isEqualTo(source.getExpiryTime());
+        assertThat(validSource.getStatus()).isEqualTo(source.getStatus());
+        assertThat(validSource.getEventReportWindow()).isEqualTo(source.getEventReportWindow());
+        assertThat(validSource.getAggregatableReportWindow())
+                .isEqualTo(source.getAggregatableReportWindow());
+        assertThat(validSource.getPriority()).isEqualTo(source.getPriority());
+        assertThat(validSource.getSourceType()).isEqualTo(source.getSourceType());
+        assertThat(validSource.getInstallAttributionWindow())
+                .isEqualTo(source.getInstallAttributionWindow());
+        assertThat(validSource.getInstallCooldownWindow())
+                .isEqualTo(source.getInstallCooldownWindow());
+        assertThat(validSource.getAttributionMode()).isEqualTo(source.getAttributionMode());
+        assertThat(validSource.getReinstallReattributionWindow())
+                .isEqualTo(source.getReinstallReattributionWindow());
+        assertThat(validSource.getAggregateSource()).isEqualTo(source.getAggregateSource());
+        assertThat(validSource.getFilterDataString()).isEqualTo(source.getFilterDataString());
+        assertThat(validSource.getSharedFilterDataKeys())
+                .isEqualTo(source.getSharedFilterDataKeys());
+        assertThat(validSource.getAggregateContributions())
+                .isEqualTo(source.getAggregateContributions());
+        assertThat(validSource.isDebugReporting()).isEqualTo(source.isDebugReporting());
+        assertThat(validSource.getSharedAggregationKeys())
+                .isEqualTo(source.getSharedAggregationKeys());
+        assertThat(validSource.getRegistrationId()).isEqualTo(source.getRegistrationId());
+        assertThat(validSource.getInstallTime()).isEqualTo(source.getInstallTime());
+        assertThat(validSource.getPlatformAdId()).isEqualTo(source.getPlatformAdId());
+        assertThat(validSource.getDebugAdId()).isEqualTo(source.getDebugAdId());
+        assertThat(validSource.getRegistrationOrigin()).isEqualTo(source.getRegistrationOrigin());
+        assertThat(validSource.hasCoarseEventReportDestinations())
+                .isEqualTo(source.hasCoarseEventReportDestinations());
+        assertThat(validSource.getTriggerDataMatching()).isEqualTo(source.getTriggerDataMatching());
+        assertThat(validSource.getTriggerData()).isEqualTo(source.getTriggerData());
+        assertThat(validSource.getEventReportWindows()).isEqualTo(source.getEventReportWindows());
+        assertThat(SourceFixture.ValidSourceParams.SHARED_DEBUG_KEY)
+                .isEqualTo(source.getSharedDebugKey());
+        assertThat(source.getDestinationLimitPriority()).isEqualTo(0L);
+        assertThat(validSource.getAggregateDebugReportingString())
+                .isEqualTo(source.getAggregateDebugReportingString());
+        assertThat(validSource.getAggregateDebugReportContributions())
+                .isEqualTo(source.getAggregateDebugReportContributions());
+
+        // Assert destinations were inserted into the source destination table.
+
+        Pair<List<Uri>, List<Uri>> destinations =
+                mDatastoreManager
+                        .runInTransactionWithResult(
+                                measurementDao ->
+                                        measurementDao.getSourceDestinations(source.getId()))
+                        .get();
+        assertThat(
+                        ImmutableMultiset.copyOf(validSource.getAppDestinations())
+                                .equals(ImmutableMultiset.copyOf(destinations.first)))
+                .isTrue();
+        assertThat(
+                        ImmutableMultiset.copyOf(validSource.getWebDestinations())
+                                .equals(ImmutableMultiset.copyOf(destinations.second)))
+                .isTrue();
+    }
+
+    @Test
+    public void testInsertSource_aggregateDebugReportingDisabled_relatedDataNotInserted() {
+        mFlags = mock(Flags.class);
+        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(false).when(mFlags).getMeasurementEnableAggregateDebugReporting();
+        doReturn(MEASUREMENT_DB_SIZE_LIMIT).when(mFlags).getMeasurementDbSizeLimit();
+
+        Source validSource =
+                SourceFixture.getValidSourceBuilder()
+                        .setEventReportWindows("{'start_time': 1, 'end_times': ['3600', '7200']}")
+                        .setStatus(Source.Status.MARKED_TO_DELETE)
+                        .setTriggerDataMatching(Source.TriggerDataMatching.EXACT)
+                        .setTriggerData(Set.of(new UnsignedLong(23L), new UnsignedLong(1L)))
+                        .build();
+        mDatastoreManager.runInTransaction((dao) -> dao.insertSource(validSource));
+
+        String sourceId = getFirstSourceIdFromDatastore();
+        Source source =
+                mDatastoreManager
+                        .runInTransactionWithResult(
+                                measurementDao -> measurementDao.getSource(sourceId))
+                        .get();
+
+        assertThat(source).isNotNull();
+        assertThat(source.getId()).isNotNull();
+        assertThat(source.getAppDestinations()).isNull();
+        assertThat(source.getWebDestinations()).isNull();
+        assertThat(validSource.getEnrollmentId()).isEqualTo(source.getEnrollmentId());
+        assertThat(validSource.getRegistrant()).isEqualTo(source.getRegistrant());
+        assertThat(validSource.getEventTime()).isEqualTo(source.getEventTime());
+        assertThat(validSource.getExpiryTime()).isEqualTo(source.getExpiryTime());
+        assertThat(validSource.getStatus()).isEqualTo(source.getStatus());
+        assertThat(validSource.getEventReportWindow()).isEqualTo(source.getEventReportWindow());
+        assertThat(validSource.getAggregatableReportWindow())
+                .isEqualTo(source.getAggregatableReportWindow());
+        assertThat(validSource.getPriority()).isEqualTo(source.getPriority());
+        assertThat(validSource.getSourceType()).isEqualTo(source.getSourceType());
+        assertThat(validSource.getInstallAttributionWindow())
+                .isEqualTo(source.getInstallAttributionWindow());
+        assertThat(validSource.getInstallCooldownWindow())
+                .isEqualTo(source.getInstallCooldownWindow());
+        assertThat(validSource.getAttributionMode()).isEqualTo(source.getAttributionMode());
+        assertThat(validSource.getReinstallReattributionWindow())
+                .isEqualTo(source.getReinstallReattributionWindow());
+        assertThat(validSource.getAggregateSource()).isEqualTo(source.getAggregateSource());
+        assertThat(validSource.getFilterDataString()).isEqualTo(source.getFilterDataString());
+        assertThat(validSource.getSharedFilterDataKeys())
+                .isEqualTo(source.getSharedFilterDataKeys());
+        assertThat(validSource.getAggregateContributions())
+                .isEqualTo(source.getAggregateContributions());
+        assertThat(validSource.isDebugReporting()).isEqualTo(source.isDebugReporting());
+        assertThat(validSource.getSharedAggregationKeys())
+                .isEqualTo(source.getSharedAggregationKeys());
+        assertThat(validSource.getRegistrationId()).isEqualTo(source.getRegistrationId());
+        assertThat(validSource.getInstallTime()).isEqualTo(source.getInstallTime());
+        assertThat(validSource.getPlatformAdId()).isEqualTo(source.getPlatformAdId());
+        assertThat(validSource.getDebugAdId()).isEqualTo(source.getDebugAdId());
+        assertThat(validSource.getRegistrationOrigin()).isEqualTo(source.getRegistrationOrigin());
+        assertThat(validSource.hasCoarseEventReportDestinations())
+                .isEqualTo(source.hasCoarseEventReportDestinations());
+        assertThat(validSource.getTriggerDataMatching()).isEqualTo(source.getTriggerDataMatching());
+        assertThat(validSource.getTriggerData()).isEqualTo(source.getTriggerData());
+        assertThat(validSource.getEventReportWindows()).isEqualTo(source.getEventReportWindows());
+        assertThat(SourceFixture.ValidSourceParams.SHARED_DEBUG_KEY)
+                .isEqualTo(source.getSharedDebugKey());
+        assertThat(source.getDestinationLimitPriority()).isEqualTo(0L);
+        assertThat(source.getAggregateDebugReportingString()).isEqualTo(null);
+        assertThat(source.getAggregateDebugReportContributions()).isEqualTo(0L);
+
+        // Assert destinations were inserted into the source destination table.
+
+        Pair<List<Uri>, List<Uri>> destinations =
+                mDatastoreManager
+                        .runInTransactionWithResult(
+                                measurementDao ->
+                                        measurementDao.getSourceDestinations(source.getId()))
+                        .get();
+        assertThat(
+                        ImmutableMultiset.copyOf(validSource.getAppDestinations())
+                                .equals(ImmutableMultiset.copyOf(destinations.first)))
+                .isTrue();
+        assertThat(
+                        ImmutableMultiset.copyOf(validSource.getWebDestinations())
+                                .equals(ImmutableMultiset.copyOf(destinations.second)))
+                .isTrue();
+    }
+
     private void insertSourceReachingDbSizeLimit(long dbSize, long dbSizeMaxLimit) {
         final Source validSource = SourceFixture.getValidSource();
 
@@ -504,6 +684,8 @@ public class MeasurementDaoTest {
             assertEquals(
                     validTrigger.getAggregatableFilteringIdMaxBytes(),
                     trigger.getAggregatableFilteringIdMaxBytes());
+            assertThat(validTrigger.getAggregateDebugReportingString())
+                    .isEqualTo(trigger.getAggregateDebugReportingString());
         }
     }
 
@@ -11604,6 +11786,410 @@ public class MeasurementDaoTest {
         assertEquals(
                 SourceFixture.ValidSourceParams.DESTINATION_LIMIT_PRIORITY,
                 source.getDestinationLimitPriority());
+    }
+
+    @Test
+    public void testInsertAggregateDebugReportRecords_sourceAndTriggerIdPresent_succeeds() {
+        // insert source & trigger to honor the foreign key constraint
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId("S1")
+                        .setEventId(new UnsignedLong(3L))
+                        .setEnrollmentId("1")
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder().setId("T1").setEnrollmentId("2").build();
+        AggregateDebugReportRecord validAggregateDebugReportRecord =
+                new AggregateDebugReportRecord.Builder(
+                                /* reportGenerationTime= */ 1000L,
+                                /* topLevelRegistrant= */ TOP_LEVEL_REGISTRANT_1,
+                                /* registrantApp= */ Uri.parse("com.test1.myapp"),
+                                /* registrationOrigin= */ Uri.parse("https://destination.test"),
+                                /* contributions= */ 9)
+                        .setSourceId("S1")
+                        .setTriggerId("T1")
+                        .build();
+
+        // Execution
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).getWritableDatabase();
+        Objects.requireNonNull(db);
+        insertSource(source, source.getId());
+        AbstractDbIntegrationTest.insertToDb(trigger, db);
+        mDatastoreManager.runInTransaction(
+                (dao) -> dao.insertAggregateDebugReportRecord(validAggregateDebugReportRecord));
+
+        // Assertion
+        try (Cursor cursor =
+                MeasurementDbHelper.getInstance(sContext)
+                        .getReadableDatabase()
+                        .query(
+                                MeasurementTables.AggregatableDebugReportBudgetTrackerContract
+                                        .TABLE,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null)) {
+            assertThat(cursor.moveToNext()).isTrue();
+            assertThat(validAggregateDebugReportRecord.getReportGenerationTime())
+                    .isEqualTo(
+                            cursor.getInt(
+                                    cursor.getColumnIndex(
+                                            MeasurementTables
+                                                    .AggregatableDebugReportBudgetTrackerContract
+                                                    .REPORT_GENERATION_TIME)));
+            assertThat(validAggregateDebugReportRecord.getTopLevelRegistrant().toString())
+                    .isEqualTo(
+                            cursor.getString(
+                                    cursor.getColumnIndex(
+                                            MeasurementTables
+                                                    .AggregatableDebugReportBudgetTrackerContract
+                                                    .TOP_LEVEL_REGISTRANT)));
+            assertThat(validAggregateDebugReportRecord.getRegistrantApp().toString())
+                    .isEqualTo(
+                            cursor.getString(
+                                    cursor.getColumnIndex(
+                                            MeasurementTables
+                                                    .AggregatableDebugReportBudgetTrackerContract
+                                                    .REGISTRANT_APP)));
+            assertThat(validAggregateDebugReportRecord.getRegistrationOrigin().toString())
+                    .isEqualTo(
+                            cursor.getString(
+                                    cursor.getColumnIndex(
+                                            MeasurementTables
+                                                    .AggregatableDebugReportBudgetTrackerContract
+                                                    .REGISTRATION_ORIGIN)));
+            assertThat(validAggregateDebugReportRecord.getSourceId())
+                    .isEqualTo(
+                            cursor.getString(
+                                    cursor.getColumnIndex(
+                                            MeasurementTables
+                                                    .AggregatableDebugReportBudgetTrackerContract
+                                                    .SOURCE_ID)));
+            assertThat(validAggregateDebugReportRecord.getTriggerId())
+                    .isEqualTo(
+                            cursor.getString(
+                                    cursor.getColumnIndex(
+                                            MeasurementTables
+                                                    .AggregatableDebugReportBudgetTrackerContract
+                                                    .TRIGGER_ID)));
+            assertThat(validAggregateDebugReportRecord.getContributions())
+                    .isEqualTo(
+                            cursor.getInt(
+                                    cursor.getColumnIndex(
+                                            MeasurementTables
+                                                    .AggregatableDebugReportBudgetTrackerContract
+                                                    .CONTRIBUTIONS)));
+        }
+    }
+
+    @Test
+    public void testInsertAggregateDebugReportRecords_nullTriggerId_succeeds() {
+        // insert source & trigger to honor the foreign key constraint
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId("S1")
+                        .setEventId(new UnsignedLong(3L))
+                        .setEnrollmentId("1")
+                        .build();
+        AggregateDebugReportRecord validAggregateDebugReportRecord =
+                new AggregateDebugReportRecord.Builder(
+                                /* reportGenerationTime= */ 1000L,
+                                /* topLevelRegistrant= */ TOP_LEVEL_REGISTRANT_1,
+                                /* registrantApp= */ Uri.parse("com.test1.myapp"),
+                                /* registrationOrigin= */ Uri.parse("https://destination.test"),
+                                /* contributions= */ 9)
+                        .setSourceId("S1")
+                        .build();
+
+        // Execution
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).getWritableDatabase();
+        Objects.requireNonNull(db);
+        insertSource(source, source.getId());
+        mDatastoreManager.runInTransaction(
+                (dao) -> dao.insertAggregateDebugReportRecord(validAggregateDebugReportRecord));
+
+        // Assertion
+        try (Cursor cursor =
+                MeasurementDbHelper.getInstance(sContext)
+                        .getReadableDatabase()
+                        .query(
+                                MeasurementTables.AggregatableDebugReportBudgetTrackerContract
+                                        .TABLE,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null)) {
+            assertThat(cursor.moveToNext()).isTrue();
+            assertThat(validAggregateDebugReportRecord.getReportGenerationTime())
+                    .isEqualTo(
+                            cursor.getInt(
+                                    cursor.getColumnIndex(
+                                            MeasurementTables
+                                                    .AggregatableDebugReportBudgetTrackerContract
+                                                    .REPORT_GENERATION_TIME)));
+            assertThat(validAggregateDebugReportRecord.getTopLevelRegistrant().toString())
+                    .isEqualTo(
+                            cursor.getString(
+                                    cursor.getColumnIndex(
+                                            MeasurementTables
+                                                    .AggregatableDebugReportBudgetTrackerContract
+                                                    .TOP_LEVEL_REGISTRANT)));
+            assertThat(validAggregateDebugReportRecord.getRegistrantApp().toString())
+                    .isEqualTo(
+                            cursor.getString(
+                                    cursor.getColumnIndex(
+                                            MeasurementTables
+                                                    .AggregatableDebugReportBudgetTrackerContract
+                                                    .REGISTRANT_APP)));
+            assertThat(validAggregateDebugReportRecord.getRegistrationOrigin().toString())
+                    .isEqualTo(
+                            cursor.getString(
+                                    cursor.getColumnIndex(
+                                            MeasurementTables
+                                                    .AggregatableDebugReportBudgetTrackerContract
+                                                    .REGISTRATION_ORIGIN)));
+            assertThat(validAggregateDebugReportRecord.getSourceId())
+                    .isEqualTo(
+                            cursor.getString(
+                                    cursor.getColumnIndex(
+                                            MeasurementTables
+                                                    .AggregatableDebugReportBudgetTrackerContract
+                                                    .SOURCE_ID)));
+            assertThat(validAggregateDebugReportRecord.getTriggerId())
+                    .isEqualTo(
+                            cursor.getString(
+                                    cursor.getColumnIndex(
+                                            MeasurementTables
+                                                    .AggregatableDebugReportBudgetTrackerContract
+                                                    .TRIGGER_ID)));
+            assertThat(validAggregateDebugReportRecord.getContributions())
+                    .isEqualTo(
+                            cursor.getInt(
+                                    cursor.getColumnIndex(
+                                            MeasurementTables
+                                                    .AggregatableDebugReportBudgetTrackerContract
+                                                    .CONTRIBUTIONS)));
+        }
+    }
+
+    @Test
+    public void testInsertAggregateDebugReportRecords_nullSourceAndTriggerId_succeeds() {
+        AggregateDebugReportRecord validAggregateDebugReportRecord =
+                new AggregateDebugReportRecord.Builder(
+                                /* reportGenerationTime= */ 1000L,
+                                /* topLevelRegistrant= */ TOP_LEVEL_REGISTRANT_1,
+                                /* registrantApp= */ Uri.parse("com.test1.myapp"),
+                                /* registrationOrigin= */ Uri.parse("https://destination.test"),
+                                /* contributions= */ 9)
+                        .build();
+
+        // Execution
+        mDatastoreManager.runInTransaction(
+                (dao) -> dao.insertAggregateDebugReportRecord(validAggregateDebugReportRecord));
+
+        // Assertion
+        try (Cursor cursor =
+                MeasurementDbHelper.getInstance(sContext)
+                        .getReadableDatabase()
+                        .query(
+                                MeasurementTables.AggregatableDebugReportBudgetTrackerContract
+                                        .TABLE,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null)) {
+            assertThat(cursor.moveToNext()).isTrue();
+            assertThat(validAggregateDebugReportRecord.getReportGenerationTime())
+                    .isEqualTo(
+                            cursor.getInt(
+                                    cursor.getColumnIndex(
+                                            MeasurementTables
+                                                    .AggregatableDebugReportBudgetTrackerContract
+                                                    .REPORT_GENERATION_TIME)));
+            assertThat(validAggregateDebugReportRecord.getTopLevelRegistrant().toString())
+                    .isEqualTo(
+                            cursor.getString(
+                                    cursor.getColumnIndex(
+                                            MeasurementTables
+                                                    .AggregatableDebugReportBudgetTrackerContract
+                                                    .TOP_LEVEL_REGISTRANT)));
+            assertThat(validAggregateDebugReportRecord.getRegistrantApp().toString())
+                    .isEqualTo(
+                            cursor.getString(
+                                    cursor.getColumnIndex(
+                                            MeasurementTables
+                                                    .AggregatableDebugReportBudgetTrackerContract
+                                                    .REGISTRANT_APP)));
+            assertThat(validAggregateDebugReportRecord.getRegistrationOrigin().toString())
+                    .isEqualTo(
+                            cursor.getString(
+                                    cursor.getColumnIndex(
+                                            MeasurementTables
+                                                    .AggregatableDebugReportBudgetTrackerContract
+                                                    .REGISTRATION_ORIGIN)));
+            assertThat(validAggregateDebugReportRecord.getSourceId())
+                    .isEqualTo(
+                            cursor.getString(
+                                    cursor.getColumnIndex(
+                                            MeasurementTables
+                                                    .AggregatableDebugReportBudgetTrackerContract
+                                                    .SOURCE_ID)));
+            assertThat(validAggregateDebugReportRecord.getTriggerId())
+                    .isEqualTo(
+                            cursor.getString(
+                                    cursor.getColumnIndex(
+                                            MeasurementTables
+                                                    .AggregatableDebugReportBudgetTrackerContract
+                                                    .TRIGGER_ID)));
+            assertThat(validAggregateDebugReportRecord.getContributions())
+                    .isEqualTo(
+                            cursor.getInt(
+                                    cursor.getColumnIndex(
+                                            MeasurementTables
+                                                    .AggregatableDebugReportBudgetTrackerContract
+                                                    .CONTRIBUTIONS)));
+        }
+    }
+
+    @Test
+    public void testGetTotalAggregateDebugReportBudget() {
+        // insert source & trigger to honor the foreign key constraint
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId("S1")
+                        .setEventId(new UnsignedLong(3L))
+                        .setEnrollmentId("1")
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder().setId("T1").setEnrollmentId("2").build();
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).getWritableDatabase();
+        Objects.requireNonNull(db);
+        insertSource(source, source.getId());
+        AbstractDbIntegrationTest.insertToDb(trigger, db);
+
+        // test case 1 (publisher query): outside time window + same publisher
+        AggregateDebugReportRecord validAggregateDebugReportRecord1 =
+                new AggregateDebugReportRecord.Builder(
+                                /* reportGenerationTime= */ 1000L,
+                                /* topLevelRegistrant= */ TOP_LEVEL_REGISTRANT_1,
+                                /* registrantApp= */ Uri.parse("com.test.myapp"),
+                                /* registrationOrigin= */ Uri.parse("https://destination0.test"),
+                                /* contributions= */ 9)
+                        .setSourceId("S1")
+                        .setTriggerId("T1")
+                        .build();
+
+        // test case 2 (publisher query): inside time window + same publisher + different origin
+        AggregateDebugReportRecord validAggregateDebugReportRecord2 =
+                new AggregateDebugReportRecord.Builder(
+                                /* reportGenerationTime= */ 2000L,
+                                /* topLevelRegistrant= */ TOP_LEVEL_REGISTRANT_1,
+                                /* registrantApp= */ Uri.parse("com.test.myapp"),
+                                /* registrationOrigin= */ Uri.parse("https://destination1.test"),
+                                /* contributions= */ 16)
+                        .setSourceId("S1")
+                        .setTriggerId("T1")
+                        .build();
+        AggregateDebugReportRecord validAggregateDebugReportRecord3 =
+                new AggregateDebugReportRecord.Builder(
+                                /* reportGenerationTime= */ 3000L,
+                                /* topLevelRegistrant= */ TOP_LEVEL_REGISTRANT_1,
+                                /* registrantApp= */ Uri.parse("com.test.myapp"),
+                                /* registrationOrigin= */ Uri.parse("https://destination2.test"),
+                                /* contributions= */ 25)
+                        .setSourceId("S1")
+                        .setTriggerId("T1")
+                        .build();
+        AggregateDebugReportRecord validAggregateDebugReportRecord4 =
+                new AggregateDebugReportRecord.Builder(
+                                /* reportGenerationTime= */ 4000L,
+                                /* topLevelRegistrant= */ TOP_LEVEL_REGISTRANT_1,
+                                /* registrantApp= */ Uri.parse("com.test.myapp"),
+                                /* registrationOrigin= */ Uri.parse("https://destination3.test"),
+                                /* contributions= */ 36)
+                        .setSourceId("S1")
+                        .setTriggerId("T1")
+                        .build();
+
+        // test case 3 (publisher + origin query): inside time window + same publisher + same origin
+        AggregateDebugReportRecord validAggregateDebugReportRecord5 =
+                new AggregateDebugReportRecord.Builder(
+                                /* reportGenerationTime= */ 5000L,
+                                /* topLevelRegistrant= */ TOP_LEVEL_REGISTRANT_2,
+                                /* registrantApp= */ Uri.parse("com.test.myapp"),
+                                /* registrationOrigin= */ Uri.parse("https://destination4.test"),
+                                /* contributions= */ 49)
+                        .setSourceId("S1")
+                        .setTriggerId("T1")
+                        .build();
+        AggregateDebugReportRecord validAggregateDebugReportRecord6 =
+                new AggregateDebugReportRecord.Builder(
+                                /* reportGenerationTime= */ 6000L,
+                                /* topLevelRegistrant= */ TOP_LEVEL_REGISTRANT_2,
+                                /* registrantApp= */ Uri.parse("com.test.myapp"),
+                                /* registrationOrigin= */ Uri.parse("https://destination4.test"),
+                                /* contributions= */ 64)
+                        .setSourceId("S1")
+                        .setTriggerId("T1")
+                        .build();
+        List<AggregateDebugReportRecord> validAggregateDebugReportRecords =
+                Arrays.asList(
+                        validAggregateDebugReportRecord1,
+                        validAggregateDebugReportRecord2,
+                        validAggregateDebugReportRecord3,
+                        validAggregateDebugReportRecord4,
+                        validAggregateDebugReportRecord5,
+                        validAggregateDebugReportRecord6);
+
+        for (AggregateDebugReportRecord validAggregateDebugReportRecord :
+                validAggregateDebugReportRecords) {
+            mDatastoreManager.runInTransaction(
+                    (dao) -> dao.insertAggregateDebugReportRecord(validAggregateDebugReportRecord));
+        }
+
+        // test case 1
+        int budget1 =
+                mDatastoreManager
+                        .runInTransactionWithResult(
+                                (dao) ->
+                                        dao.sumAggregateDebugReportBudgetXPublisherXWindow(
+                                                /* publisher= */ TOP_LEVEL_REGISTRANT_1,
+                                                /* publisherType= */ EventSurfaceType.APP,
+                                                /* windowEndTime= */ 1000L))
+                        .get();
+        assertThat(budget1).isEqualTo((9 + 16 + 25 + 36));
+
+        // test case 2
+        int budget2 =
+                mDatastoreManager
+                        .runInTransactionWithResult(
+                                (dao) ->
+                                        dao.sumAggregateDebugReportBudgetXPublisherXWindow(
+                                                /* publisher= */ TOP_LEVEL_REGISTRANT_1,
+                                                /* publisherType= */ EventSurfaceType.APP,
+                                                /* windowEndTime= */ 1001L))
+                        .get();
+        assertThat(budget2).isEqualTo((16 + 25 + 36));
+
+        // test case 3
+        int budget3 =
+                mDatastoreManager
+                        .runInTransactionWithResult(
+                                (dao) ->
+                                        dao.sumAggregateDebugReportBudgetXOriginXPublisherXWindow(
+                                                /* publisher= */ TOP_LEVEL_REGISTRANT_2,
+                                                /* publisherType= */ EventSurfaceType.APP,
+                                                /* origin= */ Uri.parse(
+                                                        "https://destination4.test"),
+                                                /* windowEndTime= */ 1001L))
+                        .get();
+        assertThat(budget3).isEqualTo((49 + 64));
     }
 
     private static Consumer<AggregateReport> getAggregateReportConsumer(SQLiteDatabase db) {
