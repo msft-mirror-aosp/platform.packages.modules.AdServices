@@ -3916,17 +3916,6 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION;
     }
 
-    /** Disable maximum number of aggregatable reports per source by default. */
-    boolean MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE = false;
-
-    /**
-     * Returns true if maximum number of aggregatable reports per source is enabled, false
-     * otherwise.
-     */
-    default boolean getMeasurementEnableMaxAggregateReportsPerSource() {
-        return MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE;
-    }
-
     /** Maximum Aggregate Reports per source. */
     int MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE = 20;
 
