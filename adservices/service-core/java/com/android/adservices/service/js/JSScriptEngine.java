@@ -21,6 +21,7 @@ import static com.android.adservices.service.js.JSScriptEngineCommonConstants.WA
 import android.annotation.Nullable;
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.os.Trace;
 
 import androidx.javascriptengine.IsolateStartupParameters;
 import androidx.javascriptengine.JavaScriptIsolate;
@@ -77,6 +78,7 @@ public class JSScriptEngine {
     private static final Object sJSScriptEngineLock = new Object();
 
     @SuppressLint("StaticFieldLeak")
+    @GuardedBy("sJSScriptEngineLock")
     private static JSScriptEngine sSingleton;
 
     private final Context mContext;
@@ -159,6 +161,7 @@ public class JSScriptEngine {
 
         public ListenableFuture<Void> destroyIfCurrentInstance(
                 JavaScriptSandbox javaScriptSandbox) {
+            mLogger.d("Destroying specific instance of JavaScriptSandbox");
             synchronized (mSandboxLock) {
                 if (mFutureSandbox != null) {
                     ListenableFuture<JavaScriptSandbox> futureSandbox = mFutureSandbox;
@@ -196,10 +199,10 @@ public class JSScriptEngine {
                             .catching(
                                     Throwable.class,
                                     t -> {
-                                        mLogger.w(
+                                        mLogger.e(
                                                 t,
                                                 "JavaScriptSandbox initialization failed,"
-                                                        + " won't close");
+                                                        + " cannot close");
                                         return null;
                                     },
                                     AdServicesExecutors.getLightWeightExecutor());
@@ -214,6 +217,7 @@ public class JSScriptEngine {
          * A new call to {@link #getFutureInstance(Context)} will create the instance again.
          */
         public ListenableFuture<Void> destroyCurrentInstance() {
+            mLogger.d("Destroying JavaScriptSandbox");
             synchronized (mSandboxLock) {
                 if (mFutureSandbox != null) {
                     ListenableFuture<Void> result =
@@ -230,10 +234,10 @@ public class JSScriptEngine {
                                     .catching(
                                             Throwable.class,
                                             t -> {
-                                                mLogger.w(
+                                                mLogger.e(
                                                         t,
                                                         "JavaScriptSandbox initialization failed,"
-                                                                + " won't close");
+                                                                + " cannot close");
                                                 return null;
                                             },
                                             AdServicesExecutors.getLightWeightExecutor());
@@ -250,21 +254,7 @@ public class JSScriptEngine {
      * @return JSScriptEngine instance
      */
     public static JSScriptEngine getInstance(LoggerFactory.Logger logger) {
-        synchronized (sJSScriptEngineLock) {
-            if (sSingleton == null) {
-                Profiler profiler = Profiler.createNoOpInstance(TAG);
-                sSingleton =
-                        new JSScriptEngine(
-                                ApplicationContextSingleton.get(),
-                                new JavaScriptSandboxProvider(profiler, logger),
-                                profiler,
-                                // There is no blocking call or IO code in the service logic
-                                AdServicesExecutors.getLightWeightExecutor(),
-                                logger);
-            }
-
-            return sSingleton;
-        }
+        return getInstance(ApplicationContextSingleton.get(), logger);
     }
 
     /**
@@ -274,6 +264,7 @@ public class JSScriptEngine {
     public static JSScriptEngine getInstance(Context context, LoggerFactory.Logger logger) {
         synchronized (sJSScriptEngineLock) {
             if (sSingleton == null) {
+                logger.d("Creating new instance for JSScriptEngine");
                 Profiler profiler = Profiler.createNoOpInstance(TAG);
                 sSingleton =
                         new JSScriptEngine(
@@ -303,6 +294,7 @@ public class JSScriptEngine {
                         "Unable to initialize test JSScriptEngine multiple times using"
                                 + "the real JavaScriptSandboxProvider.");
             }
+            logger.d("Creating new instance for JSScriptEngine");
             sSingleton =
                     new JSScriptEngine(
                             context,
@@ -351,7 +343,16 @@ public class JSScriptEngine {
                             synchronized (sJSScriptEngineLock) {
                                 sSingleton = null;
                             }
+                            mLogger.d("shutdown successful for JSScriptEngine");
                             return Futures.immediateVoidFuture();
+                        },
+                        mExecutorService)
+                .catching(
+                        Throwable.class,
+                        throwable -> {
+                            mLogger.e(throwable, "shutdown unsuccessful for JSScriptEngine");
+                            throw new IllegalStateException(
+                                    "Shutdown unsuccessful for JSScriptEngine", throwable);
                         },
                         mExecutorService);
     }
@@ -695,34 +696,28 @@ public class JSScriptEngine {
      * <p>Throws error in case, we have enforced max heap memory restrictions and isolate does not
      * support that feature
      */
+    @SuppressWarnings("UnclosedTrace")
+    // This is false-positives lint result. The trace is closed in finally.
     private JavaScriptIsolate createIsolate(
             JavaScriptSandbox jsSandbox, IsolateSettings isolateSettings) {
-        // TODO: b/321237839. After upgrading the dependency on javascriptengine to beta1, revisit
-        // the exception handling of this method.
-        int traceCookie = Tracing.beginAsyncSection(Tracing.JSSCRIPTENGINE_CREATE_ISOLATE);
+        Trace.beginSection(Tracing.JSSCRIPTENGINE_CREATE_ISOLATE);
+
+        // TODO (b/321237839): Clean up exception handling after upgrading javascriptengine
+        //  dependency to beta1
         StopWatch isolateStopWatch =
                 mProfiler.start(JSScriptEngineLogConstants.ISOLATE_CREATE_TIME);
         try {
-            if (!isConfigurableHeapSizeSupported(jsSandbox)
-                    && isolateSettings.getEnforceMaxHeapSizeFeature()) {
+            if (!isConfigurableHeapSizeSupported(jsSandbox)) {
                 mLogger.e("Memory limit enforcement required, but not supported by Isolate");
                 throw new IllegalStateException(NON_SUPPORTED_MAX_HEAP_SIZE_EXCEPTION_MSG);
             }
 
-            JavaScriptIsolate javaScriptIsolate;
-            if (isolateSettings.getEnforceMaxHeapSizeFeature()
-                    && isolateSettings.getMaxHeapSizeBytes() > 0) {
-                mLogger.d(
-                        "Creating JS isolate with memory limit: %d bytes",
-                        isolateSettings.getMaxHeapSizeBytes());
-                IsolateStartupParameters startupParams = new IsolateStartupParameters();
-                startupParams.setMaxHeapSizeBytes(isolateSettings.getMaxHeapSizeBytes());
-                javaScriptIsolate = jsSandbox.createIsolate(startupParams);
-            } else {
-                mLogger.d("Creating JS isolate with unbounded memory limit");
-                javaScriptIsolate = jsSandbox.createIsolate();
-            }
-            return javaScriptIsolate;
+            mLogger.d(
+                    "Creating JS isolate with memory limit: %d bytes",
+                    isolateSettings.getMaxHeapSizeBytes());
+            IsolateStartupParameters startupParams = new IsolateStartupParameters();
+            startupParams.setMaxHeapSizeBytes(isolateSettings.getMaxHeapSizeBytes());
+            return jsSandbox.createIsolate(startupParams);
         } catch (RuntimeException jsSandboxPossiblyDisconnected) {
             mLogger.e(
                     jsSandboxPossiblyDisconnected,
@@ -734,7 +729,7 @@ public class JSScriptEngine {
                     JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_MSG, jsSandboxPossiblyDisconnected);
         } finally {
             isolateStopWatch.stop();
-            Tracing.endAsyncSection(Tracing.JSSCRIPTENGINE_CREATE_ISOLATE, traceCookie);
+            Trace.endSection();
         }
     }
 
@@ -769,16 +764,15 @@ public class JSScriptEngine {
 
         @Override
         public void close() {
-            int traceCookie = Tracing.beginAsyncSection(Tracing.JSSCRIPTENGINE_CLOSE_ISOLATE);
+            Trace.beginSection(Tracing.JSSCRIPTENGINE_CLOSE_ISOLATE);
             mLogger.d("Closing JavaScriptSandbox isolate");
-            // Closing the isolate will also cause the thread in JavaScriptSandbox to be terminated
-            // if
-            // still running.
-            // There is no need to verify if ISOLATE_TERMINATION is supported by JavaScriptSandbox
-            // because there is no new API but just new capability on the JavaScriptSandbox side for
-            // existing API.
+            // Closing the isolate will also cause the thread in JavaScriptSandbox to be
+            // terminated if it's still running.
+            // There is no need to verify if ISOLATE_TERMINATION is supported by
+            // JavaScriptSandbox because there is no new API but just new capability on
+            // the JavaScriptSandbox side for the existing API.
             mIsolate.close();
-            Tracing.endAsyncSection(Tracing.JSSCRIPTENGINE_CLOSE_ISOLATE, traceCookie);
+            Trace.endSection();
         }
     }
 }

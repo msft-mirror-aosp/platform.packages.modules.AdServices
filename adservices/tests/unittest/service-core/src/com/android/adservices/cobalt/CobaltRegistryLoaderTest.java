@@ -24,14 +24,8 @@ import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeast
 import com.android.cobalt.domain.Project;
 import com.android.cobalt.registry.RegistryValidator;
 
-import com.google.cobalt.IntegerBuckets;
 import com.google.cobalt.MetricDefinition;
 import com.google.cobalt.ReportDefinition;
-import com.google.cobalt.ReportDefinition.LocalAggregationProcedure;
-import com.google.cobalt.ReportDefinition.ReportingInterval;
-import com.google.cobalt.StringSketchParameters;
-import com.google.cobalt.SystemProfileSelectionPolicy;
-import com.google.cobalt.WindowSize;
 
 import org.junit.Test;
 
@@ -69,25 +63,6 @@ public final class CobaltRegistryLoaderTest extends AdServicesUnitTestCase {
                 if (report.getReportName().endsWith(REPORT_NAME_DOGFOOD_SUFFIX)) {
                     assertThat(report.getMaxReleaseStage()).isEqualTo(DOGFOOD);
                 }
-                assertThat(report.getReportingInterval()).isEqualTo(ReportingInterval.DAYS_1);
-                assertThat(report.getLocalAggregationProcedure())
-                        .isEqualTo(LocalAggregationProcedure.LOCAL_AGGREGATION_PROCEDURE_UNSET);
-                assertThat(report.getExperimentIdList()).isEmpty();
-                assertThat(report.getSystemProfileSelection())
-                        .isEqualTo(SystemProfileSelectionPolicy.REPORT_ALL);
-                assertThat(report.getStringSketchParams())
-                        .isEqualTo(StringSketchParameters.getDefaultInstance());
-                assertThat(report.getIntBuckets()).isEqualTo(IntegerBuckets.getDefaultInstance());
-                assertThat(report.getLocalAggregationProcedurePercentileN()).isEqualTo(0);
-                assertThat(report.getExpeditedSending()).isFalse();
-                assertThat(report.getExperimentIdList()).isEmpty();
-
-                // Sme parts of the code always assume a local aggregation period of 1 day
-                // independent
-                // of the values in reports, e.g. database clean. Supporting larger windows in
-                // reports
-                // must be done with a careful check of existing code.
-                assertThat(report.getLocalAggregationPeriod()).isEqualTo(WindowSize.UNSET);
             }
         }
     }

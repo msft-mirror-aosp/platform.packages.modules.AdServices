@@ -17,19 +17,14 @@ package com.android.sdksandbox.audit;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.junit.Assume.assumeTrue;
-
-import android.app.sdksandbox.testutils.DeviceSupportUtils;
 import android.os.SELinux;
 import android.platform.test.annotations.RequiresFlagsEnabled;
 import android.platform.test.flag.junit.CheckFlagsRule;
 import android.platform.test.flag.junit.DeviceFlagsValueProvider;
 
-import androidx.test.platform.app.InstrumentationRegistry;
-
 import com.android.sdksandbox.flags.Flags;
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -38,17 +33,10 @@ import org.junit.runners.JUnit4;
 /** Tests to check some basic properties of the Sdk Sandbox audit process. */
 @RunWith(JUnit4.class)
 @RequiresFlagsEnabled(Flags.FLAG_SELINUX_SDK_SANDBOX_AUDIT)
-public class SdkSandboxAuditTest {
+public class SdkSandboxAuditTest extends DeviceSupportedBaseTest {
 
-    @Rule
+    @Rule(order = 0)
     public final CheckFlagsRule mCheckFlagsRule = DeviceFlagsValueProvider.createCheckFlagsRule();
-
-    @Before
-    public void setUp() {
-        assumeTrue(
-                DeviceSupportUtils.isSdkSandboxSupported(
-                        InstrumentationRegistry.getInstrumentation().getContext()));
-    }
 
     @Test
     @RequiresFlagsEnabled(Flags.FLAG_SELINUX_INPUT_SELECTOR)

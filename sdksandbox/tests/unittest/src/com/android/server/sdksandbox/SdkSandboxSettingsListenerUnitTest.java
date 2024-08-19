@@ -27,6 +27,7 @@ import android.util.ArrayMap;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 import com.android.server.sdksandbox.proto.Services;
 
 import org.junit.After;
@@ -37,7 +38,7 @@ import org.mockito.Mockito;
 import java.util.List;
 import java.util.Map;
 
-public class SdkSandboxSettingsListenerUnitTest {
+public class SdkSandboxSettingsListenerUnitTest extends DeviceSupportedBaseTest {
     private static final String PROPERTY_DISABLE_SANDBOX = "disable_sdk_sandbox";
     private static final String PROPERTY_APPLY_SDK_SANDBOX_NEXT_RESTRICTIONS =
             "apply_sdk_sandbox_next_restrictions";

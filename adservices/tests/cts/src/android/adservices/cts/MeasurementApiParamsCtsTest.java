@@ -16,8 +16,7 @@
 
 package android.adservices.cts;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.measurement.DeletionRequest;
 import android.adservices.measurement.WebSourceParams;
@@ -28,20 +27,14 @@ import android.net.Uri;
 import android.os.Parcel;
 import android.view.KeyEvent;
 
-import androidx.test.filters.SmallTest;
-import androidx.test.runner.AndroidJUnit4;
-
 import com.android.adservices.common.WebUtil;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.time.Instant;
 import java.util.List;
 
-@SmallTest
-@RunWith(AndroidJUnit4.class)
-public class MeasurementApiParamsCtsTest {
+public final class MeasurementApiParamsCtsTest extends CtsAdServicesDeviceTestCase {
 
     @Test
     public void testDeletionRequest() {
@@ -64,22 +57,23 @@ public class MeasurementApiParamsCtsTest {
                                         WebUtil.validUri("https://o-bar.test")))
                         .build();
 
-        assertEquals(DeletionRequest.DELETION_MODE_ALL, deletionRequest.getDeletionMode());
-        assertEquals(DeletionRequest.MATCH_BEHAVIOR_DELETE, deletionRequest.getMatchBehavior());
-        assertEquals(start, deletionRequest.getStart());
-        assertEquals(end, deletionRequest.getEnd());
-        assertEquals(
-                WebUtil.validUrl("https://d-foo.test"),
-                deletionRequest.getDomainUris().get(0).toString());
-        assertEquals(
-                WebUtil.validUrl("https://d-bar.test"),
-                deletionRequest.getDomainUris().get(1).toString());
-        assertEquals(
-                WebUtil.validUrl("https://o-foo.test"),
-                deletionRequest.getOriginUris().get(0).toString());
-        assertEquals(
-                WebUtil.validUrl("https://o-bar.test"),
-                deletionRequest.getOriginUris().get(1).toString());
+        expect.that(deletionRequest.getDeletionMode()).isEqualTo(DeletionRequest.DELETION_MODE_ALL);
+        expect.that(deletionRequest.getMatchBehavior())
+                .isEqualTo(DeletionRequest.MATCH_BEHAVIOR_DELETE);
+        expect.that(deletionRequest.getStart()).isEqualTo(start);
+        expect.that(deletionRequest.getEnd()).isEqualTo(end);
+
+        assertThat(deletionRequest.getDomainUris()).hasSize(2);
+        expect.that(deletionRequest.getDomainUris().get(0).toString())
+                .isEqualTo(WebUtil.validUrl("https://d-foo.test"));
+        expect.that(deletionRequest.getDomainUris().get(1).toString())
+                .isEqualTo(WebUtil.validUrl("https://d-bar.test"));
+
+        assertThat(deletionRequest.getOriginUris()).hasSize(2);
+        expect.that(deletionRequest.getOriginUris().get(0).toString())
+                .isEqualTo(WebUtil.validUrl("https://o-foo.test"));
+        expect.that(deletionRequest.getOriginUris().get(1).toString())
+                .isEqualTo(WebUtil.validUrl("https://o-bar.test"));
     }
 
     private WebSourceParams createWebSourceParamsExample() {
@@ -91,9 +85,10 @@ public class MeasurementApiParamsCtsTest {
     @Test
     public void testWebSourceParams() {
         WebSourceParams webSourceParams = createWebSourceParamsExample();
-        assertEquals("https://registration-uri", webSourceParams.getRegistrationUri().toString());
-        assertTrue(webSourceParams.isDebugKeyAllowed());
-        assertEquals(0, webSourceParams.describeContents());
+        expect.that(webSourceParams.getRegistrationUri().toString())
+                .isEqualTo("https://registration-uri");
+        expect.that(webSourceParams.isDebugKeyAllowed()).isTrue();
+        expect.that(webSourceParams.describeContents()).isEqualTo(0);
     }
 
     @Test
@@ -104,10 +99,10 @@ public class MeasurementApiParamsCtsTest {
         p.setDataPosition(0);
 
         WebSourceParams webSourceParams = WebSourceParams.CREATOR.createFromParcel(p);
-        assertEquals(
-                exampleParams.getRegistrationUri().toString(),
-                webSourceParams.getRegistrationUri().toString());
-        assertEquals(exampleParams.isDebugKeyAllowed(), webSourceParams.isDebugKeyAllowed());
+        expect.that(webSourceParams.getRegistrationUri().toString())
+                .isEqualTo(exampleParams.getRegistrationUri().toString());
+        expect.that(webSourceParams.isDebugKeyAllowed())
+                .isEqualTo(exampleParams.isDebugKeyAllowed());
         p.recycle();
     }
 
@@ -129,18 +124,18 @@ public class MeasurementApiParamsCtsTest {
     public void testWebSourceRegistrationRequest() {
         WebSourceRegistrationRequest request = createWebSourceRegistrationRequestExample();
 
-        assertEquals(0, request.describeContents());
-        assertEquals(
-                "https://registration-uri",
-                request.getSourceParams().get(0).getRegistrationUri().toString());
-        assertTrue(request.getSourceParams().get(0).isDebugKeyAllowed());
-        assertEquals("https://top-origin", request.getTopOriginUri().toString());
-        assertEquals(
-                new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_1).getAction(),
-                ((KeyEvent) request.getInputEvent()).getAction());
-        assertEquals("https://verified-destination", request.getVerifiedDestination().toString());
-        assertEquals("android-app://app-destination", request.getAppDestination().toString());
-        assertEquals("https://web-destination", request.getWebDestination().toString());
+        expect.that(request.describeContents()).isEqualTo(0);
+        expect.that(request.getSourceParams().get(0).getRegistrationUri().toString())
+                .isEqualTo("https://registration-uri");
+        expect.that(request.getSourceParams().get(0).isDebugKeyAllowed()).isTrue();
+        expect.that(request.getTopOriginUri().toString()).isEqualTo("https://top-origin");
+        expect.that(((KeyEvent) request.getInputEvent()).getAction())
+                .isEqualTo(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_1).getAction());
+        expect.that(request.getVerifiedDestination().toString())
+                .isEqualTo("https://verified-destination");
+        expect.that(request.getAppDestination().toString())
+                .isEqualTo("android-app://app-destination");
+        expect.that(request.getWebDestination().toString()).isEqualTo("https://web-destination");
     }
 
     @Test
@@ -152,27 +147,21 @@ public class MeasurementApiParamsCtsTest {
         WebSourceRegistrationRequest request =
                 WebSourceRegistrationRequest.CREATOR.createFromParcel(p);
 
-        assertEquals(exampleRequest.describeContents(), request.describeContents());
-        assertEquals(
-                exampleRequest.getSourceParams().get(0).getRegistrationUri().toString(),
-                request.getSourceParams().get(0).getRegistrationUri().toString());
-        assertEquals(
-                exampleRequest.getSourceParams().get(0).isDebugKeyAllowed(),
-                request.getSourceParams().get(0).isDebugKeyAllowed());
-        assertEquals(
-                exampleRequest.getTopOriginUri().toString(), request.getTopOriginUri().toString());
-        assertEquals(
-                ((KeyEvent) exampleRequest.getInputEvent()).getAction(),
-                ((KeyEvent) request.getInputEvent()).getAction());
-        assertEquals(
-                exampleRequest.getVerifiedDestination().toString(),
-                request.getVerifiedDestination().toString());
-        assertEquals(
-                exampleRequest.getAppDestination().toString(),
-                request.getAppDestination().toString());
-        assertEquals(
-                exampleRequest.getWebDestination().toString(),
-                request.getWebDestination().toString());
+        expect.that(request.describeContents()).isEqualTo(exampleRequest.describeContents());
+        expect.that(request.getSourceParams().get(0).getRegistrationUri().toString())
+                .isEqualTo(exampleRequest.getSourceParams().get(0).getRegistrationUri().toString());
+        expect.that(request.getSourceParams().get(0).isDebugKeyAllowed())
+                .isEqualTo(exampleRequest.getSourceParams().get(0).isDebugKeyAllowed());
+        expect.that(request.getTopOriginUri().toString())
+                .isEqualTo(exampleRequest.getTopOriginUri().toString());
+        expect.that(((KeyEvent) request.getInputEvent()).getAction())
+                .isEqualTo(((KeyEvent) exampleRequest.getInputEvent()).getAction());
+        expect.that(request.getVerifiedDestination().toString())
+                .isEqualTo(exampleRequest.getVerifiedDestination().toString());
+        expect.that(request.getAppDestination().toString())
+                .isEqualTo(exampleRequest.getAppDestination().toString());
+        expect.that(request.getWebDestination().toString())
+                .isEqualTo(exampleRequest.getWebDestination().toString());
         p.recycle();
     }
 
@@ -186,9 +175,10 @@ public class MeasurementApiParamsCtsTest {
     public void testWebTriggerParams() {
         WebTriggerParams webTriggerParams = createWebTriggerParamsExample();
 
-        assertEquals(0, webTriggerParams.describeContents());
-        assertEquals("https://registration-uri", webTriggerParams.getRegistrationUri().toString());
-        assertTrue(webTriggerParams.isDebugKeyAllowed());
+        expect.that(webTriggerParams.describeContents()).isEqualTo(0);
+        expect.that(webTriggerParams.getRegistrationUri().toString())
+                .isEqualTo("https://registration-uri");
+        expect.that(webTriggerParams.isDebugKeyAllowed()).isTrue();
     }
 
     @Test
@@ -199,11 +189,10 @@ public class MeasurementApiParamsCtsTest {
         p.setDataPosition(0);
         WebTriggerParams params = WebTriggerParams.CREATOR.createFromParcel(p);
 
-        assertEquals(exampleParams.describeContents(), params.describeContents());
-        assertEquals(
-                exampleParams.getRegistrationUri().toString(),
-                params.getRegistrationUri().toString());
-        assertEquals(exampleParams.isDebugKeyAllowed(), params.isDebugKeyAllowed());
+        expect.that(params.describeContents()).isEqualTo(exampleParams.describeContents());
+        expect.that(params.getRegistrationUri().toString())
+                .isEqualTo(exampleParams.getRegistrationUri().toString());
+        expect.that(params.isDebugKeyAllowed()).isEqualTo(exampleParams.isDebugKeyAllowed());
         p.recycle();
     }
 
@@ -221,12 +210,11 @@ public class MeasurementApiParamsCtsTest {
     public void testWebTriggerRegistrationRequest() {
         WebTriggerRegistrationRequest request = createWebTriggerRegistrationRequestExample();
 
-        assertEquals(0, request.describeContents());
-        assertEquals(
-                "https://registration-uri",
-                request.getTriggerParams().get(0).getRegistrationUri().toString());
-        assertTrue(request.getTriggerParams().get(0).isDebugKeyAllowed());
-        assertEquals("https://destination", request.getDestination().toString());
+        expect.that(request.describeContents()).isEqualTo(0);
+        expect.that(request.getTriggerParams().get(0).getRegistrationUri().toString())
+                .isEqualTo("https://registration-uri");
+        expect.that(request.getTriggerParams().get(0).isDebugKeyAllowed()).isTrue();
+        expect.that(request.getDestination().toString()).isEqualTo("https://destination");
     }
 
     @Test
@@ -238,15 +226,14 @@ public class MeasurementApiParamsCtsTest {
         WebTriggerRegistrationRequest request =
                 WebTriggerRegistrationRequest.CREATOR.createFromParcel(p);
 
-        assertEquals(exampleRequest.describeContents(), request.describeContents());
-        assertEquals(
-                exampleRequest.getTriggerParams().get(0).getRegistrationUri().toString(),
-                request.getTriggerParams().get(0).getRegistrationUri().toString());
-        assertEquals(
-                exampleRequest.getTriggerParams().get(0).isDebugKeyAllowed(),
-                request.getTriggerParams().get(0).isDebugKeyAllowed());
-        assertEquals(
-                exampleRequest.getDestination().toString(), request.getDestination().toString());
+        expect.that(request.describeContents()).isEqualTo(exampleRequest.describeContents());
+        expect.that(request.getTriggerParams().get(0).getRegistrationUri().toString())
+                .isEqualTo(
+                        exampleRequest.getTriggerParams().get(0).getRegistrationUri().toString());
+        expect.that(request.getTriggerParams().get(0).isDebugKeyAllowed())
+                .isEqualTo(exampleRequest.getTriggerParams().get(0).isDebugKeyAllowed());
+        expect.that(request.getDestination().toString())
+                .isEqualTo(exampleRequest.getDestination().toString());
         p.recycle();
     }
 }

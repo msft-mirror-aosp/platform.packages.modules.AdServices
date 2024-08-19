@@ -30,6 +30,12 @@ public abstract class AbstractMocker {
 
     @FormatMethod
     protected final void logV(@FormatString String fmt, Object... args) {
-        Log.v(TAG, mTag + ": " + String.format(fmt, args));
+        try {
+            Log.v(TAG, mTag + ": " + String.format(fmt, args));
+        } catch (Exception e) {
+            // Typically happens when the object being passed to a mock method is mal-formed; for
+            // example, a ResolveInfo without a component name
+            Log.w(TAG, mTag + ".logV(fmt=" + fmt + ", args=...): failed to generate string: " + e);
+        }
     }
 }

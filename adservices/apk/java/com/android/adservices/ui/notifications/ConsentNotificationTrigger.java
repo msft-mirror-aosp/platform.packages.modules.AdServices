@@ -40,6 +40,7 @@ import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.api.R;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
@@ -69,6 +70,7 @@ public class ConsentNotificationTrigger {
      * @param context Context which is used to display {@link NotificationCompat}
      */
     public static void showConsentNotification(@NonNull Context context, boolean isEuDevice) {
+        LogUtil.d("Started requesting notification.");
         UiStatsLogger.logRequestedNotification();
 
         boolean gaUxFeatureEnabled =
@@ -77,6 +79,7 @@ public class ConsentNotificationTrigger {
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
         ConsentManager consentManager = ConsentManager.getInstance();
         if (!notificationManager.areNotificationsEnabled()) {
+            LogUtil.d("Notification is disabled.");
             recordNotificationDisplayed(context, gaUxFeatureEnabled, consentManager);
             UiStatsLogger.logNotificationDisabled();
             return;
@@ -95,7 +98,7 @@ public class ConsentNotificationTrigger {
         notificationManager.notify(NOTIFICATION_ID, notification);
 
         setupConsents(context, isEuDevice, gaUxFeatureEnabled, consentManager);
-
+        LogUtil.d("Notification was displayed.");
         UiStatsLogger.logNotificationDisplayed();
         recordNotificationDisplayed(context, gaUxFeatureEnabled, consentManager);
     }
@@ -189,11 +192,10 @@ public class ConsentNotificationTrigger {
         if (isUxStatesReady(context)) {
             switch (UxUtil.getUx(context)) {
                 case GA_UX:
-                    if (UxStatesManager.getInstance().getFlag(KEY_PAS_UX_ENABLED)
-                            && (isFledgeOrMsmtEnabled(consentManager)
-                                    || consentManager.getUserManualInteractionWithConsent()
-                                            == MANUAL_INTERACTIONS_RECORDED)) {
-                        // Not first time user, respect previous consents
+                    if (isPasRenotifyUser(consentManager)
+                            && !isOtaRvcMsmtEnabledUser(consentManager)) {
+                        // Is PAS renotify user AND Not adult user from Rvc with measurement
+                        // enabled, respect previous consents.
                         break;
                     }
                     setUpGaConsent(context, isEuDevice, consentManager);
@@ -238,6 +240,18 @@ public class ConsentNotificationTrigger {
                 }
             }
         }
+    }
+
+    private static boolean isPasRenotifyUser(ConsentManager consentManager) {
+        return UxStatesManager.getInstance().getFlag(KEY_PAS_UX_ENABLED)
+                && (isFledgeOrMsmtEnabled(consentManager)
+                        || consentManager.getUserManualInteractionWithConsent()
+                                == MANUAL_INTERACTIONS_RECORDED);
+    }
+
+    private static boolean isOtaRvcMsmtEnabledUser(ConsentManager consentManager) {
+        return consentManager.isOtaAdultUserFromRvc()
+                && consentManager.getConsent(AdServicesApiType.MEASUREMENTS).isGiven();
     }
 
     private static Notification getGaV2ConsentNotification(

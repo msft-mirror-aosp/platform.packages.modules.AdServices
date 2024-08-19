@@ -16,8 +16,8 @@
 
 package android.adservices.lint.prod
 
-import android.adservices.lint.*
 import android.adservices.lint.common.DeviceConfigUsageDetector
+import android.adservices.lint.common.KillSwitchFlagUsageDetector
 import android.adservices.lint.common.PreconditionsCheckStateDetector
 import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.client.api.Vendor
@@ -28,15 +28,16 @@ import com.google.auto.service.AutoService
 @Suppress("UnstableApiUsage")
 class AdServicesProdLintCheckerIssueRegistry : IssueRegistry() {
     override val issues =
-            listOf(
-                BackCompatAndroidProcessDetector.ISSUE,
-                BackCompatJobServiceDetector.ISSUE,
-                BackCompatNewFileDetector.ISSUE,
-                DeviceConfigUsageDetector.ISSUE,
-                PreconditionsCheckStateDetector.ISSUE,
-                RoomDatabaseMigrationDetector.ISSUE_ERROR,
-                RoomDatabaseMigrationDetector.ISSUE_WARNING,
-            )
+        listOf(
+            BackCompatAndroidProcessDetector.ISSUE,
+            BackCompatJobServiceDetector.ISSUE,
+            BackCompatNewFileDetector.ISSUE,
+            DeviceConfigUsageDetector.ISSUE,
+            KillSwitchFlagUsageDetector.ISSUE,
+            PreconditionsCheckStateDetector.ISSUE,
+            RoomDatabaseMigrationDetector.ISSUE_ERROR,
+            RoomDatabaseMigrationDetector.ISSUE_WARNING,
+        )
 
     override val api: Int
         get() = CURRENT_API
@@ -48,9 +49,9 @@ class AdServicesProdLintCheckerIssueRegistry : IssueRegistry() {
         get() = 11
 
     override val vendor =
-            Vendor(
-                    vendorName = "Android",
-                    feedbackUrl = "http://b/issues/new?component=1451456",
-                    contact = "gehuang@google.com"
-            )
+        Vendor(
+            vendorName = "Android",
+            feedbackUrl = "http://b/issues/new?component=1451456",
+            contact = "gehuang@google.com"
+        )
 }

@@ -54,14 +54,12 @@ import static org.mockito.Mockito.when;
 import android.adservices.exceptions.AdServicesNetworkException;
 import android.adservices.exceptions.RetryableAdServicesNetworkException;
 import android.adservices.http.MockWebServerRule;
-import android.content.Context;
 import android.net.Uri;
 
 import androidx.room.Room;
-import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.SmallTest;
 
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.WebAddresses;
@@ -101,26 +99,22 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.Spy;
 import org.mockito.internal.stubbing.answers.AnswersWithDelay;
 import org.mockito.internal.stubbing.answers.Returns;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.HttpsURLConnection;
 
-@SmallTest
-public class AdServicesHttpsClientTest {
-    @Spy private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
+public final class AdServicesHttpsClientTest extends AdServicesMockitoTestCase {
     private static final String CACHE_HEADER = "Cache-Control: max-age=60";
     private static final String NO_CACHE_HEADER = "Cache-Control: no-cache";
     private static final String RESPONSE_HEADER_KEY = "fake_response_header_key";
@@ -132,7 +126,7 @@ public class AdServicesHttpsClientTest {
     private static final long MAX_ENTRIES = 20;
     private static final DevContext DEV_CONTEXT_DISABLED = DevContext.createForDevOptionsDisabled();
     private static final DevContext DEV_CONTEXT_ENABLED =
-            DevContext.builder().setDevOptionsEnabled(true).build();
+            DevContext.builder(sPackageName).setDevOptionsEnabled(true).build();
 
     private final ExecutorService mExecutorService = MoreExecutors.newDirectExecutorService();
     private final String mJsScript = "function test() { return \"hello world\"; }";
@@ -142,7 +136,6 @@ public class AdServicesHttpsClientTest {
     private final int mTimeoutDeltaMs = 1000;
     private final int mBytesPerPeriod = 1;
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
-    @Rule public MockitoRule rule = MockitoJUnit.rule();
     private AdServicesHttpsClient mClient;
     @Mock private AdServicesHttpsClient.UriConverter mUriConverterMock;
     @Mock private URL mUrlMock;
@@ -164,7 +157,7 @@ public class AdServicesHttpsClientTest {
     @Before
     public void setup() throws Exception {
         mCacheEntryDao =
-                Room.inMemoryDatabaseBuilder(CONTEXT, CacheDatabase.class)
+                Room.inMemoryDatabaseBuilder(mContext, CacheDatabase.class)
                         .build()
                         .getCacheEntryDao();
 
@@ -692,7 +685,7 @@ public class AdServicesHttpsClientTest {
                         return false;
                     }
                 };
-        HttpCache cache = CacheProviderFactory.create(CONTEXT, disableCacheFlags);
+        HttpCache cache = CacheProviderFactory.create(mContext, disableCacheFlags);
         AdServicesHttpsClient client = new AdServicesHttpsClient(mExecutorService, cache);
 
         client.fetchPayload(
@@ -1219,6 +1212,33 @@ public class AdServicesHttpsClientTest {
 
         // Verify the logging of SelectAdsFromOutcomesApiCalledStats
         verifySelectAdsFromOutcomesApiCalledStatsLogging(executionLogger, 200);
+    }
+
+    @Test
+    public void testPickRequiredHeaderFields() throws Exception {
+        ImmutableMap<String, List<String>> allHeaders =
+                ImmutableMap.of(
+                        "key1", ImmutableList.of("value1"), "key2", ImmutableList.of("value2"));
+        ImmutableSet<String> requiredHeaderKeys = ImmutableSet.of("key1");
+
+        Map<String, List<String>> result =
+                mClient.pickRequiredHeaderFields(allHeaders, requiredHeaderKeys);
+        assertEquals(result, ImmutableMap.of("key1", ImmutableList.of("value1")));
+    }
+
+    @Test
+    public void testPickRequiredHeaderFieldsCaseInsensitive() throws Exception {
+        ImmutableMap<String, List<String>> allHeaders =
+                ImmutableMap.of(
+                        "KEY1", ImmutableList.of("value1"), "KEY2", ImmutableList.of("value2"));
+        ImmutableSet<String> requiredHeaderKeys = ImmutableSet.of("key1", "key2");
+
+        Map<String, List<String>> result =
+                mClient.pickRequiredHeaderFields(allHeaders, requiredHeaderKeys);
+        assertEquals(
+                result,
+                ImmutableMap.of(
+                        "key1", ImmutableList.of("value1"), "key2", ImmutableList.of("value2")));
     }
 
     private AdServicesHttpClientResponse fetchPayload(Uri uri, DevContext devContext)

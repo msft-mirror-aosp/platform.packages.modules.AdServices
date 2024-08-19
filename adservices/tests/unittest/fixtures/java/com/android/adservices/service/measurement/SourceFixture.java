@@ -103,7 +103,10 @@ public final class SourceFixture {
                 .setAttributionScopes(ValidSourceParams.ATTRIBUTION_SCOPES)
                 .setAttributionScopeLimit(ValidSourceParams.ATTRIBUTION_SCOPE_LIMIT)
                 .setMaxEventStates(ValidSourceParams.MAX_NUM_VIEW_STATES)
-                .setAttributedTriggers(new ArrayList<>());
+                .setDestinationLimitPriority(ValidSourceParams.DESTINATION_LIMIT_PRIORITY)
+                .setDestinationLimitAlgorithm(ValidSourceParams.DESTINATION_LIMIT_ALGORITHM)
+                .setAttributedTriggers(new ArrayList<>())
+                .setEventLevelEpsilon(ValidSourceParams.EVENT_LEVEL_EPSILON);
     }
 
     public static class ValidSourceParams {
@@ -122,8 +125,10 @@ public final class SourceFixture {
         public static final Long INSTALL_ATTRIBUTION_WINDOW = 841839879274L;
         public static final Long INSTALL_COOLDOWN_WINDOW = 8418398274L;
         public static final UnsignedLong DEBUG_KEY = new UnsignedLong(7834690L);
-        public static final @Source.AttributionMode int ATTRIBUTION_MODE =
-                Source.AttributionMode.TRUTHFULLY;
+
+        @Source.AttributionMode
+        public static final int ATTRIBUTION_MODE = Source.AttributionMode.TRUTHFULLY;
+
         public static final int AGGREGATE_CONTRIBUTIONS = 0;
         public static final String REGISTRATION_ID = "R1";
         public static final String SHARED_AGGREGATE_KEYS = "[\"key1\"]";
@@ -139,6 +144,10 @@ public final class SourceFixture {
         public static final Long ATTRIBUTION_SCOPE_LIMIT = 5L;
         public static final Long MAX_NUM_VIEW_STATES = 10L;
         public static final Long REINSTALL_REATTRIBUTION_WINDOW = 841839879274L;
+        public static final long DESTINATION_LIMIT_PRIORITY = 841849879274L;
+        public static final Source.DestinationLimitAlgorithm DESTINATION_LIMIT_ALGORITHM =
+                Source.DestinationLimitAlgorithm.FIFO;
+        public static final Double EVENT_LEVEL_EPSILON = 12D;
 
         public static final String buildAggregateSource() {
             try {
@@ -192,7 +201,7 @@ public final class SourceFixture {
                         + String.format(
                                 "\"end_times\": [%s, %s]}, ",
                                 TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(7))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2]}]";
         Source source =
                 getMinimalValidSourceBuilder()
@@ -212,7 +221,7 @@ public final class SourceFixture {
                         + "\"event_report_windows\": { "
                         + "\"start_time\": 0, "
                         + String.format("\"end_times\": [%s]}, ", TimeUnit.DAYS.toMillis(2))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1]}]";
         Source source = getMinimalValidSourceBuilder().build();
         TriggerSpecs triggerSpecs = new TriggerSpecs(
@@ -229,7 +238,7 @@ public final class SourceFixture {
                         + "\"event_report_windows\": { "
                         + "\"start_time\": 0, "
                         + String.format("\"end_times\": [%s]}, ", TimeUnit.DAYS.toMillis(2))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1]}]";
         Source source = getMinimalValidSourceBuilder().build();
         double mockFlipProbability = Combinatorics.getFlipProbability(5, 3);
@@ -353,7 +362,7 @@ public final class SourceFixture {
                         TimeUnit.DAYS.toMillis(2),
                         TimeUnit.DAYS.toMillis(7),
                         TimeUnit.DAYS.toMillis(30))
-                + "\"summary_window_operator\": \"count\", "
+                + "\"summary_operator\": \"count\", "
                 + "\"summary_buckets\": [1, 2, 3, 4]}]";
     }
 
@@ -373,7 +382,7 @@ public final class SourceFixture {
                 + String.format(
                         "\"end_times\": [%s, %s]}, ",
                         TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(7))
-                + "\"summary_window_operator\": \"value_sum\", "
+                + "\"summary_operator\": \"value_sum\", "
                 + "\"summary_buckets\": [10, 100]}]";
     }
 
@@ -396,13 +405,13 @@ public final class SourceFixture {
                                 TimeUnit.DAYS.toMillis(2),
                                 TimeUnit.DAYS.toMillis(7),
                                 TimeUnit.DAYS.toMillis(30))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3, 4]}, "
                         + "{\"trigger_data\": [4, 5, 6, 7],"
                         + "\"event_report_windows\": { "
                         + "\"start_time\": 0, "
                         + String.format("\"end_times\": [%s]}, ", TimeUnit.DAYS.toMillis(3))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1,5,7]} "
                         + "]");
     }

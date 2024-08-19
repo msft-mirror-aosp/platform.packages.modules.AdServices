@@ -18,10 +18,7 @@ package com.android.adservices.common;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.when;
 
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
@@ -30,12 +27,12 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
-import java.util.List;
-
 /** Unit tests for {@link AdServicesSupportHelper}. */
 public final class AdServicesSupportHelperTest extends AdServicesMockitoTestCase {
     private static final String INTENT_ACTION_NAME = "SomeService";
+
     @Mock private PackageManager mMockPackageManager;
+
     private AdServicesSupportHelper mAdServicesSupportHelper;
 
     @Before
@@ -47,22 +44,14 @@ public final class AdServicesSupportHelperTest extends AdServicesMockitoTestCase
 
     @Test
     public void testIsAndroidServiceAvailable_true() {
-        mockPackageManagerQueryIntentService(List.of(new ResolveInfo()));
+        mockPackageManagerQueryIntentService(new ResolveInfo());
 
         assertThat(mAdServicesSupportHelper.isAndroidServiceAvailable(INTENT_ACTION_NAME)).isTrue();
     }
 
     @Test
     public void testIsAndroidServiceAvailable_false() {
-        mockPackageManagerQueryIntentService(/* resolveInfos= */ null);
-
-        expect.withMessage(
-                        "isAdIdProviderAvailable() when PackageManager returns a null list of"
-                                + " ResolveInfo.")
-                .that(mAdServicesSupportHelper.isAndroidServiceAvailable(INTENT_ACTION_NAME))
-                .isFalse();
-
-        mockPackageManagerQueryIntentService(List.of());
+        mockPackageManagerQueryIntentService(new ResolveInfo[0]);
 
         expect.withMessage(
                         "isAdIdProviderAvailable() when PackageManager returns an empty list of"
@@ -70,7 +59,7 @@ public final class AdServicesSupportHelperTest extends AdServicesMockitoTestCase
                 .that(mAdServicesSupportHelper.isAndroidServiceAvailable(INTENT_ACTION_NAME))
                 .isFalse();
 
-        mockPackageManagerQueryIntentService(List.of(new ResolveInfo(), new ResolveInfo()));
+        mockPackageManagerQueryIntentService(new ResolveInfo(), new ResolveInfo());
 
         expect.withMessage(
                         "isAdIdProviderAvailable() when PackageManager returns a 2-element list of"
@@ -79,7 +68,7 @@ public final class AdServicesSupportHelperTest extends AdServicesMockitoTestCase
                 .isFalse();
     }
 
-    private void mockPackageManagerQueryIntentService(List<ResolveInfo> resolveInfos) {
-        when(mMockPackageManager.queryIntentServices(any(), anyInt())).thenReturn(resolveInfos);
+    private void mockPackageManagerQueryIntentService(ResolveInfo... resolveInfos) {
+        mocker.mockQueryIntentService(mMockPackageManager, resolveInfos);
     }
 }

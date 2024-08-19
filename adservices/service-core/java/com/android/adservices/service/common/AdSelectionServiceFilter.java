@@ -27,9 +27,9 @@ import android.os.Build;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
+import com.android.adservices.service.profiling.Tracing;
 
 import java.util.Objects;
 
@@ -38,20 +38,20 @@ import java.util.Objects;
 public class AdSelectionServiceFilter extends AbstractFledgeServiceFilter {
     public AdSelectionServiceFilter(
             @NonNull Context context,
-            @NonNull ConsentManager consentManager,
+            @NonNull FledgeConsentFilter fledgeConsentFilter,
             @NonNull Flags flags,
             @NonNull AppImportanceFilter appImportanceFilter,
             @NonNull FledgeAuthorizationFilter fledgeAuthorizationFilter,
             @NonNull FledgeAllowListsFilter fledgeAllowListsFilter,
-            @NonNull Throttler throttler) {
+            @NonNull FledgeApiThrottleFilter fledgeApiThrottleFilter) {
         super(
                 context,
-                consentManager,
+                fledgeConsentFilter,
                 flags,
                 appImportanceFilter,
                 fledgeAuthorizationFilter,
                 fledgeAllowListsFilter,
-                throttler);
+                fledgeApiThrottleFilter);
     }
 
     /**
@@ -77,12 +77,13 @@ public class AdSelectionServiceFilter extends AbstractFledgeServiceFilter {
             int apiName,
             @NonNull Throttler.ApiKey apiKey,
             DevContext devContext) {
+        int traceCookie = Tracing.beginAsyncSection(Tracing.AD_SELECTION_SERVICE_FILTER);
         try {
             Objects.requireNonNull(callerPackageName);
             Objects.requireNonNull(apiKey);
 
             assertCallerPackageName(callerPackageName, callerUid, apiName);
-            assertCallerNotThrottled(callerPackageName, apiKey);
+            assertCallerNotThrottled(callerPackageName, apiKey, apiName);
             if (enforceForeground) {
                 assertForegroundCaller(callerUid, apiName);
             }
@@ -92,10 +93,12 @@ public class AdSelectionServiceFilter extends AbstractFledgeServiceFilter {
             }
             assertAppInAllowList(callerPackageName, apiName, API_AD_SELECTION);
             if (enforceConsent) {
-                assertCallerHasUserConsent();
+                assertCallerHasUserConsent(callerPackageName, apiName);
             }
         } catch (Throwable t) {
             throw new FilterException(t);
+        } finally {
+            Tracing.endAsyncSection(Tracing.AD_SELECTION_SERVICE_FILTER, traceCookie);
         }
     }
 }

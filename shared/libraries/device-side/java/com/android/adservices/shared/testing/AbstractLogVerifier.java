@@ -93,7 +93,7 @@ public abstract class AbstractLogVerifier<T extends LogCall> implements LogVerif
      */
     public void validateTimes(int times, String annotation) {
         if (times == 0) {
-            throw new IllegalStateException(
+            throw new IllegalArgumentException(
                     "Detected @"
                             + annotation
                             + " with times = 0. Remove annotation as the "
@@ -101,7 +101,7 @@ public abstract class AbstractLogVerifier<T extends LogCall> implements LogVerif
         }
 
         if (times < 0) {
-            throw new IllegalStateException("Detected @" + annotation + " with times < 0!");
+            throw new IllegalArgumentException("Detected @" + annotation + " with times < 0!");
         }
     }
 

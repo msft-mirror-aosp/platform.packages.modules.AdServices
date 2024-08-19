@@ -18,7 +18,7 @@ package com.android.server.adservices.consent;
 import android.annotation.NonNull;
 import android.app.adservices.consent.ConsentParcel;
 
-import com.android.adservices.shared.storage.BooleanFileDatastore;
+import com.android.adservices.shared.storage.AtomicFileDatastore;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.adservices.LogUtil;
 import com.android.server.adservices.feature.PrivacySandboxEnrollmentChannelCollection;
@@ -64,7 +64,7 @@ public final class ConsentManager {
     static final int STORAGE_VERSION = 1;
     static final String STORAGE_XML_IDENTIFIER = "ConsentManagerStorageIdentifier.xml";
 
-    private final BooleanFileDatastore mDatastore;
+    private final AtomicFileDatastore mDatastore;
 
     @VisibleForTesting static final String DEFAULT_CONSENT = "DEFAULT_CONSENT";
 
@@ -83,7 +83,7 @@ public final class ConsentManager {
 
     private final ReadWriteLock mReadWriteLock = new ReentrantReadWriteLock();
 
-    private ConsentManager(@NonNull BooleanFileDatastore datastore) {
+    private ConsentManager(@NonNull AtomicFileDatastore datastore) {
         Objects.requireNonNull(datastore);
 
         mDatastore = datastore;
@@ -102,34 +102,34 @@ public final class ConsentManager {
                 ConsentDatastoreLocationHelper.getConsentDataStoreDirAndCreateDir(
                         baseDir, userIdentifier);
 
-        BooleanFileDatastore datastore = createAndInitBooleanFileDatastore(consentDataStoreDir);
+        AtomicFileDatastore datastore = createAndInitAtomicFileDatastore(consentDataStoreDir);
 
         return new ConsentManager(datastore);
     }
 
     @NonNull
     @VisibleForTesting
-    static BooleanFileDatastore createAndInitBooleanFileDatastore(String consentDataStoreDir)
+    static AtomicFileDatastore createAndInitAtomicFileDatastore(String consentDataStoreDir)
             throws IOException {
         // Create the DataStore and initialize it.
-        BooleanFileDatastore datastore =
-                new BooleanFileDatastore(
+        AtomicFileDatastore datastore =
+                new AtomicFileDatastore(
                         consentDataStoreDir, STORAGE_XML_IDENTIFIER, STORAGE_VERSION, VERSION_KEY);
         datastore.initialize();
         // TODO(b/259607624): implement a method in the datastore which would support
         // this exact scenario - if the value is null, return default value provided
         // in the parameter (similar to SP apply etc.)
-        if (datastore.get(NOTIFICATION_DISPLAYED_ONCE) == null) {
-            datastore.put(NOTIFICATION_DISPLAYED_ONCE, false);
+        if (datastore.getBoolean(NOTIFICATION_DISPLAYED_ONCE) == null) {
+            datastore.putBoolean(NOTIFICATION_DISPLAYED_ONCE, false);
         }
-        if (datastore.get(GA_UX_NOTIFICATION_DISPLAYED_ONCE) == null) {
-            datastore.put(GA_UX_NOTIFICATION_DISPLAYED_ONCE, false);
+        if (datastore.getBoolean(GA_UX_NOTIFICATION_DISPLAYED_ONCE) == null) {
+            datastore.putBoolean(GA_UX_NOTIFICATION_DISPLAYED_ONCE, false);
         }
-        if (datastore.get(TOPICS_CONSENT_PAGE_DISPLAYED) == null) {
-            datastore.put(TOPICS_CONSENT_PAGE_DISPLAYED, false);
+        if (datastore.getBoolean(TOPICS_CONSENT_PAGE_DISPLAYED) == null) {
+            datastore.putBoolean(TOPICS_CONSENT_PAGE_DISPLAYED, false);
         }
-        if (datastore.get(FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED) == null) {
-            datastore.put(FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED, false);
+        if (datastore.getBoolean(FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED) == null) {
+            datastore.putBoolean(FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED, false);
         }
         return datastore;
     }
@@ -142,7 +142,7 @@ public final class ConsentManager {
         try {
             return new ConsentParcel.Builder()
                     .setConsentApiType(consentApiType)
-                    .setIsGiven(mDatastore.get(getConsentApiTypeKey(consentApiType)))
+                    .setIsGiven(mDatastore.getBoolean(getConsentApiTypeKey(consentApiType)))
                     .build();
         } catch (NullPointerException | IllegalArgumentException e) {
             LogUtil.e(e, ERROR_MESSAGE_DATASTORE_EXCEPTION_WHILE_GET_CONTENT);
@@ -156,31 +156,31 @@ public final class ConsentManager {
     public void setConsent(ConsentParcel consentParcel) throws IOException {
         mReadWriteLock.writeLock().lock();
         try {
-            mDatastore.put(
+            mDatastore.putBoolean(
                     getConsentApiTypeKey(consentParcel.getConsentApiType()),
                     consentParcel.isIsGiven());
             if (consentParcel.getConsentApiType() == ConsentParcel.ALL_API) {
                 // Convert from 1 to 3 consents.
-                mDatastore.put(
+                mDatastore.putBoolean(
                         getConsentApiTypeKey(ConsentParcel.TOPICS), consentParcel.isIsGiven());
-                mDatastore.put(
+                mDatastore.putBoolean(
                         getConsentApiTypeKey(ConsentParcel.FLEDGE), consentParcel.isIsGiven());
-                mDatastore.put(
+                mDatastore.putBoolean(
                         getConsentApiTypeKey(ConsentParcel.MEASUREMENT), consentParcel.isIsGiven());
             } else {
                 // Convert from 3 consents to 1 consent.
-                if (mDatastore.get(
+                if (mDatastore.getBoolean(
                                 getConsentApiTypeKey(ConsentParcel.TOPICS), /* defaultValue */
                                 false)
-                        && mDatastore.get(
+                        && mDatastore.getBoolean(
                                 getConsentApiTypeKey(ConsentParcel.FLEDGE), /* defaultValue */
                                 false)
-                        && mDatastore.get(
+                        && mDatastore.getBoolean(
                                 getConsentApiTypeKey(ConsentParcel.MEASUREMENT), /* defaultValue */
                                 false)) {
-                    mDatastore.put(getConsentApiTypeKey(ConsentParcel.ALL_API), true);
+                    mDatastore.putBoolean(getConsentApiTypeKey(ConsentParcel.ALL_API), true);
                 } else {
-                    mDatastore.put(getConsentApiTypeKey(ConsentParcel.ALL_API), false);
+                    mDatastore.putBoolean(getConsentApiTypeKey(ConsentParcel.ALL_API), false);
                 }
             }
         } finally {
@@ -307,13 +307,13 @@ public final class ConsentManager {
         try {
             switch (interaction) {
                 case -1:
-                    mDatastore.put(MANUAL_INTERACTION_WITH_CONSENT_RECORDED, false);
+                    mDatastore.putBoolean(MANUAL_INTERACTION_WITH_CONSENT_RECORDED, false);
                     break;
                 case 0:
                     mDatastore.remove(MANUAL_INTERACTION_WITH_CONSENT_RECORDED);
                     break;
                 case 1:
-                    mDatastore.put(MANUAL_INTERACTION_WITH_CONSENT_RECORDED, true);
+                    mDatastore.putBoolean(MANUAL_INTERACTION_WITH_CONSENT_RECORDED, true);
                     break;
                 default:
                     throw new IllegalArgumentException(
@@ -335,7 +335,7 @@ public final class ConsentManager {
         mReadWriteLock.readLock().lock();
         try {
             Boolean userManualInteractionWithConsent =
-                    mDatastore.get(MANUAL_INTERACTION_WITH_CONSENT_RECORDED);
+                    mDatastore.getBoolean(MANUAL_INTERACTION_WITH_CONSENT_RECORDED);
             if (userManualInteractionWithConsent == null) {
                 return 0;
             } else if (Boolean.TRUE.equals(userManualInteractionWithConsent)) {
@@ -400,7 +400,7 @@ public final class ConsentManager {
         try {
             for (PrivacySandboxFeatureType featureType : PrivacySandboxFeatureType.values()) {
                 try {
-                    mDatastore.put(
+                    mDatastore.putBoolean(
                             featureType.name(), currentFeatureType.equals(featureType.name()));
                 } catch (IOException e) {
                     LogUtil.e(
@@ -534,7 +534,8 @@ public final class ConsentManager {
                     .forEach(
                             ux -> {
                                 try {
-                                    mDatastore.put(ux.toString(), ux.toString().equals(eligibleUx));
+                                    mDatastore.putBoolean(
+                                            ux.toString(), ux.toString().equals(eligibleUx));
                                 } catch (IOException e) {
                                     LogUtil.e(
                                             "IOException caught while setting the current UX."
@@ -551,7 +552,7 @@ public final class ConsentManager {
         mReadWriteLock.readLock().lock();
         try {
             return Stream.of(PrivacySandboxUxCollection.values())
-                    .filter(ux -> Boolean.TRUE.equals(mDatastore.get(ux.toString())))
+                    .filter(ux -> Boolean.TRUE.equals(mDatastore.getBoolean(ux.toString())))
                     .findFirst()
                     .orElse(PrivacySandboxUxCollection.UNSUPPORTED_UX)
                     .toString();
@@ -568,7 +569,7 @@ public final class ConsentManager {
                     .forEach(
                             channel -> {
                                 try {
-                                    mDatastore.put(
+                                    mDatastore.putBoolean(
                                             channel.toString(),
                                             channel.toString().equals(enrollmentChannel));
                                 } catch (IOException e) {
@@ -591,7 +592,8 @@ public final class ConsentManager {
                     Stream.of(PrivacySandboxEnrollmentChannelCollection.values())
                             .filter(
                                     channel ->
-                                            Boolean.TRUE.equals(mDatastore.get(channel.toString())))
+                                            Boolean.TRUE.equals(
+                                                    mDatastore.getBoolean(channel.toString())))
                             .findFirst()
                             .orElse(null);
             if (enrollmentChannel != null) {
@@ -630,10 +632,23 @@ public final class ConsentManager {
         setValueWithLock(IS_PA_DATA_RESET, isPaDataReset, /* callerName */ "isPaDataReset");
     }
 
+    @VisibleForTesting static final String MODULE_ENROLLMENT_STATE = "MODULE_ENROLLMENT_STATE";
+
+    /** Returns the enrollmentState. */
+    public String getModuleEnrollmentState() {
+        return getStringValueWithLock(MODULE_ENROLLMENT_STATE);
+    }
+
+    /** Set enrollmentState in system server. */
+    public void setModuleEnrollmentState(String enrollmentState) throws IOException {
+        setStringValueWithLock(
+                MODULE_ENROLLMENT_STATE, enrollmentState, /* callerName */ "enrollmentState");
+    }
+
     private boolean getValueWithLock(String key) {
         mReadWriteLock.readLock().lock();
         try {
-            Boolean value = mDatastore.get(key);
+            Boolean value = mDatastore.getBoolean(key);
             return value != null ? value : false;
         } finally {
             mReadWriteLock.readLock().unlock();
@@ -650,7 +665,32 @@ public final class ConsentManager {
     private void setValueWithLock(String key, Boolean value, String callerName) {
         mReadWriteLock.writeLock().lock();
         try {
-            mDatastore.put(key, value);
+            mDatastore.putBoolean(key, value);
+        } catch (IOException e) {
+            LogUtil.e(
+                    e,
+                    callerName
+                            + " operation failed due to IOException thrown by Datastore: "
+                            + e.getMessage());
+        } finally {
+            mReadWriteLock.writeLock().unlock();
+        }
+    }
+
+    private String getStringValueWithLock(String key) {
+        mReadWriteLock.readLock().lock();
+        try {
+            String value = mDatastore.getString(key);
+            return value != null ? value : "";
+        } finally {
+            mReadWriteLock.readLock().unlock();
+        }
+    }
+
+    private void setStringValueWithLock(String key, String value, String callerName) {
+        mReadWriteLock.writeLock().lock();
+        try {
+            mDatastore.putString(key, value);
         } catch (IOException e) {
             LogUtil.e(
                     e,

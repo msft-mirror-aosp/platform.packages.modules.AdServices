@@ -16,60 +16,92 @@
 
 package com.android.adservices.shared.testing;
 
+import static android.platform.test.ravenwood.RavenwoodRule.isOnRavenwood;
+
 import android.content.Context;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import org.junit.Test;
 
-public final class DeviceSideTestCaseTest extends SidelessTestCase {
-
-    private final MyDeviceSideTestCase mTestCase = new MyDeviceSideTestCase();
+public final class DeviceSideTestCaseTest extends DeviceSideTestCase {
 
     @Test
-    public void testContextReferences() {
-        Context expectedContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        expect.withMessage("mContext")
-                .that(mTestCase.getContext())
-                .isSameInstanceAs(expectedContext);
-        expect.withMessage("sContext")
-                .that(mTestCase.getStaticContext())
-                .isSameInstanceAs(expectedContext);
+    public void testStaticContext() {
+        if (isOnRavenwood()) {
+            expect.withMessage("sContext")
+                    .that(sContext)
+                    // Cannot call InstrumentationRegistry... again as it would return another
+                    // context
+                    .isNotNull();
+            return;
+        }
+        Context expectedContext = InstrumentationRegistry.getInstrumentation().getContext();
+        expect.withMessage("sContext").that(sContext).isSameInstanceAs(expectedContext);
+    }
 
-        String expectedPackageName = expectedContext.getPackageName();
-        expect.withMessage("mPackageName")
-                .that(mTestCase.getPackageName())
-                .isSameInstanceAs(expectedPackageName);
-        expect.withMessage("sPackageName")
-                .that(mTestCase.getStaticPackageName())
-                .isSameInstanceAs(expectedPackageName);
+    @Test
+    public void testStaticPackageName() {
+        expect.withMessage("sPackageName").that(sPackageName).isEqualTo(getExpectedPackageName());
+    }
+
+    @Test
+    public void testStaticTargetContext() {
+        if (isOnRavenwood()) {
+            expect.withMessage("sTargetContext")
+                    .that(sTargetContext)
+                    // Cannot call InstrumentationRegistry... again as it would return another
+                    // context
+                    .isNotNull();
+            return;
+        }
+        Context expectedContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        expect.withMessage("sTargetContext").that(sTargetContext).isSameInstanceAs(expectedContext);
+    }
+
+    @Test
+    public void testStaticTargetPackageName() {
+        expect.withMessage("sTargetPackageName")
+                .that(sTargetPackageName)
+                .isEqualTo(getExpectedPackageName());
+    }
+
+    @Test
+    public void testContext() {
+        Context expectedContext =
+                isOnRavenwood()
+                        ? mContext
+                        : InstrumentationRegistry.getInstrumentation().getContext();
+        expect.withMessage("mContext").that(mContext).isSameInstanceAs(expectedContext);
+    }
+
+    @Test
+    public void testPackageName() {
+        expect.withMessage("mPackageName").that(mPackageName).isEqualTo(getExpectedPackageName());
+    }
+
+    @Test
+    public void testTargetContext() {
+        Context expectedContext =
+                isOnRavenwood()
+                        ? mTargetContext
+                        : InstrumentationRegistry.getInstrumentation().getTargetContext();
+        expect.withMessage("mTargetContext").that(mTargetContext).isSameInstanceAs(expectedContext);
+    }
+
+    @Test
+    public void testTargetPackageName() {
+        expect.withMessage("mTargetPackageName")
+                .that(mTargetPackageName)
+                .isEqualTo(getExpectedPackageName());
     }
 
     @Test
     public void testTag() {
-        expect.withMessage("mTag").that(mTestCase.getTag()).isEqualTo("MyDeviceSideTestCase");
+        expect.withMessage("mTag").that(mTag).isEqualTo("DeviceSideTestCaseTest");
     }
 
-    private static final class MyDeviceSideTestCase extends DeviceSideTestCase {
-
-        public Context getContext() {
-            return mContext;
-        }
-
-        public Context getStaticContext() {
-            return sContext;
-        }
-
-        public String getPackageName() {
-            return mPackageName;
-        }
-
-        public String getStaticPackageName() {
-            return sPackageName;
-        }
-
-        public String getTag() {
-            return mTag;
-        }
+    private String getExpectedPackageName() {
+        return isOnRavenwood() ? RAVENWOOD_PACKAGE_NAME : "com.android.adservices.shared.tests";
     }
 }

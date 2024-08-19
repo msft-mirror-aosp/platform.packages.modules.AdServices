@@ -242,13 +242,11 @@ public class AdSelectionScriptEngine {
     private final JSScriptEngine mJsEngine;
     // Used for the Futures.transform calls to compose futures.
     private final Executor mExecutor = MoreExecutors.directExecutor();
-    private final Supplier<Boolean> mEnforceMaxHeapSizeFeatureSupplier;
     private final Supplier<Long> mMaxHeapSizeBytesSupplier;
     private final RetryStrategy mRetryStrategy;
     private final Supplier<Boolean> mIsolateConsoleMessageInLogsEnabled;
 
     public AdSelectionScriptEngine(
-            Supplier<Boolean> enforceMaxHeapSizeFeatureSupplier,
             Supplier<Long> maxHeapSizeBytesSupplier,
             AdCounterKeyCopier adCounterKeyCopier,
             DebugReportingScriptStrategy debugReportingScript,
@@ -260,7 +258,6 @@ public class AdSelectionScriptEngine {
         mAdWithBidArgumentUtil = new AdWithBidArgumentUtil(mAdDataArgumentUtil);
         mDebugReportingScript = debugReportingScript;
         mCpcBillingEnabled = cpcBillingEnabled;
-        mEnforceMaxHeapSizeFeatureSupplier = enforceMaxHeapSizeFeatureSupplier;
         mMaxHeapSizeBytesSupplier = maxHeapSizeBytesSupplier;
         mRetryStrategy = retryStrategy;
         mIsolateConsoleMessageInLogsEnabled = isolateConsoleMessageInLogsEnabled;
@@ -787,7 +784,6 @@ public class AdSelectionScriptEngine {
                         ImmutableList.of(
                                 stringArrayArg(FUNCTION_NAMES_ARG_NAME, expectedFunctionsNames)),
                         buildIsolateSettings(
-                                mEnforceMaxHeapSizeFeatureSupplier,
                                 mMaxHeapSizeBytesSupplier,
                                 mIsolateConsoleMessageInLogsEnabled),
                         mRetryStrategy),
@@ -836,7 +832,6 @@ public class AdSelectionScriptEngine {
                                 stringArrayArg(
                                         FUNCTION_NAMES_ARG_NAME, ImmutableList.of(functionName))),
                         buildIsolateSettings(
-                                mEnforceMaxHeapSizeFeatureSupplier,
                                 mMaxHeapSizeBytesSupplier,
                                 mIsolateConsoleMessageInLogsEnabled),
                         mRetryStrategy),
@@ -938,7 +933,6 @@ public class AdSelectionScriptEngine {
                                 auctionFunctionCallGenerator.apply(args)),
                 args,
                 buildIsolateSettings(
-                        mEnforceMaxHeapSizeFeatureSupplier,
                         mMaxHeapSizeBytesSupplier,
                         mIsolateConsoleMessageInLogsEnabled),
                 mRetryStrategy);
@@ -992,7 +986,6 @@ public class AdSelectionScriptEngine {
                                 auctionFunctionCallGenerator.apply(otherArgs)),
                 allArgs,
                 buildIsolateSettings(
-                        mEnforceMaxHeapSizeFeatureSupplier,
                         mMaxHeapSizeBytesSupplier,
                         mIsolateConsoleMessageInLogsEnabled),
                 mRetryStrategy);
@@ -1070,11 +1063,9 @@ public class AdSelectionScriptEngine {
     }
 
     private static IsolateSettings buildIsolateSettings(
-            Supplier<Boolean> enforceMaxHeapSizeFeatureSupplier,
             Supplier<Long> maxHeapSizeBytesSupplier,
             Supplier<Boolean> isolateConsoleMessageInLogsEnabled) {
         return IsolateSettings.builder()
-                .setEnforceMaxHeapSizeFeature(enforceMaxHeapSizeFeatureSupplier.get())
                 .setMaxHeapSizeBytes(maxHeapSizeBytesSupplier.get())
                 .setIsolateConsoleMessageInLogsEnabled(isolateConsoleMessageInLogsEnabled.get())
                 .build();

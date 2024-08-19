@@ -26,7 +26,6 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
-
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -45,6 +44,8 @@ public final class CustomAudienceFixture {
     public static final Duration CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN =
             Duration.ofMillis(
                     CommonFixture.FLAGS_FOR_TEST.getFledgeCustomAudienceDefaultExpireInMs());
+    public static final long CUSTOM_AUDIENCE_ACTIVE_FETCH_WINDOW_MS =
+            CommonFixture.FLAGS_FOR_TEST.getFledgeCustomAudienceActiveTimeWindowInMs();
     public static final long DAY_IN_SECONDS = 60 * 60 * 24;
 
     public static final String VALID_OWNER = CommonFixture.TEST_PACKAGE_NAME;
@@ -115,6 +116,12 @@ public final class CustomAudienceFixture {
             @CustomAudience.AuctionServerRequestFlag int auctionServerRequestFlags) {
         return getValidBuilderForBuyer(buyer)
                 .setAuctionServerRequestFlags(auctionServerRequestFlags);
+    }
+
+    /** Build valid CA with priority */
+    public static CustomAudience.Builder getValidBuilderByBuyerWithPriority(
+            AdTechIdentifier buyer, double priority) {
+        return getValidBuilderForBuyer(buyer).setPriority(priority);
     }
 
     public static CustomAudience.Builder getValidBuilderWithSubdomainsForBuyer(

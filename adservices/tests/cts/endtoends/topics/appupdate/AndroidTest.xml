@@ -21,6 +21,7 @@
     <option name="config-descriptor:metadata" key="parameter" value="not_instant_app" />
     <option name="config-descriptor:metadata" key="parameter" value="not_multi_abi" />
     <option name="config-descriptor:metadata" key="parameter" value="secondary_user" />
+    <option name="config-descriptor:metadata" key="parameter" value="secondary_user_on_secondary_display" />
 
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true"/>
@@ -35,34 +36,12 @@
 
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
         <option name="test-user-token" value="%TEST_USER%"/>
-        <!-- Disable global/topics kill_switch to ignore the effect of actual PH values. -->
-        <option name="run-command" value="device_config put adservices global_kill_switch false" />
-        <option name="run-command" value="device_config put adservices topics_kill_switch false" />
-        <!-- Enable adservices system service-->
-        <option name="run-command" value="device_config put adservices adservice_system_service_enabled true" />
-        <!-- Override Consent Manager to debug mode to grant user consent -->
-        <option name="run-command" value="setprop debug.adservices.consent_manager_debug_mode true" />
-        <option name="run-command" value="setprop log.tag.adservices VERBOSE" />
-        <option name="run-command" value="setprop log.tag.adservices.topics VERBOSE" />
-        <!-- Override the flag to disable Topics enrollment check. -->
-        <option name="run-command" value="device_config put adservices disable_topics_enrollment_check true" />
         <!-- Create place to store tests apks that will be installed/uninstalled in the test. -->
         <option name="run-command" value="mkdir -p /data/local/tmp/cts/install" />
-        <!-- Forces using bundled model files. -->
-        <option name="run-command" value="device_config put adservices classifier_force_use_bundled_files true" />
-        <!-- Temporarily disable Device Config sync -->
-        <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />
-
-        <option name="teardown-command" value="setprop debug.adservices.consent_manager_debug_mode false"/>
-        <option name="teardown-command" value="device_config put adservices disable_topics_enrollment_check false" />
-        <option name="teardown-command" value="device_config put adservices classifier_force_use_bundled_files false" />
-
         <option name="teardown-command" value="rm -rf /data/local/tmp/cts"/>
         <!-- Uninstall the test app anyway in case failed test skips the uninstallation -->
         <option name="teardown-command"
                 value="pm uninstall -user %TEST_USER% com.android.adservices.tests.cts.topics.testapp1" />
-        <option name="teardown-command" value="device_config put adservices adservice_system_service_enabled false" />
-        <option name="teardown-command" value="device_config set_sync_disabled_for_tests none" />
     </target_preparer>
 
     <!-- Create place to store tests apks that will be installed/uninstalled in the test. -->
@@ -86,4 +65,6 @@
         <option name="mainline-module-package-name" value="com.google.android.adservices"/>
     </object>
     <option name="config-descriptor:metadata" key="mainline-param" value="com.google.android.adservices.apex" />
+
+    <!-- NOTE: DeviceConfig and SystemProperties are handled by AdServicesFlagsSetterRule -->
 </configuration>

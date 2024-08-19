@@ -24,32 +24,46 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /**
- * Used to specify expected {@code ErrorLogUtil.e(int, int} calls over test methods.
+ * Used to specify expected {@code ErrorLogUtil.e(int, int)} calls over test methods.
  *
  * <ol>
  *   <li>To verify ErrorLogUtil.e(int, int) calls: @ExpectErrorLogUtilCall(X, Y)
  *   <li>To verify multiple same calls, use the times arg: @ExpectErrorLogUtilCall(X, Y, 5)
  *   <li>To verify different invocations, use multiple annotations.
+ *   <li>See {@link SetErrorLogUtilDefaultParams} to specify default params at the class level.
  * </ol>
  *
- * <p>See {@link ExpectErrorLogUtilWithExceptionCall} for {@code ErrorLogUtil.e(Throwable, int, int}
- * calls.
+ * <p>See {@link ExpectErrorLogUtilWithExceptionCall} for verifying {@code ErrorLogUtil.e(Throwable,
+ * int, int)} calls.
  */
 @Retention(RUNTIME)
 @Target(METHOD)
 @Repeatable(ExpectErrorLogUtilCalls.class)
 public @interface ExpectErrorLogUtilCall {
     /** Name of annotation */
-    String NAME = ExpectErrorLogUtilCall.class.getSimpleName();
+    String ANNOTATION_NAME = ExpectErrorLogUtilCall.class.getSimpleName();
+
+    /** Internal value to represent unspecified int logging parameter. */
+    int UNDEFINED_INT_PARAM = Integer.MIN_VALUE;
 
     /** Default number of times to expect log call. */
     int DEFAULT_TIMES = 1;
 
-    /** Error code to be logged */
-    int errorCode();
+    /**
+     * Error code to be logged.
+     *
+     * <p>It's required to define this using {@link SetErrorLogUtilDefaultParams} at the class level
+     * if it is not defined within this annotation.
+     */
+    int errorCode() default UNDEFINED_INT_PARAM;
 
-    /** PPAPI name code to be logged */
-    int ppapiName();
+    /**
+     * PPAPI name code to be logged.
+     *
+     * <p>It's required to define this using {@link SetErrorLogUtilDefaultParams} at the class level
+     * if it is not defined within this annotation.
+     */
+    int ppapiName() default UNDEFINED_INT_PARAM;
 
     /** Number of log calls, default set to 1 */
     int times() default DEFAULT_TIMES;

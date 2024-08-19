@@ -21,7 +21,6 @@ import static java.util.function.Predicate.not;
 import android.database.Cursor;
 import android.net.Uri;
 
-
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
@@ -34,8 +33,10 @@ import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /** Helper class for SQLite operations. */
 public class SqliteObjectMapper {
@@ -203,6 +204,11 @@ public class SqliteObjectMapper {
                 builder::setCoarseEventReportDestinations);
         setTextColumn(
                 cursor,
+                MeasurementTables.SourceContract.TRIGGER_DATA,
+                (concatArray) ->
+                        builder.setTriggerData(unsignedLongsStringToSet(concatArray)));
+        setTextColumn(
+                cursor,
                 MeasurementTables.SourceContract.TRIGGER_SPECS,
                 builder::setTriggerSpecsString);
         setIntColumn(
@@ -240,6 +246,15 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.SourceContract.MAX_EVENT_STATES,
                 builder::setMaxEventStates);
+        setLongColumn(
+                cursor,
+                MeasurementTables.SourceContract.DESTINATION_LIMIT_PRIORITY,
+                builder::setDestinationLimitPriority);
+        setDoubleColumn(
+                cursor,
+                MeasurementTables.SourceContract.EVENT_LEVEL_EPSILON,
+                builder::setEventLevelEpsilon);
+
         return builder.build();
     }
 
@@ -384,6 +399,8 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.AggregateReport.TRIGGER_CONTEXT_ID,
                 builder::setTriggerContextId);
+        setLongColumn(
+                cursor, MeasurementTables.AggregateReport.TRIGGER_TIME, builder::setTriggerTime);
         return builder.build();
     }
 
@@ -569,12 +586,19 @@ public class SqliteObjectMapper {
     }
 
     private static List<UnsignedLong> unsignedLongsStringToList(String concatArray) {
+        return getUnsignedLongStream(concatArray).collect(Collectors.toList());
+    }
+
+    private static Set<UnsignedLong> unsignedLongsStringToSet(String concatArray) {
+        return getUnsignedLongStream(concatArray).collect(Collectors.toSet());
+    }
+
+    private static Stream<UnsignedLong> getUnsignedLongStream(String concatArray) {
         return Arrays.stream(concatArray.split(","))
                 .map(String::trim)
                 .filter(not(String::isEmpty))
                 // TODO (b/295059367): Negative numbers handling to be reverted
-                .map(parseCleanUnsignedLong())
-                .collect(Collectors.toList());
+                .map(parseCleanUnsignedLong());
     }
 
     private static Function<String, UnsignedLong> parseCleanUnsignedLong() {
