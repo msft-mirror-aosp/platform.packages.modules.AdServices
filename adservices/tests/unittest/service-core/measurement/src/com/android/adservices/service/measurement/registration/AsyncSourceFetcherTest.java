@@ -312,7 +312,8 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES,
                 mLogger,
                 asyncRegistration,
-                asyncFetchStatus);
+                asyncFetchStatus,
+                ENROLLMENT_ID);
         verify(mLogger)
                 .logMeasurementRegistrationsResponseSize(
                         eq(
@@ -333,7 +334,8 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 0,
                                                 false)
                                         .setAdTechDomain(null)
-                                        .build()));
+                                        .build()),
+                        eq(ENROLLMENT_ID));
         verify(mUrlConnection).setRequestMethod("POST");
         verify(mUrlConnection).setRequestProperty("Attribution-Reporting-Source-Info", "event");
     }
@@ -5443,7 +5445,8 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 mFetcher.fetchSource(asyncRegistration, asyncFetchStatus, asyncRedirects);
 
         assertTrue(fetch.isPresent());
-        FetcherUtil.emitHeaderMetrics(5L, mLogger, asyncRegistration, asyncFetchStatus);
+        FetcherUtil.emitHeaderMetrics(
+                5L, mLogger, asyncRegistration, asyncFetchStatus, ENROLLMENT_ID);
         verify(mLogger)
                 .logMeasurementRegistrationsResponseSize(
                         eq(
@@ -5464,7 +5467,8 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 0,
                                                 false)
                                         .setAdTechDomain(WebUtil.validUrl("https://foo.test"))
-                                        .build()));
+                                        .build()),
+                        eq(ENROLLMENT_ID));
     }
 
     @Test
