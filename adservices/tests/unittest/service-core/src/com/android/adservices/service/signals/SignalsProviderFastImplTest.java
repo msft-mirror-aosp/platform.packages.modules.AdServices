@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.signals;
 
+import static com.android.adservices.service.signals.ProtectedSignalsFixture.getHexString;
+
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 
@@ -34,12 +36,11 @@ import org.mockito.junit.MockitoRule;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-public class SignalsProviderImplTest {
+public class SignalsProviderFastImplTest {
 
     @Rule public MockitoRule mRule = MockitoJUnit.rule();
 
@@ -48,14 +49,14 @@ public class SignalsProviderImplTest {
     private static final Instant NOW = CommonFixture.FIXED_NOW;
     @Mock private ProtectedSignalsDao mProtectedSignalsDao;
 
-    private SignalsProviderImpl mSignalStorage;
+    private SignalsProviderFastImpl mSignalStorage;
 
     @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Before
     public void setup() {
-        mSignalStorage = new SignalsProviderImpl(mProtectedSignalsDao);
+        mSignalStorage = new SignalsProviderFastImpl(mProtectedSignalsDao);
     }
 
     @Test
@@ -85,7 +86,7 @@ public class SignalsProviderImplTest {
                 mSignalStorage.getSignals(BUYER).get(generateKey(seed));
 
         Assert.assertEquals(NOW, protectedSignals.get(0).getCreationTime());
-        Assert.assertEquals(generateValue(seed), protectedSignals.get(0).getBase64EncodedValue());
+        Assert.assertEquals(generateValue(seed), protectedSignals.get(0).getHexEncodedValue());
         Assert.assertEquals(generatePackageName(seed), protectedSignals.get(0).getPackageName());
     }
 
@@ -120,8 +121,8 @@ public class SignalsProviderImplTest {
     }
 
     private DBProtectedSignal generateDBProtectedSignal(String seed) {
-        byte[] key = Base64.getDecoder().decode(generateKey(seed));
-        byte[] value = Base64.getDecoder().decode(generateValue(seed));
+        byte[] key = ("TestKey" + seed).getBytes();
+        byte[] value = ("TestValue" + seed).getBytes();
         String packageName = generatePackageName(seed);
 
         Random rand = new Random();
@@ -140,12 +141,12 @@ public class SignalsProviderImplTest {
 
     private String generateKey(String seed) {
         String key = "TestKey" + seed;
-        return Base64.getEncoder().encodeToString(key.getBytes());
+        return getHexString(key.getBytes());
     }
 
     private String generateValue(String seed) {
         String value = "TestValue" + seed;
-        return Base64.getEncoder().encodeToString(value.getBytes());
+        return getHexString(value.getBytes());
     }
 
     private String generatePackageName(String seed) {

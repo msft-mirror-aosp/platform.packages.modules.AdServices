@@ -17,6 +17,7 @@
 package com.android.adservices.service.signals;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 import android.adservices.common.CommonFixture;
 
@@ -27,21 +28,52 @@ import org.junit.Test;
 
 public class ProtectedSignalTest {
 
-    private static final String VALUE = "A5";
-
     @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
+    private static final String VALID_BASE64 = "dGVzdGluZw==";
+    private static final String VALID_HEX = "74657374696E67";
+
     @Test
-    public void testCreateProtectedSignal() {
+    public void test_protectedSignalBuilder_hexValueSetsBase64_returnsProperBase64() {
         ProtectedSignal signal =
                 ProtectedSignal.builder()
-                        .setBase64EncodedValue(VALUE)
+                        .setHexEncodedValue(VALID_HEX)
                         .setCreationTime(CommonFixture.FIXED_NOW)
-                        .setPackageName(CommonFixture.TEST_PACKAGE_NAME_1)
+                        .setPackageName(CommonFixture.TEST_PACKAGE_NAME)
                         .build();
-        assertEquals(VALUE, signal.getBase64EncodedValue());
+
+        assertEquals(VALID_BASE64, signal.getBase64EncodedValue());
+        assertEquals(VALID_HEX, signal.getHexEncodedValue());
         assertEquals(CommonFixture.FIXED_NOW, signal.getCreationTime());
-        assertEquals(CommonFixture.TEST_PACKAGE_NAME_1, signal.getPackageName());
+        assertEquals(CommonFixture.TEST_PACKAGE_NAME, signal.getPackageName());
+    }
+
+    @Test
+    public void test_protectedSignalBuilder_base64ValueSetsHex_returnsProperHex() {
+        ProtectedSignal signal =
+                ProtectedSignal.builder()
+                        .setBase64EncodedValue(VALID_BASE64)
+                        .setCreationTime(CommonFixture.FIXED_NOW)
+                        .setPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                        .build();
+
+        assertEquals(VALID_BASE64, signal.getBase64EncodedValue());
+        assertEquals(VALID_HEX, signal.getHexEncodedValue());
+        assertEquals(CommonFixture.FIXED_NOW, signal.getCreationTime());
+        assertEquals(CommonFixture.TEST_PACKAGE_NAME, signal.getPackageName());
+    }
+
+    @Test
+    public void test_protectedSignalBuilder_invalidBase64_throwsException() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> {
+                    ProtectedSignal.builder()
+                            .setBase64EncodedValue("not base 64")
+                            .setCreationTime(CommonFixture.FIXED_NOW)
+                            .setPackageName(CommonFixture.TEST_PACKAGE_NAME_1)
+                            .build();
+                });
     }
 }

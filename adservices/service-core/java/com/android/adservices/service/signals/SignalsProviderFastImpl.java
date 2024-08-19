@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.signals;
 
+import static com.android.adservices.service.signals.HexEncodingUtil.binaryToHex;
+
 import android.adservices.common.AdTechIdentifier;
 
 import androidx.annotation.NonNull;
@@ -24,17 +26,16 @@ import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/** Reads signals from Signals DB and collects them into a map with base64 encoded String keys */
-public class SignalsProviderImpl implements SignalsProvider {
+/** Reads signals from Signals DB and collects them into a map with hex encoded String keys */
+public class SignalsProviderFastImpl implements SignalsProvider {
 
     private final ProtectedSignalsDao mProtectedSignalsDao;
 
-    public SignalsProviderImpl(@NonNull ProtectedSignalsDao protectedSignalsDao) {
+    public SignalsProviderFastImpl(@NonNull ProtectedSignalsDao protectedSignalsDao) {
         mProtectedSignalsDao = protectedSignalsDao;
     }
 
@@ -45,18 +46,17 @@ public class SignalsProviderImpl implements SignalsProvider {
         Map<String, List<ProtectedSignal>> signalsMap = new HashMap<>();
 
         for (DBProtectedSignal dbSignal : dbSignals) {
-            String base64EncodedKey = Base64.getEncoder().encodeToString(dbSignal.getKey());
+            String hexEncodedKey = binaryToHex(dbSignal.getKey());
 
             ProtectedSignal protectedSignal =
                     ProtectedSignal.builder()
-                            .setBase64EncodedValue(
-                                    Base64.getEncoder().encodeToString(dbSignal.getValue()))
+                            .setHexEncodedValue(binaryToHex(dbSignal.getValue()))
                             .setPackageName(dbSignal.getPackageName())
                             .setCreationTime(dbSignal.getCreationTime())
                             .build();
 
-            signalsMap.putIfAbsent(base64EncodedKey, new ArrayList<>());
-            signalsMap.get(base64EncodedKey).add(protectedSignal);
+            signalsMap.putIfAbsent(hexEncodedKey, new ArrayList<>());
+            signalsMap.get(hexEncodedKey).add(protectedSignal);
         }
         return signalsMap;
     }
