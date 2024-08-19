@@ -202,7 +202,7 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
                 NullPointerException.class,
                 () -> mProtectedSignalsService.updateSignals(null, mUpdateSignalsCallbackMock));
         verifyUpdateSignalsApiUsageLog(
-                AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, /* packageName */"");
+                AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, /* packageName */ "");
         verify(
                 () -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)),
                 times(0));
@@ -361,8 +361,8 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
     private void verifyUpdateSignalsApiUsageLog(int resultCode, String packageName)
             throws InterruptedException {
         ApiCallStats apiCallStats = logApiCallStatsCallback.assertResultReceived();
-        assertThat(apiCallStats.getApiName()).isEqualTo(
-                AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS);
+        assertThat(apiCallStats.getApiName())
+                .isEqualTo(AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS);
         assertThat(apiCallStats.getAppPackageName()).isEqualTo(packageName);
         assertThat(apiCallStats.getResultCode()).isEqualTo(resultCode);
         assertThat(apiCallStats.getLatencyMillisecond()).isAtLeast(0);

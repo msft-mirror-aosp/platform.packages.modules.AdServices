@@ -191,10 +191,6 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
     private static final Map<String, String> sPhFlagsForInterop =
             Map.ofEntries(
                     entry(
-                            // TODO (b/295382171): remove this after the flag is removed.
-                            FlagsConstants.KEY_MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE,
-                            "true"),
-                    entry(
                             FlagsConstants
                                     .KEY_MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED,
                             "true"),

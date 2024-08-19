@@ -793,5 +793,10 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
         public boolean getDisableFledgeEnrollmentCheck() {
             return true;
         }
+
+        @Override
+        public String getPasAppAllowList() {
+            return CommonFixture.TEST_PACKAGE_NAME;
+        }
     }
 }
