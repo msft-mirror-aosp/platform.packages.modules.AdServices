@@ -46,6 +46,7 @@ import static org.mockito.Mockito.when;
 import android.adservices.common.AdServicesCommonStatesResponse;
 import android.adservices.common.AdServicesStates;
 import android.adservices.common.CallerMetadata;
+import android.adservices.common.CommonFixture;
 import android.adservices.common.ConsentStatus;
 import android.adservices.common.EnableAdServicesResponse;
 import android.adservices.common.GetAdServicesCommonStatesParams;
@@ -117,7 +118,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
     @Captor private ArgumentCaptor<Integer> mIntegerArgumentCaptor;
 
     private static final int BINDER_CONNECTION_TIMEOUT_MS = 5_000;
-    private static final String TEST_APP_PACKAGE_NAME = "com.android.adservices.servicecoretest";
+    private static final String TEST_APP_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     private static final String INVALID_PACKAGE_NAME = "com.do_not_exists";
     private static final String SOME_SDK_NAME = "SomeSdkName";
     private ResultSyncCallback<ApiCallStats> mLogApiCallStatsCallback;
