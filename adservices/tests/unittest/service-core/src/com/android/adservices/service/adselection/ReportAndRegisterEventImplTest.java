@@ -421,6 +421,7 @@ public class ReportAndRegisterEventImplTest {
         // Allow the first call and filter the second.
         doNothing()
                 .doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
+                .when(mFledgeAuthorizationFilterMock)
                 .assertAdTechFromUriEnrolled(
                         any(Uri.class),
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
