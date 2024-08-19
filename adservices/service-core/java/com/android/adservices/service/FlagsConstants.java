@@ -1286,9 +1286,6 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION =
             "measurement_max_event_reports_per_destination";
 
-    public static final String KEY_MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE =
-            "measurement_enable_max_aggregate_reports_per_source";
-
     public static final String KEY_MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE =
             "measurement_max_aggregate_reports_per_source";
 

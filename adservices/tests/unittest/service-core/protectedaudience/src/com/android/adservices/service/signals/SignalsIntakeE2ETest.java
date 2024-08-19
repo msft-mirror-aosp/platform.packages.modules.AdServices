@@ -128,7 +128,7 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
 
     @Spy
     FledgeAllowListsFilter mFledgeAllowListsFilterSpy =
-            new FledgeAllowListsFilter(FakeFlagsFactory.getFlagsForTest(), mAdServicesLoggerMock);
+            new FledgeAllowListsFilter(new SignalsIntakeE2ETestFlags(), mAdServicesLoggerMock);
 
     private ProtectedSignalsDao mSignalsDao;
     private EncoderEndpointsDao mEncoderEndpointsDao;
@@ -152,6 +152,7 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
 
     @Before
     public void setup() {
+        mFakeFlags = new SignalsIntakeE2ETestFlags();
         mSignalsDao =
                 Room.inMemoryDatabaseBuilder(mSpyContext, ProtectedSignalsDatabase.class)
                         .build()
@@ -165,10 +166,7 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
                         .build()
                         .getEncoderLogicMetadataDao();
         mEnrollmentDao =
-                new EnrollmentDao(
-                        mSpyContext,
-                        DbTestUtil.getSharedDbHelperForTest(),
-                        FakeFlagsFactory.getFlagsForTest());
+                new EnrollmentDao(mSpyContext, DbTestUtil.getSharedDbHelperForTest(), mFakeFlags);
         mEnrollmentDao.insert(
                 new EnrollmentData.Builder()
                         .setEnrollmentId("123")
@@ -178,7 +176,6 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mUpdateProcessorSelector = new UpdateProcessorSelector();
         mEncoderPersistenceDao = EncoderPersistenceDao.getInstance(mSpyContext);
-        mFakeFlags = FakeFlagsFactory.getFlagsForTest();
         mEncoderLogicHandler =
                 new EncoderLogicHandler(
                         mEncoderPersistenceDao,
@@ -192,13 +189,11 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
         mUpdateEncoderEventHandler =
                 new UpdateEncoderEventHandler(mEncoderEndpointsDao, mEncoderLogicHandler);
         int oversubscriptionBytesLimit =
-                FakeFlagsFactory.getFlagsForTest()
-                        .getProtectedSignalsMaxSignalSizePerBuyerWithOversubsciptionBytes();
+                mFakeFlags.getProtectedSignalsMaxSignalSizePerBuyerWithOversubsciptionBytes();
         mSignalEvictionController =
                 new SignalEvictionController(
                         ImmutableList.of(),
-                        FakeFlagsFactory.getFlagsForTest()
-                                .getProtectedSignalsMaxSignalSizePerBuyerBytes(),
+                        mFakeFlags.getProtectedSignalsMaxSignalSizePerBuyerBytes(),
                         oversubscriptionBytesLimit);
         mUpdateProcessingOrchestrator =
                 new UpdateProcessingOrchestrator(
@@ -217,7 +212,7 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
                 new ProtectedSignalsServiceFilter(
                         mSpyContext,
                         mFledgeConsentFilterMock,
-                        FakeFlagsFactory.getFlagsForTest(),
+                        mFakeFlags,
                         mAppImportanceFilterMock,
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilterSpy,
@@ -256,7 +251,7 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
                         mDevContextFilterMock,
                         AdServicesExecutors.getBackgroundExecutor(),
                         mAdServicesLoggerMock,
-                        FakeFlagsFactory.getFlagsForTest(),
+                        mFakeFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mProtectedSignalsServiceFilter,
                         mEnrollmentDao);
@@ -769,5 +764,12 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
                 .setCreationTime(Instant.now())
                 .setPackageName(CommonFixture.TEST_PACKAGE_NAME)
                 .build();
+    }
+
+    private static final class SignalsIntakeE2ETestFlags extends FakeFlagsFactory.TestFlags {
+        @Override
+        public String getPasAppAllowList() {
+            return CommonFixture.TEST_PACKAGE_NAME;
+        }
     }
 }

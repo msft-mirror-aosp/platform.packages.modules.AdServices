@@ -40,6 +40,7 @@ public final class BuildCompatUtils {
     }
 
     @VisibleForTesting
+    @SuppressWarnings("AvoidSystemPropertiesUsage") // Reading non-adservices property
     static boolean computeIsDebuggable_R() {
         // Build.isDebuggable was added in S; duplicate that functionality for R.
         return SystemProperties.getInt("ro.debuggable", 0) == 1;
