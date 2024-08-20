@@ -2934,16 +2934,7 @@ public interface Flags extends ModuleSharedFlags {
                     + "android.adservices.crystalball,"
                     + "android.adservices.cts,"
                     + "android.adservices.debuggablects,"
-                    + "com.android.adservices.endtoendtest,"
-                    + "com.android.adservices.tests.permissions.appoptout,"
-                    + "com.android.adservices.tests.permissions.valid,"
-                    + "com.android.adservices.tests.adid,"
-                    + "com.android.adservices.tests.appsetid,"
                     + "com.android.sdksandboxclient,"
-                    + "com.android.tests.sandbox.adid,"
-                    + "com.android.tests.sandbox.appsetid,"
-                    + "com.android.tests.sandbox.fledge,"
-                    + "com.android.tests.sandbox.measurement,"
                     + "com.example.adservices.samples.adid.app,"
                     + "com.example.adservices.samples.appsetid.app,"
                     + "com.example.adservices.samples.fledge.sampleapp,"
@@ -2953,8 +2944,7 @@ public interface Flags extends ModuleSharedFlags {
                     + "com.example.adservices.samples.fledge.sampleapp4,"
                     + "com.example.adservices.samples.signals.sampleapp,"
                     + "com.example.measurement.sampleapp,"
-                    + "com.example.measurement.sampleapp2,"
-                    + "com.android.adservices.tests.cts.endtoendtest.measurement";
+                    + "com.example.measurement.sampleapp2";
 
     /**
      * Returns bypass List for PPAPI app signature check. Apps with package name on this list will
@@ -2985,16 +2975,7 @@ public interface Flags extends ModuleSharedFlags {
                     + "android.adservices.crystalball,"
                     + "android.adservices.cts,"
                     + "android.adservices.debuggablects,"
-                    + "com.android.adservices.endtoendtest,"
-                    + "com.android.adservices.tests.permissions.appoptout,"
-                    + "com.android.adservices.tests.permissions.valid,"
-                    + "com.android.adservices.tests.adid,"
-                    + "com.android.adservices.tests.appsetid,"
                     + "com.android.sdksandboxclient,"
-                    + "com.android.tests.sandbox.adid,"
-                    + "com.android.tests.sandbox.appsetid,"
-                    + "com.android.tests.sandbox.fledge,"
-                    + "com.android.tests.sandbox.measurement,"
                     + "com.example.adservices.samples.adid.app,"
                     + "com.example.adservices.samples.appsetid.app,"
                     + "com.example.adservices.samples.fledge.sampleapp,"
@@ -3003,8 +2984,7 @@ public interface Flags extends ModuleSharedFlags {
                     + "com.example.adservices.samples.fledge.sampleapp3,"
                     + "com.example.adservices.samples.fledge.sampleapp4,"
                     + "com.example.measurement.sampleapp,"
-                    + "com.example.measurement.sampleapp2,"
-                    + "com.android.adservices.tests.cts.endtoendtest.measurement";
+                    + "com.example.measurement.sampleapp2";
 
     /*
      * App Package Name that does not belong to this allow-list will not be able to use Measurement
