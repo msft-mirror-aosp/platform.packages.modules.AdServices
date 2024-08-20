@@ -2935,7 +2935,6 @@ public interface Flags extends ModuleSharedFlags {
                     + "android.adservices.cts,"
                     + "android.adservices.debuggablects,"
                     + "com.android.adservices.endtoendtest,"
-                    + "com.android.adservices.servicecoretest,"
                     + "com.android.adservices.tests.permissions.appoptout,"
                     + "com.android.adservices.tests.permissions.valid,"
                     + "com.android.adservices.tests.adid,"
@@ -2987,7 +2986,6 @@ public interface Flags extends ModuleSharedFlags {
                     + "android.adservices.cts,"
                     + "android.adservices.debuggablects,"
                     + "com.android.adservices.endtoendtest,"
-                    + "com.android.adservices.servicecoretest,"
                     + "com.android.adservices.tests.permissions.appoptout,"
                     + "com.android.adservices.tests.permissions.valid,"
                     + "com.android.adservices.tests.adid,"
@@ -3914,17 +3912,6 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns maximum Event Reports per destination */
     default int getMeasurementMaxEventReportsPerDestination() {
         return MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION;
-    }
-
-    /** Disable maximum number of aggregatable reports per source by default. */
-    boolean MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE = false;
-
-    /**
-     * Returns true if maximum number of aggregatable reports per source is enabled, false
-     * otherwise.
-     */
-    default boolean getMeasurementEnableMaxAggregateReportsPerSource() {
-        return MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE;
     }
 
     /** Maximum Aggregate Reports per source. */
