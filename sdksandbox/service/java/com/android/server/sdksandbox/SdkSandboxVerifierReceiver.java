@@ -16,7 +16,7 @@
 
 package com.android.server.sdksandbox;
 
-import static com.android.sdksandbox.flags.Flags.sdkSandboxDexVerifier;
+import static com.android.sdksandbox.flags.Flags.sdkSandboxVerifySdkDexFiles;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -76,7 +76,7 @@ public class SdkSandboxVerifierReceiver extends BroadcastReceiver {
         int verificationId = intent.getIntExtra(PackageManager.EXTRA_VERIFICATION_ID, -1);
 
         boolean isRestrictionsEnabled =
-                sdkSandboxDexVerifier()
+                sdkSandboxVerifySdkDexFiles()
                         && DeviceConfig.getBoolean(
                                 DeviceConfig.NAMESPACE_ADSERVICES,
                                 SdkSandboxManagerService.PROPERTY_ENFORCE_RESTRICTIONS,

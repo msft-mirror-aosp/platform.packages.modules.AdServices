@@ -58,13 +58,10 @@ import com.google.cobalt.SystemProfileSelectionPolicy;
 import com.google.cobalt.WindowSize;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
 import java.util.List;
 import java.util.function.BiPredicate;
 
-@RunWith(JUnit4.class)
 public final class RegistryValidatorTest extends AdServicesUnitTestCase {
 
     @Test

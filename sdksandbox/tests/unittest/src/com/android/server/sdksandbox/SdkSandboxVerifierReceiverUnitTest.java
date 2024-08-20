@@ -16,7 +16,7 @@
 
 package com.android.server.sdksandbox;
 
-import static com.android.sdksandbox.flags.Flags.FLAG_SDK_SANDBOX_DEX_VERIFIER;
+import static com.android.sdksandbox.flags.Flags.FLAG_SDK_SANDBOX_VERIFY_SDK_DEX_FILES;
 
 import android.Manifest;
 import android.content.Context;
@@ -92,7 +92,7 @@ public class SdkSandboxVerifierReceiverUnitTest extends DeviceSupportedBaseTest 
     }
 
     @Test
-    @RequiresFlagsEnabled(FLAG_SDK_SANDBOX_DEX_VERIFIER)
+    @RequiresFlagsEnabled(FLAG_SDK_SANDBOX_VERIFY_SDK_DEX_FILES)
     public void verifierBroadcastReceived_startsDexParsing() {
         MockitoSession staticMockSession = null;
         try {
@@ -114,7 +114,7 @@ public class SdkSandboxVerifierReceiverUnitTest extends DeviceSupportedBaseTest 
     }
 
     @Test
-    @RequiresFlagsEnabled(FLAG_SDK_SANDBOX_DEX_VERIFIER)
+    @RequiresFlagsEnabled(FLAG_SDK_SANDBOX_VERIFY_SDK_DEX_FILES)
     public void verifierBroadcastReceived_doesNotStartDexParsing() {
         MockitoSession staticMockSession = null;
         try {

@@ -695,6 +695,7 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     @FeatureFlag(LEGACY_KILL_SWITCH_RAMPED_UP)
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH = false;
 
     /** Returns the feature flag for Attribution Fallback Job . */
@@ -2211,6 +2212,7 @@ public interface Flags extends ModuleSharedFlags {
     // Starting M-2023-05, global kill switch is enabled in the binary. Prior to this (namely in
     // M-2022-11), the value of this flag in the binary was false.
     @FeatureFlag(LEGACY_KILL_SWITCH_GLOBAL)
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean GLOBAL_KILL_SWITCH = true;
 
     default boolean getGlobalKillSwitch() {
@@ -2226,6 +2228,7 @@ public interface Flags extends ModuleSharedFlags {
      * <p>This flag is used for emergency turning off the whole Measurement API.
      */
     @FeatureFlag(LEGACY_KILL_SWITCH_RAMPED_UP)
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_KILL_SWITCH = false;
 
     /**
@@ -2251,6 +2254,7 @@ public interface Flags extends ModuleSharedFlags {
      * Delete Registrations API is enabled. This flag is used for emergency turning off the Delete
      * Registrations API.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH = false;
 
     /**
@@ -2266,6 +2270,7 @@ public interface Flags extends ModuleSharedFlags {
      * Measurement API Status Kill Switch. The default value is false which means Status API is
      * enabled. This flag is used for emergency turning off the Status API.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_API_STATUS_KILL_SWITCH = false;
 
     /**
@@ -2281,6 +2286,7 @@ public interface Flags extends ModuleSharedFlags {
      * Measurement API Register Source Kill Switch. The default value is false which means Register
      * Source API is enabled. This flag is used for emergency turning off the Register Source API.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH = false;
 
     /**
@@ -2296,6 +2302,7 @@ public interface Flags extends ModuleSharedFlags {
      * Measurement API Register Trigger Kill Switch. The default value is false which means Register
      * Trigger API is enabled. This flag is used for emergency turning off the Register Trigger API.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH = false;
 
     /**
@@ -2312,6 +2319,7 @@ public interface Flags extends ModuleSharedFlags {
      * Register Web Source API is enabled. This flag is used for emergency turning off the Register
      * Web Source API.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH = false;
 
     /**
@@ -2327,6 +2335,7 @@ public interface Flags extends ModuleSharedFlags {
      * Measurement API Register Sources Kill Switch. The default value is false which means Register
      * Sources API is enabled. This flag is used for emergency turning off the Register Sources API.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_API_REGISTER_SOURCES_KILL_SWITCH = false;
 
     /**
@@ -2343,6 +2352,7 @@ public interface Flags extends ModuleSharedFlags {
      * Register Web Trigger API is enabled. This flag is used for emergency turning off the Register
      * Web Trigger API.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH = false;
 
     /**
@@ -2359,6 +2369,7 @@ public interface Flags extends ModuleSharedFlags {
      * means Aggregate Fallback Reporting Job is enabled. This flag is used for emergency turning
      * off the Aggregate Fallback Reporting Job.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH = false;
 
     /**
@@ -2376,6 +2387,7 @@ public interface Flags extends ModuleSharedFlags {
      * Aggregate Reporting Job is enabled. This flag is used for emergency turning off the Aggregate
      * Reporting Job.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH = false;
 
     /**
@@ -2392,6 +2404,7 @@ public interface Flags extends ModuleSharedFlags {
      * means Immediate Aggregate Reporting Job is disabled. This flag is used for emergency turning
      * off of the Immediate Aggregate Reporting Job.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_JOB_IMMEDIATE_AGGREGATE_REPORTING_KILL_SWITCH = true;
 
     /**
@@ -2408,6 +2421,7 @@ public interface Flags extends ModuleSharedFlags {
      * Measurement Job Attribution Kill Switch. The default value is false which means Attribution
      * Job is enabled. This flag is used for emergency turning off the Attribution Job.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH = false;
 
     /**
@@ -2423,6 +2437,7 @@ public interface Flags extends ModuleSharedFlags {
      * Measurement Job Delete Expired Kill Switch. The default value is false which means Delete
      * Expired Job is enabled. This flag is used for emergency turning off the Delete Expired Job.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH = false;
 
     /**
@@ -2439,6 +2454,7 @@ public interface Flags extends ModuleSharedFlags {
      * Uninstalled Job is enabled. This flag is used for emergency turning off the Delete
      * Uninstalled Job.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH = false;
 
     /**
@@ -2455,6 +2471,7 @@ public interface Flags extends ModuleSharedFlags {
      * Event Fallback Reporting Job is enabled. This flag is used for emergency turning off the
      * Event Fallback Reporting Job.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH = false;
 
     /**
@@ -2472,6 +2489,7 @@ public interface Flags extends ModuleSharedFlags {
      * Reporting Job is enabled. This flag is used for emergency turning off the Event Reporting
      * Job.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH = false;
 
     /**
@@ -2488,6 +2506,7 @@ public interface Flags extends ModuleSharedFlags {
      * Reporting Job is enabled. This flag is used for emergency turning off the Debug Reporting
      * Job.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH = false;
 
     /**
@@ -2504,6 +2523,7 @@ public interface Flags extends ModuleSharedFlags {
      * the job is enabled. This flag is used for emergency turning off the Debug Reporting Fallback
      * Job.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH = false;
 
     /**
@@ -2521,6 +2541,7 @@ public interface Flags extends ModuleSharedFlags {
      * which means the job is enabled. This flag is used for emergency turning off the Verbose Debug
      * Reporting Fallback Job.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH = false;
 
     /**
@@ -2558,6 +2579,7 @@ public interface Flags extends ModuleSharedFlags {
      * the Verbose Debug Reporting Job is enabled. This flag is used for emergency turning off the
      * Verbose Debug Reporting Job.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH = false;
 
     /**
@@ -2575,6 +2597,7 @@ public interface Flags extends ModuleSharedFlags {
      * which means Install Attribution is enabled. This flag is used for emergency turning off
      * Install Attribution Broadcast Receiver.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH = false;
 
     /**
@@ -2592,6 +2615,7 @@ public interface Flags extends ModuleSharedFlags {
      * means Delete Packages is enabled. This flag is used for emergency turning off Delete Packages
      * Broadcast Receiver.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH = false;
 
     /**
@@ -2608,6 +2632,7 @@ public interface Flags extends ModuleSharedFlags {
      * handling on measurement service start is enabled. This flag is used for emergency turning off
      * measurement rollback data deletion handling.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH = false;
 
     /**
@@ -2637,6 +2662,7 @@ public interface Flags extends ModuleSharedFlags {
      * flag is used for emergency turning off measurement rollback data deletion handling on Android
      * S.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH = false;
 
     /**
@@ -2653,6 +2679,7 @@ public interface Flags extends ModuleSharedFlags {
      * AdId API Kill Switch. The default value is false which means the AdId API is enabled. This
      * flag is used for emergency turning off the AdId API.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean ADID_KILL_SWITCH = false; // By default, the AdId API is enabled.
 
     /** Gets the state of adId kill switch. */
@@ -2665,6 +2692,7 @@ public interface Flags extends ModuleSharedFlags {
      * AppSetId API Kill Switch. The default value is false which means the AppSetId API is enabled.
      * This flag is used for emergency turning off the AppSetId API.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean APPSETID_KILL_SWITCH = false; // By default, the AppSetId API is enabled.
 
     /** Gets the state of the global and appSetId kill switch. */
@@ -2681,6 +2709,7 @@ public interface Flags extends ModuleSharedFlags {
      * <p>This flag is used for emergency turning off the Topics API.
      */
     @FeatureFlag(LEGACY_KILL_SWITCH)
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean TOPICS_KILL_SWITCH = true;
 
     /** Returns value of Topics API kill switch */
@@ -2692,6 +2721,7 @@ public interface Flags extends ModuleSharedFlags {
      * Topics on-device classifier Kill Switch. The default value is false which means the on-device
      * classifier in enabled. This flag is used for emergency turning off the on-device classifier.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH = false;
 
     /** Returns value of Topics on-device classifier kill switch. */
@@ -2705,6 +2735,7 @@ public interface Flags extends ModuleSharedFlags {
      * MDD Background Task Kill Switch. The default value is false which means the MDD background
      * task is enabled. This flag is used for emergency turning off the MDD background tasks.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MDD_BACKGROUND_TASK_KILL_SWITCH = false;
 
     /** Returns value of Mdd Background Task kill switch */
@@ -2717,6 +2748,7 @@ public interface Flags extends ModuleSharedFlags {
      * This flag is used for emergency turning off the MDD Logger.
      */
     @FeatureFlag(LEGACY_KILL_SWITCH_RAMPED_UP)
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MDD_LOGGER_KILL_SWITCH = false;
 
     /**
@@ -2735,6 +2767,7 @@ public interface Flags extends ModuleSharedFlags {
      * Fledge AdSelectionService kill switch. The default value is false which means that
      * AdSelectionService is enabled by default. This flag should be should as emergency andon cord.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean FLEDGE_SELECT_ADS_KILL_SWITCH = false;
 
     /** Returns value of Fledge Ad Selection Service API kill switch . */
@@ -2747,6 +2780,7 @@ public interface Flags extends ModuleSharedFlags {
      * Fledge Auction Server API Kill switch. The default value is true which means that Auction
      * server APIs is disabled by default.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean FLEDGE_AUCTION_SERVER_KILL_SWITCH = true;
 
     /** Returns value of Fledge Auction server API kill switch. */
@@ -2758,6 +2792,7 @@ public interface Flags extends ModuleSharedFlags {
      * Fledge On Device Auction API Kill switch. The default value is false which means that On
      * Device Auction APIs is enabled by default.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH = false;
 
     /** Returns value of On Device Auction API kill switch. */
@@ -2770,6 +2805,7 @@ public interface Flags extends ModuleSharedFlags {
      * Custom Audience API is enabled by default. This flag should be should as emergency andon
      * cord.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH = false;
 
     /** Returns value of Fledge Join Custom Audience API kill switch */
@@ -2799,6 +2835,7 @@ public interface Flags extends ModuleSharedFlags {
      *
      * <p>Set true to disable the function since no adtech actually provide encryption endpoint now.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH = true;
 
     /** Returns value of encryption key new enrollment fetch job kill switch */
@@ -2813,6 +2850,7 @@ public interface Flags extends ModuleSharedFlags {
      *
      * <p>Set true to disable the function since no adtech actually provide encryption endpoint now.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH = true;
 
     /** Returns value of encryption key new enrollment fetch job kill switch */
@@ -2934,17 +2972,7 @@ public interface Flags extends ModuleSharedFlags {
                     + "android.adservices.crystalball,"
                     + "android.adservices.cts,"
                     + "android.adservices.debuggablects,"
-                    + "com.android.adservices.endtoendtest,"
-                    + "com.android.adservices.servicecoretest,"
-                    + "com.android.adservices.tests.permissions.appoptout,"
-                    + "com.android.adservices.tests.permissions.valid,"
-                    + "com.android.adservices.tests.adid,"
-                    + "com.android.adservices.tests.appsetid,"
                     + "com.android.sdksandboxclient,"
-                    + "com.android.tests.sandbox.adid,"
-                    + "com.android.tests.sandbox.appsetid,"
-                    + "com.android.tests.sandbox.fledge,"
-                    + "com.android.tests.sandbox.measurement,"
                     + "com.example.adservices.samples.adid.app,"
                     + "com.example.adservices.samples.appsetid.app,"
                     + "com.example.adservices.samples.fledge.sampleapp,"
@@ -2954,8 +2982,7 @@ public interface Flags extends ModuleSharedFlags {
                     + "com.example.adservices.samples.fledge.sampleapp4,"
                     + "com.example.adservices.samples.signals.sampleapp,"
                     + "com.example.measurement.sampleapp,"
-                    + "com.example.measurement.sampleapp2,"
-                    + "com.android.adservices.tests.cts.endtoendtest.measurement";
+                    + "com.example.measurement.sampleapp2";
 
     /**
      * Returns bypass List for PPAPI app signature check. Apps with package name on this list will
@@ -2986,17 +3013,7 @@ public interface Flags extends ModuleSharedFlags {
                     + "android.adservices.crystalball,"
                     + "android.adservices.cts,"
                     + "android.adservices.debuggablects,"
-                    + "com.android.adservices.endtoendtest,"
-                    + "com.android.adservices.servicecoretest,"
-                    + "com.android.adservices.tests.permissions.appoptout,"
-                    + "com.android.adservices.tests.permissions.valid,"
-                    + "com.android.adservices.tests.adid,"
-                    + "com.android.adservices.tests.appsetid,"
                     + "com.android.sdksandboxclient,"
-                    + "com.android.tests.sandbox.adid,"
-                    + "com.android.tests.sandbox.appsetid,"
-                    + "com.android.tests.sandbox.fledge,"
-                    + "com.android.tests.sandbox.measurement,"
                     + "com.example.adservices.samples.adid.app,"
                     + "com.example.adservices.samples.appsetid.app,"
                     + "com.example.adservices.samples.fledge.sampleapp,"
@@ -3005,8 +3022,7 @@ public interface Flags extends ModuleSharedFlags {
                     + "com.example.adservices.samples.fledge.sampleapp3,"
                     + "com.example.adservices.samples.fledge.sampleapp4,"
                     + "com.example.measurement.sampleapp,"
-                    + "com.example.measurement.sampleapp2,"
-                    + "com.android.adservices.tests.cts.endtoendtest.measurement";
+                    + "com.example.measurement.sampleapp2";
 
     /*
      * App Package Name that does not belong to this allow-list will not be able to use Measurement
@@ -3647,6 +3663,7 @@ public interface Flags extends ModuleSharedFlags {
      * Registration Job Queue Kill Switch. The default value is false which means Registration Job
      * Queue is enabled. This flag is used for emergency shutdown of the Registration Job Queue.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH = false;
 
     /**
@@ -3658,6 +3675,7 @@ public interface Flags extends ModuleSharedFlags {
         return getLegacyMeasurementKillSwitch() || MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
     }
 
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH = false;
 
     /**
@@ -3695,6 +3713,7 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     /** Kill switch to guard backward-compatible logging. See go/rbc-ww-logging */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean COMPAT_LOGGING_KILL_SWITCH = false;
 
     /** Returns true if backward-compatible logging should be disabled; false otherwise. */
@@ -3703,6 +3722,7 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     /** Kill switch to guard background jobs logging. */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean BACKGROUND_JOBS_LOGGING_KILL_SWITCH = true;
 
     /** Returns true if background jobs logging should be disabled; false otherwise */
@@ -4601,6 +4621,7 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     /** Default value of flag for session stable kill switches. */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES = true;
 
     /** Returns true when session stable kill switches are enabled. */

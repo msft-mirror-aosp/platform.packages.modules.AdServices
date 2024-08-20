@@ -58,7 +58,14 @@ import org.mockito.Spy;
 public final class AdSelectionServiceFilterTest extends AdServicesMockitoTestCase {
 
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
-    private static final Flags TEST_FLAGS = FakeFlagsFactory.getFlagsForTest();
+    private static final Flags TEST_FLAGS =
+            new FakeFlagsFactory.TestFlags() {
+                @Override
+                public String getPpapiAppAllowList() {
+                    return CALLER_PACKAGE_NAME;
+                }
+            };
+
     private static final Flags FLAGS_WITH_ENROLLMENT_CHECK =
             new Flags() {
                 @Override

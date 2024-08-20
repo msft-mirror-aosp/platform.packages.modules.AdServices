@@ -89,6 +89,7 @@ public final class RegistryValidator {
      * @param report the report being validated
      * @return true if metric and report are a valid and supported combination
      */
+    // TODO(b/343722587): Rename this function to something more generic.
     public static boolean isValidReportTypeAndPrivacyMechanism(
             MetricDefinition metric, ReportDefinition report) {
         if (!validateReportType(metric.getMetricType(), report.getReportType())) {
@@ -222,9 +223,6 @@ public final class RegistryValidator {
             return false;
         }
 
-        // TODO(b/343722587): Add remaining validations:
-        // * that private reports can't be added if the new and old metrics don't have the same
-        //   dimensions
         return true;
     }
 

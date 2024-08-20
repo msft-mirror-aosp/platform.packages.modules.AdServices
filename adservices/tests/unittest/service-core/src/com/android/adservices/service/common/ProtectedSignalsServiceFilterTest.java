@@ -57,7 +57,13 @@ public final class ProtectedSignalsServiceFilterTest extends AdServicesMockitoTe
 
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
 
-    private static final Flags TEST_FLAGS = FakeFlagsFactory.getFlagsForTest();
+    private static final Flags TEST_FLAGS =
+            new FakeFlagsFactory.TestFlags() {
+                @Override
+                public String getPasAppAllowList() {
+                    return CALLER_PACKAGE_NAME;
+                }
+            };
 
     @Mock private FledgeConsentFilter mFledgeConsentFilterMock;
 
