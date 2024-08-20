@@ -23,12 +23,18 @@ import static org.junit.Assert.fail;
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.SandboxedSdk;
 import android.os.OutcomeReceiver;
+import android.os.SystemClock;
 
 import androidx.annotation.Nullable;
 
 import com.google.common.base.Preconditions;
 
 public class FakeLoadSdkCallback implements OutcomeReceiver<SandboxedSdk, LoadSdkException> {
+
+    private static final int ZYGOTE_CONTENTION_PERIOD_MS = 5 * 60 * 1000;
+    private static final int DEFAULT_WAIT_TIME_SEC = 5;
+    private static final int CONTEND_WAIT_TIME_SEC = 30;
+
     private final WaitableCountDownLatch mLoadSdkLatch;
 
     private boolean mLoadSdkSuccess;
@@ -36,8 +42,19 @@ public class FakeLoadSdkCallback implements OutcomeReceiver<SandboxedSdk, LoadSd
     private SandboxedSdk mSandboxedSdk;
     private LoadSdkException mLoadSdkException = null;
 
+    /**
+     * Calculates default timeout depending on time since device boot.
+     *
+     * <p>Loading SDK right after device reboot take more time because of zygote contention.
+     */
+    private static int defaultWaitTimeSec() {
+        return SystemClock.uptimeMillis() > ZYGOTE_CONTENTION_PERIOD_MS
+                ? DEFAULT_WAIT_TIME_SEC
+                : CONTEND_WAIT_TIME_SEC;
+    }
+
     public FakeLoadSdkCallback() {
-        mLoadSdkLatch = new WaitableCountDownLatch(5);
+        mLoadSdkLatch = new WaitableCountDownLatch(defaultWaitTimeSec());
     }
 
     public FakeLoadSdkCallback(int waitTimeSec) {
