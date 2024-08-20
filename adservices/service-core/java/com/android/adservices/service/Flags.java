@@ -2970,8 +2970,6 @@ public interface Flags extends ModuleSharedFlags {
     String PPAPI_APP_ALLOW_LIST =
             "android.platform.test.scenario,"
                     + "android.adservices.crystalball,"
-                    + "android.adservices.cts,"
-                    + "android.adservices.debuggablects,"
                     + "com.android.sdksandboxclient,"
                     + "com.example.adservices.samples.adid.app,"
                     + "com.example.adservices.samples.appsetid.app,"
@@ -3011,8 +3009,6 @@ public interface Flags extends ModuleSharedFlags {
     String MSMT_API_APP_ALLOW_LIST =
             "android.platform.test.scenario,"
                     + "android.adservices.crystalball,"
-                    + "android.adservices.cts,"
-                    + "android.adservices.debuggablects,"
                     + "com.android.sdksandboxclient,"
                     + "com.example.adservices.samples.adid.app,"
                     + "com.example.adservices.samples.appsetid.app,"
