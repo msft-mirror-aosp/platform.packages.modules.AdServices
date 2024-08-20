@@ -32,7 +32,6 @@ import android.adservices.customaudience.LeaveCustomAudienceRequest;
 import android.net.Uri;
 import android.util.Log;
 
-import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.AdServicesEndToEndTestCase;
@@ -45,7 +44,6 @@ import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeast
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
-import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.Before;
 import org.junit.Ignore;
@@ -125,54 +123,6 @@ public final class CustomAudienceManagerTest extends AdServicesEndToEndTestCase 
         measureJoinCustomAudience("no-kill, 2nd call");
         measureLeaveCustomAudience("no-kill, 1st call");
         measureLeaveCustomAudience("no-kill, 2nd call");
-    }
-
-    /**
-     * Test to measure an "end-to-end" latency of registerSource() and registerTrigger, * when the
-     * service process isn't running.
-     *
-     * <p>To run this test alone, use the following command. {@code atest
-     * com.android.adservices.customaudience
-     * .CustomAudienceManagerTest#testCallCustomAudienceAPIAfterKillingService}
-     *
-     * <p>Note the performance varies depending on various factors (examples below), so getting the
-     * "real world number" is really hard. - What other processes are running, what they're doing,
-     * and the temperature of the device, which affects the CPU clock, disk I/O performance, etc...
-     * The busy the CPU is, the higher the clock gets, but that causes the CPU to become hot, which
-     * then will lower the CPU clock. For micro-benchmarks, we fixate to a lower clock speed to
-     * avoid fluctuation, which works okay for comparing multiple algorithms, but not a good way to
-     * get the "actual" number.
-     */
-    // TODO(b/271338417): Remove @FlakyTest after stabilizing test
-    @FlakyTest(bugId = 271338417)
-    @Test
-    public void testCallCustomAudienceAPIAfterKillingService() throws Exception {
-        // Kill the service process, if it's already running.
-        // Give the system time to calm down.
-        // If we know process isn't running for sure, then we don't need it.
-        Thread.sleep(1000);
-        // Kill the service process.
-        ShellUtils.runShellCommand("su 0 killall -9 " + SERVICE_APK_NAME);
-
-        // TODO(b/230873929): Extract to util method.
-        int count = 0;
-        boolean succeed = false;
-        while (count < MAX_RETRY) {
-            try {
-                measureJoinCustomAudience("with-kill, 1st call");
-                succeed = true;
-                break;
-            } catch (Exception exception) {
-                sLogger.e(exception, "Failure testing Custom Audience API");
-                Thread.sleep(1000);
-                count++;
-            }
-        }
-        assertWithMessage("success()").that(succeed).isTrue();
-
-        measureJoinCustomAudience("with-kill, 2nd call");
-        measureLeaveCustomAudience("with-kill, 1st call");
-        measureLeaveCustomAudience("with-kill, 2nd call");
     }
 
     @Ignore("TODO(b/295231590): remove annotation when bug is fixed")

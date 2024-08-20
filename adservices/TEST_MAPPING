@@ -97,6 +97,14 @@
       ]
     },
     {
+      "name": "AdServicesServiceCoreDatabaseMigrationUnitTests",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
       "name": "AdServicesJsEngineUnitTests",
       "options": [
         {
@@ -850,6 +858,16 @@
       ]
     },
     {
+      // Install com.google.android.adservices.apex and run
+      // AdServicesServiceCoreDatabaseMigrationUnitTests.
+      "name": "AdServicesServiceCoreDatabaseMigrationUnitTests[com.google.android.adservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
       // Install com.google.android.extservices.apex and run
       // AdExtServicesServiceCoreProtectedAudienceUnitTests.
       "name": "AdExtServicesServiceCoreProtectedAudienceUnitTests[com.google.android.extservices.apex]",
@@ -1513,6 +1531,14 @@
     },
     {
       "name": "AdServicesApkUISettingsGaOtaTests",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "AdServicesServiceCoreDatabaseMigrationUnitTests",
       "options": [
         {
           "exclude-annotation": "androidx.test.filters.FlakyTest"
