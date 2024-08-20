@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
 
+import android.adservices.common.CommonFixture;
 import android.content.res.Resources;
 import android.content.res.XmlResourceParser;
 
@@ -35,7 +36,7 @@ import java.util.NoSuchElementException;
 
 @SpyStatic(SdkLevel.class)
 public final class AndroidManifestConfigParserTest extends AdServicesExtendedMockitoTestCase {
-    private static final String TEST_APP_PACKAGE_NAME = "com.android.adservices.servicecoretest";
+    private static final String TEST_APP_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     private static final String RESOURCE_NAME = "ad_services_config";
     private static final String RESOURCE_TYPE = "xml";
     private static final String MISSING_RESOURCE_ERROR_MSG =
