@@ -18,6 +18,7 @@ package android.adservices.debuggablects;
 
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_APP_ALLOW_LIST;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_ENABLED;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -61,20 +62,22 @@ public final class SignalsCtsDebuggableTest extends ForegroundDebuggableCtsTest 
 
     @Rule(order = 11)
     public final SupportedByConditionRule webViewSupportsJSSandbox =
-            CtsWebViewSupportUtil.createJSSandboxAvailableRule(sContext);
+            CtsWebViewSupportUtil.createJSSandboxAvailableRule(mContext);
 
     @Rule(order = 12)
     public MockWebServerRule mMockWebServerRule =
             MockWebServerRule.forHttps(
-                    sContext, "adservices_untrusted_test_server.p12", "adservices_test");
+                    mContext, "adservices_untrusted_test_server.p12", "adservices_test");
 
     @Before
     public void setUp() throws Exception {
-        AdservicesTestHelper.killAdservicesProcess(sContext);
+        flags.setAllowListFlag(KEY_PAS_APP_ALLOW_LIST, new String[0]);
+
+        AdservicesTestHelper.killAdservicesProcess(mContext);
         ExecutorService executor = Executors.newCachedThreadPool();
         mProtectedSignalsClient =
                 new ProtectedSignalsClient.Builder()
-                        .setContext(sContext)
+                        .setContext(mContext)
                         .setExecutor(executor)
                         .build();
     }

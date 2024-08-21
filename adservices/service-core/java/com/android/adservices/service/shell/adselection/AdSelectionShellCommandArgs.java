@@ -16,12 +16,17 @@
 
 package com.android.adservices.service.shell.adselection;
 
-public final class GetAdSelectionDataArgs {
+/**
+ * Args for signals shell commands. Consented debugging is more complex so see {@link
+ * ConsentedDebugEnableArgs} for more info.
+ */
+public final class AdSelectionShellCommandArgs {
     static final int FIRST_ARG_FOR_PARSING = 2;
 
     public static final String BUYER = "--buyer";
+    public static final String AD_SELECTION_ID = "--ad-selection-id";
 
-    private GetAdSelectionDataArgs() {
+    private AdSelectionShellCommandArgs() {
         throw new UnsupportedOperationException();
     }
 }
