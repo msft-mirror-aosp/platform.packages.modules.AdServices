@@ -390,6 +390,7 @@ public class GetAdSelectionDataRunner {
                                             inputParams.getCallerPackageName(),
                                             /*enforceForeground:*/ false,
                                             /*enforceConsent:*/ true,
+                                            !mFlags.getConsentNotificationDebugMode(),
                                             mCallerUid,
                                             apiName,
                                             Throttler.ApiKey.FLEDGE_API_GET_AD_SELECTION_DATA,

@@ -409,6 +409,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         TEST_PACKAGE_NAME,
                         true,
                         true,
+                        true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
                         Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS,
@@ -430,7 +431,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testReportImpressionSuccessWithRegisterAdBeaconDisabled() throws Exception {
-        // Re init flags with registerAdBeaconDisabled
         boolean enrollmentCheckDisabled = false;
         mFakeFlags =
                 new AdSelectionServicesTestsFlags(enrollmentCheckDisabled) {
@@ -549,6 +549,141 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                 AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
                 TEST_PACKAGE_NAME,
                 STATUS_SUCCESS);
+    }
+
+    @Test
+    public void testReportImpressionSuccessWithUXNotificationNotEnforced() throws Exception {
+        boolean enrollmentCheckDisabled = false;
+        Flags flagsWithoutUxNotificationEnforcement =
+                new AdSelectionServicesTestsFlags(enrollmentCheckDisabled) {
+                    @Override
+                    public boolean getConsentNotificationDebugMode() {
+                        return true;
+                    }
+                };
+
+        Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
+        Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
+
+        Uri biddingLogicUri = (mMockWebServerRule.uriForPath(mFetchJavaScriptPathBuyer));
+
+        String sellerDecisionLogicJs =
+                "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
+                        + " \n"
+                        + " return {'status': 0, 'results': {'signals_for_buyer':"
+                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
+                        + sellerReportingUri
+                        + "' } };\n"
+                        + "}";
+
+        String buyerDecisionLogicJs =
+                "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
+                        + " contextual_signals, custom_audience_signals) { \n"
+                        + " return {'status': 0, 'results': {'reporting_uri': '"
+                        + buyerReportingUri
+                        + "' } };\n"
+                        + "}";
+
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(
+                                new MockResponse().setBody(sellerDecisionLogicJs),
+                                new MockResponse(),
+                                new MockResponse()));
+
+        DBBuyerDecisionLogic dbBuyerDecisionLogic =
+                new DBBuyerDecisionLogic.Builder()
+                        .setBiddingLogicUri(biddingLogicUri)
+                        .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
+                        .build();
+
+        DBAdSelection dbAdSelection =
+                new DBAdSelection.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setCustomAudienceSignals(mCustomAudienceSignals)
+                        .setBuyerContextualSignals(mContextualSignals.toString())
+                        .setBiddingLogicUri(biddingLogicUri)
+                        .setWinningAdRenderUri(RENDER_URI)
+                        .setWinningAdBid(BID)
+                        .setCreationTimestamp(ACTIVATION_TIME)
+                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                        .build();
+
+        mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
+        mAdSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
+
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+
+        mockCreateDevContextForDevOptionsDisabled();
+
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mAppInstallDao,
+                        mCustomAudienceDao,
+                        mEncodedPayloadDao,
+                        mFrequencyCapDao,
+                        mEncryptionKeyDao,
+                        mEnrollmentDao,
+                        mClientSpy,
+                        mDevContextFilterMock,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        mContext,
+                        mAdServicesLoggerMock,
+                        flagsWithoutUxNotificationEnforcement,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterMock,
+                        mAdSelectionServiceFilterMock,
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock,
+                        mMultiCloudSupportStrategy,
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator,
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+
+        ReportImpressionInput input =
+                new ReportImpressionInput.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionConfig(adSelectionConfig)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
+                        .build();
+
+        // Count down callback + log interaction.
+        ReportImpressionTestCallback callback =
+                callReportImpression(adSelectionService, input, true);
+
+        assertTrue(callback.mIsSuccess);
+        RecordedRequest fetchRequest = server.takeRequest();
+        assertEquals(mFetchJavaScriptPathSeller, fetchRequest.getPath());
+
+        List<String> notifications =
+                ImmutableList.of(server.takeRequest().getPath(), server.takeRequest().getPath());
+
+        assertThat(notifications).containsExactly(mSellerReportingPath, mBuyerReportingPath);
+
+        verifyLogFledgeApiCallStatsAnyLatency(
+                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                TEST_PACKAGE_NAME,
+                STATUS_SUCCESS);
+
+        verify(mAdSelectionServiceFilterMock)
+                .filterRequest(
+                        mSeller,
+                        TEST_PACKAGE_NAME,
+                        true,
+                        true,
+                        false,
+                        CALLER_UID,
+                        AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                        Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS,
+                        DevContext.createForDevOptionsDisabled());
     }
 
     @Test
@@ -4556,6 +4691,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         TEST_PACKAGE_NAME,
                         true,
                         true,
+                        true,
                         CALLER_UID,
                         AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
                         Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS,
@@ -6720,6 +6856,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         TEST_PACKAGE_NAME,
                         true,
                         true,
+                        true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
                         Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS,
@@ -7145,6 +7282,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         INCORRECT_PKG_NAME,
                         true,
                         true,
+                        true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
                         Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS,
@@ -7258,6 +7396,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                 .filterRequest(
                         mSeller,
                         TEST_PACKAGE_NAME,
+                        true,
                         true,
                         true,
                         CALLER_UID,
@@ -7379,6 +7518,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                 .filterRequest(
                         mSeller,
                         TEST_PACKAGE_NAME,
+                        true,
                         true,
                         true,
                         CALLER_UID,
@@ -7551,6 +7691,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                 .filterRequest(
                         mSeller,
                         TEST_PACKAGE_NAME,
+                        true,
                         true,
                         true,
                         CALLER_UID,
@@ -7823,6 +7964,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                 .filterRequest(
                         mSeller,
                         TEST_PACKAGE_NAME,
+                        true,
                         true,
                         true,
                         CALLER_UID,
@@ -10302,6 +10444,88 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                 .doesAdSelectionMatchingCallerPackageNameExistInOnDeviceTable(
                         AD_SELECTION_ID, TEST_PACKAGE_NAME);
         verify(adSelectionEntryDaoSpy, times(0)).doesAdSelectionIdExist(AD_SELECTION_ID);
+    }
+
+    @Test
+    public void
+            testReportImpressionSuccess_callsServerAuctionForImpressionReporterIsOnWithUXNotificationEnforcementDisabled()
+                    throws Exception {
+        boolean enrollmentCheck = false;
+        Flags flagsWithUXConsentEnforcementDisabled =
+                new AdSelectionServicesTestsFlags(enrollmentCheck) {
+                    @Override
+                    public boolean getFledgeAuctionServerEnabledForReportImpression() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getConsentNotificationDebugMode() {
+                        return true;
+                    }
+                };
+
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+
+        mockCreateDevContextForDevOptionsDisabled();
+        AdSelectionEntryDao adSelectionEntryDaoSpy = spy(mAdSelectionEntryDao);
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        adSelectionEntryDaoSpy,
+                        mAppInstallDao,
+                        mCustomAudienceDao,
+                        mEncodedPayloadDao,
+                        mFrequencyCapDao,
+                        mEncryptionKeyDao,
+                        mEnrollmentDao,
+                        mClientSpy,
+                        mDevContextFilterMock,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        mContext,
+                        mAdServicesLoggerMock,
+                        flagsWithUXConsentEnforcementDisabled,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterMock,
+                        mAdSelectionServiceFilterMock,
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock,
+                        mMultiCloudSupportStrategy,
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator,
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+
+        ReportImpressionInput input =
+                new ReportImpressionInput.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionConfig(adSelectionConfig)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
+                        .build();
+
+        // Count down callback + log interaction.
+        callReportImpression(adSelectionService, input, true);
+
+        verify(adSelectionEntryDaoSpy, times(1))
+                .doesAdSelectionMatchingCallerPackageNameExistInOnDeviceTable(
+                        AD_SELECTION_ID, TEST_PACKAGE_NAME);
+        verify(adSelectionEntryDaoSpy, times(0)).doesAdSelectionIdExist(AD_SELECTION_ID);
+
+        verify(mAdSelectionServiceFilterMock)
+                .filterRequest(
+                        mSeller,
+                        TEST_PACKAGE_NAME,
+                        true,
+                        true,
+                        false,
+                        CALLER_UID,
+                        AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                        Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS,
+                        DevContext.createForDevOptionsDisabled());
     }
 
     private AdSelectionServiceImpl generateAdSelectionServiceImpl() {

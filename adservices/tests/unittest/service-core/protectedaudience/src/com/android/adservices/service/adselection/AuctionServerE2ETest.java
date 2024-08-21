@@ -502,9 +502,11 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
                         eq(CALLER_PACKAGE_NAME),
                         eq(false),
                         eq(true),
+                        eq(true),
                         eq(CALLER_UID),
-                        eq(AdServicesStatsLog
-                                .AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA),
+                        eq(
+                                AdServicesStatsLog
+                                        .AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA),
                         eq(Throttler.ApiKey.FLEDGE_API_GET_AD_SELECTION_DATA),
                         eq(DevContext.createForDevOptionsDisabled()));
         doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
@@ -514,9 +516,11 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
                         eq(CALLER_PACKAGE_NAME),
                         eq(false),
                         eq(true),
+                        eq(true),
                         eq(CALLER_UID),
-                        eq(AdServicesStatsLog
-                                .AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT),
+                        eq(
+                                AdServicesStatsLog
+                                        .AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT),
                         eq(Throttler.ApiKey.FLEDGE_API_PERSIST_AD_SELECTION_RESULT),
                         eq(DevContext.createForDevOptionsDisabled()));
 
