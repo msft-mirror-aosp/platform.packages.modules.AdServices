@@ -59,7 +59,6 @@ public class CompressedBuyerInputCreatorNoOptimizations implements CompressedBuy
             generateCompressedBuyerInputFromDBCAsAndEncodedSignals(
                     @NonNull List<DBCustomAudience> dbCustomAudiences,
                     @NonNull Map<AdTechIdentifier, DBEncodedPayload> encodedPayloadMap) {
-        int traceCookie = Tracing.beginAsyncSection(Tracing.GET_COMPRESSED_BUYERS_INPUTS);
         long startLatency = mClock.millis();
 
         final Map<AdTechIdentifier, BiddingAuctionServers.BuyerInput.Builder> buyerInputs =
@@ -69,6 +68,8 @@ public class CompressedBuyerInputCreatorNoOptimizations implements CompressedBuy
 
         // Creating a distinct loop over signals as buyers with CAs and Signals could be mutually
         // exclusive
+        int buildSignalsProtoTraceCookie =
+                Tracing.beginAsyncSection(Tracing.COMPRESSED_INPUT_BUILD_SIGNALS_PROTO);
         for (Map.Entry<AdTechIdentifier, DBEncodedPayload> entry : encodedPayloadMap.entrySet()) {
             final AdTechIdentifier buyerName = entry.getKey();
             if (!buyerInputs.containsKey(buyerName)) {
@@ -86,7 +87,11 @@ public class CompressedBuyerInputCreatorNoOptimizations implements CompressedBuy
 
             buyerInputs.put(buyerName, builderWithSignals);
         }
+        Tracing.endAsyncSection(
+                Tracing.COMPRESSED_INPUT_BUILD_SIGNALS_PROTO, buildSignalsProtoTraceCookie);
 
+        int buildCAProtoTraceCookie =
+                Tracing.beginAsyncSection(Tracing.COMPRESSED_INPUT_BUILD_CA_PROTO);
         for (DBCustomAudience dBcustomAudience : dbCustomAudiences) {
             final AdTechIdentifier buyerName = dBcustomAudience.getBuyer();
             if (!buyerInputs.containsKey(buyerName)) {
@@ -101,20 +106,39 @@ public class CompressedBuyerInputCreatorNoOptimizations implements CompressedBuy
             mCompressedBuyerInputCreatorHelper.addToBuyerIntermediateStats(
                     perBuyerStats, dBcustomAudience, customAudience);
         }
+        Tracing.endAsyncSection(Tracing.COMPRESSED_INPUT_BUILD_CA_PROTO, buildCAProtoTraceCookie);
 
         mCompressedBuyerInputCreatorHelper.logBuyerInputGeneratedStats(perBuyerStats);
 
+        int serializeAndCompressInputTraceCookie =
+                Tracing.beginAsyncSection(Tracing.COMPRESSED_INPUT_SERIALIZE_AND_COMPRESS_INPUT);
         sLogger.v(String.format("Created BuyerInput proto for %s buyers", buyerInputs.size()));
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedInputs =
                 new HashMap<>();
         for (Map.Entry<AdTechIdentifier, BiddingAuctionServers.BuyerInput.Builder> entry :
                 buyerInputs.entrySet()) {
-            compressedInputs.put(
-                    entry.getKey(),
-                    mDataCompressor.compress(
-                            AuctionServerDataCompressor.UncompressedData.create(
-                                    entry.getValue().build().toByteArray())));
+            int serializeInputTraceCookie =
+                    Tracing.beginAsyncSection(Tracing.COMPRESSED_INPUT_SERIALIZE_INPUT);
+            byte[] bytes = entry.getValue().build().toByteArray();
+            Tracing.endAsyncSection(
+                    Tracing.COMPRESSED_INPUT_SERIALIZE_INPUT, serializeInputTraceCookie);
+
+            AuctionServerDataCompressor.UncompressedData uncompressedData =
+                    AuctionServerDataCompressor.UncompressedData.create(bytes);
+
+            int compressInputTraceCookie =
+                    Tracing.beginAsyncSection(Tracing.COMPRESSED_INPUT_COMPRESS_INPUT);
+            AuctionServerDataCompressor.CompressedData compressedData =
+                    mDataCompressor.compress(uncompressedData);
+            Tracing.endAsyncSection(
+                    Tracing.COMPRESSED_INPUT_COMPRESS_INPUT, compressInputTraceCookie);
+
+            compressedInputs.put(entry.getKey(), compressedData);
         }
+        Tracing.endAsyncSection(
+                Tracing.COMPRESSED_INPUT_SERIALIZE_AND_COMPRESS_INPUT,
+                serializeAndCompressInputTraceCookie);
+
         long endLatency = mClock.millis();
         mCompressedBuyerInputCreatorHelper
                 .addBuyerInputLatencyAndCompressedBuyerInputCreatorVersionToStats(
@@ -122,7 +146,6 @@ public class CompressedBuyerInputCreatorNoOptimizations implements CompressedBuy
                         (int) (endLatency - startLatency),
                         CompressedBuyerInputCreatorNoOptimizations.VERSION);
 
-        Tracing.endAsyncSection(Tracing.GET_COMPRESSED_BUYERS_INPUTS, traceCookie);
         return compressedInputs;
     }
 }

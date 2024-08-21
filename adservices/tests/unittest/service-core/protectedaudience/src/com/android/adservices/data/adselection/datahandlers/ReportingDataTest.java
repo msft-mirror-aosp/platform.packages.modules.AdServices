@@ -27,6 +27,7 @@ import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
 import com.android.adservices.data.adselection.CustomAudienceSignals;
+import com.android.adservices.data.adselection.ReportingDataFixture;
 import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Rule;
@@ -59,12 +60,7 @@ public class ReportingDataTest {
             AdSelectionSignals.fromString("{\"test_seller_signals\":1}");
     public static final AdSelectionSignals BUYER_SIGNALS =
             AdSelectionSignals.fromString("{\"buyer_signals\":1}");
-    private static final String REPORTING_FRAGMENT = "/reporting";
     private static final String TEST_BUYER_DECISION_LOGIC_JS = "fooJs";
-    private static final Uri BUYER_REPORTING_URI_1 =
-            CommonFixture.getUri(AdSelectionConfigFixture.BUYER, REPORTING_FRAGMENT);
-    private static final Uri SELLER_REPORTING_URI_1 =
-            CommonFixture.getUri(AdSelectionConfigFixture.SELLER, REPORTING_FRAGMENT);
     private static final Uri RENDER_URI = Uri.parse("http://www.domain.com/advert");
     private static final double BID = 5;
 
@@ -87,8 +83,9 @@ public class ReportingDataTest {
                 IllegalArgumentException.class,
                 () ->
                         ReportingData.builder()
-                                .setBuyerWinReportingUri(BUYER_REPORTING_URI_1)
-                                .setSellerWinReportingUri(SELLER_REPORTING_URI_1)
+                                .setBuyerWinReportingUri(ReportingDataFixture.BUYER_REPORTING_URI_1)
+                                .setSellerWinReportingUri(
+                                        ReportingDataFixture.SELLER_REPORTING_URI_1)
                                 .setReportingComputationData(reportingComputationData)
                                 .build());
     }
@@ -97,12 +94,16 @@ public class ReportingDataTest {
     public void testBuild_withReportingUris_success() {
         ReportingData reportingData =
                 ReportingData.builder()
-                        .setBuyerWinReportingUri(BUYER_REPORTING_URI_1)
-                        .setSellerWinReportingUri(SELLER_REPORTING_URI_1)
+                        .setBuyerWinReportingUri(ReportingDataFixture.BUYER_REPORTING_URI_1)
+                        .setSellerWinReportingUri(ReportingDataFixture.SELLER_REPORTING_URI_1)
                         .build();
 
-        assertEquals(BUYER_REPORTING_URI_1, reportingData.getBuyerWinReportingUri());
-        assertEquals(SELLER_REPORTING_URI_1, reportingData.getSellerWinReportingUri());
+        assertEquals(
+                ReportingDataFixture.BUYER_REPORTING_URI_1,
+                reportingData.getBuyerWinReportingUri());
+        assertEquals(
+                ReportingDataFixture.SELLER_REPORTING_URI_1,
+                reportingData.getSellerWinReportingUri());
     }
 
     @Test

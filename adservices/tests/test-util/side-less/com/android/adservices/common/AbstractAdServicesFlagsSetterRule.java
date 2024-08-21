@@ -391,6 +391,17 @@ public abstract class AbstractAdServicesFlagsSetterRule<
     // make it easier to transition the test to an annotated-base approach.                       //
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
+    /**
+     * Overrides flag used by the specified key.
+     *
+     * @param name the PhFlags key that corresponds to the allow-list to override
+     * @param values the comma-separated list of values to use as the allow-list. If empty, use the
+     *     test package name
+     */
+    public T setAllowListFlag(String name, String[] values) {
+        return setAllowListFlag(name, values, USE_TEST_PACKAGE_AS_DEFAULT);
+    }
+
     private T setAllowListFlag(String name, String[] values, boolean useTestPackageAsDefault) {
         if (values.length == 0 && useTestPackageAsDefault) {
             String testPkg = getTestPackageName();

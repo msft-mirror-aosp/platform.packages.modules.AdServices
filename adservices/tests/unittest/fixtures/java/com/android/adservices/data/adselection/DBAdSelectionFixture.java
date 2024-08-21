@@ -16,6 +16,7 @@
 
 package com.android.adservices.data.adselection;
 
+import android.adservices.adselection.SignedContextualAdsFixture;
 import android.adservices.common.AdDataFixture;
 import android.adservices.common.CommonFixture;
 
@@ -48,5 +49,29 @@ public final class DBAdSelectionFixture {
                 .setCreationTimestamp(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
                 .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
                 .setAdCounterIntKeys(AdDataFixture.getAdCounterKeys());
+    }
+
+    public static DBAdSelectionEntry.Builder getValidDbAdSelectionEntryBuilder() {
+
+        return new DBAdSelectionEntry.Builder()
+                .setAdSelectionId(VALID_AD_SELECTION_ID)
+                .setCustomAudienceSignals(
+                        CustomAudienceSignals.buildFromCustomAudience(
+                                DBCustomAudienceFixture.VALID_DB_CUSTOM_AUDIENCE_NO_FILTERS))
+                .setBuyerDecisionLogicJs(SignedContextualAdsFixture.DECISION_LOGIC_URI.toString())
+                .setBuyerContextualSignals(EMPTY_SIGNALS)
+                .setSellerContextualSignals(EMPTY_SIGNALS)
+                .setBiddingLogicUri(
+                        CommonFixture.getUri(
+                                DBCustomAudienceFixture.VALID_DB_CUSTOM_AUDIENCE_NO_FILTERS
+                                        .getBuyer(),
+                                /* path= */ "/bidding"))
+                .setWinningAdRenderUri(
+                        CommonFixture.getUri(
+                                DBCustomAudienceFixture.VALID_DB_CUSTOM_AUDIENCE_NO_FILTERS
+                                        .getBuyer(),
+                                /* path= */ "/bidding"))
+                .setWinningAdBid(VALID_BID)
+                .setCreationTimestamp(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI);
     }
 }

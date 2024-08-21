@@ -15,7 +15,6 @@
  */
 package com.android.adservices.service.measurement.reporting;
 
-import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -53,7 +52,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /** Unit tests for {@link DebugReport} */
 @SpyStatic(VerboseDebugReportingJobService.class)
@@ -95,6 +96,7 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 .thenReturn(Flags.MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS);
         when(mMockFlags.getMeasurementMaxReportStatesPerSourceRegistration())
                 .thenReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION);
+        when(mMockFlags.getMeasurementAttributionScopeMaxInfoGainNavigation()).thenReturn(11.5f);
     }
 
     @Test
@@ -4129,11 +4131,25 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
     @Test
     public void scheduleSourceAttributionScopeDebugReport_maxEventStatesLimit_success()
             throws Exception {
+        long baseTime = System.currentTimeMillis();
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setEventTime(baseTime)
+                        .setEventReportWindows(
+                                "{"
+                                        + "\"start_time\": \"0\","
+                                        + String.format(
+                                                "\"end_times\": [%s, %s]}",
+                                                baseTime + TimeUnit.DAYS.toMillis(7),
+                                                baseTime + TimeUnit.DAYS.toMillis(30)))
+                        .setMaxEventLevelReports(2)
+                        .setAttributionScopes(List.of("1", "2"))
+                        .setAttributionScopeLimit(5L)
+                        .setMaxEventStates(3L)
                         .build();
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
@@ -4144,16 +4160,36 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 mMeasurementDao);
         ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
         verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
-        assertThat(captor.getValue().getType()).isEqualTo(Type.SOURCE_MAX_EVENT_STATES_LIMIT);
+        assertSourceDebugReportParameters(
+                captor.getValue(),
+                DebugReportApi.Type.SOURCE_MAX_EVENT_STATES_LIMIT,
+                SourceFixture.ValidSourceParams.PUBLISHER.toString(),
+                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS.get(0).toString(),
+                Map.of(DebugReportApi.Body.LIMIT, String.valueOf(source.getMaxEventStates())));
     }
 
     @Test
     public void scheduleSourceAttributionScopeDebugReport_infoGainLimit_success() throws Exception {
+        long baseTime = System.currentTimeMillis();
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
                         .setIsDebugReporting(true)
                         .setAdIdPermission(true)
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setEventTime(baseTime)
+                        .setEventReportWindows(
+                                "{"
+                                        + "\"start_time\": \"0\","
+                                        + String.format(
+                                                "\"end_times\": [%s, %s]}",
+                                                baseTime + TimeUnit.DAYS.toMillis(7),
+                                                baseTime + TimeUnit.DAYS.toMillis(30)))
+                        .setMaxEventLevelReports(2)
+                        .setAttributionScopes(List.of("1", "2"))
+                        // Attribution scope information gain: 11.622509454683335 > 11.5.
+                        .setAttributionScopeLimit(4L)
+                        .setMaxEventStates(1000L)
                         .build();
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
@@ -4164,8 +4200,13 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 mMeasurementDao);
         ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
         verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
-        assertThat(captor.getValue().getType())
-                .isEqualTo(Type.SOURCE_ATTRIBUTION_SCOPE_INFO_GAIN_LIMIT);
+
+        assertSourceDebugReportParameters(
+                captor.getValue(),
+                DebugReportApi.Type.SOURCE_SCOPES_CHANNEL_CAPACITY_LIMIT,
+                SourceFixture.ValidSourceParams.PUBLISHER.toString(),
+                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS.get(0).toString(),
+                Map.of(DebugReportApi.Body.LIMIT, String.valueOf(11.5f)));
     }
 
     private static void assertSourceDebugReportParameters(

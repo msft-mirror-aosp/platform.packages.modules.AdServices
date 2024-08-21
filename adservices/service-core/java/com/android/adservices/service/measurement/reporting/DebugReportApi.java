@@ -41,6 +41,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -63,8 +64,7 @@ public class DebugReportApi {
         String SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR =
                 "source-flexible-event-report-value-error";
         String SOURCE_MAX_EVENT_STATES_LIMIT = "source-max-event-states-limit";
-        String SOURCE_ATTRIBUTION_SCOPE_INFO_GAIN_LIMIT =
-                "source-attribution-scope-info-gain-limit";
+        String SOURCE_SCOPES_CHANNEL_CAPACITY_LIMIT = "source-scopes-channel-capacity-limit";
 
         String TRIGGER_AGGREGATE_DEDUPLICATED = "trigger-aggregate-deduplicated";
         String TRIGGER_AGGREGATE_INSUFFICIENT_BUDGET = "trigger-aggregate-insufficient-budget";
@@ -283,15 +283,20 @@ public class DebugReportApi {
     public void scheduleAttributionScopeDebugReport(
             Source source, Source.AttributionScopeValidationResult result, IMeasurementDao dao) {
         String type = null;
+        Map<String, String> additionalBodyParams = new HashMap<>();
         switch (result) {
             case VALID -> {
                 // No-op.
             }
             case INVALID_MAX_EVENT_STATES_LIMIT -> {
                 type = Type.SOURCE_MAX_EVENT_STATES_LIMIT;
+                additionalBodyParams.put(Body.LIMIT, String.valueOf(source.getMaxEventStates()));
             }
             case INVALID_INFORMATION_GAIN_LIMIT -> {
-                type = Type.SOURCE_ATTRIBUTION_SCOPE_INFO_GAIN_LIMIT;
+                type = Type.SOURCE_SCOPES_CHANNEL_CAPACITY_LIMIT;
+                additionalBodyParams.put(
+                        Body.LIMIT,
+                        String.valueOf(source.getAttributionScopeInfoGainThreshold(mFlags)));
             }
         }
         if (type == null) {
@@ -309,7 +314,7 @@ public class DebugReportApi {
         }
         scheduleReport(
                 type,
-                generateSourceDebugReportBody(source, null),
+                generateSourceDebugReportBody(source, additionalBodyParams),
                 source.getEnrollmentId(),
                 source.getRegistrationOrigin(),
                 source.getRegistrant(),

@@ -17,8 +17,8 @@
 package com.android.adservices.service.shell.adselection;
 
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.TAG;
-import static com.android.adservices.service.shell.adselection.GetAdSelectionDataArgs.BUYER;
-import static com.android.adservices.service.shell.adselection.GetAdSelectionDataArgs.FIRST_ARG_FOR_PARSING;
+import static com.android.adservices.service.shell.adselection.AdSelectionShellCommandArgs.BUYER;
+import static com.android.adservices.service.shell.adselection.AdSelectionShellCommandArgs.FIRST_ARG_FOR_PARSING;
 import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_AD_SELECTION_GET_AD_SELECTION_DATA;
 import static com.android.adservices.service.stats.ShellCommandStats.RESULT_SUCCESS;
 import static com.android.adservices.service.stats.ShellCommandStats.RESULT_TIMEOUT_ERROR;
@@ -95,7 +95,7 @@ public class GetAdSelectionDataCommand extends AbstractShellCommand {
                     + " "
                     + CMD
                     + " "
-                    + GetAdSelectionDataArgs.BUYER
+                    + AdSelectionShellCommandArgs.BUYER
                     + " <buyer>"
                     + "\n    Get ad selection data for a given buyer. This generates the "
                     + "base64 encoded GetBidsRequest protocol buffer message designed for usage "
