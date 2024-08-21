@@ -96,11 +96,13 @@ public class ConsentNotificationTrigger {
                 getNotification(context, isEuDevice, gaUxFeatureEnabled, consentManager);
 
         notificationManager.notify(NOTIFICATION_ID, notification);
-
-        setupConsents(context, isEuDevice, gaUxFeatureEnabled, consentManager);
-        LogUtil.d("Notification was displayed.");
-        UiStatsLogger.logNotificationDisplayed();
         recordNotificationDisplayed(context, gaUxFeatureEnabled, consentManager);
+
+        // must setup consents after recording notification displayed data to ensure accurate UX in
+        // logs
+        setupConsents(context, isEuDevice, gaUxFeatureEnabled, consentManager);
+        UiStatsLogger.logNotificationDisplayed();
+        LogUtil.d("Notification was displayed.");
     }
 
     private static void recordNotificationDisplayed(
