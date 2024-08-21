@@ -29,13 +29,15 @@
                     "event_value_2"
                   ]
                 },
-                "attribution_scope_limit": 3,
-                "attribution_scopes": [
-                  "1",
-                  "2",
-                  "3"
-                ],
-                "max_event_states": 10
+                "attribution_scopes": {
+                  "limit": 3,
+                  "values": [
+                    "1",
+                    "2",
+                    "3"
+                  ],
+                  "max_event_states": 10
+                }
               },
               "Location": null,
               "Attribution-Reporting-Redirect": null
@@ -69,13 +71,15 @@
                     "event_value_2"
                   ]
                 },
-                "attribution_scope_limit": 3,
-                "attribution_scopes": [
-                  "3",
-                  "4",
-                  "5"
-                ],
-                "max_event_states": 10
+                "attribution_scopes": {
+                  "limit": 3,
+                  "values": [
+                    "3",
+                    "4",
+                    "5"
+                  ],
+                  "max_event_states": 10
+                }
               },
               "Location": null,
               "Attribution-Reporting-Redirect": null
@@ -108,11 +112,13 @@
                     "event_value_2"
                   ]
                 },
-                "attribution_scope_limit": 3,
-                "attribution_scopes": [
-                  "4"
-                ],
-                "max_event_states": 10
+                "attribution_scopes": {
+                  "limit": 3,
+                  "values": [
+                    "4"
+                  ],
+                  "max_event_states": 10
+                }
               },
               "Location": null,
               "Attribution-Reporting-Redirect": null
