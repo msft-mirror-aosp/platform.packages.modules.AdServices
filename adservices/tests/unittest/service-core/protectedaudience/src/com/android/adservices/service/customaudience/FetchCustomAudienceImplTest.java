@@ -42,6 +42,7 @@ import static android.adservices.customaudience.CustomAudienceFixture.INVALID_DE
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_EXPIRATION_TIME;
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_NAME;
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_OWNER;
+import static android.adservices.customaudience.CustomAudienceFixture.VALID_PRIORITY_1;
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS;
 import static android.adservices.customaudience.CustomAudienceFixture.getValidDailyUpdateUriByBuyer;
 import static android.adservices.exceptions.RetryableAdServicesNetworkException.DEFAULT_RETRY_AFTER_VALUE;
@@ -703,7 +704,10 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
     public void testImpl_invalidFused_missingField() throws Exception {
         // Remove ads from the response, resulting in an incomplete fused custom audience.
         JSONObject validResponse =
-                getFullSuccessfulJsonResponse(BUYER, /* auctionServerRequestFlagsEnabled= */ false);
+                getFullSuccessfulJsonResponse(
+                        BUYER,
+                        /* auctionServerRequestFlagsEnabled= */ false,
+                        /* sellerConfigurationEnabled= */ false);
         validResponse.remove(ADS_KEY);
 
         MockWebServer mockWebServer =
@@ -731,7 +735,42 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
 
         // Remove adsKey from the response, resulting in an incomplete fused custom audience.
         JSONObject validResponse =
-                getFullSuccessfulJsonResponse(BUYER, /* auctionServerRequestFlagsEnabled= */ true);
+                getFullSuccessfulJsonResponse(
+                        BUYER,
+                        /* auctionServerRequestFlagsEnabled= */ true,
+                        /* sellerConfigurationEnabled= */ false);
+        validResponse.remove(ADS_KEY);
+
+        MockWebServer mockWebServer =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(new MockResponse().setBody(validResponse.toString())));
+
+        FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
+
+        assertEquals(1, mockWebServer.getRequestCount());
+        assertFalse(callback.mIsSuccess);
+        assertEquals(STATUS_INVALID_OBJECT, callback.mFledgeErrorResponse.getStatusCode());
+        assertEquals(
+                FUSED_CUSTOM_AUDIENCE_INCOMPLETE_MESSAGE,
+                callback.mFledgeErrorResponse.getErrorMessage());
+
+        // Assert failure due to the invalid response is logged.
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_INVALID_OBJECT), anyInt());
+    }
+
+    @Test
+    public void testImpl_invalidFused_missingFieldSellerConfigurationFlagEnabled()
+            throws Exception {
+        enableSellerConfigurationFlag();
+
+        // Remove adsKey from the response, resulting in an incomplete fused custom audience.
+        JSONObject validResponse =
+                getFullSuccessfulJsonResponse(
+                        BUYER,
+                        /* auctionServerRequestFlagsEnabled= */ false,
+                        /* sellerConfigurationEnabled= */ true);
         validResponse.remove(ADS_KEY);
 
         MockWebServer mockWebServer =
@@ -756,7 +795,11 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
     @Test
     public void testImpl_invalidFused_invalidField() throws Exception {
         // Replace buyer to cause mismatch.
-        JSONObject validResponse = getFullSuccessfulJsonResponse(BUYER, false);
+        JSONObject validResponse =
+                getFullSuccessfulJsonResponse(
+                        BUYER,
+                        /* auctionServerRequestFlagsEnabled= */ false,
+                        /* sellerConfigurationEnabled= */ false);
         validResponse.remove(DAILY_UPDATE_URI_KEY);
         JSONObject invalidResponse =
                 addDailyUpdateUri(
@@ -829,7 +872,11 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
     @Test
     public void testImpl_runNormally_partialResponse() throws Exception {
         // Remove all fields from the response that the request itself has.
-        JSONObject partialResponse = getFullSuccessfulJsonResponse(BUYER, false);
+        JSONObject partialResponse =
+                getFullSuccessfulJsonResponse(
+                        BUYER,
+                        /* auctionServerRequestFlagsEnabled= */ false,
+                        /* sellerConfigurationEnabled= */ false);
         partialResponse.remove(OWNER_KEY);
         partialResponse.remove(BUYER_KEY);
         partialResponse.remove(NAME_KEY);
@@ -858,7 +905,11 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
     @Test
     public void testImpl_runNormally_discardedResponseValues() throws Exception {
         // Replace response name with a valid but different name from the original request.
-        JSONObject validResponse = getFullSuccessfulJsonResponse(BUYER, false);
+        JSONObject validResponse =
+                getFullSuccessfulJsonResponse(
+                        BUYER,
+                        /* auctionServerRequestFlagsEnabled= */ false,
+                        /* sellerConfigurationEnabled= */ false);
         validResponse.remove(NAME_KEY);
         String validNameFromTheServer = VALID_NAME + "FromTheServer";
         validResponse = addName(validResponse, validNameFromTheServer, false);
@@ -968,7 +1019,12 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                         List.of(
                                 new MockResponse()
                                         .setBody(
-                                                getFullSuccessfulJsonResponse(BUYER, true)
+                                                getFullSuccessfulJsonResponse(
+                                                                BUYER,
+                                                                /*auctionServerRequestFlagsEnabled*/
+                                                                true,
+                                                                /* sellerConfigurationEnabled */
+                                                                false)
                                                         .toString())));
 
         FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
@@ -997,7 +1053,12 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                         List.of(
                                 new MockResponse()
                                         .setBody(
-                                                getFullSuccessfulJsonResponse(BUYER, true)
+                                                getFullSuccessfulJsonResponse(
+                                                                BUYER,
+                                                                /*auctionServerRequestFlagsEnabled*/
+                                                                false,
+                                                                /* sellerConfigurationEnabled */
+                                                                false)
                                                         .toString())));
 
         FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
@@ -1027,7 +1088,12 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                         List.of(
                                 new MockResponse()
                                         .setBody(
-                                                getFullSuccessfulJsonResponse(BUYER, false)
+                                                getFullSuccessfulJsonResponse(
+                                                                BUYER,
+                                                                /*auctionServerRequestFlagsEnabled*/
+                                                                false,
+                                                                /* sellerConfigurationEnabled */
+                                                                false)
                                                         .toString())));
 
         FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
@@ -1035,6 +1101,71 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
         assertEquals(1, mockWebServer.getRequestCount());
         assertTrue(callback.mIsSuccess);
         // Expect a CA without auction server request flags
+        verify(mCustomAudienceDaoMock)
+                .insertOrOverwriteCustomAudience(
+                        FetchCustomAudienceFixture.getFullSuccessfulDBCustomAudience(),
+                        getValidDailyUpdateUriByBuyer(BUYER),
+                        DevContext.createForDevOptionsDisabled().getDevOptionsEnabled());
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_SUCCESS), anyInt());
+    }
+
+    @Test
+    public void testImpl_runNormally_completeResponseWithSellerConfigurationFlagEnabled()
+            throws Exception {
+        enableSellerConfigurationFlag();
+
+        MockWebServer mockWebServer =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(
+                                new MockResponse()
+                                        .setBody(
+                                                getFullSuccessfulJsonResponse(
+                                                                BUYER,
+                                                                /*auctionServerRequestFlagsEnabled*/
+                                                                false,
+                                                                /* sellerConfigurationEnabled */
+                                                                true)
+                                                        .toString())));
+
+        FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
+
+        assertEquals(1, mockWebServer.getRequestCount());
+        assertTrue(callback.mIsSuccess);
+        verify(mCustomAudienceDaoMock)
+                .insertOrOverwriteCustomAudience(
+                        FetchCustomAudienceFixture.getFullSuccessfulDBCustomAudienceWithPriority(
+                                VALID_PRIORITY_1),
+                        getValidDailyUpdateUriByBuyer(BUYER),
+                        DevContext.createForDevOptionsDisabled().getDevOptionsEnabled());
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_SUCCESS), anyInt());
+    }
+
+    @Test
+    public void testImpl_runNormally_completeResponseWithSellerConfigurationFlagDisabled()
+            throws Exception {
+        enableSellerConfigurationFlag();
+
+        MockWebServer mockWebServer =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(
+                                new MockResponse()
+                                        .setBody(
+                                                getFullSuccessfulJsonResponse(
+                                                                BUYER,
+                                                                /*auctionServerRequestFlagsEnabled*/
+                                                                false,
+                                                                /* sellerConfigurationEnabled */
+                                                                false)
+                                                        .toString())));
+
+        FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
+
+        assertEquals(1, mockWebServer.getRequestCount());
+        assertTrue(callback.mIsSuccess);
         verify(mCustomAudienceDaoMock)
                 .insertOrOverwriteCustomAudience(
                         FetchCustomAudienceFixture.getFullSuccessfulDBCustomAudience(),
@@ -1197,10 +1328,17 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
     @Test
     public void testImpl_runNormally_differentResponsesToSameFetchUri() throws Exception {
         // Respond with a complete custom audience including the request values as is.
-        JSONObject response1 = getFullSuccessfulJsonResponse(BUYER, false);
+        JSONObject response1 =
+                getFullSuccessfulJsonResponse(
+                        BUYER,
+                        /* auctionServerRequestFlagsEnabled= */ false,
+                        /* sellerConfigurationEnabled= */ false);
         Uri differentDailyUpdateUri = CommonFixture.getUri(BUYER, "/differentUpdate");
         JSONObject response2 =
-                getFullSuccessfulJsonResponse(BUYER, false)
+                getFullSuccessfulJsonResponse(
+                                BUYER,
+                                /* auctionServerRequestFlagsEnabled= */ false,
+                                /* sellerConfigurationEnabled= */ false)
                         .put(DAILY_UPDATE_URI_KEY, differentDailyUpdateUri.toString());
 
         MockWebServer mockWebServer =
@@ -1351,6 +1489,18 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                         new FetchCustomAudienceFlags() {
                             @Override
                             public boolean getFledgeAuctionServerRequestFlagsEnabled() {
+                                return true;
+                            }
+                        });
+    }
+
+    private void enableSellerConfigurationFlag() {
+        // Helper method to enable seller configuration flag along with default flags
+        mFetchCustomAudienceImpl =
+                getImplWithFlags(
+                        new FetchCustomAudienceFlags() {
+                            @Override
+                            public boolean getFledgeGetAdSelectionDataSellerConfigurationEnabled() {
                                 return true;
                             }
                         });
