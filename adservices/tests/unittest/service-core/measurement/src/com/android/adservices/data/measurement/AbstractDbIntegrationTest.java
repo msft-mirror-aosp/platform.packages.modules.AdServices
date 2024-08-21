@@ -461,7 +461,8 @@ public abstract class AbstractDbIntegrationTest {
                 MeasurementTables.TriggerContract.AGGREGATE_TRIGGER_DATA,
                 trigger.getAggregateTriggerData());
         values.put(
-                MeasurementTables.TriggerContract.AGGREGATE_VALUES, trigger.getAggregateValues());
+                MeasurementTables.TriggerContract.AGGREGATE_VALUES,
+                trigger.getAggregateValuesString());
         values.put(MeasurementTables.TriggerContract.ENROLLMENT_ID, trigger.getEnrollmentId());
         values.put(MeasurementTables.TriggerContract.STATUS, trigger.getStatus());
         values.put(MeasurementTables.TriggerContract.TRIGGER_TIME, trigger.getTriggerTime());
