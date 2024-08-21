@@ -20,6 +20,7 @@ import static com.android.adservices.service.CommonFlagsConstants.KEY_ADSERVICES
 import static com.android.adservices.service.DebugFlagsConstants.KEY_PROTECTED_APP_SIGNALS_CLI_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_APP_ALLOW_LIST;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.PPAPI_AND_SYSTEM_SERVER;
 import static com.android.adservices.service.signals.ProtectedSignalsArgumentImpl.validateAndSerializeBase64;
@@ -69,11 +70,13 @@ public final class GenerateInputForEncodingShellCommandTest extends ForegroundDe
     @Rule(order = 6)
     public MockWebServerRule mMockWebServerRule =
             MockWebServerRule.forHttps(
-                    sContext, "adservices_untrusted_test_server.p12", "adservices_test");
+                    mContext, "adservices_untrusted_test_server.p12", "adservices_test");
 
     @Before
     public void setUp() throws Exception {
-        AdservicesTestHelper.killAdservicesProcess(sContext);
+        flags.setAllowListFlag(KEY_PAS_APP_ALLOW_LIST, new String[0]);
+
+        AdservicesTestHelper.killAdservicesProcess(mContext);
 
         if (sdkLevel.isAtLeastT()) {
             assertForegroundActivityStarted();
@@ -81,7 +84,7 @@ public final class GenerateInputForEncodingShellCommandTest extends ForegroundDe
 
         mProtectedSignalsClient =
                 new ProtectedSignalsClient.Builder()
-                        .setContext(sContext)
+                        .setContext(mContext)
                         .setExecutor(Executors.newCachedThreadPool())
                         .build();
     }

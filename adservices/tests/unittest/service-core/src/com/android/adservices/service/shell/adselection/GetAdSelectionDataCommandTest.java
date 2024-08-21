@@ -116,7 +116,7 @@ public class GetAdSelectionDataCommandTest extends ShellCommandTestCase<GetAdSel
                                 mConsentedDebugConfigurationGenerator),
                         AdSelectionShellCommandFactory.COMMAND_PREFIX,
                         CMD,
-                        GetAdSelectionDataArgs.BUYER,
+                        AdSelectionShellCommandArgs.BUYER,
                         BUYER.toString());
 
         expectFailure(
@@ -163,7 +163,7 @@ public class GetAdSelectionDataCommandTest extends ShellCommandTestCase<GetAdSel
                                 mConsentedDebugConfigurationGenerator),
                         AdSelectionShellCommandFactory.COMMAND_PREFIX,
                         CMD,
-                        GetAdSelectionDataArgs.BUYER,
+                        AdSelectionShellCommandArgs.BUYER,
                         BUYER.toString());
 
         expectSuccess(result, EXPECTED_COMMAND);
@@ -230,7 +230,7 @@ public class GetAdSelectionDataCommandTest extends ShellCommandTestCase<GetAdSel
                                 mConsentedDebugConfigurationGenerator),
                         AdSelectionShellCommandFactory.COMMAND_PREFIX,
                         CMD,
-                        GetAdSelectionDataArgs.BUYER,
+                        AdSelectionShellCommandArgs.BUYER,
                         BUYER.toString());
 
         expectSuccess(result, EXPECTED_COMMAND);

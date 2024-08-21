@@ -113,6 +113,14 @@
       ]
     },
     {
+      "name": "AdServicesMddIntegrationTests",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
       "name": "CtsAdServicesDeviceTestCases",
       "options": [
         {
@@ -436,6 +444,14 @@
       ]
     },
     {
+      "name": "AdExtServicesMddIntegrationTests",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
       "name": "CtsAdExtServicesDeviceTestCases",
       "options": [
         {
@@ -693,6 +709,24 @@
     {
       // Install com.google.android.extservices.apex and run AdExtServicesCobaltUnitTests.
       "name": "AdExtServicesCobaltUnitTests[com.google.android.extservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      // Install com.google.android.adservices.apex and run AdServicesMddIntegrationTests.
+      "name": "AdServicesMddIntegrationTests[com.google.android.adservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      // Install com.google.android.extservices.apex and run AdExtServicesMddIntegrationTests.
+      "name": "AdExtServicesMddIntegrationTests[com.google.android.extservices.apex]",
       "options": [
         {
           "exclude-annotation": "androidx.test.filters.FlakyTest"
