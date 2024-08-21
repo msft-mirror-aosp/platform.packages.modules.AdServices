@@ -181,9 +181,11 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
 
     @Override
     public void logMeasurementAttributionStats(
-            MeasurementAttributionStats measurementAttributionStats) {
-        mStatsdAdServicesLogger.logMeasurementAttributionStats(measurementAttributionStats);
-        cobaltLogMsmtAttribution(measurementAttributionStats);
+            MeasurementAttributionStats measurementAttributionStats,
+            @Nullable String enrollmentId) {
+        mStatsdAdServicesLogger.logMeasurementAttributionStats(
+                measurementAttributionStats, enrollmentId);
+        cobaltLogMsmtAttribution(measurementAttributionStats, enrollmentId);
     }
 
     @Override
@@ -466,7 +468,8 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     }
 
     /** Logs measurement attribution status using {@code CobaltLogger}. */
-    private void cobaltLogMsmtAttribution(MeasurementAttributionStats stats) {
+    private void cobaltLogMsmtAttribution(
+            MeasurementAttributionStats stats, @Nullable String enrollmentId) {
         sBackgroundExecutor.execute(
                 () -> {
                     MeasurementCobaltLogger measurementCobaltLogger =
@@ -476,7 +479,8 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
                             /* attrSurfaceType= */ stats.getSurfaceType(),
                             /* sourceType= */ stats.getSourceType(),
                             /* statusCode= */ stats.getResult(),
-                            /* errorCode= */ stats.getFailureType());
+                            /* errorCode= */ stats.getFailureType(),
+                            enrollmentId);
                 });
     }
 

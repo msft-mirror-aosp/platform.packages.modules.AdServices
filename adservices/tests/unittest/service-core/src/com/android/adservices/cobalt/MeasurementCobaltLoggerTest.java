@@ -470,6 +470,31 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
     }
 
     @Test
+    public void testLogAttributionStatus_nullEnrollment() {
+        mockCobaltLoggingFlags(true);
+        mockMsmtAttributionCobaltLoggingEnabled(true);
+        MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
+
+        logger.logAttributionStatusWithAppName(
+                APP_PACKAGE_NAME,
+                AD_SERVICES_MEASUREMENT_ATTRIBUTION__ATTRIBUTION_SURFACE_COMBINATION__WEB_APP_ATTRIBUTION_SURFACE_COMBINATION,
+                AD_SERVICES_MEASUREMENT_REGISTRATIONS__SOURCE_TYPE__EVENT_SOURCE_TYPE,
+                AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__FAILURE_STATUS,
+                AD_SERVICES_MEASUREMENT_ATTRIBUTION__FAILURE_TYPE__UNKNOWN_ATTRIBUTION_FAILURE_TYPE,
+                /* enrollmentId= */ null);
+
+        verify(mMockCobaltLogger, times(1))
+                .logString(
+                        ATTRIBUTION_METRIC_ID,
+                        APP_PACKAGE_NAME,
+                        ImmutableList.of(
+                                ATTRIBUTION_WEB_APP_SURFACE,
+                                ATTRIBUTION_EVENT_SOURCE_TYPE,
+                                ATTRIBUTION_UNKNOWN_FAILURE_STATUS_CODE,
+                                /* enrollment= */ 0));
+    }
+
+    @Test
     public void testLogAttributionStatus_negativeErrorCode() {
         mockCobaltLoggingFlags(true);
         mockMsmtAttributionCobaltLoggingEnabled(true);
@@ -480,7 +505,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 AD_SERVICES_MEASUREMENT_ATTRIBUTION__ATTRIBUTION_SURFACE_COMBINATION__WEB_APP_ATTRIBUTION_SURFACE_COMBINATION,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__SOURCE_TYPE__EVENT_SOURCE_TYPE,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__FAILURE_STATUS,
-                /* errorCode= */ -10);
+                /* errorCode= */ -10,
+                ENROLLMENT_ID);
 
         verify(mMockCobaltLogger, times(1))
                 .logString(
@@ -489,7 +515,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                         ImmutableList.of(
                                 ATTRIBUTION_WEB_APP_SURFACE,
                                 ATTRIBUTION_EVENT_SOURCE_TYPE,
-                                ATTRIBUTION_UNKNOWN_FAILURE_STATUS_CODE));
+                                ATTRIBUTION_UNKNOWN_FAILURE_STATUS_CODE,
+                                HASHED_ENROLLMENT));
     }
 
     @Test
@@ -503,7 +530,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 AD_SERVICES_MEASUREMENT_ATTRIBUTION__ATTRIBUTION_SURFACE_COMBINATION__APP_APP_ATTRIBUTION_SURFACE_COMBINATION,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__SOURCE_TYPE__NAVIGATION_SOURCE_TYPE,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__FAILURE_STATUS,
-                AD_SERVICES_MEASUREMENT_ATTRIBUTION__FAILURE_TYPE__NO_MATCHING_SOURCE_ATTRIBUTION_FAILURE_TYPE);
+                AD_SERVICES_MEASUREMENT_ATTRIBUTION__FAILURE_TYPE__NO_MATCHING_SOURCE_ATTRIBUTION_FAILURE_TYPE,
+                ENROLLMENT_ID);
 
         verify(mMockCobaltLogger, times(1))
                 .logString(
@@ -512,7 +540,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                         ImmutableList.of(
                                 ATTRIBUTION_APP_APP_SURFACE,
                                 ATTRIBUTION_NAVIGATION_SOURCE_TYPE,
-                                ATTRIBUTION_NO_MATCHING_SOURCE_FAILURE_STATUS_CODE));
+                                ATTRIBUTION_NO_MATCHING_SOURCE_FAILURE_STATUS_CODE,
+                                HASHED_ENROLLMENT));
     }
 
     @Test
@@ -526,7 +555,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 AD_SERVICES_MEASUREMENT_ATTRIBUTION__ATTRIBUTION_SURFACE_COMBINATION__APP_APP_ATTRIBUTION_SURFACE_COMBINATION,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__SOURCE_TYPE__NAVIGATION_SOURCE_TYPE,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__SUCCESS_STATUS,
-                AD_SERVICES_MEASUREMENT_ATTRIBUTION__FAILURE_TYPE__UNKNOWN_ATTRIBUTION_FAILURE_TYPE);
+                AD_SERVICES_MEASUREMENT_ATTRIBUTION__FAILURE_TYPE__UNKNOWN_ATTRIBUTION_FAILURE_TYPE,
+                ENROLLMENT_ID);
 
         verify(mMockCobaltLogger, times(1))
                 .logString(
@@ -535,7 +565,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                         ImmutableList.of(
                                 ATTRIBUTION_APP_APP_SURFACE,
                                 ATTRIBUTION_NAVIGATION_SOURCE_TYPE,
-                                ATTRIBUTION_SUCCESS_STATUS_CODE));
+                                ATTRIBUTION_SUCCESS_STATUS_CODE,
+                                HASHED_ENROLLMENT));
     }
 
     @Test
@@ -549,7 +580,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 AD_SERVICES_MEASUREMENT_ATTRIBUTION__ATTRIBUTION_SURFACE_COMBINATION__APP_APP_ATTRIBUTION_SURFACE_COMBINATION,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__SOURCE_TYPE__NAVIGATION_SOURCE_TYPE,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__AGGREGATE_REPORT_GENERATED_SUCCESS_STATUS,
-                AD_SERVICES_MEASUREMENT_ATTRIBUTION__FAILURE_TYPE__UNKNOWN_ATTRIBUTION_FAILURE_TYPE);
+                AD_SERVICES_MEASUREMENT_ATTRIBUTION__FAILURE_TYPE__UNKNOWN_ATTRIBUTION_FAILURE_TYPE,
+                ENROLLMENT_ID);
 
         verify(mMockCobaltLogger, times(1))
                 .logString(
@@ -558,7 +590,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                         ImmutableList.of(
                                 ATTRIBUTION_APP_APP_SURFACE,
                                 ATTRIBUTION_NAVIGATION_SOURCE_TYPE,
-                                AGGREGATE_REPORT_GENERATED_SUCCESS_STATUS));
+                                AGGREGATE_REPORT_GENERATED_SUCCESS_STATUS,
+                                HASHED_ENROLLMENT));
     }
 
     @Test
@@ -572,7 +605,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 AD_SERVICES_MEASUREMENT_ATTRIBUTION__ATTRIBUTION_SURFACE_COMBINATION__APP_APP_ATTRIBUTION_SURFACE_COMBINATION,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__SOURCE_TYPE__NAVIGATION_SOURCE_TYPE,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__EVENT_REPORT_GENERATED_SUCCESS_STATUS,
-                AD_SERVICES_MEASUREMENT_ATTRIBUTION__FAILURE_TYPE__UNKNOWN_ATTRIBUTION_FAILURE_TYPE);
+                AD_SERVICES_MEASUREMENT_ATTRIBUTION__FAILURE_TYPE__UNKNOWN_ATTRIBUTION_FAILURE_TYPE,
+                ENROLLMENT_ID);
 
         verify(mMockCobaltLogger, times(1))
                 .logString(
@@ -581,7 +615,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                         ImmutableList.of(
                                 ATTRIBUTION_APP_APP_SURFACE,
                                 ATTRIBUTION_NAVIGATION_SOURCE_TYPE,
-                                EVENT_REPORT_GENERATED_SUCCESS_STATUS));
+                                EVENT_REPORT_GENERATED_SUCCESS_STATUS,
+                                HASHED_ENROLLMENT));
     }
 
     @Test
@@ -595,7 +630,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 AD_SERVICES_MEASUREMENT_ATTRIBUTION__ATTRIBUTION_SURFACE_COMBINATION__APP_APP_ATTRIBUTION_SURFACE_COMBINATION,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__SOURCE_TYPE__NAVIGATION_SOURCE_TYPE,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__AGGREGATE_AND_EVENT_REPORTS_GENERATED_SUCCESS_STATUS,
-                AD_SERVICES_MEASUREMENT_ATTRIBUTION__FAILURE_TYPE__UNKNOWN_ATTRIBUTION_FAILURE_TYPE);
+                AD_SERVICES_MEASUREMENT_ATTRIBUTION__FAILURE_TYPE__UNKNOWN_ATTRIBUTION_FAILURE_TYPE,
+                ENROLLMENT_ID);
 
         verify(mMockCobaltLogger, times(1))
                 .logString(
@@ -604,7 +640,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                         ImmutableList.of(
                                 ATTRIBUTION_APP_APP_SURFACE,
                                 ATTRIBUTION_NAVIGATION_SOURCE_TYPE,
-                                AGGREGATE_AND_EVENT_REPORTS_GENERATED_SUCCESS_STATUS));
+                                AGGREGATE_AND_EVENT_REPORTS_GENERATED_SUCCESS_STATUS,
+                                HASHED_ENROLLMENT));
     }
 
     @Test
@@ -618,7 +655,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 AD_SERVICES_MEASUREMENT_ATTRIBUTION__ATTRIBUTION_SURFACE_COMBINATION__UNKNOWN_ATTRIBUTION_SURFACE_COMBINATION,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__SOURCE_TYPE__UNKNOWN_SOURCE_TYPE,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__UNKNOWN_STATUS,
-                AD_SERVICES_MEASUREMENT_REGISTRATIONS__FAILURE_TYPE__UNKNOWN_REGISTRATION_FAILURE_TYPE);
+                AD_SERVICES_MEASUREMENT_REGISTRATIONS__FAILURE_TYPE__UNKNOWN_REGISTRATION_FAILURE_TYPE,
+                ENROLLMENT_ID);
 
         verify(mMockCobaltLogger, times(1))
                 .logString(
@@ -627,7 +665,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                         ImmutableList.of(
                                 ATTRIBUTION_UNKNOWN_SURFACE_TYPE,
                                 ATTRIBUTION_UNKNOWN_SOURCE_TYPE,
-                                ATTRIBUTION_UNKNOWN_STATUS_CODE));
+                                ATTRIBUTION_UNKNOWN_STATUS_CODE,
+                                HASHED_ENROLLMENT));
     }
 
     @Test
@@ -640,7 +679,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 AD_SERVICES_MEASUREMENT_ATTRIBUTION__ATTRIBUTION_SURFACE_COMBINATION__UNKNOWN_ATTRIBUTION_SURFACE_COMBINATION,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__SOURCE_TYPE__UNKNOWN_SOURCE_TYPE,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__UNKNOWN_STATUS,
-                AD_SERVICES_MEASUREMENT_REGISTRATIONS__FAILURE_TYPE__UNKNOWN_REGISTRATION_FAILURE_TYPE);
+                AD_SERVICES_MEASUREMENT_REGISTRATIONS__FAILURE_TYPE__UNKNOWN_REGISTRATION_FAILURE_TYPE,
+                ENROLLMENT_ID);
 
         verify(mMockCobaltLogger, never())
                 .logString(
@@ -649,7 +689,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                         ImmutableList.of(
                                 ATTRIBUTION_UNKNOWN_SURFACE_TYPE,
                                 ATTRIBUTION_UNKNOWN_SOURCE_TYPE,
-                                ATTRIBUTION_UNKNOWN_STATUS_CODE));
+                                ATTRIBUTION_UNKNOWN_STATUS_CODE,
+                                HASHED_ENROLLMENT));
     }
 
     @Test
@@ -663,7 +704,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 AD_SERVICES_MEASUREMENT_ATTRIBUTION__ATTRIBUTION_SURFACE_COMBINATION__UNKNOWN_ATTRIBUTION_SURFACE_COMBINATION,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__SOURCE_TYPE__UNKNOWN_SOURCE_TYPE,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__UNKNOWN_STATUS,
-                AD_SERVICES_MEASUREMENT_REGISTRATIONS__FAILURE_TYPE__UNKNOWN_REGISTRATION_FAILURE_TYPE);
+                AD_SERVICES_MEASUREMENT_REGISTRATIONS__FAILURE_TYPE__UNKNOWN_REGISTRATION_FAILURE_TYPE,
+                ENROLLMENT_ID);
 
         verify(mMockCobaltLogger, never())
                 .logString(
@@ -672,7 +714,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                         ImmutableList.of(
                                 ATTRIBUTION_UNKNOWN_SURFACE_TYPE,
                                 ATTRIBUTION_UNKNOWN_SOURCE_TYPE,
-                                ATTRIBUTION_UNKNOWN_STATUS_CODE));
+                                ATTRIBUTION_UNKNOWN_STATUS_CODE,
+                                HASHED_ENROLLMENT));
     }
 
     @Test
