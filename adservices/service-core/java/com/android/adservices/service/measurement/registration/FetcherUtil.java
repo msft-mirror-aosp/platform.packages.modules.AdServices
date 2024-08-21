@@ -380,7 +380,8 @@ public class FetcherUtil {
             long headerSizeLimitBytes,
             AdServicesLogger logger,
             AsyncRegistration asyncRegistration,
-            AsyncFetchStatus asyncFetchStatus) {
+            AsyncFetchStatus asyncFetchStatus,
+            @Nullable String enrollmentId) {
         long headerSize = asyncFetchStatus.getResponseSize();
         String adTechDomain = null;
 
@@ -408,7 +409,8 @@ public class FetcherUtil {
                                 asyncFetchStatus.getNumDeletedEntities(),
                                 asyncFetchStatus.isEventLevelEpsilonConfigured())
                         .setAdTechDomain(adTechDomain)
-                        .build());
+                        .build(),
+                enrollmentId);
     }
 
     private static List<Uri> parseListRedirects(Map<String, List<String>> headers) {
