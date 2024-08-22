@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.shell.common;
+package com.android.adservices.service.shell.adservicesapi;
 
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.TAG;
+import static com.android.adservices.service.shell.adservicesapi.AdServicesApiShellCommandFactory.COMMAND_PREFIX;
 import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_ENABLE_ADSERVICES;
 import static com.android.adservices.service.stats.ShellCommandStats.RESULT_SUCCESS;
 
@@ -53,8 +54,11 @@ public final class EnableAdServicesCommand extends AbstractShellCommand {
     public static final String CMD_ENABLE_ADSERVICES = "enable-adservices";
 
     public static final String HELP_ENABLE_ADSERVICES =
-            CMD_ENABLE_ADSERVICES
-                    + "usage:\n enable-adservices [--adid true|false][--adult true|false][--u18 "
+            "usage:\n "
+                    + COMMAND_PREFIX
+                    + " "
+                    + CMD_ENABLE_ADSERVICES
+                    + " [--adid true|false][--adult true|false][--u18 "
                     + "true|false]";
 
     private static final String ADID_KEY = "adid";
@@ -63,16 +67,18 @@ public final class EnableAdServicesCommand extends AbstractShellCommand {
 
     private static final String U18_ACCOUNT_KEY = "u18";
 
+    private static final int ARG_PARSE_START_INDEX = 2;
+
     @SuppressLint("MissingPermission")
     @Override
     public ShellCommandResult run(PrintWriter out, PrintWriter err, String[] args) {
-        // args length should be odd number, first arg is the command itself
-        if (args.length % 2 == 0) {
+        // args length should be even number, first and second arg is factory and command name
+        if (args.length < 2 || args.length % 2 != 0) {
             return invalidArgsError(
                     HELP_ENABLE_ADSERVICES, err, ShellCommandStats.COMMAND_ENABLE_ADSERVICES, args);
         }
         ImmutableMap<String, String> paramMap =
-                ShellCommandArgParserHelper.parseCliArguments(args, 1);
+                ShellCommandArgParserHelper.parseCliArguments(args, ARG_PARSE_START_INDEX);
 
         AdServicesCommonManager commonManager =
                 AdServicesCommonManager.get(ApplicationContextSingleton.get());

@@ -624,7 +624,8 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                         interactionType,
                         registrationStatus,
                         failureType,
-                        isEeaDevice);
+                        isEeaDevice,
+                        TEST_ENROLLMENT_ID);
         MeasurementRegistrationResponseStats stats =
                 new MeasurementRegistrationResponseStats.Builder(
                                 metricsCode,
@@ -643,10 +644,12 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                                 /* isEventLevelEpsilonEnabled= */ false)
                         .setAdTechDomain(null)
                         .build();
-        mAdservicesLogger.logMeasurementRegistrationsResponseSize(stats);
+        mAdservicesLogger.logMeasurementRegistrationsResponseSize(stats, TEST_ENROLLMENT_ID);
         ArgumentCaptor<MeasurementRegistrationResponseStats> argumentCaptor =
                 ArgumentCaptor.forClass(MeasurementRegistrationResponseStats.class);
-        verify(mStatsdLoggerMock).logMeasurementRegistrationsResponseSize(argumentCaptor.capture());
+        verify(mStatsdLoggerMock)
+                .logMeasurementRegistrationsResponseSize(
+                        argumentCaptor.capture(), eq(TEST_ENROLLMENT_ID));
         MeasurementRegistrationResponseStats loggedStats = argumentCaptor.getValue();
         expect.that(loggedStats.getCode()).isEqualTo(metricsCode);
         expect.that(loggedStats.getRegistrationStatus()).isEqualTo(registrationStatus);

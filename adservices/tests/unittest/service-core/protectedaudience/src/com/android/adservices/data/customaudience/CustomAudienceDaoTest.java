@@ -843,9 +843,9 @@ public class CustomAudienceDaoTest {
 
         assertNotNull(customAudience);
         assertEquals(
-                CUSTOM_AUDIENCE_WITH_PRIORITY.getPriority(),
-                customAudience.getPriority(),
-                0.001); // Need delta since priority is float
+                0,
+                Double.compare(
+                        CUSTOM_AUDIENCE_WITH_PRIORITY.getPriority(), customAudience.getPriority()));
     }
 
     @Test

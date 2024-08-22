@@ -26,6 +26,8 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__RESPONSE_CODE__FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__RESPONSE_CODE__SUCCESS;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import android.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
@@ -36,6 +38,7 @@ import com.android.cobalt.CobaltLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.hash.Hashing;
 
 import java.util.Objects;
 
@@ -149,7 +152,8 @@ public final class MeasurementCobaltLogger {
             int sourceType,
             int statusCode,
             int errorCode,
-            boolean isEeaDevice) {
+            boolean isEeaDevice,
+            @Nullable String enrollmentId) {
         if (!isRegistrationCobaltLoggingEnabled()) {
             LogUtil.w("Skip logRegistrationStatus because Cobalt logger is not available.");
             return;
@@ -163,7 +167,8 @@ public final class MeasurementCobaltLogger {
                         surfaceType,
                         getSourceTriggerType(type, sourceType),
                         getRegistrationStatusEvent(statusCode, errorCode),
-                        isEeaDevice ? EEA_REGION_CODE : ROW_REGION_CODE));
+                        isEeaDevice ? EEA_REGION_CODE : ROW_REGION_CODE,
+                        hashEnrollmentIntoUnsignedInt(enrollmentId)));
     }
 
     @SuppressWarnings("FutureReturnValueIgnored") // TODO(b/323263328): Remove @SuppressWarnings.
@@ -290,5 +295,14 @@ public final class MeasurementCobaltLogger {
             statusEvent = REPORTING_UNKNOWN_STATUS_CODE;
         }
         return statusEvent;
+    }
+
+    private static int hashEnrollmentIntoUnsignedInt(@Nullable String enrollmentId) {
+        if (enrollmentId == null) {
+            return 0;
+        }
+        // Hash string into 32 bit int then remove the sign bit since Cobalt's dimension supports
+        // unsigned int up to 2^31 -1.
+        return Hashing.murmur3_32_fixed().hashString(enrollmentId, UTF_8).asInt() & 0x7FFFFFFF;
     }
 }
