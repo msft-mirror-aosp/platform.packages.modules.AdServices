@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.stats;
 
+import android.annotation.Nullable;
+
 import com.android.adservices.service.common.AppManifestConfigCall;
 import com.android.adservices.service.stats.kanon.KAnonBackgroundJobStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonGetChallengeStatusStats;
@@ -49,7 +51,7 @@ public class NoOpLoggerImpl implements AdServicesLogger {
 
     @Override
     public void logMeasurementRegistrationsResponseSize(
-            MeasurementRegistrationResponseStats stats) {}
+            MeasurementRegistrationResponseStats stats, @Nullable String enrollmentId) {}
 
     @Override
     public void logRunAdSelectionProcessReportedStats(RunAdSelectionProcessReportedStats stats) {}
