@@ -353,15 +353,15 @@ public final class CobaltJobServiceTest extends AdServicesJobServiceTestCase {
     }
 
     private void mockBackgroundJobsLoggingKillSwitch(boolean value) {
-        mocker.mockGetBackgroundJobsLoggingKillSwitch(mMockFlags, value);
+        mocker.mockGetBackgroundJobsLoggingKillSwitch(value);
     }
 
     private void mockCobaltLoggingEnabled(boolean value) {
-        mocker.mockGetCobaltLoggingEnabled(mMockFlags, value);
+        mocker.mockGetCobaltLoggingEnabled(value);
     }
 
     private void mockCobaltLoggingFlags() {
-        mocker.mockGetAdservicesReleaseStageForCobalt(mMockFlags, DEFAULT_RELEASE_STAGE);
+        mocker.mockGetAdservicesReleaseStageForCobalt(DEFAULT_RELEASE_STAGE);
         when(mMockFlags.getCobaltAdservicesApiKeyHex()).thenReturn(DEFAULT_API_KEY);
     }
 

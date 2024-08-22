@@ -15,17 +15,19 @@
  */
 package com.android.adservices.common;
 
-import com.android.adservices.mockito.AdServicesPragmaticMockerTestCase;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase.Mocker;
+import com.android.adservices.mockito.StaticClassChecker;
+import com.android.adservices.shared.meta_testing.AndroidStaticMockerTestCase;
 
 /**
  * Unit tests for {@link AdServicesExtendedMockitoTestCase.Mocker}'s implementation of {@link
- * com.android.adservices.mockito.AdServicesPragmaticMocker}.
+ * com.android.adservices.mockito.AndroidStaticMocker}.
  */
 public final class AdServicesExtendedMockitoTestCaseAndroidStaticMockerTest
-        extends AdServicesPragmaticMockerTestCase<AdServicesExtendedMockitoTestCase.Mocker> {
+        extends AndroidStaticMockerTestCase<AdServicesExtendedMockitoTestCase.Mocker> {
 
     @Override
-    protected AdServicesExtendedMockitoTestCase.Mocker getMocker() {
-        return new AdServicesExtendedMockitoTestCase.Mocker();
+    protected Mocker getMocker(StaticClassChecker checker) {
+        return AdServicesExtendedMockitoTestCase.Mocker.forAndroidStaticMockerTests(checker);
     }
 }

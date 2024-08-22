@@ -4231,6 +4231,43 @@ public class AttributionJobHandlerTest {
     }
 
     @Test
+    public void performAttributions_invalidAggregateValues_generateEventReportOnly()
+            throws JSONException, DatastoreException {
+        // Setup
+        JSONArray triggerData = getAggregateTriggerData();
+        String invalidAggregatableValuesWithFlagOff =
+                "[{\"values\":{\"campaignCounts\":32768, \"geoValue\":1664}},{\"values\":{\"a\":1,"
+                        + " \"b\":2, \"c\":3}}]";
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("triggerId1")
+                        .setTriggerTime(TRIGGER_TIME)
+                        .setStatus(Trigger.Status.PENDING)
+                        .setEventTriggers(getEventTriggers())
+                        .setAggregateTriggerData(triggerData.toString())
+                        .setAggregateValues(invalidAggregatableValuesWithFlagOff)
+                        .build();
+        Source source = getAggregateSource();
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        List<Source> matchingSourceList = new ArrayList<>();
+        matchingSourceList.add(source);
+        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(anyInt(), any(), any()))
+                .thenReturn(5L);
+        when(mMeasurementDao.getSourceDestinations(source.getId()))
+                .thenReturn(Pair.create(source.getAppDestinations(), source.getWebDestinations()));
+        // Execution
+        mHandler.performPendingAttributions();
+        // Assertions
+        verify(mMeasurementDao, never()).insertAggregateReport(any());
+        verify(mMeasurementDao, times(1)).insertEventReport(any());
+        verify(mTransaction, times(2)).begin();
+        verify(mTransaction, times(2)).end();
+    }
+
+    @Test
     public void performAttributions_filterSet_eventLevelFiltersFailToMatch_aggregateReportOnly()
             throws DatastoreException, JSONException {
         // Setup
