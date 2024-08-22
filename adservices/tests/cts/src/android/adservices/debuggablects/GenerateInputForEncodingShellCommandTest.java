@@ -16,6 +16,8 @@
 
 package android.adservices.debuggablects;
 
+import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
+
 import static com.android.adservices.service.CommonFlagsConstants.KEY_ADSERVICES_SHELL_COMMAND_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_PROTECTED_APP_SIGNALS_CLI_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH;
@@ -29,7 +31,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.clients.signals.ProtectedSignalsClient;
 import android.adservices.common.AdTechIdentifier;
-import android.adservices.common.CommonFixture;
 import android.adservices.signals.UpdateSignalsRequest;
 import android.adservices.utils.MockWebServerRule;
 import android.adservices.utils.ScenarioDispatcher;
@@ -74,7 +75,7 @@ public final class GenerateInputForEncodingShellCommandTest extends ForegroundDe
 
     @Before
     public void setUp() throws Exception {
-        flags.setAllowListFlag(KEY_PAS_APP_ALLOW_LIST, new String[0]);
+        flags.setFlag(KEY_PAS_APP_ALLOW_LIST, new String[] {TEST_PACKAGE_NAME}, ",");
 
         AdservicesTestHelper.killAdservicesProcess(mContext);
 
@@ -119,6 +120,6 @@ public final class GenerateInputForEncodingShellCommandTest extends ForegroundDe
 
         assertThat(commandResult.getOut()).contains(validateAndSerializeBase64("AAAAAQ=="));
         assertThat(commandResult.getOut()).contains(validateAndSerializeBase64("AAAAAg=="));
-        assertThat(commandResult.getOut()).contains(CommonFixture.TEST_PACKAGE_NAME);
+        assertThat(commandResult.getOut()).contains(TEST_PACKAGE_NAME);
     }
 }
