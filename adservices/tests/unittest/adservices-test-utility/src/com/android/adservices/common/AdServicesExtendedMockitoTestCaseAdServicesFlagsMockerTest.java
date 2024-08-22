@@ -26,6 +26,7 @@ import com.android.adservices.service.Flags;
 public final class AdServicesExtendedMockitoTestCaseAdServicesFlagsMockerTest
         extends AdServicesFlagsMockerTestCase<AdServicesExtendedMockitoTestCase.Mocker> {
 
+    @SuppressWarnings("VisibleForTests") // ErrorProne doesn't recognize this is a test
     @Override
     protected Mocker getMocker(Flags flags) {
         return AdServicesExtendedMockitoTestCase.Mocker.forAdServicesFlagsMockerTests(flags);

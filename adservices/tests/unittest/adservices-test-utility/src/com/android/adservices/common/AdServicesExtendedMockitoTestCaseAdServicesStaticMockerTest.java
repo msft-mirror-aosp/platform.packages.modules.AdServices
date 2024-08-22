@@ -26,6 +26,7 @@ import com.android.adservices.mockito.StaticClassChecker;
 public final class AdServicesExtendedMockitoTestCaseAdServicesStaticMockerTest
         extends AdServicesStaticMockerTestCase<AdServicesExtendedMockitoTestCase.Mocker> {
 
+    @SuppressWarnings("VisibleForTests") // ErrorProne doesn't recognize this is a test
     @Override
     protected Mocker getMocker(StaticClassChecker checker) {
         return AdServicesExtendedMockitoTestCase.Mocker.forAdServicesStaticMockerTests(checker);

@@ -86,7 +86,7 @@ public final class DeleteExpiredJobServiceTest extends MeasurementJobServiceTest
     public void onStartJob_killSwitchOn_withoutLogging() throws Exception {
         runWithMocks(
                 () -> {
-                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
+                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, true);
 
                     onStartJob_killSwitchOn();
 
@@ -98,7 +98,7 @@ public final class DeleteExpiredJobServiceTest extends MeasurementJobServiceTest
     public void onStartJob_killSwitchOn_withLogging() throws Exception {
         runWithMocks(
                 () -> {
-                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
+                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, false);
                     JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
 
                     onStartJob_killSwitchOn();
@@ -111,7 +111,7 @@ public final class DeleteExpiredJobServiceTest extends MeasurementJobServiceTest
     public void onStartJob_killSwitchOff_withoutLogging() throws Exception {
         runWithMocks(
                 () -> {
-                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
+                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, true);
 
                     onStartJob_killSwitchOff();
 
@@ -123,7 +123,7 @@ public final class DeleteExpiredJobServiceTest extends MeasurementJobServiceTest
     public void onStartJob_killSwitchOff_withLogging() throws Exception {
         runWithMocks(
                 () -> {
-                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
+                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, false);
                     JobServiceLoggingCallback onStartJobCallback =
                             syncPersistJobExecutionData(mSpyLogger);
                     JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
@@ -138,8 +138,8 @@ public final class DeleteExpiredJobServiceTest extends MeasurementJobServiceTest
     public void onStartJob_shouldDisableJobTrue_withoutLogging() throws Exception {
         runWithMocks(
                 () -> {
-                    ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
+                    mocker.mockGetFlags(mMockFlags);
+                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, true);
 
                     onStartJob_shouldDisableJobTrue();
 
@@ -151,8 +151,8 @@ public final class DeleteExpiredJobServiceTest extends MeasurementJobServiceTest
     public void onStartJob_shouldDisableJobTrue_withLoggingEnabled() throws Exception {
         runWithMocks(
                 () -> {
-                    ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
+                    mocker.mockGetFlags(mMockFlags);
+                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, false);
 
                     onStartJob_shouldDisableJobTrue();
 
@@ -414,7 +414,7 @@ public final class DeleteExpiredJobServiceTest extends MeasurementJobServiceTest
     }
 
     private void toggleKillSwitch(boolean value) {
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mMockFlags);
         ExtendedMockito.doReturn(value).when(mMockFlags).getMeasurementJobDeleteExpiredKillSwitch();
     }
 }
