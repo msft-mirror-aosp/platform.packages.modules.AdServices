@@ -142,7 +142,7 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
         mocker.mockGetFlags(mMockFlags);
         mocker.mockGetCallingUidOrThrow(); // expected calling by its test uid by default
 
-        mocker.mockAllCobaltLoggingFlags(mMockFlags, false);
+        mocker.mockAllCobaltLoggingFlags(false);
     }
 
     @Test
