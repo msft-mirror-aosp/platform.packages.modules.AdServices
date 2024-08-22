@@ -83,22 +83,9 @@ public final class DeleteExpiredJobServiceTest extends MeasurementJobServiceTest
     }
 
     @Test
-    public void onStartJob_killSwitchOn_withoutLogging() throws Exception {
-        runWithMocks(
-                () -> {
-                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, true);
-
-                    onStartJob_killSwitchOn();
-
-                    verifyLoggingNotHappened(mSpyLogger);
-                });
-    }
-
-    @Test
     public void onStartJob_killSwitchOn_withLogging() throws Exception {
         runWithMocks(
                 () -> {
-                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, false);
                     JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
 
                     onStartJob_killSwitchOn();
@@ -108,22 +95,9 @@ public final class DeleteExpiredJobServiceTest extends MeasurementJobServiceTest
     }
 
     @Test
-    public void onStartJob_killSwitchOff_withoutLogging() throws Exception {
-        runWithMocks(
-                () -> {
-                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, true);
-
-                    onStartJob_killSwitchOff();
-
-                    verifyLoggingNotHappened(mSpyLogger);
-                });
-    }
-
-    @Test
     public void onStartJob_killSwitchOff_withLogging() throws Exception {
         runWithMocks(
                 () -> {
-                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, false);
                     JobServiceLoggingCallback onStartJobCallback =
                             syncPersistJobExecutionData(mSpyLogger);
                     JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
@@ -135,25 +109,10 @@ public final class DeleteExpiredJobServiceTest extends MeasurementJobServiceTest
     }
 
     @Test
-    public void onStartJob_shouldDisableJobTrue_withoutLogging() throws Exception {
-        runWithMocks(
-                () -> {
-                    mocker.mockGetFlags(mMockFlags);
-                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, true);
-
-                    onStartJob_shouldDisableJobTrue();
-
-                    verifyLoggingNotHappened(mSpyLogger);
-                });
-    }
-
-    @Test
     public void onStartJob_shouldDisableJobTrue_withLoggingEnabled() throws Exception {
         runWithMocks(
                 () -> {
                     mocker.mockGetFlags(mMockFlags);
-                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, false);
-
                     onStartJob_shouldDisableJobTrue();
 
                     // Verify logging has not happened even though logging is enabled because this
