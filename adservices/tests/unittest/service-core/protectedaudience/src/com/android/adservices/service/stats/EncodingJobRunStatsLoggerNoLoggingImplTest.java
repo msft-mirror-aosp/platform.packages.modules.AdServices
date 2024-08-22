@@ -26,8 +26,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 public class EncodingJobRunStatsLoggerNoLoggingImplTest {
-    @Mock
-    private AdServicesLogger mAdServicesLoggerMock;
+    @Mock private AdServicesLogger mAdServicesLoggerMock;
+
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);

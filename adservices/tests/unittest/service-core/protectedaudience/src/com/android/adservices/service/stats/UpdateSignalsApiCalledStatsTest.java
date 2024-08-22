@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.stats;
 
-
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JSON_PROCESSING_STATUS_SUCCESS;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_MEDIUM;
 
