@@ -25,6 +25,7 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
+import android.annotation.CallSuper;
 import android.app.job.JobParameters;
 import android.app.job.JobService;
 import android.content.Context;
@@ -36,8 +37,6 @@ import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
 import com.android.adservices.spe.AdServicesJobServiceFactory;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
-
-import org.junit.Test;
 
 /** Base class for tests that exercise {@code JobService} implementations. */
 public abstract class AdServicesJobServiceTestCase extends AdServicesExtendedMockitoTestCase {
@@ -56,8 +55,13 @@ public abstract class AdServicesJobServiceTestCase extends AdServicesExtendedMoc
         return jobMocker.mockJobSchedulingLogger(factory);
     }
 
-    @Test
-    public final void testAdServicesJobTestCaseFixtures() throws Exception {
+    // TODO(b/361555631): rename to testAdServicesJobTestCaseFixtures() and annotate
+    // it with @MetaTest
+    @CallSuper
+    @Override
+    protected void assertValidTestCaseFixtures() throws Exception {
+        super.assertValidTestCaseFixtures();
+
         assertTestClassHasNoFieldsFromSuperclass(AdServicesJobServiceTestCase.class, "jobMocker");
     }
 

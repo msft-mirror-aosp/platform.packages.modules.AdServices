@@ -15,6 +15,7 @@
  */
 package com.android.adservices.service.measurement;
 
+import android.annotation.CallSuper;
 import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
 
@@ -23,15 +24,13 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 
 import org.junit.Before;
-import org.junit.Test;
 import org.mockito.Mock;
 
 public abstract class MeasurementJobServiceTestCase extends AdServicesJobServiceTestCase {
 
-    // TODO(b/354932043): move to superclass
+    // TODO(b/354932043): move 2 fields below (and check on assertValidTestCaseFixtures())
+    // to superclass
     @Mock protected JobScheduler mMockJobScheduler;
-
-    // TODO(b/354932043): move to superclass
     @Mock protected JobParameters mMockJobParameters;
 
     protected AdServicesJobServiceLogger mSpyLogger;
@@ -43,11 +42,15 @@ public abstract class MeasurementJobServiceTestCase extends AdServicesJobService
         mSpyLogger = jobMocker.getSpiedAdServicesJobServiceLogger(mContext, mMockFlags);
     }
 
-    @Test
-    public final void testMeasurementJobServiceTestCaseFixtures() throws Exception {
+    // TODO(b/361555631): rename to testMeasurementJobServiceTestCaseFixtures() and annotate
+    // it with @MetaTest
+    @CallSuper
+    @Override
+    protected void assertValidTestCaseFixtures() throws Exception {
+        super.assertValidTestCaseFixtures();
+
         assertTestClassHasNoFieldsFromSuperclass(
                 MeasurementJobServiceTestCase.class,
-                "mMockFlags",
                 "mMockJobScheduler",
                 "mMockJobParameters",
                 "mSpyLogger",
