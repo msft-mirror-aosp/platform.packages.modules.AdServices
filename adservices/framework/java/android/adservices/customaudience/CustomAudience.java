@@ -51,6 +51,9 @@ public final class CustomAudience implements Parcelable {
     /** @hide */
     public static final int FLAG_AUCTION_SERVER_REQUEST_DEFAULT = 0;
 
+    /** @hide */
+    public static final double PRIORITY_DEFAULT = 0.0;
+
     /**
      * This auction server request flag indicates to the service that ads for this {@link
      * CustomAudience} can be omitted in the server auction payload.
@@ -363,7 +366,7 @@ public final class CustomAudience implements Parcelable {
      * Executor, OutcomeReceiver)} call, the service will attempt to include the highest priority
      * custom audiences first.
      *
-     * <p>The default value if this field is not set is 0.
+     * <p>The default value if this field is not set is 0.0.
      */
     @FlaggedApi(FLAG_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED)
     public double getPriority() {

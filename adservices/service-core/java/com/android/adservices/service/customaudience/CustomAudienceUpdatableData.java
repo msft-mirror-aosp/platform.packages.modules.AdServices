@@ -17,6 +17,7 @@
 package com.android.adservices.service.customaudience;
 
 import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_DEFAULT;
+import static android.adservices.customaudience.CustomAudience.PRIORITY_DEFAULT;
 
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
@@ -88,6 +89,12 @@ public abstract class CustomAudienceUpdatableData {
     /** Returns the bitfield of auction server request flags. */
     @CustomAudience.AuctionServerRequestFlag
     public abstract int getAuctionServerRequestFlags();
+
+    /**
+     * @return the priority value that was sent in the update response. If no value was sent,
+     *     returns {@code 0.0}.
+     */
+    public abstract double getPriority();
 
     /**
      * @return the result type for the update attempt before {@link
@@ -211,6 +218,10 @@ public abstract class CustomAudienceUpdatableData {
             auctionServerFlagStatus =
                     readAuctionServerRequestFlags(reader, responseHash, dataBuilder);
         }
+        ReadStatus priorityValueStatus = ReadStatus.STATUS_UNKNOWN;
+        if (flags.getFledgeGetAdSelectionDataSellerConfigurationEnabled()) {
+            priorityValueStatus = readPriority(reader, responseHash, dataBuilder);
+        }
 
         // If there were no useful fields found, or if there was something useful found and
         // successfully updated, then this object should signal a successful update.
@@ -221,7 +232,8 @@ public abstract class CustomAudienceUpdatableData {
                         || (userBiddingSignalsReadStatus == ReadStatus.STATUS_NOT_FOUND
                                 && trustedBiddingDataReadStatus == ReadStatus.STATUS_NOT_FOUND
                                 && adsReadStatus == ReadStatus.STATUS_NOT_FOUND)
-                        || auctionServerFlagStatus == ReadStatus.STATUS_FOUND_VALID;
+                        || auctionServerFlagStatus == ReadStatus.STATUS_FOUND_VALID
+                        || priorityValueStatus == ReadStatus.STATUS_FOUND_VALID;
         sLogger.v(
                 "%s Completed parsing JSON response with containsSuccessfulUpdate = %b",
                 responseHash, containsSuccessfulUpdate);
@@ -351,6 +363,25 @@ public abstract class CustomAudienceUpdatableData {
         }
     }
 
+    @VisibleForTesting
+    @NonNull
+    static ReadStatus readPriority(
+            @NonNull CustomAudienceUpdatableDataReader reader,
+            @NonNull String responseHash,
+            @NonNull CustomAudienceUpdatableData.Builder dataBuilder) {
+        try {
+            dataBuilder.setPriority(reader.getPriority());
+            return ReadStatus.STATUS_FOUND_VALID;
+        } catch (JSONException e) {
+            sLogger.e(
+                    e,
+                    INVALID_JSON_TYPE_ERROR_FORMAT,
+                    responseHash,
+                    CustomAudienceUpdatableDataReader.PRIORITY_KEY);
+            return ReadStatus.STATUS_FOUND_INVALID;
+        }
+    }
+
     /**
      * Gets a Builder to make {@link #createFromResponseString(Instant, AdTechIdentifier,
      * BackgroundFetchRunner.UpdateResultType, String, Flags, boolean)} easier.
@@ -359,7 +390,8 @@ public abstract class CustomAudienceUpdatableData {
     @NonNull
     public static CustomAudienceUpdatableData.Builder builder() {
         return new AutoValue_CustomAudienceUpdatableData.Builder()
-                .setAuctionServerRequestFlags(FLAG_AUCTION_SERVER_REQUEST_DEFAULT);
+                .setAuctionServerRequestFlags(FLAG_AUCTION_SERVER_REQUEST_DEFAULT)
+                .setPriority(PRIORITY_DEFAULT);
     }
 
     /**
@@ -390,6 +422,10 @@ public abstract class CustomAudienceUpdatableData {
         @NonNull
         public abstract Builder setAuctionServerRequestFlags(
                 @CustomAudience.AuctionServerRequestFlag int auctionServerRequestFlags);
+
+        /** Sets the priority value found in the response string. */
+        @NonNull
+        public abstract Builder setPriority(double value);
 
         /** Sets the result of the update prior to parsing the response string. */
         @NonNull

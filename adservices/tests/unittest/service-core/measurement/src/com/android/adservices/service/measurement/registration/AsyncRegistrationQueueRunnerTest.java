@@ -741,7 +741,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         ArgumentCaptor<MeasurementRegistrationResponseStats> statsArgumentCaptor =
                 ArgumentCaptor.forClass(MeasurementRegistrationResponseStats.class);
         verify(mLogger, times(1))
-                .logMeasurementRegistrationsResponseSize(statsArgumentCaptor.capture());
+                .logMeasurementRegistrationsResponseSize(statsArgumentCaptor.capture(), any());
         assertEquals(4, statsArgumentCaptor.getValue().getNumDeletedEntities());
     }
 
@@ -1987,7 +1987,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
                     asyncFetchStatus.setResponseStatus(
                             AsyncFetchStatus.ResponseStatus.SERVER_UNAVAILABLE);
-                    return Optional.of(mMockedSource);
+                    return Optional.of(mMockedTrigger);
                 };
         doAnswer(answerAsyncTriggerFetcher)
                 .when(mAsyncTriggerFetcher)
@@ -2030,7 +2030,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
                     asyncFetchStatus.setResponseStatus(
                             AsyncFetchStatus.ResponseStatus.NETWORK_ERROR);
-                    return Optional.of(mMockedSource);
+                    return Optional.of(mMockedTrigger);
                 };
         doAnswer(answerAsyncTriggerFetcher)
                 .when(mAsyncTriggerFetcher)
@@ -5879,7 +5879,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     private MeasurementRegistrationResponseStats getMeasurementRegistrationResponseStats() {
         ArgumentCaptor<MeasurementRegistrationResponseStats> statsArg =
                 ArgumentCaptor.forClass(MeasurementRegistrationResponseStats.class);
-        verify(mLogger).logMeasurementRegistrationsResponseSize(statsArg.capture());
+        verify(mLogger).logMeasurementRegistrationsResponseSize(statsArg.capture(), any());
         return statsArg.getValue();
     }
 }

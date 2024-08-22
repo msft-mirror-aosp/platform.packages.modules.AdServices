@@ -22,7 +22,6 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
@@ -47,7 +46,6 @@ import org.mockito.quality.Strictness;
 public abstract class AdServicesPragmaticMockerTestCase<T extends AdServicesPragmaticMocker>
         extends AdServicesUnitTestCase {
 
-    @Mock private Flags mMockFlags;
     @Mock private AdServicesLogger mMockAdServicesLogger;
     @Mock private ApiCallStats mApiCallStats;
 
@@ -58,97 +56,6 @@ public abstract class AdServicesPragmaticMockerTestCase<T extends AdServicesPrag
     @Before
     public final void verifyMocker() {
         assertWithMessage("getMocker()").that(getMocker()).isNotNull();
-    }
-
-    @Test
-    public final void testMockGetBackgroundJobsLoggingKillSwitch_null() {
-        assertThrows(
-                NullPointerException.class,
-                () -> getMocker().mockGetBackgroundJobsLoggingKillSwitch(null, true));
-    }
-
-    @Test
-    public final void testMockGetBackgroundJobsLoggingKillSwitch() {
-        getMocker().mockGetBackgroundJobsLoggingKillSwitch(mMockFlags, true);
-
-        boolean result = mMockFlags.getBackgroundJobsLoggingKillSwitch();
-
-        expect.withMessage("flags.getBackgroundJobsLoggingKillSwitch()").that(result).isTrue();
-    }
-
-    @Test
-    public final void testMockGetCobaltLoggingEnabled_null() {
-        assertThrows(
-                NullPointerException.class,
-                () -> getMocker().mockGetCobaltLoggingEnabled(null, true));
-    }
-
-    @Test
-    public final void testMockGetCobaltLoggingEnabled() {
-        getMocker().mockGetCobaltLoggingEnabled(mMockFlags, true);
-
-        boolean result = mMockFlags.getCobaltLoggingEnabled();
-
-        expect.withMessage("flags.getCobaltLoggingEnabled()").that(result).isTrue();
-    }
-
-    @Test
-    public final void testMockGetAppNameApiErrorCobaltLoggingEnabled_null() {
-        assertThrows(
-                NullPointerException.class,
-                () -> getMocker().mockGetAppNameApiErrorCobaltLoggingEnabled(null, true));
-    }
-
-    @Test
-    public final void testMockGetAppNameApiErrorCobaltLoggingEnabled() {
-        getMocker().mockGetAppNameApiErrorCobaltLoggingEnabled(mMockFlags, true);
-
-        boolean result = mMockFlags.getAppNameApiErrorCobaltLoggingEnabled();
-
-        expect.withMessage("flags.getAppNameApiErrorCobaltLoggingEnabled()").that(result).isTrue();
-    }
-
-    @Test
-    public final void testMockGetAdservicesReleaseStageForCobalt_null() {
-        assertThrows(
-                NullPointerException.class,
-                () -> getMocker().mockGetAdservicesReleaseStageForCobalt(null, "Central Stage"));
-        assertThrows(
-                NullPointerException.class,
-                () -> getMocker().mockGetAdservicesReleaseStageForCobalt(mMockFlags, null));
-    }
-
-    @Test
-    public final void testMockGetAdservicesReleaseStageForCobalt() {
-        getMocker().mockGetAdservicesReleaseStageForCobalt(mMockFlags, "Central Stage");
-
-        String result = mMockFlags.getAdservicesReleaseStageForCobalt();
-
-        expect.withMessage("flags.getAdservicesReleaseStageForCobalt()")
-                .that(result)
-                .isEqualTo("Central Stage");
-    }
-
-    @Test
-    public final void testMockAllCobaltLoggingFlags_null() {
-        assertThrows(
-                NullPointerException.class,
-                () -> getMocker().mockAllCobaltLoggingFlags(null, true));
-    }
-
-    @Test
-    public final void testMockAllCobaltLoggingFlags() {
-        getMocker().mockAllCobaltLoggingFlags(mMockFlags, true);
-
-        expect.withMessage("flags.getCobaltLoggingEnabled()")
-                .that(mMockFlags.getCobaltLoggingEnabled())
-                .isTrue();
-        expect.withMessage("flags.getAppNameApiErrorCobaltLoggingEnabled()")
-                .that(mMockFlags.getAppNameApiErrorCobaltLoggingEnabled())
-                .isTrue();
-        expect.withMessage("flags.getAdservicesReleaseStageForCobalt()")
-                .that(mMockFlags.getAdservicesReleaseStageForCobalt())
-                .isEqualTo("DEBUG");
     }
 
     @Test

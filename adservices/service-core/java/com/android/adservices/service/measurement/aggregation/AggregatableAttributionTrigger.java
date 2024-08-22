@@ -16,12 +16,13 @@
 
 package com.android.adservices.service.measurement.aggregation;
 
+import android.annotation.Nullable;
+
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.FilterMap;
 import com.android.adservices.service.measurement.util.Filter;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -33,12 +34,12 @@ import java.util.Optional;
 public class AggregatableAttributionTrigger {
 
     private List<AggregateTriggerData> mTriggerData;
-    private Map<String, Integer> mValues;
+    @Nullable private Map<String, Integer> mValues;
+    @Nullable private List<AggregatableValuesConfig> mValueConfigs;
     private Optional<List<AggregateDeduplicationKey>> mAggregateDeduplicationKeys;
 
     private AggregatableAttributionTrigger() {
         mTriggerData = new ArrayList<>();
-        mValues = new HashMap<>();
     }
 
     @Override
@@ -48,12 +49,13 @@ public class AggregatableAttributionTrigger {
         }
         AggregatableAttributionTrigger attributionTrigger = (AggregatableAttributionTrigger) obj;
         return Objects.equals(mTriggerData, attributionTrigger.mTriggerData)
-                && Objects.equals(mValues, attributionTrigger.mValues);
+                && Objects.equals(mValues, attributionTrigger.mValues)
+                && Objects.equals(mValueConfigs, attributionTrigger.mValueConfigs);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mTriggerData, mValues);
+        return Objects.hash(mTriggerData, mValues, mValueConfigs);
     }
 
     /**
@@ -64,11 +66,19 @@ public class AggregatableAttributionTrigger {
         return mTriggerData;
     }
 
-    /**
-     * Returns the value map which contains the value for each aggregatable_source.
-     */
+    /** Returns the value map which contains the value for each aggregatable_source. */
+    @Nullable
     public Map<String, Integer> getValues() {
         return mValues;
+    }
+
+    /**
+     * Returns a list of AggregatableValuesConfig that contains values, filters, and not_filters for
+     * each aggregatable_source.
+     */
+    @Nullable
+    public List<AggregatableValuesConfig> getValueConfigs() {
+        return mValueConfigs;
     }
 
     /** Returns De-deuplication keys for Aggregate Report Creation. */
@@ -125,11 +135,15 @@ public class AggregatableAttributionTrigger {
             return this;
         }
 
-        /**
-         * See {@link AggregatableAttributionTrigger#getValues()}.
-         */
-        public Builder setValues(Map<String, Integer> values) {
+        /** See {@link AggregatableAttributionTrigger#getValues()}. */
+        public Builder setValues(@Nullable Map<String, Integer> values) {
             mBuilding.mValues = values;
+            return this;
+        }
+
+        /** See {@link AggregatableAttributionTrigger#getValueConfigs()}. */
+        public Builder setValueConfigs(@Nullable List<AggregatableValuesConfig> mValueConfigs) {
+            mBuilding.mValueConfigs = mValueConfigs;
             return this;
         }
 

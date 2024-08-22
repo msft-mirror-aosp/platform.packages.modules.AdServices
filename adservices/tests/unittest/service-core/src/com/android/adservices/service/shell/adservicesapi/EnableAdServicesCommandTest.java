@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.shell.common;
+package com.android.adservices.service.shell.adservicesapi;
 
-import static com.android.adservices.service.shell.common.EnableAdServicesCommand.CMD_ENABLE_ADSERVICES;
-import static com.android.adservices.service.shell.common.EnableAdServicesCommand.HELP_ENABLE_ADSERVICES;
+import static com.android.adservices.service.shell.adservicesapi.AdServicesApiShellCommandFactory.COMMAND_PREFIX;
+import static com.android.adservices.service.shell.adservicesapi.EnableAdServicesCommand.CMD_ENABLE_ADSERVICES;
+import static com.android.adservices.service.shell.adservicesapi.EnableAdServicesCommand.HELP_ENABLE_ADSERVICES;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
@@ -63,6 +64,7 @@ public final class EnableAdServicesCommandTest
                 enableAdServicesCommand,
                 HELP_ENABLE_ADSERVICES,
                 ShellCommandStats.COMMAND_ENABLE_ADSERVICES,
+                COMMAND_PREFIX,
                 CMD_ENABLE_ADSERVICES,
                 "--u18");
     }
@@ -70,7 +72,12 @@ public final class EnableAdServicesCommandTest
     @Test
     public void testRun_valid() {
         Result actualResult =
-                run(new EnableAdServicesCommand(), CMD_ENABLE_ADSERVICES, "--u18", "true");
+                run(
+                        new EnableAdServicesCommand(),
+                        COMMAND_PREFIX,
+                        CMD_ENABLE_ADSERVICES,
+                        "--u18",
+                        "true");
 
         expectSuccess(actualResult, "", ShellCommandStats.COMMAND_ENABLE_ADSERVICES);
     }

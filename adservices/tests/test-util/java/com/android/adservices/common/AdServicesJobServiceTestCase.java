@@ -68,8 +68,13 @@ public abstract class AdServicesJobServiceTestCase extends AdServicesExtendedMoc
      * Convenience helper to call {@code
      * AdServicesPragmaticMocker.mockGetBackgroundJobsLoggingKillSwitch()} using {@code mocker}.
      */
-    protected final void mockBackgroundJobsLoggingKillSwitch(Flags flag, boolean value) {
-        mocker.mockGetBackgroundJobsLoggingKillSwitch(flag, value);
+    protected final void mockBackgroundJobsLoggingKillSwitch(Flags unusedFlags, boolean value) {
+        if (!mMockFlags.equals(unusedFlags)) {
+            throw new IllegalArgumentException(
+                    "Flags argument is not used anymore and will be removed, you should be passing"
+                            + " mMockFlags");
+        }
+        mocker.mockGetBackgroundJobsLoggingKillSwitch(value);
     }
 
     /**

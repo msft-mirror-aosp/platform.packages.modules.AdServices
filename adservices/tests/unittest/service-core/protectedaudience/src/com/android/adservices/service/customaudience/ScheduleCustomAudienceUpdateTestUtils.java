@@ -17,6 +17,7 @@
 package com.android.adservices.service.customaudience;
 
 import static com.android.adservices.service.customaudience.CustomAudienceBlobFixture.addAuctionServerRequestFlags;
+import static com.android.adservices.service.customaudience.CustomAudienceBlobFixture.addPriority;
 import static com.android.adservices.service.customaudience.ScheduledUpdatesHandler.JOIN_CUSTOM_AUDIENCE_KEY;
 import static com.android.adservices.service.customaudience.ScheduledUpdatesHandler.LEAVE_CUSTOM_AUDIENCE_KEY;
 
@@ -92,7 +93,8 @@ public class ScheduleCustomAudienceUpdateTestUtils {
             String owner,
             List<String> joinCustomAudienceNames,
             List<String> leaveCustomAudienceNames,
-            boolean auctionServerRequestFlagsEnabled)
+            boolean auctionServerRequestFlagsEnabled,
+            boolean sellerConfigurationEnabled)
             throws JSONException {
 
         JSONObject responseJson = new JSONObject();
@@ -108,6 +110,14 @@ public class ScheduleCustomAudienceUpdateTestUtils {
                                 generatedCa,
                                 ImmutableList.of(CustomAudienceBlob.OMIT_ADS_VALUE),
                                 false);
+            }
+            if (sellerConfigurationEnabled) {
+                // give every CA a priority of 1.0
+                generatedCa =
+                        addPriority(
+                                /* jsonObject */ generatedCa,
+                                CustomAudienceFixture.VALID_PRIORITY_1,
+                                /* shouldAddHarmlessJunk= */ false);
             }
             joinCustomAudienceArray.put(i, generatedCa);
         }

@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.measurement;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
@@ -31,8 +33,6 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
 import com.android.adservices.service.measurement.util.UnsignedLong;
-
-import com.google.common.truth.Truth;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -476,6 +476,7 @@ public class TriggerTest {
 
     @Test
     public void testAggregatableAttributionTrigger() throws Exception {
+        when(mFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true, false);
         final Map<String, Integer> values = Map.of("foo", 93);
         final List<AggregateTriggerData> triggerData =
                 List.of(new AggregateTriggerData.Builder().build());
@@ -500,6 +501,7 @@ public class TriggerTest {
 
     @Test
     public void testParseAggregateTrigger() throws JSONException {
+        when(mFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true, false);
         JSONArray triggerDatas = new JSONArray();
         JSONObject jsonObject1 = new JSONObject();
         jsonObject1.put("key_piece", "0x400");
@@ -900,7 +902,47 @@ public class TriggerTest {
                         .setId("triggerId1")
                         .setAttributionScopesString("[\"1\", \"2\"]")
                         .build();
-        Truth.assertThat(trigger.getAttributionScopes()).containsExactly("1", "2");
+        assertThat(trigger.getAttributionScopes()).containsExactly("1", "2");
+    }
+
+    @Test
+    public void testParseAggregateTrigger_aggregateValueFiltersJsonArrayParses_success()
+            throws Exception {
+        when(mFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true);
+        String validAggregatableValues =
+                "[{\"values\":{\"campaignCounts\":32768, \"geoValue\":1664}},{\"values\":{\"a\":1,"
+                        + " \"b\":2, \"c\":3}}]";
+        // Verify aggregatable values string gets parsed into AggregatableValuesConfig.
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAggregateValues(validAggregatableValues)
+                        .build();
+        Optional<AggregatableAttributionTrigger> aggregatableAttributionTrigger =
+                trigger.getAggregatableAttributionTrigger(mFlags);
+        assertThat(aggregatableAttributionTrigger).isNotNull();
+        assertThat(aggregatableAttributionTrigger.get().getValues()).isNull();
+        assertThat(aggregatableAttributionTrigger.get().getValueConfigs().size())
+                .isEqualTo(2);
+        assertThat(aggregatableAttributionTrigger.get().getValueConfigs().get(0).getValues().size())
+                .isEqualTo(2);
+        assertThat(aggregatableAttributionTrigger.get().getValueConfigs().get(1).getValues().size())
+                .isEqualTo(3);
+    }
+
+    @Test
+    public void testParseAggregateTrigger_aggregateValueFiltersFlagOffJsonArray_fails()
+            throws JSONException {
+        String invalidAggregatableValuesWithFlagOff =
+                "[{\"values\":{\"campaignCounts\":32768, \"geoValue\":1664}},{\"values\":{\"a\":1,"
+                        + " \"b\":2, \"c\":3}}]";
+        // Aggregate Values in Trigger table is persisted in JSONArray string format.
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAggregateValues(invalidAggregatableValuesWithFlagOff)
+                        .build();
+        // Values are not parsable and trigger is rejected.
+        assertThat(trigger.getAggregatableAttributionTrigger(mFlags))
+                .isEqualTo(Optional.empty());
     }
 
     private void assertInvalidTriggerArguments(

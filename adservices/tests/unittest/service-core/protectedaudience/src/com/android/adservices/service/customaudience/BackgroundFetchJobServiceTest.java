@@ -367,10 +367,8 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
 
     @Test
     public void testOnStopJobCallsStopWork_withoutLogging() {
-        Flags mockFlag = mock(Flags.class);
-        mocker.mockGetFlags(mockFlag);
-        mockBackgroundJobsLoggingKillSwitch(mockFlag, /* overrideValue= */ true);
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mockFlag);
+        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(mContext, mMockFlags);
 
         testOnStopJobCallsStopWork();
 
@@ -379,10 +377,8 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
 
     @Test
     public void testOnStopJob_withLogging() throws InterruptedException {
-        Flags mockFlag = mock(Flags.class);
-        mocker.mockGetFlags(mockFlag);
-        mockBackgroundJobsLoggingKillSwitch(mockFlag, /* overrideValue= */ false);
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mockFlag);
+        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(mContext, mMockFlags);
         JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
         testOnStopJobCallsStopWork();
@@ -462,10 +458,8 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
     @Test
     public void testOnStartJob_shouldDisableJobTrue_withoutLogging()
             throws ExecutionException, InterruptedException, TimeoutException {
-        Flags mockFlag = mock(Flags.class);
-        mocker.mockGetFlags(mockFlag);
-        mockBackgroundJobsLoggingKillSwitch(mockFlag, /* overrideValue= */ true);
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mockFlag);
+        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(mContext, mMockFlags);
 
         testOnStartJobShouldDisableJobTrue();
 

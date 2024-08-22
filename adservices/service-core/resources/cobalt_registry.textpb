@@ -2367,6 +2367,10 @@ customers {
           value: "ROW"
         }
       }
+      metric_dimensions {
+        dimension: "enrollment"
+        max_event_code: 2147483647
+      }
       metric_semantics: USAGE_COUNTING
     }
     metrics {
@@ -2514,6 +2518,10 @@ customers {
           key: 200
           value: "UNKNOWN_STATUS"
         }
+      }
+      metric_dimensions {
+        dimension: "enrollment"
+        max_event_code: 2147483647
       }
       metric_semantics: USAGE_COUNTING
     }
@@ -2758,6 +2766,10 @@ customers {
           key: 200
           value: "UNKNOWN_STATUS"
         }
+      }
+      metric_dimensions {
+        dimension: "enrollment"
+        max_event_code: 2147483647
       }
       metric_semantics: USAGE_COUNTING
     }

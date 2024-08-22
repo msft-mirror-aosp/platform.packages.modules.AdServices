@@ -32,7 +32,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -177,7 +176,7 @@ public final class DebugReportSenderJobServiceTest extends AdServicesJobServiceT
 
     @Test
     public void testOnStartJobEnableDebugReportingFlagDisabled() {
-        doReturn(mFlagsWithDebugReportingDisabled).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFlagsWithDebugReportingDisabled);
         doReturn(JOB_SCHEDULER)
                 .when(mDebugReportSenderJobService)
                 .getSystemService(JobScheduler.class);
@@ -203,7 +202,7 @@ public final class DebugReportSenderJobServiceTest extends AdServicesJobServiceT
 
     @Test
     public void testOnStartJobGaUxFlagDisabled() {
-        doReturn(mFlagsWithGaUxDisabled).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFlagsWithGaUxDisabled);
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.REVOKED)
                 .when(mConsentManagerMock)
@@ -233,7 +232,7 @@ public final class DebugReportSenderJobServiceTest extends AdServicesJobServiceT
 
     @Test
     public void testOnStartJobConsentRevokedGaUxDisabled() {
-        doReturn(mFlagsWithGaUxDisabled).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFlagsWithGaUxDisabled);
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.REVOKED)
                 .when(mConsentManagerMock)
@@ -265,7 +264,7 @@ public final class DebugReportSenderJobServiceTest extends AdServicesJobServiceT
     public void testScheduleIfNeededFlagDisabled() {
         doCallRealMethod()
                 .when(() -> DebugReportSenderJobService.scheduleIfNeeded(any(), eq(false)));
-        doReturn(mFlagsWithDebugReportingDisabled).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFlagsWithDebugReportingDisabled);
         DebugReportSenderJobService.scheduleIfNeeded(sContext, false);
 
         ExtendedMockito.verify(() -> DebugReportSenderJobService.schedule(any(), any()), never());
@@ -276,7 +275,7 @@ public final class DebugReportSenderJobServiceTest extends AdServicesJobServiceT
     public void testScheduleIfNeededSuccess() {
         doCallRealMethod()
                 .when(() -> DebugReportSenderJobService.scheduleIfNeeded(any(), eq(false)));
-        doReturn(mFlagsWithGaUxDisabled).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFlagsWithGaUxDisabled);
         doNothing().when(() -> DebugReportSenderJobService.schedule(any(), any()));
 
         DebugReportSenderJobService.scheduleIfNeeded(sContext, false);
@@ -287,7 +286,7 @@ public final class DebugReportSenderJobServiceTest extends AdServicesJobServiceT
 
     @Test
     public void testScheduleIfNeededSkippedAlreadyScheduled() {
-        doReturn(mFlagsWithGaUxDisabled).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFlagsWithGaUxDisabled);
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 FLEDGE_DEBUG_REPORT_SENDER_JOB_ID,
@@ -308,7 +307,7 @@ public final class DebugReportSenderJobServiceTest extends AdServicesJobServiceT
 
     @Test
     public void testScheduleIfNeededForceSuccess() {
-        doReturn(mFlagsWithGaUxDisabled).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFlagsWithGaUxDisabled);
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 FLEDGE_DEBUG_REPORT_SENDER_JOB_ID,
@@ -330,7 +329,7 @@ public final class DebugReportSenderJobServiceTest extends AdServicesJobServiceT
 
     @Test
     public void testScheduleFlagDisabled() {
-        doReturn(mFlagsWithDebugReportingDisabled).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFlagsWithDebugReportingDisabled);
         DebugReportSenderJobService.schedule(sContext, mFlagsWithDebugReportingDisabled);
 
         verifyNoMoreInteractions(staticMockMarker(DebugReportSenderWorker.class));
@@ -338,10 +337,9 @@ public final class DebugReportSenderJobServiceTest extends AdServicesJobServiceT
 
     @Test
     public void testOnStartJob_shouldDisableJobTrueWithoutLogging() {
-        Flags mockFlag = mock(Flags.class);
-        mocker.mockGetFlags(mockFlag);
-        mockBackgroundJobsLoggingKillSwitch(mockFlag, /* overrideValue= */ true);
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mockFlag);
+        mocker.mockGetFlags(mMockFlags);
+        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mMockFlags);
 
         testOnStartJobShouldDisableJobTrue();
 
@@ -353,7 +351,7 @@ public final class DebugReportSenderJobServiceTest extends AdServicesJobServiceT
         Flags flagsWithGaUxDisabledLoggingDisabled =
                 new DebugReportSenderJobServiceTestFlags.FlagsWithGaUxDisabledLoggingDisabled();
 
-        doReturn(flagsWithGaUxDisabledLoggingDisabled).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(flagsWithGaUxDisabledLoggingDisabled);
         AdServicesJobServiceLogger logger =
                 mockAdServicesJobServiceLogger(sContext, flagsWithGaUxDisabledLoggingDisabled);
 
@@ -366,7 +364,7 @@ public final class DebugReportSenderJobServiceTest extends AdServicesJobServiceT
     public void testOnStartJobUpdateTimeoutHandledWithLogging() throws Exception {
         Flags flagsWithGaUxDisabledLoggingEnabled =
                 new DebugReportSenderJobServiceTestFlags.FlagsWithGaUxDisabledLoggingEnabled();
-        doReturn(flagsWithGaUxDisabledLoggingEnabled).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(flagsWithGaUxDisabledLoggingEnabled);
         AdServicesJobServiceLogger logger =
                 mockAdServicesJobServiceLogger(sContext, flagsWithGaUxDisabledLoggingEnabled);
         JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);
@@ -382,7 +380,7 @@ public final class DebugReportSenderJobServiceTest extends AdServicesJobServiceT
     public void testOnStartJobUpdateInterruptedHandled() throws Exception {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
-        doReturn(mFlagsWithGaUxDisabled).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFlagsWithGaUxDisabled);
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
@@ -414,7 +412,7 @@ public final class DebugReportSenderJobServiceTest extends AdServicesJobServiceT
     public void testOnStartJobUpdateExecutionExceptionHandled() throws Exception {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
-        doReturn(mFlagsWithGaUxDisabled).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFlagsWithGaUxDisabled);
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
@@ -445,10 +443,9 @@ public final class DebugReportSenderJobServiceTest extends AdServicesJobServiceT
 
     @Test
     public void testOnStartJob_shouldDisableJobTrueWithLoggingEnabled() {
-        Flags mockFlag = mock(Flags.class);
-        mocker.mockGetFlags(mockFlag);
-        mockBackgroundJobsLoggingKillSwitch(mockFlag, /* overrideValue= */ true);
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mockFlag);
+        mocker.mockGetFlags(mMockFlags);
+        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mMockFlags);
 
         testOnStartJobShouldDisableJobTrue();
 
@@ -461,7 +458,7 @@ public final class DebugReportSenderJobServiceTest extends AdServicesJobServiceT
     public void testOnStopJobCallsStopWorkWithoutLogging() {
         Flags flagsWithGaUxDisabledLoggingDisabled =
                 new DebugReportSenderJobServiceTestFlags.FlagsWithGaUxDisabledLoggingDisabled();
-        doReturn(flagsWithGaUxDisabledLoggingDisabled).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(flagsWithGaUxDisabledLoggingDisabled);
         AdServicesJobServiceLogger logger =
                 mockAdServicesJobServiceLogger(sContext, flagsWithGaUxDisabledLoggingDisabled);
 
@@ -472,10 +469,10 @@ public final class DebugReportSenderJobServiceTest extends AdServicesJobServiceT
 
     @Test
     public void testOnStopJobWithLogging() throws Exception {
-        Flags mockFlag =
+        Flags fakeFlags =
                 new DebugReportSenderJobServiceTestFlags.FlagsWithGaUxDisabledLoggingEnabled();
-        mocker.mockGetFlags(mockFlag);
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mockFlag);
+        mocker.mockGetFlags(fakeFlags);
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, fakeFlags);
         JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
         testOnStopJobCallsStopWork();
@@ -514,7 +511,7 @@ public final class DebugReportSenderJobServiceTest extends AdServicesJobServiceT
     public void testOnStartJobUpdateSuccessWithoutLogging() throws Exception {
         Flags flagsWithGaUxDisabledLoggingDisabled =
                 new DebugReportSenderJobServiceTestFlags.FlagsWithGaUxDisabledLoggingDisabled();
-        doReturn(flagsWithGaUxDisabledLoggingDisabled).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(flagsWithGaUxDisabledLoggingDisabled);
         AdServicesJobServiceLogger logger =
                 mockAdServicesJobServiceLogger(sContext, flagsWithGaUxDisabledLoggingDisabled);
 
@@ -527,7 +524,7 @@ public final class DebugReportSenderJobServiceTest extends AdServicesJobServiceT
     public void testOnStartJobUpdateSuccessWithLogging() throws Exception {
         Flags flagsWithGaUxDisabledLoggingEnabled =
                 new DebugReportSenderJobServiceTestFlags.FlagsWithGaUxDisabledLoggingEnabled();
-        doReturn(flagsWithGaUxDisabledLoggingEnabled).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(flagsWithGaUxDisabledLoggingEnabled);
         AdServicesJobServiceLogger logger =
                 mockAdServicesJobServiceLogger(sContext, flagsWithGaUxDisabledLoggingEnabled);
         JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);

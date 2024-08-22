@@ -28,6 +28,6 @@ public final class AdServicesExtendedMockitoTestCaseAdServicesStaticMockerTest
 
     @Override
     protected Mocker getMocker(StaticClassChecker checker) {
-        return new AdServicesExtendedMockitoTestCase.Mocker(checker);
+        return AdServicesExtendedMockitoTestCase.Mocker.forAdServicesStaticMockerTests(checker);
     }
 }

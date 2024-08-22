@@ -66,7 +66,6 @@ public final class ProtectedSignalsDaoTest extends AdServicesExtendedMockitoTest
 
     @Mock private EnrollmentDao mEnrollmentDaoMock;
     @Mock private PackageManager mPackageManagerMock;
-    @Mock private Flags mMockFlags;
 
     private ProtectedSignalsDao mProtectedSignalsDao;
 

@@ -70,6 +70,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.UPDATE_CUS
 import static com.android.adservices.service.stats.AdServicesStatsLog.UPDATE_SIGNALS_API_CALLED;
 
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.util.proto.ProtoOutputStream;
 
 import com.android.adservices.service.Flags;
@@ -206,7 +207,7 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
 
     @Override
     public void logMeasurementRegistrationsResponseSize(
-            MeasurementRegistrationResponseStats stats) {
+            MeasurementRegistrationResponseStats stats, @Nullable String enrollmentId) {
         AdServicesStatsLog.write(
                 stats.getCode(),
                 stats.getRegistrationType(),

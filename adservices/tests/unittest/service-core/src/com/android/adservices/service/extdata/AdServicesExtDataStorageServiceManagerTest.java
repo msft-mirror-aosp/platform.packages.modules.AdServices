@@ -114,7 +114,7 @@ public final class AdServicesExtDataStorageServiceManagerTest
         doReturn(mAdServicesLogger).when(AdServicesLoggerImpl::getInstance);
         mManager = AdServicesExtDataStorageServiceManager.getInstance(mContext);
 
-        mocker.mockAllCobaltLoggingFlags(mMockFlags, false);
+        mocker.mockAllCobaltLoggingFlags(false);
     }
 
     @Test

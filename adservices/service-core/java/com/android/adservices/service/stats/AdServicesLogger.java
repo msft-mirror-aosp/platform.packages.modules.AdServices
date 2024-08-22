@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.stats;
 
+import android.annotation.Nullable;
+
 import com.android.adservices.service.common.AppManifestConfigCall;
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.adservices.service.stats.kanon.KAnonBackgroundJobStatusStats;
@@ -51,7 +53,8 @@ public interface AdServicesLogger {
     void logFledgeApiCallStats(int apiName, int resultCode, int latencyMs);
 
     /** Logs measurement registrations response size. */
-    void logMeasurementRegistrationsResponseSize(MeasurementRegistrationResponseStats stats);
+    void logMeasurementRegistrationsResponseSize(
+            MeasurementRegistrationResponseStats stats, @Nullable String enrollmentId);
 
     /**
      * Logs the runAdSelection process stats as an {@link RunAdSelectionProcessReportedStats}

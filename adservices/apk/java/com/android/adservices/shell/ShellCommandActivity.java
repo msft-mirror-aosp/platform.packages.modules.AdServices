@@ -20,8 +20,11 @@ import android.annotation.IntDef;
 import android.annotation.Nullable;
 import android.app.Activity;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.api.R;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -52,6 +55,7 @@ import java.util.stream.Collectors;
  * disabled state. Essentially Activity is only alive for the duration of the one command and once
  * dump cmd is run, it is closed.
  */
+@RequiresApi(Build.VERSION_CODES.S)
 public final class ShellCommandActivity extends Activity {
     // TODO(b/308009734): Add data/info to the UI (input, status, output).
     // TODO(b/308009734): Add an option to startForResult() that way CTS can use this instead of

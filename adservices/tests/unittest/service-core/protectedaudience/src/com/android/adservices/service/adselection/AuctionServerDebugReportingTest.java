@@ -28,7 +28,6 @@ import android.os.Process;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.service.Flags;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import com.google.common.util.concurrent.Futures;
@@ -48,7 +47,6 @@ public final class AuctionServerDebugReportingTest extends AdServicesMockitoTest
     private static final int CALLER_UID = Process.myUid();
     private static final long AD_ID_FETCHER_TIMEOUT_MS = 20;
 
-    @Mock private Flags mMockFlags;
     @Mock private AdIdFetcher mAdIdFetcher;
     private ExecutorService mLightweightExecutorService;
 

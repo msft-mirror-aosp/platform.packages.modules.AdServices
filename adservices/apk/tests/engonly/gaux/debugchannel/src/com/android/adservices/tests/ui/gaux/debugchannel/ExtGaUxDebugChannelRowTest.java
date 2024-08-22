@@ -22,7 +22,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.common.AdServicesCommonManager;
 import android.adservices.common.AdServicesStates;
-import android.content.Context;
 import android.os.OutcomeReceiver;
 import android.platform.test.rule.ScreenRecordRule;
 
@@ -57,9 +56,6 @@ public final class ExtGaUxDebugChannelRowTest extends AdExtServicesGaUxDebugChan
     private String mTestName;
 
     private OutcomeReceiver<Boolean, Exception> mCallback;
-
-    private static final Context sContext =
-            InstrumentationRegistry.getInstrumentation().getContext();
 
     @Rule public final ScreenRecordRule sScreenRecordRule = new ScreenRecordRule();
 

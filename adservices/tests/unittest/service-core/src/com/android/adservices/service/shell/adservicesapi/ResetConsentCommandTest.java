@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.shell.common;
+package com.android.adservices.service.shell.adservicesapi;
 
 import static com.android.adservices.service.consent.AdServicesApiType.FLEDGE;
 import static com.android.adservices.service.consent.AdServicesApiType.MEASUREMENTS;
 import static com.android.adservices.service.consent.AdServicesApiType.TOPICS;
 import static com.android.adservices.service.consent.ConsentManager.NO_MANUAL_INTERACTIONS_RECORDED;
-import static com.android.adservices.service.shell.common.ResetConsentCommand.CMD_RESET_CONSENT_DATA;
-import static com.android.adservices.service.shell.common.ResetConsentCommand.HELP_RESET_CONSENT_DATA;
+import static com.android.adservices.service.shell.adservicesapi.AdServicesApiShellCommandFactory.COMMAND_PREFIX;
+import static com.android.adservices.service.shell.adservicesapi.ResetConsentCommand.CMD_RESET_CONSENT_DATA;
+import static com.android.adservices.service.shell.adservicesapi.ResetConsentCommand.HELP_RESET_CONSENT_DATA;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -55,13 +56,15 @@ public final class ResetConsentCommandTest extends ShellCommandTestCase<ResetCon
                 resetConsentCommand,
                 HELP_RESET_CONSENT_DATA,
                 ShellCommandStats.COMMAND_RESET_CONSENT_DATA,
+                COMMAND_PREFIX,
                 CMD_RESET_CONSENT_DATA,
                 "foo bar");
     }
 
     @Test
     public void testRun_valid() {
-        Result actualResult = run(new ResetConsentCommand(), CMD_RESET_CONSENT_DATA);
+        Result actualResult =
+                run(new ResetConsentCommand(), COMMAND_PREFIX, CMD_RESET_CONSENT_DATA);
         expectSuccess(
                 actualResult,
                 "Consent data has been reset.",

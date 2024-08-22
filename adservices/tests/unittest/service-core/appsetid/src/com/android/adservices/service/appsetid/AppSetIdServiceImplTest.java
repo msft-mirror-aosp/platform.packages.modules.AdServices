@@ -128,7 +128,7 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
 
         mocker.mockGetFlags(mMockFlags);
 
-        mocker.mockAllCobaltLoggingFlags(mMockFlags, false);
+        mocker.mockAllCobaltLoggingFlags(false);
     }
 
     @Test

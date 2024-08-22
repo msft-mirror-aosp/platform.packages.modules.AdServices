@@ -26,6 +26,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.clients.signals.ProtectedSignalsClient;
+import android.adservices.common.CommonFixture;
 import android.adservices.signals.UpdateSignalsRequest;
 import android.adservices.utils.CtsWebViewSupportUtil;
 import android.adservices.utils.MockWebServerRule;
@@ -71,7 +72,7 @@ public final class SignalsCtsDebuggableTest extends ForegroundDebuggableCtsTest 
 
     @Before
     public void setUp() throws Exception {
-        flags.setAllowListFlag(KEY_PAS_APP_ALLOW_LIST, new String[0]);
+        flags.setFlag(KEY_PAS_APP_ALLOW_LIST, new String[] {CommonFixture.TEST_PACKAGE_NAME}, ",");
 
         AdservicesTestHelper.killAdservicesProcess(mContext);
         ExecutorService executor = Executors.newCachedThreadPool();
