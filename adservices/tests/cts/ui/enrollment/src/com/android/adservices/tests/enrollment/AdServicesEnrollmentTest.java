@@ -15,8 +15,9 @@
  */
 package com.android.adservices.tests.enrollment;
 
-import static com.android.adservices.service.shell.common.EnableAdServicesCommand.CMD_ENABLE_ADSERVICES;
-import static com.android.adservices.service.shell.common.ResetConsentCommand.CMD_RESET_CONSENT_DATA;
+import static com.android.adservices.service.shell.adservicesapi.AdServicesApiShellCommandFactory.COMMAND_PREFIX;
+import static com.android.adservices.service.shell.adservicesapi.EnableAdServicesCommand.CMD_ENABLE_ADSERVICES;
+import static com.android.adservices.service.shell.adservicesapi.ResetConsentCommand.CMD_RESET_CONSENT_DATA;
 
 import android.util.Log;
 
@@ -44,13 +45,16 @@ public final class AdServicesEnrollmentTest extends AdServicesCtsTestCase
         AdServicesShellCommandHelper adServicesShellCommandHelper =
                 new AdServicesShellCommandHelper();
         CommandResult commandResult =
-                adServicesShellCommandHelper.runCommandRwe(CMD_RESET_CONSENT_DATA);
+                adServicesShellCommandHelper.runCommandRwe(
+                        COMMAND_PREFIX + " " + CMD_RESET_CONSENT_DATA);
 
         Log.i(
                 mTag,
                 "Invoked reset consent data through cli, output from cli:"
                         + commandResult.getOut());
-        commandResult = adServicesShellCommandHelper.runCommandRwe(CMD_ENABLE_ADSERVICES);
+        commandResult =
+                adServicesShellCommandHelper.runCommandRwe(
+                        COMMAND_PREFIX + " " + CMD_ENABLE_ADSERVICES);
         Log.i(
                 mTag,
                 "Invoked enableAdServices through cli, output from cli:" + commandResult.getOut());
