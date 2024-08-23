@@ -790,11 +790,11 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
     }
 
     private void mockCobaltLoggingFlags(boolean value) {
-        mocker.mockAllCobaltLoggingFlags(mMockFlags, value);
+        mocker.mockAllCobaltLoggingFlags(value);
     }
 
     private void mockCobaltLoggingEnabled(boolean value) {
-        mocker.mockGetCobaltLoggingEnabled(mMockFlags, value);
+        mocker.mockGetCobaltLoggingEnabled(value);
     }
 
     private void mockMsmtRegistrationCobaltLoggingEnabled(boolean value) {

@@ -34,8 +34,6 @@ import org.junit.Test;
 
 public final class AdServicesEnrollmentTest extends AdServicesCtsTestCase
         implements CtsEnrollmentFlags {
-    private final String mTag = "AdServicesEnrollmentTest";
-
     /**
      * Verify that for GA, ROW devices with non zeroed-out AdId, the GA ROW notification is
      * displayed.

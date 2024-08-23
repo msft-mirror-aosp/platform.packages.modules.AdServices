@@ -775,11 +775,6 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
         }
 
         @Override
-        public boolean getBackgroundJobsLoggingKillSwitch() {
-            return false;
-        }
-
-        @Override
         public boolean getProtectedSignalsEnabled() {
             return true;
         }
