@@ -141,6 +141,7 @@ import com.android.adservices.service.stats.pas.EncodingJobRunStats;
 import com.android.adservices.service.stats.pas.EncodingJsExecutionStats;
 import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedStats;
 import com.android.adservices.shared.testing.AnswerSyncCallback;
 
 import org.junit.Before;
@@ -1240,6 +1241,25 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                         .build();
         mAdservicesLogger.logSelectAdsFromOutcomesApiCalledStats(stats);
         verify(mStatsdLoggerMock).logSelectAdsFromOutcomesApiCalledStats(eq(stats));
+    }
+
+    @Test
+    public void testLogUpdateSignalsProcessReportedStats() {
+        UpdateSignalsProcessReportedStats stats =
+                UpdateSignalsProcessReportedStats.builder()
+                        .setUpdateSignalsProcessLatencyMillis(200)
+                        .setAdservicesApiStatusCode(STATUS_SUCCESS)
+                        .setSignalsWrittenCount(10)
+                        .setKeysStoredCount(6)
+                        .setValuesStoredCount(7)
+                        .setEvictionRulesCount(8)
+                        .setPerBuyerSignalSize(SIZE_MEDIUM)
+                        .setMeanRawProtectedSignalsSizeBytes(123.4F)
+                        .setMaxRawProtectedSignalsSizeBytes(345.67F)
+                        .setMinRawProtectedSignalsSizeBytes(0.0001F)
+                        .build();
+        mAdservicesLogger.logUpdateSignalsProcessReportedStats(stats);
+        verify(mStatsdLoggerMock).logUpdateSignalsProcessReportedStats(eq(stats));
     }
 
     private void mockAppNameApiErrorLogger() {
