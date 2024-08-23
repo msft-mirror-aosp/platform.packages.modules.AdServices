@@ -41,12 +41,11 @@ import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudience;
-import android.content.Context;
 import android.net.Uri;
 
 import androidx.room.Room;
-import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
@@ -64,8 +63,9 @@ import com.android.adservices.service.proto.bidding_auction_servers.BiddingAucti
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
 import com.android.adservices.service.stats.GetAdSelectionDataBuyerInputGeneratedStats;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -73,15 +73,11 @@ import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
 import java.time.Clock;
 import java.util.HashMap;
@@ -95,13 +91,15 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-public class BuyerInputGeneratorTest {
+@RequiresSdkLevelAtLeastS()
+@SpyStatic(FlagsFactory.class)
+@MockStatic(PackageManagerCompatUtils.class)
+public final class BuyerInputGeneratorTest extends AdServicesExtendedMockitoTestCase {
     private static final boolean ENABLE_AD_FILTER = true;
     private static final boolean ENABLE_PERIODIC_SIGNALS = true;
     private static final long API_RESPONSE_TIMEOUT_SECONDS = 10_000L;
     private static final AdTechIdentifier BUYER_1 = AdSelectionConfigFixture.BUYER_1;
     private static final AdTechIdentifier BUYER_2 = AdSelectionConfigFixture.BUYER_2;
-    private Context mContext;
     private ExecutorService mLightweightExecutorService;
     private ExecutorService mBackgroundExecutorService;
     private CustomAudienceDao mCustomAudienceDao;
@@ -110,14 +108,10 @@ public class BuyerInputGeneratorTest {
     @Mock private AppInstallAdFilterer mAppInstallAdFiltererMock;
     private BuyerInputGenerator mBuyerInputGenerator;
     private AuctionServerDataCompressor mDataCompressor;
-    private MockitoSession mStaticMockSession = null;
     @Mock private AdServicesLogger mAdServicesLoggerMock;
     private final AuctionServerPayloadMetricsStrategy mAuctionServerPayloadMetricsStrategyDisabled =
             new AuctionServerPayloadMetricsStrategyDisabled();
     @Mock private CompressedBuyerInputCreatorFactory mCompressedBuyerInputCreatorFactoryMock;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     private static final PayloadOptimizationContext PAYLOAD_OPTIMIZATION_CONTEXT_DISABLED =
             PayloadOptimizationContext.builder().build();
@@ -126,17 +120,6 @@ public class BuyerInputGeneratorTest {
 
     @Before
     public void setUp() throws Exception {
-        // Test applications don't have the required permissions to read config P/H flags, and
-        // injecting mocked flags everywhere is annoying and non-trivial for static methods
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .mockStatic(PackageManagerCompatUtils.class)
-                        .initMocks(this)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
-
-        mContext = ApplicationProvider.getApplicationContext();
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mCustomAudienceDao =
@@ -169,13 +152,6 @@ public class BuyerInputGeneratorTest {
 
         // Required by CustomAudienceDao.
         doReturn(FakeFlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
-    }
-
-    @After
-    public void teardown() {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
     }
 
     @Test
@@ -822,7 +798,7 @@ public class BuyerInputGeneratorTest {
         verify(mFrequencyCapAdFiltererMock).filterCustomAudiences(any());
         verify(mAppInstallAdFiltererMock).filterCustomAudiences(any());
 
-        verify(mAdServicesLoggerMock, times(1))
+        verify(mAdServicesLoggerMock)
                 .logGetAdSelectionDataBuyerInputGeneratedStats(argumentCaptor.capture());
         GetAdSelectionDataBuyerInputGeneratedStats stats = argumentCaptor.getValue();
 
@@ -913,7 +889,7 @@ public class BuyerInputGeneratorTest {
         verify(mFrequencyCapAdFiltererMock).filterCustomAudiences(any());
         verify(mAppInstallAdFiltererMock).filterCustomAudiences(any());
 
-        verify(mAdServicesLoggerMock, times(1))
+        verify(mAdServicesLoggerMock)
                 .logGetAdSelectionDataBuyerInputGeneratedStats(argumentCaptor.capture());
         GetAdSelectionDataBuyerInputGeneratedStats stats = argumentCaptor.getValue();
 
