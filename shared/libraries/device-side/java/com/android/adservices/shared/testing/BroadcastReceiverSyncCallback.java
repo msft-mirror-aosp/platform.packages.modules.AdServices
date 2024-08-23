@@ -22,7 +22,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.util.Log;
 
 import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
@@ -30,6 +29,7 @@ import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Helper used to block util a broadcast is received.
@@ -38,8 +38,6 @@ import java.util.Objects;
  * broadcast. Then caller calls {@link #assertResultReceived()} to assert the expected outcome.
  */
 public final class BroadcastReceiverSyncCallback extends ResultSyncCallback<Intent> {
-
-    private static final String TAG = BroadcastReceiverSyncCallback.class.getSimpleName();
 
     private final Context mContext;
     private final ResultBroadcastReceiver mReceiver;
@@ -68,7 +66,7 @@ public final class BroadcastReceiverSyncCallback extends ResultSyncCallback<Inte
         mReceiver = new ResultBroadcastReceiver(this);
 
         IntentFilter filter = new IntentFilter(action);
-        Log.d(TAG, "Registering receiver for action: " + mAction);
+        logD("Registering %s for action %s on context %s", mReceiver, mAction, mContext);
         mContext.registerReceiver(mReceiver, filter, Context.RECEIVER_EXPORTED);
     }
 
@@ -90,12 +88,15 @@ public final class BroadcastReceiverSyncCallback extends ResultSyncCallback<Inte
     }
 
     private void cleanup() {
-        Log.d(TAG, "Unregistering receiver for action: " + mAction);
+        logD("Unregistering %s for action %s on context %s", mReceiver, mAction, mContext);
         mContext.unregisterReceiver(mReceiver);
     }
 
     @VisibleForTesting
-    static class ResultBroadcastReceiver extends BroadcastReceiver {
+    static final class ResultBroadcastReceiver extends BroadcastReceiver implements Identifiable {
+        private static final AtomicInteger sNextId = new AtomicInteger();
+
+        private final String mId = String.valueOf(sNextId.incrementAndGet());
         private final BroadcastReceiverSyncCallback mSyncCallback;
 
         ResultBroadcastReceiver(BroadcastReceiverSyncCallback syncCallback) {
@@ -104,8 +105,18 @@ public final class BroadcastReceiverSyncCallback extends ResultSyncCallback<Inte
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d(TAG, "Broadcast received with intent: " + intent);
+            mSyncCallback.logD("%s.onReceive(%s, %s)", this, context, intent);
             mSyncCallback.internalInjectResult("onReceive", intent);
+        }
+
+        @Override
+        public String getId() {
+            return mId;
+        }
+
+        @Override
+        public String toString() {
+            return getClass().getSimpleName() + "#" + mId;
         }
     }
 }
