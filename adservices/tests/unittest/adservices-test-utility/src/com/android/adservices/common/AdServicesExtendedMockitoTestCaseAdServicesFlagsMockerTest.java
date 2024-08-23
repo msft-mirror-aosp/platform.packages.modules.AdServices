@@ -16,19 +16,19 @@
 package com.android.adservices.common;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase.Mocker;
-import com.android.adservices.mockito.AdServicesStaticMockerTestCase;
-import com.android.adservices.mockito.StaticClassChecker;
+import com.android.adservices.mockito.AdServicesFlagsMockerTestCase;
+import com.android.adservices.service.Flags;
 
 /**
  * Unit tests for {@link AdServicesExtendedMockitoTestCase.Mocker}'s implementation of {@link
- * com.android.adservices.mockito.AdServicesStaticMocker}.
+ * com.android.adservices.mockito.AdServicesFlagsMocker}.
  */
-public final class AdServicesExtendedMockitoTestCaseAdServicesStaticMockerTest
-        extends AdServicesStaticMockerTestCase<AdServicesExtendedMockitoTestCase.Mocker> {
+public final class AdServicesExtendedMockitoTestCaseAdServicesFlagsMockerTest
+        extends AdServicesFlagsMockerTestCase<AdServicesExtendedMockitoTestCase.Mocker> {
 
     @SuppressWarnings("VisibleForTests") // ErrorProne doesn't recognize this is a test
     @Override
-    protected Mocker getMocker(StaticClassChecker checker) {
-        return AdServicesExtendedMockitoTestCase.Mocker.forAdServicesStaticMockerTests(checker);
+    protected Mocker getMocker(Flags flags) {
+        return AdServicesExtendedMockitoTestCase.Mocker.forAdServicesFlagsMockerTests(flags);
     }
 }

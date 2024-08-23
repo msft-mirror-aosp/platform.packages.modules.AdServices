@@ -31,7 +31,6 @@ import static com.android.adservices.service.Flags.APPSETID_REQUEST_PERMITS_PER_
 import static com.android.adservices.service.Flags.APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED;
 import static com.android.adservices.service.Flags.APP_NAME_API_ERROR_COBALT_LOGGING_SAMPLING_RATE;
 import static com.android.adservices.service.Flags.ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS;
-import static com.android.adservices.service.Flags.BACKGROUND_JOBS_LOGGING_KILL_SWITCH;
 import static com.android.adservices.service.Flags.CLASSIFIER_DESCRIPTION_MAX_LENGTH;
 import static com.android.adservices.service.Flags.CLASSIFIER_DESCRIPTION_MAX_WORDS;
 import static com.android.adservices.service.Flags.CLASSIFIER_FORCE_USE_BUNDLED_FILES;
@@ -559,7 +558,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_APPSETID_REQUEST
 import static com.android.adservices.service.FlagsConstants.KEY_APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_APP_NAME_API_ERROR_COBALT_LOGGING_SAMPLING_RATE;
 import static com.android.adservices.service.FlagsConstants.KEY_ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS;
-import static com.android.adservices.service.FlagsConstants.KEY_BACKGROUND_JOBS_LOGGING_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_BACKGROUND_JOB_SAMPLING_LOGGING_RATE;
 import static com.android.adservices.service.FlagsConstants.KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.FlagsConstants.KEY_CLASSIFIER_DESCRIPTION_MAX_LENGTH;
@@ -3709,14 +3707,6 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    public void testBackgroundJobsLoggingKillSwitch() {
-        mFlagsTestHelper.testConfigFlag(
-                KEY_BACKGROUND_JOBS_LOGGING_KILL_SWITCH,
-                BACKGROUND_JOBS_LOGGING_KILL_SWITCH,
-                Flags::getBackgroundJobsLoggingKillSwitch);
-    }
-
-    @Test
     public void testEnableBackCompat_sdkIsAtleastT_enableBackCompatTrue_isFalse() {
         testEnableBackCompat(
                 /* isSdkAtleastT */ true, /* enableBackCompat */ true, /* expected */ false);
@@ -4976,6 +4966,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 IS_U18_SUPERVISED_ACCOUNT_ENABLED_DEFAULT,
                 Flags::isU18SupervisedAccountEnabled);
     }
+
     @Test
     public void testGetAdIdFetcherTimeout() {
         mFlagsTestHelper.testConfigFlag(
@@ -5491,27 +5482,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testGetBackgroundJobsLoggingEnabled() {
-        boolean overridingValue = false;
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_BACKGROUND_JOBS_LOGGING_KILL_SWITCH,
-                Boolean.toString(overridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getBackgroundJobsLoggingKillSwitch()).isEqualTo(overridingValue);
-        assertThat(mPhFlags.getBackgroundJobsLoggingEnabled()).isEqualTo(!overridingValue);
-
-        overridingValue = true;
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_BACKGROUND_JOBS_LOGGING_KILL_SWITCH,
-                Boolean.toString(overridingValue),
-                /* makeDefault */ false);
-
-        assertThat(mPhFlags.getBackgroundJobsLoggingKillSwitch()).isEqualTo(overridingValue);
-        assertThat(mPhFlags.getBackgroundJobsLoggingEnabled()).isEqualTo(!overridingValue);
+        assertThat(mPhFlags.getBackgroundJobsLoggingEnabled()).isTrue();
     }
 
     @Test

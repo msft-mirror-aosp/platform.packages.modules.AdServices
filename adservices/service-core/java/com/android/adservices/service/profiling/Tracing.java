@@ -28,6 +28,27 @@ import java.util.concurrent.ThreadLocalRandom;
 public final class Tracing {
     public static final String DB_CUSTOM_AUDIENCE_TO_JSON = "DBCustomAudience#toJson";
     public static final String DB_CUSTOM_AUDIENCE_FROM_JSON = "DBCustomAudience#fromJson";
+    public static final String ROOM_CONVERT_INTEGER_SET_TO_JSON =
+            "FledgeRoomConverters#integerSetToJson";
+    public static final String ROOM_CONVERT_INTEGER_SET_FROM_JSON =
+            "FledgeRoomConverters#integerSetFromJson";
+    public static final String ROOM_CONVERT_STRING_SET_TO_JSON =
+            "FledgeRoomConverters#stringSetToJson";
+    public static final String ROOM_CONVERT_STRING_SET_FROM_JSON =
+            "FledgeRoomConverters#stringSetFromJson";
+    public static final String ROOM_CONVERT_INSTANT_TO_LONG = "FledgeRoomConverters#instantToLong";
+    public static final String ROOM_CONVERT_INSTANT_FROM_LONG =
+            "FledgeRoomConverters#instantFromLong";
+    public static final String ROOM_CONVERT_URI_TO_STRING = "FledgeRoomConverters#uriToString";
+    public static final String ROOM_CONVERT_URI_FROM_STRING = "FledgeRoomConverters#uriFromString";
+    public static final String ROOM_CONVERT_ADTECHIDENTIFIER_TO_STRING =
+            "FledgeRoomConverters#adTechIdentifierToString";
+    public static final String ROOM_CONVERT_ADTECHIDENTIFIER_FROM_STRING =
+            "FledgeRoomConverters#adTechIdentifierFromString";
+    public static final String ROOM_CONVERT_ADSELECTIONSIGNALS_TO_STRING =
+            "FledgeRoomConverters#adSelectionSignalsToString";
+    public static final String ROOM_CONVERT_ADSELECTIONSIGNALS_FROM_STRING =
+            "FledgeRoomConverters#adSelectionSignalsFromString";
     public static final String AD_SELECTION_SERVICE_FILTER =
             "AdSelectionServiceFilter#filterRequest";
     public static final String GET_AD_SELECTION_DATA_OFF_BINDER_THREAD =
