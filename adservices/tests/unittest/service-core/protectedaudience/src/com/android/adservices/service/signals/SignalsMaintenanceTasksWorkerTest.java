@@ -31,7 +31,6 @@ import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.EncoderLogicHandler;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
-import com.android.adservices.service.Flags;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 
 import org.junit.Before;
@@ -50,7 +49,6 @@ public final class SignalsMaintenanceTasksWorkerTest extends AdServicesMockitoTe
     @Mock private EnrollmentDao mEnrollmentDaoMock;
     @Mock private EncoderLogicHandler mEncoderLogicHandlerMock;
     @Mock private EncodedPayloadDao mEncodedPayloadDaoMock;
-    @Mock private Flags mMockFlags;
     @Mock private Clock mClockMock;
     @Mock private PackageManager mPackageManagerMock;
 

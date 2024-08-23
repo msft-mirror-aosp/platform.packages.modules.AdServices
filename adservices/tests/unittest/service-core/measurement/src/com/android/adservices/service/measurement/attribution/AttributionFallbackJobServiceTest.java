@@ -93,25 +93,10 @@ public final class AttributionFallbackJobServiceTest extends MeasurementJobServi
         mSpyService = spy(new AttributionFallbackJobService());
     }
 
-    // NOTE: has killSwitch in the name to conserve test execution history
-    @Test
-    public void onStartJob_killSwitchOn_withoutLogging() throws Exception {
-        runWithMocks(
-                () -> {
-                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
-
-                    onStartJob_featureDisabled();
-
-                    verifyLoggingNotHappened(mSpyLogger);
-                });
-    }
-
-    // NOTE: has killSwitch in the name to conserve test execution history
     @Test
     public void onStartJob_killSwitchOn_withLogging() throws Exception {
         runWithMocks(
                 () -> {
-                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
                     JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
 
                     onStartJob_featureDisabled();
@@ -120,25 +105,10 @@ public final class AttributionFallbackJobServiceTest extends MeasurementJobServi
                 });
     }
 
-    // NOTE: has killSwitch in the name to conserve test execution history
-    @Test
-    public void onStartJob_killSwitchOff_withoutLogging() throws Exception {
-        runWithMocks(
-                () -> {
-                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
-
-                    onStartJob_featureEnabled();
-
-                    verifyLoggingNotHappened(mSpyLogger);
-                });
-    }
-
-    // NOTE: has killSwitch in the name to conserve test execution history
     @Test
     public void onStartJob_killSwitchOff_withLogging() throws Exception {
         runWithMocks(
                 () -> {
-                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
                     JobServiceLoggingCallback onStartJobCallback =
                             syncPersistJobExecutionData(mSpyLogger);
                     JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
@@ -187,24 +157,10 @@ public final class AttributionFallbackJobServiceTest extends MeasurementJobServi
     }
 
     @Test
-    public void onStartJob_shouldDisableJobTrue_withoutLogging() throws Exception {
-        runWithMocks(
-                () -> {
-                    mocker.mockGetFlags(mMockFlags);
-                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
-
-                    onStartJob_shouldDisableJobTrue();
-
-                    verifyLoggingNotHappened(mSpyLogger);
-                });
-    }
-
-    @Test
     public void onStartJob_shouldDisableJobTrue_withLoggingEnabled() throws Exception {
         runWithMocks(
                 () -> {
                     mocker.mockGetFlags(mMockFlags);
-                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
 
                     onStartJob_shouldDisableJobTrue();
 
