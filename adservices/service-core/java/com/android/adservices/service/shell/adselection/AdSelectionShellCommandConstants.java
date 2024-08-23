@@ -20,13 +20,15 @@ package com.android.adservices.service.shell.adselection;
  * Args for signals shell commands. Consented debugging is more complex so see {@link
  * ConsentedDebugEnableArgs} for more info.
  */
-public final class AdSelectionShellCommandArgs {
+public final class AdSelectionShellCommandConstants {
     static final int FIRST_ARG_FOR_PARSING = 2;
 
     public static final String BUYER = "--buyer";
     public static final String AD_SELECTION_ID = "--ad-selection-id";
 
-    private AdSelectionShellCommandArgs() {
+    public static final String OUTPUT_PROTO_FIELD_NAME = "output_proto";
+
+    private AdSelectionShellCommandConstants() {
         throw new UnsupportedOperationException();
     }
 }
