@@ -96,7 +96,6 @@ import android.adservices.common.FledgeErrorResponse;
 import android.adservices.common.FrequencyCapFilters;
 import android.adservices.common.KeyedFrequencyCap;
 import android.adservices.http.MockWebServerRule;
-import android.content.Context;
 import android.content.res.AssetFileDescriptor;
 import android.net.Uri;
 import android.os.IBinder;
@@ -108,7 +107,7 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.MockWebServerRuleFactory;
-import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.DBAdDataFixture;
 import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -174,8 +173,10 @@ import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.FetchProcessLogger;
 import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
 import com.android.adservices.service.stats.GetAdSelectionDataBuyerInputGeneratedStats;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -198,8 +199,6 @@ import org.junit.Test;
 import org.junit.function.ThrowingRunnable;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 import org.mockito.stubbing.Answer;
 
 import java.io.IOException;
@@ -222,7 +221,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class AuctionServerE2ETest {
+@RequiresSdkLevelAtLeastS()
+@MockStatic(ConsentManager.class)
+@MockStatic(AppImportanceFilter.class)
+@MockStatic(FlagsFactory.class)
+@SpyStatic(JSScriptEngine.class)
+public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCase {
     private static final int COUNTDOWN_LATCH_LIMIT_SECONDS = 10;
     private static final int CALLER_UID = Process.myUid();
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
@@ -252,7 +256,6 @@ public class AuctionServerE2ETest {
     private static final String COORDINATOR_URL = "https://example.com/keys";
     private static final String COORDINATOR_HOST = "https://example.com";
     private static final String DEFAULT_FETCH_URI = "https://default-example.com/keys";
-    private static final String DEFAULT_FETCH_HOST = "https://default-example.com";
 
     private static final String COORDINATOR_ALLOWLIST = COORDINATOR_URL + "," + DEFAULT_FETCH_URI;
 
@@ -309,24 +312,15 @@ public class AuctionServerE2ETest {
     private AdServicesHttpsClient mAdServicesHttpsClientSpy;
     private AdServicesLogger mAdServicesLoggerMock;
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
-    @Rule(order = 1)
-    public final AdServicesDeviceSupportedRule deviceSupportRule =
-            new AdServicesDeviceSupportedRule();
-
     @Rule(order = 2)
     public final MockWebServerRule mockWebServerRule = MockWebServerRuleFactory.createForHttps();
 
     // This object access some system APIs
     @Mock public DevContextFilter mDevContextFilterMock;
     @Mock public AppImportanceFilter mAppImportanceFilterMock;
-    private Context mContext;
-    private Flags mFlags;
+    private Flags mFakeFlags;
     @Mock private FledgeAuthorizationFilter mFledgeAuthorizationFilterMock;
     private AdFilteringFeatureFactory mAdFilteringFeatureFactory;
-    private MockitoSession mStaticMockSession = null;
     @Mock private ConsentManager mConsentManagerMock;
     private CustomAudienceDao mCustomAudienceDaoSpy;
     private EncodedPayloadDao mEncodedPayloadDaoSpy;
@@ -362,16 +356,8 @@ public class AuctionServerE2ETest {
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mScheduledExecutor = AdServicesExecutors.getScheduler();
         mContext = ApplicationProvider.getApplicationContext();
-        mFlags = new AuctionServerE2ETestFlags();
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(JSScriptEngine.class)
-                        .strictness(Strictness.LENIENT)
-                        .initMocks(this)
-                        .mockStatic(ConsentManager.class)
-                        .mockStatic(AppImportanceFilter.class)
-                        .mockStatic(FlagsFactory.class)
-                        .startMocking();
+        mFakeFlags = new AuctionServerE2ETestFlags();
+
         mAdServicesLoggerMock = ExtendedMockito.mock(AdServicesLoggerImpl.class);
         mCustomAudienceDaoSpy =
                 spy(
@@ -391,7 +377,7 @@ public class AuctionServerE2ETest {
         SharedStorageDatabase sharedDb =
                 Room.inMemoryDatabaseBuilder(mContext, SharedStorageDatabase.class).build();
 
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
         mAppInstallDao = sharedDb.appInstallDao();
         mFrequencyCapDaoSpy = spy(sharedDb.frequencyCapDao());
         AdSelectionServerDatabase serverDb =
@@ -403,7 +389,7 @@ public class AuctionServerE2ETest {
         mProtectedServersEncryptionConfigDao = serverDb.protectedServersEncryptionConfigDao();
         mEncryptionContextDao = serverDb.encryptionContextDao();
         mAdFilteringFeatureFactory =
-                new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDaoSpy, mFlags);
+                new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDaoSpy, mFakeFlags);
         when(ConsentManager.getInstance()).thenReturn(mConsentManagerMock);
         when(AppImportanceFilter.create(any(), any())).thenReturn(mAppImportanceFilterMock);
         doNothing()
@@ -444,15 +430,16 @@ public class AuctionServerE2ETest {
 
         mPayloadFormatter =
                 AuctionServerPayloadFormatterFactory.createPayloadFormatter(
-                        mFlags.getFledgeAuctionServerPayloadFormatVersion(),
-                        mFlags.getFledgeAuctionServerPayloadBucketSizes());
+                        mFakeFlags.getFledgeAuctionServerPayloadFormatVersion(),
+                        mFakeFlags.getFledgeAuctionServerPayloadBucketSizes());
         mPayloadExtractor =
                 AuctionServerPayloadFormatterFactory.createPayloadExtractor(
-                        mFlags.getFledgeAuctionServerPayloadFormatVersion(), mAdServicesLoggerMock);
+                        mFakeFlags.getFledgeAuctionServerPayloadFormatVersion(),
+                        mAdServicesLoggerMock);
 
         mDataCompressor =
                 AuctionServerDataCompressorFactory.getDataCompressor(
-                        mFlags.getFledgeAuctionServerCompressionAlgorithmVersion());
+                        mFakeFlags.getFledgeAuctionServerCompressionAlgorithmVersion());
 
         doReturn(DevContext.createForDevOptionsDisabled())
                 .when(mDevContextFilterMock)
@@ -462,9 +449,6 @@ public class AuctionServerE2ETest {
 
     @After
     public void tearDown() {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
         if (mAdServicesHttpsClientSpy != null) {
             reset(mAdServicesHttpsClientSpy);
         }
@@ -472,7 +456,7 @@ public class AuctionServerE2ETest {
 
     @Test
     public void testAuctionServer_killSwitchDisabled_throwsException() {
-        mFlags =
+        mFakeFlags =
                 new AuctionServerE2ETestFlags(
                         true, false, AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS, false);
         mAdSelectionService = createAdSelectionService(); // create the service again with new flags
@@ -573,7 +557,7 @@ public class AuctionServerE2ETest {
 
     @Test
     public void testGetAdSelectionData_withoutEncrypt_validRequest_success() throws Exception {
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
 
         Map<String, AdTechIdentifier> nameAndBuyersMap =
                 Map.of(
@@ -638,7 +622,7 @@ public class AuctionServerE2ETest {
                 };
         AdFilteringFeatureFactory adFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDaoSpy, flags);
-        doReturn(flags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(flags);
         AdSelectionService adSelectionService =
                 createAdSelectionService(
                         flags,
@@ -772,7 +756,7 @@ public class AuctionServerE2ETest {
         AdFilteringFeatureFactory adFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(
                         mAppInstallDao, mFrequencyCapDaoSpy, flagsWithBothFiltersEnabled);
-        doReturn(flagsWithBothFiltersEnabled).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(flagsWithBothFiltersEnabled);
         AdSelectionService adSelectionService =
                 createAdSelectionService(
                         flagsWithBothFiltersEnabled,
@@ -871,7 +855,7 @@ public class AuctionServerE2ETest {
         adFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(
                         mAppInstallDao, mFrequencyCapDaoSpy, flagsWithAppInstallDisabled);
-        doReturn(flagsWithAppInstallDisabled).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(flagsWithAppInstallDisabled);
         adSelectionService =
                 createAdSelectionService(
                         flagsWithAppInstallDisabled,
@@ -922,7 +906,7 @@ public class AuctionServerE2ETest {
         AdFilteringFeatureFactory adFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(
                         mAppInstallDao, mFrequencyCapDaoSpy, flagsWithBothFiltersEnabled);
-        doReturn(flagsWithBothFiltersEnabled).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(flagsWithBothFiltersEnabled);
         AdSelectionService adSelectionService =
                 createAdSelectionService(
                         flagsWithBothFiltersEnabled,
@@ -1021,7 +1005,7 @@ public class AuctionServerE2ETest {
         adFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(
                         mAppInstallDao, mFrequencyCapDaoSpy, flagsWithFCapDisabled);
-        doReturn(flagsWithFCapDisabled).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(flagsWithFCapDisabled);
         adSelectionService =
                 createAdSelectionService(
                         flagsWithFCapDisabled,
@@ -1061,7 +1045,7 @@ public class AuctionServerE2ETest {
         ArgumentCaptor<GetAdSelectionDataBuyerInputGeneratedStats> argumentCaptorBuyerInputStats =
                 ArgumentCaptor.forClass(GetAdSelectionDataBuyerInputGeneratedStats.class);
 
-        mFlags =
+        mFakeFlags =
                 new AuctionServerE2ETestFlags() {
                     @Override
                     public boolean getFledgeAuctionServerGetAdSelectionDataPayloadMetricsEnabled() {
@@ -1069,7 +1053,7 @@ public class AuctionServerE2ETest {
                     }
                 };
 
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
         // Create a logging latch with count of 3, 2 for buyer input logs and 1 for api logs
         CountDownLatch loggingLatch = new CountDownLatch(3);
         Answer<Void> countDownAnswer =
@@ -1199,7 +1183,7 @@ public class AuctionServerE2ETest {
                     }
                 };
 
-        doReturn(flags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(flags);
         // Create a logging latch with count of 3, 2 for buyer input logs and 1 for api logs
         CountDownLatch loggingLatch = new CountDownLatch(3);
         Answer<Void> countDownAnswer =
@@ -1345,7 +1329,7 @@ public class AuctionServerE2ETest {
         AdFilteringFeatureFactory adFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDaoSpy, flags);
 
-        doReturn(flags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(flags);
 
         AdSelectionService adSelectionService =
                 createAdSelectionService(
@@ -1460,7 +1444,7 @@ public class AuctionServerE2ETest {
         AdFilteringFeatureFactory adFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDaoSpy, flags);
 
-        doReturn(flags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(flags);
 
         AdSelectionService adSelectionService =
                 createAdSelectionService(
@@ -1544,7 +1528,7 @@ public class AuctionServerE2ETest {
         ArgumentCaptor<GetAdSelectionDataBuyerInputGeneratedStats> argumentCaptorBuyerInputStats =
                 ArgumentCaptor.forClass(GetAdSelectionDataBuyerInputGeneratedStats.class);
 
-        mFlags =
+        mFakeFlags =
                 new AuctionServerE2ETestFlags() {
                     @Override
                     public boolean getFledgeAuctionServerGetAdSelectionDataPayloadMetricsEnabled() {
@@ -1557,7 +1541,7 @@ public class AuctionServerE2ETest {
                     }
                 };
 
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
         // Create a logging latch with count of 3, 2 for buyer input logs and 1 for api logs
         CountDownLatch loggingLatch = new CountDownLatch(3);
         Answer<Void> countDownAnswer =
@@ -1650,7 +1634,7 @@ public class AuctionServerE2ETest {
     @Test
     public void testGetAdSelectionData_withoutEncrypt_validRequest_successPayloadMetricsDisabled()
             throws Exception {
-        mFlags =
+        mFakeFlags =
                 new AuctionServerE2ETestFlags() {
                     @Override
                     public boolean getFledgeAuctionServerGetAdSelectionDataPayloadMetricsEnabled() {
@@ -1658,7 +1642,7 @@ public class AuctionServerE2ETest {
                     }
                 };
 
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
 
         mAdSelectionService = createAdSelectionService(); // create the service again with new flags
 
@@ -1714,10 +1698,10 @@ public class AuctionServerE2ETest {
     @Test
     public void testGetAdSelectionData_withoutEncrypt_validRequestWithOmitAdsInOneCA_success()
             throws Exception {
-        mFlags =
+        mFakeFlags =
                 new AuctionServerE2ETestFlags(
-                        /* omitAdsEnabled = */ true); // create flags with omit ads enabled
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+                        /* omitAdsEnabled= */ true); // create flags with omit ads enabled
+        mocker.mockGetFlags(mFakeFlags);
 
         mAdSelectionService = createAdSelectionService(); // create the service again with new flags
 
@@ -1785,7 +1769,7 @@ public class AuctionServerE2ETest {
 
     @Test
     public void testGetAdSelectionData_fCap_success() throws Exception {
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
 
         when(mObliviousHttpEncryptorMock.encryptBytes(
                         any(byte[].class), anyLong(), anyLong(), any(), any()))
@@ -1883,7 +1867,7 @@ public class AuctionServerE2ETest {
 
     @Test
     public void testGetAdSelectionData_withEncrypt_validRequest_success() throws Exception {
-        testGetAdSelectionData_withEncryptHelper(mFlags);
+        testGetAdSelectionData_withEncryptHelper(mFakeFlags);
     }
 
     @Test
@@ -1921,7 +1905,7 @@ public class AuctionServerE2ETest {
     @Test
     public void testPersistAdSelectionResult_withoutDecrypt_validRequest_success()
             throws Exception {
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
 
         when(mObliviousHttpEncryptorMock.encryptBytes(
                         any(byte[].class), anyLong(), anyLong(), any(), any()))
@@ -1988,7 +1972,8 @@ public class AuctionServerE2ETest {
         Flags flagWithOmitAdsEnabled =
                 new AuctionServerE2ETestFlags(
                         /* omitAdsEnabled = */ true); // create flags with omit ads enabled
-        doReturn(flagWithOmitAdsEnabled).when(FlagsFactory::getFlags);
+
+        mocker.mockGetFlags(flagWithOmitAdsEnabled);
 
         when(mObliviousHttpEncryptorMock.encryptBytes(
                         any(byte[].class), anyLong(), anyLong(), any(), any()))
@@ -2098,7 +2083,7 @@ public class AuctionServerE2ETest {
     @FlakyTest(bugId = 303119299)
     public void testAuctionServerResult_usedInWaterfallMediation_success() throws Exception {
         Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
 
         Dispatcher dispatcher =
                 new Dispatcher() {
@@ -2209,7 +2194,7 @@ public class AuctionServerE2ETest {
     @Test
     public void testPersistAdSelectionResult_withDecrypt_validRequest_successEmptyUri()
             throws Exception {
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
 
         DBEncryptionKey dbEncryptionKey =
                 DBEncryptionKey.builder()
@@ -2238,7 +2223,7 @@ public class AuctionServerE2ETest {
                         mScheduledExecutor,
                         mContext,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFakeFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -2248,7 +2233,7 @@ public class AuctionServerE2ETest {
                                 new ObliviousHttpEncryptorWithSeedImpl(
                                         new AdSelectionEncryptionKeyManager(
                                                 mAuctionServerEncryptionKeyDao,
-                                                mFlags,
+                                                mFakeFlags,
                                                 mAdServicesHttpsClientSpy,
                                                 mLightweightExecutorService,
                                                 mAdServicesLoggerMock),
@@ -2363,7 +2348,7 @@ public class AuctionServerE2ETest {
                         CONSOLE_MESSAGE_IN_LOGS_ENABLED);
 
         Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
 
         CountDownLatch reportImpressionCountDownLatch = new CountDownLatch(4);
         Answer<ListenableFuture<Void>> successReportImpressionGetAnswer =
@@ -2551,7 +2536,7 @@ public class AuctionServerE2ETest {
                         CONSOLE_MESSAGE_IN_LOGS_ENABLED);
 
         Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
 
         CountDownLatch reportImpressionCountDownLatch = new CountDownLatch(4);
         Answer<ListenableFuture<Void>> successReportImpressionGetAnswer =
@@ -2697,7 +2682,7 @@ public class AuctionServerE2ETest {
     public void testReportImpression_serverAuction_sellerReportingFailure_noExceptionThrown()
             throws Exception {
         Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
 
         CountDownLatch reportImpressionCountDownLatch = new CountDownLatch(2);
         Answer<ListenableFuture<Void>> failedReportImpressionGetAnswer =
@@ -2805,7 +2790,7 @@ public class AuctionServerE2ETest {
     public void testReportImpression_serverAuction_buyerReportingFailure_noExceptionThrown()
             throws Exception {
         Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
 
         CountDownLatch reportImpressionCountDownLatch = new CountDownLatch(2);
         Answer<ListenableFuture<Void>> failedReportImpressionGetAnswer =
@@ -2913,10 +2898,10 @@ public class AuctionServerE2ETest {
     @Test
     public void testPersistAdSelectionResult_withoutDecrypt_savesWinEventsSuccess()
             throws Exception {
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
 
         mAdFilteringFeatureFactory =
-                new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDaoSpy, mFlags);
+                new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDaoSpy, mFakeFlags);
         mAdSelectionService = createAdSelectionService();
 
         when(mObliviousHttpEncryptorMock.encryptBytes(
@@ -2988,10 +2973,10 @@ public class AuctionServerE2ETest {
     @Test
     public void testPersistAdSelectionResult_withoutDecrypt_savesNonWinEventsSuccess()
             throws Exception {
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
 
         mAdFilteringFeatureFactory =
-                new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDaoSpy, mFlags);
+                new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDaoSpy, mFakeFlags);
         mAdSelectionService = createAdSelectionService();
 
         when(mObliviousHttpEncryptorMock.encryptBytes(
@@ -3080,7 +3065,7 @@ public class AuctionServerE2ETest {
 
     @Test
     public void testGetAdSelectionData_withOhttpGatewayDecryption() throws Exception {
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
 
         String winnerBuyerCaOneName = "Shoes CA of Buyer 1";
         String winnerBuyerCaTwoName = "Shirts CA of Buyer 1";
@@ -3124,7 +3109,7 @@ public class AuctionServerE2ETest {
                         mScheduledExecutor,
                         mContext,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFakeFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -3134,7 +3119,7 @@ public class AuctionServerE2ETest {
                                 new ObliviousHttpEncryptorWithSeedImpl(
                                         new AdSelectionEncryptionKeyManager(
                                                 mAuctionServerEncryptionKeyDao,
-                                                mFlags,
+                                                mFakeFlags,
                                                 mAdServicesHttpsClientSpy,
                                                 mLightweightExecutorService,
                                                 mAdServicesLoggerMock),
@@ -3186,14 +3171,14 @@ public class AuctionServerE2ETest {
     public void
             testGetAdSelectionData_withOhttpGatewayDecryption_withServerAuctionMediaTypeChanged()
                     throws Exception {
-        mFlags =
+        mFakeFlags =
                 new AuctionServerE2ETestFlags() {
                     @Override
                     public boolean getFledgeAuctionServerMediaTypeChangeEnabled() {
                         return true;
                     }
                 };
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
 
         String winnerBuyerCaOneName = "Shoes CA of Buyer 1";
         String winnerBuyerCaTwoName = "Shirts CA of Buyer 1";
@@ -3235,7 +3220,7 @@ public class AuctionServerE2ETest {
                         mScheduledExecutor,
                         mContext,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFakeFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -3245,7 +3230,7 @@ public class AuctionServerE2ETest {
                                 new ObliviousHttpEncryptorImpl(
                                         new AdSelectionEncryptionKeyManager(
                                                 mAuctionServerEncryptionKeyDao,
-                                                mFlags,
+                                                mFakeFlags,
                                                 mAdServicesHttpsClientSpy,
                                                 mLightweightExecutorService,
                                                 mAdServicesLoggerMock),
@@ -3294,7 +3279,7 @@ public class AuctionServerE2ETest {
 
     @Test
     public void testGetAdSelectionData_multiCloudOn_success() throws Exception {
-        mFlags =
+        mFakeFlags =
                 new AuctionServerE2ETestFlags(
                         false,
                         false,
@@ -3304,7 +3289,7 @@ public class AuctionServerE2ETest {
                         false,
                         true,
                         false);
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
 
         String privateKeyHex = "e7b292f49df28b8065992cdeadbc9d032a0e09e8476cb6d8d507212e7be3b9b4";
         OhttpGatewayPrivateKey privKey =
@@ -3324,7 +3309,7 @@ public class AuctionServerE2ETest {
                         any(FetchProcessLogger.class)))
                 .thenReturn(Futures.immediateFuture(httpClientResponse));
 
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
 
         mCustomAudienceDaoSpy.insertOrOverwriteCustomAudience(
                 DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(
@@ -3344,7 +3329,7 @@ public class AuctionServerE2ETest {
                                 new ObliviousHttpEncryptorImpl(
                                         new ProtectedServersEncryptionConfigManager(
                                                 mProtectedServersEncryptionConfigDao,
-                                                mFlags,
+                                                mFakeFlags,
                                                 mMockHttpClient,
                                                 mLightweightExecutorService,
                                                 mAdServicesLoggerMock),
@@ -3412,7 +3397,7 @@ public class AuctionServerE2ETest {
 
     @Test
     public void testGetAdSelectionData_multiCloudOn_refreshFlagOn_fetchesNewKey() throws Exception {
-        mFlags =
+        mFakeFlags =
                 new AuctionServerE2ETestFlags(
                         false,
                         false,
@@ -3422,7 +3407,7 @@ public class AuctionServerE2ETest {
                         false,
                         true,
                         true);
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
 
         String liveKeyId = "400bed24-c62f-46e0-a1ad-211361ad771a";
         String privateKeyHex = "e7b292f49df28b8065992cdeadbc9d032a0e09e8476cb6d8d507212e7be3b9b4";
@@ -3463,7 +3448,7 @@ public class AuctionServerE2ETest {
         Assert.assertEquals(
                 expiredKeyId, protectedServersEncryptionConfigs.get(0).getKeyIdentifier());
 
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
 
         mCustomAudienceDaoSpy.insertOrOverwriteCustomAudience(
                 DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(
@@ -3483,7 +3468,7 @@ public class AuctionServerE2ETest {
                                 new ObliviousHttpEncryptorImpl(
                                         new ProtectedServersEncryptionConfigManager(
                                                 mProtectedServersEncryptionConfigDao,
-                                                mFlags,
+                                                mFakeFlags,
                                                 mMockHttpClient,
                                                 mLightweightExecutorService,
                                                 mAdServicesLoggerMock),
@@ -3550,7 +3535,7 @@ public class AuctionServerE2ETest {
     @Test
     public void testGetAdSelectionData_multiCloudOn_refreshFlagOff_noNetworkCall()
             throws Exception {
-        mFlags =
+        mFakeFlags =
                 new AuctionServerE2ETestFlags(
                         false,
                         false,
@@ -3560,7 +3545,7 @@ public class AuctionServerE2ETest {
                         false,
                         true,
                         false);
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
 
         String liveKeyId = "400bed24-c62f-46e0-a1ad-211361ad771a";
         String privateKeyHex = "e7b292f49df28b8065992cdeadbc9d032a0e09e8476cb6d8d507212e7be3b9b4";
@@ -3606,7 +3591,7 @@ public class AuctionServerE2ETest {
                         eq(DevContext.createForDevOptionsDisabled()),
                         any(FetchProcessLogger.class));
 
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
 
         mCustomAudienceDaoSpy.insertOrOverwriteCustomAudience(
                 DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(
@@ -3626,7 +3611,7 @@ public class AuctionServerE2ETest {
                                 new ObliviousHttpEncryptorImpl(
                                         new ProtectedServersEncryptionConfigManager(
                                                 mProtectedServersEncryptionConfigDao,
-                                                mFlags,
+                                                mFakeFlags,
                                                 mMockHttpClient,
                                                 mLightweightExecutorService,
                                                 mAdServicesLoggerMock),
@@ -3684,7 +3669,7 @@ public class AuctionServerE2ETest {
     @Test
     public void testGetAdSelectionData_multiCloudOff_refreshFlagOn_fetchesNewKey()
             throws Exception {
-        mFlags =
+        mFakeFlags =
                 new AuctionServerE2ETestFlags(
                         false,
                         false,
@@ -3694,7 +3679,7 @@ public class AuctionServerE2ETest {
                         false,
                         true,
                         true);
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
 
         String liveKeyId = "000bed24-c62f-46e0-a1ad-211361ad771a";
         String privateKeyHex = "e7b292f49df28b8065992cdeadbc9d032a0e09e8476cb6d8d507212e7be3b9b4";
@@ -3731,7 +3716,7 @@ public class AuctionServerE2ETest {
         Assert.assertEquals(1, encryptionConfigs.size());
         Assert.assertEquals(expiredKeyId, encryptionConfigs.get(0).getKeyIdentifier());
 
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
 
         mCustomAudienceDaoSpy.insertOrOverwriteCustomAudience(
                 DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(
@@ -3751,7 +3736,7 @@ public class AuctionServerE2ETest {
                                 new ObliviousHttpEncryptorImpl(
                                         new AdSelectionEncryptionKeyManager(
                                                 mAuctionServerEncryptionKeyDao,
-                                                mFlags,
+                                                mFakeFlags,
                                                 mMockHttpClient,
                                                 mLightweightExecutorService,
                                                 mAdServicesLoggerMock),
@@ -3810,7 +3795,7 @@ public class AuctionServerE2ETest {
     @Test
     public void testGetAdSelectionData_multiCloudOff_refreshFlagOff_noNetworkCall()
             throws Exception {
-        mFlags =
+        mFakeFlags =
                 new AuctionServerE2ETestFlags(
                         false,
                         false,
@@ -3820,7 +3805,7 @@ public class AuctionServerE2ETest {
                         false,
                         true,
                         false);
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
 
         String liveKeyId = "400bed24-c62f-46e0-a1ad-211361ad771a";
         String privateKeyHex = "e7b292f49df28b8065992cdeadbc9d032a0e09e8476cb6d8d507212e7be3b9b4";
@@ -3857,7 +3842,7 @@ public class AuctionServerE2ETest {
         Assert.assertEquals(1, encryptionConfigs.size());
         Assert.assertEquals(expiredKeyId, encryptionConfigs.get(0).getKeyIdentifier());
 
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
 
         mCustomAudienceDaoSpy.insertOrOverwriteCustomAudience(
                 DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(
@@ -3877,7 +3862,7 @@ public class AuctionServerE2ETest {
                                 new ObliviousHttpEncryptorImpl(
                                         new AdSelectionEncryptionKeyManager(
                                                 mAuctionServerEncryptionKeyDao,
-                                                mFlags,
+                                                mFakeFlags,
                                                 mMockHttpClient,
                                                 mLightweightExecutorService,
                                                 mAdServicesLoggerMock),
@@ -3935,7 +3920,7 @@ public class AuctionServerE2ETest {
 
     @Test
     public void testGetAdSelectionData_multiCloudOn_nullCoordinator_success() throws Exception {
-        mFlags =
+        mFakeFlags =
                 new AuctionServerE2ETestFlags(
                         false,
                         false,
@@ -3945,7 +3930,7 @@ public class AuctionServerE2ETest {
                         false,
                         true,
                         false);
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
 
         AuctionEncryptionKeyFixture.AuctionKey auctionKey =
                 AuctionEncryptionKeyFixture.AuctionKey.builder()
@@ -3961,7 +3946,7 @@ public class AuctionServerE2ETest {
                         any(FetchProcessLogger.class)))
                 .thenReturn(Futures.immediateFuture(httpClientResponse));
 
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
 
         Map<String, AdTechIdentifier> nameAndBuyersMap =
                 Map.of(
@@ -3976,7 +3961,7 @@ public class AuctionServerE2ETest {
                                 new ObliviousHttpEncryptorImpl(
                                         new ProtectedServersEncryptionConfigManager(
                                                 mProtectedServersEncryptionConfigDao,
-                                                mFlags,
+                                                mFakeFlags,
                                                 mMockHttpClient,
                                                 mLightweightExecutorService,
                                                 mAdServicesLoggerMock),
@@ -4005,7 +3990,7 @@ public class AuctionServerE2ETest {
 
     @Test
     public void testGetAdSelectionData_multiCloudOn_inValidCoordinator_fails() throws Exception {
-        mFlags =
+        mFakeFlags =
                 new AuctionServerE2ETestFlags(
                         false,
                         false,
@@ -4015,7 +4000,7 @@ public class AuctionServerE2ETest {
                         false,
                         true,
                         false);
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
 
         AuctionEncryptionKeyFixture.AuctionKey auctionKey =
                 AuctionEncryptionKeyFixture.AuctionKey.builder()
@@ -4031,7 +4016,7 @@ public class AuctionServerE2ETest {
                         any(FetchProcessLogger.class)))
                 .thenReturn(Futures.immediateFuture(httpClientResponse));
 
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
 
         Map<String, AdTechIdentifier> nameAndBuyersMap =
                 Map.of(
@@ -4046,7 +4031,7 @@ public class AuctionServerE2ETest {
                                 new ObliviousHttpEncryptorImpl(
                                         new ProtectedServersEncryptionConfigManager(
                                                 mProtectedServersEncryptionConfigDao,
-                                                mFlags,
+                                                mFakeFlags,
                                                 mMockHttpClient,
                                                 mLightweightExecutorService,
                                                 mAdServicesLoggerMock),
@@ -4069,7 +4054,7 @@ public class AuctionServerE2ETest {
 
     @Test
     public void testGetAdSelectionData_multiCloudOff_nullCoordinator_success() throws Exception {
-        mFlags =
+        mFakeFlags =
                 new AuctionServerE2ETestFlags(
                         false,
                         false,
@@ -4079,7 +4064,7 @@ public class AuctionServerE2ETest {
                         false,
                         true,
                         false);
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
 
         AuctionEncryptionKeyFixture.AuctionKey auctionKey =
                 AuctionEncryptionKeyFixture.AuctionKey.builder()
@@ -4095,7 +4080,7 @@ public class AuctionServerE2ETest {
                         any(FetchProcessLogger.class)))
                 .thenReturn(Futures.immediateFuture(httpClientResponse));
 
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
 
         Map<String, AdTechIdentifier> nameAndBuyersMap =
                 Map.of(
@@ -4110,7 +4095,7 @@ public class AuctionServerE2ETest {
                                 (new ObliviousHttpEncryptorImpl(
                                         new AdSelectionEncryptionKeyManager(
                                                 mAuctionServerEncryptionKeyDao,
-                                                mFlags,
+                                                mFakeFlags,
                                                 mMockHttpClient,
                                                 mLightweightExecutorService,
                                                 mAdServicesLoggerMock),
@@ -4139,8 +4124,8 @@ public class AuctionServerE2ETest {
 
     @Test
     public void testGetAdSelectionData_withoutEncrypt_protectedSignals_success() throws Exception {
-        mFlags = new AuctionServerE2ETestFlags();
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mFakeFlags = new AuctionServerE2ETestFlags();
+        mocker.mockGetFlags(mFakeFlags);
 
         byte[] encodedSignals = new byte[] {2, 3, 5, 7, 11, 13, 17, 19};
         createAndPersistEncodedSignals(WINNER_BUYER, encodedSignals);
@@ -4179,8 +4164,8 @@ public class AuctionServerE2ETest {
     @Test
     public void testPersistAdSelectionResult_withoutDecrypt_validSignalsRequest_success()
             throws Exception {
-        mFlags = new AuctionServerE2ETestFlags();
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        mFakeFlags = new AuctionServerE2ETestFlags();
+        mocker.mockGetFlags(mFakeFlags);
 
         when(mObliviousHttpEncryptorMock.encryptBytes(
                         any(byte[].class), anyLong(), anyLong(), any(), any()))
@@ -4248,7 +4233,7 @@ public class AuctionServerE2ETest {
                 mScheduledExecutor,
                 mContext,
                 mAdServicesLoggerMock,
-                mFlags,
+                mFakeFlags,
                 CallingAppUidSupplierProcessImpl.create(),
                 mFledgeAuthorizationFilterMock,
                 mAdSelectionServiceFilterMock,
@@ -4323,7 +4308,7 @@ public class AuctionServerE2ETest {
     }
 
     private void testGetAdSelectionData_withEncryptHelper(Flags flags) throws Exception {
-        doReturn(flags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(flags);
 
         Map<String, AdTechIdentifier> nameAndBuyersMap =
                 Map.of(
@@ -4369,7 +4354,7 @@ public class AuctionServerE2ETest {
                                 new ObliviousHttpEncryptorWithSeedImpl(
                                         new AdSelectionEncryptionKeyManager(
                                                 mAuctionServerEncryptionKeyDao,
-                                                mFlags,
+                                                mFakeFlags,
                                                 mAdServicesHttpsClientSpy,
                                                 mLightweightExecutorService,
                                                 mAdServicesLoggerMock),
@@ -4437,7 +4422,7 @@ public class AuctionServerE2ETest {
                 mScheduledExecutor,
                 mContext,
                 mAdServicesLoggerMock,
-                mFlags,
+                mFakeFlags,
                 CallingAppUidSupplierProcessImpl.create(),
                 mFledgeAuthorizationFilterMock,
                 mAdSelectionServiceFilterMock,
