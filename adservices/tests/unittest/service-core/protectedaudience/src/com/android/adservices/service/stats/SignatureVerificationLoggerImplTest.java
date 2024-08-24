@@ -16,7 +16,15 @@
 
 package com.android.adservices.service.stats;
 
-import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.START_ELAPSED_TIMESTAMP;
+import static com.android.adservices.service.stats.SignatureVerificationLoggerImplTestFixture.SIGNATURE_VERIFICATION_END_KEY_FETCH;
+import static com.android.adservices.service.stats.SignatureVerificationLoggerImplTestFixture.SIGNATURE_VERIFICATION_END_SERIALIZATION;
+import static com.android.adservices.service.stats.SignatureVerificationLoggerImplTestFixture.SIGNATURE_VERIFICATION_END_VERIFICATION;
+import static com.android.adservices.service.stats.SignatureVerificationLoggerImplTestFixture.SIGNATURE_VERIFICATION_KEY_FETCH_LATENCY_MS;
+import static com.android.adservices.service.stats.SignatureVerificationLoggerImplTestFixture.SIGNATURE_VERIFICATION_SERIALIZATION_LATENCY_MS;
+import static com.android.adservices.service.stats.SignatureVerificationLoggerImplTestFixture.SIGNATURE_VERIFICATION_START_KEY_FETCH;
+import static com.android.adservices.service.stats.SignatureVerificationLoggerImplTestFixture.SIGNATURE_VERIFICATION_START_SERIALIZATION;
+import static com.android.adservices.service.stats.SignatureVerificationLoggerImplTestFixture.SIGNATURE_VERIFICATION_START_VERIFICATION;
+import static com.android.adservices.service.stats.SignatureVerificationLoggerImplTestFixture.SIGNATURE_VERIFICATION_VERIFICATION_LATENCY_MS;
 import static com.android.adservices.service.stats.SignatureVerificationStats.EMPTY_STRING;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -38,23 +46,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 public class SignatureVerificationLoggerImplTest {
-    public static final int SIGNATURE_VERIFICATION_KEY_FETCH_LATENCY_MS = 3;
-    public static final int SIGNATURE_VERIFICATION_SERIALIZATION_LATENCY_MS = 5;
-    public static final int SIGNATURE_VERIFICATION_VERIFICATION_LATENCY_MS = 7;
-
-    public static final long SIGNATURE_VERIFICATION_START_KEY_FETCH = START_ELAPSED_TIMESTAMP + 1L;
-    public static final long SIGNATURE_VERIFICATION_END_KEY_FETCH =
-            SIGNATURE_VERIFICATION_START_KEY_FETCH + SIGNATURE_VERIFICATION_KEY_FETCH_LATENCY_MS;
-    public static final long SIGNATURE_VERIFICATION_START_SERIALIZATION =
-            SIGNATURE_VERIFICATION_END_KEY_FETCH + 1L;
-    public static final long SIGNATURE_VERIFICATION_END_SERIALIZATION =
-            SIGNATURE_VERIFICATION_START_SERIALIZATION
-                    + SIGNATURE_VERIFICATION_SERIALIZATION_LATENCY_MS;
-    public static final long SIGNATURE_VERIFICATION_START_VERIFICATION =
-            SIGNATURE_VERIFICATION_END_SERIALIZATION + 1L;
-    public static final long SIGNATURE_VERIFICATION_END_VERIFICATION =
-            SIGNATURE_VERIFICATION_START_VERIFICATION
-                    + SIGNATURE_VERIFICATION_VERIFICATION_LATENCY_MS;
     @Captor ArgumentCaptor<SignatureVerificationStats> mSignatureVerificationStatsArgumentCaptor;
     @Mock private Clock mMockClock;
     @Mock private AdServicesLogger mAdServicesLoggerMock;
