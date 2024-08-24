@@ -34,6 +34,7 @@ import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEven
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorSelector;
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONException;
@@ -87,7 +88,8 @@ public class UpdateProcessingOrchestrator {
             Instant creationTime,
             JSONObject json,
             DevContext devContext,
-            UpdateSignalsApiCalledStats.Builder jsonProcessingStatsBuilder) {
+            UpdateSignalsApiCalledStats.Builder jsonProcessingStatsBuilder,
+            UpdateSignalsProcessReportedLogger updateSignalsProcessReportedLogger) {
         sLogger.v("Processing signal updates for " + adtech);
         try {
             // Load the current signals, organizing them into a map for quick access
@@ -126,15 +128,21 @@ public class UpdateProcessingOrchestrator {
                 }
             }
 
+            updateSignalsProcessReportedLogger.setSignalsWrittenAndValuesCount(
+                    combinedUpdates.getToAddSize() + combinedUpdates.getToRemoveSize());
+            updateSignalsProcessReportedLogger.setKeysStoredCount(
+                    combinedUpdates.getKeysTouchedSize());
+
             List<DBProtectedSignal> updatedSignals =
                     updateProtectedSignalInMemory(
                             adtech, packageName, creationTime, currentSignalsList, combinedUpdates);
 
             sLogger.v(
                     "Finished parsing JSON %d signals to add, and %d signals to remove",
-                    combinedUpdates.getToAdd().size(), combinedUpdates.getToRemove().size());
+                    combinedUpdates.getToAddSize(), combinedUpdates.getToRemoveSize());
 
-            mSignalEvictionController.evict(adtech, updatedSignals, combinedUpdates);
+            mSignalEvictionController.evict(
+                    adtech, updatedSignals, combinedUpdates, updateSignalsProcessReportedLogger);
 
             writeChanges(adtech, creationTime, combinedUpdates, devContext);
         } catch (JSONException e) {

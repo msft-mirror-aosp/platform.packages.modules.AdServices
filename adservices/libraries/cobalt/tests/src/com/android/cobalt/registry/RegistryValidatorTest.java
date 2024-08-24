@@ -778,7 +778,7 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                         .setMinValue(1L)
                         .setMaxValue(2L)
                         .build();
-        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report)).isTrue();
+        assertThat(RegistryValidator.isValid(metric, report)).isTrue();
     }
 
     @Test
@@ -786,14 +786,14 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
         MetricDefinition metric = getMetricDefinition(OCCURRENCE);
         ReportDefinition report =
                 getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, DE_IDENTIFICATION);
-        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report)).isTrue();
+        assertThat(RegistryValidator.isValid(metric, report)).isTrue();
     }
 
     @Test
     public void testIsValidReportTypeAndPrivacyMechanism_deIdStringCounts() {
         MetricDefinition metric = getMetricDefinition(STRING);
         ReportDefinition report = getReportDefinition(STRING_COUNTS, DE_IDENTIFICATION);
-        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report)).isTrue();
+        assertThat(RegistryValidator.isValid(metric, report)).isTrue();
     }
 
     @Test
@@ -802,10 +802,9 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
         MetricDefinition metric = getMetricDefinition(OCCURRENCE);
         ReportDefinition report =
                 getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, DE_IDENTIFICATION);
-        expect.that(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
-                .isTrue();
+        expect.that(RegistryValidator.isValid(metric, report)).isTrue();
         expect.that(
-                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                        RegistryValidator.isValid(
                                 metric,
                                 report.toBuilder()
                                         .setIntBuckets(
@@ -820,10 +819,9 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
     public void testIsValidReportTypeAndPrivacyMechanism_stringCounts_defaultIntegerBuckets() {
         MetricDefinition metric = getMetricDefinition(STRING);
         ReportDefinition report = getReportDefinition(STRING_COUNTS, DE_IDENTIFICATION);
-        expect.that(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
-                .isTrue();
+        expect.that(RegistryValidator.isValid(metric, report)).isTrue();
         expect.that(
-                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                        RegistryValidator.isValid(
                                 metric,
                                 report.toBuilder()
                                         .setIntBuckets(
@@ -841,7 +839,7 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                 getReportDefinition(STRING_COUNTS, DE_IDENTIFICATION).toBuilder()
                         .setSystemProfileSelection(REPORT_ALL)
                         .build();
-        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report)).isTrue();
+        assertThat(RegistryValidator.isValid(metric, report)).isTrue();
     }
 
     @Test
@@ -851,8 +849,7 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                 getReportDefinition(STRING_COUNTS, DE_IDENTIFICATION).toBuilder()
                         .setSystemProfileSelection(SELECT_FIRST)
                         .build();
-        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
-                .isFalse();
+        assertThat(RegistryValidator.isValid(metric, report)).isFalse();
     }
 
     @Test
@@ -862,7 +859,7 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                 getReportDefinition(STRING_COUNTS, DE_IDENTIFICATION).toBuilder()
                         .addSystemProfileField(APP_VERSION)
                         .build();
-        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report)).isTrue();
+        assertThat(RegistryValidator.isValid(metric, report)).isTrue();
     }
 
     @Test
@@ -872,8 +869,7 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                 getReportDefinition(STRING_COUNTS, DE_IDENTIFICATION).toBuilder()
                         .addSystemProfileField(CHANNEL)
                         .build();
-        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
-                .isFalse();
+        assertThat(RegistryValidator.isValid(metric, report)).isFalse();
     }
 
     @Test
@@ -883,8 +879,7 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                 getReportDefinition(STRING_COUNTS, DE_IDENTIFICATION).toBuilder()
                         .addExperimentId(1L)
                         .build();
-        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
-                .isFalse();
+        assertThat(RegistryValidator.isValid(metric, report)).isFalse();
     }
 
     @Test
@@ -898,7 +893,7 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                         .setMinValue(1)
                         .setMaxValue(2)
                         .build();
-        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report)).isTrue();
+        assertThat(RegistryValidator.isValid(metric, report)).isTrue();
     }
 
     @Test
@@ -912,8 +907,7 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                         .setMinValue(1)
                         .setMaxValue(2)
                         .build();
-        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
-                .isFalse();
+        assertThat(RegistryValidator.isValid(metric, report)).isFalse();
     }
 
     @Test
@@ -928,8 +922,7 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                         .setMaxValue(2)
                         .setStringSketchParams(StringSketchParameters.newBuilder().setNumHashes(1))
                         .build();
-        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
-                .isFalse();
+        assertThat(RegistryValidator.isValid(metric, report)).isFalse();
     }
 
     @Test
@@ -939,10 +932,9 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                 getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, DE_IDENTIFICATION);
 
         // De-identified reports must have minValue == maxValue == 0
-        expect.that(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
-                .isTrue();
+        expect.that(RegistryValidator.isValid(metric, report)).isTrue();
         expect.that(
-                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                        RegistryValidator.isValid(
                                 metric, report.toBuilder().setMinValue(1).setMaxValue(2).build()))
                 .isFalse();
 
@@ -953,10 +945,9 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                         .build();
 
         // Private reports must have 0 < minValue <= maxValue
-        expect.that(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
-                .isFalse();
+        expect.that(RegistryValidator.isValid(metric, report)).isFalse();
         expect.that(
-                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                        RegistryValidator.isValid(
                                 metric, report.toBuilder().setMinValue(1).setMaxValue(2).build()))
                 .isTrue();
     }
@@ -967,10 +958,9 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
         ReportDefinition report = getReportDefinition(STRING_COUNTS, DE_IDENTIFICATION);
 
         // Reports must have minValue == maxValue == 0
-        expect.that(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
-                .isTrue();
+        expect.that(RegistryValidator.isValid(metric, report)).isTrue();
         expect.that(
-                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                        RegistryValidator.isValid(
                                 metric, report.toBuilder().setMinValue(1).setMaxValue(2).build()))
                 .isFalse();
     }
@@ -982,17 +972,14 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                 getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, DE_IDENTIFICATION);
 
         // De-identified reports must have minValue == maxValue == 0
-        expect.that(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
-                .isTrue();
-        expect.that(
-                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
-                                metric, report.toBuilder().setMaxCount(2).build()))
+        expect.that(RegistryValidator.isValid(metric, report)).isTrue();
+        expect.that(RegistryValidator.isValid(metric, report.toBuilder().setMaxCount(2).build()))
                 .isFalse();
 
         report = getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, SHUFFLED_DIFFERENTIAL_PRIVACY);
 
         expect.that(
-                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                        RegistryValidator.isValid(
                                 metric,
                                 report.toBuilder()
                                         .setMinValue(1)
@@ -1008,10 +995,9 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
         ReportDefinition report = getReportDefinition(STRING_COUNTS, DE_IDENTIFICATION);
 
         // Reports must have minValue == maxValue == 0
-        expect.that(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
-                .isTrue();
+        expect.that(RegistryValidator.isValid(metric, report)).isTrue();
         expect.that(
-                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                        RegistryValidator.isValid(
                                 metric, report.toBuilder().setMinValue(1).setMaxValue(2).build()))
                 .isFalse();
     }
@@ -1023,26 +1009,26 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                 getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, DE_IDENTIFICATION);
 
         expect.that(
-                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                        RegistryValidator.isValid(
                                 metric,
                                 report.toBuilder().setLocalAggregationPeriod(WINDOW_1_DAY).build()))
                 .isFalse();
         expect.that(
-                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                        RegistryValidator.isValid(
                                 metric,
                                 report.toBuilder()
                                         .setLocalAggregationPeriod(WINDOW_7_DAYS)
                                         .build()))
                 .isFalse();
         expect.that(
-                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                        RegistryValidator.isValid(
                                 metric,
                                 report.toBuilder()
                                         .setLocalAggregationPeriod(WINDOW_28_DAYS)
                                         .build()))
                 .isFalse();
         expect.that(
-                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                        RegistryValidator.isValid(
                                 metric,
                                 report.toBuilder()
                                         .setLocalAggregationPeriod(WINDOW_30_DAYS)
@@ -1057,8 +1043,7 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                 getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, DE_IDENTIFICATION).toBuilder()
                         .setLocalAggregationProcedure(SUM_PROCEDURE)
                         .build();
-        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
-                .isFalse();
+        assertThat(RegistryValidator.isValid(metric, report)).isFalse();
     }
 
     @Test
@@ -1068,8 +1053,7 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                 getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, DE_IDENTIFICATION).toBuilder()
                         .setLocalAggregationProcedurePercentileN(1)
                         .build();
-        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
-                .isFalse();
+        assertThat(RegistryValidator.isValid(metric, report)).isFalse();
     }
 
     @Test
@@ -1079,8 +1063,7 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                 getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, DE_IDENTIFICATION).toBuilder()
                         .setExpeditedSending(true)
                         .build();
-        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
-                .isFalse();
+        assertThat(RegistryValidator.isValid(metric, report)).isFalse();
     }
 
     @Test
@@ -1090,18 +1073,18 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                 getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, DE_IDENTIFICATION);
 
         expect.that(
-                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                        RegistryValidator.isValid(
                                 metric,
                                 report.toBuilder()
                                         .setReportingInterval(REPORTING_INTERVAL_UNSET)
                                         .build()))
                 .isFalse();
         expect.that(
-                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                        RegistryValidator.isValid(
                                 metric, report.toBuilder().setReportingInterval(HOURS_1).build()))
                 .isFalse();
         expect.that(
-                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                        RegistryValidator.isValid(
                                 metric, report.toBuilder().setReportingInterval(DAYS_1).build()))
                 .isTrue();
     }
@@ -1112,10 +1095,9 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
         ReportDefinition report =
                 getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, DE_IDENTIFICATION);
 
-        expect.that(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
-                .isTrue();
+        expect.that(RegistryValidator.isValid(metric, report)).isTrue();
         expect.that(
-                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                        RegistryValidator.isValid(
                                 metric, report.toBuilder().setExemptFromConsent(true).build()))
                 .isFalse();
     }
@@ -1136,8 +1118,7 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                         .build();
 
         // Fails because 1000 * Integer.MAX_VALUE / 10 > Integer.MAX_VALUE
-        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
-                .isFalse();
+        assertThat(RegistryValidator.isValid(metric, report)).isFalse();
     }
 
     @Test
@@ -1151,7 +1132,7 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                         .setMaxReleaseStage(ReleaseStage.RELEASE_STAGE_NOT_SET)
                         .build();
 
-        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report)).isTrue();
+        assertThat(RegistryValidator.isValid(metric, report)).isTrue();
     }
 
     @Test
@@ -1167,7 +1148,7 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                         .setMaxReleaseStage(ReleaseStage.DEBUG)
                         .build();
 
-        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report)).isTrue();
+        assertThat(RegistryValidator.isValid(metric, report)).isTrue();
     }
 
     @Test
@@ -1183,7 +1164,7 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                         .setMaxReleaseStage(ReleaseStage.GA)
                         .build();
 
-        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report)).isTrue();
+        assertThat(RegistryValidator.isValid(metric, report)).isTrue();
     }
 
     @Test
@@ -1199,8 +1180,7 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                         .setMaxReleaseStage(ReleaseStage.GA)
                         .build();
 
-        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
-                .isFalse();
+        assertThat(RegistryValidator.isValid(metric, report)).isFalse();
     }
 
     @Test
@@ -1217,8 +1197,7 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                                         .build())
                         .build();
 
-        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
-                .isFalse();
+        assertThat(RegistryValidator.isValid(metric, report)).isFalse();
     }
 
     private static MetricDefinition getMetricDefinition(MetricType metricType) {
