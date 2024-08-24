@@ -25,6 +25,7 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
+import android.annotation.CallSuper;
 import android.app.job.JobParameters;
 import android.app.job.JobService;
 import android.content.Context;
@@ -36,8 +37,6 @@ import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
 import com.android.adservices.spe.AdServicesJobServiceFactory;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
-
-import org.junit.Test;
 
 /** Base class for tests that exercise {@code JobService} implementations. */
 public abstract class AdServicesJobServiceTestCase extends AdServicesExtendedMockitoTestCase {
@@ -56,26 +55,18 @@ public abstract class AdServicesJobServiceTestCase extends AdServicesExtendedMoc
         return jobMocker.mockJobSchedulingLogger(factory);
     }
 
-    @Test
-    public final void testAdServicesJobTestCaseFixtures() throws Exception {
+    // TODO(b/361555631): rename to testAdServicesJobTestCaseFixtures() and annotate
+    // it with @MetaTest
+    @CallSuper
+    @Override
+    protected void assertValidTestCaseFixtures() throws Exception {
+        super.assertValidTestCaseFixtures();
+
         assertTestClassHasNoFieldsFromSuperclass(AdServicesJobServiceTestCase.class, "jobMocker");
     }
 
     // TODO(b/314969513): inline methods below once all classes are refactored (and use a common
     // mMockFlags instance)
-
-    /**
-     * Convenience helper to call {@code
-     * AdServicesPragmaticMocker.mockGetBackgroundJobsLoggingKillSwitch()} using {@code mocker}.
-     */
-    protected final void mockBackgroundJobsLoggingKillSwitch(Flags unusedFlags, boolean value) {
-        if (!mMockFlags.equals(unusedFlags)) {
-            throw new IllegalArgumentException(
-                    "Flags argument is not used anymore and will be removed, you should be passing"
-                            + " mMockFlags");
-        }
-        mocker.mockGetBackgroundJobsLoggingKillSwitch(value);
-    }
 
     /**
      * Convenience helper to call {@link
@@ -104,6 +95,15 @@ public abstract class AdServicesJobServiceTestCase extends AdServicesExtendedMoc
     protected final AdServicesJobServiceLogger mockAdServicesJobServiceLogger(
             Context context, Flags flags) {
         return jobMocker.mockNoOpAdServicesJobServiceLogger(context, flags);
+    }
+
+    /**
+     * Convenience helper to call {@link
+     * AdServicesJobMocker#mockNoOpAdServicesJobServiceLogger(Context, Flags)} using {@code
+     * jobMocker}, with {@code mMockFlags}.
+     */
+    protected final AdServicesJobServiceLogger mockAdServicesJobServiceLogger(Context context) {
+        return jobMocker.mockNoOpAdServicesJobServiceLogger(context, mMockFlags);
     }
 
     // TODO(b/296945680): methods below were moved "as is" from MockitoExpectations. They should

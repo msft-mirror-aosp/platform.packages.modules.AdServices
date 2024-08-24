@@ -62,6 +62,7 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
@@ -121,9 +122,10 @@ import com.android.adservices.service.signals.EgressConfigurationGenerator;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.mockwebserver.MockResponse;
@@ -136,9 +138,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoSession;
 import org.mockito.Spy;
-import org.mockito.quality.Strictness;
 import org.mockito.stubbing.Answer;
 
 import java.time.Instant;
@@ -146,7 +146,18 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
-public class ReportAndRegisterEventE2ETest {
+@RequiresSdkLevelAtLeastS()
+@MockStatic(ConsentManager.class)
+@MockStatic(PermissionHelper.class)
+@SpyStatic(MeasurementImpl.class)
+@SpyStatic(AsyncRegistrationQueueJobService.class)
+@SpyStatic(AdServicesLoggerImpl.class)
+@SpyStatic(DatastoreManagerFactory.class)
+@SpyStatic(EnrollmentDao.class)
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(AdServicesJobServiceLogger.class)
+@MockStatic(ServiceCompatUtils.class)
+public final class ReportAndRegisterEventE2ETest extends AdServicesExtendedMockitoTestCase {
     private final DevContext mDevContext = DevContext.createForDevOptionsDisabled();
 
     @Spy
@@ -163,7 +174,6 @@ public class ReportAndRegisterEventE2ETest {
 
     @Mock FledgeAuthorizationFilter mFledgeAuthorizationFilterMock;
 
-    private MockitoSession mStaticMockSession = null;
     @Mock private ConsentManager mConsentManagerMock;
     private CustomAudienceDao mCustomAudienceDao;
     private EncodedPayloadDao mEncodedPayloadDao;
@@ -203,14 +213,13 @@ public class ReportAndRegisterEventE2ETest {
 
     private final ScheduledThreadPoolExecutor mScheduledExecutor =
             AdServicesExecutors.getScheduler();
-    private Flags mFlags = new ReportAndRegisterEventTestFlags();
+    private Flags mFakeFlags = new ReportAndRegisterEventTestFlags();
 
     private final long mMaxRegisteredAdBeaconsTotalCount =
-            mFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount();
+            mFakeFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount();
     private final long mMaxRegisteredAdBeaconsPerDestination =
-            mFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount();
+            mFakeFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount();
 
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final boolean CONSOLE_MESSAGE_IN_LOGS_ENABLED = true;
 
     private DBAdSelection mDBAdSelection;
@@ -245,14 +254,18 @@ public class ReportAndRegisterEventE2ETest {
     @Spy
     private AsyncSourceFetcher mAsyncSourceFetcherSpy =
             new AsyncSourceFetcher(
-                    CONTEXT, mEnrollmentDaoMock, mFlags, mDatastoreManagerSpy, mDebugReportApiMock);
+                    mContext,
+                    mEnrollmentDaoMock,
+                    mFakeFlags,
+                    mDatastoreManagerSpy,
+                    mDebugReportApiMock);
 
     @Spy
     private AsyncTriggerFetcher mAsyncTriggerFetcherSpy =
             new AsyncTriggerFetcher(
-                    CONTEXT,
+                    mContext,
                     mEnrollmentDaoMock,
-                    mFlags,
+                    mFakeFlags,
                     mIOdpDelegationWrapperMock,
                     mDatastoreManagerSpy,
                     mDebugReportApiMock);
@@ -264,39 +277,20 @@ public class ReportAndRegisterEventE2ETest {
             mConsentedDebugConfigurationGeneratorFactory;
     private EgressConfigurationGenerator mEgressConfigurationGenerator;
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Before
     public void setup() throws Exception {
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .mockStatic(ConsentManager.class)
-                        .mockStatic(PermissionHelper.class)
-                        .spyStatic(MeasurementImpl.class)
-                        .spyStatic(AsyncRegistrationQueueJobService.class)
-                        .spyStatic(AdServicesLoggerImpl.class)
-                        .spyStatic(DatastoreManagerFactory.class)
-                        .spyStatic(EnrollmentDao.class)
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(AdServicesJobServiceLogger.class)
-                        .mockStatic(ServiceCompatUtils.class)
-                        .strictness(Strictness.LENIENT)
-                        .initMocks(this)
-                        .startMocking();
-
         mRequestMatcherPrefixMatch = (a, b) -> !b.isEmpty() && a.startsWith(b);
 
-        doReturn(mFlags).when(() -> FlagsFactory.getFlags());
+        doReturn(mFakeFlags).when(() -> FlagsFactory.getFlags());
 
         mCustomAudienceDao =
-                Room.inMemoryDatabaseBuilder(CONTEXT, CustomAudienceDatabase.class)
+                Room.inMemoryDatabaseBuilder(mContext, CustomAudienceDatabase.class)
                         .addTypeConverter(new DBCustomAudience.Converters(true, true, true))
                         .build()
                         .customAudienceDao();
 
         mEncodedPayloadDao =
-                Room.inMemoryDatabaseBuilder(CONTEXT, ProtectedSignalsDatabase.class)
+                Room.inMemoryDatabaseBuilder(mContext, ProtectedSignalsDatabase.class)
                         .build()
                         .getEncodedPayloadDao();
 
@@ -317,18 +311,18 @@ public class ReportAndRegisterEventE2ETest {
         mEncryptionKeyDao = EncryptionKeyDao.getInstance();
         mEnrollmentDao = EnrollmentDao.getInstance();
         mAdFilteringFeatureFactory =
-                new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, mFlags);
+                new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, mFakeFlags);
 
         mMeasurementImplSpy =
                 spy(
                         new MeasurementImpl(
-                                CONTEXT,
+                                mContext,
                                 FakeFlagsFactory.getFlagsForTest(),
                                 mDatastoreManagerSpy,
                                 mClickVerifierMock,
                                 mMeasurementDataDeleterMock,
                                 mContentResolverMock));
-        doReturn(mMeasurementImplSpy).when(() -> MeasurementImpl.getInstance(CONTEXT));
+        doReturn(mMeasurementImplSpy).when(() -> MeasurementImpl.getInstance(mContext));
         doReturn(true)
                 .when(mClickVerifierMock)
                 .isInputEventVerifiable(any(), anyLong(), anyString());
@@ -338,7 +332,7 @@ public class ReportAndRegisterEventE2ETest {
         when(mDevContextFilterMock.createDevContext()).thenReturn(mDevContext);
         mRetryStrategyFactory = RetryStrategyFactory.createInstanceForTesting();
         mConsentedDebugConfigurationDao =
-                Room.inMemoryDatabaseBuilder(CONTEXT, AdSelectionDatabase.class)
+                Room.inMemoryDatabaseBuilder(mContext, AdSelectionDatabase.class)
                         .build()
                         .consentedDebugConfigurationDao();
         mConsentedDebugConfigurationGeneratorFactory =
@@ -351,7 +345,7 @@ public class ReportAndRegisterEventE2ETest {
                         Flags.DEFAULT_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS,
                         mLightweightExecutorService);
 
-        mAdSelectionService = getAdSelectionServiceImpl(mFlags);
+        mAdSelectionService = getAdSelectionServiceImpl(mFakeFlags);
 
         initializeReportingArtifacts();
 
@@ -361,14 +355,14 @@ public class ReportAndRegisterEventE2ETest {
         mAsyncRegistrationQueueRunnerSpy =
                 spy(
                         new AsyncRegistrationQueueRunner(
-                                CONTEXT,
+                                mContext,
                                 mContentResolverMock,
                                 mAsyncSourceFetcherSpy,
                                 mAsyncTriggerFetcherSpy,
                                 mDatastoreManagerSpy,
                                 mDebugReportApiMock,
                                 mSourceNoiseHandlerMock,
-                                mFlags,
+                                mFakeFlags,
                                 mAdServicesLoggerMock));
     }
 
@@ -376,10 +370,6 @@ public class ReportAndRegisterEventE2ETest {
     public void tearDown() throws DatastoreException {
         // Clean up db to prevent polluting subsequent tests.
         mDatastoreManagerSpy.runInTransaction((dao) -> dao.deleteAllMeasurementData(List.of()));
-
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
     }
 
     @Test
@@ -1043,7 +1033,7 @@ public class ReportAndRegisterEventE2ETest {
                 mLightweightExecutorService,
                 mBackgroundExecutorService,
                 mScheduledExecutor,
-                CONTEXT,
+                mContext,
                 mAdServicesLoggerMock,
                 flags,
                 CallingAppUidSupplierProcessImpl.create(),

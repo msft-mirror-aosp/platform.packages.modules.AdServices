@@ -16,12 +16,16 @@
 
 package com.android.adservices.service.shell.adselection;
 
-import static com.android.adservices.service.shell.adselection.AdSelectionShellCommandArgs.AD_SELECTION_ID;
-import static com.android.adservices.service.shell.adselection.AdSelectionShellCommandArgs.FIRST_ARG_FOR_PARSING;
+import static com.android.adservices.service.shell.adselection.AdSelectionShellCommandConstants.AD_SELECTION_ID;
+import static com.android.adservices.service.shell.adselection.AdSelectionShellCommandConstants.FIRST_ARG_FOR_PARSING;
+import static com.android.adservices.service.shell.adselection.AdSelectionShellCommandConstants.OUTPUT_PROTO_FIELD_NAME;
 import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_AD_SELECTION_VIEW_AUCTION_RESULT;
+
+import android.util.Base64;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.AuctionResult;
 import com.android.adservices.service.shell.AbstractShellCommand;
 import com.android.adservices.service.shell.ShellCommandArgParserHelper;
 import com.android.adservices.service.shell.ShellCommandResult;
@@ -81,12 +85,17 @@ public class ViewAuctionResultCommand extends AbstractShellCommand {
             return invalidArgsError(HELP, err, COMMAND_AD_SELECTION_VIEW_AUCTION_RESULT, args);
         }
 
-        JSONObject jsonObject;
         try {
-            jsonObject =
-                    AdSelectionEntryHelper.getJsonFromAdSelectionEntry(
+            AuctionResult result =
+                    AdSelectionEntryHelper.getAuctionResultFromAdSelectionEntry(
                             mAdSelectionEntryDao.getAdSelectionEntityById(adSelectionId),
                             mAdSelectionEntryDao.getReportingUris(adSelectionId));
+            out.printf(
+                    new JSONObject()
+                            .put(
+                                    OUTPUT_PROTO_FIELD_NAME,
+                                    Base64.encodeToString(result.toByteArray(), Base64.DEFAULT))
+                            .toString());
         } catch (JSONException e) {
             sLogger.v("could not format ad selection (id: %s) entry to json", adSelectionId);
             err.write("could not format ad selection entry to json with id: " + adSelectionId);
@@ -94,8 +103,6 @@ public class ViewAuctionResultCommand extends AbstractShellCommand {
                     ShellCommandStats.RESULT_GENERIC_ERROR,
                     COMMAND_AD_SELECTION_VIEW_AUCTION_RESULT);
         }
-
-        out.println(jsonObject);
         return toShellCommandResult(
                 ShellCommandStats.RESULT_SUCCESS, COMMAND_AD_SELECTION_VIEW_AUCTION_RESULT);
     }

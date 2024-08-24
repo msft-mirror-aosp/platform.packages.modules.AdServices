@@ -22,6 +22,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 
+import android.annotation.CallSuper;
 import android.annotation.Nullable;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -65,7 +66,6 @@ import com.google.common.annotations.VisibleForTesting;
 
 import org.junit.ClassRule;
 import org.junit.Rule;
-import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.quality.Strictness;
@@ -153,8 +153,13 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
         return new AdServicesExtendedMockitoRule.Builder(this).setStrictness(Strictness.LENIENT);
     }
 
-    @Test
-    public final void testAdServicesExtendedMockitoTestCaseFixtures() throws Exception {
+    // TODO(b/361555631): rename to testAdServicesExtendedMockitoTestCaseFixtures() and annotate
+    // it with @MetaTest
+    @CallSuper
+    @Override
+    protected void assertValidTestCaseFixtures() throws Exception {
+        super.assertValidTestCaseFixtures();
+
         checkProhibitedMockitoFields(AdServicesExtendedMockitoTestCase.class, this);
     }
 

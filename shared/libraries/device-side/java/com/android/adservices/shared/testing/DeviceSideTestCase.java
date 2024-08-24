@@ -15,6 +15,7 @@
  */
 package com.android.adservices.shared.testing;
 
+import android.annotation.CallSuper;
 import android.content.Context;
 import android.platform.test.ravenwood.RavenwoodRule;
 
@@ -147,8 +148,19 @@ public abstract class DeviceSideTestCase extends SidelessTestCase {
         mTargetPackageName = sTargetPackageName;
     }
 
+    // TODO(b/361555631): merge 2 classes below into testDeviceSideTestCaseFixtures() and annotate
+    // it with @MetaTest
     @Test
-    public final void testDeviceSideTestCaseFixtures() throws Exception {
+    @Override
+    public final void testValidTestCaseFixtures() throws Exception {
+        assertValidTestCaseFixtures();
+    }
+
+    @CallSuper
+    @Override
+    protected void assertValidTestCaseFixtures() throws Exception {
+        super.assertValidTestCaseFixtures();
+
         assertTestClassHasNoFieldsFromSuperclass(
                 DeviceSideTestCase.class,
                 "mContext",
@@ -165,7 +177,9 @@ public abstract class DeviceSideTestCase extends SidelessTestCase {
                 "sTargetPackageName",
                 "sRavenWood",
                 "RAVENWOOD_PACKAGE_NAME");
-        assertTestClassHasNoSuchField("CONTEXT", "should use existing sContext instead");
+        assertTestClassHasNoSuchField(
+                "CONTEXT",
+                "should use existing mContext (or sContext when that's not possible) instead");
         assertTestClassHasNoSuchField("context", "should use existing mContext instead");
     }
 

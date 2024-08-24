@@ -89,9 +89,7 @@ public final class RegistryValidator {
      * @param report the report being validated
      * @return true if metric and report are a valid and supported combination
      */
-    // TODO(b/343722587): Rename this function to something more generic.
-    public static boolean isValidReportTypeAndPrivacyMechanism(
-            MetricDefinition metric, ReportDefinition report) {
+    public static boolean isValid(MetricDefinition metric, ReportDefinition report) {
         if (!validateReportType(metric.getMetricType(), report.getReportType())) {
             logValidationFailure(
                     "Metric type (%s) and report type (%s) failed validation",
