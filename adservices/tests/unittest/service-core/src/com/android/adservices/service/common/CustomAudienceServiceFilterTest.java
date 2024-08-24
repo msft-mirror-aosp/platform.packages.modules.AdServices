@@ -31,6 +31,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
@@ -128,6 +129,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                                 "invalidPackageName",
                                 false,
                                 false,
+                                true,
                                 MY_UID,
                                 API_NAME,
                                 Throttler.ApiKey.UNKNOWN,
@@ -148,6 +150,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                                 CALLER_PACKAGE_NAME,
                                 false,
                                 false,
+                                true,
                                 MY_UID,
                                 API_NAME,
                                 Throttler.ApiKey.UNKNOWN,
@@ -168,6 +171,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                                 CALLER_PACKAGE_NAME,
                                 true,
                                 false,
+                                true,
                                 MY_UID,
                                 API_NAME,
                                 Throttler.ApiKey.UNKNOWN,
@@ -185,6 +189,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                 CALLER_PACKAGE_NAME,
                 false,
                 false,
+                true,
                 MY_UID,
                 API_NAME,
                 Throttler.ApiKey.UNKNOWN,
@@ -221,6 +226,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                                 CALLER_PACKAGE_NAME,
                                 false,
                                 false,
+                                true,
                                 MY_UID,
                                 API_NAME,
                                 Throttler.ApiKey.UNKNOWN,
@@ -247,6 +253,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                                 CALLER_PACKAGE_NAME,
                                 false,
                                 false,
+                                true,
                                 MY_UID,
                                 API_NAME,
                                 Throttler.ApiKey.UNKNOWN,
@@ -260,6 +267,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                 CALLER_PACKAGE_NAME,
                 false,
                 false,
+                true,
                 MY_UID,
                 API_NAME,
                 Throttler.ApiKey.UNKNOWN,
@@ -283,6 +291,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                 CALLER_PACKAGE_NAME,
                 false,
                 false,
+                true,
                 MY_UID,
                 API_NAME,
                 Throttler.ApiKey.UNKNOWN,
@@ -299,6 +308,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                 CALLER_PACKAGE_NAME,
                 false,
                 false,
+                true,
                 MY_UID,
                 API_NAME,
                 Throttler.ApiKey.UNKNOWN,
@@ -322,6 +332,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                                 CALLER_PACKAGE_NAME,
                                 false,
                                 false,
+                                true,
                                 MY_UID,
                                 API_NAME,
                                 Throttler.ApiKey.UNKNOWN,
@@ -334,6 +345,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                 SELLER_VALID,
                 CALLER_PACKAGE_NAME,
                 false,
+                true,
                 true,
                 MY_UID,
                 API_NAME,
@@ -355,6 +367,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                                 CALLER_PACKAGE_NAME,
                                 false,
                                 true,
+                                true,
                                 MY_UID,
                                 API_NAME,
                                 Throttler.ApiKey.UNKNOWN,
@@ -372,6 +385,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                 CALLER_PACKAGE_NAME,
                 false,
                 false,
+                true,
                 MY_UID,
                 API_NAME,
                 Throttler.ApiKey.UNKNOWN,
@@ -389,6 +403,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                                 false,
                                 false,
                                 false,
+                                true,
                                 MY_UID,
                                 API_NAME,
                                 Throttler.ApiKey.UNKNOWN,
@@ -410,6 +425,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                                 false,
                                 false,
                                 false,
+                                true,
                                 MY_UID,
                                 API_NAME,
                                 Throttler.ApiKey.UNKNOWN,
@@ -431,6 +447,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                                 false,
                                 true,
                                 false,
+                                true,
                                 MY_UID,
                                 API_NAME,
                                 Throttler.ApiKey.UNKNOWN,
@@ -459,6 +476,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                 false,
                 false,
                 false,
+                true,
                 MY_UID,
                 API_NAME,
                 Throttler.ApiKey.UNKNOWN,
@@ -494,6 +512,49 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                                 false,
                                 false,
                                 false,
+                                true,
+                                MY_UID,
+                                API_NAME,
+                                Throttler.ApiKey.UNKNOWN,
+                                DevContext.createForDevOptionsDisabled()));
+    }
+
+    @Test
+    public void
+            testFilterRequestAndExtractIdentifier_withEnrollmentJobNotScheduledAndEnrollmentCheckFails() {
+        doThrow(new ConsentManager.RevokedConsentException())
+                .when(mFledgeConsentFilterMock)
+                .assertEnrollmentShouldBeScheduled(
+                        anyBoolean(), anyBoolean(), anyString(), anyInt());
+
+        doReturn(SELLER_VALID)
+                .when(mFledgeAuthorizationFilterSpy)
+                .getAndAssertAdTechFromUriAllowed(
+                        mSpyContext,
+                        CALLER_PACKAGE_NAME,
+                        getValidFetchUriByBuyer(SELLER_VALID),
+                        API_NAME,
+                        API_CUSTOM_AUDIENCES);
+
+        doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
+                .when(mFledgeAuthorizationFilterSpy)
+                .getAndAssertAdTechFromUriAllowed(
+                        mSpyContext,
+                        CALLER_PACKAGE_NAME,
+                        getValidFetchUriByBuyer(SELLER_VALID),
+                        API_NAME,
+                        API_CUSTOM_AUDIENCES);
+
+        assertThrows(
+                ConsentManager.RevokedConsentException.class,
+                () ->
+                        mCustomAudienceServiceFilter.filterRequestAndExtractIdentifier(
+                                getValidFetchUriByBuyer(SELLER_VALID),
+                                CALLER_PACKAGE_NAME,
+                                false,
+                                false,
+                                false,
+                                true,
                                 MY_UID,
                                 API_NAME,
                                 Throttler.ApiKey.UNKNOWN,
@@ -510,6 +571,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                         true,
                         false,
                         false,
+                        true,
                         MY_UID,
                         API_NAME,
                         Throttler.ApiKey.UNKNOWN,
@@ -552,6 +614,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                                 false,
                                 false,
                                 false,
+                                true,
                                 MY_UID,
                                 API_NAME,
                                 Throttler.ApiKey.UNKNOWN,
@@ -574,6 +637,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                 CALLER_PACKAGE_NAME,
                 false,
                 false,
+                true,
                 true,
                 MY_UID,
                 API_NAME,
@@ -605,6 +669,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                                 false,
                                 false,
                                 true,
+                                true,
                                 MY_UID,
                                 API_NAME,
                                 Throttler.ApiKey.UNKNOWN,
@@ -632,9 +697,49 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                 false,
                 false,
                 false,
+                true,
                 MY_UID,
                 API_NAME,
                 Throttler.ApiKey.UNKNOWN,
                 DevContext.createForDevOptionsDisabled());
+    }
+
+    @Test
+    public void testFilterRequest_withEnrollmentJobNotScheduledAndEnrollmentCheckFails() {
+        doThrow(new ConsentManager.RevokedConsentException())
+                .when(mFledgeConsentFilterMock)
+                .assertEnrollmentShouldBeScheduled(
+                        anyBoolean(), anyBoolean(), anyString(), anyInt());
+
+        doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
+                .when(mFledgeAuthorizationFilterSpy)
+                .assertAdTechAllowed(any(), anyString(), any(), anyInt(), anyInt());
+
+        mCustomAudienceServiceFilter =
+                new CustomAudienceServiceFilter(
+                        mSpyContext,
+                        mFledgeConsentFilterMock,
+                        FLAGS_WITH_ENROLLMENT_CHECK,
+                        mAppImportanceFilter,
+                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAllowListsFilterSpy,
+                        mFledgeApiThrottleFilterMock);
+
+        assertThrows(
+                ConsentManager.RevokedConsentException.class,
+                () ->
+                        mCustomAudienceServiceFilter.filterRequest(
+                                SELLER_LOCALHOST,
+                                CALLER_PACKAGE_NAME,
+                                true,
+                                true,
+                                true,
+                                MY_UID,
+                                API_NAME,
+                                Throttler.ApiKey.UNKNOWN,
+                                DevContext.builder()
+                                        .setDevOptionsEnabled(true)
+                                        .setCallingAppPackageName(CALLER_PACKAGE_NAME)
+                                        .build()));
     }
 }

@@ -1383,6 +1383,12 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_ENABLE_AGGREGATE_VALUE_FILTERS =
             "measurement_enable_aggregate_value_filters";
 
+    public static final String KEY_MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES =
+            "measurement_default_filtering_id_max_bytes";
+
+    public static final String KEY_MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING =
+            "measurement_enable_flexible_contribution_filtering";
+
     // Database Schema Version Flags
     public static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_8 =
             "enable_database_schema_version_8";

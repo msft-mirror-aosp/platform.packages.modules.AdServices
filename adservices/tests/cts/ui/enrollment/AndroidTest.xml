@@ -14,9 +14,9 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<configuration description="Config for AdServices Enrollment CTS tests">
+<configuration description="Config for AdServices Enrollment tests">
     <option name="test-suite-tag" value="cts" />
-    <option name="test-tag" value="CtsAdServicesEnrollmentTest" />
+    <option name="test-tag" value="AdServicesEnrollmentTest" />
     <option name="config-descriptor:metadata" key="component" value="framework"/>
     <option name="config-descriptor:metadata" key="parameter" value="not_instant_app" />
     <option name="config-descriptor:metadata" key="parameter" value="not_multi_abi" />
@@ -28,7 +28,7 @@
             value="com.google.android.adservices.apex" />
 
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
-        <option name="test-file-name" value="CtsAdServicesEnrollmentTest.apk"/>
+        <option name="test-file-name" value="AdServicesEnrollmentTest.apk"/>
     </target_preparer>
 
     <!-- Grant notification permission for adservices in aosp -->

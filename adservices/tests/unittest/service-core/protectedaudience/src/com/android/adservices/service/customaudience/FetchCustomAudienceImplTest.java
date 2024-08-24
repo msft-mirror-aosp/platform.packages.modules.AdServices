@@ -222,6 +222,7 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                         false,
                         true,
                         true,
+                        true,
                         Process.myUid(),
                         API_NAME,
                         Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
@@ -232,6 +233,7 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                         mFetchUri,
                         VALID_OWNER,
                         false,
+                        true,
                         true,
                         true,
                         Process.myUid(),
@@ -298,6 +300,7 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                         false,
                         true,
                         true,
+                        true,
                         Process.myUid(),
                         API_NAME,
                         Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
@@ -329,6 +332,7 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                         mFetchUri,
                         VALID_OWNER,
                         false,
+                        true,
                         true,
                         true,
                         Process.myUid(),
@@ -364,6 +368,7 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                         false,
                         true,
                         true,
+                        true,
                         Process.myUid(),
                         API_NAME,
                         Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
@@ -396,6 +401,7 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                         mFetchUri,
                         VALID_OWNER,
                         false,
+                        true,
                         true,
                         true,
                         Process.myUid(),
@@ -433,6 +439,7 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                         false,
                         true,
                         true,
+                        true,
                         Process.myUid(),
                         API_NAME,
                         Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
@@ -468,6 +475,7 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                         false,
                         true,
                         true,
+                        true,
                         Process.myUid(),
                         API_NAME,
                         Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
@@ -486,6 +494,60 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                         eq(TEST_PACKAGE_NAME),
                         eq(STATUS_USER_CONSENT_REVOKED),
                         anyInt());
+    }
+
+    @Test
+    public void testImpl_revokedConsent_failsSilentlyUXNotificationDisabled() throws Exception {
+
+        mFetchCustomAudienceImpl =
+                getImplWithFlags(
+                        new FetchCustomAudienceFlags() {
+                            @Override
+                            public boolean getConsentNotificationDebugMode() {
+                                return true;
+                            }
+                        });
+
+        doThrow(new ConsentManager.RevokedConsentException())
+                .when(mCustomAudienceServiceFilterMock)
+                .filterRequestAndExtractIdentifier(
+                        mFetchUri,
+                        VALID_OWNER,
+                        false,
+                        true,
+                        true,
+                        false,
+                        Process.myUid(),
+                        API_NAME,
+                        Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
+                        DevContext.createForDevOptionsDisabled());
+
+        FetchCustomAudienceTestSyncCallback callback =
+                callFetchCustomAudience(mInputBuilder.build());
+        callback.assertResultReceived();
+        assertTrue(callback.getResult().booleanValue());
+
+        // Confirm a duplicate log entry does not exist.
+        // CustomAudienceServiceFilter ensures the failing assertion is logged internally.
+        verify(mAdServicesLoggerMock, never())
+                .logFledgeApiCallStats(
+                        eq(API_NAME),
+                        eq(TEST_PACKAGE_NAME),
+                        eq(STATUS_USER_CONSENT_REVOKED),
+                        anyInt());
+
+        verify(mCustomAudienceServiceFilterMock)
+                .filterRequestAndExtractIdentifier(
+                        mFetchUri,
+                        VALID_OWNER,
+                        false,
+                        true,
+                        true,
+                        false,
+                        Process.myUid(),
+                        API_NAME,
+                        Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
+                        DevContext.createForDevOptionsDisabled());
     }
 
     @Test
@@ -1011,6 +1073,7 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                         mFetchUri,
                         VALID_OWNER,
                         false,
+                        true,
                         true,
                         true,
                         Process.myUid(),

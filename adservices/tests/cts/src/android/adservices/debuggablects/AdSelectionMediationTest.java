@@ -16,6 +16,7 @@
 
 package android.adservices.debuggablects;
 
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_HTTP_CACHE_ENABLE;
 
@@ -32,6 +33,7 @@ import android.adservices.utils.ScenarioDispatcherFactory;
 import android.adservices.utils.Scenarios;
 import android.net.Uri;
 
+import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 
 import org.junit.Assert;
@@ -44,6 +46,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 @SetFlagDisabled(KEY_FLEDGE_HTTP_CACHE_ENABLE)
+@EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
 public final class AdSelectionMediationTest extends FledgeDebuggableScenarioTest {
 
     /** Test sellers can orchestrate waterfall mediation. Remarketing CUJ 069. */

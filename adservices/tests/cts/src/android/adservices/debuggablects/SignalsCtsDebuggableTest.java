@@ -16,6 +16,7 @@
 
 package android.adservices.debuggablects;
 
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_APP_ALLOW_LIST;
@@ -36,6 +37,7 @@ import android.net.Uri;
 
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
+import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
@@ -51,6 +53,7 @@ import java.util.concurrent.Executors;
 @SetFlagEnabled(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
 @SetFlagEnabled(KEY_PROTECTED_SIGNALS_ENABLED)
 @SetFlagEnabled(KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED) // Enabled retry for java script engine
+@EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
 @RequiresSdkLevelAtLeastT
 public final class SignalsCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     private static final String POSTFIX = "/signals";

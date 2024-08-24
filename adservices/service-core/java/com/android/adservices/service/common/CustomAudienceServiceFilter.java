@@ -65,6 +65,7 @@ public class CustomAudienceServiceFilter extends AbstractFledgeServiceFilter {
      * @param callerPackageName caller package name to be validated
      * @param enforceForeground whether to enforce a foreground check
      * @param enforceConsent whether to enforce per-app consent
+     * @param enforceNotificationShown whether to enforce a UX notification check
      * @param callerUid caller's uid from the Binder thread
      * @param apiName the id of the api being called
      * @param apiKey api-specific throttler key
@@ -84,6 +85,7 @@ public class CustomAudienceServiceFilter extends AbstractFledgeServiceFilter {
             @NonNull String callerPackageName,
             boolean enforceForeground,
             boolean enforceConsent,
+            boolean enforceNotificationShown,
             int callerUid,
             int apiName,
             @NonNull Throttler.ApiKey apiKey,
@@ -102,6 +104,8 @@ public class CustomAudienceServiceFilter extends AbstractFledgeServiceFilter {
             sLogger.v("Checking caller is in foreground.");
             assertForegroundCaller(callerUid, apiName);
         }
+        assertEnrollmentShouldBeScheduled(
+                enforceConsent, enforceNotificationShown, callerPackageName, apiName);
         if (!Objects.isNull(adTech)) {
             sLogger.v("Checking ad tech is allowed to use FLEDGE.");
             assertFledgeEnrollment(
@@ -124,6 +128,7 @@ public class CustomAudienceServiceFilter extends AbstractFledgeServiceFilter {
      * @param callerPackageName caller package name to be validated
      * @param enforceForeground whether to enforce a foreground check
      * @param enforceConsent whether to enforce per-app consent
+     * @param enforceNotificationShown whether to enforce a UX notification check
      * @param callerUid caller's uid from the Binder thread
      * @param apiName the id of the api being called
      * @param apiKey api-specific throttler key
@@ -143,6 +148,7 @@ public class CustomAudienceServiceFilter extends AbstractFledgeServiceFilter {
             boolean disableEnrollmentCheck,
             boolean enforceForeground,
             boolean enforceConsent,
+            boolean enforceNotificationShown,
             int callerUid,
             int apiName,
             @NonNull Throttler.ApiKey apiKey,
@@ -161,6 +167,9 @@ public class CustomAudienceServiceFilter extends AbstractFledgeServiceFilter {
             sLogger.v("Checking caller is in foreground.");
             assertForegroundCaller(callerUid, apiName);
         }
+
+        assertEnrollmentShouldBeScheduled(
+                enforceConsent, enforceNotificationShown, callerPackageName, apiName);
 
         AdTechIdentifier adTech;
         if (disableEnrollmentCheck) {

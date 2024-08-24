@@ -16,6 +16,7 @@
 
 package android.adservices.rootcts;
 
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_BACKGROUND_FETCH_JOB_MAX_RUNTIME_MS;
 import static com.android.adservices.spe.AdServicesJobInfo.FLEDGE_BACKGROUND_FETCH_JOB;
 
@@ -27,6 +28,7 @@ import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.utils.ScenarioDispatcher;
 import android.adservices.utils.ScenarioDispatcherFactory;
 
+import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 
 import org.junit.Before;
@@ -36,6 +38,7 @@ import org.junit.Test;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
+@EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
 public class CustomAudienceBackgroundFetchTest extends FledgeRootScenarioTest {
 
     private static final String CA_NAME = "shoes";

@@ -250,6 +250,9 @@ public final class AdServicesStatusUtils {
      */
     public static final int STATUS_UPDATE_ALREADY_PENDING_ERROR = 29;
 
+    /** This error denotes that consent was revoked for all APIS. */
+    public static final int STATUS_CONSENT_REVOKED_ALL_APIS = 30;
+
     /** The error message to be returned along with {@link LimitExceededException}. */
     public static final String RATE_LIMIT_REACHED_ERROR_MESSAGE = "API rate limit exceeded.";
 
@@ -337,6 +340,7 @@ public final class AdServicesStatusUtils {
             case STATUS_KILLSWITCH_ENABLED: // Intentional fallthrough
             case STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET: // Intentional fallthrough
             case STATUS_USER_CONSENT_REVOKED: // Intentional fallthrough
+            case STATUS_CONSENT_REVOKED_ALL_APIS: // Intentional fallthrough
             case STATUS_JS_SANDBOX_UNAVAILABLE:
                 return new ServiceUnavailableException(SERVICE_UNAVAILABLE_ERROR_MESSAGE);
             case STATUS_PERMISSION_NOT_REQUESTED:
@@ -425,6 +429,7 @@ public final class AdServicesStatusUtils {
                 STATUS_CALLBACK_SHUTDOWN,
                 STATUS_PROVIDER_SERVICE_INTERNAL_ERROR,
                 STATUS_UPDATE_ALREADY_PENDING_ERROR,
+                STATUS_CONSENT_REVOKED_ALL_APIS,
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface StatusCode {}

@@ -162,8 +162,7 @@ public final class RegistryMerger {
             if (mergedReports.containsKey(report.getKey())) {
                 continue;
             }
-            if (!RegistryValidator.isValidReportTypeAndPrivacyMechanism(
-                    baseMetric, report.getValue())) {
+            if (!RegistryValidator.isValid(baseMetric, report.getValue())) {
                 // Invalid reports from the registry being merged in are considered deleted for
                 // safety.
                 deletedReportIds =

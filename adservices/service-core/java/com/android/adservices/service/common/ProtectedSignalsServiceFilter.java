@@ -64,6 +64,7 @@ public class ProtectedSignalsServiceFilter extends AbstractFledgeServiceFilter {
             @NonNull String callerPackageName,
             boolean enforceForeground,
             boolean enforceConsent,
+            boolean enforceNotificationShown,
             int callerUid,
             int apiName,
             @NonNull Throttler.ApiKey apiKey,
@@ -78,6 +79,7 @@ public class ProtectedSignalsServiceFilter extends AbstractFledgeServiceFilter {
      * @param callerPackageName caller package name to be validated
      * @param enforceForeground whether to enforce a foreground check
      * @param enforceConsent whether to enforce per-app consent
+     * @param enforceNotificationShown whether to enforce a UX notification check
      * @param callerUid caller's uid from the Binder thread
      * @param apiName the id of the api being called
      * @param apiKey api-specific throttler key
@@ -97,6 +99,7 @@ public class ProtectedSignalsServiceFilter extends AbstractFledgeServiceFilter {
             boolean disableEnrollmentCheck,
             boolean enforceForeground,
             boolean enforceConsent,
+            boolean enforceNotificationShown,
             int callerUid,
             int apiName,
             @NonNull Throttler.ApiKey apiKey,
@@ -115,6 +118,9 @@ public class ProtectedSignalsServiceFilter extends AbstractFledgeServiceFilter {
             sLogger.v("Checking caller is in foreground.");
             assertForegroundCaller(callerUid, apiName);
         }
+
+        assertEnrollmentShouldBeScheduled(
+                enforceConsent, enforceNotificationShown, callerPackageName, apiName);
 
         AdTechIdentifier adTech;
         if (disableEnrollmentCheck) {

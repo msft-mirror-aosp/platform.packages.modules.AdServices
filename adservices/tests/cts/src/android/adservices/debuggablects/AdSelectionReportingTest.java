@@ -16,6 +16,7 @@
 
 package android.adservices.debuggablects;
 
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_DATA_VERSION_HEADER_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_HTTP_CACHE_ENABLE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED;
@@ -33,6 +34,7 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.utils.ScenarioDispatcher;
 import android.adservices.utils.ScenarioDispatcherFactory;
 
+import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 
@@ -44,6 +46,7 @@ import java.util.concurrent.ExecutionException;
 @SetFlagEnabled(KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED)
 @SetFlagDisabled(KEY_FLEDGE_HTTP_CACHE_ENABLE)
 @SetFlagDisabled(KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED)
+@EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
 public final class AdSelectionReportingTest extends FledgeDebuggableScenarioTest {
 
     @Test

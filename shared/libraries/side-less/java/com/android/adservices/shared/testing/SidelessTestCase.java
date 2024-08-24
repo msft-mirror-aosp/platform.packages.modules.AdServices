@@ -102,6 +102,8 @@ public abstract class SidelessTestCase implements TestNamer {
      */
     @CallSuper
     protected void assertValidTestCaseFixtures() throws Exception {
+        expect.withMessage("getTestName()").that(getTestName()).isNotNull();
+
         assertTestClassHasNoFieldsFromSuperclass(
                 SidelessTestCase.class, "mLog", "mRealLogger", "expect");
     }

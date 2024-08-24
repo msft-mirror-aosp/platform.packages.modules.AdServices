@@ -325,9 +325,7 @@ public final class RegistryMergerTest extends AdServicesUnitTestCase {
                         .setSystemProfileSelection(REPORT_ALL)
                         .setMaxReleaseStage(ReleaseStage.GA)
                         .build();
-        assertEquals(
-                true,
-                RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, mergeInReport));
+        assertEquals(true, RegistryValidator.isValid(metric, mergeInReport));
         CobaltRegistry baseRegistry =
                 makeRegistry(
                         CUSTOMER_ID,

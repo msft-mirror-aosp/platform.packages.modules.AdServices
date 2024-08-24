@@ -56,7 +56,6 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.shared.spe.logging.JobServiceLogger;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
-import com.android.adservices.shared.testing.SidelessTestCase;
 import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 import com.android.adservices.spe.AdServicesJobScheduler;
 import com.android.adservices.spe.AdServicesJobServiceFactory;
@@ -165,52 +164,6 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
 
     private static final String REASON_SESSION_MANAGED_BY_RULE =
             "mockito session is automatically managed by a @Rule";
-
-    // Make it static so it can be used by AdServicesMockitoTestCase, as often test cases are
-    // converted to use AdServicesMockitoTestCase and still defined the ExtendedMockito session -
-    // they should migrate to AdServicesExtendedMockitoTestCase instead.
-    static <T extends SidelessTestCase> void checkProhibitedMockitoFields(
-            Class<T> superclass, T testInstance) throws Exception {
-        testInstance.assertTestClassHasNoFieldsFromSuperclass(
-                superclass,
-                "mMockContext",
-                "mSpyContext",
-                "extendedMockito",
-                "errorLogUtilUsageRule",
-                "mocker",
-                "sInlineCleaner",
-                "sSpyContext",
-                "mMockFlags");
-        testInstance.assertTestClassHasNoSuchField(
-                "mContextMock", "should use existing mMockContext instead");
-        testInstance.assertTestClassHasNoSuchField(
-                "mContextSpy", "should use existing mSpyContext instead");
-        testInstance.assertTestClassHasNoSuchField("mockito", "already taken care by @Rule");
-        testInstance.assertTestClassHasNoSuchField(
-                "mFlagsMock", "should use existing mMockFlags instead");
-        testInstance.assertTestClassHasNoSuchField(
-                "mFlags",
-                superclass.getSimpleName()
-                        + " already define a mMockFlags, and often subclasses define a @Mock"
-                        + " mFlags; to avoid confusion, either use the existing mMockFlags, or"
-                        + " create a non-mock instance like mFakeFlags");
-
-        // Listed below are existing names for the extended mockito session on test classes that
-        // don't use the rule / superclass:
-        testInstance.assertTestClassHasNoSuchField(
-                "mStaticMockSession", REASON_SESSION_MANAGED_BY_RULE);
-        testInstance.assertTestClassHasNoSuchField(
-                "mMockitoSession", REASON_SESSION_MANAGED_BY_RULE);
-        testInstance.assertTestClassHasNoSuchField(
-                "mockitoSession", REASON_SESSION_MANAGED_BY_RULE);
-        testInstance.assertTestClassHasNoSuchField("session", REASON_SESSION_MANAGED_BY_RULE);
-        testInstance.assertTestClassHasNoSuchField(
-                "sStaticMockitoSession", REASON_SESSION_MANAGED_BY_RULE);
-        testInstance.assertTestClassHasNoSuchField(
-                "staticMockitoSession", REASON_SESSION_MANAGED_BY_RULE);
-        testInstance.assertTestClassHasNoSuchField(
-                "staticMockSession", REASON_SESSION_MANAGED_BY_RULE);
-    }
 
     public static final class Mocker
             implements AndroidMocker,

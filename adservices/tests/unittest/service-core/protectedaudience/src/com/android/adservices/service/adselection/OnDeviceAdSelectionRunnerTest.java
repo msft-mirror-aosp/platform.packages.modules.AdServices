@@ -409,6 +409,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         MY_APP_PACKAGE_NAME,
                         true,
                         true,
+                        true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                         Throttler.ApiKey.FLEDGE_API_SELECT_ADS,
@@ -537,6 +538,134 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         eq(TEST_PACKAGE_NAME),
                         eq(STATUS_SUCCESS),
                         eq(RUN_AD_SELECTION_OVERALL_LATENCY_MS));
+    }
+
+    @Test
+    public void testRunAdSelectionSuccessWithUXNotificationEnforcementDisabled()
+            throws AdServicesException {
+        Flags flagsWithoutUxNotificationEnforcement =
+                new OnDeviceAdSelectionRunnerTestFlags() {
+                    @Override
+                    public boolean getConsentNotificationDebugMode() {
+                        return true;
+                    }
+                };
+
+        doReturn(flagsWithoutUxNotificationEnforcement).when(FlagsFactory::getFlags);
+
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+        verifyAndSetupCommonSuccessScenario(adSelectionConfig);
+        mAdSelectionRunner =
+                new OnDeviceAdSelectionRunner(
+                        mCustomAudienceDao,
+                        mAdSelectionEntryDaoSpy,
+                        mEncryptionKeyDaoMock,
+                        mEnrollmentDaoMock,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        mMockAdsScoreGenerator,
+                        mMockAdSelectionIdGenerator,
+                        mClockSpy,
+                        mAdServicesLoggerMock,
+                        flagsWithoutUxNotificationEnforcement,
+                        CALLER_UID,
+                        mAdSelectionServiceFilterMock,
+                        mAdSelectionExecutionLogger,
+                        mPerBuyerBiddingRunnerMock,
+                        mFrequencyCapAdFilterer,
+                        mAdCounterKeyCopier,
+                        mAdCounterHistogramUpdater,
+                        mFrequencyCapAdDataValidator,
+                        mDebugReportingMock,
+                        false,
+                        mKAnonSignJoinFactoryMock,
+                        mAppInstallAdFilterer);
+        // Populating the Custom Audience DB
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                mDBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1),
+                false);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                mDBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
+                false);
+        Instant adSelectionCreationTs = Clock.systemUTC().instant().truncatedTo(ChronoUnit.MILLIS);
+        when(mClockSpy.instant()).thenReturn(adSelectionCreationTs);
+        DBAdSelectionEntry expectedAdSelectionResult =
+                new DBAdSelectionEntry.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setBiddingLogicUri(mDBCustomAudienceForBuyer2.getBiddingLogicUri())
+                        .setWinningAdBid(
+                                mAdScoringOutcomeForBuyer2.getAdWithScore().getAdWithBid().getBid())
+                        .setCustomAudienceSignals(
+                                mAdScoringOutcomeForBuyer2.getCustomAudienceSignals())
+                        .setWinningAdRenderUri(
+                                mAdScoringOutcomeForBuyer2
+                                        .getAdWithScore()
+                                        .getAdWithBid()
+                                        .getAdData()
+                                        .getRenderUri())
+                        .setBuyerDecisionLogicJs(
+                                mAdBiddingOutcomeForBuyer1
+                                        .getCustomAudienceBiddingInfo()
+                                        .getBuyerDecisionLogicJs())
+                        // TODO(b/230569187) add contextual signals once supported in the main logic
+                        .setBuyerContextualSignals("{}")
+                        .setSellerContextualSignals("{}")
+                        .setCreationTimestamp(adSelectionCreationTs)
+                        .build();
+
+        AdSelectionTestCallback resultsCallback =
+                invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
+
+        verify(mPerBuyerBiddingRunnerMock)
+                .runBidding(
+                        BUYER_1,
+                        ImmutableList.of(mDBCustomAudienceForBuyer1),
+                        mFakeFlags.getAdSelectionBiddingTimeoutPerBuyerMs(),
+                        adSelectionConfig);
+        verify(mPerBuyerBiddingRunnerMock)
+                .runBidding(
+                        BUYER_2,
+                        ImmutableList.of(mDBCustomAudienceForBuyer2),
+                        mFakeFlags.getAdSelectionBiddingTimeoutPerBuyerMs(),
+                        adSelectionConfig);
+
+        verify(mMockAdsScoreGenerator).runAdScoring(mAdBiddingOutcomeList, adSelectionConfig);
+
+        assertTrue(resultsCallback.mIsSuccess);
+        assertEquals(
+                expectedAdSelectionResult.getAdSelectionId(),
+                resultsCallback.mAdSelectionResponse.getAdSelectionId());
+        assertEquals(
+                expectedAdSelectionResult.getWinningAdRenderUri(),
+                resultsCallback.mAdSelectionResponse.getRenderUri());
+        assertTrue(mAdSelectionEntryDaoSpy.doesAdSelectionIdExist(AD_SELECTION_ID));
+        assertEquals(
+                expectedAdSelectionResult,
+                mAdSelectionEntryDaoSpy.getAdSelectionEntityById(AD_SELECTION_ID));
+        verifyLogForSuccessfulBiddingProcess(mAdBiddingOutcomeList);
+        verifyLogForSuccessfulAdSelectionProcess();
+        verifyDebugReportingWasNotCalled();
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(TEST_PACKAGE_NAME),
+                        eq(STATUS_SUCCESS),
+                        eq(RUN_AD_SELECTION_OVERALL_LATENCY_MS));
+        verify(mAdSelectionServiceFilterMock)
+                .filterRequest(
+                        SELLER_VALID,
+                        MY_APP_PACKAGE_NAME,
+                        true,
+                        true,
+                        false,
+                        CALLER_UID,
+                        AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
+                        Throttler.ApiKey.FLEDGE_API_SELECT_ADS,
+                        DevContext.createForDevOptionsDisabled());
     }
 
     @Test
@@ -1283,6 +1412,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         MY_APP_PACKAGE_NAME,
                         true,
                         true,
+                        true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                         Throttler.ApiKey.FLEDGE_API_SELECT_ADS,
@@ -1565,6 +1695,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                 .filterRequest(
                         SELLER_VALID,
                         MY_APP_PACKAGE_NAME,
+                        true,
                         true,
                         true,
                         CALLER_UID,
@@ -2826,6 +2957,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                 .filterRequest(
                         SELLER_VALID,
                         MY_APP_PACKAGE_NAME,
+                        true,
                         true,
                         true,
                         CALLER_UID,

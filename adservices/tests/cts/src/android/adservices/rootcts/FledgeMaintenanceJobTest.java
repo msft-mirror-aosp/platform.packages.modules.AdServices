@@ -16,6 +16,7 @@
 
 package android.adservices.rootcts;
 
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED;
 
@@ -30,6 +31,7 @@ import android.adservices.utils.ScenarioDispatcherFactory;
 
 import androidx.test.filters.FlakyTest;
 
+import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 
@@ -37,6 +39,7 @@ import org.junit.Test;
 
 import java.util.concurrent.ExecutionException;
 
+@EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
 public final class FledgeMaintenanceJobTest extends FledgeRootScenarioTest {
     private static final int FLEDGE_MAINTENANCE_JOB_ID = 1;
     private static final int FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S_OVERRIDE = 1;

@@ -14,9 +14,9 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<configuration description="Config for AdServices Enrollment CTS tests">
+<configuration description="Config for AdServices Enrollment tests">
     <option name="test-suite-tag" value="cts"/>
-    <option name="test-tag" value="CtsAdExtServicesEnrollmentTest"/>
+    <option name="test-tag" value="AdExtServicesEnrollmentTest"/>
     <option name="config-descriptor:metadata" key="component" value="framework"/>
     <option name="config-descriptor:metadata" key="parameter" value="not_instant_app"/>
     <option name="config-descriptor:metadata" key="parameter" value="not_multi_abi"/>
@@ -39,7 +39,7 @@
 
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true"/>
-        <option name="test-file-name" value="CtsAdExtServicesEnrollmentTest.apk"/>
+        <option name="test-file-name" value="AdExtServicesEnrollmentTest.apk"/>
         <option name="check-min-sdk" value="true"/>
     </target_preparer>
 

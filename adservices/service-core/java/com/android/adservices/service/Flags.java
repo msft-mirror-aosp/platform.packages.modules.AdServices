@@ -4960,6 +4960,18 @@ public interface Flags extends ModuleSharedFlags {
         return ENROLLMENT_ENABLE_LIMITED_LOGGING;
     }
 
+    @ConfigFlag int MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES = 8;
+
+    default int getMeasurementDefaultFilteringIdMaxBytes() {
+        return MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES;
+    }
+
+    @FeatureFlag boolean MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING = false;
+
+    default boolean getMeasurementEnableFlexibleContributionFiltering() {
+        return MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING;
+    }
+
     /**
      * Default value for if events will be registered as a source of attribution in addition to
      * being reported.

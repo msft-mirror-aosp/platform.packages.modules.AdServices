@@ -134,6 +134,7 @@ public class FetchCustomAudienceImpl {
     private final long mFledgeAuctionServerAdRenderIdMaxLength;
     private final long mDefaultRetryDurationSeconds;
     private final long mMaxRetryDurationSeconds;
+    private final boolean mEnforceNotification;
 
     // TODO(b/289123035): Make these locally scoped, passed down by the orchestrator function.
     @NonNull private AdTechIdentifier mBuyer;
@@ -254,6 +255,8 @@ public class FetchCustomAudienceImpl {
                                 adDataConversionStrategy,
                                 mFledgeCustomAudienceMaxAdsSizeB,
                                 mFledgeCustomAudienceMaxNumAds));
+
+        mEnforceNotification = !flags.getConsentNotificationDebugMode();
     }
 
     /** Adds a user to a fetched custom audience. */
@@ -333,6 +336,7 @@ public class FetchCustomAudienceImpl {
                                                         mDisableFledgeEnrollmentCheck,
                                                         mEnforceForegroundStatus,
                                                         true,
+                                                        mEnforceNotification,
                                                         mCallingAppUid,
                                                         API_NAME,
                                                         FLEDGE_API_FETCH_CUSTOM_AUDIENCE,

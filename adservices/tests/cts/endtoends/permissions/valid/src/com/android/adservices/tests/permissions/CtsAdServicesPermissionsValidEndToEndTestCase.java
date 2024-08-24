@@ -17,6 +17,7 @@
 package com.android.adservices.tests.permissions;
 
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED;
@@ -42,5 +43,6 @@ import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 @SetFlagEnabled(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK)
 @SetFlagEnabled(KEY_ENABLE_ENROLLMENT_TEST_SEED)
 @SetIntegerFlag(name = KEY_SDK_REQUEST_PERMITS_PER_SECOND, value = 1000)
+@EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
 @SetPpapiAppAllowList
 public abstract class CtsAdServicesPermissionsValidEndToEndTestCase extends AdServicesCtsTestCase {}

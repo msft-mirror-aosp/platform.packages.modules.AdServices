@@ -33,7 +33,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.android.adservices.shared.SharedMockitoTestCase;
-import com.android.adservices.shared.common.flags.ModuleSharedFlags;
 import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 
 import org.junit.Before;
@@ -49,7 +48,6 @@ public final class JobSchedulingLoggerTest extends SharedMockitoTestCase {
     private static final int RESULT_CODE = SCHEDULING_RESULT_CODE_SUCCESSFUL;
 
     @Mock private StatsdJobServiceLogger mMockStatsdLogger;
-    @Mock private ModuleSharedFlags mMockFlags;
 
     private JobSchedulingLogger mSpyJobSchedulingLogger;
 

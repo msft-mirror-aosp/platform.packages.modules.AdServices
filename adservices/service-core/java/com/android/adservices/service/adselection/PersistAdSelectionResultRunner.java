@@ -224,6 +224,7 @@ public class PersistAdSelectionResultRunner {
                                             inputParams.getCallerPackageName(),
                                             false,
                                             true,
+                                            !mFlags.getConsentNotificationDebugMode(),
                                             mCallerUid,
                                             apiName,
                                             Throttler.ApiKey.FLEDGE_API_PERSIST_AD_SELECTION_RESULT,

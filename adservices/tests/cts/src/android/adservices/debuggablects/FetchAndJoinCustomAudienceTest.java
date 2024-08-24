@@ -22,6 +22,7 @@ import static android.adservices.customaudience.CustomAudienceFixture.VALID_ACTI
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_EXPIRATION_TIME;
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS;
 
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NAME_SIZE_B;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B;
@@ -39,6 +40,7 @@ import android.adservices.utils.ScenarioDispatcher;
 import android.adservices.utils.ScenarioDispatcherFactory;
 import android.util.Log;
 
+import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 
@@ -49,6 +51,7 @@ import org.junit.Test;
 import java.util.concurrent.ExecutionException;
 
 @SetFlagEnabled(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED)
+@EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
 public class FetchAndJoinCustomAudienceTest extends FledgeDebuggableScenarioTest {
 
     /**

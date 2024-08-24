@@ -69,6 +69,7 @@ import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
 import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.FutureCallback;
@@ -118,11 +119,11 @@ public class GetAdSelectionDataRunner {
     @NonNull protected final AdSelectionIdGenerator mAdSelectionIdGenerator;
     @NonNull private final BuyerInputGenerator mBuyerInputGenerator;
     @NonNull private final AuctionServerDataCompressor mDataCompressor;
-    @NonNull private final AuctionServerPayloadFormatter mPayloadFormatter;
     @NonNull private final AuctionServerDebugReporting mAuctionServerDebugReporting;
     @NonNull private final DevContext mDevContext;
     @NonNull private final Clock mClock;
     private final int mPayloadFormatterVersion;
+    private final ImmutableList<Integer> mPayloadBucketSizes;
 
     @NonNull private final CoordinatorOriginUriValidator mCoordinatorOriginUriValidator;
     @NonNull private final AdsRelevanceExecutionLogger mAdsRelevanceExecutionLogger;
@@ -231,10 +232,7 @@ public class GetAdSelectionDataRunner {
                         appInstallAdFilterer,
                         compressedBuyerInputCreatorFactory);
         mPayloadFormatterVersion = mFlags.getFledgeAuctionServerPayloadFormatVersion();
-        mPayloadFormatter =
-                AuctionServerPayloadFormatterFactory.createPayloadFormatter(
-                        mPayloadFormatterVersion,
-                        mFlags.getFledgeAuctionServerPayloadBucketSizes());
+        mPayloadBucketSizes = mFlags.getFledgeAuctionServerPayloadBucketSizes();
         mAuctionServerDebugReporting = auctionServerDebugReporting;
         mAdsRelevanceExecutionLogger = adsRelevanceExecutionLogger;
         mAdServicesLogger = adServicesLogger;
@@ -340,10 +338,7 @@ public class GetAdSelectionDataRunner {
                         appInstallAdFilterer,
                         compressedBuyerInputCreatorFactory);
         mPayloadFormatterVersion = mFlags.getFledgeAuctionServerPayloadFormatVersion();
-        mPayloadFormatter =
-                AuctionServerPayloadFormatterFactory.createPayloadFormatter(
-                        mPayloadFormatterVersion,
-                        mFlags.getFledgeAuctionServerPayloadBucketSizes());
+        mPayloadBucketSizes = mFlags.getFledgeAuctionServerPayloadBucketSizes();
         mAuctionServerDebugReporting = auctionServerDebugReporting;
         mAdsRelevanceExecutionLogger = adsRelevanceExecutionLogger;
         mAdServicesLogger = adServicesLogger;
@@ -390,6 +385,7 @@ public class GetAdSelectionDataRunner {
                                             inputParams.getCallerPackageName(),
                                             /*enforceForeground:*/ false,
                                             /*enforceConsent:*/ true,
+                                            !mFlags.getConsentNotificationDebugMode(),
                                             mCallerUid,
                                             apiName,
                                             Throttler.ApiKey.FLEDGE_API_GET_AD_SELECTION_DATA,
@@ -505,7 +501,8 @@ public class GetAdSelectionDataRunner {
                         auctionServerPayloadInfoBuilder3 ->
                                 createPayload(
                                         auctionServerPayloadInfoBuilder3.build(),
-                                        apiCalledStatsBuilder),
+                                        apiCalledStatsBuilder,
+                                        sellerConfiguration),
                         mLightweightExecutorService)
                 .transformAsync(
                         formatted -> {
@@ -571,7 +568,8 @@ public class GetAdSelectionDataRunner {
 
     private AuctionServerPayloadFormattedData createPayload(
             AuctionServerPayloadInfo auctionServerPayloadInfo,
-            GetAdSelectionDataApiCalledStats.Builder apiCalledStatsBuilder) {
+            GetAdSelectionDataApiCalledStats.Builder apiCalledStatsBuilder,
+            @Nullable SellerConfiguration sellerConfiguration) {
         int traceCookie = Tracing.beginAsyncSection(Tracing.CREATE_GET_AD_SELECTION_DATA_PAYLOAD);
 
         // Sets number of buyers
@@ -588,7 +586,7 @@ public class GetAdSelectionDataRunner {
                         auctionServerPayloadInfo.getConsentedDebugConfigurationOptional());
         sLogger.v("ProtectedAuctionInput composed");
         AuctionServerPayloadFormattedData formattedData =
-                applyPayloadFormatter(protectedAudienceInput);
+                applyPayloadFormatter(protectedAudienceInput, sellerConfiguration);
 
         Tracing.endAsyncSection(Tracing.CREATE_GET_AD_SELECTION_DATA_PAYLOAD, traceCookie);
         return formattedData;
@@ -662,12 +660,17 @@ public class GetAdSelectionDataRunner {
     }
 
     private AuctionServerPayloadFormattedData applyPayloadFormatter(
-            ProtectedAuctionInput protectedAudienceInput) {
+            ProtectedAuctionInput protectedAudienceInput,
+            @Nullable SellerConfiguration sellerConfiguration) {
         int version = mFlags.getFledgeAuctionServerCompressionAlgorithmVersion();
         sLogger.v("Applying formatter V" + version + " on protected audience input bytes");
         AuctionServerPayloadUnformattedData unformattedData =
                 AuctionServerPayloadUnformattedData.create(protectedAudienceInput.toByteArray());
-        return mPayloadFormatter.apply(unformattedData, version);
+
+        AuctionServerPayloadFormatter payloadFormatter =
+                AuctionServerPayloadFormatterFactory.createPayloadFormatter(
+                        mPayloadFormatterVersion, mPayloadBucketSizes, sellerConfiguration);
+        return payloadFormatter.apply(unformattedData, version);
     }
 
     private void notifySuccessToCaller(
@@ -680,7 +683,8 @@ public class GetAdSelectionDataRunner {
         int resultCode = STATUS_SUCCESS;
 
         try {
-            if (mPayloadFormatterVersion == AuctionServerPayloadFormatterExcessiveMaxSize.VERSION) {
+            if (mPayloadFormatterVersion == AuctionServerPayloadFormatterExcessiveMaxSize.VERSION
+                    || mPayloadFormatterVersion == AuctionServerPayloadFormatterExactSize.VERSION) {
                 sLogger.d("Creating response with AssetFileDescriptor");
                 AssetFileDescriptor assetFileDescriptor;
                 try {

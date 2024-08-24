@@ -17,6 +17,7 @@
 package com.android.adservices;
 
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_ADID_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
@@ -39,5 +40,6 @@ import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 @SetFlagDisabled(KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH)
 @SetFlagDisabled(KEY_FLEDGE_SELECT_ADS_KILL_SWITCH)
 @SetFlagDisabled(KEY_MEASUREMENT_KILL_SWITCH)
+@EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
 @SetIntegerFlag(name = KEY_SDK_REQUEST_PERMITS_PER_SECOND, value = 1000)
 public abstract class AdServicesEndToEndTestCase extends AdServicesCtsTestCase {}

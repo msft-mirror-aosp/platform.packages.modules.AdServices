@@ -435,7 +435,8 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
         mPayloadFormatter =
                 AuctionServerPayloadFormatterFactory.createPayloadFormatter(
                         AuctionServerPayloadFormatterV0.VERSION,
-                        mFakeFlags.getFledgeAuctionServerPayloadBucketSizes());
+                        mFakeFlags.getFledgeAuctionServerPayloadBucketSizes(),
+                        /* sellerConfiguration= */ null);
         mDataCompressor = new AuctionServerDataCompressorGzip();
 
         mOverallTimeout = FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS;
@@ -1384,6 +1385,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         eq(CALLER_PACKAGE_NAME),
                         eq(false),
                         eq(true),
+                        eq(true),
                         eq(CALLER_UID),
                         eq(AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT),
                         eq(Throttler.ApiKey.FLEDGE_API_PERSIST_AD_SELECTION_RESULT),
@@ -1407,6 +1409,86 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
         verifyZeroInteractions(mCustomAudienceDaoMock);
         verifyZeroInteractions(mObliviousHttpEncryptorMock);
         verifyZeroInteractions(mAdSelectionEntryDaoSpy);
+    }
+
+    @Test
+    public void testRunner_revokedUserConsent_returnsEmptyResult_UXNotificationEnforcementDisabled()
+            throws InterruptedException {
+        Flags flagsWithUXConsentEnforcementDisabled =
+                new PersistAdSelectionResultRunnerTestFlags() {
+                    @Override
+                    public boolean getConsentNotificationDebugMode() {
+                        return true;
+                    }
+                };
+
+        mocker.mockGetFlags(flagsWithUXConsentEnforcementDisabled);
+
+        doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
+                .when(mAdSelectionServiceFilterMock)
+                .filterRequest(
+                        eq(SELLER),
+                        eq(CALLER_PACKAGE_NAME),
+                        eq(false),
+                        eq(true),
+                        eq(false),
+                        eq(CALLER_UID),
+                        eq(AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT),
+                        eq(Throttler.ApiKey.FLEDGE_API_PERSIST_AD_SELECTION_RESULT),
+                        eq(DevContext.createForDevOptionsDisabled()));
+
+        PersistAdSelectionResultInput inputParams =
+                new PersistAdSelectionResultInput.Builder()
+                        .setSeller(SELLER)
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionResult(CIPHER_TEXT_BYTES)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+
+        PersistAdSelectionResultRunner persistAdSelectionResultRunner =
+                new PersistAdSelectionResultRunner(
+                        mObliviousHttpEncryptorMock,
+                        mAdSelectionEntryDaoSpy,
+                        mCustomAudienceDaoMock,
+                        mAdSelectionServiceFilterMock,
+                        mBackgroundExecutorService,
+                        mLightweightExecutorService,
+                        mScheduledExecutor,
+                        CALLER_UID,
+                        DevContext.createForDevOptionsDisabled(),
+                        mOverallTimeout,
+                        mForceContinueOnAbsentOwner,
+                        mReportingLimits,
+                        mAdCounterHistogramUpdaterSpy,
+                        mAuctionResultValidator,
+                        flagsWithUXConsentEnforcementDisabled,
+                        mAdServicesLoggerSpy,
+                        mAdsRelevanceExecutionLogger,
+                        mKAnonSignJoinFactoryMock);
+
+        PersistAdSelectionResultTestCallback callback =
+                invokePersistAdSelectionResult(persistAdSelectionResultRunner, inputParams);
+
+        Assert.assertTrue(callback.mIsSuccess);
+        Assert.assertNotNull(callback.mPersistAdSelectionResultResponse);
+        Assert.assertEquals(
+                AD_SELECTION_ID, callback.mPersistAdSelectionResultResponse.getAdSelectionId());
+        Assert.assertEquals(Uri.EMPTY, callback.mPersistAdSelectionResultResponse.getAdRenderUri());
+        verifyZeroInteractions(mCustomAudienceDaoMock);
+        verifyZeroInteractions(mObliviousHttpEncryptorMock);
+        verifyZeroInteractions(mAdSelectionEntryDaoSpy);
+
+        verify(mAdSelectionServiceFilterMock)
+                .filterRequest(
+                        eq(SELLER),
+                        eq(CALLER_PACKAGE_NAME),
+                        eq(false),
+                        eq(true),
+                        eq(false),
+                        eq(CALLER_UID),
+                        eq(AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT),
+                        eq(Throttler.ApiKey.FLEDGE_API_PERSIST_AD_SELECTION_RESULT),
+                        eq(DevContext.createForDevOptionsDisabled()));
     }
 
     @Test

@@ -137,6 +137,62 @@ public class UpdateAdCounterHistogramWorkerTest {
     }
 
     @Test
+    public void testWorkerUpdatesHistogramAndNotifiesSuccessWithUXNotificationEnforcementDisabled()
+            throws InterruptedException {
+        CountDownLatch callbackLatch = new CountDownLatch(1);
+        UpdateAdCounterHistogramTestCallback callback =
+                new UpdateAdCounterHistogramTestCallback(callbackLatch);
+
+        Flags flagsWithUXNotificationEnforcementDisabled =
+                new FlagsOverridingAdFiltering(true) {
+                    @Override
+                    public boolean getConsentNotificationDebugMode() {
+                        return true;
+                    }
+                };
+
+        UpdateAdCounterHistogramWorker updateAdCounterHistogramWorker =
+                new UpdateAdCounterHistogramWorker(
+                        mHistogramUpdaterMock,
+                        DIRECT_EXECUTOR,
+                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
+                        mAdServicesLoggerMock,
+                        flagsWithUXNotificationEnforcementDisabled,
+                        mServiceFilterMock,
+                        mConsentManagerMock,
+                        CALLER_UID,
+                        DevContext.createForDevOptionsDisabled());
+
+        updateAdCounterHistogramWorker.updateAdCounterHistogram(mInputParams, callback);
+
+        assertThat(callbackLatch.await(CALLBACK_WAIT_MS, TimeUnit.MILLISECONDS)).isTrue();
+        assertThat(callback.mIsSuccess).isTrue();
+
+        verify(mHistogramUpdaterMock)
+                .updateNonWinHistogram(
+                        eq(AD_SELECTION_ID),
+                        eq(TEST_PACKAGE_NAME),
+                        eq(FrequencyCapFilters.AD_EVENT_TYPE_CLICK),
+                        eq(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI));
+
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(LOGGING_API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_SUCCESS), anyInt());
+
+        verify(mServiceFilterMock)
+                .filterRequest(
+                        any(),
+                        any(),
+                        anyBoolean(),
+                        anyBoolean(),
+                        eq(false),
+                        anyInt(),
+                        anyInt(),
+                        any(),
+                        any());
+    }
+
+    @Test
     public void testWorkerValidatesInvalidAdEventTypeAndNotifiesFailure() throws Exception {
         Parcel sourceParcel = Parcel.obtain();
         sourceParcel.writeLong(AD_SELECTION_ID);
@@ -209,7 +265,15 @@ public class UpdateAdCounterHistogramWorkerTest {
         doThrow(new FilterException(new FledgeAuthorizationFilter.CallerMismatchException()))
                 .when(mServiceFilterMock)
                 .filterRequest(
-                        any(), any(), anyBoolean(), anyBoolean(), anyInt(), anyInt(), any(), any());
+                        any(),
+                        any(),
+                        anyBoolean(),
+                        anyBoolean(),
+                        anyBoolean(),
+                        anyInt(),
+                        anyInt(),
+                        any(),
+                        any());
 
         CountDownLatch callbackLatch = new CountDownLatch(1);
         UpdateAdCounterHistogramTestCallback callback =

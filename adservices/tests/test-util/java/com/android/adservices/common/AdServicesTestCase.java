@@ -24,8 +24,6 @@ import org.junit.Rule;
 /** Superclass for all other "base classes" on {@code AdServices} projects. */
 abstract class AdServicesTestCase extends DeviceSideTestCase {
 
-    private static final String TAG = AdServicesTestCase.class.getSimpleName();
-
     @Rule(order = 1)
     public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
             new AdServicesDeviceSupportedRule();

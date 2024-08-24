@@ -16,6 +16,7 @@
 
 package android.adservices.rootcts;
 
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE;
 import static com.android.adservices.spe.AdServicesJobInfo.SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB;
@@ -36,6 +37,7 @@ import android.adservices.utils.ScenarioDispatcherFactory;
 import android.adservices.utils.Scenarios;
 import android.net.Uri;
 
+import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 import com.android.compatibility.common.util.ShellUtils;
@@ -51,6 +53,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 @SetFlagEnabled(KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED)
+@EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
 @SetIntegerFlag(
         name = KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE,
         value = 30)

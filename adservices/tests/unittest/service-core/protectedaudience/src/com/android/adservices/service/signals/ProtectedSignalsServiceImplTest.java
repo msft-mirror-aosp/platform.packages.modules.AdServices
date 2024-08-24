@@ -137,6 +137,7 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
                         eq(false),
                         eq(true),
                         eq(false),
+                        eq(true),
                         eq(UID),
                         eq(API_NAME),
                         eq(PROTECTED_SIGNAL_API_UPDATE_SIGNALS),
@@ -178,6 +179,84 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
                         eq(PACKAGE),
                         eq(false),
                         eq(true),
+                        eq(false),
+                        eq(true),
+                        eq(UID),
+                        eq(API_NAME),
+                        eq(PROTECTED_SIGNAL_API_UPDATE_SIGNALS),
+                        eq(mDevContext));
+        verify(mConsentManagerMock).isFledgeConsentRevokedForAppAfterSettingFledgeUse(eq(PACKAGE));
+        verify(mUpdateSignalsOrchestratorMock)
+                .orchestrateUpdate(eq(URI), eq(ADTECH), eq(PACKAGE), eq(mDevContext), any(), any());
+        verify(mUpdateSignalsCallbackMock).onSuccess();
+        verifyUpdateSignalsApiUsageLog(AdServicesStatusUtils.STATUS_SUCCESS, PACKAGE);
+        verify(
+                () -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)),
+                times(1));
+        verify(mAdServicesLoggerMock).logUpdateSignalsApiCalledStats(mStatsCaptor.capture());
+        assertEquals(
+                JSON_PROCESSING_STATUS_SUCCESS, mStatsCaptor.getValue().getJsonProcessingStatus());
+        // Shouldn't be logged if status is success
+        assertEquals("", mStatsCaptor.getValue().getAdTechId());
+        assertEquals(0, mStatsCaptor.getValue().getPackageUid());
+    }
+
+    @SuppressWarnings("FutureReturnValueIgnored")
+    @Test
+    public void testUpdateSignalsSuccessWithUXNotificationNotEnforced() throws Exception {
+        Flags flagsWithUXNotificationEnforcementDisabled =
+                new ProtectedSignalsServiceImplTestFlags() {
+                    @Override
+                    public boolean getConsentNotificationDebugMode() {
+                        return true;
+                    }
+                };
+
+        when(mProtectedSignalsServiceFilterMock.filterRequestAndExtractIdentifier(
+                        eq(URI),
+                        eq(PACKAGE),
+                        eq(false),
+                        eq(true),
+                        eq(false),
+                        eq(false),
+                        eq(UID),
+                        eq(API_NAME),
+                        eq(PROTECTED_SIGNAL_API_UPDATE_SIGNALS),
+                        eq(mDevContext)))
+                .thenReturn(ADTECH);
+
+        ProtectedSignalsServiceImpl protectedSignalsService =
+                new ProtectedSignalsServiceImpl(
+                        mContext,
+                        mUpdateSignalsOrchestratorMock,
+                        mFledgeAuthorizationFilterMock,
+                        mConsentManagerMock,
+                        mDevContextFilterMock,
+                        DIRECT_EXECUTOR,
+                        mAdServicesLoggerMock,
+                        flagsWithUXNotificationEnforcementDisabled,
+                        mCallingAppUidSupplierMock,
+                        mProtectedSignalsServiceFilterMock,
+                        mEnrollmentDaoMock,
+                        mUpdateSignalsProcessReportedLoggerMock);
+
+        protectedSignalsService.updateSignals(mInput, mUpdateSignalsCallbackMock);
+
+        verify(mFledgeAuthorizationFilterMock)
+                .assertAppDeclaredPermission(
+                        eq(mContext),
+                        eq(PACKAGE),
+                        eq(API_NAME),
+                        eq(AdServicesPermissions.ACCESS_ADSERVICES_PROTECTED_SIGNALS));
+        verify(mCallingAppUidSupplierMock).getCallingAppUid();
+        verify(mDevContextFilterMock).createDevContext();
+        verify(mProtectedSignalsServiceFilterMock)
+                .filterRequestAndExtractIdentifier(
+                        eq(URI),
+                        eq(PACKAGE),
+                        eq(false),
+                        eq(true),
+                        eq(false),
                         eq(false),
                         eq(UID),
                         eq(API_NAME),
@@ -264,6 +343,7 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
                         eq(false),
                         eq(true),
                         eq(false),
+                        eq(true),
                         eq(UID),
                         eq(API_NAME),
                         eq(PROTECTED_SIGNAL_API_UPDATE_SIGNALS),

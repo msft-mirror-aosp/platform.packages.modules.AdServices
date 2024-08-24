@@ -407,6 +407,7 @@ public final class AdSelectionFailureE2ETest extends AdServicesExtendedMockitoTe
                         CALLER_PACKAGE_NAME,
                         true,
                         true,
+                        true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                         Throttler.ApiKey.FLEDGE_API_SELECT_ADS,

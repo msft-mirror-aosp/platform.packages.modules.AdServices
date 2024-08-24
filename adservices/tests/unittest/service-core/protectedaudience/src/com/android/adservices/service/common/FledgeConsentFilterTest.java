@@ -48,6 +48,11 @@ public class FledgeConsentFilterTest extends AdServicesExtendedMockitoTestCase {
 
     private FledgeConsentFilter mFledgeConsentFilter;
 
+    private static final boolean ENFORCE_NOTIFICATION_ENABLED = true;
+    private static final boolean ENFORCE_CONSENT_ENABLED = true;
+    private static final boolean ENFORCE_NOTIFICATION_DISABLED = false;
+    private static final boolean ENFORCE_CONSENT_DISABLED = false;
+
     @Before
     public void setup() {
         mFledgeConsentFilter = new FledgeConsentFilter(mConsentManagerMock, mAdServicesLoggerMock);
@@ -112,5 +117,136 @@ public class FledgeConsentFilterTest extends AdServicesExtendedMockitoTestCase {
                         eq(CommonFixture.TEST_PACKAGE_NAME),
                         eq(AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED),
                         anyInt());
+    }
+
+    @Test
+    public void testAssertEnrollmentShouldBeScheduled_enforceConsentFalse_doesNotThrowOrLogError() {
+        enableUXNotification();
+
+        stubAllAPIsDisabledToTrue();
+
+        mFledgeConsentFilter.assertEnrollmentShouldBeScheduled(
+                ENFORCE_CONSENT_DISABLED,
+                ENFORCE_NOTIFICATION_ENABLED,
+                CommonFixture.TEST_PACKAGE_NAME,
+                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS);
+
+        verifyNoMoreInteractions(mAdServicesLoggerMock);
+    }
+
+    @Test
+    public void
+            testAssertEnrollmentShouldBeScheduled_enforceNotificationFalse_doesNotThrowOrLogError() {
+        disableUXNotification();
+
+        stubAllAPIsDisabledToFalse();
+
+        mFledgeConsentFilter.assertEnrollmentShouldBeScheduled(
+                ENFORCE_CONSENT_ENABLED,
+                ENFORCE_NOTIFICATION_DISABLED,
+                CommonFixture.TEST_PACKAGE_NAME,
+                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS);
+
+        verifyNoMoreInteractions(mAdServicesLoggerMock);
+    }
+
+    @Test
+    public void
+            testAssertEnrollmentShouldBeScheduled_enforceConsentFalse_doesNotThrowOrLogErrorEvenWhenApisDisabled() {
+        enableUXNotification();
+
+        stubAllAPIsDisabledToTrue();
+
+        mFledgeConsentFilter.assertEnrollmentShouldBeScheduled(
+                ENFORCE_CONSENT_DISABLED,
+                ENFORCE_NOTIFICATION_ENABLED,
+                CommonFixture.TEST_PACKAGE_NAME,
+                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS);
+
+        verifyNoMoreInteractions(mAdServicesLoggerMock);
+    }
+
+    @Test
+    public void
+            testAssertEnrollmentShouldBeScheduled_enforceNotificationFalse_doesNotThrowOrLogErrorEvenWhenNotificationNotShown() {
+        disableUXNotification();
+
+        stubAllAPIsDisabledToFalse();
+
+        mFledgeConsentFilter.assertEnrollmentShouldBeScheduled(
+                ENFORCE_CONSENT_ENABLED,
+                ENFORCE_NOTIFICATION_DISABLED,
+                CommonFixture.TEST_PACKAGE_NAME,
+                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS);
+
+        verifyNoMoreInteractions(mAdServicesLoggerMock);
+    }
+
+    @Test
+    public void
+            testAssertEnrollmentShouldBeScheduled_noNotificationsDisplayed_throwsAndLogsError() {
+        disableUXNotification();
+        assertThrows(
+                ConsentManager.RevokedConsentException.class,
+                () ->
+                        mFledgeConsentFilter.assertEnrollmentShouldBeScheduled(
+                                ENFORCE_CONSENT_ENABLED,
+                                ENFORCE_NOTIFICATION_ENABLED,
+                                CommonFixture.TEST_PACKAGE_NAME,
+                                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS));
+
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(CommonFixture.TEST_PACKAGE_NAME),
+                        eq(
+                                AdServicesStatusUtils
+                                        .STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET),
+                        anyInt());
+    }
+
+    @Test
+    public void testAssertEnrollmentShouldBeScheduled_allAPIsDisabled_throwsAndLogsError() {
+        enableUXNotification();
+
+        stubAllAPIsDisabledToTrue();
+
+        assertThrows(
+                ConsentManager.RevokedConsentException.class,
+                () ->
+                        mFledgeConsentFilter.assertEnrollmentShouldBeScheduled(
+                                ENFORCE_CONSENT_ENABLED,
+                                ENFORCE_NOTIFICATION_ENABLED,
+                                CommonFixture.TEST_PACKAGE_NAME,
+                                AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS));
+
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(CommonFixture.TEST_PACKAGE_NAME),
+                        eq(AdServicesStatusUtils.STATUS_CONSENT_REVOKED_ALL_APIS),
+                        anyInt());
+    }
+
+    private void enableUXNotification() {
+        when(mConsentManagerMock.wasNotificationDisplayed()).thenReturn(true);
+        when(mConsentManagerMock.wasGaUxNotificationDisplayed()).thenReturn(true);
+        when(mConsentManagerMock.wasU18NotificationDisplayed()).thenReturn(true);
+        when(mConsentManagerMock.wasPasNotificationDisplayed()).thenReturn(true);
+    }
+
+    private void disableUXNotification() {
+        when(mConsentManagerMock.wasNotificationDisplayed()).thenReturn(false);
+        when(mConsentManagerMock.wasGaUxNotificationDisplayed()).thenReturn(false);
+        when(mConsentManagerMock.wasU18NotificationDisplayed()).thenReturn(false);
+        when(mConsentManagerMock.wasPasNotificationDisplayed()).thenReturn(false);
+    }
+
+    private void stubAllAPIsDisabledToFalse() {
+        when(mConsentManagerMock.areAllApisDisabled()).thenReturn(false);
+    }
+
+    private void stubAllAPIsDisabledToTrue() {
+        when(mConsentManagerMock.areAllApisDisabled()).thenReturn(true);
     }
 }

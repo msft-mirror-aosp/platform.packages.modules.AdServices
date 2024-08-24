@@ -45,7 +45,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 import com.android.adservices.shared.SharedExtendedMockitoTestCase;
-import com.android.adservices.shared.common.flags.ModuleSharedFlags;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.util.Clock;
 
@@ -72,7 +71,6 @@ public final class JobServiceLoggerTest extends SharedExtendedMockitoTestCase {
                     .build();
     private JobServiceLogger mLogger;
 
-    @Mock private ModuleSharedFlags mMockFlags;
     @Mock private StatsdJobServiceLogger mMockStatsdLogger;
     @Mock private AdServicesErrorLogger mMockErrorLogger;
 

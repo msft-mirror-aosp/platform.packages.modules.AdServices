@@ -230,6 +230,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                         CALLER_PACKAGE_NAME,
                         true,
                         true,
+                        true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
                         Throttler.ApiKey.FLEDGE_API_SELECT_ADS,
@@ -299,6 +300,74 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
         verify(mConsentedDebugConfigurationGenerator).getConsentedDebugConfiguration();
         verify(mEgressConfigurationGenerator)
                 .isUnlimitedEgressEnabledForAuction(CALLER_PACKAGE_NAME, CALLER_UID);
+    }
+
+    @Test
+    public void testRunner_getAdSelectionData_returnsSuccessWithUXNotificationEnforcementDisabled()
+            throws Exception {
+        Flags flagsWithoutUxNotificationEnforcement =
+                new GetAdSelectionDataRunnerTestFlags() {
+                    @Override
+                    public boolean getConsentNotificationDebugMode() {
+                        return true;
+                    }
+                };
+
+        mocker.mockGetFlags(flagsWithoutUxNotificationEnforcement);
+        doReturn(FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))
+                .when(mObliviousHttpEncryptorMock)
+                .encryptBytes(any(), anyLong(), anyLong(), any(), any());
+        mockGetAdSelectionDataRunnerWithFledgeAuctionServerExecutionLogger(
+                MultiCloudTestStrategyFactory.getDisabledTestStrategy(mObliviousHttpEncryptorMock));
+
+        createAndPersistDBCustomAudiencesWithAdRenderId();
+        GetAdSelectionDataInput inputParams =
+                new GetAdSelectionDataInput.Builder()
+                        .setSeller(SELLER)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+
+        GetAdSelectionDataRunner getAdSelectionDataRunner =
+                initRunner(flagsWithoutUxNotificationEnforcement, mAdsRelevanceExecutionLogger);
+
+        GetAdSelectionDataTestCallback callback =
+                invokeGetAdSelectionData(getAdSelectionDataRunner, inputParams);
+
+        Assert.assertTrue(
+                "Call failed with response " + callback.mFledgeErrorResponse, callback.mIsSuccess);
+        Assert.assertNotNull(callback.mGetAdSelectionDataResponse);
+        Assert.assertNotNull(callback.mGetAdSelectionDataResponse.getAdSelectionData());
+        Assert.assertArrayEquals(
+                CIPHER_TEXT_BYTES, callback.mGetAdSelectionDataResponse.getAdSelectionData());
+        Assert.assertTrue(callback.mGetAdSelectionDataResponse.getAdSelectionData().length > 0);
+        verify(mObliviousHttpEncryptorMock, times(1))
+                .encryptBytes(any(), anyLong(), anyLong(), any(), any());
+        verify(mAdSelectionEntryDaoSpy, times(1))
+                .persistAdSelectionInitialization(
+                        callback.mGetAdSelectionDataResponse.getAdSelectionId(),
+                        AdSelectionInitialization.builder()
+                                .setSeller(SELLER)
+                                .setCallerPackageName(CALLER_PACKAGE_NAME)
+                                .setCreationInstant(AD_SELECTION_INITIALIZATION_INSTANT)
+                                .build());
+        verify(mFrequencyCapAdFiltererSpy).filterCustomAudiences(any());
+
+        verifyGetAdSelectionDataApiUsageLog(STATUS_SUCCESS);
+        verify(mAuctionServerDebugReporting).isEnabled();
+        verify(mConsentedDebugConfigurationGenerator).getConsentedDebugConfiguration();
+        verify(mEgressConfigurationGenerator)
+                .isUnlimitedEgressEnabledForAuction(CALLER_PACKAGE_NAME, CALLER_UID);
+        verify(mAdSelectionServiceFilterMock)
+                .filterRequest(
+                        SELLER,
+                        CALLER_PACKAGE_NAME,
+                        false,
+                        true,
+                        false,
+                        CALLER_UID,
+                        AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA,
+                        Throttler.ApiKey.FLEDGE_API_GET_AD_SELECTION_DATA,
+                        DevContext.createForDevOptionsDisabled());
     }
 
     @Test
@@ -1077,6 +1146,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                         eq(CALLER_PACKAGE_NAME),
                         eq(false),
                         eq(true),
+                        eq(true),
                         eq(CALLER_UID),
                         eq(AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA),
                         eq(Throttler.ApiKey.FLEDGE_API_GET_AD_SELECTION_DATA),
@@ -1114,6 +1184,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                         eq(SELLER),
                         eq(CALLER_PACKAGE_NAME),
                         eq(false),
+                        eq(true),
                         eq(true),
                         eq(CALLER_UID),
                         eq(AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA),

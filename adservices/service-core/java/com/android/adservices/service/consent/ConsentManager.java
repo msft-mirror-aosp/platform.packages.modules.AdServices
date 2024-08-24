@@ -462,13 +462,11 @@ public class ConsentManager {
         }
     }
 
-    private boolean areAllApisDisabled() {
-        if (getConsent(AdServicesApiType.TOPICS).isGiven()
-                || getConsent(AdServicesApiType.MEASUREMENTS).isGiven()
-                || getConsent(AdServicesApiType.FLEDGE).isGiven()) {
-            return false;
-        }
-        return true;
+    /** Returns true if all APIs are disabled. */
+    public boolean areAllApisDisabled() {
+        return !getConsent(AdServicesApiType.TOPICS).isGiven()
+                && !getConsent(AdServicesApiType.MEASUREMENTS).isGiven()
+                && !getConsent(AdServicesApiType.FLEDGE).isGiven();
     }
 
     /**

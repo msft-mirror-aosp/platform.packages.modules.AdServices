@@ -16,6 +16,7 @@
 
 package android.adservices.rootcts;
 
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED;
@@ -26,12 +27,14 @@ import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.utils.ScenarioDispatcher;
 import android.adservices.utils.ScenarioDispatcherFactory;
 
+import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 
 import org.junit.Before;
 import org.junit.Test;
 
+@EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
 public class AdBeaconRegistrationTest extends FledgeRootScenarioTest {
     private BackgroundJobHelper mBackgroundJobHelper;
 

@@ -361,6 +361,7 @@ public final class AdSelectionFromOutcomesE2ETest extends AdServicesExtendedMock
                         CALLER_PACKAGE_NAME,
                         false,
                         true,
+                        true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                         Throttler.ApiKey.FLEDGE_API_SELECT_ADS,
