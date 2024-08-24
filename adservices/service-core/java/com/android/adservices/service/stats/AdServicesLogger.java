@@ -31,6 +31,7 @@ import com.android.adservices.service.stats.pas.EncodingJobRunStats;
 import com.android.adservices.service.stats.pas.EncodingJsExecutionStats;
 import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedStats;
 
 /** Interface for Adservices logger. */
 public interface AdServicesLogger {
@@ -243,9 +244,6 @@ public interface AdServicesLogger {
     /** Logs stats for EncodingFetchStats */
     void logEncodingJsFetchStats(EncodingFetchStats stats);
 
-    /** Logs stats for UpdateSignalsApiCalledStats */
-    void logUpdateSignalsApiCalledStats(UpdateSignalsApiCalledStats stats);
-
     /** Logs stats for ServerAuctionBackgroundKeyFetchScheduled */
     void logServerAuctionBackgroundKeyFetchScheduledStats(
             ServerAuctionBackgroundKeyFetchScheduledStats stats);
@@ -259,6 +257,9 @@ public interface AdServicesLogger {
     /** Logs stats for EncodingJobRunStats */
     void logEncodingJobRunStats(EncodingJobRunStats stats);
 
+    /** Logs stats for UpdateSignalsProcessReportedStats. */
+    void logUpdateSignalsProcessReportedStats(UpdateSignalsProcessReportedStats stats);
+
     /** Logs stats for PersistAdSelectionResultCalledStats */
     void logPersistAdSelectionResultCalledStats(PersistAdSelectionResultCalledStats stats);
 
@@ -267,4 +268,7 @@ public interface AdServicesLogger {
 
     /** Logs stats for ReportImpressionApiCalledStats */
     void logReportImpressionApiCalledStats(ReportImpressionApiCalledStats stats);
+
+    /** Logs stats for UpdateSignalsApiCalledStats */
+    void logUpdateSignalsApiCalledStats(UpdateSignalsApiCalledStats stats);
 }

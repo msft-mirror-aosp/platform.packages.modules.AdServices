@@ -18,8 +18,6 @@ package com.android.adservices.service.stats;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.junit.Assert.assertThrows;
-
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -31,36 +29,32 @@ public class DestinationRegisteredBeaconsReportedStatsTest {
     @Test
     public void testGetInteractionKeySizeRangeTypeList_SuccessCorrectInput() {
         // Tests getInteractionKeySizeRangeTypeList return correct list.
-        Set<String> testKeySet = new HashSet<>(Arrays.asList(
-                "abcde", "ab", null, "abcdeabcde", "abcdeabcdeabcde"));
+        Set<String> testKeySet =
+                new HashSet<>(Arrays.asList("abcde", "ab", null, "abcdeabcde", "abcdeabcdeabcde"));
         long maxInteractionKeySize = 10;
         List<DestinationRegisteredBeaconsReportedStats.InteractionKeySizeRangeType>
                 testInteractionKeySizeRangeTypeList =
-                DestinationRegisteredBeaconsReportedStats
-                        .getInteractionKeySizeRangeTypeList(testKeySet, maxInteractionKeySize);
+                        DestinationRegisteredBeaconsReportedStats
+                                .getInteractionKeySizeRangeTypeList(
+                                        testKeySet, maxInteractionKeySize);
         // The maximum interaction key size is 10, so:
         // "abcde" should be "SMALLER_THAN_MAXIMUM_KEY_SIZE"
         // "ab" should be "MUCH_SMALLER_THAN_MAXIMUM_KEY_SIZE"
         // null should be "UNSET_TYPE"
         // "abcdeabcde" should be "EQUAL_TO_MAXIMUM_KEY_SIZE"
         // "abcdeabcdeabcde" should be "LARGER_THAN_MAXIMUM_KEY_SIZE"
-        assertThat(testInteractionKeySizeRangeTypeList).containsExactly(
-                DestinationRegisteredBeaconsReportedStats
-                        .InteractionKeySizeRangeType
-                        .SMALLER_THAN_MAXIMUM_KEY_SIZE,
-                DestinationRegisteredBeaconsReportedStats
-                        .InteractionKeySizeRangeType
-                        .MUCH_SMALLER_THAN_MAXIMUM_KEY_SIZE,
-                DestinationRegisteredBeaconsReportedStats
-                        .InteractionKeySizeRangeType
-                        .UNSET_TYPE,
-                DestinationRegisteredBeaconsReportedStats
-                        .InteractionKeySizeRangeType
-                        .EQUAL_TO_MAXIMUM_KEY_SIZE,
-                DestinationRegisteredBeaconsReportedStats
-                        .InteractionKeySizeRangeType
-                        .LARGER_THAN_MAXIMUM_KEY_SIZE
-        );
+        assertThat(testInteractionKeySizeRangeTypeList)
+                .containsExactly(
+                        DestinationRegisteredBeaconsReportedStats.InteractionKeySizeRangeType
+                                .SMALLER_THAN_MAXIMUM_KEY_SIZE,
+                        DestinationRegisteredBeaconsReportedStats.InteractionKeySizeRangeType
+                                .MUCH_SMALLER_THAN_MAXIMUM_KEY_SIZE,
+                        DestinationRegisteredBeaconsReportedStats.InteractionKeySizeRangeType
+                                .UNSET_TYPE,
+                        DestinationRegisteredBeaconsReportedStats.InteractionKeySizeRangeType
+                                .EQUAL_TO_MAXIMUM_KEY_SIZE,
+                        DestinationRegisteredBeaconsReportedStats.InteractionKeySizeRangeType
+                                .LARGER_THAN_MAXIMUM_KEY_SIZE);
     }
 
     @Test
@@ -68,8 +62,9 @@ public class DestinationRegisteredBeaconsReportedStatsTest {
         // Tests getInteractionKeySizeRangeTypeList returns empty list by given null key set.
         long maxInteractionKeySize = 5;
         assertThat(
-                DestinationRegisteredBeaconsReportedStats.getInteractionKeySizeRangeTypeList(
-                        null, maxInteractionKeySize)).isEmpty();
+                        DestinationRegisteredBeaconsReportedStats
+                                .getInteractionKeySizeRangeTypeList(null, maxInteractionKeySize))
+                .isEmpty();
     }
 
     @Test
@@ -79,7 +74,9 @@ public class DestinationRegisteredBeaconsReportedStatsTest {
         Set<String> testKeySet = new HashSet<>(Arrays.asList("abcde", "ab"));
         long maxInteractionKeySize = -1;
         assertThat(
-                DestinationRegisteredBeaconsReportedStats.getInteractionKeySizeRangeTypeList(
-                        testKeySet, maxInteractionKeySize)).isEmpty();
+                        DestinationRegisteredBeaconsReportedStats
+                                .getInteractionKeySizeRangeTypeList(
+                                        testKeySet, maxInteractionKeySize))
+                .isEmpty();
     }
 }

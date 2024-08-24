@@ -33,10 +33,10 @@ import com.android.adservices.tests.ui.libs.UiConstants;
 import org.junit.Test;
 
 public final class AdServicesEnrollmentTest extends AdServicesCtsTestCase
-        implements CtsEnrollmentFlags {
+        implements EnrollmentTestFlags {
     /**
      * Verify that for GA, ROW devices with non zeroed-out AdId, the GA ROW notification is
-     * displayed.
+     * displayed. Note that it extends AdServicesCtsTestCase, it is not part of Cts test suite.
      */
     @Test
     public void testEnableAdServices() throws Exception {
