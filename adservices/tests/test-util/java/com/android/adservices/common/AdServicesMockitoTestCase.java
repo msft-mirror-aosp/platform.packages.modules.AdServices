@@ -68,7 +68,6 @@ public abstract class AdServicesMockitoTestCase extends AdServicesUnitTestCase {
     protected void assertValidTestCaseFixtures() throws Exception {
         super.assertValidTestCaseFixtures();
 
-        AdServicesExtendedMockitoTestCase.checkProhibitedMockitoFields(
-                AdServicesMockitoTestCase.class, this);
+        checkProhibitedMockitoFields(AdServicesMockitoTestCase.class, this);
     }
 }
