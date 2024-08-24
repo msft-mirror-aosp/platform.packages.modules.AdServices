@@ -56,60 +56,62 @@ import java.util.function.Supplier;
  *
  * <p>Tests in assets/msmt_interop_tests/ directory were copied from Chromium
  * src/content/test/data/attribution_reporting/interop GitHub commit
- * be33435ba1f0ac5c6a1b9bd62f7cafb141e10b26.
+ * 3967cb751a9f347b39ae835be608bf3dff21f4b7.
  */
 @RunWith(Parameterized.class)
 public class E2EInteropMockTest extends E2EAbstractMockTest {
     static {
-        sTestsToSkip = ImmutableSet.of(
-                "aggregatable_budget.json",
-                "aggregatable_contributions_creation.json",
-                "aggregatable_contributions_with_filtering_ids.json",
-                "aggregatable_debug_reports.json",
-                "aggregatable_debug_reports_limits.json",
-                "aggregatable_debug_reports_with_filtering_ids.json",
-                "aggregatable_dedup_key.json",
-                "aggregatable_large_key.json",
-                "aggregatable_report_source_registration_time.json",
-                "aggregatable_report_trigger_context_id.json",
-                "aggregatable_report_window.json",
-                "aggregatable_reports_fake_source.json",
-                "aggregatable_storage_limit.json",
-                "aggregatable_values_filtering.json",
-                "aggregatable_with_event_disabled.json",
-                "aggregation_coordinator_origin.json",
-                "basic_aggregatable.json",
-                "channel_capacity.json",
-                "destination_limit.json",
-                "destination_rate_limit.json",
-                "destination_validation.json",
-                "event_level_epsilon.json",
-                "event_level_report_time.json",
-                "event_level_storage_limit.json",
-                "event_level_trigger_filter_data.json",
-                "event_report_window.json",
-                "fenced.json",
-                "filter_data_validation.json",
-                "header_presence.json",
-                "lookback_window_precision.json",
-                "max_aggregatable_reports_per_source.json",
-                "max_trigger_state_cardinality.json",
-                "multiple_destinations.json",
-                "null_aggregatable_report.json",
-                "os_debug_reports.json",
-                "preferred_platform.json",
-                "rate_limit_max_attributions.json",
-                "rate_limit_max_distinct_reporting_origins_per_source_reporting_site.json",
-                "rate_limit_max_reporting_origins_per_source_reporting_site.json",
-                "redirect_source_trigger.json",
-                "source_destination_limit_fifo.json",
-                "source_destination_limit_fifo_rate_limits.json",
-                "source_registration_limits.json",
-                "source_storage_limit_expiry.json",
-                "success_debug_aggregatable.json",
-                "top_level_filter_data.json",
-                "unsuitable_response_url.json",
-                "verbose_debug_report_multiple_data.json");
+        sTestsToSkip =
+                ImmutableSet.of(
+                        "aggregatable_budget.json",
+                        "aggregatable_contributions_creation.json",
+                        "aggregatable_contributions_with_filtering_ids.json",
+                        "aggregatable_debug_reports.json",
+                        "aggregatable_debug_reports_limits.json",
+                        "aggregatable_debug_reports_with_filtering_ids.json",
+                        "aggregatable_dedup_key.json",
+                        "aggregatable_large_key.json",
+                        "aggregatable_report_source_registration_time.json",
+                        "aggregatable_report_trigger_context_id.json",
+                        "aggregatable_report_window.json",
+                        "aggregatable_reports_fake_source.json",
+                        "aggregatable_storage_limit.json",
+                        "aggregatable_values_filtering.json",
+                        "aggregatable_with_event_disabled.json",
+                        "aggregation_coordinator_origin.json",
+                        "basic_aggregatable.json",
+                        "channel_capacity.json",
+                        "clamp_aggregatable_report_window.json",
+                        "destination_limit.json",
+                        "destination_rate_limit.json",
+                        "destination_validation.json",
+                        "event_level_epsilon.json",
+                        "event_level_report_time.json",
+                        "event_level_storage_limit.json",
+                        "event_level_trigger_filter_data.json",
+                        "event_report_window.json",
+                        "fenced.json",
+                        "filter_data_validation.json",
+                        "header_presence.json",
+                        "lookback_window_precision.json",
+                        "max_aggregatable_reports_per_source.json",
+                        "max_trigger_state_cardinality.json",
+                        "multiple_destinations.json",
+                        "null_aggregatable_report.json",
+                        "os_debug_reports.json",
+                        "preferred_platform.json",
+                        "rate_limit_max_attributions.json",
+                        "rate_limit_max_distinct_reporting_origins_per_source_reporting_site.json",
+                        "rate_limit_max_reporting_origins_per_source_reporting_site.json",
+                        "redirect_source_trigger.json",
+                        "source_destination_limit_fifo.json",
+                        "source_destination_limit_fifo_rate_limits.json",
+                        "source_registration_limits.json",
+                        "source_storage_limit_expiry.json",
+                        "success_debug_aggregatable.json",
+                        "top_level_filter_data.json",
+                        "unsuitable_response_url.json",
+                        "verbose_debug_report_multiple_data.json");
     }
 
     // The following keys are to JSON fields that should be interpreted in milliseconds.
@@ -139,47 +141,53 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                     AsyncFetchStatus.EntityStatus.HEADER_ERROR,
                     AsyncFetchStatus.EntityStatus.PARSING_ERROR,
                     AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
-    private static final Map<String, String> sApiConfigPhFlags = Map.ofEntries(
-            entry(
-                    "rate_limit_max_attributions",
-                    UNUSED),
-            entry(
-                    "aggregation_coordinator_origins",
-                    UNUSED),
-            entry(
-                    "rate_limit_max_attribution_reporting_origins",
-                    FlagsConstants.KEY_MEASUREMENT_MAX_DISTINCT_REPORTING_ORIGINS_IN_ATTRIBUTION),
-            entry(
-                    "rate_limit_max_source_registration_reporting_origins",
-                    FlagsConstants.KEY_MEASUREMENT_MAX_DISTINCT_REPORTING_ORIGINS_IN_SOURCE),
-            entry(
-                    "max_destinations_per_source_site_reporting_site",
-                    FlagsConstants.KEY_MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE),
-            entry(
-                    "max_event_info_gain",
-                    FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT),
-            entry(
-                    "rate_limit_max_reporting_origins_per_source_reporting_site",
-                    FlagsConstants.KEY_MEASUREMENT_MAX_REPORTING_ORIGINS_PER_SOURCE_REPORTING_SITE_PER_WINDOW),
-            entry(
-                    "max_destinations_per_rate_limit_window",
-                    FlagsConstants.KEY_MEASUREMENT_MAX_DESTINATIONS_PER_PUBLISHER_PER_RATE_LIMIT_WINDOW),
-            entry(
-                    "max_destinations_per_reporting_site_per_day",
-                    FlagsConstants.KEY_MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT),
-            entry("max_destinations_per_rate_limit_window_reporting_site",
-                    FlagsConstants.KEY_MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW),
-            entry("max_sources_per_origin",
-                    FlagsConstants.KEY_MEASUREMENT_MAX_SOURCES_PER_PUBLISHER),
-            entry(
-                    "max_event_level_reports_per_destination",
-                    FlagsConstants.KEY_MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION),
-            entry(
-                    "max_aggregatable_reports_per_destination",
-                    FlagsConstants.KEY_MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_DESTINATION),
-            entry(
-                    "max_trigger_state_cardinality",
-                    FlagsConstants.KEY_MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION));
+    private static final Map<String, String> sApiConfigPhFlags =
+            Map.ofEntries(
+                    entry("rate_limit_max_attributions", UNUSED),
+                    entry("aggregation_coordinator_origins", UNUSED),
+                    entry(
+                            "rate_limit_max_attribution_reporting_origins",
+                            FlagsConstants
+                                    .KEY_MEASUREMENT_MAX_DISTINCT_REPORTING_ORIGINS_IN_ATTRIBUTION),
+                    entry(
+                            "rate_limit_max_source_registration_reporting_origins",
+                            FlagsConstants
+                                    .KEY_MEASUREMENT_MAX_DISTINCT_REPORTING_ORIGINS_IN_SOURCE),
+                    entry(
+                            "max_destinations_per_source_site_reporting_site",
+                            FlagsConstants
+                                    .KEY_MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE),
+                    entry(
+                            "max_event_info_gain",
+                            FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT),
+                    entry(
+                            "rate_limit_max_reporting_origins_per_source_reporting_site",
+                            FlagsConstants
+                                    .KEY_MEASUREMENT_MAX_REPORTING_ORIGINS_PER_SOURCE_REPORTING_SITE_PER_WINDOW),
+                    entry(
+                            "max_destinations_per_rate_limit_window",
+                            FlagsConstants
+                                    .KEY_MEASUREMENT_MAX_DESTINATIONS_PER_PUBLISHER_PER_RATE_LIMIT_WINDOW),
+                    entry(
+                            "max_destinations_per_reporting_site_per_day",
+                            FlagsConstants.KEY_MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT),
+                    entry(
+                            "max_destinations_per_rate_limit_window_reporting_site",
+                            FlagsConstants
+                                    .KEY_MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW),
+                    entry(
+                            "max_sources_per_origin",
+                            FlagsConstants.KEY_MEASUREMENT_MAX_SOURCES_PER_PUBLISHER),
+                    entry(
+                            "max_event_level_reports_per_destination",
+                            FlagsConstants.KEY_MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION),
+                    entry(
+                            "max_aggregatable_reports_per_destination",
+                            FlagsConstants.KEY_MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_DESTINATION),
+                    entry(
+                            "max_trigger_state_cardinality",
+                            FlagsConstants
+                                    .KEY_MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION));
 
     private static String preprocessor(String json) {
         return json.replaceAll("\\.test(?=[\"\\/])", ".com")
@@ -190,10 +198,6 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
 
     private static final Map<String, String> sPhFlagsForInterop =
             Map.ofEntries(
-                    entry(
-                            // TODO (b/295382171): remove this after the flag is removed.
-                            FlagsConstants.KEY_MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE,
-                            "true"),
                     entry(
                             FlagsConstants
                                     .KEY_MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED,
@@ -245,15 +249,14 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                 expectedOutput,
                 paramsProvider,
                 name,
-                (
-                        (Supplier<Map<String, String>>) () -> {
-                            for (String key : sPhFlagsForInterop.keySet()) {
-                                phFlagsMap.putIfAbsent(key, sPhFlagsForInterop.get(key));
-                            }
-                            return phFlagsMap;
-                        }
-                ).get()
-        );
+                ((Supplier<Map<String, String>>)
+                                () -> {
+                                    for (String key : sPhFlagsForInterop.keySet()) {
+                                        phFlagsMap.putIfAbsent(key, sPhFlagsForInterop.get(key));
+                                    }
+                                    return phFlagsMap;
+                                })
+                        .get());
         mAttributionHelper =
                 TestObjectProvider.getAttributionJobHandler(
                         mDatastoreManager, mFlags, mErrorLogger);
@@ -325,7 +328,8 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
             String uri,
             boolean arDebugPermission,
             RegistrationRequest request,
-            Map<String, List<String>> headers) throws JSONException {
+            Map<String, List<String>> headers)
+            throws JSONException {
         String enrollmentId =
                 Enrollment.getValidEnrollmentId(
                                 Uri.parse(uri),
@@ -350,8 +354,8 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                         .build();
 
         AsyncFetchStatus status = new AsyncFetchStatus();
-        Optional<Source> maybeSource = mAsyncSourceFetcher
-                .parseSource(asyncRegistration, enrollmentId, headers, status);
+        Optional<Source> maybeSource =
+                mAsyncSourceFetcher.parseSource(asyncRegistration, enrollmentId, headers, status);
 
         if (maybeSource.isPresent()) {
             Assert.assertTrue(
@@ -374,7 +378,8 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
             String uri,
             boolean arDebugPermission,
             RegistrationRequest request,
-            Map<String, List<String>> headers) throws JSONException {
+            Map<String, List<String>> headers)
+            throws JSONException {
         String enrollmentId =
                 Enrollment.getValidEnrollmentId(
                                 Uri.parse(uri),
@@ -396,8 +401,8 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                         .build();
 
         AsyncFetchStatus status = new AsyncFetchStatus();
-        Optional<Trigger> maybeTrigger = mAsyncTriggerFetcher
-                .parseTrigger(asyncRegistration, enrollmentId, headers, status);
+        Optional<Trigger> maybeTrigger =
+                mAsyncTriggerFetcher.parseTrigger(asyncRegistration, enrollmentId, headers, status);
 
         if (maybeTrigger.isPresent()) {
             Assert.assertTrue(

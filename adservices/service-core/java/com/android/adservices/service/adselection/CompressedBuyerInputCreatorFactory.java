@@ -62,19 +62,30 @@ public class CompressedBuyerInputCreatorFactory {
     /** Returns an implementation for the {@link CompressedBuyerInputCreator} */
     @NonNull
     public CompressedBuyerInputCreator createCompressedBuyerInputCreator(
-            int maxPayloadSizeBytes, GetAdSelectionDataApiCalledStats.Builder builder) {
-        if (mSellerConfigurationEnabled
-                && mCompressedBuyerInputCreatorVersion
-                        == CompressedBuyerInputCreatorSellerPayloadMaxImpl.VERSION) {
-            sLogger.v("Returning CompressedBuyerInputCreatorSellerMaxImpl");
-            return new CompressedBuyerInputCreatorSellerPayloadMaxImpl(
-                    mCompressedBuyerInputCreatorHelper,
-                    mDataCompressor,
-                    mMaxNumRecompressions,
-                    maxPayloadSizeBytes,
-                    mPasMaxPerBuyerSizeBytes,
-                    mClock,
-                    builder);
+            PayloadOptimizationContext payloadOptimizationContext,
+            GetAdSelectionDataApiCalledStats.Builder builder) {
+        if (mSellerConfigurationEnabled) {
+            if (mCompressedBuyerInputCreatorVersion
+                    == CompressedBuyerInputCreatorSellerPayloadMaxImpl.VERSION) {
+                sLogger.v("Returning CompressedBuyerInputCreatorSellerPayloadMaxImpl");
+                int maxPayloadSizeBytes = payloadOptimizationContext.getMaxBuyerInputSizeBytes();
+                return new CompressedBuyerInputCreatorSellerPayloadMaxImpl(
+                        mCompressedBuyerInputCreatorHelper,
+                        mDataCompressor,
+                        mMaxNumRecompressions,
+                        maxPayloadSizeBytes,
+                        mPasMaxPerBuyerSizeBytes,
+                        mClock,
+                        builder);
+            } else if (mCompressedBuyerInputCreatorVersion
+                    == CompressedBuyerInputCreatorPerBuyerLimitsGreedyImpl.VERSION) {
+                sLogger.v("Returning CompressedBuyerInputCreatorPerBuyerLimitsImpl");
+                return new CompressedBuyerInputCreatorPerBuyerLimitsGreedyImpl(
+                        mCompressedBuyerInputCreatorHelper,
+                        mDataCompressor,
+                        payloadOptimizationContext,
+                        mPasMaxPerBuyerSizeBytes);
+            }
         }
         // Update this whn more implementations are available
         sLogger.v("Returning CompressedBuyerInputCreatorNoOptimizations");

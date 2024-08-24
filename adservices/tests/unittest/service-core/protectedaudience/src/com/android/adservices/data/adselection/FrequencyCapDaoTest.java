@@ -37,27 +37,27 @@ import android.database.sqlite.SQLiteConstraintException;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.HistogramEvent;
 import com.android.adservices.service.adselection.HistogramEventFixture;
 import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
-import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoSession;
 
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.HashSet;
 
-public class FrequencyCapDaoTest {
+@RequiresSdkLevelAtLeastS()
+@MockStatic(PackageManagerCompatUtils.class)
+public final class FrequencyCapDaoTest extends AdServicesExtendedMockitoTestCase {
     private static final int ABSOLUTE_MAX_TOTAL_EVENT_COUNT = 10;
     private static final int LOWER_MAX_TOTAL_EVENT_COUNT = 9;
     private static final int ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT = 8;
@@ -68,32 +68,14 @@ public class FrequencyCapDaoTest {
 
     private FrequencyCapDao mFrequencyCapDao;
 
-    private MockitoSession mStaticMockSession;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Before
     public void setup() {
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .mockStatic(PackageManagerCompatUtils.class)
-                        .initMocks(this)
-                        .startMocking();
-
         mFrequencyCapDao =
                 Room.inMemoryDatabaseBuilder(
                                 ApplicationProvider.getApplicationContext(),
                                 SharedStorageDatabase.class)
                         .build()
                         .frequencyCapDao();
-    }
-
-    @After
-    public void teardown() {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
     }
 
     @Test

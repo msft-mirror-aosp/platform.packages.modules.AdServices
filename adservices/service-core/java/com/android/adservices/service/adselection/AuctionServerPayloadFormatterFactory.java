@@ -16,7 +16,9 @@
 
 package com.android.adservices.service.adselection;
 
+import android.adservices.adselection.SellerConfiguration;
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -24,6 +26,8 @@ import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
 
 import com.google.common.collect.ImmutableList;
+
+import java.util.Objects;
 
 /** Factory for {@link AuctionServerPayloadFormatter} and {@link AuctionServerPayloadExtractor} */
 public class AuctionServerPayloadFormatterFactory {
@@ -35,13 +39,26 @@ public class AuctionServerPayloadFormatterFactory {
     /** Returns an implementation for the {@link AuctionServerPayloadFormatter} */
     @NonNull
     public static AuctionServerPayloadFormatter createPayloadFormatter(
-            int version, @NonNull ImmutableList<Integer> availableBucketSizes) {
+            int version,
+            @NonNull ImmutableList<Integer> availableBucketSizes,
+            @Nullable SellerConfiguration sellerConfiguration) {
         Preconditions.checkCollectionNotEmpty(availableBucketSizes, "available bucket sizes.");
 
         if (version == AuctionServerPayloadFormatterV0.VERSION) {
+            sLogger.v("Using AuctionServerPayloadFormatterV0 formatter");
             return new AuctionServerPayloadFormatterV0(availableBucketSizes);
         } else if (version == AuctionServerPayloadFormatterExcessiveMaxSize.VERSION) {
+            sLogger.v("Using AuctionServerPayloadFormatterExcessiveMaxSize formatter");
             return new AuctionServerPayloadFormatterExcessiveMaxSize();
+        } else if (version == AuctionServerPayloadFormatterExactSize.VERSION) {
+            if (Objects.nonNull(sellerConfiguration)) {
+                sLogger.v("Using AuctionServerPayloadFormatterExactSize formatter");
+                return new AuctionServerPayloadFormatterExactSize(
+                        sellerConfiguration.getMaximumPayloadSizeBytes());
+            } else {
+                sLogger.v("Using AuctionServerPayloadFormatterExcessiveMaxSize formatter");
+                return new AuctionServerPayloadFormatterExcessiveMaxSize();
+            }
         }
 
         String errMsg =
@@ -62,6 +79,9 @@ public class AuctionServerPayloadFormatterFactory {
             return new AuctionServerPayloadFormatterV0(ImmutableList.of());
         } else if (version == AuctionServerPayloadFormatterExcessiveMaxSize.VERSION) {
             return new AuctionServerPayloadFormatterExcessiveMaxSize();
+        } else if (version == AuctionServerPayloadFormatterExactSize.VERSION) {
+            // Extract data not need target size
+            return new AuctionServerPayloadFormatterExactSize(/* targetPayloadSizeBytes= */ 0);
         }
 
         String errMsg =

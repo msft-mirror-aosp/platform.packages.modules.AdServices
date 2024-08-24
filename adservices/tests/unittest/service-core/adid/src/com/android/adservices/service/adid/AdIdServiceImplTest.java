@@ -48,6 +48,7 @@ import android.adservices.adid.GetAdIdParam;
 import android.adservices.adid.GetAdIdResult;
 import android.adservices.adid.IGetAdIdCallback;
 import android.adservices.common.CallerMetadata;
+import android.adservices.common.CommonFixture;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -89,13 +90,12 @@ import java.util.concurrent.TimeUnit;
         throwable = Any.class,
         ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID)
 public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase {
-    private static final String TEST_APP_PACKAGE_NAME = "com.android.adservices.servicecoretest";
+    private static final String TEST_APP_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     private static final String INVALID_PACKAGE_NAME = "com.do_not_exists";
     private static final String SOME_SDK_NAME = "SomeSdkName";
     private static final int BINDER_CONNECTION_TIMEOUT_MS = 5_000;
     private static final int LOGGER_EVENT_TIMEOUT_MS = 5_000;
     private static final String SDK_PACKAGE_NAME = "test_package_name";
-    private static final String ADID_API_ALLOW_LIST = "com.android.adservices.servicecoretest";
     // See android.os.Process, that FIRST_SDK_SANDBOX_UID = 20000 and LAST_SDK_SANDBOX_UID = 29999.
     private static final int SANDBOX_UID = 25000;
 
@@ -142,7 +142,7 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
         mocker.mockGetFlags(mMockFlags);
         mocker.mockGetCallingUidOrThrow(); // expected calling by its test uid by default
 
-        mocker.mockAllCobaltLoggingFlags(mMockFlags, false);
+        mocker.mockAllCobaltLoggingFlags(false);
     }
 
     @Test

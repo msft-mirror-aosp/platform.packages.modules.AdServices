@@ -34,4 +34,20 @@ public class SignalSizeCalculator {
     public static int calculate(@NonNull DBProtectedSignal signal) {
         return signal.getKey().length + signal.getValue().length;
     }
+
+    /** Return the size of the largest raw protected signals per buyer in bytes. */
+    public static float maxSignalsSizeBytes(@NonNull List<DBProtectedSignal> signalList) {
+        return signalList.stream()
+                .map(SignalSizeCalculator::calculate)
+                .max(Float::compare)
+                .orElse(0);
+    }
+
+    /** Return the size of the smallest raw protected signals per buyer in bytes. */
+    public static float minSignalsSizeBytes(@NonNull List<DBProtectedSignal> signalList) {
+        return signalList.stream()
+                .map(SignalSizeCalculator::calculate)
+                .min(Float::compare)
+                .orElse(0);
+    }
 }

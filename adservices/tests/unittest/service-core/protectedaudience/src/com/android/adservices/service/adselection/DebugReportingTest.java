@@ -29,7 +29,6 @@ import android.os.Process;
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
@@ -51,7 +50,6 @@ public final class DebugReportingTest extends AdServicesMockitoTestCase {
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     private static final int CALLER_UID = Process.myUid();
     private static final long AD_ID_FETCHER_TIMEOUT_MS = 50;
-    @Mock private Flags mMockFlags;
     @Mock private AdServicesHttpsClient mHttpClientMock;
     @Mock private AdSelectionDebugReportDao mAdSelectionDebugReportDao;
     @Mock private AdIdFetcher mAdIdFetcher;
