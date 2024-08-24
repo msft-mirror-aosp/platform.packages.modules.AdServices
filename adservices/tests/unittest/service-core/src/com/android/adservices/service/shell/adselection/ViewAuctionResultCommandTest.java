@@ -16,24 +16,8 @@
 
 package com.android.adservices.service.shell.adselection;
 
-import static com.android.adservices.service.shell.adselection.AdSelectionEntryHelper.FIELD_AD_SELECTION_ID;
-import static com.android.adservices.service.shell.adselection.AdSelectionEntryHelper.FIELD_BIDDING_LOGIC_URI;
-import static com.android.adservices.service.shell.adselection.AdSelectionEntryHelper.FIELD_BUYER_CONTEXTUAL_SIGNALS;
-import static com.android.adservices.service.shell.adselection.AdSelectionEntryHelper.FIELD_BUYER_DECISION_LOGIC_JS;
-import static com.android.adservices.service.shell.adselection.AdSelectionEntryHelper.FIELD_BUYER_WIN_REPORTING_URI;
-import static com.android.adservices.service.shell.adselection.AdSelectionEntryHelper.FIELD_CREATION_TIMESTAMP;
-import static com.android.adservices.service.shell.adselection.AdSelectionEntryHelper.FIELD_CUSTOM_AUDIENCE_SIGNALS;
-import static com.android.adservices.service.shell.adselection.AdSelectionEntryHelper.FIELD_CUSTOM_AUDIENCE_SIGNALS_ACTIVATION_TIME;
-import static com.android.adservices.service.shell.adselection.AdSelectionEntryHelper.FIELD_CUSTOM_AUDIENCE_SIGNALS_BUYER;
-import static com.android.adservices.service.shell.adselection.AdSelectionEntryHelper.FIELD_CUSTOM_AUDIENCE_SIGNALS_EXPIRATION_TIME;
-import static com.android.adservices.service.shell.adselection.AdSelectionEntryHelper.FIELD_CUSTOM_AUDIENCE_SIGNALS_NAME;
-import static com.android.adservices.service.shell.adselection.AdSelectionEntryHelper.FIELD_CUSTOM_AUDIENCE_SIGNALS_OWNER;
-import static com.android.adservices.service.shell.adselection.AdSelectionEntryHelper.FIELD_CUSTOM_AUDIENCE_SIGNALS_USER_BIDDING_SIGNALS;
-import static com.android.adservices.service.shell.adselection.AdSelectionEntryHelper.FIELD_SELLER_CONTEXTUAL_SIGNALS;
-import static com.android.adservices.service.shell.adselection.AdSelectionEntryHelper.FIELD_SELLER_WIN_REPORTING_URI;
-import static com.android.adservices.service.shell.adselection.AdSelectionEntryHelper.FIELD_WINNING_AD_BID;
-import static com.android.adservices.service.shell.adselection.AdSelectionEntryHelper.FIELD_WINNING_AD_RENDER_URI;
-import static com.android.adservices.service.shell.adselection.AdSelectionShellCommandArgs.AD_SELECTION_ID;
+import static com.android.adservices.service.shell.adselection.AdSelectionShellCommandConstants.AD_SELECTION_ID;
+import static com.android.adservices.service.shell.adselection.AdSelectionShellCommandConstants.OUTPUT_PROTO_FIELD_NAME;
 import static com.android.adservices.service.shell.adselection.ViewAuctionResultCommand.CMD;
 import static com.android.adservices.service.shell.adselection.ViewAuctionResultCommand.HELP;
 import static com.android.adservices.service.shell.signals.SignalsShellCommandFactory.COMMAND_PREFIX;
@@ -43,13 +27,18 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.Mockito.when;
 
+import android.util.Base64;
+
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.DBAdSelectionEntry;
 import com.android.adservices.data.adselection.DBAdSelectionFixture;
 import com.android.adservices.data.adselection.ReportingDataFixture;
 import com.android.adservices.data.adselection.datahandlers.ReportingData;
+import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.AuctionResult;
 import com.android.adservices.service.shell.ShellCommandTestCase;
 import com.android.adservices.service.stats.ShellCommandStats;
+
+import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -92,7 +81,8 @@ public class ViewAuctionResultCommandTest extends ShellCommandTestCase<ViewAucti
     }
 
     @Test
-    public void testRun_withValidAdSelectionId_returnsSuccess() throws JSONException {
+    public void testRun_withValidAdSelectionId_returnsSuccess()
+            throws JSONException, InvalidProtocolBufferException {
         when(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ENTRY.getAdSelectionId()))
                 .thenReturn(true);
         when(mAdSelectionEntryDao.getAdSelectionEntityById(AD_SELECTION_ENTRY.getAdSelectionId()))
@@ -109,73 +99,35 @@ public class ViewAuctionResultCommandTest extends ShellCommandTestCase<ViewAucti
                         Long.toString(AD_SELECTION_ENTRY.getAdSelectionId()));
 
         expectSuccess(result, EXPECTED_COMMAND);
-        JSONObject jsonObject = new JSONObject(result.mOut);
-        assertThat(jsonObject.getString(FIELD_AD_SELECTION_ID))
-                .isEqualTo(Long.toString(AD_SELECTION_ENTRY.getAdSelectionId()));
-        assertThat(jsonObject.getString(FIELD_CREATION_TIMESTAMP))
-                .isEqualTo(AD_SELECTION_ENTRY.getCreationTimestamp().toString());
-        assertThat(jsonObject.getString(FIELD_WINNING_AD_BID))
-                .isEqualTo(Double.toString(AD_SELECTION_ENTRY.getWinningAdBid()));
-        assertThat(jsonObject.getString(FIELD_WINNING_AD_RENDER_URI))
+        AuctionResult auctionResult =
+                AuctionResult.parseFrom(
+                        Base64.decode(
+                                new JSONObject(result.mOut).getString(OUTPUT_PROTO_FIELD_NAME),
+                                Base64.DEFAULT));
+        assertThat(auctionResult.getAdRenderUrl())
                 .isEqualTo(AD_SELECTION_ENTRY.getWinningAdRenderUri().toString());
-        assertThat(
-                        jsonObject
-                                .getJSONObject(FIELD_CUSTOM_AUDIENCE_SIGNALS)
-                                .getString(FIELD_CUSTOM_AUDIENCE_SIGNALS_BUYER))
+        assertThat(auctionResult.getBid())
+                .isEqualTo(Float.parseFloat(Double.toString(AD_SELECTION_ENTRY.getWinningAdBid())));
+        assertThat(auctionResult.getIsChaff()).isFalse();
+        assertThat(auctionResult.getBuyer())
                 .isEqualTo(AD_SELECTION_ENTRY.getCustomAudienceSignals().getBuyer().toString());
-        assertThat(
-                        jsonObject
-                                .getJSONObject(FIELD_CUSTOM_AUDIENCE_SIGNALS)
-                                .getString(FIELD_CUSTOM_AUDIENCE_SIGNALS_OWNER))
+        assertThat(auctionResult.getCustomAudienceOwner())
                 .isEqualTo(AD_SELECTION_ENTRY.getCustomAudienceSignals().getOwner());
-        assertThat(
-                        jsonObject
-                                .getJSONObject(FIELD_CUSTOM_AUDIENCE_SIGNALS)
-                                .getString(FIELD_CUSTOM_AUDIENCE_SIGNALS_NAME))
+        assertThat(auctionResult.getCustomAudienceName())
                 .isEqualTo(AD_SELECTION_ENTRY.getCustomAudienceSignals().getName());
         assertThat(
-                        jsonObject
-                                .getJSONObject(FIELD_CUSTOM_AUDIENCE_SIGNALS)
-                                .getString(FIELD_CUSTOM_AUDIENCE_SIGNALS_ACTIVATION_TIME))
-                .isEqualTo(
-                        AD_SELECTION_ENTRY
-                                .getCustomAudienceSignals()
-                                .getActivationTime()
-                                .toString());
-        assertThat(
-                        jsonObject
-                                .getJSONObject(FIELD_CUSTOM_AUDIENCE_SIGNALS)
-                                .getString(FIELD_CUSTOM_AUDIENCE_SIGNALS_EXPIRATION_TIME))
-                .isEqualTo(
-                        AD_SELECTION_ENTRY
-                                .getCustomAudienceSignals()
-                                .getExpirationTime()
-                                .toString());
-        assertThat(
-                        jsonObject
-                                .getJSONObject(FIELD_CUSTOM_AUDIENCE_SIGNALS)
-                                .getString(FIELD_CUSTOM_AUDIENCE_SIGNALS_USER_BIDDING_SIGNALS))
-                .isEqualTo(
-                        AD_SELECTION_ENTRY
-                                .getCustomAudienceSignals()
-                                .getUserBiddingSignals()
-                                .toString());
-        assertThat(jsonObject.getString(FIELD_SELLER_CONTEXTUAL_SIGNALS))
-                .isEqualTo(AD_SELECTION_ENTRY.getSellerContextualSignals());
-        assertThat(jsonObject.getString(FIELD_BUYER_CONTEXTUAL_SIGNALS))
-                .isEqualTo(AD_SELECTION_ENTRY.getBuyerContextualSignals());
-        assertThat(jsonObject.getString(FIELD_BUYER_DECISION_LOGIC_JS))
-                .isEqualTo(AD_SELECTION_ENTRY.getBuyerDecisionLogicJs());
-        assertThat(jsonObject.getString(FIELD_BIDDING_LOGIC_URI))
-                .isEqualTo(AD_SELECTION_ENTRY.getBiddingLogicUri().toString());
-        assertThat(jsonObject.getString(FIELD_BUYER_WIN_REPORTING_URI))
-                .isEqualTo(ReportingDataFixture.BUYER_REPORTING_URI_1.toString());
-        assertThat(jsonObject.getString(FIELD_SELLER_WIN_REPORTING_URI))
+                        auctionResult
+                                .getWinReportingUrls()
+                                .getTopLevelSellerReportingUrls()
+                                .getReportingUrl())
                 .isEqualTo(ReportingDataFixture.SELLER_REPORTING_URI_1.toString());
+        assertThat(auctionResult.getWinReportingUrls().getBuyerReportingUrls().getReportingUrl())
+                .isEqualTo(ReportingDataFixture.BUYER_REPORTING_URI_1.toString());
     }
 
     @Test
-    public void testRun_withEmptyReportingUris_fieldNotPresent() throws JSONException {
+    public void testRun_withEmptyReportingUris_fieldNotPresent()
+            throws JSONException, InvalidProtocolBufferException {
         when(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ENTRY.getAdSelectionId()))
                 .thenReturn(true);
         when(mAdSelectionEntryDao.getAdSelectionEntityById(AD_SELECTION_ENTRY.getAdSelectionId()))
@@ -192,13 +144,24 @@ public class ViewAuctionResultCommandTest extends ShellCommandTestCase<ViewAucti
                         Long.toString(AD_SELECTION_ENTRY.getAdSelectionId()));
 
         expectSuccess(result, EXPECTED_COMMAND);
-        JSONObject jsonObject = new JSONObject(result.mOut);
-        assertThat(jsonObject.getString(FIELD_SELLER_WIN_REPORTING_URI)).isEqualTo("none");
-        assertThat(jsonObject.getString(FIELD_BUYER_WIN_REPORTING_URI)).isEqualTo("none");
+        AuctionResult auctionResult =
+                AuctionResult.parseFrom(
+                        Base64.decode(
+                                new JSONObject(result.mOut).getString(OUTPUT_PROTO_FIELD_NAME),
+                                Base64.DEFAULT));
+        assertThat(
+                        auctionResult
+                                .getWinReportingUrls()
+                                .getTopLevelSellerReportingUrls()
+                                .getReportingUrl())
+                .isEmpty();
+        assertThat(auctionResult.getWinReportingUrls().getBuyerReportingUrls().getReportingUrl())
+                .isEmpty();
     }
 
     @Test
-    public void testRun_withoutSellerReportingUri_fieldNotPresent() throws JSONException {
+    public void testRun_withoutSellerReportingUri_fieldNotPresent()
+            throws JSONException, InvalidProtocolBufferException {
         when(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ENTRY.getAdSelectionId()))
                 .thenReturn(true);
         when(mAdSelectionEntryDao.getAdSelectionEntityById(AD_SELECTION_ENTRY.getAdSelectionId()))
@@ -218,13 +181,24 @@ public class ViewAuctionResultCommandTest extends ShellCommandTestCase<ViewAucti
                         Long.toString(AD_SELECTION_ENTRY.getAdSelectionId()));
 
         expectSuccess(result, EXPECTED_COMMAND);
-        JSONObject jsonObject = new JSONObject(result.mOut);
-        assertThat(jsonObject.getString(FIELD_SELLER_WIN_REPORTING_URI)).isEqualTo("none");
-        assertThat(jsonObject.has(FIELD_BUYER_WIN_REPORTING_URI)).isTrue();
+        AuctionResult auctionResult =
+                AuctionResult.parseFrom(
+                        Base64.decode(
+                                new JSONObject(result.mOut).getString(OUTPUT_PROTO_FIELD_NAME),
+                                Base64.DEFAULT));
+        assertThat(
+                        auctionResult
+                                .getWinReportingUrls()
+                                .getTopLevelSellerReportingUrls()
+                                .getReportingUrl())
+                .isEmpty();
+        assertThat(auctionResult.getWinReportingUrls().getBuyerReportingUrls().getReportingUrl())
+                .isEqualTo(ReportingDataFixture.BUYER_REPORTING_URI_1.toString());
     }
 
     @Test
-    public void testRun_withoutBuyerReportingUri_fieldNotPresent() throws JSONException {
+    public void testRun_withoutBuyerReportingUri_fieldNotPresent()
+            throws JSONException, InvalidProtocolBufferException {
         when(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ENTRY.getAdSelectionId()))
                 .thenReturn(true);
         when(mAdSelectionEntryDao.getAdSelectionEntityById(AD_SELECTION_ENTRY.getAdSelectionId()))
@@ -245,8 +219,18 @@ public class ViewAuctionResultCommandTest extends ShellCommandTestCase<ViewAucti
                         Long.toString(AD_SELECTION_ENTRY.getAdSelectionId()));
 
         expectSuccess(result, EXPECTED_COMMAND);
-        JSONObject jsonObject = new JSONObject(result.mOut);
-        assertThat(jsonObject.has(FIELD_SELLER_WIN_REPORTING_URI)).isTrue();
-        assertThat(jsonObject.getString(FIELD_BUYER_WIN_REPORTING_URI)).isEqualTo("none");
+        AuctionResult auctionResult =
+                AuctionResult.parseFrom(
+                        Base64.decode(
+                                new JSONObject(result.mOut).getString(OUTPUT_PROTO_FIELD_NAME),
+                                Base64.DEFAULT));
+        assertThat(
+                        auctionResult
+                                .getWinReportingUrls()
+                                .getTopLevelSellerReportingUrls()
+                                .getReportingUrl())
+                .isEqualTo(ReportingDataFixture.SELLER_REPORTING_URI_1.toString());
+        assertThat(auctionResult.getWinReportingUrls().getBuyerReportingUrls().getReportingUrl())
+                .isEmpty();
     }
 }

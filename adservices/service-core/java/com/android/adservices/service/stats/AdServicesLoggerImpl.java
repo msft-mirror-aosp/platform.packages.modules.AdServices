@@ -34,6 +34,7 @@ import com.android.adservices.service.stats.pas.EncodingJobRunStats;
 import com.android.adservices.service.stats.pas.EncodingJsExecutionStats;
 import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedStats;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
@@ -394,11 +395,6 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     }
 
     @Override
-    public void logUpdateSignalsApiCalledStats(UpdateSignalsApiCalledStats stats) {
-        mStatsdAdServicesLogger.logUpdateSignalsApiCalledStats(stats);
-    }
-
-    @Override
     public void logEncodingJsExecutionStats(EncodingJsExecutionStats stats) {
         mStatsdAdServicesLogger.logEncodingJsExecutionStats(stats);
     }
@@ -406,6 +402,11 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     @Override
     public void logEncodingJobRunStats(EncodingJobRunStats stats) {
         mStatsdAdServicesLogger.logEncodingJobRunStats(stats);
+    }
+
+    @Override
+    public void logUpdateSignalsProcessReportedStats(UpdateSignalsProcessReportedStats stats) {
+        mStatsdAdServicesLogger.logUpdateSignalsProcessReportedStats(stats);
     }
 
     @Override
@@ -421,6 +422,11 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     @Override
     public void logReportImpressionApiCalledStats(ReportImpressionApiCalledStats stats) {
         mStatsdAdServicesLogger.logReportImpressionApiCalledStats(stats);
+    }
+
+    @Override
+    public void logUpdateSignalsApiCalledStats(UpdateSignalsApiCalledStats stats) {
+        mStatsdAdServicesLogger.logUpdateSignalsApiCalledStats(stats);
     }
 
     /** Logs api call error status using {@code CobaltLogger}. */

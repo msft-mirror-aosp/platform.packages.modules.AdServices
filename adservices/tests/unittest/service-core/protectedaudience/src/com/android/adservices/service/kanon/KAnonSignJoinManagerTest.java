@@ -22,18 +22,16 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.app.job.JobScheduler;
-import android.content.Context;
 
 import androidx.room.Room;
-import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.kanon.DBKAnonMessage;
 import com.android.adservices.data.kanon.KAnonDatabase;
 import com.android.adservices.data.kanon.KAnonMessageConstants;
@@ -41,37 +39,30 @@ import com.android.adservices.data.kanon.KAnonMessageDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.MockitoSession;
-import org.mockito.junit.MockitoJUnitRunner;
-import org.mockito.quality.Strictness;
 
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
 
-@RunWith(MockitoJUnitRunner.class)
-public class KAnonSignJoinManagerTest {
-    private final Context mContext = ApplicationProvider.getApplicationContext();
+@RequiresSdkLevelAtLeastS()
+public final class KAnonSignJoinManagerTest extends AdServicesExtendedMockitoTestCase {
     private KAnonSignJoinManager mKAnonSignJoinManager;
     private KAnonMessageManager mKAnonMessageManager;
     private KAnonMessageDao mKAnonMessageDao;
-    private Flags mFlags;
+    private Flags mFakeFlags;
     @Mock private Clock mockClock;
-    @Mock private Flags mockFlags;
     @Mock private KAnonCaller mockKanonCaller;
-    @Mock private Context mockContext;
     @Captor private ArgumentCaptor<List<KAnonMessageEntity>> kanonMessageEntityArgumentCaptor;
 
     @Captor
@@ -100,9 +91,6 @@ public class KAnonSignJoinManagerTest {
                     .setCreatedAt(FIXED_TIME)
                     .setStatus(KAnonMessageConstants.MessageStatus.JOINED);
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Before
     public void setup() {
         mKAnonMessageDao =
@@ -110,8 +98,8 @@ public class KAnonSignJoinManagerTest {
                         .build()
                         .kAnonMessageDao();
         when(mockClock.instant()).thenReturn(FIXED_TIME);
-        mFlags = new KanonSignJoinManagerTestFlags(100);
-        mKAnonMessageManager = new KAnonMessageManager(mKAnonMessageDao, mFlags, mockClock);
+        mFakeFlags = new KanonSignJoinManagerTestFlags(100);
+        mKAnonMessageManager = new KAnonMessageManager(mKAnonMessageDao, mFakeFlags, mockClock);
         mJobScheduler = mContext.getSystemService(JobScheduler.class);
         mKAnonSignJoinBackgroundJobServiceSpy = spy(new KAnonSignJoinBackgroundJobService());
     }
@@ -263,7 +251,7 @@ public class KAnonSignJoinManagerTest {
                         mContext,
                         mockKanonCaller,
                         mKAnonMessageManager,
-                        mFlags,
+                        mFakeFlags,
                         mockClock,
                         mockAdServicesLogger);
 
@@ -299,26 +287,20 @@ public class KAnonSignJoinManagerTest {
 
     @Test
     @Ignore("b/327172045")
+    @MockStatic(FlagsFactory.class)
     public void processNewMessage_noBackgroundJobRunning_schedulesBackgroundService() {
-        MockitoSession mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .mockStatic(FlagsFactory.class)
-                        .strictness(Strictness.LENIENT)
-                        .initMocks(this)
-                        .startMocking();
-        try {
-            doReturn(true).when(mockFlags).getFledgeKAnonBackgroundProcessEnabled();
-            doReturn(100000L).when(mockFlags).getFledgeKAnonBackgroundProcessTimePeriodInMs();
-            ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlags);
+        when(mMockFlags.getFledgeKAnonBackgroundProcessEnabled()).thenReturn(true);
+        when(mMockFlags.getFledgeKAnonBackgroundProcessTimePeriodInMs()).thenReturn(100000L);
+        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
-            mKAnonSignJoinManager =
-                    new KAnonSignJoinManager(
-                            mContext,
-                            mockKanonCaller,
-                            mKAnonMessageManager,
-                            mockFlags,
-                            mockClock,
-                            mockAdServicesLogger);
+        mKAnonSignJoinManager =
+                new KAnonSignJoinManager(
+                        mContext,
+                        mockKanonCaller,
+                        mKAnonMessageManager,
+                        mMockFlags,
+                        mockClock,
+                        mockAdServicesLogger);
             KAnonMessageEntity kAnonMessageEntity =
                     mKAnonMessageEntityBuilder
                             .setStatus(KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED)
@@ -329,9 +311,6 @@ public class KAnonSignJoinManagerTest {
 
             assertThat(mJobScheduler.getPendingJob(FLEDGE_KANON_SIGN_JOIN_BACKGROUND_JOB_ID))
                     .isNotNull();
-        } finally {
-            mStaticMockSession.finishMocking();
-        }
     }
 
     private static class KanonSignJoinManagerTestFlags implements Flags {

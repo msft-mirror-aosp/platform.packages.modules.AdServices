@@ -20,68 +20,50 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
-import static com.google.common.truth.Truth.assertThat;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
-import android.content.Context;
 import android.content.pm.ApplicationInfo;
 
 import androidx.room.Room;
-import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.mockito.MockitoSession;
 
 import java.util.Arrays;
 import java.util.List;
 
-public class AppInstallDaoTest {
+@RequiresSdkLevelAtLeastS()
+@SpyStatic(FlagsFactory.class)
+@MockStatic(PackageManagerCompatUtils.class)
+public final class AppInstallDaoTest extends AdServicesExtendedMockitoTestCase {
     public static AdTechIdentifier BUYER_1 = CommonFixture.VALID_BUYER_1;
     public static AdTechIdentifier BUYER_2 = CommonFixture.VALID_BUYER_2;
     public static String PACKAGE_1 = CommonFixture.TEST_PACKAGE_NAME_1;
     public static String PACKAGE_2 = CommonFixture.TEST_PACKAGE_NAME_2;
 
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
-
     private AppInstallDao mAppInstallDao;
-    private MockitoSession mStaticMockSession = null;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .mockStatic(PackageManagerCompatUtils.class)
-                        .initMocks(this)
-                        .startMocking();
         mAppInstallDao =
-                Room.inMemoryDatabaseBuilder(CONTEXT, SharedStorageDatabase.class)
+                Room.inMemoryDatabaseBuilder(mContext, SharedStorageDatabase.class)
                         .build()
                         .appInstallDao();
     }
 
     @After
     public void cleanup() {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
         mAppInstallDao.deleteByPackageName(PACKAGE_1);
         mAppInstallDao.deleteByPackageName(PACKAGE_2);
     }
@@ -91,14 +73,18 @@ public class AppInstallDaoTest {
         mAppInstallDao.setAdTechsForPackage(
                 PACKAGE_1, Arrays.asList(new DBAppInstallPermissions(BUYER_1, PACKAGE_1)));
 
-        assertTrue(mAppInstallDao.canBuyerFilterPackage(BUYER_1, PACKAGE_1));
+        assertWithMessage("canBuyerFilterPackage(%s, %s)", BUYER_1, PACKAGE_1)
+                .that(mAppInstallDao.canBuyerFilterPackage(BUYER_1, PACKAGE_1))
+                .isTrue();
     }
 
     @Test
     public void testSetThenDelete() {
         mAppInstallDao.setAdTechsForPackage(
                 PACKAGE_1, Arrays.asList(new DBAppInstallPermissions(BUYER_1, PACKAGE_1)));
-        assertEquals(1, mAppInstallDao.deleteByPackageName(PACKAGE_1));
+        assertWithMessage("deleteByPackageName(%s)", PACKAGE_1)
+                .that(1)
+                .isEqualTo(mAppInstallDao.deleteByPackageName(PACKAGE_1));
     }
 
     @Test
@@ -107,7 +93,9 @@ public class AppInstallDaoTest {
                 PACKAGE_1, Arrays.asList(new DBAppInstallPermissions(BUYER_1, PACKAGE_1)));
         mAppInstallDao.deleteByPackageName(PACKAGE_1);
 
-        assertFalse(mAppInstallDao.canBuyerFilterPackage(BUYER_1, PACKAGE_1));
+        assertWithMessage("canBuyerFilterPackage(%s, %s)", BUYER_1, PACKAGE_1)
+                .that(mAppInstallDao.canBuyerFilterPackage(BUYER_1, PACKAGE_1))
+                .isFalse();
     }
 
     @Test
@@ -118,8 +106,12 @@ public class AppInstallDaoTest {
                         new DBAppInstallPermissions(BUYER_1, PACKAGE_1),
                         new DBAppInstallPermissions(BUYER_2, PACKAGE_2)));
 
-        assertTrue(mAppInstallDao.canBuyerFilterPackage(BUYER_1, PACKAGE_1));
-        assertTrue(mAppInstallDao.canBuyerFilterPackage(BUYER_2, PACKAGE_2));
+        assertWithMessage("canBuyerFilterPackage(%s, %s)", BUYER_1, PACKAGE_1)
+                .that(mAppInstallDao.canBuyerFilterPackage(BUYER_1, PACKAGE_1))
+                .isTrue();
+        assertWithMessage("canBuyerFilterPackage(%s, %s)", BUYER_2, PACKAGE_2)
+                .that(mAppInstallDao.canBuyerFilterPackage(BUYER_2, PACKAGE_2))
+                .isTrue();
     }
 
     @Test
@@ -129,8 +121,12 @@ public class AppInstallDaoTest {
         mAppInstallDao.setAdTechsForPackage(
                 PACKAGE_2, Arrays.asList(new DBAppInstallPermissions(BUYER_2, PACKAGE_2)));
 
-        assertTrue(mAppInstallDao.canBuyerFilterPackage(BUYER_1, PACKAGE_1));
-        assertTrue(mAppInstallDao.canBuyerFilterPackage(BUYER_2, PACKAGE_2));
+        assertWithMessage("canBuyerFilterPackage(%s, %s)", BUYER_1, PACKAGE_1)
+                .that(mAppInstallDao.canBuyerFilterPackage(BUYER_1, PACKAGE_1))
+                .isTrue();
+        assertWithMessage("canBuyerFilterPackage(%s, %s)", BUYER_2, PACKAGE_2)
+                .that(mAppInstallDao.canBuyerFilterPackage(BUYER_2, PACKAGE_2))
+                .isTrue();
     }
 
     @Test
@@ -140,8 +136,12 @@ public class AppInstallDaoTest {
                 Arrays.asList(
                         new DBAppInstallPermissions(BUYER_1, PACKAGE_1),
                         new DBAppInstallPermissions(BUYER_2, PACKAGE_1)));
-        assertTrue(mAppInstallDao.canBuyerFilterPackage(BUYER_1, PACKAGE_1));
-        assertTrue(mAppInstallDao.canBuyerFilterPackage(BUYER_2, PACKAGE_1));
+        assertWithMessage("canBuyerFilterPackage(%s, %s)", BUYER_1, PACKAGE_1)
+                .that(mAppInstallDao.canBuyerFilterPackage(BUYER_1, PACKAGE_1))
+                .isTrue();
+        assertWithMessage("canBuyerFilterPackage(%s, %s))", BUYER_2, PACKAGE_1)
+                .that(mAppInstallDao.canBuyerFilterPackage(BUYER_2, PACKAGE_1))
+                .isTrue();
     }
 
     @Test
@@ -151,7 +151,9 @@ public class AppInstallDaoTest {
                 Arrays.asList(
                         new DBAppInstallPermissions(BUYER_1, PACKAGE_1),
                         new DBAppInstallPermissions(BUYER_2, PACKAGE_1)));
-        assertEquals(2, mAppInstallDao.deleteByPackageName(PACKAGE_1));
+        assertWithMessage("deleteByPackageName(%s)", PACKAGE_1)
+                .that(2)
+                .isEqualTo(mAppInstallDao.deleteByPackageName(PACKAGE_1));
     }
 
     @Test
@@ -162,8 +164,12 @@ public class AppInstallDaoTest {
                         new DBAppInstallPermissions(BUYER_1, PACKAGE_1),
                         new DBAppInstallPermissions(BUYER_2, PACKAGE_1)));
         mAppInstallDao.deleteByPackageName(PACKAGE_1);
-        assertFalse(mAppInstallDao.canBuyerFilterPackage(BUYER_1, PACKAGE_1));
-        assertFalse(mAppInstallDao.canBuyerFilterPackage(BUYER_2, PACKAGE_1));
+        assertWithMessage("canBuyerFilterPackage(%s, %s)", BUYER_1, PACKAGE_1)
+                .that(mAppInstallDao.canBuyerFilterPackage(BUYER_1, PACKAGE_1))
+                .isFalse();
+        assertWithMessage("canBuyerFilterPackage(%s, %s)", BUYER_2, PACKAGE_1)
+                .that(mAppInstallDao.canBuyerFilterPackage(BUYER_2, PACKAGE_1))
+                .isFalse();
     }
 
     @Test
@@ -173,8 +179,12 @@ public class AppInstallDaoTest {
                 Arrays.asList(
                         new DBAppInstallPermissions(BUYER_1, PACKAGE_1),
                         new DBAppInstallPermissions(BUYER_1, PACKAGE_2)));
-        assertTrue(mAppInstallDao.canBuyerFilterPackage(BUYER_1, PACKAGE_1));
-        assertTrue(mAppInstallDao.canBuyerFilterPackage(BUYER_1, PACKAGE_2));
+        assertWithMessage("canBuyerFilterPackage(%s, %s)", BUYER_1, PACKAGE_1)
+                .that(mAppInstallDao.canBuyerFilterPackage(BUYER_1, PACKAGE_1))
+                .isTrue();
+        assertWithMessage("canBuyerFilterPackage(%s, %s)", BUYER_1, PACKAGE_2)
+                .that(mAppInstallDao.canBuyerFilterPackage(BUYER_1, PACKAGE_2))
+                .isTrue();
     }
 
     @Test
@@ -186,8 +196,12 @@ public class AppInstallDaoTest {
                         new DBAppInstallPermissions(BUYER_1, PACKAGE_2)));
         mAppInstallDao.deleteByPackageName(PACKAGE_1);
         mAppInstallDao.deleteByPackageName(PACKAGE_2);
-        assertFalse(mAppInstallDao.canBuyerFilterPackage(BUYER_1, PACKAGE_1));
-        assertFalse(mAppInstallDao.canBuyerFilterPackage(BUYER_1, PACKAGE_2));
+        assertWithMessage("canBuyerFilterPackage(%s, %s)", BUYER_1, PACKAGE_1)
+                .that(mAppInstallDao.canBuyerFilterPackage(BUYER_1, PACKAGE_1))
+                .isFalse();
+        assertWithMessage("canBuyerFilterPackage(%s, %s)", BUYER_1, PACKAGE_2)
+                .that(mAppInstallDao.canBuyerFilterPackage(BUYER_1, PACKAGE_2))
+                .isFalse();
     }
 
     @Test
@@ -199,9 +213,15 @@ public class AppInstallDaoTest {
                         new DBAppInstallPermissions(BUYER_2, PACKAGE_2)));
         mAppInstallDao.setAdTechsForPackage(
                 PACKAGE_1, Arrays.asList(new DBAppInstallPermissions(BUYER_2, PACKAGE_1)));
-        assertFalse(mAppInstallDao.canBuyerFilterPackage(BUYER_1, PACKAGE_1));
-        assertTrue(mAppInstallDao.canBuyerFilterPackage(BUYER_2, PACKAGE_2));
-        assertTrue(mAppInstallDao.canBuyerFilterPackage(BUYER_2, PACKAGE_1));
+        assertWithMessage("canBuyerFilterPackage(%s, %s)", BUYER_1, PACKAGE_1)
+                .that(mAppInstallDao.canBuyerFilterPackage(BUYER_1, PACKAGE_1))
+                .isFalse();
+        assertWithMessage("canBuyerFilterPackage(%s, %s)", BUYER_2, PACKAGE_2)
+                .that(mAppInstallDao.canBuyerFilterPackage(BUYER_2, PACKAGE_2))
+                .isTrue();
+        assertWithMessage("canBuyerFilterPackage(%s, %s)", BUYER_2, PACKAGE_1)
+                .that(mAppInstallDao.canBuyerFilterPackage(BUYER_2, PACKAGE_1))
+                .isTrue();
     }
 
     @Test
@@ -212,8 +232,12 @@ public class AppInstallDaoTest {
                         new DBAppInstallPermissions(BUYER_1, PACKAGE_1),
                         new DBAppInstallPermissions(BUYER_2, PACKAGE_1)));
         mAppInstallDao.deleteAllAppInstallData();
-        assertFalse(mAppInstallDao.canBuyerFilterPackage(BUYER_1, PACKAGE_1));
-        assertFalse(mAppInstallDao.canBuyerFilterPackage(BUYER_2, PACKAGE_1));
+        assertWithMessage("canBuyerFilterPackage(%s, %s)", BUYER_1, PACKAGE_1)
+                .that(mAppInstallDao.canBuyerFilterPackage(BUYER_1, PACKAGE_1))
+                .isFalse();
+        assertWithMessage("canBuyerFilterPackage(%s, %s)", BUYER_2, PACKAGE_1)
+                .that(mAppInstallDao.canBuyerFilterPackage(BUYER_2, PACKAGE_1))
+                .isFalse();
     }
 
     @Test
@@ -223,7 +247,8 @@ public class AppInstallDaoTest {
         mAppInstallDao.setAdTechsForPackage(
                 PACKAGE_2, Arrays.asList(new DBAppInstallPermissions(BUYER_1, PACKAGE_2)));
         List<String> unorderedExpected = Arrays.asList(PACKAGE_1, PACKAGE_2);
-        assertThat(mAppInstallDao.getAllPackageNames())
+        assertWithMessage("getAllPackageNames")
+                .that(mAppInstallDao.getAllPackageNames())
                 .containsExactlyElementsIn(unorderedExpected);
     }
 
@@ -245,10 +270,13 @@ public class AppInstallDaoTest {
                 PACKAGE_1, Arrays.asList(new DBAppInstallPermissions(BUYER_1, PACKAGE_1)));
         mAppInstallDao.setAdTechsForPackage(
                 PACKAGE_2, Arrays.asList(new DBAppInstallPermissions(BUYER_1, PACKAGE_2)));
-        assertEquals(
-                1,
-                mAppInstallDao.deleteAllDisallowedPackageEntries(
-                        CONTEXT.getPackageManager(), new FlagsThatAllowOneApp()));
-        assertEquals(Arrays.asList(PACKAGE_1), mAppInstallDao.getAllPackageNames());
+        assertWithMessage("deleteAllDisallowedPackageEntries")
+                .that(1)
+                .isEqualTo(
+                        mAppInstallDao.deleteAllDisallowedPackageEntries(
+                                mContext.getPackageManager(), new FlagsThatAllowOneApp()));
+        assertWithMessage("getAllPackageNames")
+                .that(Arrays.asList(PACKAGE_1))
+                .isEqualTo(mAppInstallDao.getAllPackageNames());
     }
 }

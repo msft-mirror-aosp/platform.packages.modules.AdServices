@@ -21,6 +21,7 @@ import android.adservices.common.AdTechIdentifier;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Comparator;
@@ -48,11 +49,20 @@ public class FifoSignalEvictor implements SignalEvictor {
             List<DBProtectedSignal> updatedSignals,
             UpdateOutput combinedUpdates,
             int maxAllowedSignalSize,
-            int maxAllowedSignalSizeWithOversubscription) {
+            int maxAllowedSignalSizeWithOversubscription,
+            UpdateSignalsProcessReportedLogger updateSignalsProcessReportedLogger) {
         sLogger.v("Start FIFO eviction.");
         int currentSignalSize = SignalSizeCalculator.calculate(updatedSignals);
+        int evictionRulesCount = 0;
+
         if (currentSignalSize <= maxAllowedSignalSizeWithOversubscription) {
             sLogger.v("Signal size within the limit, skipping the FIFO eviction.");
+            setUpdateSignalsProcessReportedLoggerValues(
+                    updateSignalsProcessReportedLogger,
+                    evictionRulesCount,
+                    currentSignalSize,
+                    SignalSizeCalculator.maxSignalsSizeBytes(updatedSignals),
+                    SignalSizeCalculator.minSignalsSizeBytes(updatedSignals));
             return false;
         }
 
@@ -62,11 +72,34 @@ public class FifoSignalEvictor implements SignalEvictor {
             DBProtectedSignal oldestSignal = updatedSignals.remove(updatedSignals.size() - 1);
             combinedUpdates.getToRemove().add(oldestSignal);
             currentSignalSize -= SignalSizeCalculator.calculate(oldestSignal);
+            evictionRulesCount += 1;
         }
+
+        setUpdateSignalsProcessReportedLoggerValues(
+                updateSignalsProcessReportedLogger,
+                evictionRulesCount,
+                currentSignalSize,
+                SignalSizeCalculator.maxSignalsSizeBytes(updatedSignals),
+                SignalSizeCalculator.minSignalsSizeBytes(updatedSignals));
 
         sLogger.v(
                 "Finished FIFO signal Eviction, %d signals to add, and %d signals to remove",
-                combinedUpdates.getToAdd().size(), combinedUpdates.getToRemove().size());
+                combinedUpdates.getToAddSize(), combinedUpdates.getToRemoveSize());
         return true;
+    }
+
+    private void setUpdateSignalsProcessReportedLoggerValues(
+            UpdateSignalsProcessReportedLogger updateSignalsProcessReportedLogger,
+            int evictionRulesCount,
+            int currentSignalSize,
+            float maxRawProtectedSignalsSizeBytes,
+            float minRawProtectedSignalsSizeBytes) {
+        updateSignalsProcessReportedLogger.setEvictionRulesCount(evictionRulesCount);
+        updateSignalsProcessReportedLogger.setPerBuyerSignalSize(currentSignalSize);
+
+        updateSignalsProcessReportedLogger.setMaxRawProtectedSignalsSizeBytes(
+                maxRawProtectedSignalsSizeBytes);
+        updateSignalsProcessReportedLogger.setMinRawProtectedSignalsSizeBytes(
+                minRawProtectedSignalsSizeBytes);
     }
 }

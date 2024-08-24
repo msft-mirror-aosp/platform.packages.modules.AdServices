@@ -36,27 +36,24 @@ import android.content.pm.PackageManager;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.shared.storage.AtomicFileDatastore;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Spy;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class AppConsentManagerTest {
-    @Rule public final MockitoRule rule = MockitoJUnit.rule();
-    private AppConsentManager mAppConsentManager;
-
+public final class AppConsentManagerTest extends AdServicesMockitoTestCase {
     private static final Context PPAPI_CONTEXT = ApplicationProvider.getApplicationContext();
     private static final String BASE_DIR = PPAPI_CONTEXT.getFilesDir().getAbsolutePath();
+
+    private AppConsentManager mAppConsentManager;
 
     @Spy
     private AtomicFileDatastore mDatastoreSpy =

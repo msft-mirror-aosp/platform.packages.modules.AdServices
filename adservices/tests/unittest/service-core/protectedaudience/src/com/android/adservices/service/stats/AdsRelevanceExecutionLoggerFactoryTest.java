@@ -76,8 +76,9 @@ public class AdsRelevanceExecutionLoggerFactoryTest {
                         mAdServicesLoggerMock,
                         new FlagsWithGetFledgeAuctionServerApiUsageMetricsEnabled(),
                         AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT);
-        assertTrue(adsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger()
-                instanceof AdsRelevanceExecutionLoggerImpl);
+        assertTrue(
+                adsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger()
+                        instanceof AdsRelevanceExecutionLoggerImpl);
     }
 
     @Test
@@ -90,8 +91,9 @@ public class AdsRelevanceExecutionLoggerFactoryTest {
                         mAdServicesLoggerMock,
                         new FlagsWithGetFledgeAuctionServerApiUsageMetricsDisabled(),
                         AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT);
-        assertTrue(adsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger()
-                instanceof AdsRelevanceExecutionLoggerNoLoggingImpl);
+        assertTrue(
+                adsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger()
+                        instanceof AdsRelevanceExecutionLoggerNoLoggingImpl);
     }
 
     @Test
@@ -104,8 +106,9 @@ public class AdsRelevanceExecutionLoggerFactoryTest {
                         mAdServicesLoggerMock,
                         new FlagsWithGetFledgeAuctionServerApiUsageMetricsEnabled(),
                         AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA);
-        assertTrue(adsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger()
-                instanceof AdsRelevanceExecutionLoggerImpl);
+        assertTrue(
+                adsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger()
+                        instanceof AdsRelevanceExecutionLoggerImpl);
     }
 
     @Test
@@ -118,8 +121,9 @@ public class AdsRelevanceExecutionLoggerFactoryTest {
                         mAdServicesLoggerMock,
                         new FlagsWithGetFledgeAuctionServerApiUsageMetricsDisabled(),
                         AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA);
-        assertTrue(adsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger()
-                instanceof AdsRelevanceExecutionLoggerNoLoggingImpl);
+        assertTrue(
+                adsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger()
+                        instanceof AdsRelevanceExecutionLoggerNoLoggingImpl);
     }
 
     @Test
@@ -132,8 +136,9 @@ public class AdsRelevanceExecutionLoggerFactoryTest {
                         mAdServicesLoggerMock,
                         FakeFlagsFactory.getFlagsForTest(),
                         AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS);
-        assertTrue(adsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger()
-                instanceof AdsRelevanceExecutionLoggerImpl);
+        assertTrue(
+                adsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger()
+                        instanceof AdsRelevanceExecutionLoggerImpl);
     }
 
     @Test
@@ -146,8 +151,9 @@ public class AdsRelevanceExecutionLoggerFactoryTest {
                         mAdServicesLoggerMock,
                         FakeFlagsFactory.getFlagsForTest(),
                         AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN);
-        assertTrue(adsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger()
-                instanceof AdsRelevanceExecutionLoggerNoLoggingImpl);
+        assertTrue(
+                adsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger()
+                        instanceof AdsRelevanceExecutionLoggerNoLoggingImpl);
     }
 
     private static class FlagsWithGetFledgeAuctionServerApiUsageMetricsEnabled implements Flags {

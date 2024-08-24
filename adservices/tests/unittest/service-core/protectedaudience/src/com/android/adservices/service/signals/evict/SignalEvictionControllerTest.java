@@ -25,6 +25,7 @@ import static org.mockito.Mockito.when;
 import android.adservices.common.CommonFixture;
 
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
 import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Before;
@@ -41,6 +42,7 @@ public class SignalEvictionControllerTest {
     @Mock private SignalEvictor mSignalEvictorMock1;
     @Mock private SignalEvictor mSignalEvictorMock2;
     @Mock private SignalEvictor mSignalEvictorMock3;
+    @Mock private UpdateSignalsProcessReportedLogger mUpdateSignalsProcessReportedLoggerMock;
     private SignalEvictionController mController;
 
     @Rule(order = 0)
@@ -57,23 +59,34 @@ public class SignalEvictionControllerTest {
 
     @Test
     public void evict_3Evictor_firstReturnFalse() {
-        when(mSignalEvictorMock1.evict(any(), any(), any(), anyInt(), anyInt())).thenReturn(false);
+        when(mSignalEvictorMock1.evict(any(), any(), any(), anyInt(), anyInt(), any()))
+                .thenReturn(false);
 
-        mController.evict(CommonFixture.VALID_BUYER_1, List.of(), new UpdateOutput());
+        mController.evict(
+                CommonFixture.VALID_BUYER_1,
+                List.of(),
+                new UpdateOutput(),
+                mUpdateSignalsProcessReportedLoggerMock);
 
-        verify(mSignalEvictorMock1).evict(any(), any(), any(), anyInt(), anyInt());
+        verify(mSignalEvictorMock1).evict(any(), any(), any(), anyInt(), anyInt(), any());
         verifyZeroInteractions(mSignalEvictorMock2, mSignalEvictorMock3);
     }
 
     @Test
     public void evict_3Evictor_firstReturnTrueAndSecondReturnFalse() {
-        when(mSignalEvictorMock1.evict(any(), any(), any(), anyInt(), anyInt())).thenReturn(true);
-        when(mSignalEvictorMock2.evict(any(), any(), any(), anyInt(), anyInt())).thenReturn(false);
+        when(mSignalEvictorMock1.evict(any(), any(), any(), anyInt(), anyInt(), any()))
+                .thenReturn(true);
+        when(mSignalEvictorMock2.evict(any(), any(), any(), anyInt(), anyInt(), any()))
+                .thenReturn(false);
 
-        mController.evict(CommonFixture.VALID_BUYER_1, List.of(), new UpdateOutput());
+        mController.evict(
+                CommonFixture.VALID_BUYER_1,
+                List.of(),
+                new UpdateOutput(),
+                mUpdateSignalsProcessReportedLoggerMock);
 
-        verify(mSignalEvictorMock1).evict(any(), any(), any(), anyInt(), anyInt());
-        verify(mSignalEvictorMock2).evict(any(), any(), any(), anyInt(), anyInt());
+        verify(mSignalEvictorMock1).evict(any(), any(), any(), anyInt(), anyInt(), any());
+        verify(mSignalEvictorMock2).evict(any(), any(), any(), anyInt(), anyInt(), any());
         verifyZeroInteractions(mSignalEvictorMock3);
     }
 }

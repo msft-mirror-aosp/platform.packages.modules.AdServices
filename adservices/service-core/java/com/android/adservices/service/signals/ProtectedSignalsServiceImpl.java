@@ -72,6 +72,9 @@ import com.android.adservices.service.stats.AdsRelevanceExecutionLogger;
 import com.android.adservices.service.stats.AdsRelevanceExecutionLoggerFactory;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLoggerImpl;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLoggerNoLoggingImpl;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.time.Clock;
@@ -82,7 +85,6 @@ import java.util.concurrent.ExecutorService;
 /** Implementation of the Protected Signals service. */
 @RequiresApi(Build.VERSION_CODES.S)
 public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
-
     public static final long MAX_SIZE_BYTES = 10000;
     public static final String ADTECH_CALLER_NAME = "caller";
     public static final String CLASS_NAME = "ProtectedSignalsServiceImpl";
@@ -102,6 +104,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
     @NonNull private final CallingAppUidSupplier mCallingAppUidSupplier;
     @NonNull private final ProtectedSignalsServiceFilter mProtectedSignalsServiceFilter;
     @NonNull private final EnrollmentDao mEnrollmentDao;
+    @NonNull private final UpdateSignalsProcessReportedLogger mUpdateSignalsProcessReportedLogger;
 
     private ProtectedSignalsServiceImpl(@NonNull Context context) {
         this(
@@ -149,7 +152,12 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                         new FledgeApiThrottleFilter(
                                 Throttler.getInstance(FlagsFactory.getFlags()),
                                 AdServicesLoggerImpl.getInstance())),
-                EnrollmentDao.getInstance());
+                EnrollmentDao.getInstance(),
+                FlagsFactory.getFlags().getPasProductMetricsV1Enabled()
+                        ? new UpdateSignalsProcessReportedLoggerImpl(
+                                AdServicesLoggerImpl.getInstance(),
+                                com.android.adservices.shared.util.Clock.getInstance())
+                        : new UpdateSignalsProcessReportedLoggerNoLoggingImpl());
     }
 
     @VisibleForTesting
@@ -164,7 +172,8 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
             @NonNull Flags flags,
             @NonNull CallingAppUidSupplier callingAppUidSupplier,
             @NonNull ProtectedSignalsServiceFilter protectedSignalsServiceFilter,
-            @NonNull EnrollmentDao enrollmentDao) {
+            @NonNull EnrollmentDao enrollmentDao,
+            @NonNull UpdateSignalsProcessReportedLogger updateSignalsProcessReportedLogger) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(updateSignalsOrchestrator);
         Objects.requireNonNull(fledgeAuthorizationFilter);
@@ -173,6 +182,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(protectedSignalsServiceFilter);
         Objects.requireNonNull(enrollmentDao);
+        Objects.requireNonNull(updateSignalsProcessReportedLogger);
 
         mContext = context;
         mUpdateSignalsOrchestrator = updateSignalsOrchestrator;
@@ -185,6 +195,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
         mCallingAppUidSupplier = callingAppUidSupplier;
         mProtectedSignalsServiceFilter = protectedSignalsServiceFilter;
         mEnrollmentDao = enrollmentDao;
+        mUpdateSignalsProcessReportedLogger = updateSignalsProcessReportedLogger;
     }
 
     /** Creates a new instance of {@link ProtectedSignalsServiceImpl}. */
@@ -197,6 +208,10 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
             @NonNull UpdateSignalsInput updateSignalsInput,
             @NonNull UpdateSignalsCallback updateSignalsCallback)
             throws RemoteException {
+
+        mUpdateSignalsProcessReportedLogger.setUpdateSignalsStartTimestamp(
+                com.android.adservices.shared.util.Clock.getInstance().elapsedRealtime());
+
         sLogger.v("Entering updateSignals");
 
         final int apiName = AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS;
@@ -217,6 +232,8 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                             .setAppPackageName(callerPackageName)
                             .setSdkPackageName(EMPTY_SDK_NAME)
                             .build());
+            mUpdateSignalsProcessReportedLogger.setAdservicesApiStatusCode(
+                    AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
             // Rethrow because we want to fail fast
             throw exception;
         }
@@ -241,7 +258,8 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                 apiName,
                 AdServicesPermissions.ACCESS_ADSERVICES_PROTECTED_SIGNALS);
 
-        final int callerUid = getCallingUid(adsRelevanceExecutionLogger);
+        final int callerUid =
+                getCallingUid(adsRelevanceExecutionLogger, mUpdateSignalsProcessReportedLogger);
         final DevContext devContext = mDevContextFilter.createDevContext();
         sLogger.v("Running updateSignals");
         mExecutorService.execute(
@@ -251,7 +269,10 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                                 updateSignalsCallback,
                                 callerUid,
                                 devContext,
-                                adsRelevanceExecutionLogger));
+                                adsRelevanceExecutionLogger,
+                                mUpdateSignalsProcessReportedLogger));
+
+        mUpdateSignalsProcessReportedLogger.logUpdateSignalsProcessReportedStats();
     }
 
     private void doUpdateSignals(
@@ -259,7 +280,8 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
             UpdateSignalsCallback callback,
             int callerUid,
             DevContext devContext,
-            AdsRelevanceExecutionLogger adsRelevanceExecutionLogger) {
+            AdsRelevanceExecutionLogger adsRelevanceExecutionLogger,
+            UpdateSignalsProcessReportedLogger updateSignalsProcessReportedLogger) {
         sLogger.v("Entering doUpdateSignals");
 
         final int apiName = AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS;
@@ -326,7 +348,8 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                                     buyer,
                                     input.getCallerPackageName(),
                                     devContext,
-                                    UpdateSignalsApiCalledStats.builder())
+                                    UpdateSignalsApiCalledStats.builder(),
+                                    updateSignalsProcessReportedLogger)
                             .get();
                     PeriodicEncodingJobService.scheduleIfNeeded(mContext, mFlags, false);
                     resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
@@ -353,6 +376,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
         } finally {
             if (shouldLog) {
                 adsRelevanceExecutionLogger.endAdsRelevanceApi(resultCode);
+                updateSignalsProcessReportedLogger.setAdservicesApiStatusCode(resultCode);
             }
             if (jsonProcessingStatsBuilder != null) {
                 if (jsonProcessingStatsBuilder.build().getJsonProcessingStatus()
@@ -382,12 +406,16 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
     }
 
     // TODO(b/297055198) Refactor this method into a utility class
-    private int getCallingUid(AdsRelevanceExecutionLogger adsRelevanceExecutionLogger)
+    private int getCallingUid(
+            AdsRelevanceExecutionLogger adsRelevanceExecutionLogger,
+            UpdateSignalsProcessReportedLogger updateSignalsProcessReportedLogger)
             throws IllegalStateException {
         try {
             return mCallingAppUidSupplier.getCallingAppUid();
         } catch (IllegalStateException illegalStateException) {
             adsRelevanceExecutionLogger.endAdsRelevanceApi(
+                    AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
+            updateSignalsProcessReportedLogger.setAdservicesApiStatusCode(
                     AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
             throw illegalStateException;
         }

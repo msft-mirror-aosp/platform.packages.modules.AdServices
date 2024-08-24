@@ -87,6 +87,7 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.pas.EncodingExecutionLogHelperImpl;
 import com.android.adservices.service.stats.pas.EncodingJobRunStats;
 import com.android.adservices.service.stats.pas.EncodingJobRunStatsLoggerImpl;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLoggerImpl;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
@@ -167,6 +168,7 @@ public class TriggerEncodingCommandE2ETest extends AdServicesExtendedMockitoTest
     private EncoderLogicMetadataDao mEncoderLogicMetadataDao;
     private ProtectedSignalsServiceImpl mProtectedSignalsService;
     @Mock private ConsentManager mConsentManagerMock;
+    @Mock private UpdateSignalsProcessReportedLoggerImpl mUpdateSignalsProcessReportedLoggerMock;
     private ProtectedSignalsDao mProtectedSignalsDao;
     private SignalsProviderAndArgumentFactory mSignalsProviderAndArgumentFactory;
 
@@ -262,7 +264,8 @@ public class TriggerEncodingCommandE2ETest extends AdServicesExtendedMockitoTest
                                 FledgeAuthorizationFilter.create(sContext, logger),
                                 new FledgeAllowListsFilter(flags, logger),
                                 new FledgeApiThrottleFilter(Throttler.getInstance(flags), logger)),
-                        EnrollmentDao.getInstance());
+                        EnrollmentDao.getInstance(),
+                        mUpdateSignalsProcessReportedLoggerMock);
         when(mConsentManagerMock.isPasFledgeConsentGiven()).thenReturn(true);
         when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(any()))
                 .thenReturn(false);

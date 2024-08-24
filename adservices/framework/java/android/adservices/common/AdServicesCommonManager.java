@@ -249,7 +249,35 @@ public class AdServicesCommonManager {
             @NonNull NotificationTypeParams notificationType,
             @NonNull @CallbackExecutor Executor executor,
             @NonNull AdServicesOutcomeReceiver<AdServicesCommonResponse, Exception> callback) {
-        // TODO: Add implementation
+        Objects.requireNonNull(adServicesModuleStateList);
+        Objects.requireNonNull(notificationType);
+        Objects.requireNonNull(executor);
+        Objects.requireNonNull(callback);
+
+        final IAdServicesCommonService service = getService();
+        try {
+            service.setAdServicesModuleOverrides(
+                    adServicesModuleStateList,
+                    notificationType,
+                    new ISetAdServicesModuleOverridesCallback.Stub() {
+                        @Override
+                        public void onResult(AdServicesCommonResponse adServicesCommonResponse)
+                                throws RemoteException {
+                            callback.onResult(adServicesCommonResponse);
+                        }
+
+                        @Override
+                        public void onFailure(int statusCode) throws RemoteException {
+                            callback.onError(
+                                    new IllegalStateException(
+                                            "Internal Error! status code: " + statusCode));
+                        }
+                    });
+        } catch (RemoteException e) {
+            LogUtil.e(e, "RemoteException");
+            executor.execute(
+                    () -> callback.onError(new IllegalStateException("Internal Error!", e)));
+        }
     }
 
     /**
@@ -269,7 +297,33 @@ public class AdServicesCommonManager {
             @NonNull List<AdServicesModuleUserChoice> adServicesModuleUserChoiceList,
             @NonNull @CallbackExecutor Executor executor,
             @NonNull AdServicesOutcomeReceiver<AdServicesCommonResponse, Exception> callback) {
-        // TODO: Add implementation
+        Objects.requireNonNull(adServicesModuleUserChoiceList);
+        Objects.requireNonNull(executor);
+        Objects.requireNonNull(callback);
+
+        final IAdServicesCommonService service = getService();
+        try {
+            service.setAdServicesModuleUserChoices(
+                    adServicesModuleUserChoiceList,
+                    new ISetAdServicesModuleUserChoicesCallback.Stub() {
+                        @Override
+                        public void onResult(AdServicesCommonResponse adServicesCommonResponse)
+                                throws RemoteException {
+                            callback.onResult(adServicesCommonResponse);
+                        }
+
+                        @Override
+                        public void onFailure(int statusCode) throws RemoteException {
+                            callback.onError(
+                                    new IllegalStateException(
+                                            "Internal Error! status code: " + statusCode));
+                        }
+                    });
+        } catch (RemoteException e) {
+            LogUtil.e(e, "RemoteException");
+            executor.execute(
+                    () -> callback.onError(new IllegalStateException("Internal Error!", e)));
+        }
     }
 
     /**

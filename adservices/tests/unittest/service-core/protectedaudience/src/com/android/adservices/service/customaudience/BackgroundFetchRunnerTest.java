@@ -43,6 +43,7 @@ import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.DBAdDataFixture;
 import com.android.adservices.customaudience.DBCustomAudienceBackgroundFetchDataFixture;
 import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
@@ -57,8 +58,9 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.CustomAudienceLoggerFactory;
 import com.android.adservices.service.stats.UpdateCustomAudienceExecutionLogger;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FluentFuture;
@@ -68,13 +70,10 @@ import com.google.mockwebserver.MockWebServer;
 import com.google.mockwebserver.RecordedRequest;
 
 import org.json.JSONException;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
 import java.time.Instant;
 import java.util.List;
@@ -82,9 +81,11 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-public class BackgroundFetchRunnerTest {
+@RequiresSdkLevelAtLeastS()
+@SpyStatic(FlagsFactory.class)
+public final class BackgroundFetchRunnerTest extends AdServicesExtendedMockitoTestCase {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
-    private final Flags mFlags =
+    private final Flags mFakeFlags =
             new FakeFlagsFactory.TestFlags() {
                 @Override
                 public boolean getFledgeFrequencyCapFilteringEnabled() {
@@ -99,8 +100,6 @@ public class BackgroundFetchRunnerTest {
 
     private final String mFetchPath = "/fetch";
 
-    private MockitoSession mStaticMockSession = null;
-
     @Mock private CustomAudienceDao mCustomAudienceDaoMock;
     @Mock private AppInstallDao mAppInstallDaoMock;
     @Mock private PackageManager mPackageManagerMock;
@@ -113,20 +112,8 @@ public class BackgroundFetchRunnerTest {
 
     private Uri mFetchUri;
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Before
     public void setup() {
-        // Test applications don't have the required permissions to read config P/H flags, and
-        // injecting mocked flags everywhere is annoying and non-trivial for static methods
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .strictness(Strictness.LENIENT)
-                        .initMocks(this)
-                        .startMocking();
-
         when(mCustomAudienceLoggerFactoryMock.getUpdateCustomAudienceExecutionLogger())
                 .thenReturn(mUpdateCustomAudienceExecutionLoggerMock);
 
@@ -137,17 +124,10 @@ public class BackgroundFetchRunnerTest {
                                 mAppInstallDaoMock,
                                 mPackageManagerMock,
                                 mEnrollmentDaoMock,
-                                mFlags,
+                                mFakeFlags,
                                 mCustomAudienceLoggerFactoryMock));
 
         mFetchUri = mMockWebServerRule.uriForPath(mFetchPath);
-    }
-
-    @After
-    public void teardown() {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
     }
 
     @Test
@@ -170,7 +150,7 @@ public class BackgroundFetchRunnerTest {
         mBackgroundFetchRunnerSpy.deleteDisallowedOwnerCustomAudiences();
 
         verify(mCustomAudienceDaoMock)
-                .deleteAllDisallowedOwnerCustomAudienceData(mPackageManagerMock, mFlags);
+                .deleteAllDisallowedOwnerCustomAudienceData(mPackageManagerMock, mFakeFlags);
     }
 
     @Test
@@ -179,7 +159,8 @@ public class BackgroundFetchRunnerTest {
 
         mBackgroundFetchRunnerSpy.deleteDisallowedPackageAppInstallEntries();
 
-        verify(mAppInstallDaoMock).deleteAllDisallowedPackageEntries(mPackageManagerMock, mFlags);
+        verify(mAppInstallDaoMock)
+                .deleteAllDisallowedPackageEntries(mPackageManagerMock, mFakeFlags);
     }
 
     @Test
@@ -195,7 +176,7 @@ public class BackgroundFetchRunnerTest {
         mBackgroundFetchRunnerSpy.deleteDisallowedBuyerCustomAudiences();
 
         verify(mCustomAudienceDaoMock)
-                .deleteAllDisallowedBuyerCustomAudienceData(mEnrollmentDaoMock, mFlags);
+                .deleteAllDisallowedBuyerCustomAudienceData(mEnrollmentDaoMock, mFakeFlags);
     }
 
     @Test
@@ -208,7 +189,7 @@ public class BackgroundFetchRunnerTest {
                                 mAppInstallDaoMock,
                                 mPackageManagerMock,
                                 mEnrollmentDaoMock,
-                                mFlags,
+                                mFakeFlags,
                                 mCustomAudienceLoggerFactoryMock));
         assertThrows(
                 NullPointerException.class,
@@ -218,7 +199,7 @@ public class BackgroundFetchRunnerTest {
                                 null,
                                 mPackageManagerMock,
                                 mEnrollmentDaoMock,
-                                mFlags,
+                                mFakeFlags,
                                 mCustomAudienceLoggerFactoryMock));
         assertThrows(
                 NullPointerException.class,
@@ -228,7 +209,7 @@ public class BackgroundFetchRunnerTest {
                                 mAppInstallDaoMock,
                                 null,
                                 mEnrollmentDaoMock,
-                                mFlags,
+                                mFakeFlags,
                                 mCustomAudienceLoggerFactoryMock));
         assertThrows(
                 NullPointerException.class,
@@ -238,7 +219,7 @@ public class BackgroundFetchRunnerTest {
                                 mAppInstallDaoMock,
                                 mPackageManagerMock,
                                 null,
-                                mFlags,
+                                mFakeFlags,
                                 mCustomAudienceLoggerFactoryMock));
         assertThrows(
                 NullPointerException.class,
@@ -258,14 +239,14 @@ public class BackgroundFetchRunnerTest {
                                 mAppInstallDaoMock,
                                 mPackageManagerMock,
                                 mEnrollmentDaoMock,
-                                mFlags,
+                                mFakeFlags,
                                 null));
     }
 
     @Test
     public void testUpdateCustomAudienceWithEmptyUpdate()
             throws ExecutionException, InterruptedException {
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(mFakeFlags).when(FlagsFactory::getFlags);
 
         CustomAudienceUpdatableData updatableData =
                 CustomAudienceUpdatableDataFixture.getValidBuilderEmptySuccessfulResponse().build();
@@ -277,7 +258,7 @@ public class BackgroundFetchRunnerTest {
         Instant expectedEligibleUpdateTime =
                 DBCustomAudienceBackgroundFetchData
                         .computeNextEligibleUpdateTimeAfterSuccessfulUpdate(
-                                CommonFixture.FIXED_NOW, mFlags);
+                                CommonFixture.FIXED_NOW, mFakeFlags);
         DBCustomAudienceBackgroundFetchData originalFetchData =
                 DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(
                                 CommonFixture.VALID_BUYER_1)

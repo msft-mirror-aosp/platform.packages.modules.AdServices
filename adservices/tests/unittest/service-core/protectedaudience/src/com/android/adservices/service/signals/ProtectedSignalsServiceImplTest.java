@@ -58,6 +58,7 @@ import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLoggerImpl;
 import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
@@ -93,6 +94,7 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
     @Mock private ProtectedSignalsServiceFilter mProtectedSignalsServiceFilterMock;
     @Mock private EnrollmentDao mEnrollmentDaoMock;
     @Mock private UpdateSignalsCallback mUpdateSignalsCallbackMock;
+    @Mock private UpdateSignalsProcessReportedLoggerImpl mUpdateSignalsProcessReportedLoggerMock;
 
     @Captor ArgumentCaptor<FledgeErrorResponse> mErrorCaptor;
     @Captor ArgumentCaptor<UpdateSignalsApiCalledStats> mStatsCaptor;
@@ -120,12 +122,13 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
                         mFakeFlags,
                         mCallingAppUidSupplierMock,
                         mProtectedSignalsServiceFilterMock,
-                        mEnrollmentDaoMock);
+                        mEnrollmentDaoMock,
+                        mUpdateSignalsProcessReportedLoggerMock);
 
         mDevContext = DevContext.builder(PACKAGE).setDevOptionsEnabled(false).build();
         mInput = new UpdateSignalsInput.Builder(URI, PACKAGE).build();
 
-        // Set up the mocks for a success flow -- indivual tests that want a failure can overwrite
+        // Set up the mocks for a success flow -- individual tests that want a failure can overwrite
         when(mCallingAppUidSupplierMock.getCallingAppUid()).thenReturn(UID);
         when(mDevContextFilterMock.createDevContext()).thenReturn(mDevContext);
         when(mProtectedSignalsServiceFilterMock.filterRequestAndExtractIdentifier(
@@ -145,7 +148,7 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
         SettableFuture<Object> emptyReturn = SettableFuture.create();
         emptyReturn.set(new Object());
         when(mUpdateSignalsOrchestratorMock.orchestrateUpdate(
-                        eq(URI), eq(ADTECH), eq(PACKAGE), eq(mDevContext), any()))
+                        eq(URI), eq(ADTECH), eq(PACKAGE), eq(mDevContext), any(), any()))
                 .thenReturn(FluentFuture.from(emptyReturn));
         when(mEnrollmentDaoMock.getEnrollmentDataForPASByAdTechIdentifier(eq(ADTECH)))
                 .thenReturn(new EnrollmentData.Builder().setEnrollmentId("123").build());
@@ -182,9 +185,11 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
                         eq(mDevContext));
         verify(mConsentManagerMock).isFledgeConsentRevokedForAppAfterSettingFledgeUse(eq(PACKAGE));
         verify(mUpdateSignalsOrchestratorMock)
-                .orchestrateUpdate(eq(URI), eq(ADTECH), eq(PACKAGE), eq(mDevContext), any());
+                .orchestrateUpdate(eq(URI), eq(ADTECH), eq(PACKAGE), eq(mDevContext), any(), any());
         verify(mUpdateSignalsCallbackMock).onSuccess();
         verifyUpdateSignalsApiUsageLog(AdServicesStatusUtils.STATUS_SUCCESS, PACKAGE);
+        verify(mUpdateSignalsProcessReportedLoggerMock)
+                .setAdservicesApiStatusCode(AdServicesStatusUtils.STATUS_SUCCESS);
         verify(
                 () -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)),
                 times(1));
@@ -203,6 +208,8 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
                 () -> mProtectedSignalsService.updateSignals(null, mUpdateSignalsCallbackMock));
         verifyUpdateSignalsApiUsageLog(
                 AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, /* packageName */ "");
+        verify(mUpdateSignalsProcessReportedLoggerMock)
+                .setAdservicesApiStatusCode(AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
         verify(
                 () -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)),
                 times(0));
@@ -215,6 +222,8 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
                 () -> mProtectedSignalsService.updateSignals(null, mUpdateSignalsCallbackMock));
         verifyUpdateSignalsApiUsageLog(
                 AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, /* packageName */ "");
+        verify(mUpdateSignalsProcessReportedLoggerMock)
+                .setAdservicesApiStatusCode(AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
         verify(
                 () -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)),
                 times(0));
@@ -226,6 +235,8 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
                 NullPointerException.class,
                 () -> mProtectedSignalsService.updateSignals(mInput, null));
         verifyUpdateSignalsApiUsageLog(AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, PACKAGE);
+        verify(mUpdateSignalsProcessReportedLoggerMock)
+                .setAdservicesApiStatusCode(AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
         verify(
                 () -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)),
                 times(0));
@@ -238,6 +249,8 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
                 IllegalStateException.class,
                 () -> mProtectedSignalsService.updateSignals(mInput, mUpdateSignalsCallbackMock));
         verifyUpdateSignalsApiUsageLog(AdServicesStatusUtils.STATUS_INTERNAL_ERROR, PACKAGE);
+        verify(mUpdateSignalsProcessReportedLoggerMock)
+                .setAdservicesApiStatusCode(AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
         verify(
                 () -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)),
                 times(0));
@@ -278,7 +291,7 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
         SettableFuture<Object> future = SettableFuture.create();
         future.setException(exception);
         when(mUpdateSignalsOrchestratorMock.orchestrateUpdate(
-                        eq(URI), eq(ADTECH), eq(PACKAGE), eq(mDevContext), any()))
+                        eq(URI), eq(ADTECH), eq(PACKAGE), eq(mDevContext), any(), any()))
                 .thenReturn(FluentFuture.from(future));
         mProtectedSignalsService.updateSignals(mInput, mUpdateSignalsCallbackMock);
 
@@ -287,6 +300,8 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
         assertEquals(AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, actual.getStatusCode());
         assertEquals(EXCEPTION_MESSAGE, actual.getErrorMessage());
         verifyUpdateSignalsApiUsageLog(AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, PACKAGE);
+        verify(mUpdateSignalsProcessReportedLoggerMock)
+                .setAdservicesApiStatusCode(AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
         verify(
                 () -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)),
                 times(0));
@@ -306,6 +321,8 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
 
         mProtectedSignalsService.updateSignals(mInput, mUpdateSignalsCallbackMock);
         verifyUpdateSignalsApiUsageLog(AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED, PACKAGE);
+        verify(mUpdateSignalsProcessReportedLoggerMock)
+                .setAdservicesApiStatusCode(AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED);
         verify(mAdServicesLoggerMock).logUpdateSignalsApiCalledStats(mStatsCaptor.capture());
         assertEquals(
                 JSON_PROCESSING_STATUS_OTHER_ERROR,
@@ -322,6 +339,8 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
 
         mProtectedSignalsService.updateSignals(mInput, mUpdateSignalsCallbackMock);
         verifyUpdateSignalsApiUsageLog(AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED, PACKAGE);
+        verify(mUpdateSignalsProcessReportedLoggerMock)
+                .setAdservicesApiStatusCode(AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED);
         verify(mAdServicesLoggerMock).logUpdateSignalsApiCalledStats(mStatsCaptor.capture());
         assertEquals(
                 JSON_PROCESSING_STATUS_OTHER_ERROR,
@@ -338,6 +357,8 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
 
         mProtectedSignalsService.updateSignals(mInput, mUpdateSignalsCallbackMock);
         verifyUpdateSignalsApiUsageLog(AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED, PACKAGE);
+        verify(mUpdateSignalsProcessReportedLoggerMock)
+                .setAdservicesApiStatusCode(AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED);
         verify(mUpdateSignalsCallbackMock).onSuccess();
         verify(
                 () -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)),
@@ -353,6 +374,8 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
         doThrow(new RuntimeException()).when(mUpdateSignalsCallbackMock).onSuccess();
         mProtectedSignalsService.updateSignals(mInput, mUpdateSignalsCallbackMock);
         verifyUpdateSignalsApiUsageLog(AdServicesStatusUtils.STATUS_INTERNAL_ERROR, PACKAGE);
+        verify(mUpdateSignalsProcessReportedLoggerMock)
+                .setAdservicesApiStatusCode(AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
         verify(
                 () -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)),
                 times(1));
@@ -386,6 +409,11 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
 
         @Override
         public boolean getPasExtendedMetricsEnabled() {
+            return true;
+        }
+
+        @Override
+        public boolean getPasProductMetricsV1Enabled() {
             return true;
         }
     }

@@ -34,8 +34,11 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 public class CommonFixture {
@@ -138,5 +141,15 @@ public class CommonFixture {
             sb.append(AlphaNumericString.charAt(index));
         }
         return sb.toString();
+    }
+
+    /** Creates a list of {@code AdTechIdentifier} with N amountOfBuyers */
+    public static List<AdTechIdentifier> createNAmountOfBuyers(int amountOfBuyers) {
+        List<AdTechIdentifier> buyers = new ArrayList<>();
+        for (int b = 1; b <= amountOfBuyers; b++) {
+            String buyerName = String.format(Locale.ENGLISH, "test%d.com", b);
+            buyers.add(AdTechIdentifier.fromString(buyerName));
+        }
+        return buyers;
     }
 }

@@ -27,8 +27,6 @@ import java.util.Objects;
  */
 public abstract class HostSideTestCase extends SidelessTestCase implements IDeviceTest {
 
-    protected final Logger mLog = new Logger(ConsoleLogger.getInstance(), getClass());
-
     protected ITestDevice mDevice;
 
     @Override

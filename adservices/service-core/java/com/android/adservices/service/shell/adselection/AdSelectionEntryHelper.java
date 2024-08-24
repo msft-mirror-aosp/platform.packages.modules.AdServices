@@ -16,124 +16,61 @@
 
 package com.android.adservices.service.shell.adselection;
 
-
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelectionEntry;
 import com.android.adservices.data.adselection.datahandlers.ReportingData;
-import com.android.internal.annotations.VisibleForTesting;
+import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.AuctionResult;
+import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.WinReportingUrls;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-/** Helper for parting {@link DBAdSelectionEntry} objects into JSON. */
+/** Helper for parting {@link DBAdSelectionEntry} objects into protobuf. */
 public class AdSelectionEntryHelper {
 
-    @VisibleForTesting public static final String FIELD_AD_SELECTION_ID = "ad_selection_id";
-
-    @VisibleForTesting public static final String FIELD_CREATION_TIMESTAMP = "timestamp";
-
-    @VisibleForTesting public static final String FIELD_WINNING_AD_BID = "winning_bid";
-
-    @VisibleForTesting
-    public static final String FIELD_WINNING_AD_RENDER_URI = "winning_ad_render_uri";
-
-    @VisibleForTesting
-    public static final String FIELD_CUSTOM_AUDIENCE_SIGNALS = "custom_audience_signals";
-
-    @VisibleForTesting public static final String FIELD_CUSTOM_AUDIENCE_SIGNALS_BUYER = "buyer";
-    @VisibleForTesting public static final String FIELD_CUSTOM_AUDIENCE_SIGNALS_OWNER = "owner";
-    @VisibleForTesting public static final String FIELD_CUSTOM_AUDIENCE_SIGNALS_NAME = "name";
-
-    @VisibleForTesting
-    public static final String FIELD_CUSTOM_AUDIENCE_SIGNALS_ACTIVATION_TIME = "activation_time";
-
-    @VisibleForTesting
-    public static final String FIELD_CUSTOM_AUDIENCE_SIGNALS_EXPIRATION_TIME = "expiration_time";
-
-    @VisibleForTesting
-    public static final String FIELD_CUSTOM_AUDIENCE_SIGNALS_USER_BIDDING_SIGNALS =
-            "user_bidding_signals";
-
-    @VisibleForTesting
-    public static final String FIELD_BUYER_CONTEXTUAL_SIGNALS = "buyer_contextual_signals";
-
-    @VisibleForTesting
-    public static final String FIELD_BUYER_DECISION_LOGIC_JS = "buyer_decision_logic_js";
-
-    @VisibleForTesting public static final String FIELD_BIDDING_LOGIC_URI = "bidding_logic_uri";
-
-    @VisibleForTesting
-    public static final String FIELD_SELLER_CONTEXTUAL_SIGNALS = "seller_contextual_signals";
-
-    @VisibleForTesting
-    public static final String FIELD_BUYER_WIN_REPORTING_URI = "buyer_win_reporting_uri";
-
-    @VisibleForTesting
-    public static final String FIELD_SELLER_WIN_REPORTING_URI = "seller_win_reporting_uri";
-
     /**
-     * Parse an {@link DBAdSelectionEntry} into JSON format.
+     * Construct an {@link AuctionResult} for a given ad selection.
      *
-     * <p>Not all fields are encoded so look at the implementation and various field constants if
-     * you need to know or update them.
-     *
-     * @param adSelectionEntry The entry to parse.
-     * @return An instance of {@link JSONObject} containing fields from {@link DBAdSelectionEntry}.
-     * @throws JSONException If the parsing fails.
+     * @param adSelectionEntry Data for ad selection.
+     * @param reportingUris Data for reporting.
+     * @return Valid proto.
      */
-    public static JSONObject getJsonFromAdSelectionEntry(
-            DBAdSelectionEntry adSelectionEntry, ReportingData reportingUris) throws JSONException {
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put(FIELD_AD_SELECTION_ID, adSelectionEntry.getAdSelectionId());
-        jsonObject.put(FIELD_CREATION_TIMESTAMP, adSelectionEntry.getCreationTimestamp());
-        jsonObject.put(FIELD_WINNING_AD_BID, adSelectionEntry.getWinningAdBid());
-        jsonObject.put(FIELD_WINNING_AD_RENDER_URI, adSelectionEntry.getWinningAdRenderUri());
-        jsonObject.put(FIELD_BUYER_WIN_REPORTING_URI, "none");
-        jsonObject.put(FIELD_SELLER_WIN_REPORTING_URI, "none");
-        if (reportingUris != null) {
-            if (reportingUris.getBuyerWinReportingUri() != null) {
-                jsonObject.put(
-                        FIELD_BUYER_WIN_REPORTING_URI, reportingUris.getBuyerWinReportingUri());
-            }
+    static AuctionResult getAuctionResultFromAdSelectionEntry(
+            DBAdSelectionEntry adSelectionEntry, ReportingData reportingUris) {
+        AuctionResult.Builder auctionResult =
+                AuctionResult.newBuilder()
+                        .setBid(
+                                Float.parseFloat(
+                                        Double.toString(adSelectionEntry.getWinningAdBid())))
+                        .setAdRenderUrl(adSelectionEntry.getWinningAdRenderUri().toString())
+                        .setIsChaff(false)
+                        .setWinReportingUrls(getWinReportingUrls(reportingUris));
 
-            if (reportingUris.getSellerWinReportingUri() != null) {
-                jsonObject.put(
-                        FIELD_SELLER_WIN_REPORTING_URI, reportingUris.getSellerWinReportingUri());
-            }
-        }
         if (adSelectionEntry.getCustomAudienceSignals() != null) {
-            jsonObject.put(
-                    FIELD_CUSTOM_AUDIENCE_SIGNALS,
-                    getJsonFromCustomAudienceSignals(adSelectionEntry.getCustomAudienceSignals()));
+            CustomAudienceSignals signals = adSelectionEntry.getCustomAudienceSignals();
+            auctionResult
+                    .setBuyer(signals.getBuyer().toString())
+                    .setCustomAudienceOwner(signals.getOwner())
+                    .setCustomAudienceName(signals.getName());
         }
-        // TODO(b/354392848): Add ad counter keys to class.
-        if (adSelectionEntry.getSellerContextualSignals() != null) {
-            jsonObject.put(
-                    FIELD_SELLER_CONTEXTUAL_SIGNALS, adSelectionEntry.getSellerContextualSignals());
-        }
-        jsonObject.put(
-                FIELD_BUYER_CONTEXTUAL_SIGNALS, adSelectionEntry.getBuyerContextualSignals());
-        jsonObject.put(FIELD_BUYER_DECISION_LOGIC_JS, adSelectionEntry.getBuyerDecisionLogicJs());
-        jsonObject.put(FIELD_BIDDING_LOGIC_URI, adSelectionEntry.getBiddingLogicUri());
 
-        return jsonObject;
+        return auctionResult.build();
     }
 
-    private static JSONObject getJsonFromCustomAudienceSignals(
-            CustomAudienceSignals customAudienceSignals) throws JSONException {
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put(FIELD_CUSTOM_AUDIENCE_SIGNALS_BUYER, customAudienceSignals.getBuyer());
-        jsonObject.put(FIELD_CUSTOM_AUDIENCE_SIGNALS_OWNER, customAudienceSignals.getOwner());
-        jsonObject.put(FIELD_CUSTOM_AUDIENCE_SIGNALS_NAME, customAudienceSignals.getName());
-        jsonObject.put(
-                FIELD_CUSTOM_AUDIENCE_SIGNALS_ACTIVATION_TIME,
-                customAudienceSignals.getActivationTime());
-        jsonObject.put(
-                FIELD_CUSTOM_AUDIENCE_SIGNALS_EXPIRATION_TIME,
-                customAudienceSignals.getExpirationTime());
-        jsonObject.put(
-                FIELD_CUSTOM_AUDIENCE_SIGNALS_USER_BIDDING_SIGNALS,
-                customAudienceSignals.getUserBiddingSignals().toString());
-        return jsonObject;
+    private static WinReportingUrls getWinReportingUrls(ReportingData reportingData) {
+        WinReportingUrls.Builder builder = WinReportingUrls.newBuilder();
+        if (reportingData != null) {
+            if (reportingData.getBuyerWinReportingUri() != null) {
+                builder.setBuyerReportingUrls(
+                        WinReportingUrls.ReportingUrls.newBuilder()
+                                .setReportingUrl(reportingData.getBuyerWinReportingUri().toString())
+                                .build());
+            }
+            if (reportingData.getSellerWinReportingUri() != null) {
+                builder.setTopLevelSellerReportingUrls(
+                        WinReportingUrls.ReportingUrls.newBuilder()
+                                .setReportingUrl(
+                                        reportingData.getSellerWinReportingUri().toString())
+                                .build());
+            }
+        }
+        return builder.build();
     }
 }

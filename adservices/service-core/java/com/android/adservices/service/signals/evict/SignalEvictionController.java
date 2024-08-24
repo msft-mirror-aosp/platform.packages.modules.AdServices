@@ -22,6 +22,7 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.List;
@@ -59,7 +60,8 @@ public class SignalEvictionController {
     public void evict(
             AdTechIdentifier adTech,
             List<DBProtectedSignal> updatedSignals,
-            UpdateOutput combinedUpdates) {
+            UpdateOutput combinedUpdates,
+            UpdateSignalsProcessReportedLogger updateSignalsProcessReportedLogger) {
         sLogger.v("Start running signal eviction.");
         for (SignalEvictor evictor : mSignalEvictors) {
             if (!evictor.evict(
@@ -67,7 +69,8 @@ public class SignalEvictionController {
                     updatedSignals,
                     combinedUpdates,
                     mMaxAllowedSignalSize,
-                    mMaxAllowedSignalSizeWithOversubscription)) {
+                    mMaxAllowedSignalSizeWithOversubscription,
+                    updateSignalsProcessReportedLogger)) {
                 sLogger.v("Eviction finished.");
                 break;
             }

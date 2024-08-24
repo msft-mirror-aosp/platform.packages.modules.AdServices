@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.stats;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_MEDIUM;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
@@ -25,10 +27,10 @@ import org.junit.Test;
 
 public class UpdateSignalsProcessReportedStatsTest extends AdServicesUnitTestCase {
     private static final int UPDATE_SIGNALS_PROCESS_LATENCY_MILLIS = 200;
-    private static final int ADSERVICES_API_STATUS_CODE = 401;
+    private static final int ADSERVICES_API_STATUS_CODE = STATUS_SUCCESS;
     private static final int SIGNALS_WRITTEN_COUNT = 10;
     private static final int KEYS_STORED_COUNT = 6;
-    private static final int VALUES_STORED_COUNT = 7;
+    private static final int VALUES_STORED_COUNT = 10;
     private static final int EVICTION_RULES_COUNT = 8;
     private static final int PER_BUYER_SIGNAL_SIZE = SIZE_MEDIUM;
     private static final float MEAN_RAW_PROTECTED_SIGNALS_SIZE_BYTES = 123.4f;

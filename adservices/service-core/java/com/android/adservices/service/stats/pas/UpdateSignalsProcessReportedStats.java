@@ -51,16 +51,10 @@ public abstract class UpdateSignalsProcessReportedStats {
      */
     public abstract float getMeanRawProtectedSignalsSizeBytes();
 
-    /**
-     * Returns the maximum size, in bytes, of raw protected signals being updated for the buyer
-     * performing the update.
-     */
+    /** Returns the size, in bytes, of the largest raw protected signal stored by the caller. */
     public abstract float getMaxRawProtectedSignalsSizeBytes();
 
-    /**
-     * Returns the minimum size, in bytes, of raw protected signals being updated for the buyer
-     * performing the update.
-     */
+    /** Returns the size, in bytes, of the smallest raw protected signal stored by the caller. */
     public abstract float getMinRawProtectedSignalsSizeBytes();
 
     /** Returns a generic builder. */
@@ -98,16 +92,10 @@ public abstract class UpdateSignalsProcessReportedStats {
          */
         public abstract Builder setMeanRawProtectedSignalsSizeBytes(float value);
 
-        /**
-         * Sets the maximum size, in bytes, of raw protected signals being updated for the buyer
-         * performing the update.
-         */
+        /** Sets the size, in bytes, of the largest raw protected signal stored by the caller. */
         public abstract Builder setMaxRawProtectedSignalsSizeBytes(float value);
 
-        /**
-         * Sets the minimum size, in bytes, of raw protected signals being updated for the buyer
-         * performing the update.
-         */
+        /** Sets the size, in bytes, of the smallest raw protected signal stored by the caller. */
         public abstract Builder setMinRawProtectedSignalsSizeBytes(float value);
 
         /** Build the {@link UpdateSignalsProcessReportedStats}. */

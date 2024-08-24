@@ -58,15 +58,13 @@ import android.adservices.common.FledgeErrorResponse;
 import android.adservices.common.FrequencyCapFilters;
 import android.adservices.common.KeyedFrequencyCap;
 import android.adservices.http.MockWebServerRule;
-import android.content.Context;
 import android.net.Uri;
 import android.os.RemoteException;
 
 import androidx.room.Room;
-import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
-import com.android.adservices.common.AdServicesDeviceSupportedRule;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.DBAdDataFixture;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
@@ -150,8 +148,10 @@ import com.android.adservices.service.stats.kanon.KAnonInitializeStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonJoinStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonSignJoinStatsConstants;
 import com.android.adservices.service.stats.kanon.KAnonSignStatusStats;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -173,8 +173,6 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -209,7 +207,12 @@ import private_join_and_compute.anonymous_counting_tokens.TokensSet;
 import private_join_and_compute.anonymous_counting_tokens.Transcript;
 
 @SuppressWarnings("UnusedVariable")
-public class KAnonE2ETest {
+@RequiresSdkLevelAtLeastS()
+@SpyStatic(JSScriptEngine.class)
+@MockStatic(ConsentManager.class)
+@MockStatic(AppImportanceFilter.class)
+@MockStatic(FlagsFactory.class)
+public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     private final String PRIVATE_KEY_HEX =
             "e7b292f49df28b8065992cdeadbc9d032a0e09e8476cb6d8d507212e7be3b9b4";
@@ -277,24 +280,15 @@ public class KAnonE2ETest {
     private AdServicesHttpsClient mAdServicesHttpsClientSpy;
     private AdServicesLogger mAdServicesLoggerMock;
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
-    @Rule(order = 1)
-    public final AdServicesDeviceSupportedRule deviceSupportRule =
-            new AdServicesDeviceSupportedRule();
-
     @Rule(order = 2)
     public final MockWebServerRule mockWebServerRule = MockWebServerRuleFactory.createForHttps();
 
     // This object access some system APIs
     @Mock public DevContextFilter mDevContextFilterMock;
     @Mock public AppImportanceFilter mAppImportanceFilterMock;
-    private Context mContext;
-    private Flags mFlags;
+    private Flags mFakeFlags;
     @Mock private FledgeAuthorizationFilter mFledgeAuthorizationFilterMock;
     private AdFilteringFeatureFactory mAdFilteringFeatureFactory;
-    private MockitoSession mStaticMockSession = null;
     @Mock private ConsentManager mConsentManagerMock;
     private CustomAudienceDao mCustomAudienceDaoSpy;
     private EncodedPayloadDao mEncodedPayloadDaoSpy;
@@ -341,7 +335,6 @@ public class KAnonE2ETest {
     private UserProfileIdManager mUserProfileIdManager;
     private AnonymousCountingTokens mAnonymousCountingTokensSpy;
 
-    private final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final String GOLDEN_TRANSCRIPT_PATH = "act/golden_transcript_1";
     @Mock private KAnonSignJoinFactory mKAnonSignJoinFactoryMock;
 
@@ -357,17 +350,8 @@ public class KAnonE2ETest {
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mScheduledExecutor = AdServicesExecutors.getScheduler();
-        mContext = ApplicationProvider.getApplicationContext();
-        mFlags = new KAnonE2ETestFlags(false, 20, true, 100);
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(JSScriptEngine.class)
-                        .strictness(Strictness.LENIENT)
-                        .initMocks(this)
-                        .mockStatic(ConsentManager.class)
-                        .mockStatic(AppImportanceFilter.class)
-                        .mockStatic(FlagsFactory.class)
-                        .startMocking();
+        mFakeFlags = new KAnonE2ETestFlags(false, 20, true, 100);
+
         mAdServicesLoggerMock = ExtendedMockito.mock(AdServicesLoggerImpl.class);
         mCustomAudienceDaoSpy =
                 spy(
@@ -387,7 +371,7 @@ public class KAnonE2ETest {
         SharedStorageDatabase sharedDb =
                 Room.inMemoryDatabaseBuilder(mContext, SharedStorageDatabase.class).build();
 
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(mFakeFlags).when(FlagsFactory::getFlags);
         mAppInstallDao = sharedDb.appInstallDao();
         mFrequencyCapDaoSpy = spy(sharedDb.frequencyCapDao());
         AdSelectionServerDatabase serverDb =
@@ -396,7 +380,7 @@ public class KAnonE2ETest {
                 com.android.adservices.data.encryptionkey.EncryptionKeyDao.getInstance();
         mEnrollmentDao = EnrollmentDao.getInstance();
         mAdFilteringFeatureFactory =
-                new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDaoSpy, mFlags);
+                new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDaoSpy, mFakeFlags);
         when(ConsentManager.getInstance()).thenReturn(mConsentManagerMock);
         when(AppImportanceFilter.create(any(), any())).thenReturn(mAppImportanceFilterMock);
         doNothing()
@@ -416,15 +400,16 @@ public class KAnonE2ETest {
                 MultiCloudTestStrategyFactory.getDisabledTestStrategy(mObliviousHttpEncryptorMock);
         mPayloadFormatter =
                 AuctionServerPayloadFormatterFactory.createPayloadFormatter(
-                        mFlags.getFledgeAuctionServerPayloadFormatVersion(),
-                        mFlags.getFledgeAuctionServerPayloadBucketSizes());
+                        mFakeFlags.getFledgeAuctionServerPayloadFormatVersion(),
+                        mFakeFlags.getFledgeAuctionServerPayloadBucketSizes());
         mPayloadExtractor =
                 AuctionServerPayloadFormatterFactory.createPayloadExtractor(
-                        mFlags.getFledgeAuctionServerPayloadFormatVersion(), mAdServicesLoggerMock);
+                        mFakeFlags.getFledgeAuctionServerPayloadFormatVersion(),
+                        mAdServicesLoggerMock);
 
         mDataCompressor =
                 AuctionServerDataCompressorFactory.getDataCompressor(
-                        mFlags.getFledgeAuctionServerCompressionAlgorithmVersion());
+                        mFakeFlags.getFledgeAuctionServerCompressionAlgorithmVersion());
 
         doReturn(DevContext.createForDevOptionsDisabled())
                 .when(mDevContextFilterMock)
@@ -433,7 +418,7 @@ public class KAnonE2ETest {
 
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         KAnonDatabase kAnonDatabase =
-                Room.inMemoryDatabaseBuilder(CONTEXT, KAnonDatabase.class).build();
+                Room.inMemoryDatabaseBuilder(mContext, KAnonDatabase.class).build();
         mClientParametersDao = kAnonDatabase.clientParametersDao();
         mServerParametersDao = kAnonDatabase.serverParametersDao();
         mUserProfileIdManager = new UserProfileIdManager(mockUserProfileIdDao, mAdServicesClock);
@@ -446,7 +431,7 @@ public class KAnonE2ETest {
 
         when(mockClock.instant()).thenReturn(FIXED_INSTANT);
 
-        InputStream inputStream = CONTEXT.getAssets().open(GOLDEN_TRANSCRIPT_PATH);
+        InputStream inputStream = mContext.getAssets().open(GOLDEN_TRANSCRIPT_PATH);
         mTranscript = Transcript.parseDelimitedFrom(inputStream);
         mRetryStrategyFactory = RetryStrategyFactory.createInstanceForTesting();
         mConsentedDebugConfigurationDao =
@@ -466,9 +451,6 @@ public class KAnonE2ETest {
 
     @After
     public void tearDown() {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
         if (mAdServicesHttpsClientSpy != null) {
             reset(mAdServicesHttpsClientSpy);
         }
@@ -481,7 +463,7 @@ public class KAnonE2ETest {
                 new KAnonE2ETestFlags(false, 20, true, 0);
         CountDownLatch countDownLatch = new CountDownLatch(1);
         doReturn(flagsWithKAnonEnabledAndImmediateSignValueZero).when(FlagsFactory::getFlags);
-        mFlags = flagsWithKAnonEnabledAndImmediateSignValueZero;
+        mFakeFlags = flagsWithKAnonEnabledAndImmediateSignValueZero;
         PersistAdSelectionResultInput persistAdSelectionResultInput =
                 setupTestForPersistAdSelectionResult(countDownLatch);
         mAdSelectionService = createAdSelectionService();
@@ -506,7 +488,7 @@ public class KAnonE2ETest {
         Flags flagsWithKAnonDisabled = new KAnonE2ETestFlags(false, 20, false, 0);
         CountDownLatch countDownLatch = new CountDownLatch(1);
         doReturn(flagsWithKAnonDisabled).when(FlagsFactory::getFlags);
-        mFlags = flagsWithKAnonDisabled;
+        mFakeFlags = flagsWithKAnonDisabled;
         PersistAdSelectionResultInput persistAdSelectionResultInput =
                 setupTestForPersistAdSelectionResult(countDownLatch);
         mAdSelectionService = createAdSelectionService();
@@ -592,7 +574,7 @@ public class KAnonE2ETest {
         Flags flagsWithCustomUrlsAndImmediateSignJoinValue100 = new FlagsWithUrls();
 
         doReturn(flagsWithCustomUrlsAndImmediateSignJoinValue100).when(FlagsFactory::getFlags);
-        mFlags = flagsWithCustomUrlsAndImmediateSignJoinValue100;
+        mFakeFlags = flagsWithCustomUrlsAndImmediateSignJoinValue100;
         CountDownLatch countDownLatch = new CountDownLatch(1);
         PersistAdSelectionResultInput persistAdSelectionResultInput =
                 setupTestForPersistAdSelectionResult(countDownLatch);
@@ -652,7 +634,7 @@ public class KAnonE2ETest {
         }
         Flags flagsWithCustomUrlsAndImmediateSignJoinValue100 = new FlagsWithUrls();
         doReturn(flagsWithCustomUrlsAndImmediateSignJoinValue100).when(FlagsFactory::getFlags);
-        mFlags = flagsWithCustomUrlsAndImmediateSignJoinValue100;
+        mFakeFlags = flagsWithCustomUrlsAndImmediateSignJoinValue100;
         CountDownLatch countDownLatch = new CountDownLatch(1);
         PersistAdSelectionResultInput persistAdSelectionResultInput =
                 setupTestForPersistAdSelectionResult(countDownLatch);
@@ -705,7 +687,7 @@ public class KAnonE2ETest {
         }
         Flags flagsWithCustomUrlsAndImmediateSignJoinValue100 = new FlagsWithUrls();
         doReturn(flagsWithCustomUrlsAndImmediateSignJoinValue100).when(FlagsFactory::getFlags);
-        mFlags = flagsWithCustomUrlsAndImmediateSignJoinValue100;
+        mFakeFlags = flagsWithCustomUrlsAndImmediateSignJoinValue100;
 
         CountDownLatch countDownLatch = new CountDownLatch(1);
         PersistAdSelectionResultInput persistAdSelectionResultInput =
@@ -749,7 +731,7 @@ public class KAnonE2ETest {
         }
         Flags flagsWithCustomServerParamUrl = new FlagsWithFetchServerParams();
         doReturn(flagsWithCustomServerParamUrl).when(FlagsFactory::getFlags);
-        mFlags = flagsWithCustomServerParamUrl;
+        mFakeFlags = flagsWithCustomServerParamUrl;
         CountDownLatch countDownLatch = new CountDownLatch(1);
         PersistAdSelectionResultInput persistAdSelectionResultInput =
                 setupTestForPersistAdSelectionResult(countDownLatch);
@@ -802,7 +784,7 @@ public class KAnonE2ETest {
         }
         Flags flagsWithGetChallengeUrl = new FlagsWithGetChallengeUrl();
         doReturn(flagsWithGetChallengeUrl).when(FlagsFactory::getFlags);
-        mFlags = flagsWithGetChallengeUrl;
+        mFakeFlags = flagsWithGetChallengeUrl;
         CountDownLatch countDownLatch = new CountDownLatch(1);
         PersistAdSelectionResultInput persistAdSelectionResultInput =
                 setupTestForPersistAdSelectionResult(countDownLatch);
@@ -857,7 +839,7 @@ public class KAnonE2ETest {
         }
         Flags flagsWithGetChallengeUrl = new FlagsWithGetChallengeUrl();
         doReturn(flagsWithGetChallengeUrl).when(FlagsFactory::getFlags);
-        mFlags = flagsWithGetChallengeUrl;
+        mFakeFlags = flagsWithGetChallengeUrl;
         CountDownLatch countDownLatch = new CountDownLatch(1);
         PersistAdSelectionResultInput persistAdSelectionResultInput =
                 setupTestForPersistAdSelectionResult(countDownLatch);
@@ -958,7 +940,7 @@ public class KAnonE2ETest {
 
         Flags flagsWithCustomUrlsAndImmediateSignJoinValue100 = new FlagsWithUrls();
         doReturn(flagsWithCustomUrlsAndImmediateSignJoinValue100).when(FlagsFactory::getFlags);
-        mFlags = flagsWithCustomUrlsAndImmediateSignJoinValue100;
+        mFakeFlags = flagsWithCustomUrlsAndImmediateSignJoinValue100;
         CountDownLatch countDownLatch = new CountDownLatch(1);
         PersistAdSelectionResultInput persistAdSelectionResultInput =
                 setupTestForPersistAdSelectionResult(countDownLatch);
@@ -1012,7 +994,7 @@ public class KAnonE2ETest {
         }
         Flags flagsWithCustomJoinUrl = new FlagsWithCustomJoinUrl();
         doReturn(flagsWithCustomJoinUrl).when(FlagsFactory::getFlags);
-        mFlags = flagsWithCustomJoinUrl;
+        mFakeFlags = flagsWithCustomJoinUrl;
         CountDownLatch countDownLatch = new CountDownLatch(1);
         PersistAdSelectionResultInput persistAdSelectionResultInput =
                 setupTestForPersistAdSelectionResult(countDownLatch);
@@ -1054,7 +1036,7 @@ public class KAnonE2ETest {
         }
         Flags flagsWithGetTokensUrl = new FlagsWithGetTokensUrl();
         doReturn(flagsWithGetTokensUrl).when(FlagsFactory::getFlags);
-        mFlags = flagsWithGetTokensUrl;
+        mFakeFlags = flagsWithGetTokensUrl;
         CountDownLatch countDownLatch = new CountDownLatch(1);
         PersistAdSelectionResultInput persistAdSelectionResultInput =
                 setupTestForPersistAdSelectionResult(countDownLatch);
@@ -1083,7 +1065,7 @@ public class KAnonE2ETest {
         Flags flagsWithFeatureEnabledImmediateJoinHundred =
                 new KAnonE2ETestFlags(false, 20, true, 100);
         doReturn(flagsWithFeatureEnabledImmediateJoinHundred).when(FlagsFactory::getFlags);
-        mFlags = flagsWithFeatureEnabledImmediateJoinHundred;
+        mFakeFlags = flagsWithFeatureEnabledImmediateJoinHundred;
         CountDownLatch countDownLatch = new CountDownLatch(1);
         PersistAdSelectionResultInput persistAdSelectionResultInput =
                 setupTestForPersistAdSelectionResult(countDownLatch);
@@ -1145,7 +1127,7 @@ public class KAnonE2ETest {
 
         Flags flagsWithUrlsAndFeatureEnabled = new FlagsWithUrls();
         doReturn(flagsWithUrlsAndFeatureEnabled).when(FlagsFactory::getFlags);
-        mFlags = flagsWithUrlsAndFeatureEnabled;
+        mFakeFlags = flagsWithUrlsAndFeatureEnabled;
         CountDownLatch countDownLatch = new CountDownLatch(1);
         PersistAdSelectionResultInput persistAdSelectionResultInput =
                 setupTestForPersistAdSelectionResult(countDownLatch);
@@ -1230,7 +1212,7 @@ public class KAnonE2ETest {
         Flags flagsWithCustomUrlsAndImmediateSignJoinValue100 = new FlagsWithUrls();
 
         doReturn(flagsWithCustomUrlsAndImmediateSignJoinValue100).when(FlagsFactory::getFlags);
-        mFlags = flagsWithCustomUrlsAndImmediateSignJoinValue100;
+        mFakeFlags = flagsWithCustomUrlsAndImmediateSignJoinValue100;
         CountDownLatch countDownLatch = new CountDownLatch(1);
         PersistAdSelectionResultInput persistAdSelectionResultInput =
                 setupTestForPersistAdSelectionResult(countDownLatch);
@@ -1279,7 +1261,7 @@ public class KAnonE2ETest {
         }
         Flags flagsWithCustomUrlsAndImmediateSignJoinValue100 = new FlagsWithUrls();
         doReturn(flagsWithCustomUrlsAndImmediateSignJoinValue100).when(FlagsFactory::getFlags);
-        mFlags = flagsWithCustomUrlsAndImmediateSignJoinValue100;
+        mFakeFlags = flagsWithCustomUrlsAndImmediateSignJoinValue100;
         CountDownLatch countDownLatch = new CountDownLatch(1);
         PersistAdSelectionResultInput persistAdSelectionResultInput =
                 setupTestForPersistAdSelectionResult(countDownLatch);
@@ -1327,7 +1309,7 @@ public class KAnonE2ETest {
         }
         Flags flagsWithGetTokensUrl = new FlagsWithGetTokensUrl();
         doReturn(flagsWithGetTokensUrl).when(FlagsFactory::getFlags);
-        mFlags = flagsWithGetTokensUrl;
+        mFakeFlags = flagsWithGetTokensUrl;
         CountDownLatch countDownLatch = new CountDownLatch(1);
         PersistAdSelectionResultInput persistAdSelectionResultInput =
                 setupTestForPersistAdSelectionResult(countDownLatch);
@@ -1371,7 +1353,7 @@ public class KAnonE2ETest {
         }
         Flags flagsWithCustomServerParamUrl = new FlagsWithFetchServerParams();
         doReturn(flagsWithCustomServerParamUrl).when(FlagsFactory::getFlags);
-        mFlags = flagsWithCustomServerParamUrl;
+        mFakeFlags = flagsWithCustomServerParamUrl;
         CountDownLatch countDownLatch = new CountDownLatch(1);
         PersistAdSelectionResultInput persistAdSelectionResultInput =
                 setupTestForPersistAdSelectionResult(countDownLatch);
@@ -1429,7 +1411,7 @@ public class KAnonE2ETest {
         }
         Flags flagsWithCustomUrlsAndImmediateSignJoinValue100 = new FlagsWithUrls();
         doReturn(flagsWithCustomUrlsAndImmediateSignJoinValue100).when(FlagsFactory::getFlags);
-        mFlags = flagsWithCustomUrlsAndImmediateSignJoinValue100;
+        mFakeFlags = flagsWithCustomUrlsAndImmediateSignJoinValue100;
 
         CountDownLatch countDownLatch = new CountDownLatch(1);
         PersistAdSelectionResultInput persistAdSelectionResultInput =
@@ -1523,7 +1505,7 @@ public class KAnonE2ETest {
         Flags flagsWithCustomUrlsAndImmediateSignJoinValue100 = new FlagsWithUrls();
 
         doReturn(flagsWithCustomUrlsAndImmediateSignJoinValue100).when(FlagsFactory::getFlags);
-        mFlags = flagsWithCustomUrlsAndImmediateSignJoinValue100;
+        mFakeFlags = flagsWithCustomUrlsAndImmediateSignJoinValue100;
         CountDownLatch countDownLatch = new CountDownLatch(1);
         PersistAdSelectionResultInput persistAdSelectionResultInput =
                 setupTestForPersistAdSelectionResult(countDownLatch);
@@ -1632,7 +1614,7 @@ public class KAnonE2ETest {
         Flags flagsWithCustomUrlsAndImmediateSignJoinValue100 = new FlagsWithUrls();
 
         doReturn(flagsWithCustomUrlsAndImmediateSignJoinValue100).when(FlagsFactory::getFlags);
-        mFlags = flagsWithCustomUrlsAndImmediateSignJoinValue100;
+        mFakeFlags = flagsWithCustomUrlsAndImmediateSignJoinValue100;
         CountDownLatch countDownLatch = new CountDownLatch(1);
         PersistAdSelectionResultInput persistAdSelectionResultInput =
                 setupTestForPersistAdSelectionResult(countDownLatch);
@@ -1730,7 +1712,7 @@ public class KAnonE2ETest {
         Flags flagsWithLogginDisabled = new FlagsWithLogginDisabled();
 
         doReturn(flagsWithLogginDisabled).when(FlagsFactory::getFlags);
-        mFlags = flagsWithLogginDisabled;
+        mFakeFlags = flagsWithLogginDisabled;
         CountDownLatch countDownLatch = new CountDownLatch(1);
         PersistAdSelectionResultInput persistAdSelectionResultInput =
                 setupTestForPersistAdSelectionResult(countDownLatch);
@@ -2083,7 +2065,7 @@ public class KAnonE2ETest {
                 mScheduledExecutor,
                 mContext,
                 mAdServicesLoggerMock,
-                mFlags,
+                mFakeFlags,
                 CallingAppUidSupplierProcessImpl.create(),
                 mFledgeAuthorizationFilterMock,
                 mAdSelectionServiceFilterMock,
@@ -2249,7 +2231,7 @@ public class KAnonE2ETest {
 
     private void setupMocksForKAnonWithCountdownlatch(CountDownLatch countDownLatch)
             throws IOException {
-        mKAnonMessageManager = new KAnonMessageManager(mKAnonMessageDao, mFlags, mockClock);
+        mKAnonMessageManager = new KAnonMessageManager(mKAnonMessageDao, mFakeFlags, mockClock);
         UUID userId = UUID.randomUUID();
         when(mockUserProfileIdDao.getUserProfileId()).thenReturn(userId);
         KeyAttestationFactory keyAttestationFactory = new KeyAttestationFactory(mockKeyAttestation);
@@ -2260,15 +2242,15 @@ public class KAnonE2ETest {
                 spy(
                         new AdServicesHttpsClient(
                                 AdServicesExecutors.getBlockingExecutor(),
-                                mFlags.getFledgeKanonHttpClientTimeoutInMs(),
-                                mFlags.getFledgeKanonHttpClientTimeoutInMs(),
+                                mFakeFlags.getFledgeKanonHttpClientTimeoutInMs(),
+                                mFakeFlags.getFledgeKanonHttpClientTimeoutInMs(),
                                 DEFAULT_MAX_BYTES));
 
         mAdSelectionEncryptionKeyDao.deleteAllEncryptionKeys();
         AdSelectionEncryptionKeyManager encryptionKeyManager =
                 new AdSelectionEncryptionKeyManager(
                         mAdSelectionEncryptionKeyDao,
-                        mFlags,
+                        mFakeFlags,
                         mAdServicesHttpsClientSpy,
                         AdServicesExecutors.getLightWeightExecutor(),
                         mAdServicesLoggerMock);
@@ -2287,7 +2269,7 @@ public class KAnonE2ETest {
                         mServerParametersDao,
                         mUserProfileIdManager,
                         new BinaryHttpMessageDeserializer(),
-                        mFlags,
+                        mFakeFlags,
                         mKAnonMessageManager,
                         mAdServicesLoggerMock,
                         keyAttestationFactory,
@@ -2297,7 +2279,7 @@ public class KAnonE2ETest {
                         mContext,
                         kAnonCaller,
                         mKAnonMessageManager,
-                        mFlags,
+                        mFakeFlags,
                         mockClock,
                         mAdServicesLoggerMock);
         doReturn(mKAnonSignJoinManager).when(mKAnonSignJoinFactoryMock).getKAnonSignJoinManager();

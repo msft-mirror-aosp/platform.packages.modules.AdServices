@@ -16,25 +16,26 @@
 
 package com.android.tests.sandbox.appsetid;
 
+import static com.android.adservices.service.FlagsConstants.KEY_APPSETID_KILL_SWITCH;
+
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
-import android.content.Context;
 import android.os.Bundle;
 
-import androidx.test.platform.app.InstrumentationRegistry;
-
-import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.AdServicesCtsTestCase;
+import com.android.adservices.common.annotations.SetAllLogcatTags;
+import com.android.adservices.common.annotations.SetPpapiAppAllowList;
+import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.shared.testing.network.NetworkConnectionHelper;
-import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
 import java.time.Duration;
 import java.util.concurrent.Executor;
@@ -44,54 +45,20 @@ import java.util.concurrent.TimeoutException;
 /*
  * Test AppSetId API running within the Sandbox.
  */
-@RunWith(JUnit4.class)
-public class SandboxedAppSetIdManagerTest {
+@SetAllLogcatTags
+@SetFlagDisabled(KEY_APPSETID_KILL_SWITCH)
+@SetPpapiAppAllowList
+public final class SandboxedAppSetIdManagerTest extends AdServicesCtsTestCase {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final String SDK_NAME = "com.android.tests.providers.appsetidsdk";
 
     private static final int LOAD_SDK_FROM_INTERNET_TIMEOUT_SEC = 60;
-
-    private static final Context sContext =
-            InstrumentationRegistry.getInstrumentation().getContext();
 
     @Rule(order = 0)
     public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
 
     @Before
     public void setup() throws TimeoutException, InterruptedException {
-        // Start a foreground activity
-        SimpleActivity.startAndWaitForSimpleActivity(sContext, Duration.ofMillis(1000));
-        overridingBeforeTest();
-    }
-
-    @After
-    public void shutDown() {
-        overridingAfterTest();
-        SimpleActivity.stopSimpleActivity(sContext);
-    }
-
-    @Test
-    public void loadSdkAndRunAppSetIdApi() throws Exception {
-        // Skip the test if it runs on unsupported platforms.
-        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
-        Assume.assumeTrue(NetworkConnectionHelper.isInternetConnected(sContext));
-
-        final SdkSandboxManager sdkSandboxManager =
-                sContext.getSystemService(SdkSandboxManager.class);
-
-        final FakeLoadSdkCallback callback =
-                new FakeLoadSdkCallback(LOAD_SDK_FROM_INTERNET_TIMEOUT_SEC);
-
-        sdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), CALLBACK_EXECUTOR, callback);
-
-        // This verifies that the appsetidsdk in the Sandbox gets back the correct appsetid.
-        // If the appsetidsdk did not get correct appsetid, it will trigger the
-        // callback.onLoadSdkError.
-        callback.assertLoadSdkIsSuccessful("Load SDK from internet");
-    }
-
-    private void overridingBeforeTest() {
-        overridingAdservicesLoggingLevel("VERBOSE");
         // The setup for this test:
         // SandboxedAppSetIdManagerTest is the test app. It will load the appsetidsdk into the
         // Sandbox.
@@ -103,27 +70,29 @@ public class SandboxedAppSetIdManagerTest {
         // In this test, we use the loadSdk's callback as a 2-way communications between the Test
         // app (this class) and the Sdk running within the Sandbox process.
 
-        overrideAdservicesAppSetIdKillSwitch(true);
+        // Start a foreground activity
+        SimpleActivity.startAndWaitForSimpleActivity(mContext, Duration.ofMillis(1000));
     }
 
-    // Reset back the original values.
-    private void overridingAfterTest() {
-        overridingAdservicesLoggingLevel("INFO");
-        overrideAdservicesAppSetIdKillSwitch(false);
+    @After
+    public void shutDown() {
+        SimpleActivity.stopSimpleActivity(mContext);
     }
 
-    private void overridingAdservicesLoggingLevel(String loggingLevel) {
-        ShellUtils.runShellCommand("setprop log.tag.adservices %s", loggingLevel);
-    }
+    @Test
+    public void loadSdkAndRunAppSetIdApi() {
+        Assume.assumeTrue(NetworkConnectionHelper.isInternetConnected(mContext));
 
-    // Override appsetid_kill_switch to ignore the effect of actual PH values.
-    // If shouldOverride = true, override appsetid_kill_switch to OFF to allow adservices
-    // If shouldOverride = false, override appsetid_kill_switch to meaningless value so that PhFlags
-    // will
-    // use the default value.
-    private void overrideAdservicesAppSetIdKillSwitch(boolean shouldOverride) {
-        String overrideString = shouldOverride ? "false" : "null";
-        ShellUtils.runShellCommand(
-                "device_config put adservices appsetid_kill_switch " + overrideString);
+        SdkSandboxManager sdkSandboxManager = mContext.getSystemService(SdkSandboxManager.class);
+        assertWithMessage("SdkSandboxManager").that(sdkSandboxManager).isNotNull();
+
+        FakeLoadSdkCallback callback = new FakeLoadSdkCallback(LOAD_SDK_FROM_INTERNET_TIMEOUT_SEC);
+
+        sdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), CALLBACK_EXECUTOR, callback);
+
+        // This verifies that the appsetidsdk in the Sandbox gets back the correct appsetid.
+        // If the appsetidsdk did not get correct appsetid, it will trigger the
+        // callback.onLoadSdkError.
+        callback.assertLoadSdkIsSuccessful("Load SDK from internet");
     }
 }

@@ -22,7 +22,6 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -164,7 +163,7 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
                         /* pasExtendedMetricsEnabled= */ false,
                         /* omitAdsEnabled= */ false);
         when(mMockCompressedBuyerInputCreatorFactory.createCompressedBuyerInputCreator(
-                        anyInt(), any()))
+                        any(), any()))
                 .thenReturn(
                         new CompressedBuyerInputCreatorNoOptimizations(
                                 helper,

@@ -30,11 +30,8 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.argThat;
@@ -49,7 +46,6 @@ import android.adservices.adselection.CustomAudienceSignalsFixture;
 import android.adservices.common.CommonFixture;
 import android.adservices.common.FledgeErrorResponse;
 import android.annotation.NonNull;
-import android.content.Context;
 import android.net.Uri;
 import android.os.Process;
 import android.os.RemoteException;
@@ -57,6 +53,7 @@ import android.os.RemoteException;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
@@ -72,21 +69,16 @@ import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.SelectAdsFromOutcomesExecutionLogger;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
-import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
 import java.time.Instant;
 import java.util.HashSet;
@@ -94,7 +86,8 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
-public class OutcomeSelectionRunnerTest {
+@RequiresSdkLevelAtLeastS()
+public final class OutcomeSelectionRunnerTest extends AdServicesExtendedMockitoTestCase {
     private static final int CALLER_UID = Process.myUid();
     private static final String MY_APP_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     private static final String ANOTHER_CALLER_PACKAGE_NAME = "another.caller.package";
@@ -126,31 +119,20 @@ public class OutcomeSelectionRunnerTest {
                     .setWinningAdRenderUri(RENDER_URI_3)
                     .build();
 
-    private final Context mContext = ApplicationProvider.getApplicationContext();
-
     private AdSelectionEntryDao mAdSelectionEntryDao;
     @Mock private AdOutcomeSelector mAdOutcomeSelectorMock;
     private OutcomeSelectionRunner mOutcomeSelectionRunner;
-    private Flags mFlags = new OutcomeSelectionRunnerTestFlags();
+    private Flags mFakeFlags = new OutcomeSelectionRunnerTestFlags();
     private final AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
-    private MockitoSession mStaticMockSession = null;
     private ListeningExecutorService mBlockingExecutorService;
 
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilter;
     @Mock private SelectAdsFromOutcomesExecutionLogger mSelectAdsFromOutcomesExecutionLoggerMock;
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Before
     public void setup() {
         mBlockingExecutorService = AdServicesExecutors.getBlockingExecutor();
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .strictness(Strictness.LENIENT)
-                        .initMocks(this)
-                        .startMocking();
 
         mAdSelectionEntryDao =
                 Room.inMemoryDatabaseBuilder(
@@ -169,7 +151,7 @@ public class OutcomeSelectionRunnerTest {
                         AdServicesExecutors.getScheduler(),
                         mAdServicesLoggerMock,
                         mContext,
-                        mFlags,
+                        mFakeFlags,
                         mAdSelectionServiceFilter,
                         DevContext.createForDevOptionsDisabled(),
                         false);
@@ -185,13 +167,6 @@ public class OutcomeSelectionRunnerTest {
                         AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS_FROM_OUTCOMES,
                         Throttler.ApiKey.FLEDGE_API_SELECT_ADS,
                         DevContext.createForDevOptionsDisabled());
-    }
-
-    @After
-    public void tearDown() {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
     }
 
     @Test
@@ -222,8 +197,9 @@ public class OutcomeSelectionRunnerTest {
 
         var unused =
                 verify(mAdOutcomeSelectorMock, never()).runAdOutcomeSelector(any(), any(), any());
-        assertFalse(resultsCallback.mIsSuccess);
-        assertEquals(STATUS_INVALID_ARGUMENT, resultsCallback.mFledgeErrorResponse.getStatusCode());
+        expect.that(resultsCallback.mIsSuccess).isFalse();
+        expect.that(STATUS_INVALID_ARGUMENT)
+                .isEqualTo(resultsCallback.mFledgeErrorResponse.getStatusCode());
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS_FROM_OUTCOMES),
@@ -270,8 +246,8 @@ public class OutcomeSelectionRunnerTest {
 
         var unused =
                 verify(mAdOutcomeSelectorMock, never()).runAdOutcomeSelector(any(), any(), any());
-        assertTrue(resultsCallback.mIsSuccess);
-        assertNull(resultsCallback.mAdSelectionResponse);
+        expect.that(resultsCallback.mIsSuccess).isTrue();
+        expect.that(resultsCallback.mAdSelectionResponse).isNull();
 
         // Confirm a duplicate log entry does not exist.
         // AdSelectionServiceFilter ensures the failing assertion is logged internally.
@@ -285,7 +261,7 @@ public class OutcomeSelectionRunnerTest {
 
     @Test
     public void testRunOutcomeSelectionOrchestrationTimeoutFailure() {
-        mFlags =
+        mFakeFlags =
                 new Flags() {
                     @Override
                     public long getAdSelectionSelectingOutcomeTimeoutMs() {
@@ -319,7 +295,7 @@ public class OutcomeSelectionRunnerTest {
                         adOutcomesConfigParam);
 
         GenericListMatcher matcher = new GenericListMatcher(adSelectionIdWithBidAndRenderUris);
-        doAnswer((ignored) -> getSelectedOutcomeWithDelay(AD_SELECTION_ID_1, mFlags))
+        doAnswer((ignored) -> getSelectedOutcomeWithDelay(AD_SELECTION_ID_1, mFakeFlags))
                 .when(mAdOutcomeSelectorMock)
                 .runAdOutcomeSelector(
                         argThat(matcher),
@@ -336,7 +312,7 @@ public class OutcomeSelectionRunnerTest {
                         AdServicesExecutors.getScheduler(),
                         mAdServicesLoggerMock,
                         mContext,
-                        mFlags,
+                        mFakeFlags,
                         mAdSelectionServiceFilter,
                         DevContext.createForDevOptionsDisabled(),
                         false);
@@ -348,12 +324,12 @@ public class OutcomeSelectionRunnerTest {
                         MY_APP_PACKAGE_NAME,
                         mSelectAdsFromOutcomesExecutionLoggerMock);
 
-        var unused =
-                verify(mAdOutcomeSelectorMock, Mockito.times(1))
-                        .runAdOutcomeSelector(any(), any(), any());
-        assertFalse(resultsCallback.mIsSuccess);
-        assertNotNull(resultsCallback.mFledgeErrorResponse);
-        assertEquals(STATUS_TIMEOUT, resultsCallback.mFledgeErrorResponse.getStatusCode());
+        var unused = verify(mAdOutcomeSelectorMock).runAdOutcomeSelector(any(), any(), any());
+        expect.that(resultsCallback.mIsSuccess).isFalse();
+        assertWithMessage("mFledgeErrorResponse")
+                .that(resultsCallback.mFledgeErrorResponse)
+                .isNotNull();
+        expect.that(STATUS_TIMEOUT).isEqualTo(resultsCallback.mFledgeErrorResponse.getStatusCode());
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS_FROM_OUTCOMES),

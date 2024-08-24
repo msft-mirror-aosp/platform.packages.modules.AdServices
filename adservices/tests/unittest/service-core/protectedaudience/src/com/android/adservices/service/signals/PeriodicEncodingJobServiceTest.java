@@ -109,22 +109,12 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesJobServiceTe
     }
 
     @Test
-    public void testOnStartJobFlagDisabled_withoutLogging() {
-        mockGetBackgroundJobsLoggingKillSwitch(true);
-        mockGetProtectedSignalsPeriodicEncodingEnabled(false);
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mMockFlags);
-
-        testOnStartJobFlagDisabled();
-
-        verifyLoggingNotHappened(logger);
-    }
-
-    @Test
     public void testOnStartJobFlagDisabled_withLogging() throws Exception {
         mockDisableParentKillSwitches();
         mockGetProtectedSignalsPeriodicEncodingEnabled(false);
-        mockGetBackgroundJobsLoggingKillSwitch(false);
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mMockFlags);
+
+        AdServicesJobServiceLogger logger =
+                mockAdServicesJobServiceLogger(mMockContext, mMockFlags);
         JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
         testOnStartJobFlagDisabled();
@@ -155,21 +145,10 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesJobServiceTe
     }
 
     @Test
-    public void testOnStartJobConsentRevokedGaUxEnabled_withoutLogging() {
-        mockGetBackgroundJobsLoggingKillSwitch(true);
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mMockFlags);
-
-        testOnStartJobConsentRevokedGaUxEnabled();
-
-        verifyLoggingNotHappened(logger);
-    }
-
-    @Test
     public void testOnStartJobConsentRevokedGaUxEnabled_withLogging() throws Exception {
         mockDisableRelevantKillSwitches();
-        mockGetBackgroundJobsLoggingKillSwitch(false);
 
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mMockFlags);
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(mContext, mMockFlags);
         JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
         testOnStartJobConsentRevokedGaUxEnabled();
@@ -222,8 +201,8 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesJobServiceTe
     @Test
     public void testOnStartJobUpdateSuccess_withLogging() throws Exception {
         mockDisableRelevantKillSwitches();
-        mockGetBackgroundJobsLoggingKillSwitch(false);
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mMockFlags);
+
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(mContext, mMockFlags);
         JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);
         JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
@@ -233,21 +212,10 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesJobServiceTe
     }
 
     @Test
-    public void testOnStartJobUpdateTimeoutHandled_withoutLogging() throws Exception {
-        mockDisableRelevantKillSwitches();
-        mockGetBackgroundJobsLoggingKillSwitch(true);
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mMockFlags);
-
-        testOnStartJobUpdateTimeoutHandled();
-
-        verifyLoggingNotHappened(logger);
-    }
-
-    @Test
     public void testOnStartJobUpdateTimeoutHandled_withLogging() throws Exception {
         mockDisableRelevantKillSwitches();
-        mockGetBackgroundJobsLoggingKillSwitch(false);
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mMockFlags);
+
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(mContext, mMockFlags);
         JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);
         JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
@@ -303,27 +271,11 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesJobServiceTe
     }
 
     @Test
-    public void testOnStopJobCallsStopWork_withoutLogging() {
-        mockDisableRelevantKillSwitches();
-        mockGetBackgroundJobsLoggingKillSwitch(true);
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mMockFlags);
-
-        doReturn(mMockPeriodicEncodingJobWorker)
-                .when(() -> PeriodicEncodingJobWorker.getInstance());
-        doNothing().when(mMockPeriodicEncodingJobWorker).stopWork();
-        assertOnStopSucceeded();
-        verify(mMockPeriodicEncodingJobWorker).stopWork();
-        verifyLoggingNotHappened(logger);
-    }
-
-    @Test
     public void testOnStopJob_withLogging() throws Exception {
-        mockGetBackgroundJobsLoggingKillSwitch(false);
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mMockFlags);
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(mContext, mMockFlags);
         JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
-        doReturn(mMockPeriodicEncodingJobWorker)
-                .when(() -> PeriodicEncodingJobWorker.getInstance());
+        doReturn(mMockPeriodicEncodingJobWorker).when(PeriodicEncodingJobWorker::getInstance);
         doNothing().when(mMockPeriodicEncodingJobWorker).stopWork();
         assertOnStopSucceeded();
         verify(mMockPeriodicEncodingJobWorker).stopWork();
@@ -460,21 +412,30 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesJobServiceTe
     }
 
     @Test
-    public void testOnStartJob_shouldDisableJobTrue_withoutLogging() {
-        mockGetBackgroundJobsLoggingKillSwitch(true);
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mMockFlags);
+    public void testOnStartJobShouldDisableJobTrue() {
+        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(mContext, mMockFlags);
 
-        testOnStartJobShouldDisableJobTrue();
+        doReturn(true)
+                .when(
+                        () ->
+                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
+                                        any(Context.class)));
+        doNothing().when(mSpyEncodingJobService).jobFinished(mMockJobParameters, false);
 
-        verifyLoggingNotHappened(logger);
-    }
+        // Schedule the job to assert after starting that the scheduled job has been cancelled
+        JobInfo existingJobInfo =
+                new JobInfo.Builder(
+                                PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID,
+                                new ComponentName(sContext, PeriodicEncodingJobService.class))
+                        .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
+                        .build();
+        scheduleJob(existingJobInfo);
 
-    @Test
-    public void testOnStartJob_shouldDisableJobTrue_withLoggingEnabled() {
-        mockGetBackgroundJobsLoggingKillSwitch(false);
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mMockFlags);
-
-        testOnStartJobShouldDisableJobTrue();
+        assertOnStartIgnored();
+        assertNoPendingJob();
+        verifyEncodeProtectedSignalsNeverCalled();
+        verifyJobFinished();
+        verifyNoMoreInteractions(staticMockMarker(PeriodicEncodingJobWorker.class));
 
         // Verify logging has not happened even though logging is enabled because this field is not
         // logged
@@ -496,30 +457,6 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesJobServiceTe
 
         verify(() -> PeriodicEncodingJobWorker.getInstance());
         verifyEncodeProtectedSignalsCalled();
-        verifyJobFinished();
-        verifyNoMoreInteractions(staticMockMarker(PeriodicEncodingJobWorker.class));
-    }
-
-    private void testOnStartJobShouldDisableJobTrue() {
-        doReturn(true)
-                .when(
-                        () ->
-                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
-                                        any(Context.class)));
-        doNothing().when(mSpyEncodingJobService).jobFinished(mMockJobParameters, false);
-
-        // Schedule the job to assert after starting that the scheduled job has been cancelled
-        JobInfo existingJobInfo =
-                new JobInfo.Builder(
-                                PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID,
-                                new ComponentName(sContext, PeriodicEncodingJobService.class))
-                        .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
-                        .build();
-        scheduleJob(existingJobInfo);
-
-        assertOnStartIgnored();
-        assertNoPendingJob();
-        verifyEncodeProtectedSignalsNeverCalled();
         verifyJobFinished();
         verifyNoMoreInteractions(staticMockMarker(PeriodicEncodingJobWorker.class));
     }
@@ -579,10 +516,6 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesJobServiceTe
         verifyEncodeProtectedSignalsNeverCalled();
         verifyJobFinished();
         verifyNoMoreInteractions(staticMockMarker(PeriodicEncodingJobWorker.class));
-    }
-
-    private void mockGetBackgroundJobsLoggingKillSwitch(boolean value) {
-        when(mMockFlags.getBackgroundJobsLoggingKillSwitch()).thenReturn(value);
     }
 
     private void mockGetProtectedSignalPeriodicEncodingJobPeriodMs(long value) {

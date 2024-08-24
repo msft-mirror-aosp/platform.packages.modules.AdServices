@@ -34,6 +34,7 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
 import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.util.concurrent.FluentFuture;
@@ -59,6 +60,7 @@ public class UpdateSignalsOrchestratorTest {
     @Mock private UpdatesDownloader mUpdatesDownloader;
     @Mock private UpdateProcessingOrchestrator mUpdateProcessingOrchestrator;
     @Mock private AdTechUriValidator mAdTechUriValidator;
+    @Mock private UpdateSignalsProcessReportedLogger mUpdateSignalsProcessReportedLoggerMock;
 
     private UpdateSignalsOrchestrator mUpdateSignalsOrchestrator;
 
@@ -90,7 +92,8 @@ public class UpdateSignalsOrchestratorTest {
                         CommonFixture.VALID_BUYER_1,
                         TEST_PACKAGE_NAME_1,
                         DEV_CONTEXT,
-                        UpdateSignalsApiCalledStats.builder())
+                        UpdateSignalsApiCalledStats.builder(),
+                        mUpdateSignalsProcessReportedLoggerMock)
                 .get(TEST_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
         verify(mUpdatesDownloader).getUpdateJson(eq(URI), eq(TEST_PACKAGE_NAME_1), eq(DEV_CONTEXT));
@@ -101,7 +104,8 @@ public class UpdateSignalsOrchestratorTest {
                         any(Instant.class),
                         any(JSONObject.class),
                         any(DevContext.class),
-                        any(UpdateSignalsApiCalledStats.Builder.class));
+                        any(UpdateSignalsApiCalledStats.Builder.class),
+                        any(UpdateSignalsProcessReportedLogger.class));
         verify(mAdTechUriValidator).addValidation(eq(URI), any());
     }
 }

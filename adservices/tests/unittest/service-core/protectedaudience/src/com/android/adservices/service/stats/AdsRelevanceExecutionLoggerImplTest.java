@@ -67,8 +67,9 @@ public class AdsRelevanceExecutionLoggerImplTest {
     public static final long PERSIST_AD_SELECTION_RESULT_END_TIMESTAMP =
             PERSIST_AD_SELECTION_RESULT_START_TIMESTAMP + PERSIST_AD_SELECTION_RESULT_LATENCY_MS;
     public static final int PERSIST_AD_SELECTION_RESULT_INTERNAL_FINAL_LATENCY_MS =
-            (int) (PERSIST_AD_SELECTION_RESULT_END_TIMESTAMP
-                    - PERSIST_AD_SELECTION_RESULT_START_TIMESTAMP);
+            (int)
+                    (PERSIST_AD_SELECTION_RESULT_END_TIMESTAMP
+                            - PERSIST_AD_SELECTION_RESULT_START_TIMESTAMP);
     public static final int PERSIST_AD_SELECTION_RESULT_OVERALL_LATENCY_MS =
             BINDER_LATENCY_MS + PERSIST_AD_SELECTION_RESULT_INTERNAL_FINAL_LATENCY_MS;
 
@@ -171,8 +172,7 @@ public class AdsRelevanceExecutionLoggerImplTest {
         assertThat(getAdSelectionDataStats.getApiName())
                 .isEqualTo(AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA);
         assertThat(getAdSelectionDataStats.getResultCode()).isEqualTo(STATUS_UNSET);
-        assertThat(getAdSelectionDataStats.getLatencyMillisecond())
-                .isEqualTo(UNAVAILABLE_LATENCY);
+        assertThat(getAdSelectionDataStats.getLatencyMillisecond()).isEqualTo(UNAVAILABLE_LATENCY);
     }
 
     @Test
@@ -204,8 +204,7 @@ public class AdsRelevanceExecutionLoggerImplTest {
         assertThat(getAdSelectionDataStats.getApiName())
                 .isEqualTo(AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA);
         assertThat(getAdSelectionDataStats.getResultCode()).isEqualTo(STATUS_UNSET);
-        assertThat(getAdSelectionDataStats.getLatencyMillisecond())
-                .isEqualTo(UNAVAILABLE_LATENCY);
+        assertThat(getAdSelectionDataStats.getLatencyMillisecond()).isEqualTo(UNAVAILABLE_LATENCY);
     }
 
     @Test

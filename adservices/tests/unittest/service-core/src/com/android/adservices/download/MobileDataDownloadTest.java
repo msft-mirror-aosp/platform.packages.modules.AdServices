@@ -176,7 +176,6 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     private SharedDbHelper mDbHelper;
     private MobileDataDownload mMdd;
 
-    @Mock Flags mMockFlags;
     @Mock ConsentManager mConsentManager;
     @Mock UxStatesManager mUxStatesManager;
     @Mock Clock mMockClock;

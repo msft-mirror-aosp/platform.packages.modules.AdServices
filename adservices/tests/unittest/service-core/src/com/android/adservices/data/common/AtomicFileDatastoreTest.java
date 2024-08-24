@@ -20,9 +20,7 @@ import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
 
-import android.content.Context;
-
-import androidx.test.core.app.ApplicationProvider;
+import com.android.adservices.common.AdServicesMockitoTestCase;
 
 import org.junit.After;
 import org.junit.Before;
@@ -30,16 +28,15 @@ import org.junit.Test;
 
 import java.io.IOException;
 
-public final class AtomicFileDatastoreTest {
-    private static final Context PPAPI_CONTEXT = ApplicationProvider.getApplicationContext();
+public final class AtomicFileDatastoreTest extends AdServicesMockitoTestCase {
     private static final String FILENAME = "AtomicFileDatastoreTest.xml";
     private static final int DATASTORE_VERSION = 1;
 
-    private final AtomicFileDatastore mDatastore =
-            new AtomicFileDatastore(PPAPI_CONTEXT, FILENAME, DATASTORE_VERSION);
+    private AtomicFileDatastore mDatastore;
 
     @Before
     public void initializeDatastore() throws IOException {
+        mDatastore = new AtomicFileDatastore(mContext, FILENAME, DATASTORE_VERSION);
         mDatastore.initialize();
     }
 
@@ -64,13 +61,9 @@ public final class AtomicFileDatastoreTest {
                                 /* adServicesContext= */ null, FILENAME, DATASTORE_VERSION));
         assertThrows(
                 IllegalArgumentException.class,
-                () ->
-                        new AtomicFileDatastore(
-                                PPAPI_CONTEXT, /* filename= */ null, DATASTORE_VERSION));
+                () -> new AtomicFileDatastore(mContext, /* filename= */ null, DATASTORE_VERSION));
         assertThrows(
                 IllegalArgumentException.class,
-                () ->
-                        new AtomicFileDatastore(
-                                PPAPI_CONTEXT, /* filename= */ "", DATASTORE_VERSION));
+                () -> new AtomicFileDatastore(mContext, /* filename= */ "", DATASTORE_VERSION));
     }
 }

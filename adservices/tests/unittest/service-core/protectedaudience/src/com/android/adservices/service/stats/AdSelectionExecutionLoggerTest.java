@@ -223,9 +223,11 @@ public class AdSelectionExecutionLoggerTest {
     @Captor
     ArgumentCaptor<RunAdSelectionProcessReportedStats>
             mRunAdSelectionProcessReportedStatsArgumentCaptor;
+
     @Captor
     ArgumentCaptor<RunAdBiddingProcessReportedStats>
             mRunAdBiddingProcessReportedStatsArgumentCaptor;
+
     @Captor
     ArgumentCaptor<RunAdScoringProcessReportedStats>
             mRunAdScoringProcessReportedStatsArgumentCaptor;

@@ -146,6 +146,9 @@ public class AdsRelevanceStatusUtils {
     /** The server auction encryption key source is the network. */
     public static final int SERVER_AUCTION_ENCRYPTION_KEY_SOURCE_NETWORK = 2;
 
+    /** Buckets for per buyer signal size in the update signals process. */
+    public static final long[] PER_BUYER_SIGNAL_SIZE_BUCKETS = {10, 100, 500, 5000};
+
     /** The kind of winner did the beacon come from. */
     @IntDef(
             prefix = {"BEACON_SOURCE_"},

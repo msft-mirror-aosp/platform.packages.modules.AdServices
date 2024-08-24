@@ -149,14 +149,9 @@ public class BuyerInputGenerator {
                     @NonNull GetAdSelectionDataApiCalledStats.Builder statsBuilder) {
         int traceCookie = Tracing.beginAsyncSection(Tracing.GET_COMPRESSED_BUYERS_INPUTS);
 
-        int maxPayloadSizeBytes = 0;
-        if (payloadOptimizationContext.getOptimizationsEnabled()) {
-            maxPayloadSizeBytes = payloadOptimizationContext.getMaxBuyerInputSizeBytes();
-        }
-
         CompressedBuyerInputCreator compressedBuyerInputCreator =
                 mCompressedBuyerInputCreatorFactory.createCompressedBuyerInputCreator(
-                        maxPayloadSizeBytes, statsBuilder);
+                        payloadOptimizationContext, statsBuilder);
 
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedInputs =
                 compressedBuyerInputCreator.generateCompressedBuyerInputFromDBCAsAndEncodedSignals(

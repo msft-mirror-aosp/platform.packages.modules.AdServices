@@ -20,7 +20,6 @@ import com.android.adservices.shared.testing.Logger.RealLogger;
 import com.google.common.truth.Expect;
 
 import org.junit.Rule;
-import org.junit.Test;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -35,8 +34,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public abstract class SidelessTestCase implements TestNamer {
 
-    // TODO(b/359143966): temporarily disabled until UX tests are fixed
-    private static final boolean FAIL_ON_PROHIBITED_FIELDS = false;
+    private static final boolean FAIL_ON_PROHIBITED_FIELDS = true;
 
     private static final AtomicInteger sNextInvocationId = new AtomicInteger();
 
@@ -71,8 +69,39 @@ public abstract class SidelessTestCase implements TestNamer {
         return mInvocationId;
     }
 
-    @Test
-    public final void testSidelessTestCaseFixtures() throws Exception {
+    // TODO(b/361555631): merge both methods below into a final
+    // testMeasurementJobServiceTestCaseFixtures() and annotate
+    // it with @MetaTest once we provide some infra to skip @Before / @After on them.
+    /**
+     * Test used to make sure subclasses don't define prohibited fields (as defined by {@link
+     * #assertValidTestCaseFixtures()}).
+     *
+     * <p>This method by default is not annotated with {@code Test}, so it must be overridden by
+     * test superclasses that wants to enforce such validation (ideally all of them should, but
+     * there are tests - particularly host-side ones - that have expensive <code>@Before</code> /
+     * <code>@Setup</code> methods which could cause problem when running those (for example, the
+     * whole test class might timeout).
+     *
+     * <p>Typically, the overridden method should simply call {@code assertValidTestCaseFixtures()}
+     * and be {@code final}.
+     */
+    @SuppressWarnings("JUnit4TestNotRun")
+    public void testValidTestCaseFixtures() throws Exception {
+        mLog.i("testValidTestCaseFixtures(): ignored on %s", getTestName());
+    }
+
+    /**
+     * Verifies this test class don't define prohibited fields, like fields that are already defined
+     * by a subclass or use names that could cause confusion).
+     *
+     * <p>Most test classes shouldn't care about this method, but it should be overridden by test
+     * superclasses that define their own fields (like {@code mMockFlags}.
+     *
+     * <p><b>Note: </b>when overriding it, make sure to call {@code
+     * super.assertValidTestCaseFixtures()} as the first statement.
+     */
+    @CallSuper
+    protected void assertValidTestCaseFixtures() throws Exception {
         assertTestClassHasNoFieldsFromSuperclass(
                 SidelessTestCase.class, "mLog", "mRealLogger", "expect");
     }

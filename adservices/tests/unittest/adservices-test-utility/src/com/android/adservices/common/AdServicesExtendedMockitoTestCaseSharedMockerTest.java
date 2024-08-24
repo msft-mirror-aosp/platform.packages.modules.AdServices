@@ -24,6 +24,7 @@ import com.android.adservices.shared.meta_testing.SharedMockerTestCase;
 public final class AdServicesExtendedMockitoTestCaseSharedMockerTest
         extends SharedMockerTestCase<AdServicesExtendedMockitoTestCase.Mocker> {
 
+    @SuppressWarnings("VisibleForTests") // ErrorProne doesn't recognize this is a test
     @Override
     protected AdServicesExtendedMockitoTestCase.Mocker getMocker() {
         return AdServicesExtendedMockitoTestCase.Mocker.forSharedMockerTests();
