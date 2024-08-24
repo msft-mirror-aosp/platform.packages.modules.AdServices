@@ -442,6 +442,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         anyString(),
                         anyBoolean(),
                         anyBoolean(),
+                        anyBoolean(),
                         anyInt(),
                         anyInt(),
                         any(),
@@ -3901,6 +3902,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         anyString(),
                         anyBoolean(),
                         anyBoolean(),
+                        anyBoolean(),
                         anyInt(),
                         anyInt(),
                         any(),
@@ -4128,6 +4130,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                 .filterRequest(
                         any(),
                         anyString(),
+                        anyBoolean(),
                         anyBoolean(),
                         anyBoolean(),
                         anyInt(),

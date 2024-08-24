@@ -313,6 +313,93 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
     }
 
     @Test
+    public void
+            testImplSuccessfullyReportsRegisteredInteractionsWithUXNotificationEnforcementDisabled()
+                    throws Exception {
+        Flags flagsWithoutUxNotificationEnforcement =
+                new Flags() {
+                    @Override
+                    public boolean getConsentNotificationDebugMode() {
+                        return true;
+                    }
+                };
+
+        mEventReporter =
+                new ReportEventImpl(
+                        mAdSelectionEntryDao,
+                        mHttpClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mAdServicesLoggerMock,
+                        flagsWithoutUxNotificationEnforcement,
+                        mAdSelectionServiceFilterMock,
+                        MY_UID,
+                        mFledgeAuthorizationFilterMock,
+                        DevContext.createForDevOptionsDisabled(),
+                        false);
+
+        mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionBuyerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                BUYER_DESTINATION);
+
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionSellerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                SELLER_DESTINATION);
+
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(new MockResponse(), new MockResponse()));
+
+        ReportInteractionInput inputParams =
+                new ReportInteractionInput.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
+                        .setInteractionKey(CLICK_EVENT)
+                        .setInteractionData(mInteractionData)
+                        .setReportingDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
+                        .build();
+
+        // Count down callback + log interaction.
+        ReportInteractionTestCallback callback = callReportInteraction(inputParams, true);
+
+        assertTrue(callback.mIsSuccess);
+
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
+
+        List<String> notifications =
+                ImmutableList.of(server.takeRequest().getPath(), server.takeRequest().getPath());
+
+        assertThat(notifications)
+                .containsExactly(
+                        SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT,
+                        BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT);
+
+        verify(mAdSelectionServiceFilterMock)
+                .filterRequest(
+                        null,
+                        TEST_PACKAGE_NAME,
+                        true,
+                        true,
+                        false,
+                        MY_UID,
+                        AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION,
+                        Throttler.ApiKey.FLEDGE_API_REPORT_INTERACTION,
+                        DevContext.createForDevOptionsDisabled());
+    }
+
+    @Test
     public void testImplDoesNotCrashAfterSellerReportingThrowsAnException() throws Exception {
         // Uses ArgumentCaptor to capture the logs in the tests.
         ArgumentCaptor<ReportInteractionApiCalledStats> argumentCaptor =
@@ -807,6 +894,7 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
                         TEST_PACKAGE_NAME,
                         true,
                         true,
+                        true,
                         MY_UID,
                         AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION,
                         Throttler.ApiKey.FLEDGE_API_REPORT_INTERACTION,
@@ -873,6 +961,7 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
                 .filterRequest(
                         null,
                         TEST_PACKAGE_NAME,
+                        true,
                         true,
                         true,
                         MY_UID,
@@ -982,6 +1071,7 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
                         TEST_PACKAGE_NAME,
                         true,
                         true,
+                        true,
                         MY_UID,
                         AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION,
                         Throttler.ApiKey.FLEDGE_API_REPORT_INTERACTION,
@@ -1049,6 +1139,7 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
                         TEST_PACKAGE_NAME,
                         true,
                         true,
+                        true,
                         MY_UID,
                         AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION,
                         Throttler.ApiKey.FLEDGE_API_REPORT_INTERACTION,
@@ -1109,6 +1200,7 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
                 .filterRequest(
                         null,
                         TEST_PACKAGE_NAME,
+                        true,
                         true,
                         true,
                         MY_UID,

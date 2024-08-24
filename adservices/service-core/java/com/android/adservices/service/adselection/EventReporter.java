@@ -151,6 +151,7 @@ public abstract class EventReporter {
                     input.getCallerPackageName(),
                     mFlags.getEnforceForegroundStatusForFledgeReportInteraction(),
                     true,
+                    !mFlags.getConsentNotificationDebugMode(),
                     mCallerUid,
                     LOGGING_API_NAME,
                     Throttler.ApiKey.FLEDGE_API_REPORT_INTERACTION,

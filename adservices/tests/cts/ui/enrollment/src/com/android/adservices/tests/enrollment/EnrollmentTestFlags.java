@@ -45,4 +45,4 @@ import com.android.adservices.shared.testing.annotations.SetLongFlag;
 @SetLongFlag(name = KEY_CONSENT_NOTIFICATION_INTERVAL_BEGIN_MS, value = 0)
 @SetLongFlag(name = KEY_CONSENT_NOTIFICATION_INTERVAL_END_MS, value = 86400000)
 @SetLongFlag(name = KEY_CONSENT_NOTIFICATION_MINIMAL_DELAY_BEFORE_INTERVAL_ENDS, value = 0)
-interface CtsEnrollmentFlags {}
+interface EnrollmentTestFlags {}
