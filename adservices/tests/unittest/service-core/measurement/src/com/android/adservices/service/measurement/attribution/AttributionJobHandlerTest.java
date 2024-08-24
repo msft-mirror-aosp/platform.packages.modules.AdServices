@@ -237,6 +237,8 @@ public class AttributionJobHandlerTest {
                 .thenReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION);
         when(mFlags.getMeasurementEnableV1SourceTriggerData())
                 .thenReturn(Flags.MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA);
+        when(mFlags.getMeasurementMaxAggregateReportsPerSource())
+                .thenReturn(Flags.MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE);
     }
 
     @Test
@@ -4229,6 +4231,43 @@ public class AttributionJobHandlerTest {
     }
 
     @Test
+    public void performAttributions_invalidAggregateValues_generateEventReportOnly()
+            throws JSONException, DatastoreException {
+        // Setup
+        JSONArray triggerData = getAggregateTriggerData();
+        String invalidAggregatableValuesWithFlagOff =
+                "[{\"values\":{\"campaignCounts\":32768, \"geoValue\":1664}},{\"values\":{\"a\":1,"
+                        + " \"b\":2, \"c\":3}}]";
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("triggerId1")
+                        .setTriggerTime(TRIGGER_TIME)
+                        .setStatus(Trigger.Status.PENDING)
+                        .setEventTriggers(getEventTriggers())
+                        .setAggregateTriggerData(triggerData.toString())
+                        .setAggregateValues(invalidAggregatableValuesWithFlagOff)
+                        .build();
+        Source source = getAggregateSource();
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        List<Source> matchingSourceList = new ArrayList<>();
+        matchingSourceList.add(source);
+        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(anyInt(), any(), any()))
+                .thenReturn(5L);
+        when(mMeasurementDao.getSourceDestinations(source.getId()))
+                .thenReturn(Pair.create(source.getAppDestinations(), source.getWebDestinations()));
+        // Execution
+        mHandler.performPendingAttributions();
+        // Assertions
+        verify(mMeasurementDao, never()).insertAggregateReport(any());
+        verify(mMeasurementDao, times(1)).insertEventReport(any());
+        verify(mTransaction, times(2)).begin();
+        verify(mTransaction, times(2)).end();
+    }
+
+    @Test
     public void performAttributions_filterSet_eventLevelFiltersFailToMatch_aggregateReportOnly()
             throws DatastoreException, JSONException {
         // Setup
@@ -4448,81 +4487,8 @@ public class AttributionJobHandlerTest {
     }
 
     @Test
-    public void performAttribution_maxAggregateReportsPerSourceFlagDisabled_shouldGenerateReport()
-            throws DatastoreException, JSONException {
-        // Disable flag for max aggregate reports per source.
-        when(mFlags.getMeasurementEnableMaxAggregateReportsPerSource()).thenReturn(false);
-        when(mFlags.getMeasurementMaxAggregateReportsPerSource()).thenReturn(20);
-        // Setup
-        long triggerTime = 234324L;
-        Trigger trigger =
-                TriggerFixture.getValidTriggerBuilder()
-                        .setId("triggerId1")
-                        .setStatus(Trigger.Status.PENDING)
-                        .setEventTriggers(getEventTriggers())
-                        .setFilters(
-                                "[{"
-                                        + "  \"key_1\": [\"value_1\", \"value_2\"],"
-                                        + "  \"key_2\": [\"value_1\", \"value_2\"]"
-                                        + "}]")
-                        .setTriggerTime(triggerTime)
-                        .setAggregateTriggerData(buildAggregateTriggerData().toString())
-                        .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
-                        .build();
-        Source source =
-                SourceFixture.getMinimalValidSourceBuilder()
-                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
-                        .setAggregateSource(
-                                "{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}")
-                        .setFilterDataString(
-                                "{"
-                                        + "  \"key_1\": [\"value_1\", \"value_2\"],"
-                                        + "  \"key_2\": [\"value_1\", \"value_2\"]"
-                                        + "}")
-                        .setExpiryTime(triggerTime + TimeUnit.DAYS.toMillis(28))
-                        .setEventReportWindow(triggerTime + 1L)
-                        .setAggregatableReportWindow(triggerTime + 1L)
-                        .build();
-        when(mMeasurementDao.getPendingTriggerIds())
-                .thenReturn(Collections.singletonList(trigger.getId()));
-        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
-        List<Source> matchingSourceList = new ArrayList<>();
-        matchingSourceList.add(source);
-        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
-        when(mMeasurementDao.getAttributionsPerRateLimitWindow(
-                anyInt(), any(), any())).thenReturn(5L);
-        when(mMeasurementDao.getSourceEventReports(any())).thenReturn(new ArrayList<>());
-        int numAggregateReportPerDestination = 10;
-        int numEventReportPerDestination = 10;
-        when(mMeasurementDao.getNumAggregateReportsPerDestination(
-                        trigger.getAttributionDestination(), trigger.getDestinationType()))
-                .thenReturn(numAggregateReportPerDestination);
-        when(mMeasurementDao.getNumEventReportsPerDestination(
-                        trigger.getAttributionDestination(), trigger.getDestinationType()))
-                .thenReturn(numEventReportPerDestination);
-        when(mMeasurementDao.getSourceDestinations(source.getId()))
-                .thenReturn(Pair.create(source.getAppDestinations(), source.getWebDestinations()));
-        when(mMeasurementDao.getNumAggregateReportsPerSource(source.getId())).thenReturn(21);
-
-        // Execution
-        mHandler.performPendingAttributions();
-
-        // Assertions
-        verify(mMeasurementDao)
-                .updateTriggerStatus(
-                        eq(Collections.singletonList(trigger.getId())),
-                        eq(Trigger.Status.ATTRIBUTED));
-        verify(mMeasurementDao).insertAggregateReport(any());
-        verify(mMeasurementDao).insertEventReport(any());
-        verify(mTransaction, times(2)).begin();
-        verify(mTransaction, times(2)).end();
-    }
-
-    @Test
     public void performAttribution_aggregateReportsExceedsLimitPerSource_insertsOnlyEventReport()
             throws DatastoreException, JSONException {
-        // Enable flag for max aggregate reports per source.
-        when(mFlags.getMeasurementEnableMaxAggregateReportsPerSource()).thenReturn(true);
         when(mFlags.getMeasurementMaxAggregateReportsPerSource()).thenReturn(20);
         // Setup
         long triggerTime = 234324L;

@@ -22,6 +22,7 @@ import static android.adservices.utils.CustomAudienceTestFixture.AD_URI_PREFIX;
 import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
 import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION;
@@ -102,12 +103,14 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.annotations.SetPpapiAppAllowList;
 import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.adselection.AdCost;
 import com.android.adservices.service.adselection.JsVersionRegister;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
+import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
@@ -151,6 +154,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @RequiresSdkLevelAtLeastS
 @SetFlagDisabled(KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED)
+@SetFlagEnabled(KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED) // Enabled retry for java script engine
 @SetFlagEnabled(KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED) // Enabled due to reset during teardown()
 @SetFlagDisabled(KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED)
 @SetFlagDisabled(KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_METRICS_ENABLED)
@@ -167,7 +171,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 @SetLongFlag(
         name = KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS,
         value = EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS)
-@SetFlagEnabled(KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED) // Enabled retry for java script engine
+@EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
+@SetPpapiAppAllowList
 public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     private static final long LONGER_BIDDING_SCORING_TIMEOUT_MS = 8_000L;
     private static final long SHORT_OVERALL_AD_SELECTION_TIMEOUT_MS = 2_000L;

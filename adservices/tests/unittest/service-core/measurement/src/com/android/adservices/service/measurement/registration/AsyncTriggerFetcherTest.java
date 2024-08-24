@@ -332,8 +332,10 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES,
                 mLogger,
                 asyncRegistration,
-                asyncFetchStatus);
-        verify(mLogger).logMeasurementRegistrationsResponseSize(eq(expectedStats));
+                asyncFetchStatus,
+                ENROLLMENT_ID);
+        verify(mLogger)
+                .logMeasurementRegistrationsResponseSize(eq(expectedStats), eq(ENROLLMENT_ID));
     }
 
     @Test
@@ -418,8 +420,10 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES,
                 mLogger,
                 asyncRegistration,
-                asyncFetchStatus);
-        verify(mLogger).logMeasurementRegistrationsResponseSize(eq(expectedStats));
+                asyncFetchStatus,
+                ENROLLMENT_ID);
+        verify(mLogger)
+                .logMeasurementRegistrationsResponseSize(eq(expectedStats), eq(ENROLLMENT_ID));
     }
 
     @Test
@@ -5417,8 +5421,10 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.getEventTriggers());
         assertEquals(TRIGGER_URI, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
-        FetcherUtil.emitHeaderMetrics(5L, mLogger, asyncRegistration, asyncFetchStatus);
-        verify(mLogger).logMeasurementRegistrationsResponseSize(eq(expectedStats));
+        FetcherUtil.emitHeaderMetrics(
+                5L, mLogger, asyncRegistration, asyncFetchStatus, ENROLLMENT_ID);
+        verify(mLogger)
+                .logMeasurementRegistrationsResponseSize(eq(expectedStats), eq(ENROLLMENT_ID));
     }
 
     @Test

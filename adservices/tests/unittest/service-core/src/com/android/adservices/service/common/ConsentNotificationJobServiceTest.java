@@ -117,19 +117,8 @@ public final class ConsentNotificationJobServiceTest extends AdServicesJobServic
         mConsentNotificationJobService.setUxStatesManager(mUxStatesManager);
     }
 
-    /** Test successful onStart method execution. */
-    @Test
-    public void testOnStartJobAsyncUtilExecute_withoutLogging() throws Exception {
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
-
-        testOnStartJobAsyncUtilExecute();
-
-        verifyLoggingNotHappened(mSpyLogger);
-    }
-
     @Test
     public void testOnStartJobAsyncUtilExecute_withLogging() throws Exception {
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
         JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(mSpyLogger);
         JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
 
@@ -210,42 +199,25 @@ public final class ConsentNotificationJobServiceTest extends AdServicesJobServic
     }
 
     @Test
-    public void testOnStartJobShouldDisableJobTrue_withoutLogging() {
-        mocker.mockGetFlags(mMockFlags);
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
+    public void testOnStartJobShouldDisableJobTrue() {
+        mockServiceCompatUtilDisableJob(true);
+        doReturn(mMockJobScheduler)
+                .when(mConsentNotificationJobService)
+                .getSystemService(JobScheduler.class);
+        doNothing().when(mConsentNotificationJobService).jobFinished(mMockJobParameters, false);
 
-        testOnStartJobShouldDisableJobTrue();
+        assertThat(mConsentNotificationJobService.onStartJob(mMockJobParameters)).isFalse();
 
-        verifyLoggingNotHappened(mSpyLogger);
-    }
-
-    @Test
-    public void testOnStartJobShouldDisableJobTrue_withLoggingEnabled() {
-        mocker.mockGetFlags(mMockFlags);
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
-
-        testOnStartJobShouldDisableJobTrue();
+        verify(mConsentNotificationJobService).jobFinished(mMockJobParameters, false);
+        verifyNoMoreInteractions(mConsentManager);
 
         // Verify logging has not happened even though logging is enabled because this field is not
         // logged
         verifyLoggingNotHappened(mSpyLogger);
     }
 
-    /** Test successful onStop method execution. */
-    @Test
-    public void testOnStopJob_withoutLogging() {
-        mocker.mockGetFlags(mMockFlags);
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
-
-        testOnStopJob();
-
-        verifyLoggingNotHappened(mSpyLogger);
-    }
-
     @Test
     public void testOnStopJob_withLogging() throws Exception {
-        mocker.mockGetFlags(mMockFlags);
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
         JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
 
         testOnStopJob();
@@ -491,19 +463,6 @@ public final class ConsentNotificationJobServiceTest extends AdServicesJobServic
 
         verify(mAdservicesSyncUtil).execute(any(Context.class), any(Boolean.class));
         verify(mConsentNotificationJobService).jobFinished(mMockJobParameters, false);
-    }
-
-    private void testOnStartJobShouldDisableJobTrue() {
-        mockServiceCompatUtilDisableJob(true);
-        doReturn(mMockJobScheduler)
-                .when(mConsentNotificationJobService)
-                .getSystemService(JobScheduler.class);
-        doNothing().when(mConsentNotificationJobService).jobFinished(mMockJobParameters, false);
-
-        assertThat(mConsentNotificationJobService.onStartJob(mMockJobParameters)).isFalse();
-
-        verify(mConsentNotificationJobService).jobFinished(mMockJobParameters, false);
-        verifyNoMoreInteractions(mConsentManager);
     }
 
     private void testOnStopJob() {

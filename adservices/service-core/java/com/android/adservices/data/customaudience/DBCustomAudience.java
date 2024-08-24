@@ -17,6 +17,7 @@
 package com.android.adservices.data.customaudience;
 
 import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_DEFAULT;
+import static android.adservices.customaudience.CustomAudience.PRIORITY_DEFAULT;
 
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
@@ -232,7 +233,10 @@ public class DBCustomAudience {
                         auctionServerRequestFlagsEnabled
                                 ? parcelable.getAuctionServerRequestFlags()
                                 : FLAG_AUCTION_SERVER_REQUEST_DEFAULT)
-                .setPriority(sellerConfigurationFlagEnabled ? parcelable.getPriority() : 0.0)
+                .setPriority(
+                        sellerConfigurationFlagEnabled
+                                ? parcelable.getPriority()
+                                : PRIORITY_DEFAULT)
                 .build();
     }
 

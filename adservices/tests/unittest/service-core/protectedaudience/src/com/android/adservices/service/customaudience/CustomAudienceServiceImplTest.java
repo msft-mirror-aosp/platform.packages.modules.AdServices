@@ -49,6 +49,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import android.adservices.common.AdSelectionSignals;
@@ -249,6 +250,67 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                 AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
                 CustomAudienceFixture.VALID_OWNER,
                 STATUS_SUCCESS);
+    }
+
+    @Test
+    public void testJoinCustomAudience_runNormallyWithUNotificationEnforcementDisabled()
+            throws RemoteException {
+        CustomAudienceServiceFilter customAudienceServiceFilterMock =
+                Mockito.mock(CustomAudienceServiceFilter.class);
+
+        Flags flagsWithUXNotificationEnforcementDisabled =
+                new FlagsWithCheckEnabledSwitch(true, true) {
+                    @Override
+                    public boolean getConsentNotificationDebugMode() {
+                        return true;
+                    }
+                };
+
+        CustomAudienceServiceImpl service =
+                new CustomAudienceServiceImpl(
+                        sContext,
+                        mCustomAudienceImplMock,
+                        mFledgeAuthorizationFilterMock,
+                        mConsentManagerMock,
+                        mDevContextFilterMock,
+                        DIRECT_EXECUTOR,
+                        mAdServicesLoggerMock,
+                        mAppImportanceFilterMock,
+                        flagsWithUXNotificationEnforcementDisabled,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        customAudienceServiceFilterMock,
+                        new AdFilteringFeatureFactory(
+                                mAppInstallDaoMock,
+                                mFrequencyCapDaoMock,
+                                flagsWithUXNotificationEnforcementDisabled));
+
+        service.joinCustomAudience(
+                VALID_CUSTOM_AUDIENCE,
+                CustomAudienceFixture.VALID_OWNER,
+                mICustomAudienceCallbackMock);
+        verify(mCustomAudienceImplMock)
+                .joinCustomAudience(
+                        VALID_CUSTOM_AUDIENCE,
+                        CustomAudienceFixture.VALID_OWNER,
+                        DevContext.createForDevOptionsDisabled());
+        verify(() -> BackgroundFetchJob.schedule(mFlagsWithAllCheckEnabled));
+        verify(mICustomAudienceCallbackMock).onSuccess();
+        verifyLoggerMock(
+                AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
+                CustomAudienceFixture.VALID_OWNER,
+                STATUS_SUCCESS);
+
+        verify(customAudienceServiceFilterMock)
+                .filterRequest(
+                        any(),
+                        any(),
+                        anyBoolean(),
+                        anyBoolean(),
+                        eq(false),
+                        anyInt(),
+                        anyInt(),
+                        any(),
+                        any());
     }
 
     @Test
@@ -709,6 +771,67 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                 AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
                 CustomAudienceFixture.VALID_OWNER,
                 STATUS_SUCCESS);
+    }
+
+    @Test
+    public void testLeaveCustomAudience_runNormallyWithUNotificationEnforcementDisabled()
+            throws RemoteException {
+        CustomAudienceServiceFilter customAudienceServiceFilterMock =
+                Mockito.mock(CustomAudienceServiceFilter.class);
+
+        Flags flagsWithUXNotificationEnforcementDisabled =
+                new FlagsWithCheckEnabledSwitch(true, true) {
+                    @Override
+                    public boolean getConsentNotificationDebugMode() {
+                        return true;
+                    }
+                };
+
+        CustomAudienceServiceImpl service =
+                new CustomAudienceServiceImpl(
+                        sContext,
+                        mCustomAudienceImplMock,
+                        mFledgeAuthorizationFilterMock,
+                        mConsentManagerMock,
+                        mDevContextFilterMock,
+                        DIRECT_EXECUTOR,
+                        mAdServicesLoggerMock,
+                        mAppImportanceFilterMock,
+                        flagsWithUXNotificationEnforcementDisabled,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        customAudienceServiceFilterMock,
+                        new AdFilteringFeatureFactory(
+                                mAppInstallDaoMock,
+                                mFrequencyCapDaoMock,
+                                flagsWithUXNotificationEnforcementDisabled));
+
+        service.leaveCustomAudience(
+                CustomAudienceFixture.VALID_OWNER,
+                CommonFixture.VALID_BUYER_1,
+                CustomAudienceFixture.VALID_NAME,
+                mICustomAudienceCallbackMock);
+        verify(mCustomAudienceImplMock)
+                .leaveCustomAudience(
+                        CustomAudienceFixture.VALID_OWNER,
+                        CommonFixture.VALID_BUYER_1,
+                        CustomAudienceFixture.VALID_NAME);
+        verify(mICustomAudienceCallbackMock).onSuccess();
+        verifyLoggerMock(
+                AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
+                CustomAudienceFixture.VALID_OWNER,
+                STATUS_SUCCESS);
+
+        verify(customAudienceServiceFilterMock)
+                .filterRequest(
+                        any(),
+                        any(),
+                        anyBoolean(),
+                        anyBoolean(),
+                        eq(false),
+                        anyInt(),
+                        anyInt(),
+                        any(),
+                        any());
     }
 
     @Test

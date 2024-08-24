@@ -20,64 +20,42 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 
-import android.content.Context;
 import android.net.Uri;
 
-import androidx.test.core.app.ApplicationProvider;
-
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
 import com.android.adservices.service.devapi.DevContext;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-public class DebugReportSenderStrategyBatchImplTest {
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
+@RequiresSdkLevelAtLeastS()
+@SpyStatic(DebugReportSenderJobService.class)
+public final class DebugReportSenderStrategyBatchImplTest
+        extends AdServicesExtendedMockitoTestCase {
     private static final DevContext DEV_CONTEXT = DevContext.createForDevOptionsDisabled();
     @Mock private AdSelectionDebugReportDao mAdSelectionDebugReportDao;
     private DebugReportSenderStrategyBatchImpl mDebugReportSender;
-    private MockitoSession mStaticMockSession;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setUp() {
-        MockitoAnnotations.initMocks(this);
         ExtendedMockito.doNothing()
                 .when(mAdSelectionDebugReportDao)
                 .persistAdSelectionDebugReporting(anyList());
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(DebugReportSenderJobService.class)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
         ExtendedMockito.doNothing()
                 .when(() -> DebugReportSenderJobService.scheduleIfNeeded(any(), anyBoolean()));
         mDebugReportSender =
                 new DebugReportSenderStrategyBatchImpl(
-                        CONTEXT, mAdSelectionDebugReportDao, DEV_CONTEXT);
-    }
-
-    @After
-    public void teardown() {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
+                        mContext, mAdSelectionDebugReportDao, DEV_CONTEXT);
     }
 
     @Test
@@ -89,12 +67,12 @@ public class DebugReportSenderStrategyBatchImplTest {
                                 null, mAdSelectionDebugReportDao, DEV_CONTEXT));
         Assert.assertThrows(
                 NullPointerException.class,
-                () -> new DebugReportSenderStrategyBatchImpl(CONTEXT, null, DEV_CONTEXT));
+                () -> new DebugReportSenderStrategyBatchImpl(mContext, null, DEV_CONTEXT));
         Assert.assertThrows(
                 NullPointerException.class,
                 () ->
                         new DebugReportSenderStrategyBatchImpl(
-                                CONTEXT, mAdSelectionDebugReportDao, null));
+                                mContext, mAdSelectionDebugReportDao, null));
     }
 
     @Test
@@ -129,7 +107,7 @@ public class DebugReportSenderStrategyBatchImplTest {
 
         mDebugReportSender.flush().get();
 
-        ExtendedMockito.verify(mAdSelectionDebugReportDao, times(1))
+        ExtendedMockito.verify(mAdSelectionDebugReportDao)
                 .persistAdSelectionDebugReporting(anyList());
     }
 
@@ -143,7 +121,7 @@ public class DebugReportSenderStrategyBatchImplTest {
 
         mDebugReportSender.flush().get();
 
-        ExtendedMockito.verify(mAdSelectionDebugReportDao, times(1))
+        ExtendedMockito.verify(mAdSelectionDebugReportDao)
                 .persistAdSelectionDebugReporting(anyList());
     }
 
@@ -157,10 +135,7 @@ public class DebugReportSenderStrategyBatchImplTest {
         mDebugReportSender.flush().get();
 
         ExtendedMockito.verify(
-                () ->
-                        DebugReportSenderJobService.scheduleIfNeeded(
-                                any(Context.class), anyBoolean()),
-                times(1));
+                () -> DebugReportSenderJobService.scheduleIfNeeded(any(), anyBoolean()));
     }
 
     @Test
@@ -173,9 +148,6 @@ public class DebugReportSenderStrategyBatchImplTest {
         ExtendedMockito.verify(mAdSelectionDebugReportDao, never())
                 .persistAdSelectionDebugReporting(anyList());
         ExtendedMockito.verify(
-                () ->
-                        DebugReportSenderJobService.scheduleIfNeeded(
-                                any(Context.class), anyBoolean()),
-                never());
+                () -> DebugReportSenderJobService.scheduleIfNeeded(any(), anyBoolean()), never());
     }
 }
