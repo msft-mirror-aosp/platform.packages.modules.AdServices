@@ -177,7 +177,9 @@ public abstract class DeviceSideTestCase extends SidelessTestCase {
                 "sTargetPackageName",
                 "sRavenWood",
                 "RAVENWOOD_PACKAGE_NAME");
-        assertTestClassHasNoSuchField("CONTEXT", "should use existing sContext instead");
+        assertTestClassHasNoSuchField(
+                "CONTEXT",
+                "should use existing mContext (or sContext when that's not possible) instead");
         assertTestClassHasNoSuchField("context", "should use existing mContext instead");
     }
 

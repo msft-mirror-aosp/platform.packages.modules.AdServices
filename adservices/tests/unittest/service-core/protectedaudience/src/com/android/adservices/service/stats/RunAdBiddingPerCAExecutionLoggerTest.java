@@ -111,6 +111,7 @@ public class RunAdBiddingPerCAExecutionLoggerTest {
             BUYER_DECISION_LOGIC_JS.getBytes(StandardCharsets.UTF_8).length;
     private static final int FETCHED_TRUSTED_BIDDING_SIGNALS_DATA_SIZE_IN_BYTES =
             TRUSTED_BIDDING_SIGNALS.getSizeInBytes();
+
     @Captor
     ArgumentCaptor<RunAdBiddingPerCAProcessReportedStats>
             mRunAdBiddingPerCAProcessReportedStatsArgumentCaptor;

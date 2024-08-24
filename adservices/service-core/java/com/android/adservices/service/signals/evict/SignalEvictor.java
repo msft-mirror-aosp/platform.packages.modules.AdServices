@@ -20,6 +20,7 @@ import android.adservices.common.AdTechIdentifier;
 
 import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
 
 import java.util.List;
 
@@ -39,5 +40,6 @@ public interface SignalEvictor {
             List<DBProtectedSignal> updatedSignals,
             UpdateOutput combinedUpdates,
             int maxAllowedSignalSize,
-            int maxAllowedSignalSizeWithOversubscribe);
+            int maxAllowedSignalSizeWithOversubscribe,
+            UpdateSignalsProcessReportedLogger updateSignalsProcessReportedLogger);
 }

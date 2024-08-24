@@ -17,7 +17,7 @@ package {
 }
 
 java_defaults {
-    name: "cts_enrollment_defaults",
+    name: "enrollment_defaults",
     team: "trendy_team_android_rubidium",
     srcs: [
         "src/**/*.java",
@@ -37,10 +37,7 @@ java_defaults {
         "framework-adservices-lib",
     ],
     test_suites: [
-        "cts",
         "general-tests",
-        "mts-adservices",
-        "mcts-adservices",
     ],
     sdk_version: "module_current",
     lint: {
@@ -50,16 +47,16 @@ java_defaults {
 }
 
 android_test {
-    name: "CtsAdServicesEnrollmentTest",
-    defaults: ["cts_enrollment_defaults"],
+    name: "AdServicesEnrollmentTest",
+    defaults: ["enrollment_defaults"],
     min_sdk_version: "33",
     manifest: "AndroidManifest.xml",
     test_config: "AndroidTest.xml",
 }
 
 android_test {
-    name: "CtsAdExtServicesEnrollmentTest",
-    defaults: ["cts_enrollment_defaults"],
+    name: "AdExtServicesEnrollmentTest",
+    defaults: ["enrollment_defaults"],
     min_sdk_version: "30",
     max_sdk_version: "32",
     test_config: "AndroidTest.ExtServices.xml",

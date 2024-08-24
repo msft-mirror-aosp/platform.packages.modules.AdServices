@@ -16,12 +16,12 @@
 
 package com.android.adservices.service.shell.adselection;
 
+import static com.android.adservices.service.shell.adselection.AdSelectionShellCommandConstants.OUTPUT_PROTO_FIELD_NAME;
 import static com.android.adservices.service.shell.adselection.GetAdSelectionDataCommand.APP_PACKAGE_NAME_HINT;
 import static com.android.adservices.service.shell.adselection.GetAdSelectionDataCommand.BUYER_KV_EXPERIMENT_ID_HINT;
 import static com.android.adservices.service.shell.adselection.GetAdSelectionDataCommand.CMD;
 import static com.android.adservices.service.shell.adselection.GetAdSelectionDataCommand.ERROR_UNKNOWN_BUYER_FORMAT;
 import static com.android.adservices.service.shell.adselection.GetAdSelectionDataCommand.HELP;
-import static com.android.adservices.service.shell.adselection.GetAdSelectionDataCommand.OUTPUT_PROTO_FIELD_NAME;
 import static com.android.adservices.service.shell.adselection.GetAdSelectionDataCommand.SELLER_HINT;
 import static com.android.adservices.service.shell.adselection.GetAdSelectionDataCommand.TOP_LEVEL_SELLER_HINT;
 import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_AD_SELECTION_GET_AD_SELECTION_DATA;
@@ -116,7 +116,7 @@ public class GetAdSelectionDataCommandTest extends ShellCommandTestCase<GetAdSel
                                 mConsentedDebugConfigurationGenerator),
                         AdSelectionShellCommandFactory.COMMAND_PREFIX,
                         CMD,
-                        AdSelectionShellCommandArgs.BUYER,
+                        AdSelectionShellCommandConstants.BUYER,
                         BUYER.toString());
 
         expectFailure(
@@ -163,7 +163,7 @@ public class GetAdSelectionDataCommandTest extends ShellCommandTestCase<GetAdSel
                                 mConsentedDebugConfigurationGenerator),
                         AdSelectionShellCommandFactory.COMMAND_PREFIX,
                         CMD,
-                        AdSelectionShellCommandArgs.BUYER,
+                        AdSelectionShellCommandConstants.BUYER,
                         BUYER.toString());
 
         expectSuccess(result, EXPECTED_COMMAND);
@@ -230,7 +230,7 @@ public class GetAdSelectionDataCommandTest extends ShellCommandTestCase<GetAdSel
                                 mConsentedDebugConfigurationGenerator),
                         AdSelectionShellCommandFactory.COMMAND_PREFIX,
                         CMD,
-                        AdSelectionShellCommandArgs.BUYER,
+                        AdSelectionShellCommandConstants.BUYER,
                         BUYER.toString());
 
         expectSuccess(result, EXPECTED_COMMAND);
