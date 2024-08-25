@@ -309,6 +309,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                                     mFlags.getEnforceForegroundStatusForSignals(),
                                     // Consent is enforced in a separate call below.
                                     false,
+                                    !mFlags.getConsentNotificationDebugMode(),
                                     callerUid,
                                     apiName,
                                     PROTECTED_SIGNAL_API_UPDATE_SIGNALS,

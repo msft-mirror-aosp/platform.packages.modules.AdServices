@@ -540,7 +540,8 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback & FreezableTo
     /** Helper methods to assert calls to the callback {@code logX()} methods. */
     public final void expectLoggedCalls(@Nullable LogEntry... expectedEntries) {
         ImmutableList<LogEntry> entries = mFakeLogger.getEntries();
-        expect.withMessage("log entries").that(entries).containsExactlyElementsIn(expectedEntries);
+        // Cannot check for exactly match, as some SyncCallbacks might log more info
+        expect.withMessage("log entries").that(entries).containsAtLeastElementsIn(expectedEntries);
     }
 
     protected final Thread runAsync(long timeoutMs, Runnable r) {
