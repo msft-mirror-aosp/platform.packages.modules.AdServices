@@ -107,4 +107,6 @@ public class ConsentConstants {
     public static final String IS_MEASUREMENT_DATA_RESET = "IS_MEASUREMENT_DATA_RESET";
 
     public static final String IS_PA_DATA_RESET = "IS_PA_DATA_RESET";
+
+    public static final String MODULE_ENROLLMENT_STATE = "MODULE_ENROLLMENT_STATE";
 }

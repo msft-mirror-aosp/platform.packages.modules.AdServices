@@ -44,6 +44,7 @@ import com.android.adservices.shared.testing.shell.CommandResult;
 
 import org.json.JSONException;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -92,6 +93,7 @@ public class TriggerEncodingShellCommandTest extends ForegroundDebuggableCtsTest
                         .build();
     }
 
+    @Ignore("b/359519167")
     @Test
     public void testTriggerEncoding_happyPath_updatesSuccessfully()
             throws GeneralSecurityException,

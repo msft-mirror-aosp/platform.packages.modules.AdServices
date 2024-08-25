@@ -944,8 +944,7 @@ public final class FlagsConstants {
             "fledge_custom_audience_service_kill_switch";
     public static final String KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH =
             "fledge_auction_server_kill_switch";
-    public static final String KEY_BACKGROUND_JOBS_LOGGING_KILL_SWITCH =
-            "background_jobs_logging_kill_switch";
+
     public static final String KEY_FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH =
             "fledge_on_device_auction_kill_switch";
 
@@ -1286,9 +1285,6 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION =
             "measurement_max_event_reports_per_destination";
 
-    public static final String KEY_MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE =
-            "measurement_enable_max_aggregate_reports_per_source";
-
     public static final String KEY_MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE =
             "measurement_max_aggregate_reports_per_source";
 
@@ -1386,6 +1382,12 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_ENABLE_AGGREGATE_VALUE_FILTERS =
             "measurement_enable_aggregate_value_filters";
+
+    public static final String KEY_MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES =
+            "measurement_default_filtering_id_max_bytes";
+
+    public static final String KEY_MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING =
+            "measurement_enable_flexible_contribution_filtering";
 
     // Database Schema Version Flags
     public static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_8 =

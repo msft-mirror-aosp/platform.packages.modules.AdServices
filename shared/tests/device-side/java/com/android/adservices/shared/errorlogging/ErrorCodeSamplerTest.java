@@ -22,7 +22,6 @@ import static org.mockito.Mockito.when;
 import android.util.Base64;
 
 import com.android.adservices.shared.SharedMockitoTestCase;
-import com.android.adservices.shared.common.flags.ModuleSharedFlags;
 import com.android.adservices.shared.proto.ErrorCodeList;
 import com.android.adservices.shared.proto.ErrorCodeSampleInterval;
 
@@ -44,19 +43,18 @@ public final class ErrorCodeSamplerTest extends SharedMockitoTestCase {
     private static final String ENCODED_ERROR_CODE_SAMPLE_RATE =
             Base64.encodeToString(SAMPLE_INTERVAL.toByteArray(), Base64.DEFAULT);
 
-    @Mock private ModuleSharedFlags mFlags;
     @Mock private Random mRandom;
 
     @Before
     public void setUp() {
-        when(mFlags.getEncodedErrorCodeListPerSampleInterval())
+        when(mMockFlags.getEncodedErrorCodeListPerSampleInterval())
                 .thenReturn(ENCODED_ERROR_CODE_SAMPLE_RATE);
     }
 
     @Test
     public void testShouldLog_randomSampling_loggingSuccess() {
         when(mRandom.nextInt(anyInt())).thenReturn(1);
-        ErrorCodeSampler errorCodeSampler = new ErrorCodeSampler(mFlags, mRandom);
+        ErrorCodeSampler errorCodeSampler = new ErrorCodeSampler(mMockFlags, mRandom);
 
         int errorCode = 200;
         expect.withMessage("shouldLog(errorCode=%s)", errorCode)
@@ -80,9 +78,9 @@ public final class ErrorCodeSamplerTest extends SharedMockitoTestCase {
                                         .addErrorCode(300)
                                         .build())
                         .build();
-        when(mFlags.getEncodedErrorCodeListPerSampleInterval())
+        when(mMockFlags.getEncodedErrorCodeListPerSampleInterval())
                 .thenReturn(Base64.encodeToString(sampleInterval.toByteArray(), Base64.DEFAULT));
-        ErrorCodeSampler errorCodeSampler = new ErrorCodeSampler(mFlags);
+        ErrorCodeSampler errorCodeSampler = new ErrorCodeSampler(mMockFlags);
 
         // Error code not present in map and default sampling rate is not defined.
         int errorCode = 101;
@@ -90,7 +88,7 @@ public final class ErrorCodeSamplerTest extends SharedMockitoTestCase {
                 .that(errorCodeSampler.shouldLog(errorCode))
                 .isTrue();
 
-        when(mFlags.getEncodedErrorCodeListPerSampleInterval()).thenReturn("");
+        when(mMockFlags.getEncodedErrorCodeListPerSampleInterval()).thenReturn("");
         expect.withMessage("shouldLog(errorCode=%s)", errorCode)
                 .that(errorCodeSampler.shouldLog(errorCode))
                 .isTrue();
@@ -98,8 +96,8 @@ public final class ErrorCodeSamplerTest extends SharedMockitoTestCase {
 
     @Test
     public void testShouldLog_noSampling_emptyMap() {
-        when(mFlags.getEncodedErrorCodeListPerSampleInterval()).thenReturn("");
-        ErrorCodeSampler errorCodeSampler = new ErrorCodeSampler(mFlags);
+        when(mMockFlags.getEncodedErrorCodeListPerSampleInterval()).thenReturn("");
+        ErrorCodeSampler errorCodeSampler = new ErrorCodeSampler(mMockFlags);
         int errorCode = 101;
 
         expect.withMessage("shouldLog(errorCode=%s)", errorCode)
@@ -110,7 +108,7 @@ public final class ErrorCodeSamplerTest extends SharedMockitoTestCase {
     @Test
     public void testShouldLog_randomSampling_doesNotLog() {
         when(mRandom.nextInt(anyInt())).thenReturn(10);
-        ErrorCodeSampler errorCodeSampler = new ErrorCodeSampler(mFlags, mRandom);
+        ErrorCodeSampler errorCodeSampler = new ErrorCodeSampler(mMockFlags, mRandom);
 
         // Error code present
         int errorCode = 200;

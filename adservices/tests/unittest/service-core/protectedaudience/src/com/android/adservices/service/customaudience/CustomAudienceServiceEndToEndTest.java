@@ -24,6 +24,7 @@ import static android.adservices.customaudience.CustomAudienceFixture.VALID_DELA
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_EXPIRATION_TIME;
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_NAME;
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_OWNER;
+import static android.adservices.customaudience.CustomAudienceFixture.VALID_PRIORITY_1;
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS;
 
 import static com.android.adservices.service.customaudience.FetchCustomAudienceFixture.getFullSuccessfulJsonResponse;
@@ -124,6 +125,8 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.adservices.shared.testing.concurrency.FailableOnResultSyncCallback;
+import com.android.adservices.testutils.FetchCustomAudienceTestSyncCallback;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -174,6 +177,13 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                     .setExpirationTime(CustomAudienceFixture.VALID_DELAYED_EXPIRATION_TIME)
                     .build();
 
+    private static final CustomAudience CUSTOM_AUDIENCE_PK1_2_PRIORITY_VALUE =
+            CustomAudienceFixture.getValidBuilderByBuyerWithPriority(
+                            CommonFixture.VALID_BUYER_1, VALID_PRIORITY_1)
+                    .setActivationTime(CustomAudienceFixture.VALID_DELAYED_ACTIVATION_TIME)
+                    .setExpirationTime(CustomAudienceFixture.VALID_DELAYED_EXPIRATION_TIME)
+                    .build();
+
     private static final CustomAudience CUSTOM_AUDIENCE_PK1_BEYOND_MAX_EXPIRATION_TIME =
             CustomAudienceFixture.getValidBuilderForBuyerFilters(CommonFixture.VALID_BUYER_1)
                     .setExpirationTime(CustomAudienceFixture.INVALID_BEYOND_MAX_EXPIRATION_TIME)
@@ -191,6 +201,13 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     private static final DBCustomAudience DB_CUSTOM_AUDIENCE_PK1_2_AUCTION_SERVER_REQUEST_FLAGS =
             DBCustomAudienceFixture.getValidBuilderByBuyerWithOmitAdsEnabled(
                             CommonFixture.VALID_BUYER_1)
+                    .setActivationTime(CustomAudienceFixture.VALID_DELAYED_ACTIVATION_TIME)
+                    .setExpirationTime(CustomAudienceFixture.VALID_DELAYED_EXPIRATION_TIME)
+                    .build();
+
+    private static final DBCustomAudience DB_CUSTOM_AUDIENCE_PK1_2_PRIORITY_VALUE =
+            DBCustomAudienceFixture.getValidBuilderByBuyerWithPriority(
+                            CommonFixture.VALID_BUYER_1, VALID_PRIORITY_1)
                     .setActivationTime(CustomAudienceFixture.VALID_DELAYED_ACTIVATION_TIME)
                     .setExpirationTime(CustomAudienceFixture.VALID_DELAYED_EXPIRATION_TIME)
                     .build();
@@ -591,6 +608,44 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     }
 
     @Test
+    public void
+            testJoinCustomAudience_joinTwice_secondJoinOverrideValuesWithSellerConfigurationFlag() {
+        Flags flagsWithSellerConfigurationFlagEnabled =
+                getFlagsWithSellerConfigurationFlagEnabled();
+
+        doReturn(flagsWithSellerConfigurationFlagEnabled).when(FlagsFactory::getFlags);
+        doReturn(false)
+                .when(mConsentManagerMock)
+                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
+
+        reInitServiceWithFlags(flagsWithSellerConfigurationFlagEnabled);
+
+        ResultCapturingCallback callback = new ResultCapturingCallback();
+        mService.joinCustomAudience(
+                CUSTOM_AUDIENCE_PK1_1, CustomAudienceFixture.VALID_OWNER, callback);
+        assertTrue(callback.isSuccess());
+        assertEquals(
+                DB_CUSTOM_AUDIENCE_PK1_1,
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CustomAudienceFixture.VALID_OWNER,
+                        CommonFixture.VALID_BUYER_1,
+                        VALID_NAME));
+
+        callback = new ResultCapturingCallback();
+        mService.joinCustomAudience(
+                CUSTOM_AUDIENCE_PK1_2_PRIORITY_VALUE, CustomAudienceFixture.VALID_OWNER, callback);
+        assertTrue(callback.isSuccess());
+        assertEquals(
+                DB_CUSTOM_AUDIENCE_PK1_2_PRIORITY_VALUE,
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CustomAudienceFixture.VALID_OWNER,
+                        CommonFixture.VALID_BUYER_1,
+                        VALID_NAME));
+
+        verify(() -> BackgroundFetchJob.schedule(any()), times(2));
+    }
+
+    @Test
     public void testJoinCustomAudienceWithRevokedUserConsentForAppSuccess() {
         doReturn(true)
                 .when(mConsentManagerMock)
@@ -653,13 +708,11 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         .setExpirationTime(VALID_EXPIRATION_TIME)
                         .setUserBiddingSignals(VALID_USER_BIDDING_SIGNALS)
                         .build();
-        CountDownLatch resultLatch = new CountDownLatch(1);
-        FetchCustomAudienceImplTest.FetchCustomAudienceTestCallback fetchAndJoinCallback =
-                new FetchCustomAudienceImplTest.FetchCustomAudienceTestCallback(resultLatch);
+        FetchCustomAudienceTestSyncCallback fetchAndJoinCallback =
+                new FetchCustomAudienceTestSyncCallback();
         mService.fetchAndJoinCustomAudience(input, fetchAndJoinCallback);
-        resultLatch.await();
+        fetchAndJoinCallback.assertResultReceived();
         assertEquals(1, mockWebServer.getRequestCount());
-        assertTrue(fetchAndJoinCallback.mIsSuccess);
 
         // Assert persisted custom audience's activation time is from the fetched custom audience.
         DBCustomAudience persistedCustomAudience =
@@ -702,13 +755,11 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         .setExpirationTime(VALID_EXPIRATION_TIME)
                         .setUserBiddingSignals(VALID_USER_BIDDING_SIGNALS)
                         .build();
-        CountDownLatch resultLatch = new CountDownLatch(1);
-        FetchCustomAudienceImplTest.FetchCustomAudienceTestCallback fetchAndJoinCallback =
-                new FetchCustomAudienceImplTest.FetchCustomAudienceTestCallback(resultLatch);
+        FetchCustomAudienceTestSyncCallback fetchAndJoinCallback =
+                new FetchCustomAudienceTestSyncCallback();
         mService.fetchAndJoinCustomAudience(input, fetchAndJoinCallback);
-        resultLatch.await();
+        fetchAndJoinCallback.assertResultReceived();
         assertEquals(1, mockWebServer.getRequestCount());
-        assertTrue(fetchAndJoinCallback.mIsSuccess);
 
         // Assert persisted custom audience's activation time is from the fetched custom audience.
         DBCustomAudience persistedCustomAudience =
@@ -752,13 +803,11 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         .setExpirationTime(VALID_EXPIRATION_TIME)
                         .setUserBiddingSignals(VALID_USER_BIDDING_SIGNALS)
                         .build();
-        CountDownLatch resultLatch = new CountDownLatch(1);
-        FetchCustomAudienceImplTest.FetchCustomAudienceTestCallback fetchAndJoinCallback =
-                new FetchCustomAudienceImplTest.FetchCustomAudienceTestCallback(resultLatch);
+        FetchCustomAudienceTestSyncCallback fetchAndJoinCallback =
+                new FetchCustomAudienceTestSyncCallback();
         mService.fetchAndJoinCustomAudience(input, fetchAndJoinCallback);
-        resultLatch.await();
+        fetchAndJoinCallback.assertResultReceived();
         assertEquals(1, mockWebServer.getRequestCount());
-        assertTrue(fetchAndJoinCallback.mIsSuccess);
 
         // Assert persisted custom audience's activation time is from the fetched custom audience.
         DBCustomAudience persistedCustomAudience =
@@ -770,7 +819,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
 
     @Test
     public void
-            testFetchAndJoinCustomAudience_overridesJoinCustomAudienceWithAuctionServerReqeustFlagsEnabled()
+            testFetchAndJoinCustomAudience_overridesJoinCustomAudienceWithAuctionServerRequestFlagsEnabled()
                     throws Exception {
         Flags flagsWithAuctionServerRequestFlagsEnabled =
                 getFlagsWithAuctionServerRequestFlagsEnabled();
@@ -800,7 +849,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                         .setBody(
                                                 getFullSuccessfulJsonResponse(
                                                                 LOCALHOST_BUYER,
-                                                                auctionServerRequestFlagsEnabled)
+                                                                auctionServerRequestFlagsEnabled,
+                                                                /* sellerConfigurationEnabled */ false)
                                                         .toString())));
         FetchAndJoinCustomAudienceInput input =
                 new FetchAndJoinCustomAudienceInput.Builder(mFetchUri, VALID_OWNER)
@@ -809,13 +859,11 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         .setExpirationTime(VALID_EXPIRATION_TIME)
                         .setUserBiddingSignals(VALID_USER_BIDDING_SIGNALS)
                         .build();
-        CountDownLatch resultLatch = new CountDownLatch(1);
-        FetchCustomAudienceImplTest.FetchCustomAudienceTestCallback fetchAndJoinCallback =
-                new FetchCustomAudienceImplTest.FetchCustomAudienceTestCallback(resultLatch);
+        FetchCustomAudienceTestSyncCallback fetchAndJoinCallback =
+                new FetchCustomAudienceTestSyncCallback();
         mService.fetchAndJoinCustomAudience(input, fetchAndJoinCallback);
-        resultLatch.await();
+        fetchAndJoinCallback.assertResultReceived();
         assertEquals(1, mockWebServer.getRequestCount());
-        assertTrue(fetchAndJoinCallback.mIsSuccess);
 
         // Assert persisted custom audience's activation time is from the fetched custom audience.
         DBCustomAudience persistedCustomAudience =
@@ -825,6 +873,62 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         assertEquals(
                 FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS,
                 persistedCustomAudience.getAuctionServerRequestFlags());
+    }
+
+    @Test
+    public void
+            testFetchAndJoinCustomAudience_overridesJoinCustomAudienceWithSellerConfigurationFlagEnabled()
+                    throws Exception {
+        Flags flagsWithSellerConfigurationFlagEnabled =
+                getFlagsWithSellerConfigurationFlagEnabled();
+
+        doReturn(flagsWithSellerConfigurationFlagEnabled).when(FlagsFactory::getFlags);
+        doReturn(false)
+                .when(mConsentManagerMock)
+                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
+
+        reInitServiceWithFlags(flagsWithSellerConfigurationFlagEnabled);
+
+        // Join a custom audience using the joinCustomAudience API.
+        ResultCapturingCallback joinCallback = new ResultCapturingCallback();
+        mService.joinCustomAudience(
+                CustomAudienceFixture.getValidBuilderForBuyerFilters(LOCALHOST_BUYER).build(),
+                CustomAudienceFixture.VALID_OWNER,
+                joinCallback);
+        assertTrue(joinCallback.mIsSuccess);
+
+        // Fetch and join a custom audience with the same owner, buyer and name but a different
+        // value for one of fields. In this case, we'll use a different activation time.
+        boolean sellerConfigurationFlagEnabled = true;
+        MockWebServer mockWebServer =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(
+                                new MockResponse()
+                                        .setBody(
+                                                getFullSuccessfulJsonResponse(
+                                                                LOCALHOST_BUYER,
+                                                                /* auctionServerRequestFlagsEnabled */ false,
+                                                                sellerConfigurationFlagEnabled)
+                                                        .toString())));
+        FetchAndJoinCustomAudienceInput input =
+                new FetchAndJoinCustomAudienceInput.Builder(mFetchUri, VALID_OWNER)
+                        .setName(VALID_NAME)
+                        .setActivationTime(VALID_DELAYED_ACTIVATION_TIME)
+                        .setExpirationTime(VALID_EXPIRATION_TIME)
+                        .setUserBiddingSignals(VALID_USER_BIDDING_SIGNALS)
+                        .build();
+        FetchCustomAudienceTestSyncCallback fetchAndJoinCallback =
+                new FetchCustomAudienceTestSyncCallback();
+        mService.fetchAndJoinCustomAudience(input, fetchAndJoinCallback);
+        fetchAndJoinCallback.assertResultReceived();
+        assertEquals(1, mockWebServer.getRequestCount());
+
+        // Assert persisted custom audience's activation time is from the fetched custom audience.
+        DBCustomAudience persistedCustomAudience =
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, LOCALHOST_BUYER, VALID_NAME);
+        assertEquals(VALID_DELAYED_ACTIVATION_TIME, persistedCustomAudience.getActivationTime());
+        assertEquals(0, Double.compare(VALID_PRIORITY_1, persistedCustomAudience.getPriority()));
     }
 
     @Test
@@ -844,13 +948,11 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         .setExpirationTime(VALID_EXPIRATION_TIME)
                         .setUserBiddingSignals(VALID_USER_BIDDING_SIGNALS)
                         .build();
-        CountDownLatch resultLatch = new CountDownLatch(1);
-        FetchCustomAudienceImplTest.FetchCustomAudienceTestCallback fetchAndJoinCallback =
-                new FetchCustomAudienceImplTest.FetchCustomAudienceTestCallback(resultLatch);
+        FetchCustomAudienceTestSyncCallback fetchAndJoinCallback =
+                new FetchCustomAudienceTestSyncCallback();
         mService.fetchAndJoinCustomAudience(input, fetchAndJoinCallback);
-        resultLatch.await();
+        fetchAndJoinCallback.assertResultReceived();
         assertEquals(1, mockWebServer.getRequestCount());
-        assertTrue(fetchAndJoinCallback.mIsSuccess);
 
         // Join a custom audience using the joinCustomAudience API with the same owner, buyer and
         // name but a different value for one of fields. In this case, we'll use a different
@@ -898,13 +1000,11 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         .setExpirationTime(VALID_EXPIRATION_TIME)
                         .setUserBiddingSignals(VALID_USER_BIDDING_SIGNALS)
                         .build();
-        CountDownLatch resultLatch = new CountDownLatch(1);
-        FetchCustomAudienceImplTest.FetchCustomAudienceTestCallback fetchAndJoinCallback =
-                new FetchCustomAudienceImplTest.FetchCustomAudienceTestCallback(resultLatch);
+        FetchCustomAudienceTestSyncCallback fetchAndJoinCallback =
+                new FetchCustomAudienceTestSyncCallback();
         mService.fetchAndJoinCustomAudience(input, fetchAndJoinCallback);
-        resultLatch.await();
+        fetchAndJoinCallback.assertResultReceived();
         assertEquals(1, mockWebServer.getRequestCount());
-        assertTrue(fetchAndJoinCallback.mIsSuccess);
 
         // Join a custom audience using the joinCustomAudience API with the same owner, buyer and
         // name but a different value for one of fields. In this case, we'll use a different
@@ -929,6 +1029,61 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     }
 
     @Test
+    public void
+            testFetchAndJoinCustomAudience_overriddenByJoinCustomAudienceWithSellerConfigurationFlag()
+                    throws Exception {
+        Flags flagsWithSellerConfigurationFlagEnabled =
+                getFlagsWithSellerConfigurationFlagEnabled();
+
+        doReturn(flagsWithSellerConfigurationFlagEnabled).when(FlagsFactory::getFlags);
+        doReturn(false)
+                .when(mConsentManagerMock)
+                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
+
+        reInitServiceWithFlags(flagsWithSellerConfigurationFlagEnabled);
+
+        // Fetch and join a custom audience.
+        MockWebServer mockWebServer =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(
+                                new MockResponse()
+                                        .setBody(
+                                                getFullSuccessfulJsonResponseString(
+                                                        LOCALHOST_BUYER))));
+        FetchAndJoinCustomAudienceInput input =
+                new FetchAndJoinCustomAudienceInput.Builder(mFetchUri, VALID_OWNER)
+                        .setName(VALID_NAME)
+                        .setActivationTime(VALID_DELAYED_ACTIVATION_TIME)
+                        .setExpirationTime(VALID_EXPIRATION_TIME)
+                        .setUserBiddingSignals(VALID_USER_BIDDING_SIGNALS)
+                        .build();
+        FetchCustomAudienceTestSyncCallback fetchAndJoinCallback =
+                new FetchCustomAudienceTestSyncCallback();
+        mService.fetchAndJoinCustomAudience(input, fetchAndJoinCallback);
+        fetchAndJoinCallback.assertResultReceived();
+        assertEquals(1, mockWebServer.getRequestCount());
+
+        // Join a custom audience using the joinCustomAudience API with the same owner, buyer and
+        // name but a different value for one of fields. In this case, we'll use a different
+        // activation time.
+        ResultCapturingCallback joinCallback = new ResultCapturingCallback();
+        mService.joinCustomAudience(
+                CustomAudienceFixture.getValidBuilderByBuyerWithPriority(
+                                LOCALHOST_BUYER, VALID_PRIORITY_1)
+                        .build(),
+                CustomAudienceFixture.VALID_OWNER,
+                joinCallback);
+        assertTrue(joinCallback.mIsSuccess);
+
+        // Assert persisted custom audience's activation time is from the joined custom audience.
+        DBCustomAudience persistedCustomAudience =
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, LOCALHOST_BUYER, VALID_NAME);
+        assertEquals(VALID_ACTIVATION_TIME, persistedCustomAudience.getActivationTime());
+        assertEquals(0, Double.compare(VALID_PRIORITY_1, persistedCustomAudience.getPriority()));
+    }
+
+    @Test
     public void testFetchAndJoinCustomAudience_FirstJoinsQuarantineTableSecondIsFiltered()
             throws Exception {
         assertFalse(mCustomAudienceDao.doesCustomAudienceQuarantineExist(VALID_OWNER, BUYER_1));
@@ -944,32 +1099,24 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         .setExpirationTime(VALID_EXPIRATION_TIME)
                         .setUserBiddingSignals(VALID_USER_BIDDING_SIGNALS)
                         .build();
-        CountDownLatch resultLatch1 = new CountDownLatch(1);
-        FetchCustomAudienceImplTest.FetchCustomAudienceTestCallback fetchAndJoinCallback1 =
-                new FetchCustomAudienceImplTest.FetchCustomAudienceTestCallback(resultLatch1);
+        FetchCustomAudienceTestSyncCallback fetchAndJoinCallback1 =
+                new FetchCustomAudienceTestSyncCallback();
         mService.fetchAndJoinCustomAudience(input, fetchAndJoinCallback1);
-        resultLatch1.await();
+        FledgeErrorResponse errorResponse1 = fetchAndJoinCallback1.assertFailureReceived();
         assertEquals(1, mockWebServer.getRequestCount());
-        assertFalse(fetchAndJoinCallback1.mIsSuccess);
-        assertEquals(
-                STATUS_SERVER_RATE_LIMIT_REACHED,
-                fetchAndJoinCallback1.mFledgeErrorResponse.getStatusCode());
+        assertEquals(STATUS_SERVER_RATE_LIMIT_REACHED, errorResponse1.getStatusCode());
         assertTrue(
                 mCustomAudienceDao.doesCustomAudienceQuarantineExist(VALID_OWNER, LOCALHOST_BUYER));
 
         // Try to make the same request again, should fail with STATUS_SERVER_RATE_LIMIT_REACHED but
         // should not request the server
-        CountDownLatch resultLatch2 = new CountDownLatch(1);
-        FetchCustomAudienceImplTest.FetchCustomAudienceTestCallback fetchAndJoinCallback2 =
-                new FetchCustomAudienceImplTest.FetchCustomAudienceTestCallback(resultLatch2);
+        FetchCustomAudienceTestSyncCallback fetchAndJoinCallback2 =
+                new FetchCustomAudienceTestSyncCallback();
         mService.fetchAndJoinCustomAudience(input, fetchAndJoinCallback2);
-        resultLatch2.await();
+        FledgeErrorResponse errorResponse2 = fetchAndJoinCallback2.assertFailureReceived();
         // Assert a new request was not made
         assertEquals(1, mockWebServer.getRequestCount());
-        assertFalse(fetchAndJoinCallback2.mIsSuccess);
-        assertEquals(
-                STATUS_SERVER_RATE_LIMIT_REACHED,
-                fetchAndJoinCallback2.mFledgeErrorResponse.getStatusCode());
+        assertEquals(STATUS_SERVER_RATE_LIMIT_REACHED, errorResponse2.getStatusCode());
     }
 
     @Test
@@ -1005,28 +1152,22 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         .setExpirationTime(VALID_EXPIRATION_TIME)
                         .setUserBiddingSignals(VALID_USER_BIDDING_SIGNALS)
                         .build();
-        CountDownLatch resultLatch1 = new CountDownLatch(1);
-        FetchCustomAudienceImplTest.FetchCustomAudienceTestCallback fetchAndJoinCallback1 =
-                new FetchCustomAudienceImplTest.FetchCustomAudienceTestCallback(resultLatch1);
+        FetchCustomAudienceTestSyncCallback fetchAndJoinCallback1 =
+                new FetchCustomAudienceTestSyncCallback();
         mService.fetchAndJoinCustomAudience(input, fetchAndJoinCallback1);
-        resultLatch1.await();
+        FledgeErrorResponse errorResponse1 = fetchAndJoinCallback1.assertFailureReceived();
         assertEquals(1, mockWebServer.getRequestCount());
-        assertFalse(fetchAndJoinCallback1.mIsSuccess);
-        assertEquals(
-                STATUS_SERVER_RATE_LIMIT_REACHED,
-                fetchAndJoinCallback1.mFledgeErrorResponse.getStatusCode());
+        assertEquals(STATUS_SERVER_RATE_LIMIT_REACHED, errorResponse1.getStatusCode());
         assertTrue(
                 mCustomAudienceDao.doesCustomAudienceQuarantineExist(VALID_OWNER, LOCALHOST_BUYER));
 
         // Try to make the same request again, should pass this time
-        CountDownLatch resultLatch2 = new CountDownLatch(1);
-        FetchCustomAudienceImplTest.FetchCustomAudienceTestCallback fetchAndJoinCallback2 =
-                new FetchCustomAudienceImplTest.FetchCustomAudienceTestCallback(resultLatch2);
+        FetchCustomAudienceTestSyncCallback fetchAndJoinCallback2 =
+                new FetchCustomAudienceTestSyncCallback();
         mService.fetchAndJoinCustomAudience(input, fetchAndJoinCallback2);
-        resultLatch2.await();
+        fetchAndJoinCallback2.assertResultReceived();
         // Assert a new request was not made
         assertEquals(2, mockWebServer.getRequestCount());
-        assertTrue(fetchAndJoinCallback2.mIsSuccess);
 
         // Assert entry was cleared
         assertFalse(
@@ -1056,13 +1197,12 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         .setExpirationTime(VALID_EXPIRATION_TIME)
                         .setUserBiddingSignals(VALID_USER_BIDDING_SIGNALS)
                         .build();
-        CountDownLatch resultLatch = new CountDownLatch(1);
-        FetchCustomAudienceImplTest.FetchCustomAudienceTestCallback fetchAndJoinCallback =
-                new FetchCustomAudienceImplTest.FetchCustomAudienceTestCallback(resultLatch);
+        FetchCustomAudienceTestSyncCallback fetchAndJoinCallback =
+                new FetchCustomAudienceTestSyncCallback();
         mService.fetchAndJoinCustomAudience(input, fetchAndJoinCallback);
-        resultLatch.await();
+        fetchAndJoinCallback.assertResultReceived();
+
         assertEquals(1, mockWebServer.getRequestCount());
-        assertTrue(fetchAndJoinCallback.mIsSuccess);
 
         // Leave the fetched and joined custom audience.
         ResultCapturingCallback leaveCallback = new ResultCapturingCallback();
@@ -1350,7 +1490,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 VALID_OWNER,
                                 List.of(PARTIAL_CA_1, PARTIAL_CA_2),
                                 List.of(LEAVE_CA_1, LEAVE_CA_2),
-                                /* auctionServerRequestFlagsEnabled= */ false)
+                                /* auctionServerRequestFlagsEnabled= */ false,
+                                /* sellerConfigurationEnabled= */ false)
                         .toString();
 
         Dispatcher dispatcher =
@@ -1511,7 +1652,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 VALID_OWNER,
                                 List.of(PARTIAL_CA_1, PARTIAL_CA_2),
                                 List.of(LEAVE_CA_1, LEAVE_CA_2),
-                                /* auctionServerRequestFlagsEnabled= */ true)
+                                /* auctionServerRequestFlagsEnabled= */ true,
+                                /* sellerConfigurationEnabled= */ false)
                         .toString();
 
         Dispatcher dispatcher =
@@ -1620,6 +1762,171 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     }
 
     @Test
+    public void
+            testScheduleCustomAudienceUpdate_JoinWithOverridesAndLeave_SuccessWithSellerConfigurationFlag()
+                    throws Exception {
+        Flags flagsWithSellerConfigurationFlagEnabled =
+                new CustomAudienceServiceE2ETestFlags() {
+                    @Override
+                    public boolean getFledgeGetAdSelectionDataSellerConfigurationEnabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getFledgeScheduleCustomAudienceUpdateEnabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public int getFledgeScheduleCustomAudienceMinDelayMinsOverride() {
+                        // Lets the delay be set in past for easier testing
+                        return -100;
+                    }
+                };
+
+        doReturn(flagsWithSellerConfigurationFlagEnabled).when(FlagsFactory::getFlags);
+        doReturn(false)
+                .when(mConsentManagerMock)
+                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
+
+        reInitServiceWithFlags(flagsWithSellerConfigurationFlagEnabled);
+
+        mScheduledUpdatesHandler =
+                new ScheduledUpdatesHandler(
+                        mCustomAudienceDao,
+                        new AdServicesHttpsClient(
+                                AdServicesExecutors.getBlockingExecutor(),
+                                CacheProviderFactory.createNoOpCache()),
+                        flagsWithSellerConfigurationFlagEnabled,
+                        Clock.systemUTC(),
+                        AdServicesExecutors.getBackgroundExecutor(),
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        FREQUENCY_CAP_AD_DATA_VALIDATOR_NO_OP,
+                        RENDER_ID_VALIDATOR_NO_OP,
+                        AdDataConversionStrategyFactory.getAdDataConversionStrategy(
+                                true, true, true),
+                        new CustomAudienceImpl(
+                                mCustomAudienceDao,
+                                mCustomAudienceQuantityChecker,
+                                mCustomAudienceValidator,
+                                CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
+                                flagsWithSellerConfigurationFlagEnabled),
+                        mCustomAudienceQuantityChecker);
+
+        // Wire the mock web server
+        String responsePayload =
+                createJsonResponsePayload(
+                                LOCALHOST_BUYER,
+                                VALID_OWNER,
+                                List.of(PARTIAL_CA_1, PARTIAL_CA_2),
+                                List.of(LEAVE_CA_1, LEAVE_CA_2),
+                                /* auctionServerRequestFlagsEnabled= */ false,
+                                /* sellerConfigurationEnabled= */ true)
+                        .toString();
+
+        Dispatcher dispatcher =
+                new Dispatcher() {
+                    @Override
+                    public MockResponse dispatch(RecordedRequest request)
+                            throws InterruptedException {
+                        // We can validate the request within server
+                        List<CustomAudienceBlob> caBlobs =
+                                extractPartialCustomAudiencesFromRequest(request.getBody());
+                        assertTrue(
+                                caBlobs.stream()
+                                        .map(b -> b.getName())
+                                        .collect(Collectors.toList())
+                                        .containsAll(List.of(PARTIAL_CA_1, PARTIAL_CA_2)));
+                        return new MockResponse().setBody(responsePayload);
+                    }
+                };
+        MockWebServer mockWebServer = mMockWebServerRule.startMockWebServer(dispatcher);
+
+        Uri updateUri = Uri.parse(mockWebServer.getUrl(UPDATE_URI_PATH).toString());
+
+        // Join a custom audience using the joinCustomAudience API which would be "left" by update
+        ResultCapturingCallback joinCallback = new ResultCapturingCallback();
+        mService.joinCustomAudience(
+                CustomAudienceFixture.getValidBuilderForBuyerFilters(LOCALHOST_BUYER)
+                        .setName(LEAVE_CA_1)
+                        .build(),
+                CustomAudienceFixture.VALID_OWNER,
+                joinCallback);
+        assertTrue(joinCallback.mIsSuccess);
+
+        // Make a request to the API
+        Duration negativeDelayForTest = Duration.of(-20, ChronoUnit.MINUTES);
+        ScheduleCustomAudienceUpdateInput input =
+                new ScheduleCustomAudienceUpdateInput.Builder(
+                                updateUri,
+                                VALID_OWNER,
+                                negativeDelayForTest,
+                                List.of(
+                                        DBPartialCustomAudience.getPartialCustomAudience(
+                                                PARTIAL_CUSTOM_AUDIENCE_1),
+                                        DBPartialCustomAudience.getPartialCustomAudience(
+                                                PARTIAL_CUSTOM_AUDIENCE_2)))
+                        .build();
+        CountDownLatch resultLatch = new CountDownLatch(1);
+        ScheduleUpdateTestCallback callback = new ScheduleUpdateTestCallback(resultLatch);
+        mService.scheduleCustomAudienceUpdate(input, callback);
+        resultLatch.await();
+
+        // Validate response of API is complete
+        assertTrue(callback.isSuccess());
+
+        // Ensure that job that maintains update-scheduled is itself scheduled
+        verify(
+                () ->
+                        ScheduleCustomAudienceUpdateJobService.scheduleIfNeeded(
+                                any(), any(), eq(false)),
+                times(1));
+
+        assertTrue(
+                mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(Instant.now()).size()
+                        > 0);
+
+        // Manually trigger handler as it would have been triggered by its job schedule
+        Void unused =
+                mScheduledUpdatesHandler
+                        .performScheduledUpdates(Instant.now())
+                        .get(10, TimeUnit.SECONDS);
+
+        // Check that the request for updates was made to server successfully
+        assertEquals(1, mockWebServer.getRequestCount());
+
+        // Check that updates processed successfully
+        // Join
+        DBCustomAudience persistedCustomAudience =
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, LOCALHOST_BUYER, PARTIAL_CA_1);
+        assertNotNull("The custom audience should have been joined", persistedCustomAudience);
+        assertEquals(0, Double.compare(VALID_PRIORITY_1, persistedCustomAudience.getPriority()));
+        DBCustomAudience persistedCustomAudience2 =
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, LOCALHOST_BUYER, PARTIAL_CA_2);
+        assertNotNull("The custom audience should have been joined", persistedCustomAudience2);
+        assertEquals(
+                "The signals should have been overridden from partial custom audience",
+                VALID_BIDDING_SIGNALS,
+                persistedCustomAudience.getUserBiddingSignals());
+        assertEquals(0, Double.compare(VALID_PRIORITY_1, persistedCustomAudience2.getPriority()));
+
+        // Leave
+        assertNull(
+                "The custom audience should have been left",
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, LOCALHOST_BUYER, LEAVE_CA_1));
+
+        // Check handled updates are cleared
+        assertTrue(
+                "The handled updates should have been removed from DB",
+                mCustomAudienceDao
+                        .getCustomAudienceUpdatesScheduledBeforeTime(Instant.now())
+                        .isEmpty());
+    }
+
+    @Test
     public void testScheduleCustomAudienceUpdate_MultipleUpdates_OnlyFirstUpdateSuccess()
             throws Exception {
         // Wire the mock web server for handling two updates
@@ -1629,7 +1936,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 VALID_OWNER,
                                 List.of(PARTIAL_CA_1),
                                 List.of(LEAVE_CA_1),
-                                /* auctionServerRequestFlagsEnabled= */ false)
+                                /* auctionServerRequestFlagsEnabled= */ false,
+                                /* sellerConfigurationEnabled= */ false)
                         .toString();
 
         String responsePayload2 =
@@ -1638,7 +1946,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 VALID_OWNER,
                                 List.of(PARTIAL_CA_2),
                                 List.of(LEAVE_CA_2),
-                                /* auctionServerRequestFlagsEnabled= */ false)
+                                /* auctionServerRequestFlagsEnabled= */ false,
+                                /* sellerConfigurationEnabled= */ false)
                         .toString();
 
         Dispatcher dispatcher =
@@ -1780,7 +2089,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 VALID_OWNER,
                                 List.of(PARTIAL_CA_1),
                                 List.of(LEAVE_CA_1),
-                                /* auctionServerRequestFlagsEnabled= */ false)
+                                /* auctionServerRequestFlagsEnabled= */ false,
+                                /* sellerConfigurationEnabled= */ false)
                         .toString();
 
         Dispatcher dispatcher =
@@ -1913,7 +2223,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 VALID_OWNER,
                                 List.of(PARTIAL_CA_1),
                                 List.of(LEAVE_CA_1),
-                                /* auctionServerRequestFlagsEnabled= */ false)
+                                /* auctionServerRequestFlagsEnabled= */ false,
+                                /* sellerConfigurationEnabled= */ false)
                         .toString();
 
         Dispatcher dispatcher =
@@ -2045,7 +2356,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 VALID_OWNER,
                                 List.of(PARTIAL_CA_1, PARTIAL_CA_2),
                                 List.of(LEAVE_CA_1, LEAVE_CA_2),
-                                /* auctionServerRequestFlagsEnabled= */ true)
+                                /* auctionServerRequestFlagsEnabled= */ true,
+                                /* sellerConfigurationEnabled= */ false)
                         .toString();
 
         Dispatcher dispatcher =
@@ -2150,7 +2462,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 VALID_OWNER,
                                 List.of(PARTIAL_CA_1),
                                 List.of(LEAVE_CA_1),
-                                /* auctionServerRequestFlagsEnabled= */ false)
+                                /* auctionServerRequestFlagsEnabled= */ false,
+                                /* sellerConfigurationEnabled= */ false)
                         .toString();
 
         Dispatcher dispatcher =
@@ -2310,7 +2623,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 VALID_OWNER,
                                 List.of(nonOverriddenCaName, PARTIAL_CA_1),
                                 List.of(LEAVE_CA_1),
-                                /* auctionServerRequestFlagsEnabled= */ false)
+                                /* auctionServerRequestFlagsEnabled= */ false,
+                                /* sellerConfigurationEnabled= */ false)
                         .toString();
 
         Dispatcher dispatcher =
@@ -2412,7 +2726,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 VALID_OWNER,
                                 List.of(PARTIAL_CA_1, PARTIAL_CA_2),
                                 List.of(LEAVE_CA_1, LEAVE_CA_2),
-                                /* auctionServerRequestFlagsEnabled= */ false)
+                                /* auctionServerRequestFlagsEnabled= */ false,
+                                /* sellerConfigurationEnabled= */ false)
                         .toString();
 
         Dispatcher dispatcher =
@@ -2502,7 +2817,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 VALID_OWNER,
                                 List.of(PARTIAL_CA_1, PARTIAL_CA_2),
                                 List.of(LEAVE_CA_1, LEAVE_CA_2),
-                                /* auctionServerRequestFlagsEnabled= */ false)
+                                /* auctionServerRequestFlagsEnabled= */ false,
+                                /* sellerConfigurationEnabled= */ false)
                         .toString();
 
         Dispatcher dispatcher =
@@ -2732,17 +3048,15 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         DevContext.builder(MY_APP_PACKAGE_NAME).setDevOptionsEnabled(true).build());
         doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
 
-        CustomAudienceOverrideTestCallback callback =
-                callAddOverride(
-                        MY_APP_PACKAGE_NAME,
-                        BUYER_1,
-                        NAME_1,
-                        BIDDING_LOGIC_JS,
-                        JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3,
-                        TRUSTED_BIDDING_DATA,
-                        mService);
+        callAddOverride(
+                MY_APP_PACKAGE_NAME,
+                BUYER_1,
+                NAME_1,
+                BIDDING_LOGIC_JS,
+                JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3,
+                TRUSTED_BIDDING_DATA,
+                mService);
 
-        assertTrue(callback.mIsSuccess);
         assertTrue(
                 mCustomAudienceDao.doesCustomAudienceOverrideExist(
                         MY_APP_PACKAGE_NAME, BUYER_1, NAME_1));
@@ -2756,17 +3070,15 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         DevContext.builder(MY_APP_PACKAGE_NAME).setDevOptionsEnabled(true).build());
         doReturn(true).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
 
-        CustomAudienceOverrideTestCallback callback =
-                callAddOverride(
-                        MY_APP_PACKAGE_NAME,
-                        BUYER_1,
-                        NAME_1,
-                        BIDDING_LOGIC_JS,
-                        JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3,
-                        TRUSTED_BIDDING_DATA,
-                        mService);
+        callAddOverride(
+                MY_APP_PACKAGE_NAME,
+                BUYER_1,
+                NAME_1,
+                BIDDING_LOGIC_JS,
+                JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3,
+                TRUSTED_BIDDING_DATA,
+                mService);
 
-        assertTrue(callback.mIsSuccess);
         assertFalse(
                 mCustomAudienceDao.doesCustomAudienceOverrideExist(
                         MY_APP_PACKAGE_NAME, BUYER_1, NAME_1));
@@ -2791,17 +3103,15 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
 
         String otherOwner = "otherOwner";
 
-        CustomAudienceOverrideTestCallback callback =
-                callAddOverride(
-                        otherOwner,
-                        BUYER_1,
-                        NAME_1,
-                        BIDDING_LOGIC_JS,
-                        JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3,
-                        TRUSTED_BIDDING_DATA,
-                        mService);
+        callAddOverride(
+                otherOwner,
+                BUYER_1,
+                NAME_1,
+                BIDDING_LOGIC_JS,
+                JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3,
+                TRUSTED_BIDDING_DATA,
+                mService);
 
-        assertTrue(callback.mIsSuccess);
         assertFalse(
                 mCustomAudienceDao.doesCustomAudienceOverrideExist(otherOwner, BUYER_1, NAME_1));
 
@@ -2860,7 +3170,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         CustomAudienceOverrideTestCallback callback =
                 callRemoveOverride(MY_APP_PACKAGE_NAME, BUYER_1, NAME_1, mService);
 
-        assertTrue(callback.mIsSuccess);
+        callback.assertResultReceived();
         assertFalse(
                 mCustomAudienceDao.doesCustomAudienceOverrideExist(
                         MY_APP_PACKAGE_NAME, BUYER_1, NAME_1));
@@ -2892,7 +3202,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         CustomAudienceOverrideTestCallback callback =
                 callRemoveOverride(MY_APP_PACKAGE_NAME, BUYER_1, NAME_1, mService);
 
-        assertTrue(callback.mIsSuccess);
+        callback.assertResultReceived();
         assertTrue(
                 mCustomAudienceDao.doesCustomAudienceOverrideExist(
                         MY_APP_PACKAGE_NAME, BUYER_1, NAME_1));
@@ -2936,7 +3246,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         CustomAudienceOverrideTestCallback callback =
                 callRemoveOverride(MY_APP_PACKAGE_NAME, BUYER_1, NAME_1, mService);
 
-        assertTrue(callback.mIsSuccess);
+        callback.assertResultReceived();
         assertTrue(
                 mCustomAudienceDao.doesCustomAudienceOverrideExist(
                         MY_APP_PACKAGE_NAME, BUYER_1, NAME_1));
@@ -3016,7 +3326,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
 
         CustomAudienceOverrideTestCallback callback = callResetAllOverrides(mService);
 
-        assertTrue(callback.mIsSuccess);
+        callback.assertResultReceived();
         assertFalse(
                 mCustomAudienceDao.doesCustomAudienceOverrideExist(
                         MY_APP_PACKAGE_NAME, BUYER_1, NAME_1));
@@ -3065,7 +3375,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
 
         CustomAudienceOverrideTestCallback callback = callResetAllOverrides(mService);
 
-        assertTrue(callback.mIsSuccess);
+        callback.assertResultReceived();
         assertTrue(
                 mCustomAudienceDao.doesCustomAudienceOverrideExist(
                         MY_APP_PACKAGE_NAME, BUYER_1, NAME_1));
@@ -3126,7 +3436,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
 
         CustomAudienceOverrideTestCallback callback = callResetAllOverrides(mService);
 
-        assertTrue(callback.mIsSuccess);
+        callback.assertResultReceived();
         assertTrue(
                 mCustomAudienceDao.doesCustomAudienceOverrideExist(
                         MY_APP_PACKAGE_NAME, BUYER_1, NAME_1));
@@ -3348,7 +3658,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         }
     }
 
-    private CustomAudienceOverrideTestCallback callAddOverride(
+    private void callAddOverride(
             String owner,
             AdTechIdentifier buyer,
             String name,
@@ -3356,10 +3666,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
             Long biddingLogicJsVersion,
             AdSelectionSignals trustedBiddingData,
             CustomAudienceServiceImpl customAudienceService)
-            throws Exception {
-        CountDownLatch resultLatch = new CountDownLatch(1);
-        CustomAudienceOverrideTestCallback callback =
-                new CustomAudienceOverrideTestCallback(resultLatch);
+            throws InterruptedException {
+        CustomAudienceOverrideTestCallback callback = new CustomAudienceOverrideTestCallback();
 
         customAudienceService.overrideCustomAudienceRemoteInfo(
                 owner,
@@ -3369,57 +3677,36 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                 biddingLogicJsVersion,
                 trustedBiddingData,
                 callback);
-        resultLatch.await();
-        return callback;
+
+        callback.assertResultReceived();
     }
 
     private CustomAudienceOverrideTestCallback callRemoveOverride(
             String owner,
             AdTechIdentifier buyer,
             String name,
-            CustomAudienceServiceImpl customAudienceService)
-            throws Exception {
-        CountDownLatch resultLatch = new CountDownLatch(1);
-        CustomAudienceOverrideTestCallback callback =
-                new CustomAudienceOverrideTestCallback(resultLatch);
+            CustomAudienceServiceImpl customAudienceService) {
+        CustomAudienceOverrideTestCallback callback = new CustomAudienceOverrideTestCallback();
 
         customAudienceService.removeCustomAudienceRemoteInfoOverride(owner, buyer, name, callback);
 
-        resultLatch.await();
         return callback;
     }
 
     private CustomAudienceOverrideTestCallback callResetAllOverrides(
-            CustomAudienceServiceImpl customAudienceService) throws Exception {
-        CountDownLatch resultLatch = new CountDownLatch(1);
-        CustomAudienceOverrideTestCallback callback =
-                new CustomAudienceOverrideTestCallback(resultLatch);
+            CustomAudienceServiceImpl customAudienceService) {
+        CustomAudienceOverrideTestCallback callback = new CustomAudienceOverrideTestCallback();
 
         customAudienceService.resetAllCustomAudienceOverrides(callback);
-        resultLatch.await();
         return callback;
     }
 
-    public static class CustomAudienceOverrideTestCallback
-            extends CustomAudienceOverrideCallback.Stub {
-        boolean mIsSuccess = false;
-        FledgeErrorResponse mFledgeErrorResponse;
-        private final CountDownLatch mCountDownLatch;
-
-        public CustomAudienceOverrideTestCallback(CountDownLatch countDownLatch) {
-            mCountDownLatch = countDownLatch;
-        }
-
+    private static class CustomAudienceOverrideTestCallback
+            extends FailableOnResultSyncCallback<Boolean, FledgeErrorResponse>
+            implements CustomAudienceOverrideCallback {
         @Override
         public void onSuccess() throws RemoteException {
-            mIsSuccess = true;
-            mCountDownLatch.countDown();
-        }
-
-        @Override
-        public void onFailure(FledgeErrorResponse fledgeErrorResponse) throws RemoteException {
-            mFledgeErrorResponse = fledgeErrorResponse;
-            mCountDownLatch.countDown();
+            injectResult(true);
         }
     }
 
@@ -3593,6 +3880,15 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         return new CustomAudienceServiceE2ETestFlags() {
             @Override
             public boolean getFledgeAuctionServerRequestFlagsEnabled() {
+                return true;
+            }
+        };
+    }
+
+    private Flags getFlagsWithSellerConfigurationFlagEnabled() {
+        return new CustomAudienceServiceE2ETestFlags() {
+            @Override
+            public boolean getFledgeGetAdSelectionDataSellerConfigurationEnabled() {
                 return true;
             }
         };

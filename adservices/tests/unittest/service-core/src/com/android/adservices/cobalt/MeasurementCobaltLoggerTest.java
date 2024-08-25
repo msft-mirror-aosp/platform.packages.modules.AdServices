@@ -152,6 +152,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
     private static final int REPORTING_UNKNOWN_STATUS_CODE = 200;
 
     private static final String APP_PACKAGE_NAME = "test.app.name";
+    private static final String ENROLLMENT_ID = "enrollmentId";
+    private static final int HASHED_ENROLLMENT = 964172550;
 
     @Mock private CobaltLogger mMockCobaltLogger;
 
@@ -185,7 +187,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__SOURCE_TYPE__EVENT_SOURCE_TYPE,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__SUCCESS_STATUS,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__FAILURE_TYPE__UNKNOWN_REGISTRATION_FAILURE_TYPE,
-                /* isEeaDevice= */ true);
+                /* isEeaDevice= */ true,
+                ENROLLMENT_ID);
 
         verifyLoggedEvent(
                 APP_PACKAGE_NAME,
@@ -193,6 +196,7 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 EVENT_SOURCE_TYPE,
                 SUCCESS_STATUS_CODE,
                 EEA_REGION_CODE,
+                HASHED_ENROLLMENT,
                 never());
     }
 
@@ -208,7 +212,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__SOURCE_TYPE__EVENT_SOURCE_TYPE,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__SUCCESS_STATUS,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__FAILURE_TYPE__UNKNOWN_REGISTRATION_FAILURE_TYPE,
-                /* isEeaDevice= */ true);
+                /* isEeaDevice= */ true,
+                ENROLLMENT_ID);
 
         verifyLoggedEvent(
                 APP_PACKAGE_NAME,
@@ -216,6 +221,7 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 EVENT_SOURCE_TYPE,
                 SUCCESS_STATUS_CODE,
                 EEA_REGION_CODE,
+                HASHED_ENROLLMENT,
                 never());
     }
 
@@ -233,7 +239,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__SOURCE_TYPE__EVENT_SOURCE_TYPE,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__SUCCESS_STATUS,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__FAILURE_TYPE__UNKNOWN_REGISTRATION_FAILURE_TYPE,
-                /* isEeaDevice= */ true);
+                /* isEeaDevice= */ true,
+                ENROLLMENT_ID);
 
         verifyLoggedEvent(
                 APP_PACKAGE_NAME,
@@ -241,6 +248,7 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 EVENT_SOURCE_TYPE,
                 SUCCESS_STATUS_CODE,
                 EEA_REGION_CODE,
+                HASHED_ENROLLMENT,
                 never());
     }
 
@@ -260,7 +268,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__SOURCE_TYPE__EVENT_SOURCE_TYPE,
                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__FAILURE_STATUS,
                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__FAILURE_TYPE__PARSING_REGISTRATION_FAILURE_TYPE,
-                                /* isEeaDevice= */ true));
+                                /* isEeaDevice= */ true,
+                                ENROLLMENT_ID));
     }
 
     @Test
@@ -276,7 +285,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 /* sourceType= */ -1,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__FAILURE_STATUS,
                 /* errorCode= */ -1,
-                /* isEeaDevice= */ true);
+                /* isEeaDevice= */ true,
+                ENROLLMENT_ID);
 
         verifyLoggedEvent(
                 APP_PACKAGE_NAME,
@@ -284,6 +294,7 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 UNKNOWN_SOURCE_TYPE,
                 UNKNOWN_FAILURE_TYPE,
                 EEA_REGION_CODE,
+                HASHED_ENROLLMENT,
                 times(1));
     }
 
@@ -300,7 +311,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__SOURCE_TYPE__EVENT_SOURCE_TYPE,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__SUCCESS_STATUS,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__FAILURE_TYPE__UNKNOWN_REGISTRATION_FAILURE_TYPE,
-                /* isEeaDevice= */ true);
+                /* isEeaDevice= */ true,
+                ENROLLMENT_ID);
 
         verifyLoggedEvent(
                 APP_PACKAGE_NAME,
@@ -308,6 +320,7 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 EVENT_SOURCE_TYPE,
                 SUCCESS_STATUS_CODE,
                 EEA_REGION_CODE,
+                HASHED_ENROLLMENT,
                 times(1));
     }
 
@@ -324,7 +337,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__SOURCE_TYPE__UNKNOWN_SOURCE_TYPE,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__FAILURE_STATUS,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__FAILURE_TYPE__PARSING_REGISTRATION_FAILURE_TYPE,
-                /* isEeaDevice= */ false);
+                /* isEeaDevice= */ false,
+                ENROLLMENT_ID);
 
         verifyLoggedEvent(
                 APP_PACKAGE_NAME,
@@ -332,6 +346,7 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 TRIGGER_TYPE_CODE,
                 PARSING_FAILURE_TYPE,
                 ROW_REGION_CODE,
+                HASHED_ENROLLMENT,
                 times(1));
     }
 
@@ -348,7 +363,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__SOURCE_TYPE__UNKNOWN_SOURCE_TYPE,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__UNKNOWN_STATUS,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__FAILURE_TYPE__UNKNOWN_REGISTRATION_FAILURE_TYPE,
-                /* isEeaDevice= */ true);
+                /* isEeaDevice= */ true,
+                ENROLLMENT_ID);
 
         verifyLoggedEvent(
                 APP_PACKAGE_NAME,
@@ -356,6 +372,33 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 UNKNOWN_TYPE,
                 UNKNOWN_STATUS_CODE,
                 EEA_REGION_CODE,
+                HASHED_ENROLLMENT,
+                times(1));
+    }
+
+    @Test
+    public void testLogRegistrationStatus_nullEnrollment() {
+        mockCobaltLoggingFlags(true);
+        mockMsmtRegistrationCobaltLoggingEnabled(true);
+        MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
+
+        logger.logRegistrationStatus(
+                APP_PACKAGE_NAME,
+                UNKNOWN_SURFACE_TYPE,
+                AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__UNKNOWN_REGISTRATION,
+                AD_SERVICES_MEASUREMENT_REGISTRATIONS__SOURCE_TYPE__UNKNOWN_SOURCE_TYPE,
+                AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__UNKNOWN_STATUS,
+                AD_SERVICES_MEASUREMENT_REGISTRATIONS__FAILURE_TYPE__UNKNOWN_REGISTRATION_FAILURE_TYPE,
+                /* isEeaDevice= */ true,
+                /* enrollmentId= */ null);
+
+        verifyLoggedEvent(
+                APP_PACKAGE_NAME,
+                UNKNOWN_SURFACE_TYPE,
+                UNKNOWN_TYPE,
+                UNKNOWN_STATUS_CODE,
+                EEA_REGION_CODE,
+                /* enrollment= */ 0,
                 times(1));
     }
 
@@ -371,7 +414,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__SOURCE_TYPE__EVENT_SOURCE_TYPE,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__SUCCESS_STATUS,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__FAILURE_TYPE__UNKNOWN_REGISTRATION_FAILURE_TYPE,
-                /* isEeaDevice= */ true);
+                /* isEeaDevice= */ true,
+                ENROLLMENT_ID);
 
         verifyLoggedEvent(
                 APP_PACKAGE_NAME,
@@ -379,6 +423,7 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 EVENT_SOURCE_TYPE,
                 SUCCESS_STATUS_CODE,
                 EEA_REGION_CODE,
+                HASHED_ENROLLMENT,
                 never());
     }
 
@@ -395,7 +440,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__SOURCE_TYPE__UNKNOWN_SOURCE_TYPE,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__FAILURE_STATUS,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__FAILURE_TYPE__PARSING_REGISTRATION_FAILURE_TYPE,
-                /* isEeaDevice= */ false);
+                /* isEeaDevice= */ false,
+                ENROLLMENT_ID);
 
         verifyLoggedEvent(
                 APP_PACKAGE_NAME,
@@ -403,6 +449,7 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 TRIGGER_TYPE_CODE,
                 PARSING_FAILURE_TYPE,
                 ROW_REGION_CODE,
+                HASHED_ENROLLMENT,
                 never());
     }
 
@@ -412,12 +459,14 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
             int sourceTriggerType,
             int statusEvent,
             int region,
+            int enrollment,
             VerificationMode mode) {
         verify(mMockCobaltLogger, mode)
                 .logString(
                         METRIC_ID,
                         appPackageName,
-                        ImmutableList.of(surfaceType, sourceTriggerType, statusEvent, region));
+                        ImmutableList.of(
+                                surfaceType, sourceTriggerType, statusEvent, region, enrollment));
     }
 
     @Test
@@ -741,11 +790,11 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
     }
 
     private void mockCobaltLoggingFlags(boolean value) {
-        mocker.mockAllCobaltLoggingFlags(mMockFlags, value);
+        mocker.mockAllCobaltLoggingFlags(value);
     }
 
     private void mockCobaltLoggingEnabled(boolean value) {
-        mocker.mockGetCobaltLoggingEnabled(mMockFlags, value);
+        mocker.mockGetCobaltLoggingEnabled(value);
     }
 
     private void mockMsmtRegistrationCobaltLoggingEnabled(boolean value) {

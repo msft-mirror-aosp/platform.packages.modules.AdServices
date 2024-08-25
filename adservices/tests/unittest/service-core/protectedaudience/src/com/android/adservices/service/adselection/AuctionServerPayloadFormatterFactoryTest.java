@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.adselection.SellerConfigurationFixture.SELLER_CONFIGURATION;
+
 import static com.android.adservices.service.adselection.AuctionServerPayloadFormatterFactory.NO_IMPLEMENTATION_FOUND;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -34,6 +36,7 @@ import org.mockito.Mock;
 public class AuctionServerPayloadFormatterFactoryTest {
     private static final int V0_VERSION = AuctionServerPayloadFormatterV0.VERSION;
     private static final int V1_VERSION = AuctionServerPayloadFormatterExcessiveMaxSize.VERSION;
+    private static final int V2_VERSION = AuctionServerPayloadFormatterExactSize.VERSION;
     private static final int INVALID_VERSION = Integer.MAX_VALUE;
 
     @Mock private AdServicesLogger mAdServicesLoggerMock;
@@ -45,7 +48,9 @@ public class AuctionServerPayloadFormatterFactoryTest {
     public void testCreateFormatter_validVersion_returnImplementationSuccess() {
         AuctionServerPayloadFormatter formatter =
                 AuctionServerPayloadFormatterFactory.createPayloadFormatter(
-                        V0_VERSION, Flags.FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES);
+                        V0_VERSION,
+                        Flags.FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES,
+                        /* sellerConfiguration= */ null);
         assertTrue(formatter instanceof AuctionServerPayloadFormatterV0);
     }
 
@@ -61,8 +66,32 @@ public class AuctionServerPayloadFormatterFactoryTest {
     public void testCreateFormatter_excessiveMaxSizeVersion_returnImplementationSuccess() {
         AuctionServerPayloadFormatter formatter =
                 AuctionServerPayloadFormatterFactory.createPayloadFormatter(
-                        V1_VERSION, Flags.FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES);
-        assertThat(formatter instanceof AuctionServerPayloadFormatterExcessiveMaxSize).isTrue();
+                        V1_VERSION,
+                        Flags.FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES,
+                        /* sellerConfiguration= */ null);
+        assertThat(formatter).isInstanceOf(AuctionServerPayloadFormatterExcessiveMaxSize.class);
+    }
+
+    @Test
+    public void
+            testCreateFormatter_exactSizeVersion_nullSellerConfiguration_returnExcessiveImplementationSuccess() {
+        AuctionServerPayloadFormatter formatter =
+                AuctionServerPayloadFormatterFactory.createPayloadFormatter(
+                        V2_VERSION,
+                        Flags.FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES,
+                        /* sellerConfiguration= */ null);
+        assertThat(formatter).isInstanceOf(AuctionServerPayloadFormatterExcessiveMaxSize.class);
+    }
+
+    @Test
+    public void
+            testCreateFormatter_exactSizeVersion_withSellerConfiguration_returnExactImplementationSuccess() {
+        AuctionServerPayloadFormatter formatter =
+                AuctionServerPayloadFormatterFactory.createPayloadFormatter(
+                        V2_VERSION,
+                        Flags.FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES,
+                        SELLER_CONFIGURATION);
+        assertThat(formatter).isInstanceOf(AuctionServerPayloadFormatterExactSize.class);
     }
 
     @Test
@@ -71,6 +100,14 @@ public class AuctionServerPayloadFormatterFactoryTest {
                 AuctionServerPayloadFormatterFactory.createPayloadExtractor(
                         V1_VERSION, mAdServicesLoggerMock);
         assertTrue(extractor instanceof AuctionServerPayloadFormatterExcessiveMaxSize);
+    }
+
+    @Test
+    public void testCreateExtractor_exactSizeVersion_returnImplementationSuccess() {
+        AuctionServerPayloadExtractor extractor =
+                AuctionServerPayloadFormatterFactory.createPayloadExtractor(
+                        V2_VERSION, mAdServicesLoggerMock);
+        assertTrue(extractor instanceof AuctionServerPayloadFormatterExactSize);
     }
 
     @Test
@@ -83,7 +120,9 @@ public class AuctionServerPayloadFormatterFactoryTest {
                 IllegalArgumentException.class,
                 () ->
                         AuctionServerPayloadFormatterFactory.createPayloadFormatter(
-                                INVALID_VERSION, Flags.FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES));
+                                INVALID_VERSION,
+                                Flags.FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES,
+                                /* sellerConfiguration= */ null));
     }
 
     @Test

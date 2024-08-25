@@ -74,3 +74,11 @@ flag {
     bug: "343681196"
     is_fixed_read_only: true
 }
+
+flag {
+    name: "sdk_sandbox_verify_sdk_dex_files"
+    namespace: "adservices_aconfig"
+    description: "Enables the static dex verifier for the SDK sandbox to run on new SDKs"
+    bug: "231441674"
+    is_fixed_read_only: true
+}

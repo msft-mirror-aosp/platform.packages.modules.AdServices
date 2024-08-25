@@ -39,15 +39,14 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.PartialCustomAudience;
-import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.database.sqlite.SQLiteConstraintException;
 import android.net.Uri;
 import android.util.Pair;
 
 import androidx.room.Room;
-import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
 import com.android.adservices.data.common.DBAdData;
@@ -62,18 +61,16 @@ import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
 import com.android.adservices.service.customaudience.CustomAudienceUpdatableData;
 import com.android.adservices.service.exception.PersistScheduleCAUpdateException;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.collect.ImmutableMap;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoSession;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -86,7 +83,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class CustomAudienceDaoTest {
+@RequiresSdkLevelAtLeastS()
+@SpyStatic(FlagsFactory.class)
+@MockStatic(PackageManagerCompatUtils.class)
+public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCase {
     private static final Flags TEST_FLAGS = FakeFlagsFactory.getFlagsForTest();
 
     @Mock private EnrollmentDao mEnrollmentDaoMock;
@@ -114,7 +114,6 @@ public class CustomAudienceDaoTest {
     private static final Uri TRUSTED_BIDDING_DATA_URI_2 = Uri.parse("https://www.example.com/t1");
     private static final List<String> TRUSTED_BIDDING_DATA_KEYS_2 =
             Collections.singletonList("key2");
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final Clock CLOCK = Clock.fixed(Instant.now(), ZoneOffset.UTC);
     private static final Instant CURRENT_TIME = CLOCK.instant();
     private static final Instant CREATION_TIME_1 = CURRENT_TIME.truncatedTo(ChronoUnit.MILLIS);
@@ -632,35 +631,15 @@ public class CustomAudienceDaoTest {
                     .setExpirationTime(CommonFixture.FIXED_NEXT_ONE_DAY)
                     .setUserBiddingSignals(USER_BIDDING_SIGNALS_1);
 
-    private MockitoSession mStaticMockSession = null;
     private CustomAudienceDao mCustomAudienceDao;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {
-        // Test applications don't have the required permissions to read config P/H flags, and
-        // injecting mocked flags everywhere is annoying and non-trivial for static methods
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .mockStatic(PackageManagerCompatUtils.class)
-                        .initMocks(this)
-                        .startMocking();
-
         mCustomAudienceDao =
-                Room.inMemoryDatabaseBuilder(CONTEXT, CustomAudienceDatabase.class)
+                Room.inMemoryDatabaseBuilder(mContext, CustomAudienceDatabase.class)
                         .addTypeConverter(new DBCustomAudience.Converters(true, true, true))
                         .build()
                         .customAudienceDao();
-    }
-
-    @After
-    public void teardown() {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
     }
 
     @Test
@@ -843,9 +822,9 @@ public class CustomAudienceDaoTest {
 
         assertNotNull(customAudience);
         assertEquals(
-                CUSTOM_AUDIENCE_WITH_PRIORITY.getPriority(),
-                customAudience.getPriority(),
-                0.001); // Need delta since priority is float
+                0,
+                Double.compare(
+                        CUSTOM_AUDIENCE_WITH_PRIORITY.getPriority(), customAudience.getPriority()));
     }
 
     @Test
@@ -1809,7 +1788,7 @@ public class CustomAudienceDaoTest {
         assertEquals(
                 expectedDisallowedOwnerStats,
                 mCustomAudienceDao.deleteAllDisallowedOwnerCustomAudienceData(
-                        CONTEXT.getPackageManager(), flagsThatAllowAllApps));
+                        mContext.getPackageManager(), flagsThatAllowAllApps));
 
         // Verify only the uninstalled app data is deleted
         assertEquals(
@@ -1896,7 +1875,7 @@ public class CustomAudienceDaoTest {
         assertEquals(
                 expectedDisallowedOwnerStats,
                 mCustomAudienceDao.deleteAllDisallowedOwnerCustomAudienceData(
-                        CONTEXT.getPackageManager(), flagsThatAllowOneApp));
+                        mContext.getPackageManager(), flagsThatAllowOneApp));
 
         // Verify only the uninstalled app data is deleted
         assertEquals(
@@ -1981,7 +1960,7 @@ public class CustomAudienceDaoTest {
         assertEquals(
                 expectedDisallowedOwnerStats,
                 mCustomAudienceDao.deleteAllDisallowedOwnerCustomAudienceData(
-                        CONTEXT.getPackageManager(), flagsThatAllowOneApp));
+                        mContext.getPackageManager(), flagsThatAllowOneApp));
 
         // Verify both owners' app data are deleted
         assertNull(

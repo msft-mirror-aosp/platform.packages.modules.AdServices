@@ -15,12 +15,12 @@
  */
 package com.android.adservices.common;
 
+import android.annotation.CallSuper;
+
 import com.android.adservices.mockito.AdServicesJobMocker;
 import com.android.adservices.mockito.AdServicesMockitoJobMocker;
 import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
 import com.android.adservices.spe.AdServicesJobServiceFactory;
-
-import org.junit.Test;
 
 /** Base class for tests that exercise custom {@code Jobs}. */
 public abstract class AdServicesJobTestCase extends AdServicesExtendedMockitoTestCase {
@@ -38,8 +38,13 @@ public abstract class AdServicesJobTestCase extends AdServicesExtendedMockitoTes
         return jobMocker.mockJobSchedulingLogger(factory);
     }
 
-    @Test
-    public final void testAdServicesJobTestCaseFixtures() throws Exception {
+    // TODO(b/361555631): rename to testAdServicesJobTestCaseFixtures() and annotate
+    // it with @MetaTest
+    @CallSuper
+    @Override
+    protected void assertValidTestCaseFixtures() throws Exception {
+        super.assertValidTestCaseFixtures();
+
         assertTestClassHasNoFieldsFromSuperclass(AdServicesJobTestCase.class, "jobMocker");
     }
 }

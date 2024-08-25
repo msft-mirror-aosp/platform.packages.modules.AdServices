@@ -75,6 +75,7 @@ public final class FetcherUtilTest {
     public static final int APP_REGISTRATION_SURFACE_TYPE = 2;
     public static final int UNKNOWN_STATUS = 0;
     public static final int UNKNOWN_REGISTRATION_FAILURE_TYPE = 0;
+    private static final String ENROLLMENT_ID = "enrollment_id";
 
     @Mock Flags mFlags;
     @Mock AdServicesLogger mLogger;
@@ -1021,7 +1022,7 @@ public final class FetcherUtilTest {
         asyncFetchStatus.setResponseSize(FetcherUtil.calculateHeadersCharactersLength(headersMap));
 
         FetcherUtil.emitHeaderMetrics(
-                maxAllowedHeadersSize, mLogger, asyncRegistration, asyncFetchStatus);
+                maxAllowedHeadersSize, mLogger, asyncRegistration, asyncFetchStatus, ENROLLMENT_ID);
 
         // Verify
         verify(mLogger)
@@ -1043,7 +1044,8 @@ public final class FetcherUtilTest {
                                                 0,
                                                 false)
                                         .setAdTechDomain(null)
-                                        .build()));
+                                        .build()),
+                        eq(ENROLLMENT_ID));
     }
 
     @Test
@@ -1068,7 +1070,7 @@ public final class FetcherUtilTest {
         asyncFetchStatus.setResponseSize(FetcherUtil.calculateHeadersCharactersLength(headersMap));
 
         FetcherUtil.emitHeaderMetrics(
-                maxAllowedHeadersSize, mLogger, asyncRegistration, asyncFetchStatus);
+                maxAllowedHeadersSize, mLogger, asyncRegistration, asyncFetchStatus, ENROLLMENT_ID);
 
         // Verify
         verify(mLogger)
@@ -1090,7 +1092,8 @@ public final class FetcherUtilTest {
                                                 0,
                                                 false)
                                         .setAdTechDomain(REGISTRATION_URI.toString())
-                                        .build()));
+                                        .build()),
+                        eq(ENROLLMENT_ID));
     }
 
     @Test
@@ -1118,7 +1121,7 @@ public final class FetcherUtilTest {
         asyncFetchStatus.setResponseSize(FetcherUtil.calculateHeadersCharactersLength(headersMap));
 
         FetcherUtil.emitHeaderMetrics(
-                maxAllowedHeadersSize, mLogger, asyncRegistration, asyncFetchStatus);
+                maxAllowedHeadersSize, mLogger, asyncRegistration, asyncFetchStatus, ENROLLMENT_ID);
 
         // Verify
         verify(mLogger)
@@ -1140,7 +1143,8 @@ public final class FetcherUtilTest {
                                                 0,
                                                 false)
                                         .setAdTechDomain(null)
-                                        .build()));
+                                        .build()),
+                        eq(ENROLLMENT_ID));
     }
 
     @Test

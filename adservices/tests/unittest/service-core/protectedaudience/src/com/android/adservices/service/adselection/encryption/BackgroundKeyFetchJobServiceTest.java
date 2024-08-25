@@ -50,7 +50,6 @@ import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
-import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -76,7 +75,6 @@ import java.util.concurrent.TimeoutException;
 @MockStatic(ConsentManager.class)
 @SpyStatic(BackgroundKeyFetchJobService.class)
 @SpyStatic(BackgroundKeyFetchWorker.class)
-@SpyStatic(AdServicesJobServiceLogger.class)
 @MockStatic(ServiceCompatUtils.class)
 public final class BackgroundKeyFetchJobServiceTest extends AdServicesJobServiceTestCase {
 
@@ -199,12 +197,9 @@ public final class BackgroundKeyFetchJobServiceTest extends AdServicesJobService
 
     @Test
     public void testOnStartJobUpdateSuccessdd() throws Exception {
-        Flags flagsWithEnabledBgFGaUxDisabledWithoutLogging =
-                new BackgroundKeyFetchJobServiceTest.FlagsWithEnabledBgFGaUxEnabledWithoutLogging();
-        mocker.mockGetFlags(flagsWithEnabledBgFGaUxDisabledWithoutLogging);
-        AdServicesJobServiceLogger spyLogger =
-                mockAdServicesJobServiceLogger(
-                        sContext, flagsWithEnabledBgFGaUxDisabledWithoutLogging);
+        Flags flagsWithEnabledBgFGaUxDisabled =
+                new BackgroundKeyFetchJobServiceTest.FlagsWithEnabledBgFGaUxEnabled();
+        mocker.mockGetFlags(flagsWithEnabledBgFGaUxDisabled);
 
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
@@ -229,8 +224,6 @@ public final class BackgroundKeyFetchJobServiceTest extends AdServicesJobService
         verify(mBgFWorkerMock).runBackgroundKeyFetch();
         verify(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
         verifyNoMoreInteractions(staticMockMarker(BackgroundKeyFetchWorker.class));
-
-        verifyLoggingNotHappened(spyLogger);
     }
 
     @Test
@@ -456,14 +449,6 @@ public final class BackgroundKeyFetchJobServiceTest extends AdServicesJobService
         @Override
         public boolean getFledgeAuctionServerKillSwitch() {
             return false;
-        }
-    }
-
-    private static class FlagsWithEnabledBgFGaUxEnabledWithoutLogging
-            extends FlagsWithEnabledBgFGaUxEnabled {
-        @Override
-        public boolean getBackgroundJobsLoggingKillSwitch() {
-            return true;
         }
     }
 
