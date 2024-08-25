@@ -88,7 +88,6 @@ import android.adservices.common.KeyedFrequencyCapFixture;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.CustomAudienceOverrideCallback;
-import android.adservices.customaudience.FetchAndJoinCustomAudienceCallback;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceInput;
 import android.adservices.customaudience.ICustomAudienceCallback;
 import android.adservices.customaudience.TrustedBiddingData;
@@ -105,7 +104,6 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.FlakyTest;
 
-import com.android.adservices.LoggerFactory;
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.WebViewSupportUtil;
@@ -166,6 +164,7 @@ import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.signals.EgressConfigurationGenerator;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
+import com.android.adservices.testutils.FetchCustomAudienceTestSyncCallback;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -441,6 +440,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                 .filterRequest(
                         any(),
                         anyString(),
+                        anyBoolean(),
                         anyBoolean(),
                         anyBoolean(),
                         anyInt(),
@@ -3902,6 +3902,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         anyString(),
                         anyBoolean(),
                         anyBoolean(),
+                        anyBoolean(),
                         anyInt(),
                         anyInt(),
                         any(),
@@ -4129,6 +4130,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                 .filterRequest(
                         any(),
                         anyString(),
+                        anyBoolean(),
                         anyBoolean(),
                         anyBoolean(),
                         anyInt(),
@@ -4811,11 +4813,9 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
 
     private void fetchAndJoinCustomAudienceAndAssertSuccess(FetchAndJoinCustomAudienceInput request)
             throws InterruptedException {
-        CountDownLatch resultLatch = new CountDownLatch(1);
-        FetchCustomAudienceTestCallback callback = new FetchCustomAudienceTestCallback(resultLatch);
+        FetchCustomAudienceTestSyncCallback callback = new FetchCustomAudienceTestSyncCallback();
         mCustomAudienceService.fetchAndJoinCustomAudience(request, callback);
-        resultLatch.await();
-        assertTrue(callback.isSuccess());
+        callback.assertResultReceived();
     }
 
     private void leaveCustomAudienceAndAssertSuccess(
@@ -5721,40 +5721,6 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
         @Override
         public String getPpapiAppAllowList() {
             return CommonFixture.TEST_PACKAGE_NAME;
-        }
-    }
-
-    // TODO(b/358594078): This class is identical to the one in FetchCustomAudienceImplTest.java,
-    // it's copied here because that class was moved to the ProtectedAudience unit test package.
-    // This is a temporary fix until this test is also moved to that package.
-    public static class FetchCustomAudienceTestCallback
-            extends FetchAndJoinCustomAudienceCallback.Stub {
-        protected final CountDownLatch mCountDownLatch;
-        boolean mIsSuccess = false;
-        FledgeErrorResponse mFledgeErrorResponse;
-
-        public FetchCustomAudienceTestCallback(CountDownLatch countDownLatch) {
-            mCountDownLatch = countDownLatch;
-        }
-
-        public boolean isSuccess() {
-            return mIsSuccess;
-        }
-
-        @Override
-        public void onSuccess() throws RemoteException {
-            LoggerFactory.getFledgeLogger()
-                    .v("Reporting success to FetchCustomAudienceTestCallback.");
-            mIsSuccess = true;
-            mCountDownLatch.countDown();
-        }
-
-        @Override
-        public void onFailure(FledgeErrorResponse fledgeErrorResponse) throws RemoteException {
-            LoggerFactory.getFledgeLogger()
-                    .v("Reporting failure to FetchCustomAudienceTestCallback.");
-            mFledgeErrorResponse = fledgeErrorResponse;
-            mCountDownLatch.countDown();
         }
     }
 }

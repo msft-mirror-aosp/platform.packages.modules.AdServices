@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.stats;
 
+import android.annotation.Nullable;
 
 import com.android.adservices.cobalt.AppNameApiErrorLogger;
 import com.android.adservices.cobalt.MeasurementCobaltLogger;
@@ -33,6 +34,7 @@ import com.android.adservices.service.stats.pas.EncodingJobRunStats;
 import com.android.adservices.service.stats.pas.EncodingJsExecutionStats;
 import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedStats;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
@@ -113,11 +115,11 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
 
     @Override
     public void logMeasurementRegistrationsResponseSize(
-            MeasurementRegistrationResponseStats stats) {
-        mStatsdAdServicesLogger.logMeasurementRegistrationsResponseSize(stats);
+            MeasurementRegistrationResponseStats stats, @Nullable String enrollmentId) {
+        mStatsdAdServicesLogger.logMeasurementRegistrationsResponseSize(stats, enrollmentId);
 
         // Log to Cobalt system in parallel with existing logging.
-        cobaltLogMsmtRegistration(stats);
+        cobaltLogMsmtRegistration(stats, enrollmentId);
     }
 
     @Override
@@ -393,11 +395,6 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     }
 
     @Override
-    public void logUpdateSignalsApiCalledStats(UpdateSignalsApiCalledStats stats) {
-        mStatsdAdServicesLogger.logUpdateSignalsApiCalledStats(stats);
-    }
-
-    @Override
     public void logEncodingJsExecutionStats(EncodingJsExecutionStats stats) {
         mStatsdAdServicesLogger.logEncodingJsExecutionStats(stats);
     }
@@ -405,6 +402,11 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     @Override
     public void logEncodingJobRunStats(EncodingJobRunStats stats) {
         mStatsdAdServicesLogger.logEncodingJobRunStats(stats);
+    }
+
+    @Override
+    public void logUpdateSignalsProcessReportedStats(UpdateSignalsProcessReportedStats stats) {
+        mStatsdAdServicesLogger.logUpdateSignalsProcessReportedStats(stats);
     }
 
     @Override
@@ -420,6 +422,11 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     @Override
     public void logReportImpressionApiCalledStats(ReportImpressionApiCalledStats stats) {
         mStatsdAdServicesLogger.logReportImpressionApiCalledStats(stats);
+    }
+
+    @Override
+    public void logUpdateSignalsApiCalledStats(UpdateSignalsApiCalledStats stats) {
+        mStatsdAdServicesLogger.logUpdateSignalsApiCalledStats(stats);
     }
 
     /** Logs api call error status using {@code CobaltLogger}. */
@@ -440,7 +447,8 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     }
 
     /** Logs measurement registration status using {@code CobaltLogger}. */
-    private void cobaltLogMsmtRegistration(MeasurementRegistrationResponseStats stats) {
+    private void cobaltLogMsmtRegistration(
+            MeasurementRegistrationResponseStats stats, @Nullable String enrollmentId) {
         sBackgroundExecutor.execute(
                 () -> {
                     MeasurementCobaltLogger measurementCobaltLogger =
@@ -452,7 +460,8 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
                             /* sourceType= */ stats.getInteractionType(),
                             /* statusCode= */ stats.getRegistrationStatus(),
                             /* errorCode= */ stats.getFailureType(),
-                            /* isEeaDevice= */ FlagsFactory.getFlags().isEeaDevice());
+                            /* isEeaDevice= */ FlagsFactory.getFlags().isEeaDevice(),
+                            enrollmentId);
                 });
     }
 

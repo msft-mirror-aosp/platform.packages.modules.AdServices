@@ -15,6 +15,7 @@
  */
 package com.android.adservices.shared.testing;
 
+import android.annotation.CallSuper;
 import android.content.Context;
 import android.platform.test.ravenwood.RavenwoodRule;
 
@@ -37,6 +38,9 @@ import org.junit.Test;
 public abstract class DeviceSideTestCase extends SidelessTestCase {
 
     private static final String TAG = DeviceSideTestCase.class.getSimpleName();
+
+    private static final String REASON_SESSION_MANAGED_BY_RULE =
+            "mockito session is automatically managed by a @Rule";
 
     // TODO(b/335935200): figure out if there is a way to read it from AndroidTest.xml
     @VisibleForTesting static final String RAVENWOOD_PACKAGE_NAME = "I.am.Groot.I.mean.Ravenwood";
@@ -147,8 +151,19 @@ public abstract class DeviceSideTestCase extends SidelessTestCase {
         mTargetPackageName = sTargetPackageName;
     }
 
+    // TODO(b/361555631): merge 2 classes below into testDeviceSideTestCaseFixtures() and annotate
+    // it with @MetaTest
     @Test
-    public final void testDeviceSideTestCaseFixtures() throws Exception {
+    @Override
+    public final void testValidTestCaseFixtures() throws Exception {
+        assertValidTestCaseFixtures();
+    }
+
+    @CallSuper
+    @Override
+    protected void assertValidTestCaseFixtures() throws Exception {
+        super.assertValidTestCaseFixtures();
+
         assertTestClassHasNoFieldsFromSuperclass(
                 DeviceSideTestCase.class,
                 "mContext",
@@ -165,8 +180,60 @@ public abstract class DeviceSideTestCase extends SidelessTestCase {
                 "sTargetPackageName",
                 "sRavenWood",
                 "RAVENWOOD_PACKAGE_NAME");
-        assertTestClassHasNoSuchField("CONTEXT", "should use existing sContext instead");
+        assertTestClassHasNoSuchField(
+                "CONTEXT",
+                "should use existing mContext (or sContext when that's not possible) instead");
         assertTestClassHasNoSuchField("context", "should use existing mContext instead");
+    }
+
+    // NOTE: it's static so it can be used by other mockito-related superclasses, as often test
+    // cases are converted to use AdServicesMockitoTestCase and still defined the ExtendedMockito
+    // session - they should migrate to AdServicesExtendedMockitoTestCase instead.
+    protected static <T extends DeviceSideTestCase> void checkProhibitedMockitoFields(
+            Class<T> superclass, T testInstance) throws Exception {
+        // NOTE: same fields below are not defined (yet?) SharedExtendedMockitoTestCase or
+        // SharedMockitoTestCase, but they might; and even if they don't, this method is also used
+        // by the classes on AdServices (AdServicesMockitoTestCase /
+        // AdServicesExtendedMockitoTestCase)
+        testInstance.assertTestClassHasNoFieldsFromSuperclass(
+                superclass,
+                "mMockContext",
+                "mSpyContext",
+                "extendedMockito",
+                "errorLogUtilUsageRule",
+                "mocker",
+                "sInlineCleaner",
+                "sSpyContext",
+                "mMockFlags");
+        testInstance.assertTestClassHasNoSuchField(
+                "mContextMock", "should use existing mMockContext instead");
+        testInstance.assertTestClassHasNoSuchField(
+                "mContextSpy", "should use existing mSpyContext instead");
+        testInstance.assertTestClassHasNoSuchField("mockito", "already taken care by @Rule");
+        testInstance.assertTestClassHasNoSuchField(
+                "mFlagsMock", "should use existing mMockFlags instead");
+        testInstance.assertTestClassHasNoSuchField(
+                "mFlags",
+                superclass.getSimpleName()
+                        + " already define a mMockFlags, and often subclasses define a @Mock"
+                        + " mFlags; to avoid confusion, either use the existing mMockFlags, or"
+                        + " create a non-mock instance like mFakeFlags");
+
+        // Listed below are existing names for the extended mockito session on test classes that
+        // don't use the rule / superclass:
+        testInstance.assertTestClassHasNoSuchField(
+                "mStaticMockSession", REASON_SESSION_MANAGED_BY_RULE);
+        testInstance.assertTestClassHasNoSuchField(
+                "mMockitoSession", REASON_SESSION_MANAGED_BY_RULE);
+        testInstance.assertTestClassHasNoSuchField(
+                "mockitoSession", REASON_SESSION_MANAGED_BY_RULE);
+        testInstance.assertTestClassHasNoSuchField("session", REASON_SESSION_MANAGED_BY_RULE);
+        testInstance.assertTestClassHasNoSuchField(
+                "sStaticMockitoSession", REASON_SESSION_MANAGED_BY_RULE);
+        testInstance.assertTestClassHasNoSuchField(
+                "staticMockitoSession", REASON_SESSION_MANAGED_BY_RULE);
+        testInstance.assertTestClassHasNoSuchField(
+                "staticMockSession", REASON_SESSION_MANAGED_BY_RULE);
     }
 
     // TODO(b/335935200): temporary hac^H^H^Hworkaround to set context references before subclasses

@@ -35,6 +35,7 @@ import com.android.internal.annotations.VisibleForTesting;
  *
  * @hide
  */
+@SuppressWarnings("AvoidSystemPropertiesUsage") // Helper / infra class
 public abstract class CommonDebugFlags {
     private static final String SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX = "debug.adservices.";
 

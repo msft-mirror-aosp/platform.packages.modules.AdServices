@@ -18,6 +18,7 @@ package com.android.adservices.service.customaudience;
 
 import static com.android.adservices.service.common.ValidatorUtil.AD_TECH_ROLE_BUYER;
 import static com.android.adservices.service.customaudience.CustomAudienceBlob.AUCTION_SERVER_REQUEST_FLAGS_KEY;
+import static com.android.adservices.service.customaudience.CustomAudienceBlob.PRIORITY_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.USER_BIDDING_SIGNALS_KEY;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -126,6 +127,7 @@ public class ScheduledUpdatesHandler {
     private final boolean mFledgeAppInstallFilteringEnabled;
     private final boolean mFledgeAuctionServerAdRenderIdEnabled;
     private final boolean mAuctionServerRequestFlagsEnabled;
+    private final boolean mSellerConfigurationEnabled;
     private final long mFledgeAuctionServerAdRenderIdMaxLength;
 
     @VisibleForTesting
@@ -162,6 +164,8 @@ public class ScheduledUpdatesHandler {
         mFledgeAppInstallFilteringEnabled = mFlags.getFledgeAppInstallFilteringEnabled();
         mFledgeAuctionServerAdRenderIdEnabled = mFlags.getFledgeAuctionServerAdRenderIdEnabled();
         mAuctionServerRequestFlagsEnabled = mFlags.getFledgeAuctionServerRequestFlagsEnabled();
+        mSellerConfigurationEnabled =
+                mFlags.getFledgeGetAdSelectionDataSellerConfigurationEnabled();
         mFledgeAuctionServerAdRenderIdMaxLength =
                 mFlags.getFledgeAuctionServerAdRenderIdMaxLength();
         mFledgeCustomAudienceMaxCustomAudienceSizeB =
@@ -270,7 +274,8 @@ public class ScheduledUpdatesHandler {
                             mFledgeAppInstallFilteringEnabled,
                             mFledgeAuctionServerAdRenderIdEnabled,
                             mFledgeAuctionServerAdRenderIdMaxLength,
-                            mAuctionServerRequestFlagsEnabled);
+                            mAuctionServerRequestFlagsEnabled,
+                            mSellerConfigurationEnabled);
 
             blob.overrideFromPartialCustomAudience(
                     update.getOwner(),
@@ -393,7 +398,8 @@ public class ScheduledUpdatesHandler {
                             mFledgeAppInstallFilteringEnabled,
                             mFledgeAuctionServerAdRenderIdEnabled,
                             mFledgeAuctionServerAdRenderIdMaxLength,
-                            mAuctionServerRequestFlagsEnabled);
+                            mAuctionServerRequestFlagsEnabled,
+                            mSellerConfigurationEnabled);
             try {
                 fusedBlob.overrideFromJSONObject(customAudience);
                 if (customAudienceOverrideMap.containsKey(fusedBlob.getName())) {
@@ -469,7 +475,9 @@ public class ScheduledUpdatesHandler {
                                                     .setDebuggable(isDebuggableCustomAudience)
                                                     .setAuctionServerRequestFlags(
                                                             fusedCustomAudienceBlob
-                                                                    .getAuctionServerRequestFlags());
+                                                                    .getAuctionServerRequestFlags())
+                                                    .setPriority(
+                                                            fusedCustomAudienceBlob.getPriority());
 
                                     List<DBAdData> ads = new ArrayList<>();
                                     for (AdData ad : fusedCustomAudienceBlob.getAds()) {
@@ -537,6 +545,10 @@ public class ScheduledUpdatesHandler {
 
         if (mAuctionServerRequestFlagsEnabled) {
             currentKeySet.remove(AUCTION_SERVER_REQUEST_FLAGS_KEY);
+        }
+
+        if (mSellerConfigurationEnabled) {
+            currentKeySet.remove(PRIORITY_KEY);
         }
         return currentKeySet.size() == expectedKeysSet.size();
     }

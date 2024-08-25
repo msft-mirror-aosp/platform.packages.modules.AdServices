@@ -31,6 +31,7 @@ import android.adservices.common.CommonFixture;
 import android.adservices.common.KeyedFrequencyCap;
 import android.content.pm.PackageManager;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.EncryptionContextDao;
@@ -41,20 +42,17 @@ import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.InteractionReportingTableClearedStats;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
-import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.MockitoSession;
 
 import java.time.Instant;
 
-public class FledgeMaintenanceTasksWorkerTests {
+@RequiresSdkLevelAtLeastS()
+public final class FledgeMaintenanceTasksWorkerTests extends AdServicesExtendedMockitoTestCase {
     private static final Flags TEST_FLAGS = FakeFlagsFactory.getFlagsForTest();
     @Mock private AdSelectionEntryDao mAdSelectionEntryDaoMock;
     @Mock private AdSelectionDebugReportDao mAdSelectionDebugReportDaoMock;
@@ -63,18 +61,12 @@ public class FledgeMaintenanceTasksWorkerTests {
     @Mock private EncryptionContextDao mEncryptionContextDaoMock;
     @Mock private PackageManager mPackageManagerMock;
     private FledgeMaintenanceTasksWorker mFledgeMaintenanceTasksWorker;
-    private MockitoSession mMockitoSession;
 
     @Mock private AdServicesLogger mAdServicesLoggerMock;
     @Mock private KAnonMessageDao mKAnonMessageDaoMock;
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Before
     public void setup() {
-        mMockitoSession = ExtendedMockito.mockitoSession().initMocks(this).startMocking();
-
         mFledgeMaintenanceTasksWorker =
                 new FledgeMaintenanceTasksWorker(
                         TEST_FLAGS,
@@ -88,13 +80,6 @@ public class FledgeMaintenanceTasksWorkerTests {
                         mKAnonMessageDaoMock);
     }
 
-    @After
-    public void teardown() {
-        if (mMockitoSession != null) {
-            mMockitoSession.finishMocking();
-        }
-    }
-
     @Test
     public void testClearExpiredAdSelectionData_removesExpiredData() throws Exception {
         // Uses ArgumentCaptor to capture the logs in the tests.
@@ -104,7 +89,7 @@ public class FledgeMaintenanceTasksWorkerTests {
         mFledgeMaintenanceTasksWorker.clearExpiredAdSelectionData();
 
         // Verifies InteractionReportingTableClearedStats get the correct value.
-        verify(mAdServicesLoggerMock, times(1))
+        verify(mAdServicesLoggerMock)
                 .logInteractionReportingTableClearedStats(argumentCaptor.capture());
         InteractionReportingTableClearedStats stats = argumentCaptor.getValue();
         assertThat(stats.getNumUrisCleared()).isEqualTo(0);
@@ -168,7 +153,7 @@ public class FledgeMaintenanceTasksWorkerTests {
         mFledgeMaintenanceTasksWorkerWithAuctionDisabled.clearExpiredAdSelectionData();
 
         // Verifies InteractionReportingTableClearedStats get the correct value.
-        verify(mAdServicesLoggerMock, times(1))
+        verify(mAdServicesLoggerMock)
                 .logInteractionReportingTableClearedStats(argumentCaptor.capture());
         InteractionReportingTableClearedStats stats = argumentCaptor.getValue();
         assertThat(stats.getNumUrisCleared()).isEqualTo(0);
@@ -236,7 +221,7 @@ public class FledgeMaintenanceTasksWorkerTests {
         mFledgeMaintenanceTasksWorkerWithAuctionDisabled.clearExpiredAdSelectionData();
 
         // Verifies InteractionReportingTableClearedStats get the correct value.
-        verify(mAdServicesLoggerMock, times(1))
+        verify(mAdServicesLoggerMock)
                 .logInteractionReportingTableClearedStats(argumentCaptor.capture());
         InteractionReportingTableClearedStats stats = argumentCaptor.getValue();
         assertThat(stats.getNumUrisCleared()).isEqualTo(0);
@@ -405,7 +390,7 @@ public class FledgeMaintenanceTasksWorkerTests {
         mFledgeMaintenanceTasksWorkerWithAuctionDisabled.clearExpiredAdSelectionData();
 
         // Verifies InteractionReportingTableClearedStats get the correct value.
-        verify(mAdServicesLoggerMock, times(1))
+        verify(mAdServicesLoggerMock)
                 .logInteractionReportingTableClearedStats(argumentCaptor.capture());
         InteractionReportingTableClearedStats stats = argumentCaptor.getValue();
         assertThat(stats.getNumUrisCleared()).isEqualTo(0);
@@ -447,7 +432,7 @@ public class FledgeMaintenanceTasksWorkerTests {
 
         worker.clearExpiredKAnonMessageEntities();
 
-        verify(mKAnonMessageDaoMock, times(1))
+        verify(mKAnonMessageDaoMock)
                 .removeExpiredEntities(CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI.instant());
     }
 
