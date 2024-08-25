@@ -19,12 +19,14 @@
                 "source_event_id": "1",
                 "destination": "android-app://example.2d1.test",
                 "priority": "102",
-                "attribution_scope_limit": 3,
-                "attribution_scopes": [
-                  "1",
-                  "2"
-                ],
-                "max_event_states": 10,
+                "attribution_scopes": {
+                  "limit": 3,
+                  "values": [
+                    "1",
+                    "2"
+                  ],
+                  "max_event_states": 10
+                },
                 "filter_data": {
                   "top_key_1": [
                     "top_value_1",
@@ -43,8 +45,8 @@
         ],
         "timestamp": "800000000001"
       },
-      // S2: attribution_scope_limit -> 4, priority -> 101
-      // S1 will be deactivated due to smaller attribution_scope_limit.
+      // S2: attribution scope limit -> 4, priority -> 101
+      // S1 will be deactivated due to smaller limit.
       {
         "registration_request": {
           "source_type": "navigation",
@@ -68,12 +70,14 @@
                     "event_value_2"
                   ]
                 },
-                "attribution_scope_limit": 4,
-                "attribution_scopes": [
-                  "2",
-                  "3"
-                ],
-                "max_event_states": 10
+                "attribution_scopes": {
+                  "limit": 4,
+                  "values": [
+                    "2",
+                    "3"
+                  ],
+                  "max_event_states": 10
+                }
               },
               "Location": null,
               "Attribution-Reporting-Redirect": null
@@ -81,8 +85,8 @@
         }],
         "timestamp": "800000000003"
       },
-      // S3: attribution_scope_limit -> 3, priority -> 100
-      // S2 will be NOT be deactivated as it has higher attribution_scope_limit.
+      // S3: attribution scope limit -> 3, priority -> 100
+      // S2 will be NOT be deactivated as it has higher attribution scope limit.
       {
         "registration_request": {
           "source_type": "navigation",
@@ -106,12 +110,14 @@
                     "event_value_2"
                   ]
                 },
-                "attribution_scope_limit": 3,
-                "attribution_scopes": [
-                  "3",
-                  "4"
-                ],
-                "max_event_states": 10
+                "attribution_scopes": {
+                  "limit": 3,
+                  "values": [
+                    "3",
+                    "4"
+                  ],
+                  "max_event_states": 10
+                }
               },
               "Location": null,
               "Attribution-Reporting-Redirect": null

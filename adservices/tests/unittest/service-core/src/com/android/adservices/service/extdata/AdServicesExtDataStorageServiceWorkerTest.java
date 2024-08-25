@@ -42,7 +42,6 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
@@ -72,8 +71,6 @@ public final class AdServicesExtDataStorageServiceWorkerTest
     };
 
     private AdServicesExtDataStorageServiceWorker mSpyWorker;
-
-    @Mock private Flags mMockFlags;
 
     @Mock private AdServicesExtDataStorageServiceDebugProxy mDebugProxy;
 

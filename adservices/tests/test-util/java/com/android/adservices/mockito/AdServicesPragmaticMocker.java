@@ -16,7 +16,6 @@
 
 package com.android.adservices.mockito;
 
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
@@ -35,29 +34,6 @@ import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
  * AdServicesMockitoMocker} and the 2 {@code Mocker} implementations).
  */
 public interface AdServicesPragmaticMocker {
-
-    /**
-     * Mocks a call to {@link Flags#getBackgroundJobsLoggingKillSwitch()}, returning {@code value}.
-     */
-    void mockGetBackgroundJobsLoggingKillSwitch(Flags flags, boolean value);
-
-    /** Mocks a call to {@link Flags#getCobaltLoggingEnabled()}, returning {@code value}. */
-    void mockGetCobaltLoggingEnabled(Flags flags, boolean value);
-
-    /**
-     * Mocks a call to {@link Flags#getAppNameApiErrorCobaltLoggingEnabled()}, returning
-     * overrideValue.
-     */
-    void mockGetAppNameApiErrorCobaltLoggingEnabled(Flags flags, boolean value);
-
-    /** Mocks calls to override Cobalt app name api error logging related flags. */
-    void mockAllCobaltLoggingFlags(Flags flags, boolean enabled);
-
-    /**
-     * Mocks a call to {@link Flags#getAdservicesReleaseStageForCobalt()}, returning the proper code
-     * for the testing release stage.
-     */
-    void mockGetAdservicesReleaseStageForCobalt(Flags flags, String stage);
 
     /**
      * Mocks a call to {@link AdServicesLogger#logApiCallStats(ApiCallStats)} and returns a callback

@@ -91,4 +91,48 @@ public class FledgeConsentFilter {
             throw new ConsentManager.RevokedConsentException();
         }
     }
+
+    /**
+     * Asserts that the enrollment job should be scheduled. This will happen if the UX consent
+     * notification was displayed, or the user opted into one of the APIs.
+     *
+     * @throws ConsentManager.RevokedConsentException if the enrollment job should not be scheduled
+     */
+    public void assertEnrollmentShouldBeScheduled(
+            boolean enforceConsentGiven,
+            boolean enforceNotificationShown,
+            String callerPackageName,
+            int apiName) {
+
+        boolean wasAnyNotificationDisplayed;
+
+        if (!enforceNotificationShown) {
+            // Hardcode if we don't need to enforce notification
+            wasAnyNotificationDisplayed = true;
+        } else {
+            wasAnyNotificationDisplayed =
+                    mConsentManager.wasNotificationDisplayed()
+                            || mConsentManager.wasGaUxNotificationDisplayed()
+                            || mConsentManager.wasU18NotificationDisplayed()
+                            || mConsentManager.wasPasNotificationDisplayed();
+        }
+
+        if (!wasAnyNotificationDisplayed) {
+            sLogger.v("UX notification was not displayed!");
+            mAdServicesLogger.logFledgeApiCallStats(
+                    apiName,
+                    callerPackageName,
+                    AdServicesStatusUtils.STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET,
+                    0);
+            throw new ConsentManager.RevokedConsentException();
+        } else if (enforceConsentGiven && mConsentManager.areAllApisDisabled()) {
+            sLogger.v("All PP APIs are disabled!");
+            mAdServicesLogger.logFledgeApiCallStats(
+                    apiName,
+                    callerPackageName,
+                    AdServicesStatusUtils.STATUS_CONSENT_REVOKED_ALL_APIS,
+                    0);
+            throw new ConsentManager.RevokedConsentException();
+        }
+    }
 }
