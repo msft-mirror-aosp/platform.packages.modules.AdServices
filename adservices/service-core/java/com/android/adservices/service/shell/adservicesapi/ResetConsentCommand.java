@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.shell.common;
+package com.android.adservices.service.shell.adservicesapi;
 
 import static com.android.adservices.service.consent.AdServicesApiType.FLEDGE;
 import static com.android.adservices.service.consent.AdServicesApiType.MEASUREMENTS;
 import static com.android.adservices.service.consent.AdServicesApiType.TOPICS;
 import static com.android.adservices.service.consent.ConsentManager.NO_MANUAL_INTERACTIONS_RECORDED;
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.TAG;
+import static com.android.adservices.service.shell.adservicesapi.AdServicesApiShellCommandFactory.COMMAND_PREFIX;
 import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_RESET_CONSENT_DATA;
 import static com.android.adservices.service.stats.ShellCommandStats.RESULT_SUCCESS;
 
@@ -49,12 +50,11 @@ public final class ResetConsentCommand extends AbstractShellCommand {
     public static final String CMD_RESET_CONSENT_DATA = "reset-consent-data";
 
     public static final String HELP_RESET_CONSENT_DATA =
-            CMD_RESET_CONSENT_DATA + "\n Clear all user consent data.";
+            COMMAND_PREFIX + " " + CMD_RESET_CONSENT_DATA + "\n Clear all user consent data.";
 
     @Override
     public ShellCommandResult run(PrintWriter out, PrintWriter err, String[] args) {
-
-        if (args.length != 1) {
+        if (args.length != 2) {
             return invalidArgsError(HELP_RESET_CONSENT_DATA, err, COMMAND_RESET_CONSENT_DATA, args);
         }
         ConsentManager consentManager = ConsentManager.getInstance();

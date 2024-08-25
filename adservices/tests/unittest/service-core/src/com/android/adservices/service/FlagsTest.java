@@ -42,6 +42,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_SCOPE
 import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT;
 import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION;
 import static com.android.adservices.service.Flags.MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM;
+import static com.android.adservices.service.Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES;
 import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT;
 import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW_IN_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW;
@@ -903,6 +904,21 @@ public final class FlagsTest extends AdServicesUnitTestCase {
         testFeatureFlag(
                 "MEASUREMENT_ENABLE_FAKE_REPORT_TRIGGER_TIME",
                 Flags::getMeasurementEnableFakeReportTriggerTime);
+    }
+
+    @Test
+    public void testGetMeasurementDefaultFilteringIdMaxBytes() {
+        testFlag(
+                "getMeasurementDefaultFilteringIdMaxBytes",
+                MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES,
+                Flags::getMeasurementDefaultFilteringIdMaxBytes);
+    }
+
+    @Test
+    public void testGetMeasurementEnableFlexibleContributionFiltering() {
+        testFeatureFlag(
+                "MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING",
+                Flags::getMeasurementEnableFlexibleContributionFiltering);
     }
 
     @Test

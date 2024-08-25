@@ -82,6 +82,7 @@ import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEven
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorSelector;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -125,6 +126,7 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
     @Mock private FledgeApiThrottleFilter mFledgeApiThrottleFilterMock;
     @Mock private AdServicesHttpsClient mAdServicesHttpsClientMock;
     @Mock private DevContextFilter mDevContextFilterMock;
+    @Mock private UpdateSignalsProcessReportedLogger mUpdateSignalsProcessReportedLoggerMock;
 
     @Spy
     FledgeAllowListsFilter mFledgeAllowListsFilterSpy =
@@ -254,7 +256,8 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
                         mFakeFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mProtectedSignalsServiceFilter,
-                        mEnrollmentDao);
+                        mEnrollmentDao,
+                        mUpdateSignalsProcessReportedLoggerMock);
     }
 
     @Test

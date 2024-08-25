@@ -39,9 +39,8 @@ public class AdsRelevanceExecutionLoggerNoLoggingImplTest {
 
     @Test
     public void testFledgeAuctionServerExecutionLoggerNoLogging() {
-        AdsRelevanceExecutionLoggerNoLoggingImpl getAdSelectionDataLogger
-                = new AdsRelevanceExecutionLoggerNoLoggingImpl(
-                        GET_AD_SELECTION_DATA_API_NAME);
+        AdsRelevanceExecutionLoggerNoLoggingImpl getAdSelectionDataLogger =
+                new AdsRelevanceExecutionLoggerNoLoggingImpl(GET_AD_SELECTION_DATA_API_NAME);
 
         getAdSelectionDataLogger.endAdsRelevanceApi(STATUS_SUCCESS);
         verifyZeroInteractions(mAdServicesLoggerMock);

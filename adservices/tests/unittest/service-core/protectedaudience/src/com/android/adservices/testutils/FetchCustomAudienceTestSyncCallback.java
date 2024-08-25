@@ -14,14 +14,19 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.shell.adselection;
+package com.android.adservices.testutils;
 
-public final class GetAdSelectionDataArgs {
-    static final int FIRST_ARG_FOR_PARSING = 2;
+import android.adservices.common.FledgeErrorResponse;
+import android.adservices.customaudience.FetchAndJoinCustomAudienceCallback;
+import android.os.RemoteException;
 
-    public static final String BUYER = "--buyer";
+import com.android.adservices.shared.testing.concurrency.FailableOnResultSyncCallback;
 
-    private GetAdSelectionDataArgs() {
-        throw new UnsupportedOperationException();
+public final class FetchCustomAudienceTestSyncCallback
+        extends FailableOnResultSyncCallback<Boolean, FledgeErrorResponse>
+        implements FetchAndJoinCustomAudienceCallback {
+    @Override
+    public void onSuccess() throws RemoteException {
+        this.injectResult(true);
     }
 }

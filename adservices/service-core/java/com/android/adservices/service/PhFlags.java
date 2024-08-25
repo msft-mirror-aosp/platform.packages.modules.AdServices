@@ -3480,6 +3480,20 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public int getMeasurementDefaultFilteringIdMaxBytes() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES,
+                MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
+    }
+
+    @Override
+    public boolean getMeasurementEnableFlexibleContributionFiltering() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING,
+                MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING);
+    }
+
+    @Override
     public String getAdServicesModuleJobPolicy() {
         return getDeviceConfigFlag(
                 KEY_AD_SERVICES_MODULE_JOB_POLICY, AD_SERVICES_MODULE_JOB_POLICY);
@@ -4491,6 +4505,16 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM
                         + " = "
                         + getMeasurementDefaultSourceDestinationLimitAlgorithm());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES
+                        + " = "
+                        + getMeasurementDefaultFilteringIdMaxBytes());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING
+                        + " = "
+                        + getMeasurementEnableFlexibleContributionFiltering());
 
         writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
         writer.println(
@@ -5595,10 +5619,11 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK
                         + " = "
                         + getMeasurementEnableNavigationReportingOriginCheck());
-        writer.println("\t"
-                + KEY_MEASUREMENT_ENABLE_SEPARATE_DEBUG_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT
-                + " = "
-                + getMeasurementEnableSeparateDebugReportTypesForAttributionRateLimit());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENABLE_SEPARATE_DEBUG_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT
+                        + " = "
+                        + getMeasurementEnableSeparateDebugReportTypesForAttributionRateLimit());
         writer.println(
                 "\t"
                         + KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH
@@ -5822,13 +5847,6 @@ public final class PhFlags implements Flags {
     public boolean getCompatLoggingKillSwitch() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_COMPAT_LOGGING_KILL_SWITCH, COMPAT_LOGGING_KILL_SWITCH);
-    }
-
-    @Override
-    public boolean getBackgroundJobsLoggingKillSwitch() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_BACKGROUND_JOBS_LOGGING_KILL_SWITCH,
-                BACKGROUND_JOBS_LOGGING_KILL_SWITCH);
     }
 
     @Override
@@ -6923,9 +6941,16 @@ public final class PhFlags implements Flags {
                 FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_CONNECTION_TYPE);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>This method always return {@code true} because the underlying flag is fully launched on
+     * {@code Adservices} but the method cannot be removed (as it's defined on {@code
+     * ModuleSharedFlags}).
+     */
     @Override
     public boolean getBackgroundJobsLoggingEnabled() {
-        return !getBackgroundJobsLoggingKillSwitch();
+        return true;
     }
 
     @Override

@@ -17,11 +17,16 @@ package com.android.adservices.common;
 
 import com.android.adservices.shared.meta_testing.SharedMockerTestCase;
 
+/**
+ * Unit tests for {@link AdServicesExtendedMockitoTestCase.Mocker}'s implementation of {@link
+ * com.android.adservices.mockito.SharedMocker}.
+ */
 public final class AdServicesExtendedMockitoTestCaseSharedMockerTest
         extends SharedMockerTestCase<AdServicesExtendedMockitoTestCase.Mocker> {
 
+    @SuppressWarnings("VisibleForTests") // ErrorProne doesn't recognize this is a test
     @Override
     protected AdServicesExtendedMockitoTestCase.Mocker getMocker() {
-        return new AdServicesExtendedMockitoTestCase.Mocker();
+        return AdServicesExtendedMockitoTestCase.Mocker.forSharedMockerTests();
     }
 }

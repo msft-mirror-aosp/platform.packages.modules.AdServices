@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.stats;
 
+import android.annotation.Nullable;
+
 import com.android.adservices.service.common.AppManifestConfigCall;
 import com.android.adservices.service.stats.kanon.KAnonBackgroundJobStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonGetChallengeStatusStats;
@@ -28,6 +30,7 @@ import com.android.adservices.service.stats.pas.EncodingJobRunStats;
 import com.android.adservices.service.stats.pas.EncodingJsExecutionStats;
 import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedStats;
 
 /** No-op version of {@link AdServicesLogger}. */
 public class NoOpLoggerImpl implements AdServicesLogger {
@@ -49,7 +52,7 @@ public class NoOpLoggerImpl implements AdServicesLogger {
 
     @Override
     public void logMeasurementRegistrationsResponseSize(
-            MeasurementRegistrationResponseStats stats) {}
+            MeasurementRegistrationResponseStats stats, @Nullable String enrollmentId) {}
 
     @Override
     public void logRunAdSelectionProcessReportedStats(RunAdSelectionProcessReportedStats stats) {}
@@ -235,4 +238,8 @@ public class NoOpLoggerImpl implements AdServicesLogger {
 
     @Override
     public void logReportImpressionApiCalledStats(ReportImpressionApiCalledStats stats) {}
+
+    @Override
+    public void logUpdateSignalsProcessReportedStats(
+            UpdateSignalsProcessReportedStats reportedStats) {}
 }

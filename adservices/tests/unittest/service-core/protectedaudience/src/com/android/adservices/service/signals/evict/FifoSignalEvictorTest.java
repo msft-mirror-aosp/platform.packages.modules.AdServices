@@ -19,15 +19,21 @@ package com.android.adservices.service.signals.evict;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 
 import android.adservices.common.CommonFixture;
 
 import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
 import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -36,9 +42,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class FifoSignalEvictorTest {
-
+    @Rule public MockitoRule rule = MockitoJUnit.rule();
     private static final int MAX_ALLOWED_SIGNAL_SIZE = 100;
     private static final int MAX_ALLOWED_SIGNAL_SIZE_WITH_OVERSUBSCRIPTION = 200;
+    @Mock private UpdateSignalsProcessReportedLogger mUpdateSignalsProcessReportedLoggerMock;
 
     SignalEvictor mFifoSignalEvictor = new FifoSignalEvictor();
 
@@ -56,10 +63,19 @@ public class FifoSignalEvictorTest {
                         signalInput,
                         updateOutput,
                         MAX_ALLOWED_SIGNAL_SIZE,
-                        MAX_ALLOWED_SIGNAL_SIZE_WITH_OVERSUBSCRIPTION));
+                        MAX_ALLOWED_SIGNAL_SIZE_WITH_OVERSUBSCRIPTION,
+                        mUpdateSignalsProcessReportedLoggerMock));
 
         assertEquals(getListOfSignalWithCreationTimeIncrease(5, 0), signalInput);
         assertUpdateOutputEquals(new UpdateOutput(), updateOutput);
+
+        // Get the total, max, min signal sizes after eviction
+        int sizeOfSignalsInput = SignalSizeCalculator.calculate(signalInput);
+        float maxSignalsSizeBytes = SignalSizeCalculator.maxSignalsSizeBytes(signalInput);
+        float minSignalsSizeBytes = SignalSizeCalculator.minSignalsSizeBytes(signalInput);
+
+        verifyUpdateSignalsProcessReportedLoggerArguments(
+                0, sizeOfSignalsInput, maxSignalsSizeBytes, minSignalsSizeBytes);
     }
 
     @Test
@@ -76,7 +92,8 @@ public class FifoSignalEvictorTest {
                         signalInput,
                         updateOutput,
                         sizeOfSignalsOutput + 2,
-                        sizeOfSignalsInput - 5));
+                        sizeOfSignalsInput - 5,
+                        mUpdateSignalsProcessReportedLoggerMock));
 
         assertEquals(
                 expectedOutput.stream()
@@ -86,6 +103,14 @@ public class FifoSignalEvictorTest {
                         .sorted(Comparator.comparing(DBProtectedSignal::getCreationTime))
                         .collect(Collectors.toList()));
         assertUpdateOutputEquals(getUpdatedOutput(10), updateOutput);
+
+        // Get the total, max, min signal sizes after eviction
+        sizeOfSignalsInput = SignalSizeCalculator.calculate(signalInput);
+        float maxSignalsSizeBytes = SignalSizeCalculator.maxSignalsSizeBytes(signalInput);
+        float minSignalsSizeBytes = SignalSizeCalculator.minSignalsSizeBytes(signalInput);
+
+        verifyUpdateSignalsProcessReportedLoggerArguments(
+                10, sizeOfSignalsInput, maxSignalsSizeBytes, minSignalsSizeBytes);
     }
 
     @Test
@@ -100,10 +125,19 @@ public class FifoSignalEvictorTest {
                         signalInput,
                         updateOutput,
                         MAX_ALLOWED_SIGNAL_SIZE,
-                        sizeOfSignalsInput + 5));
+                        sizeOfSignalsInput + 5,
+                        mUpdateSignalsProcessReportedLoggerMock));
 
         assertEquals(getListOfSignalWithCreationTimeIncrease(20, 0), signalInput);
         assertUpdateOutputEquals(new UpdateOutput(), updateOutput);
+
+        // Get the total, max, min signal sizes after eviction
+        sizeOfSignalsInput = SignalSizeCalculator.calculate(signalInput);
+        float maxSignalsSizeBytes = SignalSizeCalculator.maxSignalsSizeBytes(signalInput);
+        float minSignalsSizeBytes = SignalSizeCalculator.minSignalsSizeBytes(signalInput);
+
+        verifyUpdateSignalsProcessReportedLoggerArguments(
+                0, sizeOfSignalsInput, maxSignalsSizeBytes, minSignalsSizeBytes);
     }
 
     private UpdateOutput getUpdatedOutput(int evicted) {
@@ -142,5 +176,20 @@ public class FifoSignalEvictorTest {
         assertEquals(expected.getUpdateEncoderEvent(), actual.getUpdateEncoderEvent());
         assertEquals(expected.getToRemove(), actual.getToRemove());
         assertEquals(expected.getKeysTouched(), actual.getKeysTouched());
+    }
+
+    private void verifyUpdateSignalsProcessReportedLoggerArguments(
+            int evictionRulesCount,
+            int perBuyerSignalSize,
+            float maxRawProtectedSignalsSizeBytes,
+            float minRawProtectedSignalsSizeBytes) {
+        verify(mUpdateSignalsProcessReportedLoggerMock)
+                .setEvictionRulesCount(eq(evictionRulesCount));
+        verify(mUpdateSignalsProcessReportedLoggerMock)
+                .setPerBuyerSignalSize(eq(perBuyerSignalSize));
+        verify(mUpdateSignalsProcessReportedLoggerMock)
+                .setMaxRawProtectedSignalsSizeBytes(eq(maxRawProtectedSignalsSizeBytes));
+        verify(mUpdateSignalsProcessReportedLoggerMock)
+                .setMinRawProtectedSignalsSizeBytes(eq(minRawProtectedSignalsSizeBytes));
     }
 }

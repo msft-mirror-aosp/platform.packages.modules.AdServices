@@ -176,6 +176,7 @@ public class UpdateAdCounterHistogramWorker {
                 inputParams.getCallerPackageName(),
                 true,
                 false,
+                !mFlags.getConsentNotificationDebugMode(),
                 mCallerUid,
                 LOGGING_API_NAME,
                 FLEDGE_API_UPDATE_AD_COUNTER_HISTOGRAM,
