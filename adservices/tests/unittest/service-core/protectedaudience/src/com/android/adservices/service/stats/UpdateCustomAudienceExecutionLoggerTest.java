@@ -19,8 +19,8 @@ package com.android.adservices.service.stats;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
-import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.START_ELAPSED_TIMESTAMP;
-import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.STOP_ELAPSED_TIMESTAMP;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTestFixture.START_ELAPSED_TIMESTAMP;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTestFixture.STOP_ELAPSED_TIMESTAMP;
 import static com.android.adservices.service.stats.UpdateCustomAudienceExecutionLogger.MISSING_START_UPDATE_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.stats.UpdateCustomAudienceExecutionLogger.REPEATED_END_UPDATE_CUSTOM_AUDIENCE;
 

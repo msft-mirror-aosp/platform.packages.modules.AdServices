@@ -53,10 +53,46 @@ import static com.android.adservices.service.stats.AdSelectionExecutionLogger.RE
 import static com.android.adservices.service.stats.AdSelectionExecutionLogger.REPEATED_START_SCORE_ADS;
 import static com.android.adservices.service.stats.AdSelectionExecutionLogger.SCRIPT_JAVASCRIPT;
 import static com.android.adservices.service.stats.AdSelectionExecutionLogger.SCRIPT_UNSET;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTestFixture.BIDDING_STAGE_END_TIMESTAMP;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTestFixture.BIDDING_STAGE_START_TIMESTAMP;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTestFixture.DB_AD_SELECTION_FILE_SIZE;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTestFixture.GET_AD_SCORES_END_TIMESTAMP;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTestFixture.GET_AD_SCORES_LATENCY_MS;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTestFixture.GET_AD_SCORES_START_TIMESTAMP;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTestFixture.GET_AD_SELECTION_LOGIC_END_TIMESTAMP;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTestFixture.GET_AD_SELECTION_LOGIC_LATENCY_MS;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTestFixture.GET_AD_SELECTION_LOGIC_START_TIMESTAMP;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTestFixture.GET_BUYERS_CUSTOM_AUDIENCE_END_TIMESTAMP;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTestFixture.GET_BUYERS_CUSTOM_AUDIENCE_LATENCY_MS;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTestFixture.GET_TRUSTED_SCORING_SIGNALS_END_TIMESTAMP;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTestFixture.GET_TRUSTED_SCORING_SIGNALS_LATENCY_MS;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTestFixture.GET_TRUSTED_SCORING_SIGNALS_START_TIMESTAMP;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTestFixture.IS_RMKT_ADS_WON;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTestFixture.IS_RMKT_ADS_WON_UNSET;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTestFixture.PERSIST_AD_SELECTION_END_TIMESTAMP;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTestFixture.PERSIST_AD_SELECTION_LATENCY_MS;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTestFixture.PERSIST_AD_SELECTION_START_TIMESTAMP;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTestFixture.RUN_AD_BIDDING_END_TIMESTAMP;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTestFixture.RUN_AD_BIDDING_LATENCY_MS;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTestFixture.RUN_AD_BIDDING_START_TIMESTAMP;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTestFixture.RUN_AD_SCORING_END_TIMESTAMP;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTestFixture.RUN_AD_SCORING_LATENCY_MS;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTestFixture.RUN_AD_SCORING_START_TIMESTAMP;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTestFixture.RUN_AD_SELECTION_INTERNAL_FINAL_LATENCY_MS;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTestFixture.RUN_AD_SELECTION_OVERALL_LATENCY_MS;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTestFixture.SCORE_ADS_END_TIMESTAMP;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTestFixture.SCORE_ADS_LATENCY_MS;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTestFixture.SCORE_ADS_START_TIMESTAMP;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTestFixture.START_ELAPSED_TIMESTAMP;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTestFixture.STOP_ELAPSED_TIMESTAMP;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTestFixture.TOTAL_BIDDING_STAGE_LATENCY_IN_MS;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTestFixture.sCallerMetadata;
 import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_JS_REFERENCE_ERROR;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_SUCCESS;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_UNSET;
+import static com.android.adservices.service.stats.RunAdBiddingProcessReportedStatsTest.NUM_BUYERS_FETCHED;
+import static com.android.adservices.service.stats.RunAdBiddingProcessReportedStatsTest.NUM_BUYERS_REQUESTED;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -69,7 +105,6 @@ import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
-import android.adservices.common.CallerMetadata;
 import android.content.Context;
 import android.net.Uri;
 import android.util.Pair;
@@ -98,69 +133,8 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class AdSelectionExecutionLoggerTest {
-    public static final int GET_BUYERS_CUSTOM_AUDIENCE_LATENCY_MS = 1;
-    public static final int RUN_AD_BIDDING_LATENCY_MS = 1;
-    public static final int GET_AD_SELECTION_LOGIC_LATENCY_MS = 1;
-    public static final int GET_TRUSTED_SCORING_SIGNALS_LATENCY_MS = 1;
-    public static final int SCORE_ADS_LATENCY_MS = 1;
-    public static final int PERSIST_AD_SELECTION_LATENCY_MS = 1;
-    public static final long DB_AD_SELECTION_FILE_SIZE = 10L;
-    public static final boolean IS_RMKT_ADS_WON_UNSET = false;
     public static final int DB_AD_SELECTION_SIZE_IN_BYTES_UNSET = -1;
-    public static final boolean IS_RMKT_ADS_WON = true;
-    public static final int NUM_BUYERS_REQUESTED = 5;
-    public static final int NUM_BUYERS_FETCHED = 3;
-    private static final long BINDER_ELAPSED_TIMESTAMP = 90L;
-    public static final CallerMetadata sCallerMetadata =
-            new CallerMetadata.Builder()
-                    .setBinderElapsedTimestamp(BINDER_ELAPSED_TIMESTAMP)
-                    .build();
-    private static final int BINDER_LATENCY_MS = 2;
-    public static final long START_ELAPSED_TIMESTAMP =
-            BINDER_ELAPSED_TIMESTAMP + (long) BINDER_LATENCY_MS / 2;
-
-    public static final long BIDDING_STAGE_START_TIMESTAMP = START_ELAPSED_TIMESTAMP + 1L;
-    public static final long GET_BUYERS_CUSTOM_AUDIENCE_END_TIMESTAMP =
-            BIDDING_STAGE_START_TIMESTAMP + GET_BUYERS_CUSTOM_AUDIENCE_LATENCY_MS;
-    public static final long RUN_AD_BIDDING_START_TIMESTAMP =
-            GET_BUYERS_CUSTOM_AUDIENCE_END_TIMESTAMP + 1L;
-    public static final long RUN_AD_BIDDING_END_TIMESTAMP =
-            RUN_AD_BIDDING_START_TIMESTAMP + RUN_AD_BIDDING_LATENCY_MS;
-    public static final long BIDDING_STAGE_END_TIMESTAMP = RUN_AD_BIDDING_END_TIMESTAMP;
-    public static final long TOTAL_BIDDING_STAGE_LATENCY_IN_MS =
-            BIDDING_STAGE_END_TIMESTAMP - BIDDING_STAGE_START_TIMESTAMP;
-    public static final long RUN_AD_SCORING_START_TIMESTAMP = RUN_AD_BIDDING_END_TIMESTAMP;
-    public static final long GET_AD_SELECTION_LOGIC_START_TIMESTAMP =
-            RUN_AD_SCORING_START_TIMESTAMP + 1L;
-    public static final long GET_AD_SELECTION_LOGIC_END_TIMESTAMP =
-            GET_AD_SELECTION_LOGIC_START_TIMESTAMP + GET_AD_SELECTION_LOGIC_LATENCY_MS;
-    public static final long GET_AD_SCORES_START_TIMESTAMP = GET_AD_SELECTION_LOGIC_END_TIMESTAMP;
-    public static final long GET_TRUSTED_SCORING_SIGNALS_START_TIMESTAMP =
-            GET_AD_SCORES_START_TIMESTAMP + 1;
-    public static final long GET_TRUSTED_SCORING_SIGNALS_END_TIMESTAMP =
-            GET_TRUSTED_SCORING_SIGNALS_START_TIMESTAMP + GET_TRUSTED_SCORING_SIGNALS_LATENCY_MS;
-    public static final long SCORE_ADS_START_TIMESTAMP =
-            GET_TRUSTED_SCORING_SIGNALS_END_TIMESTAMP + 1L;
-    public static final long SCORE_ADS_END_TIMESTAMP =
-            SCORE_ADS_START_TIMESTAMP + SCORE_ADS_LATENCY_MS;
-    public static final long GET_AD_SCORES_END_TIMESTAMP = SCORE_ADS_END_TIMESTAMP;
-    public static final int GET_AD_SCORES_LATENCY_MS =
-            (int) (GET_AD_SCORES_END_TIMESTAMP - GET_AD_SCORES_START_TIMESTAMP);
-    public static final long RUN_AD_SCORING_END_TIMESTAMP = GET_AD_SCORES_END_TIMESTAMP + 1L;
-    public static final int RUN_AD_SCORING_LATENCY_MS =
-            (int) (RUN_AD_SCORING_END_TIMESTAMP - RUN_AD_SCORING_START_TIMESTAMP);
-    public static final long PERSIST_AD_SELECTION_START_TIMESTAMP =
-            RUN_AD_SCORING_END_TIMESTAMP + 1;
-    public static final long PERSIST_AD_SELECTION_END_TIMESTAMP =
-            PERSIST_AD_SELECTION_START_TIMESTAMP + PERSIST_AD_SELECTION_LATENCY_MS;
-    public static final long STOP_ELAPSED_TIMESTAMP = PERSIST_AD_SELECTION_END_TIMESTAMP + 1;
-    public static final int RUN_AD_SELECTION_INTERNAL_FINAL_LATENCY_MS =
-            (int) (STOP_ELAPSED_TIMESTAMP - START_ELAPSED_TIMESTAMP);
-    public static final int RUN_AD_SELECTION_OVERALL_LATENCY_MS =
-            BINDER_LATENCY_MS + RUN_AD_SELECTION_INTERNAL_FINAL_LATENCY_MS;
-
     public static final boolean SCORE_AD_SELLER_ADDITIONAL_SIGNALS_CONTAINED_DATA_VERSION = true;
-    public static final int SCORE_AD_JS_SCRIPT_RESULT_CODE = 0;
     private static final Uri DECISION_LOGIC_URI =
             Uri.parse("https://developer.android.com/test/decisions_logic_uris");
     private static final List<AdTechIdentifier> BUYERS =
@@ -232,8 +206,9 @@ public class AdSelectionExecutionLoggerTest {
     ArgumentCaptor<RunAdScoringProcessReportedStats>
             mRunAdScoringProcessReportedStatsArgumentCaptor;
 
-    private String mAdSelectionLogic = SCRIPT_STRING;
-    private AdSelectionSignals mAdSelectionSignals = AdSelectionSignals.fromString(SCRIPT_STRING);
+    private final String mAdSelectionLogic = SCRIPT_STRING;
+    private final AdSelectionSignals mAdSelectionSignals =
+            AdSelectionSignals.fromString(SCRIPT_STRING);
     @Mock private Context mContextMock;
     @Mock private File mMockDBAdSelectionFile;
     @Mock private Clock mMockClock;
@@ -952,8 +927,8 @@ public class AdSelectionExecutionLoggerTest {
         // Set start and end state of the subcomponent get-BUYERS-custom-audience process.
         adSelectionExecutionLogger.startBiddingProcess(NUM_BUYERS_REQUESTED);
         adSelectionExecutionLogger.endGetBuyersCustomAudience(NUM_BUYERS_FETCHED);
-        int resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
-        adSelectionExecutionLogger.endBiddingProcess(null, resultCode);
+        adSelectionExecutionLogger.endBiddingProcess(
+                null, AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
 
         // Verify the logging of the RunAdBiddingProcessReportedStats.
         verify(mAdServicesLoggerMock)
@@ -1058,7 +1033,7 @@ public class AdSelectionExecutionLoggerTest {
         Throwable throwable =
                 assertThrows(
                         IllegalStateException.class,
-                        () -> adSelectionExecutionLogger.startGetAdSelectionLogic());
+                        adSelectionExecutionLogger::startGetAdSelectionLogic);
         assertThat(throwable.getMessage()).contains(MISSING_START_RUN_AD_SCORING);
     }
 
@@ -1090,7 +1065,7 @@ public class AdSelectionExecutionLoggerTest {
         Throwable throwable =
                 assertThrows(
                         IllegalStateException.class,
-                        () -> adSelectionExecutionLogger.startGetAdSelectionLogic());
+                        adSelectionExecutionLogger::startGetAdSelectionLogic);
         assertThat(throwable.getMessage()).contains(REPEATED_START_GET_AD_SELECTION_LOGIC);
     }
 
@@ -1104,8 +1079,7 @@ public class AdSelectionExecutionLoggerTest {
 
         Throwable throwable =
                 assertThrows(
-                        IllegalStateException.class,
-                        () -> adSelectionExecutionLogger.startGetAdScores());
+                        IllegalStateException.class, adSelectionExecutionLogger::startGetAdScores);
         assertThat(throwable.getMessage()).contains(MISSING_END_GET_AD_SELECTION_LOGIC);
     }
 
@@ -1147,7 +1121,7 @@ public class AdSelectionExecutionLoggerTest {
         Throwable throwable =
                 assertThrows(
                         IllegalStateException.class,
-                        () -> adSelectionExecutionLogger.startGetTrustedScoringSignals());
+                        adSelectionExecutionLogger::startGetTrustedScoringSignals);
         assertThat(throwable.getMessage()).contains(MISSING_START_GET_AD_SCORES);
     }
 
@@ -1169,8 +1143,7 @@ public class AdSelectionExecutionLoggerTest {
 
         Throwable throwable =
                 assertThrows(
-                        IllegalStateException.class,
-                        () -> adSelectionExecutionLogger.startGetAdScores());
+                        IllegalStateException.class, adSelectionExecutionLogger::startGetAdScores);
         assertThat(throwable.getMessage()).contains(REPEATED_START_GET_AD_SCORES);
     }
 
@@ -1219,7 +1192,7 @@ public class AdSelectionExecutionLoggerTest {
         Throwable throwable =
                 assertThrows(
                         IllegalStateException.class,
-                        () -> adSelectionExecutionLogger.startGetTrustedScoringSignals());
+                        adSelectionExecutionLogger::startGetTrustedScoringSignals);
         assertThat(throwable.getMessage()).contains(REPEATED_START_GET_TRUSTED_SCORING_SIGNALS);
     }
 
@@ -1276,8 +1249,7 @@ public class AdSelectionExecutionLoggerTest {
 
         Throwable throwable =
                 assertThrows(
-                        IllegalStateException.class,
-                        () -> adSelectionExecutionLogger.startScoreAds());
+                        IllegalStateException.class, adSelectionExecutionLogger::startScoreAds);
         assertThat(throwable.getMessage()).contains(REPEATED_START_SCORE_ADS);
     }
 
@@ -1302,9 +1274,7 @@ public class AdSelectionExecutionLoggerTest {
         adSelectionExecutionLogger.endGetTrustedScoringSignals(mAdSelectionSignals);
 
         Throwable throwable =
-                assertThrows(
-                        IllegalStateException.class,
-                        () -> adSelectionExecutionLogger.endScoreAds());
+                assertThrows(IllegalStateException.class, adSelectionExecutionLogger::endScoreAds);
         assertThat(throwable.getMessage()).contains(MISSING_START_SCORE_ADS);
     }
 
@@ -1333,9 +1303,7 @@ public class AdSelectionExecutionLoggerTest {
         adSelectionExecutionLogger.endScoreAds();
 
         Throwable throwable =
-                assertThrows(
-                        IllegalStateException.class,
-                        () -> adSelectionExecutionLogger.endScoreAds());
+                assertThrows(IllegalStateException.class, adSelectionExecutionLogger::endScoreAds);
         assertThat(throwable.getMessage()).contains(REPEATED_END_SCORE_ADS);
     }
 
@@ -1363,8 +1331,7 @@ public class AdSelectionExecutionLoggerTest {
 
         Throwable throwable =
                 assertThrows(
-                        IllegalStateException.class,
-                        () -> adSelectionExecutionLogger.endGetAdScores());
+                        IllegalStateException.class, adSelectionExecutionLogger::endGetAdScores);
         assertThat(throwable.getMessage()).contains(MISSING_END_SCORE_ADS);
     }
 
@@ -1396,8 +1363,7 @@ public class AdSelectionExecutionLoggerTest {
 
         Throwable throwable =
                 assertThrows(
-                        IllegalStateException.class,
-                        () -> adSelectionExecutionLogger.endGetAdScores());
+                        IllegalStateException.class, adSelectionExecutionLogger::endGetAdScores);
         assertThat(throwable.getMessage()).contains(REPEATED_END_GET_AD_SCORES);
     }
 

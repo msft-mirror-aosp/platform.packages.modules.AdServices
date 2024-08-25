@@ -21,6 +21,9 @@ import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCOD
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_DOWNLOAD_LATENCY_BUCKETS;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_UNSET;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.computeSize;
+import static com.android.adservices.service.stats.EncodingJsFetchProcessLoggerImplTestFixture.TEST_AD_TECH_ID;
+import static com.android.adservices.service.stats.EncodingJsFetchProcessLoggerImplTestFixture.TEST_JS_DOWNLOAD_END_TIMESTAMP;
+import static com.android.adservices.service.stats.EncodingJsFetchProcessLoggerImplTestFixture.TEST_JS_DOWNLOAD_START_TIMESTAMP;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -40,9 +43,6 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
 public class EncodingJsFetchProcessLoggerImplTest {
-    public static final String TEST_AD_TECH_ID = "com.google.android";
-    public static final long TEST_JS_DOWNLOAD_START_TIMESTAMP = 100L;
-    public static final long TEST_JS_DOWNLOAD_END_TIMESTAMP = 120L;
     public static final int TEST_JS_DOWNLOAD_TIME =
             (int) (TEST_JS_DOWNLOAD_END_TIMESTAMP - TEST_JS_DOWNLOAD_START_TIMESTAMP);
     @Mock private Clock mMockClockMock;
