@@ -430,7 +430,7 @@ public class AsyncRegistrationQueueRunner {
                 dao.insertTrigger(trigger);
             } catch (DatastoreException e) {
                 mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
-                        trigger, dao, DebugReportApi.Type.TRIGGER_UNKNOWN_ERROR);
+                        trigger, dao, DebugReportApi.Type.TRIGGER_UNKNOWN_ERROR.getValue());
                 LoggerFactory.getMeasurementLogger()
                         .e(e, "Insert trigger to DB error, generate trigger-unknown-error report");
                 throw new DatastoreException(

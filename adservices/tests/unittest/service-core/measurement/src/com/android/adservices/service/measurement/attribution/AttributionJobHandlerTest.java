@@ -4488,7 +4488,7 @@ public class AttributionJobHandlerTest {
                         any(),
                         eq("1024"),
                         any(),
-                        eq(DebugReportApi.Type.TRIGGER_AGGREGATE_STORAGE_LIMIT));
+                        eq(DebugReportApi.Type.TRIGGER_AGGREGATE_STORAGE_LIMIT.getValue()));
         verify(mMeasurementDao).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
@@ -4564,7 +4564,7 @@ public class AttributionJobHandlerTest {
                         any(),
                         eq("20"),
                         any(),
-                        eq(DebugReportApi.Type.TRIGGER_AGGREGATE_EXCESSIVE_REPORTS));
+                        eq(DebugReportApi.Type.TRIGGER_AGGREGATE_EXCESSIVE_REPORTS.getValue()));
         verify(mMeasurementDao).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
@@ -4606,7 +4606,10 @@ public class AttributionJobHandlerTest {
                         any(),
                         any(),
                         any(),
-                        eq(DebugReportApi.Type.TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT));
+                        eq(
+                                DebugReportApi.Type
+                                        .TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT
+                                        .getValue()));
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
     }
@@ -4649,7 +4652,8 @@ public class AttributionJobHandlerTest {
                         any(),
                         eq(
                                 DebugReportApi.Type
-                                        .TRIGGER_EVENT_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT));
+                                        .TRIGGER_EVENT_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT
+                                        .getValue()));
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
     }
@@ -4684,7 +4688,8 @@ public class AttributionJobHandlerTest {
 
         // Assertion
         String reportType =
-                DebugReportApi.Type.TRIGGER_AGGREGATE_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT;
+                DebugReportApi.Type.TRIGGER_AGGREGATE_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT
+                        .getValue();
         verify(mDebugReportApi)
                 .scheduleTriggerDebugReport(any(), any(), any(), any(), eq(reportType));
         verify(mTransaction, times(2)).begin();
