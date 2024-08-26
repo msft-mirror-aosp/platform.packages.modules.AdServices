@@ -493,6 +493,7 @@ public final class ReportAndRegisterEventImplTest extends AdServicesExtendedMock
                         TEST_PACKAGE_NAME,
                         true,
                         true,
+                        true,
                         MY_UID,
                         AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION,
                         Throttler.ApiKey.FLEDGE_API_REPORT_INTERACTION,
@@ -533,6 +534,7 @@ public final class ReportAndRegisterEventImplTest extends AdServicesExtendedMock
                 .filterRequest(
                         null,
                         TEST_PACKAGE_NAME,
+                        true,
                         true,
                         true,
                         MY_UID,
@@ -578,6 +580,7 @@ public final class ReportAndRegisterEventImplTest extends AdServicesExtendedMock
                 .filterRequest(
                         null,
                         TEST_PACKAGE_NAME,
+                        true,
                         true,
                         true,
                         MY_UID,
@@ -633,6 +636,7 @@ public final class ReportAndRegisterEventImplTest extends AdServicesExtendedMock
                         TEST_PACKAGE_NAME,
                         true,
                         true,
+                        true,
                         MY_UID,
                         AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION,
                         Throttler.ApiKey.FLEDGE_API_REPORT_INTERACTION,
@@ -666,6 +670,7 @@ public final class ReportAndRegisterEventImplTest extends AdServicesExtendedMock
                 .filterRequest(
                         null,
                         TEST_PACKAGE_NAME,
+                        true,
                         true,
                         true,
                         MY_UID,

@@ -163,6 +163,7 @@ public final class OutcomeSelectionRunnerTest extends AdServicesExtendedMockitoT
                         MY_APP_PACKAGE_NAME,
                         true,
                         true,
+                        true,
                         CALLER_UID,
                         AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS_FROM_OUTCOMES,
                         Throttler.ApiKey.FLEDGE_API_SELECT_ADS,
@@ -217,6 +218,7 @@ public final class OutcomeSelectionRunnerTest extends AdServicesExtendedMockitoT
                         MY_APP_PACKAGE_NAME,
                         true,
                         true,
+                        true,
                         CALLER_UID,
                         AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS_FROM_OUTCOMES,
                         Throttler.ApiKey.FLEDGE_API_SELECT_ADS,
@@ -257,6 +259,93 @@ public final class OutcomeSelectionRunnerTest extends AdServicesExtendedMockitoT
                         eq(MY_APP_PACKAGE_NAME),
                         eq(STATUS_USER_CONSENT_REVOKED),
                         anyInt());
+    }
+
+    @Test
+    public void testRunOutcomeSelectionRevokedUserConsentEmptyResult_UXNotificationNotEnforced() {
+        Flags flagsWithUXConsentEnforcementDisabled =
+                new OutcomeSelectionRunnerTestFlags() {
+                    @Override
+                    public boolean getConsentNotificationDebugMode() {
+                        return true;
+                    }
+                };
+
+        doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
+                .when(mAdSelectionServiceFilter)
+                .filterRequest(
+                        SAMPLE_SELLER,
+                        MY_APP_PACKAGE_NAME,
+                        true,
+                        true,
+                        false,
+                        CALLER_UID,
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS_FROM_OUTCOMES,
+                        Throttler.ApiKey.FLEDGE_API_SELECT_ADS,
+                        DevContext.createForDevOptionsDisabled());
+
+        List<AdSelectionResultBidAndUri> adSelectionIdWithBidAndRenderUris =
+                List.of(AD_SELECTION_WITH_BID_1, AD_SELECTION_WITH_BID_2, AD_SELECTION_WITH_BID_3);
+        for (AdSelectionResultBidAndUri idWithBid : adSelectionIdWithBidAndRenderUris) {
+            persistAdSelectionEntry(idWithBid, MY_APP_PACKAGE_NAME);
+        }
+
+        List<Long> adOutcomesConfigParam =
+                adSelectionIdWithBidAndRenderUris.stream()
+                        .map(AdSelectionResultBidAndUri::getAdSelectionId)
+                        .collect(Collectors.toList());
+
+        AdSelectionFromOutcomesConfig config =
+                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
+                        adOutcomesConfigParam);
+
+        OutcomeSelectionRunner outcomeSelectionRunner =
+                new OutcomeSelectionRunner(
+                        CALLER_UID,
+                        mAdOutcomeSelectorMock,
+                        mAdSelectionEntryDao,
+                        mBlockingExecutorService,
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        AdServicesExecutors.getScheduler(),
+                        mAdServicesLoggerMock,
+                        mContext,
+                        flagsWithUXConsentEnforcementDisabled,
+                        mAdSelectionServiceFilter,
+                        DevContext.createForDevOptionsDisabled(),
+                        false);
+
+        AdSelectionTestCallback resultsCallback =
+                invokeRunAdSelectionFromOutcomes(
+                        outcomeSelectionRunner,
+                        config,
+                        MY_APP_PACKAGE_NAME,
+                        mSelectAdsFromOutcomesExecutionLoggerMock);
+
+        var unused =
+                verify(mAdOutcomeSelectorMock, never()).runAdOutcomeSelector(any(), any(), any());
+        expect.that(resultsCallback.mIsSuccess).isTrue();
+        expect.that(resultsCallback.mAdSelectionResponse).isNull();
+
+        // Confirm a duplicate log entry does not exist.
+        // AdSelectionServiceFilter ensures the failing assertion is logged internally.
+        verify(mAdServicesLoggerMock, never())
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS_FROM_OUTCOMES),
+                        eq(MY_APP_PACKAGE_NAME),
+                        eq(STATUS_USER_CONSENT_REVOKED),
+                        anyInt());
+
+        verify(mAdSelectionServiceFilter)
+                .filterRequest(
+                        SAMPLE_SELLER,
+                        MY_APP_PACKAGE_NAME,
+                        true,
+                        true,
+                        false,
+                        CALLER_UID,
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS_FROM_OUTCOMES,
+                        Throttler.ApiKey.FLEDGE_API_SELECT_ADS,
+                        DevContext.createForDevOptionsDisabled());
     }
 
     @Test

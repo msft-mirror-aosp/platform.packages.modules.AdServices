@@ -431,7 +431,8 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
         mPayloadFormatter =
                 AuctionServerPayloadFormatterFactory.createPayloadFormatter(
                         mFakeFlags.getFledgeAuctionServerPayloadFormatVersion(),
-                        mFakeFlags.getFledgeAuctionServerPayloadBucketSizes());
+                        mFakeFlags.getFledgeAuctionServerPayloadBucketSizes(),
+                        /* sellerConfiguration= */ null);
         mPayloadExtractor =
                 AuctionServerPayloadFormatterFactory.createPayloadExtractor(
                         mFakeFlags.getFledgeAuctionServerPayloadFormatVersion(),
@@ -502,9 +503,11 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
                         eq(CALLER_PACKAGE_NAME),
                         eq(false),
                         eq(true),
+                        eq(true),
                         eq(CALLER_UID),
-                        eq(AdServicesStatsLog
-                                .AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA),
+                        eq(
+                                AdServicesStatsLog
+                                        .AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA),
                         eq(Throttler.ApiKey.FLEDGE_API_GET_AD_SELECTION_DATA),
                         eq(DevContext.createForDevOptionsDisabled()));
         doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
@@ -514,9 +517,11 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
                         eq(CALLER_PACKAGE_NAME),
                         eq(false),
                         eq(true),
+                        eq(true),
                         eq(CALLER_UID),
-                        eq(AdServicesStatsLog
-                                .AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT),
+                        eq(
+                                AdServicesStatsLog
+                                        .AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT),
                         eq(Throttler.ApiKey.FLEDGE_API_PERSIST_AD_SELECTION_RESULT),
                         eq(DevContext.createForDevOptionsDisabled()));
 
@@ -1306,7 +1311,7 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
 
                     @Override
                     public int getFledgeAuctionServerPayloadFormatVersion() {
-                        return AuctionServerPayloadFormatterExcessiveMaxSize.VERSION;
+                        return AuctionServerPayloadFormatterExactSize.VERSION;
                     }
 
                     @Override
@@ -1392,9 +1397,9 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
 
         assertThat(totalNumCAsInBuyerInput).isGreaterThan(20);
 
-        // Make sure payload size is smaller than max, even ith persisting 100 CAs
+        // Make sure payload size is equal to than max, even with persisting 200 CAs
         assertThat(encryptedBytes.length)
-                .isLessThan(sellerConfiguration.getMaximumPayloadSizeBytes());
+                .isEqualTo(sellerConfiguration.getMaximumPayloadSizeBytes());
 
         // Verify GetAdSelectionDataBuyerInputGeneratedStats metrics are not called
         verify(mAdServicesLoggerMock, never()).logGetAdSelectionDataBuyerInputGeneratedStats(any());
@@ -1421,7 +1426,7 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
 
                     @Override
                     public int getFledgeAuctionServerPayloadFormatVersion() {
-                        return AuctionServerPayloadFormatterExcessiveMaxSize.VERSION;
+                        return AuctionServerPayloadFormatterExactSize.VERSION;
                     }
 
                     @Override

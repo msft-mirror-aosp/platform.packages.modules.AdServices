@@ -31,6 +31,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
@@ -68,6 +69,8 @@ public final class ProtectedSignalsServiceFilterTest extends AdServicesMockitoTe
     @Mock private FledgeConsentFilter mFledgeConsentFilterMock;
 
     @Mock AppImportanceFilter mAppImportanceFilter;
+
+    private static final boolean ENFORCE_NOTIFICATION_ENABLED = true;
 
     private final AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
@@ -119,6 +122,7 @@ public final class ProtectedSignalsServiceFilterTest extends AdServicesMockitoTe
                                 false,
                                 false,
                                 false,
+                                ENFORCE_NOTIFICATION_ENABLED,
                                 MY_UID,
                                 API_NAME,
                                 Throttler.ApiKey.UNKNOWN,
@@ -140,6 +144,7 @@ public final class ProtectedSignalsServiceFilterTest extends AdServicesMockitoTe
                                 false,
                                 false,
                                 false,
+                                ENFORCE_NOTIFICATION_ENABLED,
                                 MY_UID,
                                 API_NAME,
                                 Throttler.ApiKey.UNKNOWN,
@@ -161,6 +166,7 @@ public final class ProtectedSignalsServiceFilterTest extends AdServicesMockitoTe
                                 false,
                                 true,
                                 false,
+                                ENFORCE_NOTIFICATION_ENABLED,
                                 MY_UID,
                                 API_NAME,
                                 Throttler.ApiKey.UNKNOWN,
@@ -189,6 +195,7 @@ public final class ProtectedSignalsServiceFilterTest extends AdServicesMockitoTe
                 false,
                 false,
                 false,
+                ENFORCE_NOTIFICATION_ENABLED,
                 MY_UID,
                 API_NAME,
                 Throttler.ApiKey.UNKNOWN,
@@ -224,6 +231,7 @@ public final class ProtectedSignalsServiceFilterTest extends AdServicesMockitoTe
                                 false,
                                 false,
                                 false,
+                                ENFORCE_NOTIFICATION_ENABLED,
                                 MY_UID,
                                 API_NAME,
                                 Throttler.ApiKey.UNKNOWN,
@@ -240,6 +248,7 @@ public final class ProtectedSignalsServiceFilterTest extends AdServicesMockitoTe
                         true,
                         false,
                         false,
+                        ENFORCE_NOTIFICATION_ENABLED,
                         MY_UID,
                         API_NAME,
                         Throttler.ApiKey.UNKNOWN,
@@ -282,6 +291,7 @@ public final class ProtectedSignalsServiceFilterTest extends AdServicesMockitoTe
                                 false,
                                 false,
                                 false,
+                                ENFORCE_NOTIFICATION_ENABLED,
                                 MY_UID,
                                 API_NAME,
                                 Throttler.ApiKey.UNKNOWN,
@@ -305,6 +315,7 @@ public final class ProtectedSignalsServiceFilterTest extends AdServicesMockitoTe
                 false,
                 false,
                 true,
+                ENFORCE_NOTIFICATION_ENABLED,
                 MY_UID,
                 API_NAME,
                 Throttler.ApiKey.UNKNOWN,
@@ -335,6 +346,7 @@ public final class ProtectedSignalsServiceFilterTest extends AdServicesMockitoTe
                                 false,
                                 false,
                                 true,
+                                ENFORCE_NOTIFICATION_ENABLED,
                                 MY_UID,
                                 API_NAME,
                                 Throttler.ApiKey.UNKNOWN,
@@ -362,9 +374,37 @@ public final class ProtectedSignalsServiceFilterTest extends AdServicesMockitoTe
                 false,
                 false,
                 false,
+                ENFORCE_NOTIFICATION_ENABLED,
                 MY_UID,
                 API_NAME,
                 Throttler.ApiKey.UNKNOWN,
                 DevContext.createForDevOptionsDisabled());
+    }
+
+    @Test
+    public void testFilterRequest_withEnrollmentJobNotScheduledAndEnrollmentCheckFails() {
+        doThrow(new ConsentManager.RevokedConsentException())
+                .when(mFledgeConsentFilterMock)
+                .assertEnrollmentShouldBeScheduled(
+                        anyBoolean(), anyBoolean(), anyString(), anyInt());
+
+        doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
+                .when(mFledgeAuthorizationFilterSpy)
+                .assertAdTechAllowed(any(), anyString(), any(), anyInt(), anyInt());
+
+        assertThrows(
+                ConsentManager.RevokedConsentException.class,
+                () ->
+                        mProtectedSignalsServiceFilter.filterRequestAndExtractIdentifier(
+                                getValidFetchUriByBuyer(SELLER_VALID),
+                                CALLER_PACKAGE_NAME,
+                                false,
+                                false,
+                                true,
+                                ENFORCE_NOTIFICATION_ENABLED,
+                                MY_UID,
+                                API_NAME,
+                                Throttler.ApiKey.UNKNOWN,
+                                DevContext.createForDevOptionsDisabled()));
     }
 }
