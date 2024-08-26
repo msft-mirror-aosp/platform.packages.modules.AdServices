@@ -18,6 +18,7 @@ package com.android.server.adservices.consent;
 
 import android.annotation.NonNull;
 
+import com.android.adservices.shared.errorlogging.NoOpAdServicesErrorLoggerImpl;
 import com.android.adservices.shared.storage.AtomicFileDatastore;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
@@ -78,7 +79,11 @@ public class AppConsentManager {
 
         AtomicFileDatastore datastore =
                 new AtomicFileDatastore(
-                        consentDataStoreDir, DATASTORE_NAME, DATASTORE_VERSION, VERSION_KEY);
+                        consentDataStoreDir,
+                        DATASTORE_NAME,
+                        DATASTORE_VERSION,
+                        VERSION_KEY,
+                        new NoOpAdServicesErrorLoggerImpl());
         datastore.initialize();
 
         return new AppConsentManager(datastore);
