@@ -3493,6 +3493,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public int getMeasurementMaxFilteringIdMaxBytes() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES,
+                MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES);
+    }
+
+    @Override
     public boolean getMeasurementEnableFlexibleContributionFiltering() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING,

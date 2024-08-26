@@ -145,10 +145,24 @@ public class FetcherUtil {
         return value.stripTrailingZeros().scale() <= 0;
     }
 
-    /** Extract value of a numeric integral object */
+    /** Extract value of a numeric integral from JSONObject. */
     public static Optional<BigDecimal> extractIntegralValue(JSONObject obj, String key) {
         try {
-            Object maybeIntegralValue = obj.get(key);
+            Object maybeObject = obj.get(key);
+            Optional<BigDecimal> maybeIntegralValue = extractIntegralValue(maybeObject);
+            if (maybeIntegralValue.isPresent()) {
+                return maybeIntegralValue;
+            }
+        } catch (JSONException | NumberFormatException e) {
+            LoggerFactory.getMeasurementLogger()
+                    .e(e, "extractIntegralValue: caught exception. Key: %s", key);
+            return Optional.empty();
+        }
+        return Optional.empty();
+    }
+
+    /** Extract value of a numeric integral Object. */
+    public static Optional<BigDecimal> extractIntegralValue(Object maybeIntegralValue) {
             if (!(maybeIntegralValue instanceof Number)) {
                 LoggerFactory.getMeasurementLogger()
                         .e(
@@ -167,11 +181,6 @@ public class FetcherUtil {
             }
 
             return Optional.of(bd);
-        } catch (JSONException | NumberFormatException e) {
-            LoggerFactory.getMeasurementLogger()
-                    .e(e, "extractIntegralValue: caught exception. Key: %s", key);
-            return Optional.empty();
-        }
     }
 
     private static boolean isValidLookbackWindow(JSONObject obj) {
