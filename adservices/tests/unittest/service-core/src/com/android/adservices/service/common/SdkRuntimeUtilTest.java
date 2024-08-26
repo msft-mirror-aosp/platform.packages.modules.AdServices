@@ -22,33 +22,17 @@ import static org.junit.Assume.assumeTrue;
 
 import android.os.Process;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.common.compat.ProcessCompatUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
-import org.mockito.MockitoSession;
 
-public class SdkRuntimeUtilTest {
-    MockitoSession mMockitoSession;
-
-    @Before
-    public void setUp() {
-        mMockitoSession =
-                ExtendedMockito.mockitoSession()
-                        .mockStatic(Process.class)
-                        .mockStatic(ProcessCompatUtils.class)
-                        .initMocks(this)
-                        .startMocking();
-    }
-
-    @After
-    public void tearDown() {
-        mMockitoSession.finishMocking();
-    }
-
+@MockStatic(Process.class)
+@MockStatic(ProcessCompatUtils.class)
+public final class SdkRuntimeUtilTest extends AdServicesExtendedMockitoTestCase {
     @Test
     public void testCallingUidIsNotSdkSandbox_returnParameterUid() {
         int uid = 400;
