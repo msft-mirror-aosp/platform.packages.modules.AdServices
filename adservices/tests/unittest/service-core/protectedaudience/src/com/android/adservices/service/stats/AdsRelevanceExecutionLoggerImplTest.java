@@ -25,13 +25,19 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerFactory.GET_AD_SELECTION_DATA_API_NAME;
 import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerFactory.PERSIST_AD_SELECTION_RESULT_API_NAME;
 import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImpl.UNAVAILABLE_LATENCY;
+import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplFixture.BINDER_ELAPSED_TIMESTAMP;
+import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplFixture.GET_AD_SELECTION_DATA_END_TIMESTAMP;
+import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplFixture.GET_AD_SELECTION_DATA_OVERALL_LATENCY_MS;
+import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplFixture.GET_AD_SELECTION_DATA_START_TIMESTAMP;
+import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplFixture.PERSIST_AD_SELECTION_RESULT_END_TIMESTAMP;
+import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplFixture.PERSIST_AD_SELECTION_RESULT_OVERALL_LATENCY_MS;
+import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplFixture.PERSIST_AD_SELECTION_RESULT_START_TIMESTAMP;
+import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplFixture.sCallerMetadata;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import android.adservices.common.CallerMetadata;
 
 import com.android.adservices.shared.util.Clock;
 
@@ -42,37 +48,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 public class AdsRelevanceExecutionLoggerImplTest {
-    public static final int GET_AD_SELECTION_DATA_LATENCY_MS = 1;
-    public static final int PERSIST_AD_SELECTION_RESULT_LATENCY_MS = 1;
-
-    public static final long BINDER_ELAPSED_TIMESTAMP = 90L;
-
-    public static final CallerMetadata sCallerMetadata =
-            new CallerMetadata.Builder()
-                    .setBinderElapsedTimestamp(BINDER_ELAPSED_TIMESTAMP)
-                    .build();
-    private static final int BINDER_LATENCY_MS = 2;
-
-    public static final long GET_AD_SELECTION_DATA_START_TIMESTAMP =
-            BINDER_ELAPSED_TIMESTAMP + (long) BINDER_LATENCY_MS / 2;
-    public static final long GET_AD_SELECTION_DATA_END_TIMESTAMP =
-            GET_AD_SELECTION_DATA_START_TIMESTAMP + GET_AD_SELECTION_DATA_LATENCY_MS;
-    public static final int GET_AD_SELECTION_DATA_INTERNAL_FINAL_LATENCY_MS =
-            (int) (GET_AD_SELECTION_DATA_END_TIMESTAMP - GET_AD_SELECTION_DATA_START_TIMESTAMP);
-    public static final int GET_AD_SELECTION_DATA_OVERALL_LATENCY_MS =
-            BINDER_LATENCY_MS + GET_AD_SELECTION_DATA_INTERNAL_FINAL_LATENCY_MS;
-
-    public static final long PERSIST_AD_SELECTION_RESULT_START_TIMESTAMP =
-            BINDER_ELAPSED_TIMESTAMP + (long) BINDER_LATENCY_MS / 2;
-    public static final long PERSIST_AD_SELECTION_RESULT_END_TIMESTAMP =
-            PERSIST_AD_SELECTION_RESULT_START_TIMESTAMP + PERSIST_AD_SELECTION_RESULT_LATENCY_MS;
-    public static final int PERSIST_AD_SELECTION_RESULT_INTERNAL_FINAL_LATENCY_MS =
-            (int)
-                    (PERSIST_AD_SELECTION_RESULT_END_TIMESTAMP
-                            - PERSIST_AD_SELECTION_RESULT_START_TIMESTAMP);
-    public static final int PERSIST_AD_SELECTION_RESULT_OVERALL_LATENCY_MS =
-            BINDER_LATENCY_MS + PERSIST_AD_SELECTION_RESULT_INTERNAL_FINAL_LATENCY_MS;
-
     @Mock private Clock mMockClockMock;
     @Mock private AdServicesLogger mAdServicesLoggerMock;
 
