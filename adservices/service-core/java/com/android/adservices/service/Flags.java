@@ -4828,6 +4828,30 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     /**
+     * The flag to enable falling back to the default base registry. It prevents Cobalt using merged
+     * registry. So in case the MDD downloaded registry and merged with default registry already, we
+     * can still fall back to use the default base registry.
+     */
+    @FeatureFlag Boolean COBALT__FALL_BACK_TO_DEFAULT_BASE_REGISTRY = false;
+
+    /** Returns the flag to enable falling back to the default base registry. */
+    default boolean getCobaltFallBackToDefaultBaseRegistry() {
+        return COBALT__FALL_BACK_TO_DEFAULT_BASE_REGISTRY;
+    }
+
+    /**
+     * The flag tells Cobalt to ignore specific list of report id(s). This flag is used for
+     * out-of-band registry update. The format is a comma-separated list of 4 colon separated ints,
+     * e.g. a single value is customer_id:project_id:metric_id:report_id.
+     */
+    @ConfigFlag String COBALT__IGNORED_REPORT_ID_LIST = "";
+
+    /** Returns the flag to ignore specific list of report id(s). */
+    default String getCobaltIgnoredReportIdList() {
+        return COBALT__IGNORED_REPORT_ID_LIST;
+    }
+
+    /**
      * A feature flag to enable DB schema change to version 8 in Topics API. Version 8 is to add
      * logged_topic column to ReturnedTopic table.
      *
