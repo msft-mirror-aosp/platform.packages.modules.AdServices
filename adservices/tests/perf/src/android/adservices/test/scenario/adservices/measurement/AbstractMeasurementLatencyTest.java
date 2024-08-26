@@ -200,8 +200,5 @@ public class AbstractMeasurementLatencyTest {
 
         // Set flag to pre seed enrollment.
         flags.setFlag(FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED, true);
-
-        // Set flag not match origin.
-        flags.setFlag(FlagsConstants.KEY_MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH, false);
     }
 }
