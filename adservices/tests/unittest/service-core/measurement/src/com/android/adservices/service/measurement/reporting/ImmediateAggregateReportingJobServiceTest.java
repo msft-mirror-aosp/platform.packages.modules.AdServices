@@ -29,7 +29,6 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -70,16 +69,19 @@ import java.util.Optional;
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(AdServicesJobServiceLogger.class)
 @MockStatic(ServiceCompatUtils.class)
-public final class ImmediateAggregateReportingJobServiceTest extends MeasurementJobServiceTestCase {
+public final class ImmediateAggregateReportingJobServiceTest
+        extends MeasurementJobServiceTestCase<ImmediateAggregateReportingJobService> {
     private static final int MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_ID =
             MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB.getJobId();
     private static final long WAIT_IN_MILLIS = 200L;
 
-    private ImmediateAggregateReportingJobService mSpyService;
+    @Override
+    protected ImmediateAggregateReportingJobService getSpiedService() {
+        return new ImmediateAggregateReportingJobService();
+    }
 
     @Before
     public void setUp() {
-        mSpyService = spy(new ImmediateAggregateReportingJobService());
         when(mMockFlags.getMeasurementImmediateAggregateReportingJobPersisted()).thenReturn(true);
         when(mMockFlags.getMeasurementImmediateAggregateReportingJobRequiredNetworkType())
                 .thenReturn(JobInfo.NETWORK_TYPE_ANY);
@@ -446,18 +448,9 @@ public final class ImmediateAggregateReportingJobServiceTest extends Measurement
         execute.run();
     }
 
-    private void enableKillSwitch() {
-        toggleKillSwitch(true);
-    }
-
-    private void disableKillSwitch() {
-        toggleKillSwitch(false);
-    }
-
-    private void toggleKillSwitch(boolean value) {
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        ExtendedMockito.doReturn(value)
-                .when(mMockFlags)
-                .getMeasurementJobImmediateAggregateReportingKillSwitch();
+    @Override
+    protected void toggleFeature(boolean value) {
+        when(mMockFlags.getMeasurementJobImmediateAggregateReportingKillSwitch())
+                .thenReturn(!value);
     }
 }
