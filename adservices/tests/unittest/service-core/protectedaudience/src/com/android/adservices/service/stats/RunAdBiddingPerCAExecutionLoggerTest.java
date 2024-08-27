@@ -21,8 +21,8 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ER
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
 import static com.android.adservices.service.stats.AdSelectionExecutionLogger.SCRIPT_JAVASCRIPT;
-import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.START_ELAPSED_TIMESTAMP;
-import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.STOP_ELAPSED_TIMESTAMP;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTestFixture.START_ELAPSED_TIMESTAMP;
+import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTestFixture.STOP_ELAPSED_TIMESTAMP;
 import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_UNSET;
 import static com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger.MISSING_END_GENERATE_BIDS;
@@ -45,6 +45,21 @@ import static com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLog
 import static com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger.REPEATED_START_RUN_BIDDING;
 import static com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger.REPEATED_START_TRUSTED_BIDDING_SIGNALS;
 import static com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger.SCRIPT_UNSET;
+import static com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLoggerTestFixture.GENERATE_BIDS_END_TIMESTAMP;
+import static com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLoggerTestFixture.GENERATE_BIDS_LATENCY_IN_MS;
+import static com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLoggerTestFixture.GENERATE_BIDS_START_TIMESTAMP;
+import static com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLoggerTestFixture.GET_BUYER_DECISION_LOGIC_END_TIMESTAMP;
+import static com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLoggerTestFixture.GET_BUYER_DECISION_LOGIC_LATENCY_IN_MS;
+import static com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLoggerTestFixture.GET_BUYER_DECISION_LOGIC_START_TIMESTAMP;
+import static com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLoggerTestFixture.GET_TRUSTED_BIDDING_SIGNALS_END_TIMESTAMP;
+import static com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLoggerTestFixture.GET_TRUSTED_BIDDING_SIGNALS_IN_MS;
+import static com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLoggerTestFixture.GET_TRUSTED_BIDDING_SIGNALS_START_TIMESTAMP;
+import static com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLoggerTestFixture.RUN_AD_BIDDING_PER_CA_LATENCY_IN_MS;
+import static com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLoggerTestFixture.RUN_AD_BIDDING_PER_CA_START_TIMESTAMP;
+import static com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLoggerTestFixture.RUN_BIDDING_END_TIMESTAMP;
+import static com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLoggerTestFixture.RUN_BIDDING_LATENCY_IN_MS;
+import static com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLoggerTestFixture.RUN_BIDDING_START_TIMESTAMP;
+import static com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLoggerTestFixture.TRUSTED_BIDDING_SIGNALS;
 import static com.android.adservices.service.stats.RunAdBiddingPerCAProcessReportedStatsTest.GENERATE_BID_BUYER_ADDITIONAL_SIGNALS_CONTAINED_DATA_VERSION;
 import static com.android.adservices.service.stats.RunAdBiddingPerCAProcessReportedStatsTest.GENERATE_BID_JS_SCRIPT_RESULT_CODE;
 import static com.android.adservices.service.stats.RunAdBiddingPerCAProcessReportedStatsTest.RUN_AD_BIDDING_PER_CA_RETURNED_AD_COST;
@@ -54,8 +69,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import android.adservices.common.AdSelectionSignals;
 
 import com.android.adservices.service.Flags;
 import com.android.adservices.shared.testing.SdkLevelSupportRule;
@@ -72,39 +85,6 @@ import org.mockito.MockitoAnnotations;
 import java.nio.charset.StandardCharsets;
 
 public class RunAdBiddingPerCAExecutionLoggerTest {
-
-    public static final long RUN_AD_BIDDING_PER_CA_START_TIMESTAMP = START_ELAPSED_TIMESTAMP + 1;
-    public static final long GET_BUYER_DECISION_LOGIC_START_TIMESTAMP =
-            RUN_AD_BIDDING_PER_CA_START_TIMESTAMP + 1;
-    public static final int GET_BUYER_DECISION_LOGIC_LATENCY_IN_MS = 1;
-    public static final long GET_BUYER_DECISION_LOGIC_END_TIMESTAMP =
-            GET_BUYER_DECISION_LOGIC_START_TIMESTAMP + GET_BUYER_DECISION_LOGIC_LATENCY_IN_MS;
-    public static final long RUN_BIDDING_START_TIMESTAMP =
-            GET_BUYER_DECISION_LOGIC_END_TIMESTAMP + 1;
-    public static final long GET_TRUSTED_BIDDING_SIGNALS_START_TIMESTAMP =
-            RUN_BIDDING_START_TIMESTAMP + 1;
-    public static final int GET_TRUSTED_BIDDING_SIGNALS_IN_MS = 1;
-    public static final long GET_TRUSTED_BIDDING_SIGNALS_END_TIMESTAMP =
-            GET_TRUSTED_BIDDING_SIGNALS_START_TIMESTAMP + GET_TRUSTED_BIDDING_SIGNALS_IN_MS;
-    public static final long GENERATE_BIDS_START_TIMESTAMP =
-            GET_BUYER_DECISION_LOGIC_END_TIMESTAMP + 1;
-    public static final int GENERATE_BIDS_LATENCY_IN_MS = 1;
-    public static final long GENERATE_BIDS_END_TIMESTAMP =
-            GENERATE_BIDS_START_TIMESTAMP + GENERATE_BIDS_LATENCY_IN_MS;
-    public static final long RUN_BIDDING_END_TIMESTAMP = GENERATE_BIDS_END_TIMESTAMP + 1;
-    public static final int RUN_BIDDING_LATENCY_IN_MS =
-            (int) (RUN_BIDDING_END_TIMESTAMP - RUN_BIDDING_START_TIMESTAMP);
-    public static final int RUN_AD_BIDDING_PER_CA_LATENCY_IN_MS =
-            (int) (STOP_ELAPSED_TIMESTAMP - RUN_AD_BIDDING_PER_CA_START_TIMESTAMP);
-    public static final AdSelectionSignals TRUSTED_BIDDING_SIGNALS =
-            AdSelectionSignals.fromString(
-                    "{\n"
-                            + "\t\"example\": \"example\",\n"
-                            + "\t\"valid\": \"Also valid\",\n"
-                            + "\t\"list\": \"list\",\n"
-                            + "\t\"of\": \"of\",\n"
-                            + "\t\"keys\": \"trusted bidding signal Values\"\n"
-                            + "}");
     private static final int NUM_OF_ADS_FOR_BIDDING = 4;
     private static final int NUM_OF_KEYS_OF_TRUSTED_BIDDING_SIGNALS = 3;
     private static final int FETCHED_BUYER_DECISION_LOGIC_SCRIPT_SIZE_IN_BYTES =
@@ -551,7 +531,7 @@ public class RunAdBiddingPerCAExecutionLoggerTest {
         Throwable throwable =
                 assertThrows(
                         IllegalStateException.class,
-                        () -> runAdBiddingPerCAExecutionLogger.startGetBuyerDecisionLogic());
+                        runAdBiddingPerCAExecutionLogger::startGetBuyerDecisionLogic);
         assertThat(throwable.getMessage()).contains(MISSING_START_RUN_AD_BIDDING_PER_CA);
     }
 

@@ -38,6 +38,7 @@ java_defaults {
     ],
     static_libs: [
         "adservices-shared-common",
+        "adservices-datastore_testing",
         "adservices-shared-error-logging",
         "adservices-shared-exceptions",
         "adservices-shared-mockito-expectations",
