@@ -39,6 +39,8 @@ import static org.mockito.Mockito.when;
 import android.annotation.NonNull;
 import android.app.job.JobParameters;
 import android.app.job.JobService;
+import android.content.Context;
+import android.platform.test.annotations.DisabledOnRavenwood;
 
 import androidx.test.filters.FlakyTest;
 
@@ -68,6 +70,10 @@ import java.util.concurrent.TimeUnit;
  * This test creates an example {@link JobService} to use logging methods in {@link
  * JobServiceLogger} and runs tests against this class.
  */
+@DisabledOnRavenwood(
+        blockedBy =
+                Context.class) // TODO(b/362475922): remove when Context.deleteSharedPreferences()
+// is supported
 public final class JobServiceTest extends SpeMockitoTestCase {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     // Use an arbitrary job ID for testing. It won't have side effect to use production id as
