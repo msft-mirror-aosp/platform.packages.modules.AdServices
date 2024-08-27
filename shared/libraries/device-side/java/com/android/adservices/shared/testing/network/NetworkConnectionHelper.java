@@ -24,6 +24,8 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkCapabilities;
 
+import java.net.InetAddress;
+
 /** Helper for device network related functions */
 public final class NetworkConnectionHelper {
     private static final String TAG = NetworkConnectionHelper.class.getSimpleName();
@@ -42,7 +44,7 @@ public final class NetworkConnectionHelper {
                 && networkCapabilities.hasCapability(NET_CAPABILITY_VALIDATED);
     }
 
-    /** Checks whether the device has internet connected */
+    /** Checks whether the device has internet connected. */
     // The test using this helper class needs to add the ACCESS_NETWORK_STATE and
     // INTERNET permission.
     @SuppressLint("MissingPermission")
@@ -54,6 +56,19 @@ public final class NetworkConnectionHelper {
         return networkCapabilities != null
                 && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
                 && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED);
+    }
+
+    /** Check whether the device has internet connected by ping the google site. */
+    // The test using this helper class needs to add the ACCESS_NETWORK_STATE and
+    // INTERNET permission.
+    public static boolean isInternetAvailable() {
+        try {
+            InetAddress ipAddr = InetAddress.getByName("google.com");
+            return !ipAddr.equals("");
+
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private NetworkConnectionHelper() {

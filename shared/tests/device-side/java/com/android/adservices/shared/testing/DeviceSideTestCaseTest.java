@@ -46,27 +46,6 @@ public final class DeviceSideTestCaseTest extends DeviceSideTestCase {
     }
 
     @Test
-    public void testStaticTargetContext() {
-        if (isOnRavenwood()) {
-            expect.withMessage("sTargetContext")
-                    .that(sTargetContext)
-                    // Cannot call InstrumentationRegistry... again as it would return another
-                    // context
-                    .isNotNull();
-            return;
-        }
-        Context expectedContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        expect.withMessage("sTargetContext").that(sTargetContext).isSameInstanceAs(expectedContext);
-    }
-
-    @Test
-    public void testStaticTargetPackageName() {
-        expect.withMessage("sTargetPackageName")
-                .that(sTargetPackageName)
-                .isEqualTo(getExpectedPackageName());
-    }
-
-    @Test
     public void testContext() {
         Context expectedContext =
                 isOnRavenwood()
@@ -78,22 +57,6 @@ public final class DeviceSideTestCaseTest extends DeviceSideTestCase {
     @Test
     public void testPackageName() {
         expect.withMessage("mPackageName").that(mPackageName).isEqualTo(getExpectedPackageName());
-    }
-
-    @Test
-    public void testTargetContext() {
-        Context expectedContext =
-                isOnRavenwood()
-                        ? mTargetContext
-                        : InstrumentationRegistry.getInstrumentation().getTargetContext();
-        expect.withMessage("mTargetContext").that(mTargetContext).isSameInstanceAs(expectedContext);
-    }
-
-    @Test
-    public void testTargetPackageName() {
-        expect.withMessage("mTargetPackageName")
-                .that(mTargetPackageName)
-                .isEqualTo(getExpectedPackageName());
     }
 
     @Test

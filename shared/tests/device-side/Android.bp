@@ -27,6 +27,24 @@ android_test {
     ],
 }
 
+android_ravenwood_test {
+    name: "AdServicesSharedLibrariesUnitTestsRavenwood",
+    srcs: [
+        // Needed because it's not exposed as library, but in
+        // adservices-shared-extended-mockito-defaults
+        ":adservices-shared-extended-mockito-rule-sources",
+    ],
+    defaults: ["AdServicesSharedLibrariesUnitTests-defaults"],
+    static_libs: [
+        // Needed by ExtendedMockitoRule references like SpyStatic / MockStatic
+        // (not on AdServicesSharedLibrariesUnitTests-defaults because
+        // AdServicesSharedLibrariesUnitTests gets it from adservices-shared-extended-mockito-defaults
+        "modules-utils-testable-device-config",
+    ],
+    auto_gen_config: true,
+    // TODO(b/335935200): add test_suites once stable
+}
+
 // Common stuff used by both the regular and Ravenwood targets
 java_defaults {
     name: "AdServicesSharedLibrariesUnitTests-defaults",

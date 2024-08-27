@@ -30,8 +30,7 @@ import com.android.adservices.shared.SharedMockitoTestCase;
 import org.junit.Test;
 import org.mockito.Mock;
 
-// TODO(b/335935200): RavenwoodBaseContext.getApplicationContext() not supported
-@DisabledOnRavenwood(blockedBy = Context.class)
+@DisabledOnRavenwood(blockedBy = android.content.ContentProvider.class)
 public final class ApplicationContextProviderTest extends SharedMockitoTestCase {
 
     private final ApplicationContextProvider mProvider = new ApplicationContextProvider();

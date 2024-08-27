@@ -32,6 +32,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.extdata.AdServicesExtDataStorageServiceManager;
 import com.android.adservices.service.ui.data.UxStatesDao;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -55,17 +56,23 @@ public final class AppConsentForRStorageManagerTest extends AdServicesExtendedMo
 
     @Mock private AdServicesExtDataStorageServiceManager mAdExtDataManager;
 
+    @Mock private AdServicesErrorLogger mMockAdServicesErrorLogger;
+
     @Before
     public void setup() {
         mConsentDatastore =
                 new AtomicFileDatastore(
                         mSpyContext,
                         ConsentConstants.STORAGE_XML_IDENTIFIER,
-                        ConsentConstants.STORAGE_VERSION);
+                        ConsentConstants.STORAGE_VERSION,
+                        mMockAdServicesErrorLogger);
 
         mAppDaoDatastore =
                 new AtomicFileDatastore(
-                        mSpyContext, AppConsentDao.DATASTORE_NAME, AppConsentDao.DATASTORE_VERSION);
+                        mSpyContext,
+                        AppConsentDao.DATASTORE_NAME,
+                        AppConsentDao.DATASTORE_VERSION,
+                        mMockAdServicesErrorLogger);
 
         mAppConsentDaoSpy =
                 spy(new AppConsentDao(mAppDaoDatastore, mSpyContext.getPackageManager()));

@@ -80,18 +80,20 @@ import java.util.concurrent.TimeUnit;
 @SpyStatic(FlagsFactory.class)
 @MockStatic(ServiceCompatUtils.class)
 @SpyStatic(AdServicesJobServiceLogger.class)
-public final class AttributionJobServiceTest extends MeasurementJobServiceTestCase {
+public final class AttributionJobServiceTest
+        extends MeasurementJobServiceTestCase<AttributionJobService> {
     private static final long WAIT_IN_MILLIS = 1_000L;
     private static final long JOB_DELAY_MS = TimeUnit.MINUTES.toMillis(2);
     private static final int MEASUREMENT_ATTRIBUTION_JOB_ID =
             MEASUREMENT_ATTRIBUTION_JOB.getJobId();
 
-    private AttributionJobService mSpyService;
+    @Override
+    protected AttributionJobService getSpiedService() {
+        return new AttributionJobService();
+    }
 
     @Before
     public void setUp() {
-        mSpyService = spy(new AttributionJobService());
-
         when(mMockFlags.getMeasurementAttributionJobTriggeringDelayMs()).thenReturn(JOB_DELAY_MS);
     }
 
@@ -681,16 +683,8 @@ public final class AttributionJobServiceTest extends MeasurementJobServiceTestCa
         execute.run();
     }
 
-    private void enableKillSwitch() {
-        toggleKillSwitch(true);
-    }
-
-    private void disableKillSwitch() {
-        toggleKillSwitch(false);
-    }
-
-    private void toggleKillSwitch(boolean value) {
-        mocker.mockGetFlags(mMockFlags);
-        when(mMockFlags.getMeasurementJobAttributionKillSwitch()).thenReturn(value);
+    @Override
+    protected void toggleFeature(boolean value) {
+        when(mMockFlags.getMeasurementJobAttributionKillSwitch()).thenReturn(!value);
     }
 }

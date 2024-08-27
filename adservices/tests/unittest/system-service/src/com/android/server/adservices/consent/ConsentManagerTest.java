@@ -33,6 +33,8 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesMockitoTestCase;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.storage.AtomicFileDatastore;
 import com.android.server.adservices.feature.PrivacySandboxEnrollmentChannelCollection;
 import com.android.server.adservices.feature.PrivacySandboxFeatureType;
@@ -42,6 +44,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 
 import java.io.File;
 import java.io.IOException;
@@ -51,9 +54,11 @@ import java.nio.file.Paths;
 import java.util.stream.Stream;
 
 /** Tests for {@link ConsentManager} */
-public class ConsentManagerTest {
+public final class ConsentManagerTest extends AdServicesMockitoTestCase {
     private static final Context PPAPI_CONTEXT = ApplicationProvider.getApplicationContext();
     private static final String BASE_DIR = PPAPI_CONTEXT.getFilesDir().getAbsolutePath();
+
+    @Mock private AdServicesErrorLogger mMockAdServicesErrorLogger;
 
     private AtomicFileDatastore mDatastore;
 
@@ -64,7 +69,8 @@ public class ConsentManagerTest {
                         PPAPI_CONTEXT.getFilesDir().getAbsolutePath(),
                         STORAGE_XML_IDENTIFIER,
                         STORAGE_VERSION,
-                        VERSION_KEY);
+                        VERSION_KEY,
+                        mMockAdServicesErrorLogger);
     }
 
     @After

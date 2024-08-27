@@ -18,7 +18,9 @@ package com.android.adservices.data.common;
 
 import android.content.Context;
 
+import com.android.adservices.errorlogging.AdServicesErrorLoggerImpl;
 import com.android.adservices.service.common.compat.FileCompatUtils;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
 
@@ -37,12 +39,25 @@ public final class AtomicFileDatastore
     static final String VERSION_KEY = "com.android.adservices.data.common.VERSION";
 
     public AtomicFileDatastore(Context adServicesContext, String filename, int datastoreVersion) {
+        this(
+                adServicesContext,
+                filename,
+                datastoreVersion,
+                AdServicesErrorLoggerImpl.getInstance());
+    }
+
+    public AtomicFileDatastore(
+            Context adServicesContext,
+            String filename,
+            int datastoreVersion,
+            AdServicesErrorLogger adServicesErrorLogger) {
         super(
                 FileCompatUtils.newFileHelper(
                         Objects.requireNonNull(adServicesContext).getFilesDir(),
                         Preconditions.checkStringNotEmpty(
                                 filename, "Filename must not be empty or null")),
                 datastoreVersion,
-                VERSION_KEY);
+                VERSION_KEY,
+                adServicesErrorLogger);
     }
 }

@@ -29,7 +29,6 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -60,7 +59,6 @@ import org.mockito.internal.stubbing.answers.AnswersWithDelay;
 import org.mockito.internal.stubbing.answers.CallsRealMethods;
 
 import java.util.Optional;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 /** Unit test for {@link EventReportingJobService} */
@@ -69,18 +67,20 @@ import java.util.concurrent.TimeUnit;
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(AdServicesJobServiceLogger.class)
 @MockStatic(ServiceCompatUtils.class)
-public final class EventReportingJobServiceTest extends MeasurementJobServiceTestCase {
+public final class EventReportingJobServiceTest
+        extends MeasurementJobServiceTestCase<EventReportingJobService> {
     private static final int MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID =
             MEASUREMENT_EVENT_MAIN_REPORTING_JOB.getJobId();
     private static final long WAIT_IN_MILLIS = 200L;
     private static final long JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(4);
 
-    private EventReportingJobService mSpyService;
+    @Override
+    protected EventReportingJobService getSpiedService() {
+        return new EventReportingJobService();
+    }
 
     @Before
     public void setUp() {
-        mSpyService = spy(new EventReportingJobService());
-
         when(mMockFlags.getMeasurementEventReportingJobPersisted()).thenReturn(true);
         when(mMockFlags.getMeasurementEventReportingJobRequiredNetworkType())
                 .thenReturn(JobInfo.NETWORK_TYPE_UNMETERED);
@@ -445,29 +445,8 @@ public final class EventReportingJobServiceTest extends MeasurementJobServiceTes
         execute.run();
     }
 
-    private void enableKillSwitch() {
-        toggleKillSwitch(true);
-    }
-
-    private void disableKillSwitch() {
-        toggleKillSwitch(false);
-    }
-
-    private void toggleKillSwitch(boolean value) {
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        ExtendedMockito.doReturn(value)
-                .when(mMockFlags)
-                .getMeasurementJobEventReportingKillSwitch();
-    }
-
-    private CountDownLatch createCountDownLatch() {
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
-        doAnswer(i -> countDown(countDownLatch)).when(mSpyService).jobFinished(any(), anyBoolean());
-        return countDownLatch;
-    }
-
-    private Object countDown(CountDownLatch countDownLatch) {
-        countDownLatch.countDown();
-        return null;
+    @Override
+    protected void toggleFeature(boolean value) {
+        when(mMockFlags.getMeasurementJobEventReportingKillSwitch()).thenReturn(!value);
     }
 }

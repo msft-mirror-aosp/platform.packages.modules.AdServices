@@ -16,16 +16,23 @@
 
 package com.android.adservices.shared.storage;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ATOMIC_FILE_DATASTORE_READ_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ATOMIC_FILE_DATASTORE_WRITE_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 import static com.android.adservices.shared.testing.common.DumpHelper.assertDumpHasPrefix;
 import static com.android.adservices.shared.testing.common.DumpHelper.dump;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import android.util.AtomicFile;
 import android.util.Pair;
 
 import com.android.adservices.shared.SharedExtendedMockitoTestCase;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
@@ -35,6 +42,8 @@ import com.google.common.truth.StringSubject;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 
 import java.io.File;
 import java.io.IOException;
@@ -52,11 +61,19 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
     private static final String TEST_KEY_2 = "key2";
     private static final String TEST_VERSION_KEY = "version_key";
 
-    private final AtomicFileDatastore mDatastore =
-            new AtomicFileDatastore(VALID_DIR, FILENAME, DATASTORE_VERSION, TEST_VERSION_KEY);
+    @Mock private AdServicesErrorLogger mMockAdServicesErrorLogger;
+
+    private AtomicFileDatastore mDatastore;
 
     @Before
     public void initializeDatastore() throws IOException {
+        mDatastore =
+                new AtomicFileDatastore(
+                        VALID_DIR,
+                        FILENAME,
+                        DATASTORE_VERSION,
+                        TEST_VERSION_KEY,
+                        mMockAdServicesErrorLogger);
         mDatastore.initialize();
     }
 
@@ -75,7 +92,8 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
                                 /* parentPath= */ null,
                                 FILENAME,
                                 DATASTORE_VERSION,
-                                TEST_VERSION_KEY));
+                                TEST_VERSION_KEY,
+                                mMockAdServicesErrorLogger));
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -83,7 +101,8 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
                                 /* parentPath= */ "",
                                 FILENAME,
                                 DATASTORE_VERSION,
-                                TEST_VERSION_KEY));
+                                TEST_VERSION_KEY,
+                                mMockAdServicesErrorLogger));
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -91,7 +110,8 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
                                 VALID_DIR,
                                 /* filename= */ null,
                                 DATASTORE_VERSION,
-                                TEST_VERSION_KEY));
+                                TEST_VERSION_KEY,
+                                mMockAdServicesErrorLogger));
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -99,14 +119,28 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
                                 VALID_DIR,
                                 /* filename= */ "",
                                 DATASTORE_VERSION,
-                                TEST_VERSION_KEY));
+                                TEST_VERSION_KEY,
+                                mMockAdServicesErrorLogger));
+
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        new AtomicFileDatastore(
+                                VALID_DIR,
+                                FILENAME,
+                                DATASTORE_VERSION,
+                                TEST_VERSION_KEY,
+                                /* adServicesErrorLogger= */ null));
 
         // File constructor
         assertThrows(
                 NullPointerException.class,
                 () ->
                         new AtomicFileDatastore(
-                                /* file= */ null, DATASTORE_VERSION, TEST_VERSION_KEY));
+                                /* file= */ (File) null,
+                                DATASTORE_VERSION,
+                                TEST_VERSION_KEY,
+                                mMockAdServicesErrorLogger));
     }
 
     @Test
@@ -118,7 +152,8 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
                                 "I can't believe this is a valid dir",
                                 FILENAME,
                                 DATASTORE_VERSION,
-                                TEST_VERSION_KEY));
+                                TEST_VERSION_KEY,
+                                mMockAdServicesErrorLogger));
     }
 
     @Test
@@ -133,7 +168,11 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
                     IllegalArgumentException.class,
                     () ->
                             new AtomicFileDatastore(
-                                    path, FILENAME, DATASTORE_VERSION, TEST_VERSION_KEY));
+                                    path,
+                                    FILENAME,
+                                    DATASTORE_VERSION,
+                                    TEST_VERSION_KEY,
+                                    mMockAdServicesErrorLogger));
         } finally {
             if (!file.delete()) {
                 mLog.e("Could not delete file %s at the end", path);
@@ -213,6 +252,43 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
         assertWithMessage("getPreviousStoredVersion()")
                 .that(mDatastore.getPreviousStoredVersion())
                 .isEqualTo(DATASTORE_VERSION);
+    }
+
+    @Test
+    public void testWriteToFile_ThrowsIoException() throws Exception {
+        AtomicFile atomicFileMock = Mockito.mock(AtomicFile.class);
+        when(atomicFileMock.startWrite()).thenThrow(new IOException("Write failure"));
+        AtomicFileDatastore datastore =
+                new AtomicFileDatastore(
+                        atomicFileMock,
+                        DATASTORE_VERSION,
+                        TEST_VERSION_KEY,
+                        mMockAdServicesErrorLogger);
+
+        assertThrows(IOException.class, () -> datastore.putBoolean(TEST_KEY, false));
+
+        verify(mMockAdServicesErrorLogger)
+                .logError(
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ATOMIC_FILE_DATASTORE_WRITE_FAILURE,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
+    }
+
+    @Test
+    public void testReadFromFile_ThrowsIoException() throws Exception {
+        AtomicFile atomicFileMock = Mockito.mock(AtomicFile.class);
+        when(atomicFileMock.readFully()).thenThrow(new IOException("Read failure"));
+        AtomicFileDatastore datastore =
+                new AtomicFileDatastore(
+                        atomicFileMock,
+                        DATASTORE_VERSION,
+                        TEST_VERSION_KEY,
+                        mMockAdServicesErrorLogger);
+
+        assertThrows(IOException.class, () -> datastore.initialize());
+        verify(mMockAdServicesErrorLogger)
+                .logError(
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ATOMIC_FILE_DATASTORE_READ_FAILURE,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
     }
 
     @Test

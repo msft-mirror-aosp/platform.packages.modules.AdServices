@@ -381,13 +381,11 @@ public class EventReportingJobHandler {
             Uri adTechDomain, JSONObject eventReportPayload, @Nullable Boolean hasTriggerDebug)
             throws IOException {
         EventReportSender eventReportSender = new EventReportSender(mIsDebugInstance, mContext);
-        if (hasTriggerDebug != null) {
-            return eventReportSender.sendReportWithExtraHeaders(
-                    adTechDomain,
-                    eventReportPayload,
-                    Map.of("Trigger-Debugging-Available", hasTriggerDebug.toString()));
-        }
-        return eventReportSender.sendReport(adTechDomain, eventReportPayload);
+        Map<String, String> headers =
+                hasTriggerDebug == null
+                        ? null
+                        : Map.of("Trigger-Debugging-Available", hasTriggerDebug.toString());
+        return eventReportSender.sendReportWithHeaders(adTechDomain, eventReportPayload, headers);
     }
 
     @Nullable

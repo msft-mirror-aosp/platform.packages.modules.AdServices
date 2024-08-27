@@ -12,6 +12,18 @@
       ]
     }
   ],
+  "ravenwood-presubmit": [
+    {
+      // Same as AdServicesSharedLibrariesUnitTests, but running on host-side using Ravenwood
+      "name": "AdServicesSharedLibrariesUnitTestsRavenwood",
+      "host": true,
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    }
+  ],
   "extservices-mainline-presubmit": [
     {
       // This is the unit test and shared library code, which should NOT have any module apex

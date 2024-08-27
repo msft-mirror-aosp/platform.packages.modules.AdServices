@@ -332,6 +332,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 false,
                                                 false,
                                                 0,
+                                                false,
                                                 false)
                                         .setAdTechDomain(null)
                                         .build()),
@@ -5465,6 +5466,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 false,
                                                 false,
                                                 0,
+                                                false,
                                                 false)
                                         .setAdTechDomain(WebUtil.validUrl("https://foo.test"))
                                         .build()),

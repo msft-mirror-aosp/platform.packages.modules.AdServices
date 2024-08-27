@@ -82,6 +82,7 @@ public final class SandboxedAppSetIdManagerTest extends AdServicesCtsTestCase {
     @Test
     public void loadSdkAndRunAppSetIdApi() {
         Assume.assumeTrue(NetworkConnectionHelper.isInternetConnected(mContext));
+        Assume.assumeTrue(NetworkConnectionHelper.isInternetAvailable());
 
         SdkSandboxManager sdkSandboxManager = mContext.getSystemService(SdkSandboxManager.class);
         assertWithMessage("SdkSandboxManager").that(sdkSandboxManager).isNotNull();

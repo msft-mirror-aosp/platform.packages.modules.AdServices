@@ -16,6 +16,9 @@
 
 package com.android.adservices.shared.storage;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ATOMIC_FILE_DATASTORE_READ_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ATOMIC_FILE_DATASTORE_WRITE_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 import static com.android.adservices.shared.util.LogUtil.DEBUG;
 import static com.android.adservices.shared.util.LogUtil.VERBOSE;
 import static com.android.adservices.shared.util.Preconditions.checkState;
@@ -26,6 +29,7 @@ import android.annotation.Nullable;
 import android.os.PersistableBundle;
 import android.util.AtomicFile;
 
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.util.LogUtil;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
@@ -66,10 +70,12 @@ public class AtomicFileDatastore {
     public static final int NO_PREVIOUS_VERSION = -1;
 
     private final int mDatastoreVersion;
+    private final AdServicesErrorLogger mAdServicesErrorLogger;
 
     private final ReadWriteLock mReadWriteLock = new ReentrantReadWriteLock();
     private final Lock mReadLock = mReadWriteLock.readLock();
     private final Lock mWriteLock = mReadWriteLock.writeLock();
+
 
     private final AtomicFile mAtomicFile;
     private final Map<String, Object> mLocalMap = new HashMap<>();
@@ -78,16 +84,38 @@ public class AtomicFileDatastore {
     private int mPreviousStoredVersion;
 
     public AtomicFileDatastore(
-            String parentPath, String filename, int datastoreVersion, String versionKey) {
-        this(newFile(parentPath, filename), datastoreVersion, versionKey);
+            String parentPath,
+            String filename,
+            int datastoreVersion,
+            String versionKey,
+            AdServicesErrorLogger adServicesErrorLogger) {
+        this(newFile(parentPath, filename), datastoreVersion, versionKey, adServicesErrorLogger);
     }
 
-    public AtomicFileDatastore(File file, int datastoreVersion, String versionKey) {
-        mAtomicFile = new AtomicFile(Objects.requireNonNull(file));
+    public AtomicFileDatastore(
+            File file,
+            int datastoreVersion,
+            String versionKey,
+            AdServicesErrorLogger adServicesErrorLogger) {
+        this(
+                new AtomicFile(Objects.requireNonNull(file)),
+                datastoreVersion,
+                versionKey,
+                adServicesErrorLogger);
+    }
+
+    @VisibleForTesting
+    AtomicFileDatastore(
+            AtomicFile atomicFile,
+            int datastoreVersion,
+            String versionKey,
+            AdServicesErrorLogger adServicesErrorLogger) {
+        mAtomicFile = atomicFile;
         mDatastoreVersion =
                 checkArgumentNonnegative(datastoreVersion, "Version must not be negative");
 
         mVersionKey = Objects.requireNonNull(versionKey);
+        mAdServicesErrorLogger = Objects.requireNonNull(adServicesErrorLogger);
     }
 
     /**
@@ -133,6 +161,9 @@ public class AtomicFileDatastore {
                 mAtomicFile.failWrite(out);
             }
             LogUtil.e(e, "Write to file failed");
+            mAdServicesErrorLogger.logError(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ATOMIC_FILE_DATASTORE_WRITE_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
             throw e;
         }
     }
@@ -160,6 +191,9 @@ public class AtomicFileDatastore {
             mLocalMap.clear();
         } catch (IOException e) {
             LogUtil.e(e, "Read from store file failed");
+            mAdServicesErrorLogger.logError(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ATOMIC_FILE_DATASTORE_READ_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
             throw e;
         }
     }

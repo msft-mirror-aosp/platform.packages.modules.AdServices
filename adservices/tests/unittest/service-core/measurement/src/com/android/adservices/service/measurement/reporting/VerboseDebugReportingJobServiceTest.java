@@ -58,7 +58,6 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.internal.stubbing.answers.AnswersWithDelay;
@@ -74,17 +73,16 @@ import java.util.Optional;
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(AdServicesJobServiceLogger.class)
 @MockStatic(ServiceCompatUtils.class)
-public final class VerboseDebugReportingJobServiceTest extends MeasurementJobServiceTestCase {
+public final class VerboseDebugReportingJobServiceTest
+        extends MeasurementJobServiceTestCase<VerboseDebugReportingJobService> {
     private static final int MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB_ID =
             MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB.getJobId();
 
     private static final long WAIT_IN_MILLIS = 1_000L;
 
-    private VerboseDebugReportingJobService mSpyService;
-
-    @Before
-    public void setUp() {
-        mSpyService = spy(new VerboseDebugReportingJobService());
+    @Override
+    protected VerboseDebugReportingJobService getSpiedService() {
+        return new VerboseDebugReportingJobService();
     }
 
     @Test
@@ -411,17 +409,9 @@ public final class VerboseDebugReportingJobServiceTest extends MeasurementJobSer
         execute.run();
     }
 
-    private void enableKillSwitch() {
-        toggleKillSwitch(true);
-    }
-
-    private void disableKillSwitch() {
-        toggleKillSwitch(false);
-    }
-
-    private void toggleKillSwitch(boolean value) {
-        mocker.mockGetFlags(mMockFlags);
-        when(mMockFlags.getMeasurementJobVerboseDebugReportingKillSwitch()).thenReturn(value);
+    @Override
+    protected void toggleFeature(boolean value) {
+        when(mMockFlags.getMeasurementJobVerboseDebugReportingKillSwitch()).thenReturn(!value);
         when(mMockFlags.getMeasurementVerboseDebugReportingJobRequiredNetworkType())
                 .thenReturn(JobInfo.NETWORK_TYPE_ANY);
     }

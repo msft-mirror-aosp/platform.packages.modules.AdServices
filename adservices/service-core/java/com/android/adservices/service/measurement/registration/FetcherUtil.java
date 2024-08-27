@@ -407,7 +407,8 @@ public class FetcherUtil {
                                 asyncFetchStatus.isRedirectOnly(),
                                 asyncFetchStatus.isPARequest(),
                                 asyncFetchStatus.getNumDeletedEntities(),
-                                asyncFetchStatus.isEventLevelEpsilonConfigured())
+                                asyncFetchStatus.isEventLevelEpsilonConfigured(),
+                                asyncFetchStatus.isTriggerAggregatableValueFiltersConfigured())
                         .setAdTechDomain(adTechDomain)
                         .build(),
                 enrollmentId);

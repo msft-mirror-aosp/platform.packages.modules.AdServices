@@ -31,6 +31,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.spy;
 
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
@@ -41,12 +42,13 @@ import androidx.test.core.content.pm.ApplicationInfoBuilder;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.common.AtomicFileDatastore;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Spy;
+import org.mockito.Mock;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -58,12 +60,19 @@ import java.util.Set;
 public final class AppConsentDaoTest extends AdServicesExtendedMockitoTestCase {
     private AppConsentDao mAppConsentDao;
 
-    @Spy
-    private AtomicFileDatastore mDatastoreSpy =
-            new AtomicFileDatastore(mContext, AppConsentDaoFixture.TEST_DATASTORE_NAME, 1);
+    @Mock private AdServicesErrorLogger mMockAdServicesErrorLogger;
+
+    private AtomicFileDatastore mDatastoreSpy;
 
     @Before
     public void setup() throws IOException {
+        mDatastoreSpy =
+                spy(
+                        new AtomicFileDatastore(
+                                mContext,
+                                AppConsentDaoFixture.TEST_DATASTORE_NAME,
+                                1,
+                                mMockAdServicesErrorLogger));
         mAppConsentDao = new AppConsentDao(mDatastoreSpy, mContext.getPackageManager());
     }
 

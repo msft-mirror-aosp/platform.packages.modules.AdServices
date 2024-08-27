@@ -31,6 +31,8 @@ java_library {
         "framework-annotations-lib",
     ],
     static_libs: [
+        "adservices-shared-error-logging",
+        "adservices-statsd",
         "adservices-shared-util",
         "modules-utils-build",
         "modules-utils-preconditions",
@@ -63,6 +65,29 @@ java_library {
         "libprotobuf-java-lite",
         "androidx.datastore_datastore",
         "androidx.datastore_datastore-guava",
+    ],
+    apex_available: [
+        "com.android.adservices",
+        "com.android.extservices",
+        "com.android.ondevicepersonalization",
+    ],
+}
+
+java_library {
+    name: "adservices-statsd",
+    sdk_version: "module_current",
+    min_sdk_version: "30",
+    srcs: [
+        ":statslog-adservices-java-gen",
+    ],
+    libs: [
+        "androidx.annotation_annotation",
+        "framework-statsd.stubs.module_lib",
+    ],
+    visibility: [
+        "//packages/modules/AdServices:__subpackages__",
+        "//packages/modules/ExtServices:__subpackages__",
+        "//packages/modules/OnDevicePersonalization:__subpackages__",
     ],
     apex_available: [
         "com.android.adservices",

@@ -32,6 +32,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -41,9 +42,8 @@ import android.app.job.JobService;
 
 import androidx.test.filters.FlakyTest;
 
-import com.android.adservices.shared.SharedExtendedMockitoTestCase;
-import com.android.adservices.shared.common.flags.ModuleSharedFlags;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
+import com.android.adservices.shared.spe.SpeMockitoTestCase;
 import com.android.adservices.shared.util.Clock;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -56,7 +56,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 
 import java.util.concurrent.CountDownLatch;
@@ -69,7 +68,7 @@ import java.util.concurrent.TimeUnit;
  * This test creates an example {@link JobService} to use logging methods in {@link
  * JobServiceLogger} and runs tests against this class.
  */
-public final class JobServiceTest extends SharedExtendedMockitoTestCase {
+public final class JobServiceTest extends SpeMockitoTestCase {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     // Use an arbitrary job ID for testing. It won't have side effect to use production id as
     // the test doesn't actually schedule a job. This avoids complicated mocking logic.
@@ -97,7 +96,6 @@ public final class JobServiceTest extends SharedExtendedMockitoTestCase {
             new ImmutableMap.Builder<Integer, String>().put(JOB_ID, "job").build();
     private static final StatsdJobServiceLogger sMockStatsdLogger =
             mock(StatsdJobServiceLogger.class);
-    private static final ModuleSharedFlags sMockFlags = mock(ModuleSharedFlags.class);
     private JobServiceLogger mLogger;
 
     @Mock private JobParameters mMockJobParameters;
@@ -107,26 +105,26 @@ public final class JobServiceTest extends SharedExtendedMockitoTestCase {
     @Before
     public void setup() {
         mLogger =
-                Mockito.spy(
+                spy(
                         new JobServiceLogger(
-                                sContext,
+                                mContext,
                                 mMockClock,
                                 sMockStatsdLogger,
                                 mMockErrorLogger,
                                 Executors.newCachedThreadPool(),
                                 sJobIdToNameMap,
-                                sMockFlags));
+                                mMockFlags));
 
         // Clear shared preference
-        sContext.deleteSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS);
+        mContext.deleteSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS);
 
-        when(sMockFlags.getBackgroundJobsLoggingEnabled()).thenReturn(true);
+        mockGetBackgroundJobsLoggingEnabled(true);
     }
 
     @After
     public void teardown() {
         // Clear shared preference
-        sContext.deleteSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS);
+        mContext.deleteSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS);
     }
 
     /** To test 1) success as first execution 2) success result code */
@@ -461,7 +459,7 @@ public final class JobServiceTest extends SharedExtendedMockitoTestCase {
     public void testLoggingNotEnabled_successfulExecution() throws InterruptedException {
         TestJobService jobService = new TestJobService(mLogger);
         // Disable logging feature
-        when(sMockFlags.getBackgroundJobsLoggingEnabled()).thenReturn(false);
+        mockGetBackgroundJobsLoggingEnabled(false);
         // First Execution -- Succeed to execute
         jobService.setOnSuccessCallback(true);
         CountDownLatch logOperationCalledLatch1 = createCountDownLatchWithMockedOperation();
@@ -476,7 +474,7 @@ public final class JobServiceTest extends SharedExtendedMockitoTestCase {
     public void testLoggingNotEnabled_failedExecution() throws InterruptedException {
         TestJobService jobService = new TestJobService(mLogger);
         // Disable logging feature
-        when(sMockFlags.getBackgroundJobsLoggingEnabled()).thenReturn(false);
+        mockGetBackgroundJobsLoggingEnabled(false);
         // First Execution -- Fail to execute with retry
         jobService.setOnSuccessCallback(false);
         jobService.setShouldRetryOnJobFinished(true);
@@ -492,7 +490,7 @@ public final class JobServiceTest extends SharedExtendedMockitoTestCase {
     public void testLoggingNotEnabled_executionCallingOnStop() throws InterruptedException {
         TestJobService jobService = new TestJobService(mLogger);
         // Disable logging feature
-        when(sMockFlags.getBackgroundJobsLoggingEnabled()).thenReturn(false);
+        mockGetBackgroundJobsLoggingEnabled(false);
         // First Execution -- onStopJob() is called with retry
         jobService.setShouldOnStopJobHappen(true);
         jobService.setShouldRetryOnStopJob(true);
@@ -509,7 +507,7 @@ public final class JobServiceTest extends SharedExtendedMockitoTestCase {
     public void testLoggingNotEnabled_skipExecution() throws InterruptedException {
         TestJobService jobService = new TestJobService(mLogger);
         // Disable logging feature
-        when(sMockFlags.getBackgroundJobsLoggingEnabled()).thenReturn(false);
+        mockGetBackgroundJobsLoggingEnabled(false);
         // First Execution -- onStopJob() is called with retry
         jobService.setShouldSkip(true);
         CountDownLatch logOperationCalledLatch1 = createCountDownLatchWithMockedOperation();

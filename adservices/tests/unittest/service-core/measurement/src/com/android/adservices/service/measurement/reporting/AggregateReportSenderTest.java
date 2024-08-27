@@ -17,6 +17,7 @@
 package com.android.adservices.service.measurement.reporting;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.verify;
 
 import android.content.Context;
 import android.net.Uri;
@@ -40,6 +41,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Map;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -98,11 +100,46 @@ public class AggregateReportSenderTest {
         Mockito.doReturn(httpUrlConnection).when(spyAggregateReportSender)
                 .createHttpUrlConnection(Mockito.any());
 
-        int responseCode = spyAggregateReportSender.sendReport(reportingOrigin,
-                aggregateReportJson);
+        int responseCode =
+                spyAggregateReportSender.sendReportWithHeaders(
+                        reportingOrigin, aggregateReportJson, /* headers= */ null);
 
         assertEquals(outputStream.toString(), aggregateReportJson.toString());
         assertEquals(responseCode, 200);
+    }
+
+    @Test
+    public void testSendAggregateReportWithExtraHeaders() throws JSONException, IOException {
+        String triggerDebugHeaderKey = "Trigger-Debugging-Available";
+        String triggerDebugHeaderValue = Boolean.TRUE.toString();
+        HttpURLConnection httpUrlConnection = Mockito.mock(HttpURLConnection.class);
+
+        OutputStream outputStream = new ByteArrayOutputStream();
+        Mockito.when(httpUrlConnection.getOutputStream()).thenReturn(outputStream);
+        Mockito.when(httpUrlConnection.getResponseCode()).thenReturn(200);
+
+        JSONObject aggregateReportJson =
+                createAggregateReportBodyExample1()
+                        .toJson(AggregateCryptoFixture.getKey(), FlagsFactory.getFlags());
+        Uri reportingOrigin = Uri.parse(REPORTING_ORIGIN);
+
+        AggregateReportSender aggregateReportSender = new AggregateReportSender(false, sContext);
+        AggregateReportSender spyAggregateReportSender = Mockito.spy(aggregateReportSender);
+
+        Mockito.doReturn(httpUrlConnection)
+                .when(spyAggregateReportSender)
+                .createHttpUrlConnection(Mockito.any());
+
+        int responseCode =
+                spyAggregateReportSender.sendReportWithHeaders(
+                        reportingOrigin,
+                        aggregateReportJson,
+                        Map.of(triggerDebugHeaderKey, triggerDebugHeaderValue));
+
+        assertEquals(outputStream.toString(), aggregateReportJson.toString());
+        assertEquals(responseCode, 200);
+        verify(httpUrlConnection)
+                .setRequestProperty(triggerDebugHeaderKey, triggerDebugHeaderValue);
     }
 
     @Test

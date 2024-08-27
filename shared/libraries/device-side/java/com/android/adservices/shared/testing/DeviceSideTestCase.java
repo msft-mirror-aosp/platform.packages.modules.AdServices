@@ -41,6 +41,9 @@ public abstract class DeviceSideTestCase extends SidelessTestCase {
 
     private static final String REASON_SESSION_MANAGED_BY_RULE =
             "mockito session is automatically managed by a @Rule";
+    private static final String REASON_NO_TARGET_CONTEXT =
+            "tests should use mContext instead - if it needs the target context, please add to"
+                    + " DeviceSideTestCase instead";
 
     // TODO(b/335935200): figure out if there is a way to read it from AndroidTest.xml
     @VisibleForTesting static final String RAVENWOOD_PACKAGE_NAME = "I.am.Groot.I.mean.Ravenwood";
@@ -56,10 +59,6 @@ public abstract class DeviceSideTestCase extends SidelessTestCase {
      */
     @Deprecated protected static Context sContext;
 
-    /**
-     * @deprecated use {@link #mTargetContext}
-     */
-    @Deprecated protected static Context sTargetContext;
 
     /**
      * Package name of the app being instrumented.
@@ -68,8 +67,6 @@ public abstract class DeviceSideTestCase extends SidelessTestCase {
      */
     @Deprecated protected static String sPackageName;
 
-    @Deprecated protected static String sTargetPackageName;
-
     /**
      * Reference to the context of this test's instrumentation package (as defined by {@link
      * android.app.Instrumentation#getContext()})
@@ -77,22 +74,10 @@ public abstract class DeviceSideTestCase extends SidelessTestCase {
     protected Context mContext;
 
     /**
-     * Reference to the context of app being instrumented (as defined by {@link
-     * android.app.Instrumentation#getTargetContext()})
-     */
-    protected Context mTargetContext;
-
-    /**
      * Package name of this test's instrumentation package (as defined by {@link
      * android.app.Instrumentation#getContext()})
      */
     protected String mPackageName;
-
-    /**
-     * Package name of the app being instrumented (as defined by {@link
-     * android.app.Instrumentation#getTargetContext()})
-     */
-    protected String mTargetPackageName;
 
     // TODO(b/355286824) - Used only to set the static context, it doesn't skip tests. There is a
     // RavenwoodClassRule which skips tests, but it doesn't set the Context, so need to use
@@ -125,8 +110,6 @@ public abstract class DeviceSideTestCase extends SidelessTestCase {
         try {
             sContext = InstrumentationRegistry.getInstrumentation().getContext();
             sPackageName = sContext.getPackageName();
-            sTargetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-            sTargetPackageName = sTargetContext.getPackageName();
         } catch (Exception e) {
             DynamicLogger.getInstance()
                     .log(
@@ -134,12 +117,9 @@ public abstract class DeviceSideTestCase extends SidelessTestCase {
                             TAG,
                             e,
                             "setStaticFixtures() failed (usually happens under Ravenwood). Setting"
-                                    + " sContext=%s, sPackageName=%s, sTargetContext=%s,"
-                                    + " sTargetPackageName=%s",
+                                    + " sContext=%s, sPackageName=%s",
                             sContext,
-                            sPackageName,
-                            sTargetContext,
-                            sTargetPackageName);
+                            sPackageName);
         }
     }
 
@@ -147,8 +127,6 @@ public abstract class DeviceSideTestCase extends SidelessTestCase {
     public final void setInstanceFixtures() {
         mContext = sContext;
         mPackageName = sPackageName;
-        mTargetContext = sTargetContext;
-        mTargetPackageName = sTargetPackageName;
     }
 
     // TODO(b/361555631): merge 2 classes below into testDeviceSideTestCaseFixtures() and annotate
@@ -167,23 +145,23 @@ public abstract class DeviceSideTestCase extends SidelessTestCase {
         assertTestClassHasNoFieldsFromSuperclass(
                 DeviceSideTestCase.class,
                 "mContext",
-                "mTargetContext",
                 "mPackageName",
-                "mTargetPackageName",
                 "mTag",
                 "ravenwood",
                 "sdkLevel",
                 "processLifeGuard",
                 "sContext",
-                "sTargetContext",
                 "sPackageName",
-                "sTargetPackageName",
                 "sRavenWood",
                 "RAVENWOOD_PACKAGE_NAME");
         assertTestClassHasNoSuchField(
                 "CONTEXT",
                 "should use existing mContext (or sContext when that's not possible) instead");
         assertTestClassHasNoSuchField("context", "should use existing mContext instead");
+        assertTestClassHasNoSuchField("mTargetContext", REASON_NO_TARGET_CONTEXT);
+        assertTestClassHasNoSuchField("mTargetPackageName", REASON_NO_TARGET_CONTEXT);
+        assertTestClassHasNoSuchField("sTargetContext", REASON_NO_TARGET_CONTEXT);
+        assertTestClassHasNoSuchField("sTargetPackageName", REASON_NO_TARGET_CONTEXT);
     }
 
     // NOTE: it's static so it can be used by other mockito-related superclasses, as often test
@@ -212,6 +190,8 @@ public abstract class DeviceSideTestCase extends SidelessTestCase {
         testInstance.assertTestClassHasNoSuchField("mockito", "already taken care by @Rule");
         testInstance.assertTestClassHasNoSuchField(
                 "mFlagsMock", "should use existing mMockFlags instead");
+        testInstance.assertTestClassHasNoSuchField(
+                "sMockFlags", "should use existing mMockFlags instead");
         testInstance.assertTestClassHasNoSuchField(
                 "mFlags",
                 superclass.getSimpleName()
