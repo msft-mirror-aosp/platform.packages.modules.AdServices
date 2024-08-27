@@ -18,7 +18,6 @@ package com.android.cobalt.impl;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-import android.annotation.NonNull;
 import android.util.Log;
 
 import com.android.cobalt.CobaltLogger;
@@ -60,12 +59,12 @@ public final class CobaltLoggerImpl implements CobaltLogger {
     private final boolean mEnabled;
 
     public CobaltLoggerImpl(
-            @NonNull Project project,
-            @NonNull ReleaseStage releaseStage,
-            @NonNull DataService dataService,
-            @NonNull SystemData systemData,
-            @NonNull ExecutorService executor,
-            @NonNull SystemClock systemClock,
+            Project project,
+            ReleaseStage releaseStage,
+            DataService dataService,
+            SystemData systemData,
+            ExecutorService executor,
+            SystemClock systemClock,
             boolean enabled) {
         mProject = Objects.requireNonNull(project);
         mReleaseStage = Objects.requireNonNull(releaseStage);

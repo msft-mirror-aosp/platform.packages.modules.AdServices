@@ -18,8 +18,6 @@ package com.android.cobalt.observations;
 
 import static java.util.Objects.requireNonNull;
 
-import android.annotation.NonNull;
-
 import com.android.cobalt.data.DaoBuildingBlocks;
 import com.android.cobalt.data.ObservationGenerator;
 import com.android.cobalt.data.ReportKey;
@@ -44,12 +42,12 @@ public final class ObservationGeneratorFactory {
     private final CobaltOperationLogger mOperationLogger;
 
     public ObservationGeneratorFactory(
-            @NonNull Project project,
-            @NonNull SystemData systemData,
-            @NonNull DaoBuildingBlocks daoBuildingBlocks,
-            @NonNull PrivacyGenerator privacyGenerator,
-            @NonNull SecureRandom secureRandom,
-            @NonNull CobaltOperationLogger operationLogger) {
+            Project project,
+            SystemData systemData,
+            DaoBuildingBlocks daoBuildingBlocks,
+            PrivacyGenerator privacyGenerator,
+            SecureRandom secureRandom,
+            CobaltOperationLogger operationLogger) {
         mProject = requireNonNull(project);
         mSystemData = requireNonNull(systemData);
         mDaoBuildingBlocks = requireNonNull(daoBuildingBlocks);

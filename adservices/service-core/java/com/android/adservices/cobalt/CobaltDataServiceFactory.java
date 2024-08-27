@@ -18,8 +18,6 @@ package com.android.adservices.cobalt;
 
 import android.content.Context;
 
-import androidx.annotation.NonNull;
-
 import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.cobalt.data.CobaltDatabase;
 import com.android.cobalt.data.DataService;
@@ -39,9 +37,9 @@ final class CobaltDataServiceFactory {
     private static final String DB_NAME = FileCompatUtils.getAdservicesFilename("cobalt_db");
 
     static DataService createDataService(
-            @NonNull Context context,
-            @NonNull ExecutorService executorService,
-            @NonNull CobaltOperationLogger operationLogger) {
+            Context context,
+            ExecutorService executorService,
+            CobaltOperationLogger operationLogger) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(executorService);
         Objects.requireNonNull(operationLogger);

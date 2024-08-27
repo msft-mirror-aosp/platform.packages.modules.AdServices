@@ -15,7 +15,6 @@
  */
 package com.android.adservices.cobalt;
 
-import androidx.annotation.NonNull;
 
 import com.google.cobalt.ReleaseStage;
 
@@ -25,8 +24,7 @@ import java.util.Objects;
 public final class CobaltReleaseStages {
 
     /** Parses a release stage string into a {@link ReleaseStage}. */
-    static ReleaseStage getReleaseStage(@NonNull String releaseStage)
-            throws CobaltInitializationException {
+    static ReleaseStage getReleaseStage(String releaseStage) throws CobaltInitializationException {
         Objects.requireNonNull(releaseStage);
         if (releaseStage.equals("DEBUG")) {
             return ReleaseStage.DEBUG;

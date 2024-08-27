@@ -19,7 +19,6 @@ package com.android.cobalt.impl;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-import android.annotation.NonNull;
 import android.util.Log;
 
 import com.android.cobalt.CobaltPeriodicJob;
@@ -94,20 +93,20 @@ public final class CobaltPeriodicJobImpl implements CobaltPeriodicJob {
     private final ObservationGeneratorFactory mObservationGeneratorFactory;
 
     public CobaltPeriodicJobImpl(
-            @NonNull Project project,
-            @NonNull ReleaseStage releaseStage,
-            @NonNull DataService dataService,
-            @NonNull ExecutorService executor,
-            @NonNull ScheduledExecutorService scheduledExecutor,
-            @NonNull SystemClock systemClock,
-            @NonNull SystemData systemData,
-            @NonNull PrivacyGenerator privacyGenerator,
-            @NonNull SecureRandom secureRandom,
-            @NonNull Uploader uploader,
-            @NonNull Encrypter encrypter,
-            @NonNull ByteString apiKey,
-            @NonNull Duration uploadDoneDelay,
-            @NonNull CobaltOperationLogger operationLogger,
+            Project project,
+            ReleaseStage releaseStage,
+            DataService dataService,
+            ExecutorService executor,
+            ScheduledExecutorService scheduledExecutor,
+            SystemClock systemClock,
+            SystemData systemData,
+            PrivacyGenerator privacyGenerator,
+            SecureRandom secureRandom,
+            Uploader uploader,
+            Encrypter encrypter,
+            ByteString apiKey,
+            Duration uploadDoneDelay,
+            CobaltOperationLogger operationLogger,
             boolean enabled) {
         mProject = Objects.requireNonNull(project);
         mReleaseStage = Objects.requireNonNull(releaseStage);
