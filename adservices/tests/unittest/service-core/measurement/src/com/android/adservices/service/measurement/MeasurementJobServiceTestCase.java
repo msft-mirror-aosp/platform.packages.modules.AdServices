@@ -15,9 +15,14 @@
  */
 package com.android.adservices.service.measurement;
 
+import static com.google.common.truth.Truth.assertWithMessage;
+
+import static org.mockito.Mockito.spy;
+
 import android.annotation.CallSuper;
 import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
+import android.app.job.JobService;
 
 import com.android.adservices.common.AdServicesJobServiceTestCase;
 import com.android.adservices.data.measurement.DatastoreManager;
@@ -26,19 +31,25 @@ import com.android.adservices.spe.AdServicesJobServiceLogger;
 import org.junit.Before;
 import org.mockito.Mock;
 
-public abstract class MeasurementJobServiceTestCase extends AdServicesJobServiceTestCase {
+public abstract class MeasurementJobServiceTestCase<T extends JobService>
+        extends AdServicesJobServiceTestCase {
 
     // TODO(b/354932043): move 2 fields below (and check on assertValidTestCaseFixtures())
     // to superclass
     @Mock protected JobScheduler mMockJobScheduler;
     @Mock protected JobParameters mMockJobParameters;
 
+    protected T mSpyService;
     protected AdServicesJobServiceLogger mSpyLogger;
 
     @Mock protected DatastoreManager mMockDatastoreManager;
 
     @Before
-    public void setMeasurementJobServiceTestCaseFixtures() {
+    public final void setMeasurementJobServiceTestCaseFixtures() {
+        mocker.mockGetFlags(mMockFlags);
+        T spied = getSpiedService();
+        assertWithMessage("getSpiedService()").that(spied).isNotNull();
+        mSpyService = spy(spied);
         mSpyLogger = jobMocker.getSpiedAdServicesJobServiceLogger(mContext, mMockFlags);
     }
 
@@ -54,8 +65,34 @@ public abstract class MeasurementJobServiceTestCase extends AdServicesJobService
                 "mMockJobScheduler",
                 "mMockJobParameters",
                 "mSpyLogger",
-                "mMockDatastoreManager");
+                "mMockDatastoreManager",
+                "mSpyService");
         assertTestClassHasNoSuchField(
                 "mMockJobParams", "should use (existing) mMockJobParameters instead");
+        assertTestClassHasNoSuchField("mServiceSpy", "should use (existing) mSpyService instead");
     }
+
+    protected abstract T getSpiedService();
+
+    protected final void enableKillSwitch() {
+        toggleKillSwitch(true);
+    }
+
+    protected final void disableKillSwitch() {
+        toggleKillSwitch(false);
+    }
+
+    protected final void toggleKillSwitch(boolean value) {
+        toggleFeature(!value);
+    }
+
+    protected final void enableFeature() {
+        toggleFeature(true);
+    }
+
+    protected final void disableFeature() {
+        toggleFeature(false);
+    }
+
+    protected abstract void toggleFeature(boolean value);
 }
