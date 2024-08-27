@@ -213,6 +213,8 @@ public abstract class DeviceSideTestCase extends SidelessTestCase {
         testInstance.assertTestClassHasNoSuchField(
                 "mFlagsMock", "should use existing mMockFlags instead");
         testInstance.assertTestClassHasNoSuchField(
+                "sMockFlags", "should use existing mMockFlags instead");
+        testInstance.assertTestClassHasNoSuchField(
                 "mFlags",
                 superclass.getSimpleName()
                         + " already define a mMockFlags, and often subclasses define a @Mock"
