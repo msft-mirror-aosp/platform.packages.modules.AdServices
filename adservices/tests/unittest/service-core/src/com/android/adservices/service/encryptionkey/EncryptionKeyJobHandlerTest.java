@@ -25,42 +25,31 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import android.content.Context;
 import android.net.Uri;
 
-import androidx.test.core.app.ApplicationProvider;
-
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.enrollment.EnrollmentData;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
-import com.android.dx.mockito.inline.extended.StaticMockitoSession;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
-import org.mockito.quality.Strictness;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 /** Unit test for {@link EncryptionKeyJobHandler} */
-@RunWith(MockitoJUnitRunner.class)
-public class EncryptionKeyJobHandlerTest {
-
-    protected static final Context sContext = ApplicationProvider.getApplicationContext();
+@SpyStatic(FlagsFactory.class)
+public final class EncryptionKeyJobHandlerTest extends AdServicesExtendedMockitoTestCase {
 
     @Mock private EnrollmentDao mEnrollmentDao;
     @Mock private EncryptionKeyDao mEncryptionKeyDao;
     @Mock private EncryptionKeyFetcher mEncryptionKeyFetcher;
-    @Mock Flags mMockFlags;
-    private StaticMockitoSession mMockitoSession;
     EncryptionKeyJobHandler mEncryptionKeyJobHandler;
     EncryptionKeyJobHandler mSpyEncryptionKeyJobHandler;
 
@@ -143,11 +132,6 @@ public class EncryptionKeyJobHandlerTest {
 
     @Before
     public void setUp() {
-        mMockitoSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
         doReturn(Flags.ENCRYPTION_KEY_NETWORK_CONNECT_TIMEOUT_MS)
                 .when(mMockFlags)
                 .getEncryptionKeyNetworkConnectTimeoutMs();
@@ -158,11 +142,6 @@ public class EncryptionKeyJobHandlerTest {
                 new EncryptionKeyJobHandler(
                         mEncryptionKeyDao, mEnrollmentDao, mEncryptionKeyFetcher);
         mSpyEncryptionKeyJobHandler = spy(mEncryptionKeyJobHandler);
-    }
-
-    @After
-    public void after() {
-        mMockitoSession.finishMocking();
     }
 
     @Test

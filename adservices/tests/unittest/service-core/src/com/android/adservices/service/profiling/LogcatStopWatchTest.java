@@ -21,40 +21,28 @@ import static org.mockito.ArgumentMatchers.eq;
 
 import android.util.Log;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Test;
-import org.mockito.MockitoSession;
 
-public class LogcatStopWatchTest {
+@SpyStatic(Log.class)
+public final class LogcatStopWatchTest extends AdServicesExtendedMockitoTestCase {
     @Test
     public void testSingleStopSingleWrite() {
-        MockitoSession staticMockitoSession =
-                ExtendedMockito.mockitoSession().spyStatic(Log.class).startMocking();
+        LogcatStopWatch watch = new LogcatStopWatch("tag", "name");
+        watch.stop();
 
-        try {
-            LogcatStopWatch watch = new LogcatStopWatch("tag", "name");
-            watch.stop();
-
-            ExtendedMockito.verify(() -> Log.d(eq("tag"), anyString()));
-        } finally {
-            staticMockitoSession.finishMocking();
-        }
+        ExtendedMockito.verify(() -> Log.d(eq("tag"), anyString()));
     }
 
     @Test
     public void testMultipleStopsSingleWrite() {
-        MockitoSession staticMockitoSession =
-                ExtendedMockito.mockitoSession().spyStatic(Log.class).startMocking();
+        LogcatStopWatch watch = new LogcatStopWatch("tag", "name");
+        watch.stop();
+        watch.stop();
 
-        try {
-            LogcatStopWatch watch = new LogcatStopWatch("tag", "name");
-            watch.stop();
-            watch.stop();
-
-            ExtendedMockito.verify(() -> Log.d(eq("tag"), anyString()));
-        } finally {
-            staticMockitoSession.finishMocking();
-        }
+        ExtendedMockito.verify(() -> Log.d(eq("tag"), anyString()));
     }
 }
