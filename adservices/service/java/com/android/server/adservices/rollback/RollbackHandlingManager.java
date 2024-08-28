@@ -20,6 +20,7 @@ import android.annotation.NonNull;
 import android.app.adservices.AdServicesManager;
 import android.util.ArrayMap;
 
+import com.android.adservices.shared.errorlogging.NoOpAdServicesErrorLoggerImpl;
 import com.android.adservices.shared.storage.AtomicFileDatastore;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.adservices.LogUtil;
@@ -84,7 +85,8 @@ public final class RollbackHandlingManager {
                                     mDatastoreDir,
                                     MSMT_FILE_PREFIX + STORAGE_XML_IDENTIFIER,
                                     mPackageVersion,
-                                    VERSION_KEY);
+                                    VERSION_KEY,
+                                    new NoOpAdServicesErrorLoggerImpl());
                 }
                 mAtomicFileDatastoreMap.put(deletionApiType, datastore);
                 datastore.initialize();
