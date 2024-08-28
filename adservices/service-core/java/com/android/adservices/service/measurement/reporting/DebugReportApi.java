@@ -63,12 +63,12 @@ public class DebugReportApi {
         SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR("source-flexible-event-report-value-error"),
         SOURCE_MAX_EVENT_STATES_LIMIT("source-max-event-states-limit"),
         SOURCE_SCOPES_CHANNEL_CAPACITY_LIMIT("source-scopes-channel-capacity-limit"),
+        SOURCE_CHANNEL_CAPACITY_LIMIT("source-channel-capacity-limit"),
         SOURCE_ATTRIBUTION_SCOPE_INFO_GAIN_LIMIT("source-attribution-scope-info-gain-limit"),
         SOURCE_DESTINATION_GLOBAL_RATE_LIMIT("source-destination-global-rate-limit"),
         SOURCE_DESTINATION_LIMIT_REPLACED("source-destination-limit-replaced"),
         SOURCE_REPORTING_ORIGIN_LIMIT("source-reporting-origin-limit"),
         SOURCE_REPORTING_ORIGIN_PER_SITE_LIMIT("source-reporting-origin-per-site-limit"),
-        // TODO(b/363156698): Not implemented yet
         SOURCE_TRIGGER_STATE_CARDINALITY_LIMIT("source-trigger-state-cardinality-limit"),
 
         TRIGGER_AGGREGATE_DEDUPLICATED("trigger-aggregate-deduplicated"),
