@@ -32,26 +32,20 @@ import android.content.pm.PackageManager;
 import android.content.pm.Signature;
 import android.content.pm.SigningInfo;
 
-import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.SmallTest;
-
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
 
 /** Unit tests for {@link com.android.adservices.service.common.AllowLists} */
-@SmallTest
-public class AllowListsTest {
-    private final Context mContext = ApplicationProvider.getApplicationContext();
+@SpyStatic(AllowLists.class)
+public final class AllowListsTest extends AdServicesExtendedMockitoTestCase {
     private static final String SOME_PACKAGE_NAME = "SomePackageName";
     private static final String EMPTY_LIST = "";
 
-    private static MockitoSession sStaticMockitoSession;
     private static byte[] sSignature1;
     private static byte[] sSignature2;
     private static byte[] sSignature3;
@@ -61,12 +55,10 @@ public class AllowListsTest {
 
     @Mock PackageManager mMockPackageManager;
     @Mock SigningInfo mMockSigningInfo;
-    @Mock Context mMockContext;
 
     @Before
     public void setup() throws PackageManager.NameNotFoundException {
         prepareSignatures();
-        MockitoAnnotations.initMocks(this);
 
         // Mock Signing Info for signatures.
         PackageInfo packageInfo = new PackageInfo();
@@ -75,37 +67,29 @@ public class AllowListsTest {
         doReturn(packageInfo)
                 .when(mMockPackageManager)
                 .getPackageInfo(SOME_PACKAGE_NAME, PackageManager.GET_SIGNING_CERTIFICATES);
-
-        sStaticMockitoSession =
-                ExtendedMockito.mockitoSession().spyStatic(AllowLists.class).startMocking();
-    }
-
-    @After
-    public void tearDown() {
-        sStaticMockitoSession.finishMocking();
     }
 
     @Test
     public void testAppCanUsePpapi_allowAll() {
-        assertThat(AllowLists.doesAllowListAllowAll(ALLOW_ALL)).isTrue();
-        assertThat(AllowLists.isPackageAllowListed(ALLOW_ALL, SOME_PACKAGE_NAME)).isTrue();
+        expect.that(AllowLists.doesAllowListAllowAll(ALLOW_ALL)).isTrue();
+        expect.that(AllowLists.isPackageAllowListed(ALLOW_ALL, SOME_PACKAGE_NAME)).isTrue();
     }
 
     @Test
     public void testAppCanUsePpapi_emptyAllowList() {
-        assertThat(AllowLists.doesAllowListAllowAll(EMPTY_LIST)).isFalse();
-        assertThat(AllowLists.isPackageAllowListed(EMPTY_LIST, SOME_PACKAGE_NAME)).isFalse();
-        assertThat(AllowLists.splitAllowList(EMPTY_LIST)).isEmpty();
+        expect.that(AllowLists.doesAllowListAllowAll(EMPTY_LIST)).isFalse();
+        expect.that(AllowLists.isPackageAllowListed(EMPTY_LIST, SOME_PACKAGE_NAME)).isFalse();
+        expect.that(AllowLists.splitAllowList(EMPTY_LIST)).isEmpty();
     }
 
     @Test
     public void testAppCanUsePpapi_notEmptyAllowList() {
         String allowList = SOME_PACKAGE_NAME + ",AnotherPackageName";
-        assertThat(AllowLists.doesAllowListAllowAll(allowList)).isFalse();
-        assertThat(AllowLists.isPackageAllowListed(allowList, "notAllowedPackageName")).isFalse();
-        assertThat(AllowLists.isPackageAllowListed(allowList, SOME_PACKAGE_NAME)).isTrue();
-        assertThat(AllowLists.isPackageAllowListed(allowList, "AnotherPackageName")).isTrue();
-        assertThat(AllowLists.splitAllowList(allowList))
+        expect.that(AllowLists.doesAllowListAllowAll(allowList)).isFalse();
+        expect.that(AllowLists.isPackageAllowListed(allowList, "notAllowedPackageName")).isFalse();
+        expect.that(AllowLists.isPackageAllowListed(allowList, SOME_PACKAGE_NAME)).isTrue();
+        expect.that(AllowLists.isPackageAllowListed(allowList, "AnotherPackageName")).isTrue();
+        expect.that(AllowLists.splitAllowList(allowList))
                 .containsExactly(SOME_PACKAGE_NAME, "AnotherPackageName");
     }
 
@@ -114,11 +98,11 @@ public class AllowListsTest {
         // Allow list contains leading/trailing spaces
         String listWithSpace =
                 SOME_PACKAGE_NAME + ", PackageName1,PackageName2 ,  PackageName3    ";
-        assertThat(AllowLists.isPackageAllowListed(listWithSpace, SOME_PACKAGE_NAME)).isTrue();
-        assertThat(AllowLists.isPackageAllowListed(listWithSpace, "PackageName1")).isTrue();
-        assertThat(AllowLists.isPackageAllowListed(listWithSpace, "PackageName2")).isTrue();
-        assertThat(AllowLists.isPackageAllowListed(listWithSpace, "PackageName3")).isTrue();
-        assertThat(AllowLists.splitAllowList(listWithSpace))
+        expect.that(AllowLists.isPackageAllowListed(listWithSpace, SOME_PACKAGE_NAME)).isTrue();
+        expect.that(AllowLists.isPackageAllowListed(listWithSpace, "PackageName1")).isTrue();
+        expect.that(AllowLists.isPackageAllowListed(listWithSpace, "PackageName2")).isTrue();
+        expect.that(AllowLists.isPackageAllowListed(listWithSpace, "PackageName3")).isTrue();
+        expect.that(AllowLists.splitAllowList(listWithSpace))
                 .containsExactly(SOME_PACKAGE_NAME, "PackageName1", "PackageName2", "PackageName3");
     }
 
@@ -127,12 +111,15 @@ public class AllowListsTest {
         // Allow list contains leading/trailing line separators
         String listWithLineSeparator =
                 SOME_PACKAGE_NAME + ",\nPackageName1,PackageName2\n,\n\nPackageName3\n\n\n";
-        assertThat(AllowLists.isPackageAllowListed(listWithLineSeparator, SOME_PACKAGE_NAME))
+        expect.that(AllowLists.isPackageAllowListed(listWithLineSeparator, SOME_PACKAGE_NAME))
                 .isTrue();
-        assertThat(AllowLists.isPackageAllowListed(listWithLineSeparator, "PackageName1")).isTrue();
-        assertThat(AllowLists.isPackageAllowListed(listWithLineSeparator, "PackageName2")).isTrue();
-        assertThat(AllowLists.isPackageAllowListed(listWithLineSeparator, "PackageName3")).isTrue();
-        assertThat(AllowLists.splitAllowList(listWithLineSeparator))
+        expect.that(AllowLists.isPackageAllowListed(listWithLineSeparator, "PackageName1"))
+                .isTrue();
+        expect.that(AllowLists.isPackageAllowListed(listWithLineSeparator, "PackageName2"))
+                .isTrue();
+        expect.that(AllowLists.isPackageAllowListed(listWithLineSeparator, "PackageName3"))
+                .isTrue();
+        expect.that(AllowLists.splitAllowList(listWithLineSeparator))
                 .containsExactly(SOME_PACKAGE_NAME, "PackageName1", "PackageName2", "PackageName3");
     }
 
@@ -160,17 +147,17 @@ public class AllowListsTest {
     public void testSignatureAllowList_nonEmptySignatureAllowList() {
         String signatureAllowList = sHexString1 + "," + sHexString2;
         mockSignature(sSignature1);
-        assertThat(
+        expect.that(
                         AllowLists.isSignatureAllowListed(
                                 mContext, signatureAllowList, SOME_PACKAGE_NAME))
                 .isTrue();
         mockSignature(sSignature2);
-        assertThat(
+        expect.that(
                         AllowLists.isSignatureAllowListed(
                                 mContext, signatureAllowList, SOME_PACKAGE_NAME))
                 .isTrue();
         mockSignature(sSignature3);
-        assertThat(
+        expect.that(
                         AllowLists.isSignatureAllowListed(
                                 mContext, signatureAllowList, SOME_PACKAGE_NAME))
                 .isFalse();
@@ -181,30 +168,30 @@ public class AllowListsTest {
         // Allow list contains leading/trailing spaces
         String listWithSpace = sHexString1 + " , " + sHexString2 + ",  " + sHexString3 + "   ";
         mockSignature(sSignature1);
-        assertThat(AllowLists.isSignatureAllowListed(mContext, listWithSpace, SOME_PACKAGE_NAME))
+        expect.that(AllowLists.isSignatureAllowListed(mContext, listWithSpace, SOME_PACKAGE_NAME))
                 .isTrue();
         mockSignature(sSignature2);
-        assertThat(AllowLists.isSignatureAllowListed(mContext, listWithSpace, SOME_PACKAGE_NAME))
+        expect.that(AllowLists.isSignatureAllowListed(mContext, listWithSpace, SOME_PACKAGE_NAME))
                 .isTrue();
         mockSignature(sSignature3);
-        assertThat(AllowLists.isSignatureAllowListed(mContext, listWithSpace, SOME_PACKAGE_NAME))
+        expect.that(AllowLists.isSignatureAllowListed(mContext, listWithSpace, SOME_PACKAGE_NAME))
                 .isTrue();
 
         // Allow list contains leading/trailing line separators
         String listWithLineSeparator =
                 sHexString1 + "\n,\n" + sHexString2 + ",\n\n" + sHexString3 + "\n\n\n";
         mockSignature(sSignature1);
-        assertThat(
+        expect.that(
                         AllowLists.isSignatureAllowListed(
                                 mContext, listWithLineSeparator, SOME_PACKAGE_NAME))
                 .isTrue();
         mockSignature(sSignature2);
-        assertThat(
+        expect.that(
                         AllowLists.isSignatureAllowListed(
                                 mContext, listWithLineSeparator, SOME_PACKAGE_NAME))
                 .isTrue();
         mockSignature(sSignature3);
-        assertThat(
+        expect.that(
                         AllowLists.isSignatureAllowListed(
                                 mContext, listWithLineSeparator, SOME_PACKAGE_NAME))
                 .isTrue();
@@ -226,17 +213,17 @@ public class AllowListsTest {
         String hashedHexString2 =
                 "318b8f30815253bcae6eef8ff3dbd52effd2cdc1f68ef6adbf4bd4dbe7646cb0";
         // If allow list has only signature1, the app is not allowed as signature1 is not latest
-        assertThat(
+        expect.that(
                         AllowLists.isSignatureAllowListed(
                                 mMockContext, hashedHexString1, SOME_PACKAGE_NAME))
                 .isFalse();
 
         // The app is allowed if signature2 is correctly contained in the allow-list.
-        assertThat(
+        expect.that(
                         AllowLists.isSignatureAllowListed(
                                 mMockContext, hashedHexString2, SOME_PACKAGE_NAME))
                 .isTrue();
-        assertThat(
+        expect.that(
                         AllowLists.isSignatureAllowListed(
                                 mMockContext,
                                 hashedHexString1 + "," + hashedHexString2,
@@ -246,8 +233,8 @@ public class AllowListsTest {
 
     @Test
     public void testToHexString() {
-        assertThat(toHexString(sSignature1)).isEqualTo(sHexString1);
-        assertThat(toHexString(sSignature2)).isEqualTo(sHexString2);
+        expect.that(toHexString(sSignature1)).isEqualTo(sHexString1);
+        expect.that(toHexString(sSignature2)).isEqualTo(sHexString2);
     }
 
     @Test

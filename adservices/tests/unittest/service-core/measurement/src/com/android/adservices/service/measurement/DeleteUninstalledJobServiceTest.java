@@ -54,7 +54,6 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.Spy;
 
 import java.util.concurrent.TimeUnit;
 
@@ -63,7 +62,8 @@ import java.util.concurrent.TimeUnit;
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(AdServicesJobServiceLogger.class)
 @MockStatic(ServiceCompatUtils.class)
-public final class DeleteUninstalledJobServiceTest extends MeasurementJobServiceTestCase {
+public final class DeleteUninstalledJobServiceTest
+        extends MeasurementJobServiceTestCase<DeleteUninstalledJobService> {
     private static final int MEASUREMENT_DELETE_UNINSTALLED_JOB_ID =
             MEASUREMENT_DELETE_UNINSTALLED_JOB.getJobId();
     private static final long WAIT_IN_MILLIS = 1_000L;
@@ -71,7 +71,10 @@ public final class DeleteUninstalledJobServiceTest extends MeasurementJobService
 
     @Mock private MeasurementImpl mMockMeasurementImpl;
 
-    @Spy private DeleteUninstalledJobService mSpyService;
+    @Override
+    protected DeleteUninstalledJobService getSpiedService() {
+        return new DeleteUninstalledJobService();
+    }
 
     @Test
     public void onStartJob_killSwitchOn_withLogging() throws Exception {
@@ -364,19 +367,9 @@ public final class DeleteUninstalledJobServiceTest extends MeasurementJobService
         execute.run();
     }
 
-    private void enableKillSwitch() {
-        toggleKillSwitch(true);
-    }
-
-    private void disableKillSwitch() {
-        toggleKillSwitch(false);
-    }
-
-    private void toggleKillSwitch(boolean value) {
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        ExtendedMockito.doReturn(value)
-                .when(mMockFlags)
-                .getMeasurementJobDeleteUninstalledKillSwitch();
+    @Override
+    protected void toggleFeature(boolean value) {
+        when(mMockFlags.getMeasurementJobDeleteUninstalledKillSwitch()).thenReturn(!value);
         when(mMockFlags.getMeasurementDeleteUninstalledJobPersisted()).thenReturn(true);
         when(mMockFlags.getMeasurementDeleteUninstalledJobPeriodMs()).thenReturn(JOB_PERIOD_MS);
     }

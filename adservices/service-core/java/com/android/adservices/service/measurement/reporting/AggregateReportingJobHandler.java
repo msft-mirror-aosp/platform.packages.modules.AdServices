@@ -424,13 +424,12 @@ public class AggregateReportingJobHandler {
             throws IOException {
         AggregateReportSender aggregateReportSender =
                 new AggregateReportSender(mIsDebugInstance, mContext);
-        if (hasTriggerDebug != null) {
-            aggregateReportSender.sendReportWithExtraHeaders(
-                    adTechDomain,
-                    aggregateReportBody,
-                    Map.of("Trigger-Debugging-Available", hasTriggerDebug.toString()));
-        }
-        return aggregateReportSender.sendReport(adTechDomain, aggregateReportBody);
+        Map<String, String> headers =
+                hasTriggerDebug == null
+                        ? null
+                        : Map.of("Trigger-Debugging-Available", hasTriggerDebug.toString());
+        return aggregateReportSender.sendReportWithHeaders(
+                adTechDomain, aggregateReportBody, headers);
     }
 
     @Nullable
