@@ -37,7 +37,6 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -83,15 +82,14 @@ import java.util.Optional;
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(AdServicesJobServiceLogger.class)
 @MockStatic(ServiceCompatUtils.class)
-public final class ReportingJobServiceTest extends MeasurementJobServiceTestCase {
+public final class ReportingJobServiceTest
+        extends MeasurementJobServiceTestCase<ReportingJobService> {
     private static final int MEASUREMENT_REPORTING_JOB_ID = MEASUREMENT_REPORTING_JOB.getJobId();
     private static final long WAIT_IN_MILLIS = 200L;
 
     @Mock private AdServicesErrorLogger mErrorLogger;
     @Mock private IMeasurementDao mMeasurementDao;
     @Mock private ITransaction mTransaction;
-
-    private ReportingJobService mSpyService;
 
     private final class FakeDatastoreManager extends DatastoreManager {
         private FakeDatastoreManager() {
@@ -114,9 +112,13 @@ public final class ReportingJobServiceTest extends MeasurementJobServiceTestCase
         }
     }
 
+    @Override
+    protected ReportingJobService getSpiedService() {
+        return new ReportingJobService();
+    }
+
     @Before
     public void setUp() {
-        mSpyService = spy(ReportingJobService.class);
         doReturn(mContext.getPackageName()).when(mMockContext).getPackageName();
         doReturn(mContext.getPackageManager()).when(mMockContext).getPackageManager();
         doReturn(mMockJobScheduler).when(mMockContext).getSystemService(JobScheduler.class);
@@ -581,16 +583,8 @@ public final class ReportingJobServiceTest extends MeasurementJobServiceTestCase
                 .thenReturn(nextExecutionTimeKV);
     }
 
-    private void enableFeature() {
-        toggleFeatureFlag(true);
-    }
-
-    private void disableFeature() {
-        toggleFeatureFlag(false);
-    }
-
-    private void toggleFeatureFlag(boolean value) {
+    @Override
+    protected void toggleFeature(boolean value) {
         when(mMockFlags.getMeasurementReportingJobServiceEnabled()).thenReturn(value);
-        mocker.mockGetFlags(mMockFlags);
     }
 }
