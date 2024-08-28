@@ -6711,6 +6711,27 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public int getMeasurementAdrBudgetOriginXPublisherXWindow() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ADR_BUDGET_PER_ORIGIN_PUBLISHER_WINDOW,
+                MEASUREMENT_ADR_BUDGET_PER_ORIGIN_PUBLISHER_WINDOW);
+    }
+
+    @Override
+    public int getMeasurementAdrBudgetPublisherXWindow() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ADR_BUDGET_PER_PUBLISHER_WINDOW,
+                MEASUREMENT_ADR_BUDGET_PER_PUBLISHER_WINDOW);
+    }
+
+    @Override
+    public long getMeasurementAdrBudgetWindowLengthMillis() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ADR_BUDGET_WINDOW_LENGTH_MS,
+                MEASUREMENT_ADR_BUDGET_WINDOW_LENGTH_MILLIS);
+    }
+
+    @Override
     public long getMeasurementReportingJobServiceBatchWindowMillis() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS,

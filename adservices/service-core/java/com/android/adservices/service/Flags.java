@@ -4976,6 +4976,30 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_ENABLE_AGGREGATE_DEBUG_REPORTING;
     }
 
+    @ConfigFlag int MEASUREMENT_ADR_BUDGET_PER_ORIGIN_PUBLISHER_WINDOW = 65536; // = 2^16
+
+    /** Returns aggregatable debug reporting budget allocated per origin per publisher per window */
+    default int getMeasurementAdrBudgetOriginXPublisherXWindow() {
+        return MEASUREMENT_ADR_BUDGET_PER_ORIGIN_PUBLISHER_WINDOW;
+    }
+
+    @ConfigFlag int MEASUREMENT_ADR_BUDGET_PER_PUBLISHER_WINDOW = 1048576; // = 2^20
+
+    /** Returns aggregatable debug reporting budget allocated per publisher per window */
+    default int getMeasurementAdrBudgetPublisherXWindow() {
+        return MEASUREMENT_ADR_BUDGET_PER_PUBLISHER_WINDOW;
+    }
+
+    @ConfigFlag long MEASUREMENT_ADR_BUDGET_WINDOW_LENGTH_MILLIS = TimeUnit.DAYS.toMillis(1);
+
+    /**
+     * Returns aggregatable debug reporting budget consumption tracking window length in
+     * milliseconds.
+     */
+    default long getMeasurementAdrBudgetWindowLengthMillis() {
+        return MEASUREMENT_ADR_BUDGET_WINDOW_LENGTH_MILLIS;
+    }
+
     /**
      * Default whether to limit logging for enrollment metrics to avoid performance issues. This
      * includes not logging data that requires database queries and downloading MDD files.

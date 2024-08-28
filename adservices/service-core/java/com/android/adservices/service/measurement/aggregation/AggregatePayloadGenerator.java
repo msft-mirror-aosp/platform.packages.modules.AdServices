@@ -60,7 +60,7 @@ public class AggregatePayloadGenerator {
                 source.getAggregatableAttributionSource(trigger, mFlags);
         Optional<AggregatableAttributionTrigger> aggregateAttributionTrigger =
                 trigger.getAggregatableAttributionTrigger(mFlags);
-        if (!aggregateAttributionSource.isPresent() || !aggregateAttributionTrigger.isPresent()) {
+        if (aggregateAttributionSource.isEmpty() || aggregateAttributionTrigger.isEmpty()) {
             return Optional.empty();
         }
 

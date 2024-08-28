@@ -26,6 +26,7 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
+import com.android.adservices.service.measurement.aggregation.AggregateDebugReporting;
 import com.android.adservices.service.measurement.noising.Combinatorics;
 import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
@@ -123,6 +124,7 @@ public class Source {
     @Nullable private DestinationLimitAlgorithm mDestinationLimitAlgorithm;
     @Nullable private Double mEventLevelEpsilon;
     @Nullable private String mAggregateDebugReportingString;
+    @Nullable private AggregateDebugReporting mAggregateDebugReporting;
     private int mAggregateDebugReportContributions;
 
     /**
@@ -1433,6 +1435,21 @@ public class Source {
     @Nullable
     public String getAggregateDebugReportingString() {
         return mAggregateDebugReportingString;
+    }
+
+    /** Returns the aggregate debug reporting object as a string */
+    @Nullable
+    public AggregateDebugReporting getAggregateDebugReportingObject() throws JSONException {
+        if (mAggregateDebugReportingString == null) {
+            return null;
+        }
+        if (mAggregateDebugReporting == null) {
+            mAggregateDebugReporting =
+                    new AggregateDebugReporting.Builder(
+                                    new JSONObject(mAggregateDebugReportingString))
+                            .build();
+        }
+        return mAggregateDebugReporting;
     }
 
     /** Returns the aggregate debug reporting contributions */

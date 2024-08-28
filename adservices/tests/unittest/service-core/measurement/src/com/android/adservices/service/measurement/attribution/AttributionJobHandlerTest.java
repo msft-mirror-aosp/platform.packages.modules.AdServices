@@ -8200,7 +8200,7 @@ public class AttributionJobHandlerTest {
             float flagValue,
             Consumer<Trigger> assertionFunc)
             throws DatastoreException, JSONException {
-        int excessiveAggregateValue = PrivacyParams.MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE + 1;
+        int excessiveAggregateValue = Flags.MEASUREMENT_MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE + 1;
         String aggregateValuesStr =
                 String.format(
                         Locale.ENGLISH,

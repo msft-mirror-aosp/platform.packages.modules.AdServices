@@ -321,11 +321,18 @@ public interface IMeasurementDao {
     void updateSourceAggregateReportDedupKeys(@NonNull Source source) throws DatastoreException;
 
     /**
-     * Updates the value of aggregate contributions for the corresponding {@link Source}
+     * Updates the value of aggregate contributions for the corresponding {@link Source}.
      *
      * @param source the {@link Source} object.
      */
     void updateSourceAggregateContributions(@NonNull Source source) throws DatastoreException;
+
+    /**
+     * Updates the value of aggregate debug contributions for the corresponding {@link Source}.
+     *
+     * @param source the {@link Source} object.
+     */
+    void updateSourceAggregateDebugContributions(@NonNull Source source) throws DatastoreException;
 
     /**
      * Returns list of all the reports associated with the {@link Source}.

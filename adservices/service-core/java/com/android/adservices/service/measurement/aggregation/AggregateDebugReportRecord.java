@@ -116,7 +116,7 @@ public class AggregateDebugReportRecord {
         private Uri mRegistrationOrigin;
         @Nullable private String mSourceId;
         @Nullable private String mTriggerId;
-        private int mContributions;
+        private final int mContributions;
 
         public Builder(
                 long reportGenerationTime,
