@@ -114,9 +114,7 @@ import static com.android.adservices.service.Flags.DEFAULT_PAS_SCRIPT_EXECUTION_
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_PAS_UX_ENABLED;
-import static com.android.adservices.service.Flags.DEFAULT_RVC_POST_OTA_NOTIFICATION_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_RVC_POST_OTA_NOTIF_AGE_CHECK;
-import static com.android.adservices.service.Flags.DEFAULT_RVC_UX_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_R_NOTIFICATION_DEFAULT_CONSENT_FIX_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_SPE_ON_ASYNC_REGISTRATION_FALLBACK_JOB_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_SPE_ON_BACKGROUND_FETCH_JOB_ENABLED;
@@ -1047,9 +1045,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNAL
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_RECORD_MANUAL_INTERACTION_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_RVC_POST_OTA_NOTIFICATION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_RVC_POST_OTA_NOTIF_AGE_CHECK;
-import static com.android.adservices.service.FlagsConstants.KEY_RVC_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_R_NOTIFICATION_DEFAULT_CONSENT_FIX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_SDK_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.FlagsConstants.KEY_SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED;
@@ -3899,26 +3895,6 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
         assertThat(mPhFlags.getPasUxEnabled()).isEqualTo(true);
         assertThat(mPhFlags.getEeaPasUxEnabled()).isEqualTo(true);
-    }
-
-    @Test
-    public void testRvcUxEnabled_adServicesSystemApi() {
-        mFlagsTestHelper.testGuardedFeatureFlag(
-                KEY_RVC_UX_ENABLED,
-                DEFAULT_RVC_UX_ENABLED,
-                FeatureFlagType.FEATURE_FLAG,
-                value -> mockGetAdServicesFlag(KEY_ENABLE_AD_SERVICES_SYSTEM_API, value),
-                Flags::getEnableRvcUx);
-    }
-
-    @Test
-    public void testRvcNotificationEnabled() {
-        mFlagsTestHelper.testGuardedFeatureFlag(
-                KEY_RVC_POST_OTA_NOTIFICATION_ENABLED,
-                DEFAULT_RVC_POST_OTA_NOTIFICATION_ENABLED,
-                FeatureFlagType.FEATURE_FLAG,
-                value -> mockGetAdServicesFlag(KEY_ENABLE_AD_SERVICES_SYSTEM_API, value),
-                Flags::getEnableRvcPostOtaNotification);
     }
 
     @Test
