@@ -144,6 +144,9 @@ public class TriggerTest {
                                 TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN)
                         .setAttributionScopesString(
                                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_SCOPES)
+                        .setAggregatableFilteringIdMaxBytes(
+                                TriggerFixture.ValidTriggerParams
+                                        .AGGREGATABLE_FILTERING_ID_MAX_BYTES)
                         .build(),
                 TriggerFixture.getValidTriggerBuilder()
                         .setEnrollmentId("enrollment-id")
@@ -175,6 +178,9 @@ public class TriggerTest {
                                 TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN)
                         .setAttributionScopesString(
                                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_SCOPES)
+                        .setAggregatableFilteringIdMaxBytes(
+                                TriggerFixture.ValidTriggerParams
+                                        .AGGREGATABLE_FILTERING_ID_MAX_BYTES)
                         .build());
     }
 
@@ -322,6 +328,13 @@ public class TriggerTest {
         assertNotEquals(
                 TriggerFixture.getValidTriggerBuilder().setAttributionScopesString("1").build(),
                 TriggerFixture.getValidTriggerBuilder().setAttributionScopesString("2").build());
+        assertNotEquals(
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAggregatableFilteringIdMaxBytes(1)
+                        .build(),
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAggregatableFilteringIdMaxBytes(2)
+                        .build());
     }
 
     @Test
