@@ -18,10 +18,10 @@ package com.android.server.adservices.consent;
 import android.annotation.NonNull;
 import android.app.adservices.consent.ConsentParcel;
 
-import com.android.adservices.shared.errorlogging.NoOpAdServicesErrorLoggerImpl;
 import com.android.adservices.shared.storage.AtomicFileDatastore;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.adservices.LogUtil;
+import com.android.server.adservices.errorlogging.AdServicesErrorLoggerImpl;
 import com.android.server.adservices.feature.PrivacySandboxEnrollmentChannelCollection;
 import com.android.server.adservices.feature.PrivacySandboxFeatureType;
 import com.android.server.adservices.feature.PrivacySandboxUxCollection;
@@ -119,7 +119,7 @@ public final class ConsentManager {
                         STORAGE_XML_IDENTIFIER,
                         STORAGE_VERSION,
                         VERSION_KEY,
-                        new NoOpAdServicesErrorLoggerImpl());
+                        AdServicesErrorLoggerImpl.getInstance());
         datastore.initialize();
         // TODO(b/259607624): implement a method in the datastore which would support
         // this exact scenario - if the value is null, return default value provided
