@@ -20,7 +20,8 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
+
+import com.android.adservices.common.AdServicesUnitTestCase;
 
 import org.junit.Test;
 
@@ -28,7 +29,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class StochasticRoundingUtilTest {
+public final class StochasticRoundingUtilTest extends AdServicesUnitTestCase {
     @Test
     public void testRoundStochasticallyMatchesExpectedArguments() {
         RoundingTestCase[] roundingTestCases =
@@ -103,26 +104,22 @@ public class StochasticRoundingUtilTest {
             total += StochasticRoundingUtil.roundStochastically(input, 8);
         }
 
-        assertTrue(total > .9 * input * numIters);
-        assertTrue(total < 1.1 * input * numIters);
+        assertThat(total > .9 * input * numIters).isTrue();
+        assertThat(total < 1.1 * input * numIters).isTrue();
     }
 
     @Test
     public void testRoundStochasticallyNegativeNumBitsThrows() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> {
-                    StochasticRoundingUtil.roundStochastically(0, -1);
-                });
+                () -> StochasticRoundingUtil.roundStochastically(0, -1));
     }
 
     @Test
     public void testRoundStochasticallyGreaterThanMaxNumBitsThrows() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> {
-                    StochasticRoundingUtil.roundStochastically(0, 66);
-                });
+                () -> StochasticRoundingUtil.roundStochastically(0, 66));
     }
 
     private static final class RoundingTestCase {
