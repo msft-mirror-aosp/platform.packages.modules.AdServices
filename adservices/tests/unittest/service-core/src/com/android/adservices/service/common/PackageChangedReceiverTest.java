@@ -359,7 +359,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
      * cleared when the app is removed.
      */
     @Test
-    public void testReceivePackageFullyRemoved_consent_noPackageUid() throws InterruptedException {
+    public void testReceivePackageFullyRemoved_consent_noPackageUid() throws Exception {
         Assume.assumeFalse(SdkLevel.isAtLeastT());
         Assume.assumeTrue(SdkLevel.isAtLeastS());
         Intent intent =
@@ -377,7 +377,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
      */
     @Test
     public void testReceivePackageFullyRemoved_consent_packageUidIsExplicitlyDefault()
-            throws InterruptedException {
+            throws Exception {
         Assume.assumeFalse(SdkLevel.isAtLeastT());
         Assume.assumeTrue(SdkLevel.isAtLeastS());
         Intent intent =
@@ -390,8 +390,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    public void testReceivePackageFullyRemoved_consent_noPackageUid_backCompat()
-            throws InterruptedException {
+    public void testReceivePackageFullyRemoved_consent_noPackageUid_backCompat() throws Exception {
         Assume.assumeFalse(SdkLevel.isAtLeastT());
         Assume.assumeTrue(SdkLevel.isAtLeastS());
         Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_FULLY_REMOVED);
@@ -403,7 +402,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testReceivePackageFullyRemoved_consent_packageUidIsExplicitlyDefault_backCompat()
-            throws InterruptedException {
+            throws Exception {
         Assume.assumeFalse(SdkLevel.isAtLeastT());
         Assume.assumeTrue(SdkLevel.isAtLeastS());
         Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_FULLY_REMOVED);
@@ -713,7 +712,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
     }
 
     private void validateConsentWhenPackageUidAbsent(Intent intent, boolean isPackageStillInstalled)
-            throws InterruptedException {
+            throws Exception {
         // Mock static method AppConsentDao.getInstance() executed on a separate thread
         doReturn(mConsentManager).when(ConsentManager::getInstance);
 
