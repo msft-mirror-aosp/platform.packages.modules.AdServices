@@ -495,6 +495,19 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getCobaltFallBackToDefaultBaseRegistry() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_COBALT__FALL_BACK_TO_DEFAULT_BASE_REGISTRY,
+                COBALT__FALL_BACK_TO_DEFAULT_BASE_REGISTRY);
+    }
+
+    @Override
+    public String getCobaltIgnoredReportIdList() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_COBALT__IGNORED_REPORT_ID_LIST, COBALT__IGNORED_REPORT_ID_LIST);
+    }
+
+    @Override
     @SuppressWarnings("AvoidSystemPropertiesUsage")
     // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public long getMaintenanceJobPeriodMs() {

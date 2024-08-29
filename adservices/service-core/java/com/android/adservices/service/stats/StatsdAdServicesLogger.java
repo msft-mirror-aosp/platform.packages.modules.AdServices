@@ -436,7 +436,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
 
     /** log method for measurement attribution. */
     public void logMeasurementAttributionStats(
-            MeasurementAttributionStats measurementAttributionStats) {
+            MeasurementAttributionStats measurementAttributionStats,
+            @Nullable String enrollmentId) {
         AdServicesStatsLog.write(
                 measurementAttributionStats.getCode(),
                 measurementAttributionStats.getSourceType(),

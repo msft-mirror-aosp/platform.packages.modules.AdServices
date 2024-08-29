@@ -18,7 +18,6 @@ package com.android.adservices.ui.settings.delegates;
 import android.os.Build;
 import android.text.method.LinkMovementMethod;
 import android.view.View;
-import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -33,13 +32,11 @@ import com.android.adservices.ui.settings.activities.MeasurementActivity;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsMeasurementFragment;
 import com.android.adservices.ui.settings.viewmodels.MeasurementViewModel;
 import com.android.adservices.ui.settings.viewmodels.MeasurementViewModel.MeasurementViewModelUiEvent;
-import com.android.modules.utils.build.SdkLevel;
 import com.android.settingslib.widget.MainSwitchBar;
 
 /**
  * Delegate class that helps AdServices Settings fragments to respond to all view model/user events.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class MeasurementActionDelegate {
     private final MeasurementActivity mMeasurementActivity;
@@ -98,11 +95,7 @@ public class MeasurementActionDelegate {
      */
     public void initMeasurementFragment(AdServicesSettingsMeasurementFragment fragment) {
         mMeasurementActivity.setTitle(R.string.settingsUI_measurement_view_title);
-        if (SdkLevel.isAtLeastR() && !SdkLevel.isAtLeastS()) {
-            configureMeasurementConsentSwitchOnR(fragment);
-        } else {
-            configureMeasurementConsentSwitch(fragment);
-        }
+        configureMeasurementConsentSwitch(fragment);
         configureResetMeasurementButton(fragment);
         configurePrivacyPolicyLink();
     }
@@ -124,18 +117,6 @@ public class MeasurementActionDelegate {
         measurementSwitchBar.setOnClickListener(
                 switchBar ->
                         mMeasurementViewModel.consentSwitchClickHandler((MainSwitchBar) switchBar));
-    }
-
-    private void configureMeasurementConsentSwitchOnR(
-            AdServicesSettingsMeasurementFragment fragment) {
-        Switch measurementSwitchBar =
-                mMeasurementActivity.findViewById(R.id.measurement_switch_bar);
-        mMeasurementViewModel
-                .getMeasurementConsent()
-                .observe(fragment, measurementSwitchBar::setChecked);
-        measurementSwitchBar.setOnClickListener(
-                switchBar ->
-                        mMeasurementViewModel.consentSwitchClickHandlerOnR((Switch) switchBar));
     }
 
     private void configurePrivacyPolicyLink() {

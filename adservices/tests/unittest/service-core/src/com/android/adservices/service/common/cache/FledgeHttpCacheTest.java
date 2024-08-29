@@ -21,8 +21,9 @@ import static com.android.adservices.service.common.cache.FledgeHttpCache.PROPER
 import static com.android.adservices.service.common.cache.FledgeHttpCache.PROPERTY_NO_CACHE;
 import static com.android.adservices.service.common.cache.FledgeHttpCache.PROPERTY_NO_STORE;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
@@ -30,27 +31,20 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import android.content.Context;
-
 import androidx.room.Room;
-import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.net.HttpHeaders;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -61,15 +55,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
-public class FledgeHttpCacheTest {
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
+public final class FledgeHttpCacheTest extends AdServicesMockitoTestCase {
     private static final long MAX_AGE_SECONDS = 2 * 24 * 60 * 60;
     private static final long MAX_ENTRIES = 20;
     private URL mUrl;
     private String mBody;
-    private long mMaxAgeSeconds;
     private DBCacheEntry mCacheEntry;
-    private Flags mFlags;
     private FledgeHttpCache mCache;
     private ExecutorService mExecutorService;
     private Map<String, List<String>> mCachingPropertiesMap;
@@ -80,31 +71,26 @@ public class FledgeHttpCacheTest {
     @Captor private ArgumentCaptor<DBCacheEntry> mCacheEntryArgumentCaptor;
     @Captor private ArgumentCaptor<Long> mCacheMaxAgeCaptor;
     @Captor private ArgumentCaptor<Long> mCacheMaxEntriesCaptor;
-    @Rule public MockitoRule rule = MockitoJUnit.rule();
 
     @Before
     public void setup() throws MalformedURLException {
         mUrl = new URL("https://google.com");
         mBody = "This is the Google home page";
-        mMaxAgeSeconds = 1000;
         mCachingPropertiesMap = new HashMap<>();
         mResponseHeadersMap =
-                ImmutableMap.<String, List<String>>builder()
-                        .build()
-                        .of(
-                                "header_1",
-                                ImmutableList.of("h1_value1", "h1_value2"),
-                                "header_2",
-                                ImmutableList.of("h2_value1", "h2_value2"));
+                ImmutableMap.of(
+                        "header_1",
+                        ImmutableList.of("h1_value1", "h1_value2"),
+                        "header_2",
+                        ImmutableList.of("h2_value1", "h2_value2"));
         mCacheEntry =
                 DBCacheEntry.builder()
                         .setUrl(mUrl.toString())
                         .setResponseBody(mBody)
                         .setResponseHeaders(mResponseHeadersMap)
                         .setCreationTimestamp(Instant.now())
-                        .setMaxAgeSeconds(mMaxAgeSeconds)
+                        .setMaxAgeSeconds(1000)
                         .build();
-        mFlags = FlagsFactory.getFlags();
         mExecutorService = AdServicesExecutors.getBackgroundExecutor();
 
         mCache =
@@ -115,25 +101,22 @@ public class FledgeHttpCacheTest {
 
     @Test
     public void test_CacheGetEmpty_ReturnsNull() {
-        assertNull(mCache.get(mUrl));
+        assertThat(mCache.get(mUrl)).isNull();
     }
 
     @Test
     public void test_CachePutEntry_Succeeds() {
         mCache.put(mUrl, mBody, mCachingPropertiesMap, mResponseHeadersMap);
         verify(mCacheEntryDaoMock).persistCacheEntry(mCacheEntryArgumentCaptor.capture());
-        assertEquals(
-                "Cached key should have been same",
-                mUrl.toString(),
-                mCacheEntryArgumentCaptor.getValue().getUrl());
-        assertEquals(
-                "Cached body should have been same",
-                mBody,
-                mCacheEntryArgumentCaptor.getValue().getResponseBody());
-        assertEquals(
-                "Cached response headers should have been the same",
-                mResponseHeadersMap,
-                mCacheEntryArgumentCaptor.getValue().getResponseHeaders());
+        expect.withMessage("Cached key should have been same")
+                .that(mCacheEntryArgumentCaptor.getValue().getUrl())
+                .isEqualTo(mUrl.toString());
+        expect.withMessage("Cached body should have been same")
+                .that(mCacheEntryArgumentCaptor.getValue().getResponseBody())
+                .isEqualTo(mBody);
+        expect.withMessage("Cached response headers should have been the same")
+                .that(mCacheEntryArgumentCaptor.getValue().getResponseHeaders())
+                .isEqualTo(mResponseHeadersMap);
         verify(mObserver).update(HttpCache.CacheEventType.PUT);
     }
 
@@ -163,17 +146,18 @@ public class FledgeHttpCacheTest {
                 .when(mCacheEntryDaoMock)
                 .getCacheEntry(eq(mUrl.toString()), any(Instant.class));
         DBCacheEntry cacheFetchedResponse = mCache.get(mUrl);
-        assertEquals(
-                "Response body should have been the same",
-                mBody,
-                cacheFetchedResponse.getResponseBody());
+        assertWithMessage("Response body should have been the same")
+                .that(cacheFetchedResponse.getResponseBody())
+                .isEqualTo(mBody);
         verify(mObserver).update(HttpCache.CacheEventType.GET);
     }
 
     @Test
     public void test_CacheGetTotalEntries_Succeeds() {
         doReturn(123L).when(mCacheEntryDaoMock).getDBEntriesCount();
-        assertEquals("No of entries in cache mismatch", 123L, mCache.getCachedEntriesCount());
+        assertWithMessage("No of entries in cache mismatch")
+                .that(mCache.getCachedEntriesCount())
+                .isEqualTo(123L);
     }
 
     @Test
@@ -182,11 +166,15 @@ public class FledgeHttpCacheTest {
         verify(mCacheEntryDaoMock)
                 .deleteStaleRows(mCacheMaxAgeCaptor.capture(), any(Instant.class));
         long maxAgeValue = mCacheMaxAgeCaptor.getValue();
-        assertEquals("Default max age for cache not consistent", MAX_AGE_SECONDS, maxAgeValue);
+        assertWithMessage("Default max age for cache not consistent")
+                .that(maxAgeValue)
+                .isEqualTo(MAX_AGE_SECONDS);
 
         verify(mCacheEntryDaoMock).prune(mCacheMaxEntriesCaptor.capture());
         long maxEntriesValue = mCacheMaxEntriesCaptor.getValue();
-        assertEquals("Default max entries for cache not consistent", MAX_ENTRIES, maxEntriesValue);
+        assertWithMessage("Default max entries for cache not consistent")
+                .that(maxEntriesValue)
+                .isEqualTo(MAX_ENTRIES);
         verify(mObserver).update(HttpCache.CacheEventType.CLEANUP);
     }
 
@@ -203,7 +191,7 @@ public class FledgeHttpCacheTest {
         ImmutableList<String> cacheProperties =
                 ImmutableList.of(
                         PROPERTY_MAX_AGE + PROPERTY_MAX_AGE_SEPARATOR + expectedAgeSeconds);
-        assertEquals(expectedAgeSeconds, mCache.getRequestMaxAgeSeconds(cacheProperties));
+        assertThat(mCache.getRequestMaxAgeSeconds(cacheProperties)).isEqualTo(expectedAgeSeconds);
     }
 
     @Test
@@ -215,10 +203,9 @@ public class FledgeHttpCacheTest {
                 ImmutableMap.of(HttpHeaders.CACHE_CONTROL, maxCacheAgeProperties);
         mCache.put(mUrl, mBody, cachePropertiesMap, mResponseHeadersMap);
         verify(mCacheEntryDaoMock).persistCacheEntry(mCacheEntryArgumentCaptor.capture());
-        assertEquals(
-                "The max age should not have been more than default max age",
-                MAX_AGE_SECONDS,
-                mCacheEntryArgumentCaptor.getValue().getMaxAgeSeconds());
+        assertWithMessage("The max age should not have been more than default max age")
+                .that(mCacheEntryArgumentCaptor.getValue().getMaxAgeSeconds())
+                .isEqualTo(MAX_AGE_SECONDS);
     }
 
     @Test
@@ -230,10 +217,9 @@ public class FledgeHttpCacheTest {
                 ImmutableMap.of(HttpHeaders.CACHE_CONTROL, maxCacheAgeProperties);
         mCache.put(mUrl, mBody, cachePropertiesMap, mResponseHeadersMap);
         verify(mCacheEntryDaoMock).persistCacheEntry(mCacheEntryArgumentCaptor.capture());
-        assertEquals(
-                "The max age should have been set to value in the request headers",
-                reallySmallMaxAge,
-                mCacheEntryArgumentCaptor.getValue().getMaxAgeSeconds());
+        assertWithMessage("The max age should have been set to value in the request headers")
+                .that(mCacheEntryArgumentCaptor.getValue().getMaxAgeSeconds())
+                .isEqualTo(reallySmallMaxAge);
     }
 
     @Test
@@ -243,43 +229,42 @@ public class FledgeHttpCacheTest {
                 ImmutableMap.of(HttpHeaders.CACHE_CONTROL, maxCacheAgeProperties);
         mCache.put(mUrl, mBody, cachePropertiesMap, mResponseHeadersMap);
         verify(mCacheEntryDaoMock).persistCacheEntry(mCacheEntryArgumentCaptor.capture());
-        assertEquals(
-                "Cached entry max age does not match default",
-                MAX_AGE_SECONDS,
-                mCacheEntryArgumentCaptor.getValue().getMaxAgeSeconds());
+        assertWithMessage("Cached entry max age does not match default")
+                .that(mCacheEntryArgumentCaptor.getValue().getMaxAgeSeconds())
+                .isEqualTo(MAX_AGE_SECONDS);
     }
 
     @Test
     public void test_CacheE2ESetDefaultMaxAge_MissingMaxAge() {
         mCache.put(mUrl, mBody, Collections.emptyMap(), mResponseHeadersMap);
         verify(mCacheEntryDaoMock).persistCacheEntry(mCacheEntryArgumentCaptor.capture());
-        assertEquals(
-                "Cache entry max age does not match default",
-                MAX_AGE_SECONDS,
-                mCacheEntryArgumentCaptor.getValue().getMaxAgeSeconds());
+        assertWithMessage("Cache entry max age does not match default")
+                .that(mCacheEntryArgumentCaptor.getValue().getMaxAgeSeconds())
+                .isEqualTo(MAX_AGE_SECONDS);
     }
 
     /** This test uses real Dao to check the actual cache contracts put and get */
     @Test
     public void test_CacheE2EPutAndGet_Success() {
         CacheEntryDao realDao =
-                Room.inMemoryDatabaseBuilder(CONTEXT, CacheDatabase.class)
+                Room.inMemoryDatabaseBuilder(mContext, CacheDatabase.class)
                         .build()
                         .getCacheEntryDao();
         FledgeHttpCache cache =
                 new FledgeHttpCache(realDao, mExecutorService, MAX_AGE_SECONDS, MAX_ENTRIES);
         cache.put(mUrl, mBody, mCachingPropertiesMap, mResponseHeadersMap);
-        assertEquals("Cache should have persisted one entry", 1, cache.getCachedEntriesCount());
-        assertEquals(
-                "Cached response does not match original",
-                mBody,
-                cache.get(mUrl).getResponseBody());
+        expect.withMessage("Cache should have persisted one entry")
+                .that(cache.getCachedEntriesCount())
+                .isEqualTo(1);
+        expect.withMessage("Cached response does not match original")
+                .that(cache.get(mUrl).getResponseBody())
+                .isEqualTo(mBody);
     }
 
     @Test
     public void test_CacheE2EHonorsMaxAge_Success() {
         CacheEntryDao realDao =
-                Room.inMemoryDatabaseBuilder(CONTEXT, CacheDatabase.class)
+                Room.inMemoryDatabaseBuilder(mContext, CacheDatabase.class)
                         .build()
                         .getCacheEntryDao();
         FledgeHttpCache cache =
@@ -290,7 +275,11 @@ public class FledgeHttpCacheTest {
         Map<String, List<String>> cachePropertiesMap =
                 ImmutableMap.of(HttpHeaders.CACHE_CONTROL, maxCacheAgeProperties);
         cache.put(mUrl, mBody, cachePropertiesMap, mResponseHeadersMap);
-        assertEquals("Cache should have persisted one entry", 1, cache.getCachedEntriesCount());
-        assertNull("Entries past their max-age should not be fetched", cache.get(mUrl));
+        expect.withMessage("Cache should have persisted one entry")
+                .that(cache.getCachedEntriesCount())
+                .isEqualTo(1);
+        expect.withMessage("Entries past their max-age should not be fetched")
+                .that(cache.get(mUrl))
+                .isNull();
     }
 }

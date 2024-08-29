@@ -91,7 +91,8 @@ public class NoOpLoggerImpl implements AdServicesLogger {
 
     @Override
     public void logMeasurementAttributionStats(
-            MeasurementAttributionStats measurementAttributionStats) {}
+            MeasurementAttributionStats measurementAttributionStats,
+            @Nullable String enrollmentId) {}
 
     @Override
     public void logMeasurementWipeoutStats(MeasurementWipeoutStats measurementWipeoutStats) {}

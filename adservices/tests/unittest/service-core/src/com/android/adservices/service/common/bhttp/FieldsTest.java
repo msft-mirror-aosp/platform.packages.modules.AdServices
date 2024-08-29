@@ -18,12 +18,15 @@ package com.android.adservices.service.common.bhttp;
 
 import static com.android.adservices.service.common.bhttp.BinaryHttpTestUtil.combineSections;
 
-import static org.junit.Assert.assertEquals;
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertThrows;
+
+import com.android.adservices.common.AdServicesUnitTestCase;
 
 import org.junit.Test;
 
-public class FieldsTest {
+public final class FieldsTest extends AdServicesUnitTestCase {
 
     @Test
     public void testDeserialize_normal() {
@@ -48,15 +51,15 @@ public class FieldsTest {
                         Frc9000VariableLengthIntegerUtil.toFrc9000Int(fieldValue2.length()),
                         fieldValue2.getBytes());
 
-        assertEquals(
-                fields,
-                BinaryHttpMessageDeserializer.deserializeKnownLengthFields(
-                        new BinaryHttpMessageDeserializer.BinaryHttpByteArrayReader(
-                                combineSections(
-                                        new byte[1],
-                                        Frc9000VariableLengthIntegerUtil.toFrc9000Int(
-                                                fieldsWithoutTotalLength.length),
-                                        fieldsWithoutTotalLength))));
+        assertThat(fields)
+                .isEqualTo(
+                        BinaryHttpMessageDeserializer.deserializeKnownLengthFields(
+                                new BinaryHttpMessageDeserializer.BinaryHttpByteArrayReader(
+                                        combineSections(
+                                                new byte[1],
+                                                Frc9000VariableLengthIntegerUtil.toFrc9000Int(
+                                                        fieldsWithoutTotalLength.length),
+                                                fieldsWithoutTotalLength))));
     }
 
     @Test

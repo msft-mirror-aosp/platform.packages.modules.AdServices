@@ -17,7 +17,6 @@ package com.android.adservices.ui.settings.viewmodels;
 
 import android.app.Application;
 import android.os.Build;
-import android.widget.Switch;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
@@ -38,7 +37,6 @@ import com.android.settingslib.widget.MainSwitchBar;
  * responsible for serving Measurement to the Measurement view, and interacting with the {@link
  * ConsentManager} that persists and changes the Measurement data in a storage.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class MeasurementViewModel extends AndroidViewModel {
 
@@ -127,20 +125,6 @@ public class MeasurementViewModel extends AndroidViewModel {
      * confirmation dialog will handle switch change.
      */
     public void consentSwitchClickHandler(MainSwitchBar measurementSwitchBar) {
-        if (measurementSwitchBar.isChecked()) {
-            measurementSwitchBar.setChecked(false);
-            mEventTrigger.postValue(MeasurementViewModelUiEvent.SWITCH_ON_MEASUREMENT);
-        } else {
-            measurementSwitchBar.setChecked(true);
-            mEventTrigger.postValue(MeasurementViewModelUiEvent.SWITCH_OFF_MEASUREMENT);
-        }
-    }
-
-    /**
-     * Triggers opt out process for Privacy Sandbox. Also reverts the switch state, since
-     * confirmation dialog will handle switch change.
-     */
-    public void consentSwitchClickHandlerOnR(Switch measurementSwitchBar) {
         if (measurementSwitchBar.isChecked()) {
             measurementSwitchBar.setChecked(false);
             mEventTrigger.postValue(MeasurementViewModelUiEvent.SWITCH_ON_MEASUREMENT);

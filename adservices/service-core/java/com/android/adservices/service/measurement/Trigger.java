@@ -82,6 +82,7 @@ public class Trigger {
     private SourceRegistrationTimeConfig mAggregatableSourceRegistrationTimeConfig;
     @Nullable private String mTriggerContextId;
     @Nullable private String mAttributionScopesString;
+    @Nullable private Integer mAggregatableFilteringIdMaxBytes;
 
     @IntDef(value = {Status.PENDING, Status.IGNORED, Status.ATTRIBUTED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -138,7 +139,9 @@ public class Trigger {
                 && Objects.equals(mDebugAdId, trigger.mDebugAdId)
                 && Objects.equals(mRegistrationOrigin, trigger.mRegistrationOrigin)
                 && Objects.equals(mTriggerContextId, trigger.mTriggerContextId)
-                && Objects.equals(mAttributionScopesString, trigger.mAttributionScopesString);
+                && Objects.equals(mAttributionScopesString, trigger.mAttributionScopesString)
+                && Objects.equals(
+                        mAggregatableFilteringIdMaxBytes, trigger.mAggregatableFilteringIdMaxBytes);
     }
 
     @Override
@@ -168,7 +171,8 @@ public class Trigger {
                 mRegistrationOrigin,
                 mAggregatableSourceRegistrationTimeConfig,
                 mTriggerContextId,
-                mAttributionScopesString);
+                mAttributionScopesString,
+                mAggregatableFilteringIdMaxBytes);
     }
 
     /** Unique identifier for the {@link Trigger}. */
@@ -393,6 +397,12 @@ public class Trigger {
     @Nullable
     public String getTriggerContextId() {
         return mTriggerContextId;
+    }
+
+    /** Returns the aggregatable filtering id max bytes. */
+    @Nullable
+    public Integer getAggregatableFilteringIdMaxBytes() {
+        return mAggregatableFilteringIdMaxBytes;
     }
 
     /**
@@ -818,6 +828,13 @@ public class Trigger {
         @NonNull
         public Builder setAttributionScopesString(@Nullable String attributionScopesString) {
             mBuilding.mAttributionScopesString = attributionScopesString;
+            return this;
+        }
+
+        /** See {@link Trigger#getAggregatableFilteringIdMaxBytes()} */
+        public Builder setAggregatableFilteringIdMaxBytes(
+                @Nullable Integer aggregatableFilteringIdMaxBytes) {
+            mBuilding.mAggregatableFilteringIdMaxBytes = aggregatableFilteringIdMaxBytes;
             return this;
         }
 

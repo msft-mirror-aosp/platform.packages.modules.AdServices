@@ -20,13 +20,14 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.service.Flags;
 
 import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
 
-public class AdRenderIdValidatorTest {
+public final class AdRenderIdValidatorTest extends AdServicesUnitTestCase {
     private static final String VERY_LONG_ID =
             "this is a very long ad render ID which should throw an error";
     private static final String SHORT_ID = "X";

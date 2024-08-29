@@ -340,6 +340,10 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.TriggerContract.ATTRIBUTION_SCOPES,
                 builder::setAttributionScopesString);
+        setIntColumn(
+                cursor,
+                MeasurementTables.TriggerContract.AGGREGATABLE_FILTERING_ID_MAX_BYTES,
+                builder::setAggregatableFilteringIdMaxBytes);
         return builder.build();
     }
 

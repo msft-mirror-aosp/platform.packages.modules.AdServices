@@ -42,6 +42,8 @@ import static com.android.adservices.service.Flags.COBALT_LOGGING_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.COBALT_OPERATIONAL_LOGGING_ENABLED;
 import static com.android.adservices.service.Flags.COBALT_REGISTRY_OUT_OF_BAND_UPDATE_ENABLED;
 import static com.android.adservices.service.Flags.COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS;
+import static com.android.adservices.service.Flags.COBALT__FALL_BACK_TO_DEFAULT_BASE_REGISTRY;
+import static com.android.adservices.service.Flags.COBALT__IGNORED_REPORT_ID_LIST;
 import static com.android.adservices.service.Flags.COMPAT_LOGGING_KILL_SWITCH;
 import static com.android.adservices.service.Flags.CONSENT_ALREADY_INTERACTED_FIX_ENABLE;
 import static com.android.adservices.service.Flags.CONSENT_NOTIFICATION_RESET_TOKEN;
@@ -573,6 +575,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_COBALT_LOGGING_J
 import static com.android.adservices.service.FlagsConstants.KEY_COBALT_OPERATIONAL_LOGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_COBALT_REGISTRY_OUT_OF_BAND_UPDATE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_COBALT__FALL_BACK_TO_DEFAULT_BASE_REGISTRY;
+import static com.android.adservices.service.FlagsConstants.KEY_COBALT__IGNORED_REPORT_ID_LIST;
 import static com.android.adservices.service.FlagsConstants.KEY_COMPAT_LOGGING_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_ALREADY_INTERACTED_FIX_ENABLE;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_RESET_TOKEN;
@@ -1357,6 +1361,22 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_COBALT_OPERATIONAL_LOGGING_ENABLED,
                 COBALT_OPERATIONAL_LOGGING_ENABLED,
                 Flags::getCobaltOperationalLoggingEnabled);
+    }
+
+    @Test
+    public void testGetCobaltFallBackToDefaultBaseRegistry() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_COBALT__FALL_BACK_TO_DEFAULT_BASE_REGISTRY,
+                COBALT__FALL_BACK_TO_DEFAULT_BASE_REGISTRY,
+                Flags::getCobaltFallBackToDefaultBaseRegistry);
+    }
+
+    @Test
+    public void testGetCobaltIgnoredReportIdList() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_COBALT__IGNORED_REPORT_ID_LIST,
+                COBALT__IGNORED_REPORT_ID_LIST,
+                Flags::getCobaltIgnoredReportIdList);
     }
 
     @Test

@@ -71,6 +71,8 @@ public final class TriggerFixture {
                         ValidTriggerParams.AGGREGATABLE_SOURCE_REGISTRATION_TIME_CONFIG)
                 .setTriggerContextId(ValidTriggerParams.TRIGGER_CONTEXT_ID)
                 .setAttributionScopesString(ValidTriggerParams.ATTRIBUTION_SCOPES)
+                .setAggregatableFilteringIdMaxBytes(
+                        ValidTriggerParams.AGGREGATABLE_FILTERING_ID_MAX_BYTES)
                 .build();
     }
 
@@ -176,6 +178,7 @@ public final class TriggerFixture {
         public static final String DEBUG_AD_ID = "test-debug-ad-id";
         public static final String TRIGGER_CONTEXT_ID = "test-trigger-context-id";
         public static final String ATTRIBUTION_SCOPES = "[\"1\"]";
+        public static final int AGGREGATABLE_FILTERING_ID_MAX_BYTES = 1;
 
         public static final AggregatableAttributionTrigger buildAggregatableAttributionTrigger() {
             final FilterMap filter =

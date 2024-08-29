@@ -19,13 +19,15 @@ package com.android.adservices.service.common.bhttp;
 import static com.android.adservices.service.common.bhttp.BinaryHttpTestUtil.combineSections;
 import static com.android.adservices.service.common.bhttp.Frc9000VariableLengthIntegerUtil.toFrc9000Int;
 
-import static org.junit.Assert.assertEquals;
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
+
+import com.android.adservices.common.AdServicesUnitTestCase;
 
 import org.junit.Test;
 
-public class ResponseControlDataTest {
+public final class ResponseControlDataTest extends AdServicesUnitTestCase {
 
     @Test
     public void testNewAndDeserialize_normal() {
@@ -48,11 +50,11 @@ public class ResponseControlDataTest {
                         .build();
         byte[] bytes = combineSections(responseControlData.knownLengthSerialize());
 
-        assertEquals(
-                responseControlData,
-                BinaryHttpMessageDeserializer.deserializeKnownLengthResponseControlData(
-                        new BinaryHttpMessageDeserializer.BinaryHttpByteArrayReader(
-                                combineSections(new byte[1], bytes))));
+        assertThat(responseControlData)
+                .isEqualTo(
+                        BinaryHttpMessageDeserializer.deserializeKnownLengthResponseControlData(
+                                new BinaryHttpMessageDeserializer.BinaryHttpByteArrayReader(
+                                        combineSections(new byte[1], bytes))));
     }
 
     @Test
@@ -61,7 +63,7 @@ public class ResponseControlDataTest {
                 assertThrows(
                         IllegalArgumentException.class,
                         () -> ResponseControlData.builder().setFinalStatusCode(180).build());
-        assertTrue(e.getMessage().contains("status code"));
+        assertThat(e).hasMessageThat().contains("status code");
     }
 
     @Test
@@ -70,12 +72,12 @@ public class ResponseControlDataTest {
                 assertThrows(
                         IllegalArgumentException.class,
                         () -> InformativeResponse.builder().setInformativeStatusCode(50).build());
-        assertTrue(e1.getMessage().contains("status code"));
+        assertThat(e1).hasMessageThat().contains("status code");
         Exception e2 =
                 assertThrows(
                         IllegalArgumentException.class,
                         () -> InformativeResponse.builder().setInformativeStatusCode(300).build());
-        assertTrue(e2.getMessage().contains("status code"));
+        assertThat(e2).hasMessageThat().contains("status code");
     }
 
     @Test

@@ -34,6 +34,8 @@
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
         <!-- Disable SDK sandbox killswitch to ignore the effect of actual PH values. -->
         <option name="run-command" value="cmd sdk_sandbox set-state --enabled" />
+        <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />
+        <option name="teardown-command" value="device_config set_sync_disabled_for_tests none" />
         <option name="teardown-command" value="cmd sdk_sandbox set-state --reset" />
     </target_preparer>
 

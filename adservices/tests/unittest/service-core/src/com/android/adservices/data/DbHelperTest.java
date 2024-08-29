@@ -25,78 +25,50 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_WRITE_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 
-import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 
-import androidx.test.core.app.ApplicationProvider;
-
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.errorlogging.ErrorLogUtil;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
-import org.mockito.junit.MockitoJUnitRunner;
-import org.mockito.quality.Strictness;
 
-@RunWith(MockitoJUnitRunner.class)
-public class DbHelperTest {
-    protected static final Context sContext = ApplicationProvider.getApplicationContext();
-
-    private MockitoSession mStaticMockSession;
-
-    @Mock private Flags mMockFlags;
-
+@SpyStatic(FlagsFactory.class)
+public final class DbHelperTest extends AdServicesExtendedMockitoTestCase {
     @Before
     public void setup() {
-        MockitoAnnotations.initMocks(this);
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(ErrorLogUtil.class)
-                        .strictness(Strictness.WARN)
-                        .startMocking();
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-    }
-
-    @After
-    public void teardown() {
-        mStaticMockSession.finishMocking();
+        mocker.mockGetFlags(mMockFlags);
     }
 
     @Test
     public void testOnCreate() {
         SQLiteDatabase db = getDbHelperForTest().safeGetReadableDatabase();
         assertNotNull(db);
-        assertTrue(doesTableExistAndColumnCountMatch(db, "topics_taxonomy", 4));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "topics_app_classification_topics", 6));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "topics_caller_can_learn_topic", 6));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "topics_top_topics", 10));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "topics_returned_topics", 8));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "topics_usage_history", 3));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "topics_app_usage_history", 3));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "enrollment_data", 8));
+        expect.that(doesTableExistAndColumnCountMatch(db, "topics_taxonomy", 4)).isTrue();
+        expect.that(doesTableExistAndColumnCountMatch(db, "topics_app_classification_topics", 6))
+                .isTrue();
+        expect.that(doesTableExistAndColumnCountMatch(db, "topics_caller_can_learn_topic", 6))
+                .isTrue();
+        expect.that(doesTableExistAndColumnCountMatch(db, "topics_top_topics", 10)).isTrue();
+        expect.that(doesTableExistAndColumnCountMatch(db, "topics_returned_topics", 8)).isTrue();
+        expect.that(doesTableExistAndColumnCountMatch(db, "topics_usage_history", 3)).isTrue();
+        expect.that(doesTableExistAndColumnCountMatch(db, "topics_app_usage_history", 3)).isTrue();
+        expect.that(doesTableExistAndColumnCountMatch(db, "enrollment_data", 8)).isTrue();
         assertMeasurementTablesDoNotExist(db);
     }
 
@@ -107,19 +79,19 @@ public class DbHelperTest {
     @Test
     public void testGetDbFileSize() {
         final String databaseName = FileCompatUtils.getAdservicesFilename("testsize.db");
-        DbHelper dbHelper = new DbHelper(sContext, databaseName, 1);
+        DbHelper dbHelper = new DbHelper(mContext, databaseName, 1);
 
         // Create database
         dbHelper.getReadableDatabase();
 
         // Verify size should be more than 0 bytes as database was created
-        Assert.assertTrue(dbHelper.getDbFileSize() > 0);
+        expect.that(dbHelper.getDbFileSize()).isGreaterThan(0);
 
         // Delete database file
-        sContext.getDatabasePath(databaseName).delete();
+        mContext.getDatabasePath(databaseName).delete();
 
         // Verify database does not exist anymore
-        Assert.assertEquals(-1, dbHelper.getDbFileSize());
+        expect.that(dbHelper.getDbFileSize()).isEqualTo(-1);
     }
 
     @Test
@@ -128,7 +100,7 @@ public class DbHelperTest {
         SQLiteDatabase db = getDbHelperForTest().safeGetReadableDatabase();
         try (Cursor cursor = db.rawQuery("PRAGMA foreign_keys", null)) {
             cursor.moveToNext();
-            assertEquals(1, cursor.getLong(0));
+            expect.that(cursor.getLong(0)).isEqualTo(1);
         }
     }
 

@@ -23,12 +23,14 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkCapabilities;
+import android.util.Log;
 
 import java.net.InetAddress;
 
 /** Helper for device network related functions */
 public final class NetworkConnectionHelper {
     private static final String TAG = NetworkConnectionHelper.class.getSimpleName();
+    private static final String GOOGLE_SITE = "google.com";
 
     /** Checks whether the device has an active Wifi connected. */
     // The test using this helper class needs to add the ACCESS_NETWORK_STATE permission.
@@ -63,10 +65,11 @@ public final class NetworkConnectionHelper {
     // INTERNET permission.
     public static boolean isInternetAvailable() {
         try {
-            InetAddress ipAddr = InetAddress.getByName("google.com");
+            InetAddress ipAddr = InetAddress.getByName(GOOGLE_SITE);
             return !ipAddr.equals("");
 
         } catch (Exception e) {
+            Log.e(TAG, "getting error as " + e.getMessage());
             return false;
         }
     }
