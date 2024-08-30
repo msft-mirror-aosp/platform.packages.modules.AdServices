@@ -25,22 +25,24 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
-import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.attribution.AttributionJobHandlerWrapper;
 import com.android.adservices.service.measurement.inputverification.ClickVerifier;
 import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueRunner;
 import com.android.adservices.service.measurement.registration.AsyncSourceFetcher;
 import com.android.adservices.service.measurement.registration.AsyncTriggerFetcher;
+import com.android.adservices.service.measurement.reporting.AggregateDebugReportApi;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
-import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
+
+import com.google.android.libraries.mobiledatadownload.internal.AndroidTimeSource;
 
 class TestObjectProvider {
     static AttributionJobHandlerWrapper getAttributionJobHandler(
-            DatastoreManager datastoreManager, Flags flags, AdServicesErrorLogger errorLogger) {
+            DatastoreManager datastoreManager, Flags flags) {
         return new AttributionJobHandlerWrapper(
                 datastoreManager,
                 flags,
@@ -48,7 +50,8 @@ class TestObjectProvider {
                         ApplicationProvider.getApplicationContext(),
                         flags,
                         new EventReportWindowCalcDelegate(flags),
-                        new SourceNoiseHandler(flags)),
+                        new SourceNoiseHandler(flags),
+                        new AggregateDebugReportApi(flags, new AndroidTimeSource())),
                 new EventReportWindowCalcDelegate(flags),
                 new SourceNoiseHandler(flags),
                 AdServicesLoggerImpl.getInstance());
@@ -62,7 +65,7 @@ class TestObjectProvider {
         return spy(
                 new MeasurementImpl(
                         null,
-                        FakeFlagsFactory.getFlagsForTest(),
+                        FlagsFactory.getFlags(),
                         datastoreManager,
                         clickVerifier,
                         measurementDataDeleter,
