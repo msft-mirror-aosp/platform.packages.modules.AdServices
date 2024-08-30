@@ -28,8 +28,8 @@ android_test {
         "truth",
     ],
     libs: [
-        "android.test.base",
-        "android.test.runner",
+        "android.test.base.stubs.system",
+        "android.test.runner.stubs.system",
         "framework-adservices-lib",
     ],
     test_suites: [
@@ -60,8 +60,8 @@ android_test {
     ],
     libs: [
         "android.ext.adservices",
-        "android.test.base",
-        "android.test.runner",
+        "android.test.base.stubs.system",
+        "android.test.runner.stubs.system",
         "framework-adservices-lib",
     ],
     test_suites: [
