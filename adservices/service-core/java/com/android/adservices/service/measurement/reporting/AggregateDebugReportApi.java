@@ -557,7 +557,8 @@ public class AggregateDebugReportApi {
                         data ->
                                 data.getReportType().contains(reportType.getValue())
                                         || data.getReportType()
-                                                .contains(DebugReportApi.Type.DEFAULT.getValue()))
+                                                .contains(
+                                                        DebugReportApi.Type.UNSPECIFIED.getValue()))
                 .findFirst();
     }
 
