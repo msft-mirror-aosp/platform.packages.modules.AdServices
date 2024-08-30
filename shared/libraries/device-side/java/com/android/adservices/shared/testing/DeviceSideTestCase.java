@@ -79,18 +79,12 @@ public abstract class DeviceSideTestCase extends SidelessTestCase {
      */
     protected String mPackageName;
 
-    // TODO(b/355286824) - Used only to set the static context, it doesn't skip tests. There is a
-    // RavenwoodClassRule which skips tests, but it doesn't set the Context, so need to use
-    // RavenwoodRule both here and as an instance rule.
     @ClassRule
     public static final RavenwoodRule sRavenwood =
             new RavenwoodRule.Builder()
                     .setProvideMainThread(true)
                     .setPackageName(RAVENWOOD_PACKAGE_NAME)
                     .build();
-
-    // TODO(b/342639109): set proper order
-    @Rule public final RavenwoodRule ravenwood = sRavenwood;
 
     // TODO(b/342639109): make sure it's the right order
     @Rule(order = 0)
