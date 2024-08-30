@@ -52,7 +52,7 @@ public class DebugReportApi {
 
     /** Define different verbose debug report types. */
     public enum Type {
-        DEFAULT("unspecified"),
+        UNSPECIFIED("unspecified"),
         SOURCE_DESTINATION_LIMIT("source-destination-limit"),
         SOURCE_DESTINATION_RATE_LIMIT("source-destination-rate-limit"),
         SOURCE_DESTINATION_PER_DAY_RATE_LIMIT("source-destination-per-day-rate-limit"),

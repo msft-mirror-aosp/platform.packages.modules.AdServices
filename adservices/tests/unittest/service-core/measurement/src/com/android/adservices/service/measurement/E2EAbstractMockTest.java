@@ -368,6 +368,7 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
                         sourceRegistration.mTimestamp));
         mAsyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
         processActualDebugReportApiJob(sourceRegistration.mTimestamp);
+        processActualDebugReportJob(sourceRegistration.mTimestamp, 0L);
     }
 
     @Override
@@ -649,13 +650,22 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
                             .put(
                                     TestFormatJsonMapping.REPORT_TIME_KEY,
                                     String.valueOf(
-                                            aggregateReports.get(i).getScheduledReportTime()
-                                                    // Debug aggregate reports have the same
-                                                    // scheduled
-                                                    // report time as regular aggregate reports
-                                                    // but are
-                                                    // sent without delay.
-                                                    - reportDelay))
+                                            aggregateReports
+                                                            .get(i)
+                                                            .getApi()
+                                                            .equals("attribution-reporting-debug")
+                                                    ? aggregateReports
+                                                            .get(i)
+                                                            .getScheduledReportTime()
+                                                    : aggregateReports
+                                                                    .get(i)
+                                                                    .getScheduledReportTime()
+                                                            // Debug aggregate reports have the same
+                                                            // scheduled
+                                                            // report time as regular aggregate
+                                                            // reports but are
+                                                            // sent without delay.
+                                                            - reportDelay))
                             .put(
                                     TestFormatJsonMapping.REPORT_TO_KEY,
                                     destinations.get(i).toString())
