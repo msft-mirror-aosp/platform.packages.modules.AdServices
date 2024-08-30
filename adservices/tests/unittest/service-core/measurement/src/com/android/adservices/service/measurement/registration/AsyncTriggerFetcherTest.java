@@ -2944,9 +2944,10 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     }
 
     @Test
-    public void fetchTrigger_invalidLookbackWindow_rejectsTrigger() throws Exception {
+    public void fetchTrigger_invalidLookbackWindowValidJSON_rejectsTrigger() throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
-        String filters = "{\"product\":[\"1234\"], \"ctid\":[\"id\"], \"_lookback_window\": 123f}";
+        String filters =
+                "{\"product\":[\"1234\"], \"ctid\":[\"id\"], \"_lookback_window\": \"123\"}";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())

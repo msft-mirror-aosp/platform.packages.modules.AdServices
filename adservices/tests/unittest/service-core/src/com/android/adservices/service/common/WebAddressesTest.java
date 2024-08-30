@@ -16,19 +16,20 @@
 
 package com.android.adservices.service.common;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import android.net.Uri;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.common.WebUtil;
 
 import org.junit.Test;
 
+import java.util.List;
 import java.util.Optional;
 
-public class WebAddressesTest {
+public final class WebAddressesTest extends AdServicesUnitTestCase {
 
     private static final String COM_PUBLIC_SUFFIX = "com";
     private static final String BLOGSPOT_COM_PUBLIC_SUFFIX = "blogspot.com";
@@ -89,71 +90,109 @@ public class WebAddressesTest {
     public void testTopPrivateDomainAndScheme_validPublicDomainAndHttpsScheme() {
         Optional<Uri> output =
                 WebAddresses.topPrivateDomainAndScheme(HTTPS_PRIVATE_DOMAIN_COM_PUBLIC_SUFFIX);
-        assertEquals(HTTPS_PRIVATE_DOMAIN_COM_PUBLIC_SUFFIX, output.get());
+        assertThat(output.isPresent()).isTrue();
+        assertThat(output.get()).isEqualTo(HTTPS_PRIVATE_DOMAIN_COM_PUBLIC_SUFFIX);
     }
 
     @Test
     public void testTopPrivateDomainAndScheme_validLocalhost() {
         // Localhost
         Optional<Uri> localhost = WebAddresses.topPrivateDomainAndScheme(HTTPS_LOCALHOST);
-        assertEquals(HTTPS_LOCALHOST, localhost.get());
+        assertThat(localhost.isPresent()).isTrue();
+        expect.withMessage("localhost").that(localhost.get()).isEqualTo(HTTPS_LOCALHOST);
 
         Uri localhostWithPath =
                 Uri.parse(String.format("%s://%s/%s", HTTPS_SCHEME, LOCALHOST, "path"));
-        assertEquals(HTTPS_LOCALHOST,
-                WebAddresses.topPrivateDomainAndScheme(localhostWithPath).get());
+        Optional<Uri> localhostWithPathUri =
+                WebAddresses.topPrivateDomainAndScheme(localhostWithPath);
+        assertThat(localhostWithPathUri.isPresent()).isTrue();
+        expect.withMessage("localhostWithPath")
+                .that(localhostWithPathUri.get())
+                .isEqualTo(HTTPS_LOCALHOST);
 
         Uri localhostWithPort =
                 Uri.parse(String.format("%s://%s:%s", HTTPS_SCHEME, LOCALHOST, "4000"));
-        assertEquals(HTTPS_LOCALHOST,
-                WebAddresses.topPrivateDomainAndScheme(localhostWithPort).get());
+        Optional<Uri> localhostWithPortUri =
+                WebAddresses.topPrivateDomainAndScheme(localhostWithPort);
+        assertThat(localhostWithPortUri.isPresent()).isTrue();
+        expect.withMessage("localhostWithPort")
+                .that(localhostWithPortUri.get())
+                .isEqualTo(HTTPS_LOCALHOST);
 
         // localhost ip
         Optional<Uri> localhost_ip = WebAddresses.topPrivateDomainAndScheme(HTTPS_LOCALHOST_IP);
-        assertEquals(HTTPS_LOCALHOST_IP, localhost_ip.get());
+        assertThat(localhost_ip.isPresent()).isTrue();
+        expect.withMessage("localhost_ip").that(localhost_ip.get()).isEqualTo(HTTPS_LOCALHOST_IP);
 
         Uri localhostIpWithPath =
                 Uri.parse(String.format("%s://%s/%s", HTTPS_SCHEME, LOCALHOST_IP, "path"));
-        assertEquals(HTTPS_LOCALHOST_IP,
-                WebAddresses.topPrivateDomainAndScheme(localhostIpWithPath).get());
+        Optional<Uri> localhostIpWithPathUri =
+                WebAddresses.topPrivateDomainAndScheme(localhostIpWithPath);
+        assertThat(localhostIpWithPathUri.isPresent()).isTrue();
+        expect.withMessage("localhostIpWithPath")
+                .that(localhostIpWithPathUri.get())
+                .isEqualTo(HTTPS_LOCALHOST_IP);
 
         Uri localhostIpWithPort =
                 Uri.parse(String.format("%s://%s:%s", HTTPS_SCHEME, LOCALHOST_IP, "4000"));
-        assertEquals(HTTPS_LOCALHOST_IP,
-                WebAddresses.topPrivateDomainAndScheme(localhostIpWithPort).get());
+        Optional<Uri> localhostIpWithPortUri =
+                WebAddresses.topPrivateDomainAndScheme(localhostIpWithPort);
+        assertThat(localhostIpWithPortUri.isPresent()).isTrue();
+        expect.withMessage("localhostIpWithPort")
+                .that(localhostIpWithPortUri.get())
+                .isEqualTo(HTTPS_LOCALHOST_IP);
     }
 
     @Test
     public void testOriginAndScheme_validPublicDomainAndHttpsScheme() {
         Optional<Uri> output = WebAddresses.originAndScheme(HTTPS_PRIVATE_DOMAIN_COM_PUBLIC_SUFFIX);
-        assertEquals(HTTPS_PRIVATE_DOMAIN_COM_PUBLIC_SUFFIX, output.get());
+        assertThat(output.isPresent()).isTrue();
+        expect.that(output.get()).isEqualTo(HTTPS_PRIVATE_DOMAIN_COM_PUBLIC_SUFFIX);
     }
 
     @Test
     public void testOriginAndScheme_validLocalhost() {
         // Localhost
         Optional<Uri> localhost = WebAddresses.originAndScheme(HTTPS_LOCALHOST);
-        assertEquals(HTTPS_LOCALHOST, localhost.get());
+        assertWithMessage("localhost").that(localhost.isPresent()).isTrue();
+        expect.withMessage("localhost").that(localhost.get()).isEqualTo(HTTPS_LOCALHOST);
 
         Uri localhostWithPath =
                 Uri.parse(String.format("%s://%s/%s", HTTPS_SCHEME, LOCALHOST, "path"));
-        assertEquals(HTTPS_LOCALHOST, WebAddresses.originAndScheme(localhostWithPath).get());
+        Optional<Uri> localhostWithPathUri = WebAddresses.originAndScheme(localhostWithPath);
+        assertWithMessage("localhostWithPath").that(localhostWithPathUri.isPresent()).isTrue();
+        expect.withMessage("localhostWithPath")
+                .that(localhostWithPathUri.get())
+                .isEqualTo(HTTPS_LOCALHOST);
 
         Uri localhostWithPort =
                 Uri.parse(String.format("%s://%s:%s", HTTPS_SCHEME, LOCALHOST, "4000"));
-        assertEquals(localhostWithPort, WebAddresses.originAndScheme(localhostWithPort).get());
+        Optional<Uri> localhostWithPortUri = WebAddresses.originAndScheme(localhostWithPort);
+        assertWithMessage("localhostWithPort").that(localhostWithPortUri.isPresent()).isTrue();
+        expect.withMessage("localhostWithPort")
+                .that(localhostWithPortUri.get())
+                .isEqualTo(localhostWithPort);
 
         // localhost ip
         Optional<Uri> localhost_ip = WebAddresses.originAndScheme(HTTPS_LOCALHOST_IP);
-        assertEquals(HTTPS_LOCALHOST_IP, localhost_ip.get());
+        assertWithMessage("localhost_ip").that(localhost_ip.isPresent()).isTrue();
+        expect.withMessage("localhost_ip").that(localhost_ip.get()).isEqualTo(HTTPS_LOCALHOST_IP);
 
         Uri localhostIpWithPath =
                 Uri.parse(String.format("%s://%s/%s", HTTPS_SCHEME, LOCALHOST_IP, "path"));
-        assertEquals(HTTPS_LOCALHOST_IP, WebAddresses.originAndScheme(localhostIpWithPath).get());
+        Optional<Uri> localhostIpWithPathUri = WebAddresses.originAndScheme(localhostIpWithPath);
+        assertWithMessage("localhostIpWithPath").that(localhostIpWithPathUri.isPresent()).isTrue();
+        expect.withMessage("localhostIpWithPath")
+                .that(localhostIpWithPathUri.get())
+                .isEqualTo(HTTPS_LOCALHOST_IP);
 
         Uri localhostIpWithPort =
                 Uri.parse(String.format("%s://%s:%s", HTTPS_SCHEME, LOCALHOST_IP, "4000"));
-        assertEquals(localhostIpWithPort, WebAddresses.originAndScheme(localhostIpWithPort).get());
+        Optional<Uri> localhostIpWithPortUri = WebAddresses.originAndScheme(localhostIpWithPort);
+        assertWithMessage("localhostIpWithPort").that(localhostIpWithPortUri.isPresent()).isTrue();
+        expect.withMessage("localhostIpWithPort")
+                .that(localhostIpWithPortUri.get())
+                .isEqualTo(localhostIpWithPort);
     }
 
     @Test
@@ -161,14 +200,16 @@ public class WebAddressesTest {
         Optional<Uri> output =
                 WebAddresses.topPrivateDomainAndScheme(
                         HTTPS_PRIVATE_DOMAIN_BLOGSPOT_COM_PUBLIC_SUFFIX);
-        assertEquals(HTTPS_PRIVATE_DOMAIN_BLOGSPOT_COM_PUBLIC_SUFFIX, output.get());
+        assertThat(output.isPresent()).isTrue();
+        expect.that(output.get()).isEqualTo(HTTPS_PRIVATE_DOMAIN_BLOGSPOT_COM_PUBLIC_SUFFIX);
     }
 
     @Test
     public void testOriginAndScheme_validPrivateDomainAndHttpsScheme() {
         Optional<Uri> output = WebAddresses.originAndScheme(
                 HTTPS_PRIVATE_DOMAIN_BLOGSPOT_COM_PUBLIC_SUFFIX);
-        assertEquals(HTTPS_PRIVATE_DOMAIN_BLOGSPOT_COM_PUBLIC_SUFFIX, output.get());
+        assertThat(output.isPresent()).isTrue();
+        expect.that(output.get()).isEqualTo(HTTPS_PRIVATE_DOMAIN_BLOGSPOT_COM_PUBLIC_SUFFIX);
     }
 
     @Test
@@ -176,14 +217,16 @@ public class WebAddressesTest {
         Optional<Uri> output =
                 WebAddresses.topPrivateDomainAndScheme(
                         HTTPS_SUBDOMAIN_PRIVATE_DOMAIN_COM_PUBLIC_SUFFIX);
-        assertEquals(HTTPS_PRIVATE_DOMAIN_COM_PUBLIC_SUFFIX, output.get());
+        assertThat(output.isPresent()).isTrue();
+        expect.that(output.get()).isEqualTo(HTTPS_PRIVATE_DOMAIN_COM_PUBLIC_SUFFIX);
     }
 
     @Test
     public void testOriginAndScheme_validPublicDomainAndHttpsScheme_extraSubdomain() {
         Optional<Uri> output =
                 WebAddresses.originAndScheme(HTTPS_SUBDOMAIN_PRIVATE_DOMAIN_COM_PUBLIC_SUFFIX);
-        assertEquals(HTTPS_SUBDOMAIN_PRIVATE_DOMAIN_COM_PUBLIC_SUFFIX, output.get());
+        assertThat(output.isPresent()).isTrue();
+        expect.that(output.get()).isEqualTo(HTTPS_SUBDOMAIN_PRIVATE_DOMAIN_COM_PUBLIC_SUFFIX);
     }
 
     @Test
@@ -191,7 +234,8 @@ public class WebAddressesTest {
         Optional<Uri> output =
                 WebAddresses.topPrivateDomainAndScheme(
                         HTTPS_SUBDOMAIN_PRIVATE_DOMAIN_BLOGSPOT_COM_PUBLIC_SUFFIX);
-        assertEquals(HTTPS_PRIVATE_DOMAIN_BLOGSPOT_COM_PUBLIC_SUFFIX, output.get());
+        assertThat(output.isPresent()).isTrue();
+        expect.that(output.get()).isEqualTo(HTTPS_PRIVATE_DOMAIN_BLOGSPOT_COM_PUBLIC_SUFFIX);
     }
 
     @Test
@@ -199,83 +243,91 @@ public class WebAddressesTest {
         Optional<Uri> output =
                 WebAddresses.originAndScheme(
                         HTTPS_SUBDOMAIN_PRIVATE_DOMAIN_BLOGSPOT_COM_PUBLIC_SUFFIX);
-        assertEquals(HTTPS_SUBDOMAIN_PRIVATE_DOMAIN_BLOGSPOT_COM_PUBLIC_SUFFIX, output.get());
+        assertThat(output.isPresent()).isTrue();
+        expect.that(output.get())
+                .isEqualTo(HTTPS_SUBDOMAIN_PRIVATE_DOMAIN_BLOGSPOT_COM_PUBLIC_SUFFIX);
     }
 
     @Test
     public void testTopPrivateDomainAndScheme_validPublicDomainAndHttpScheme() {
         Optional<Uri> output = WebAddresses.topPrivateDomainAndScheme(
                 HTTP_PRIVATE_DOMAIN_COM_PUBLIC_SUFFIX);
-        assertEquals(HTTP_PRIVATE_DOMAIN_COM_PUBLIC_SUFFIX, output.get());
+        assertThat(output.isPresent()).isTrue();
+        expect.that(output.get()).isEqualTo(HTTP_PRIVATE_DOMAIN_COM_PUBLIC_SUFFIX);
     }
 
     @Test
     public void testOriginAndScheme_validPublicDomainAndHttpScheme() {
         Optional<Uri> output = WebAddresses.originAndScheme(HTTP_PRIVATE_DOMAIN_COM_PUBLIC_SUFFIX);
-        assertEquals(HTTP_PRIVATE_DOMAIN_COM_PUBLIC_SUFFIX, output.get());
+        assertThat(output.isPresent()).isTrue();
+        expect.that(output.get()).isEqualTo(HTTP_PRIVATE_DOMAIN_COM_PUBLIC_SUFFIX);
     }
 
     @Test
     public void testTopPrivateDomainAndScheme_validPublicDomainAndPortAndHttpsScheme() {
         Optional<Uri> output =
                 WebAddresses.topPrivateDomainAndScheme(HTTPS_PRIVATE_DOMAIN_COM_PUBLIC_SUFFIX_PORT);
-        assertEquals(HTTPS_PRIVATE_DOMAIN_COM_PUBLIC_SUFFIX, output.get());
+        assertThat(output.isPresent()).isTrue();
+        expect.that(output.get()).isEqualTo(HTTPS_PRIVATE_DOMAIN_COM_PUBLIC_SUFFIX);
     }
 
     @Test
     public void testOriginAndScheme_validPublicDomainAndPortAndHttpsScheme() {
         Optional<Uri> output = WebAddresses.originAndScheme(
                 HTTPS_PRIVATE_DOMAIN_COM_PUBLIC_SUFFIX_PORT);
-        assertEquals(HTTPS_PRIVATE_DOMAIN_COM_PUBLIC_SUFFIX_PORT, output.get());
+        assertThat(output.isPresent()).isTrue();
+        expect.that(output.get()).isEqualTo(HTTPS_PRIVATE_DOMAIN_COM_PUBLIC_SUFFIX_PORT);
     }
 
     @Test
     public void testTopPrivateDomainAndPath_forInvalidUri_returnsEmptyOptional() {
         Optional<Uri> output = WebAddresses.topPrivateDomainAndScheme(Uri.parse(INVALID_URL));
-        assertFalse(output.isPresent());
+        assertThat(output.isPresent()).isFalse();
     }
 
     @Test
     public void testOriginAndScheme_forInvalidUri_returnsEmptyOptional() {
         Optional<Uri> output = WebAddresses.originAndScheme(Uri.parse(INVALID_URL));
-        assertFalse(output.isPresent());
+        assertThat(output.isPresent()).isFalse();
     }
 
     @Test
     public void testTopPrivateDomainAndScheme_invalidTldAndHttpScheme_returnsEmptyOptional() {
         String inputUrl = String.format("%s://%s.%s", HTTP_SCHEME, TOP_PRIVATE_DOMAIN, INVALID_TLD);
         Optional<Uri> output = WebAddresses.topPrivateDomainAndScheme(Uri.parse(inputUrl));
-        assertFalse(output.isPresent());
+        assertThat(output.isPresent()).isFalse();
     }
 
     @Test
     public void testTopPrivateDomainAndScheme_invalidLocalhostScheme_returnsEmptyOptional() {
         Uri inputUrl = Uri.parse(String.format("%s://%s", HTTP_SCHEME, LOCALHOST));
         Optional<Uri> output = WebAddresses.topPrivateDomainAndScheme(inputUrl);
-        assertFalse(output.isPresent());
+        assertThat(output.isPresent()).isFalse();
     }
 
     @Test
     public void testTopPrivateDomainAndScheme_invalidLocalhost_returnsEmptyOptional() {
-        assertFalse(WebAddresses.topPrivateDomainAndScheme(
-                Uri.parse(String.format("%s://%s", HTTPS_SCHEME, "localyhost"))).isPresent());
-        assertFalse(WebAddresses.topPrivateDomainAndScheme(
-                Uri.parse(String.format("%s://%s", HTTPS_SCHEME, "localhosts/path"))).isPresent());
-        assertFalse(WebAddresses.topPrivateDomainAndScheme(
-                Uri.parse(String.format("%s://%s", HTTPS_SCHEME, "localhosts:8000"))).isPresent());
-        assertFalse(WebAddresses.topPrivateDomainAndScheme(
-                Uri.parse(String.format("%s://%s", HTTPS_SCHEME, "128.0.0.1"))).isPresent());
-        assertFalse(WebAddresses.topPrivateDomainAndScheme(
-                Uri.parse(String.format("%s://%s", HTTPS_SCHEME, "127.1.0.1/path"))).isPresent());
-        assertFalse(WebAddresses.topPrivateDomainAndScheme(
-                Uri.parse(String.format("%s://%s", HTTPS_SCHEME, "127.0.0.2:7654"))).isPresent());
+        List<String> invalidUris =
+                List.of(
+                        String.format("%s://%s", HTTPS_SCHEME, "localyhost"),
+                        String.format("%s://%s", HTTPS_SCHEME, "localhosts/path"),
+                        String.format("%s://%s", HTTPS_SCHEME, "localhosts:8000"),
+                        String.format("%s://%s", HTTPS_SCHEME, "128.0.0.1"),
+                        String.format("%s://%s", HTTPS_SCHEME, "127.1.0.1/path"),
+                        String.format("%s://%s", HTTPS_SCHEME, "127.0.0.2:7654"));
+
+        for (String invalidUri : invalidUris) {
+            expect.withMessage(invalidUri)
+                    .that(WebAddresses.topPrivateDomainAndScheme(Uri.parse(invalidUri)).isPresent())
+                    .isFalse();
+        }
     }
 
     @Test
     public void testOriginAndScheme_invalidTldAndHttpScheme_returnsEmptyOptional() {
         String inputUrl = String.format("%s://%s.%s", HTTP_SCHEME, TOP_PRIVATE_DOMAIN, INVALID_TLD);
         Optional<Uri> output = WebAddresses.originAndScheme(Uri.parse(inputUrl));
-        assertFalse(output.isPresent());
+        assertThat(output.isPresent()).isFalse();
     }
 
     @Test
@@ -283,7 +335,7 @@ public class WebAddressesTest {
         String inputUrl =
                 String.format("%s://%s.%s", HTTPS_SCHEME, TOP_PRIVATE_DOMAIN, INVALID_TLD);
         Optional<Uri> output = WebAddresses.originAndScheme(Uri.parse(inputUrl));
-        assertFalse(output.isPresent());
+        assertThat(output.isPresent()).isFalse();
     }
 
     @Test
@@ -292,7 +344,7 @@ public class WebAddressesTest {
                 String.format(
                         "%s://%s.%s.%s", HTTP_SCHEME, SUBDOMAIN, TOP_PRIVATE_DOMAIN, INVALID_TLD);
         Optional<Uri> output = WebAddresses.originAndScheme(Uri.parse(inputUrl));
-        assertFalse(output.isPresent());
+        assertThat(output.isPresent()).isFalse();
     }
 
     @Test
@@ -301,93 +353,131 @@ public class WebAddressesTest {
                 String.format(
                         "%s://%s.%s.%s", HTTPS_SCHEME, SUBDOMAIN, TOP_PRIVATE_DOMAIN, INVALID_TLD);
         Optional<Uri> output = WebAddresses.originAndScheme(Uri.parse(inputUrl));
-        assertFalse(output.isPresent());
+        assertThat(output.isPresent()).isFalse();
     }
 
     @Test
     public void testOriginAndScheme_invalidLocalhostScheme() {
         Uri inputUrl = Uri.parse(String.format("%s://%s", HTTP_SCHEME, LOCALHOST));
         Optional<Uri> output = WebAddresses.originAndScheme(inputUrl);
-        assertFalse(output.isPresent());
+        assertThat(output.isPresent()).isFalse();
     }
 
     @Test
     public void testOriginAndScheme_invalidLocalhost() {
-        assertFalse(WebAddresses.originAndScheme(
-                Uri.parse(String.format("%s://%s", HTTPS_SCHEME, "localyhost"))).isPresent());
-        assertFalse(WebAddresses.originAndScheme(
-                Uri.parse(String.format("%s://%s", HTTPS_SCHEME, "localhosts/path"))).isPresent());
-        assertFalse(WebAddresses.originAndScheme(
-                Uri.parse(String.format("%s://%s", HTTPS_SCHEME, "localhosts:8000"))).isPresent());
-        assertFalse(WebAddresses.originAndScheme(
-                Uri.parse(String.format("%s://%s", HTTPS_SCHEME, "128.0.0.1"))).isPresent());
-        assertFalse(WebAddresses.originAndScheme(
-                Uri.parse(String.format("%s://%s", HTTPS_SCHEME, "127.1.0.1/path"))).isPresent());
-        assertFalse(WebAddresses.originAndScheme(
-                Uri.parse(String.format("%s://%s", HTTPS_SCHEME, "127.0.0.2:7654"))).isPresent());
+        List<String> invalidUris =
+                List.of(
+                        String.format("%s://%s", HTTPS_SCHEME, "localyhost"),
+                        String.format("%s://%s", HTTPS_SCHEME, "localhosts/path"),
+                        String.format("%s://%s", HTTPS_SCHEME, "localhosts:8000"),
+                        String.format("%s://%s", HTTPS_SCHEME, "128.0.0.1"),
+                        String.format("%s://%s", HTTPS_SCHEME, "127.1.0.1/path"),
+                        String.format("%s://%s", HTTPS_SCHEME, "127.0.0.2:7654"));
+
+        for (String invalidUri : invalidUris) {
+            expect.withMessage(invalidUri)
+                    .that(WebAddresses.originAndScheme(Uri.parse(invalidUri)).isPresent())
+                    .isFalse();
+        }
     }
 
     @Test
     public void testIsLocalHost_success() {
-        assertTrue(WebAddresses.isLocalhost(Uri.parse("https://127.0.0.1")));
-        assertTrue(WebAddresses.isLocalhost(Uri.parse("https://127.0.0.1:5000/path")));
-        assertTrue(WebAddresses.isLocalhost(Uri.parse("https://127.0.0.1/path")));
-        assertTrue(WebAddresses.isLocalhost(Uri.parse("https://localhost")));
-        assertTrue(WebAddresses.isLocalhost(Uri.parse("https://localhost:5000/path")));
-        assertTrue(WebAddresses.isLocalhost(Uri.parse("https://localhost/path")));
+        List<String> uris =
+                List.of(
+                        "https://127.0.0.1",
+                        "https://127.0.0.1:5000/path",
+                        "https://127.0.0.1/path",
+                        "https://localhost",
+                        "https://localhost:5000/path",
+                        "https://localhost/path");
+
+        for (String uri : uris) {
+            expect.withMessage(uri).that(WebAddresses.isLocalhost(Uri.parse(uri))).isTrue();
+        }
     }
 
     @Test
     public void testIsLocalHost_wrongScheme() {
-        assertFalse(WebAddresses.isLocalhost(Uri.parse("android-app://com.example")));
-        assertFalse(WebAddresses.isLocalhost(WebUtil.validUri("http://example.test:8000")));
-        assertFalse(WebAddresses.isLocalhost(Uri.parse("http://127.0.0.1:5000/path")));
-        assertFalse(WebAddresses.isLocalhost(Uri.parse("http://127.0.0.1/path")));
-        assertFalse(WebAddresses.isLocalhost(Uri.parse("127.0.0.1:5000/path")));
-        assertFalse(WebAddresses.isLocalhost(Uri.parse("127.0.0.1/path")));
-        assertFalse(WebAddresses.isLocalhost(Uri.parse("http://localhost:5000/path")));
-        assertFalse(WebAddresses.isLocalhost(Uri.parse("http://localhost/path")));
-        assertFalse(WebAddresses.isLocalhost(Uri.parse("localhost:5000/path")));
-        assertFalse(WebAddresses.isLocalhost(Uri.parse("localhost/path")));
+        List<Uri> uris =
+                List.of(
+                        Uri.parse("android-app://com.example"),
+                        WebUtil.validUri("http://example.test:8000"),
+                        Uri.parse("http://127.0.0.1:5000/path"),
+                        Uri.parse("http://127.0.0.1/path"),
+                        Uri.parse("127.0.0.1:5000/path"),
+                        Uri.parse("127.0.0.1/path"),
+                        Uri.parse("http://localhost:5000/path"),
+                        Uri.parse("http://localhost/path"),
+                        Uri.parse("localhost:5000/path"),
+                        Uri.parse("localhost/path"));
+
+        for (Uri uri : uris) {
+            expect.withMessage(uri.toSafeString()).that(WebAddresses.isLocalhost(uri)).isFalse();
+        }
     }
 
     @Test
     public void testIsLocalHost_wrongHost() {
-        assertFalse(WebAddresses.isLocalhost(Uri.parse("https://128.0.0.1")));
-        assertFalse(WebAddresses.isLocalhost(Uri.parse("https://127.56.0.1:5000/path")));
-        assertFalse(WebAddresses.isLocalhost(Uri.parse("https://127.0.1.1/path")));
-        assertFalse(WebAddresses.isLocalhost(Uri.parse("https://localhosts")));
-        assertFalse(WebAddresses.isLocalhost(Uri.parse("https://not-localhost:5000/path")));
-        assertFalse(WebAddresses.isLocalhost(Uri.parse("https://localyhost/path")));
+        List<String> uris =
+                List.of(
+                        "https://128.0.0.1",
+                        "https://127.56.0.1:5000/path",
+                        "https://127.0.1.1/path",
+                        "https://localhosts",
+                        "https://not-localhost:5000/path",
+                        "https://localyhost/path");
+
+        for (String uri : uris) {
+            expect.withMessage(uri).that(WebAddresses.isLocalhost(Uri.parse(uri))).isFalse();
+        }
     }
 
     @Test
     public void testIsLocalHostIp_success() {
-        assertTrue(WebAddresses.isLocalhostIp(Uri.parse("https://127.0.0.1")));
-        assertTrue(WebAddresses.isLocalhostIp(Uri.parse("https://127.0.0.1:5000/path")));
-        assertTrue(WebAddresses.isLocalhostIp(Uri.parse("https://127.0.0.1/path")));
+        List<String> uris =
+                List.of(
+                        "https://127.0.0.1",
+                        "https://127.0.0.1:5000/path",
+                        "https://127.0.0.1/path");
+
+        for (String uri : uris) {
+            expect.withMessage(uri).that(WebAddresses.isLocalhostIp(Uri.parse(uri))).isTrue();
+        }
     }
 
     @Test
     public void testIsLocalHostIp_wrongScheme() {
-        assertFalse(WebAddresses.isLocalhostIp(Uri.parse("android-app://com.example")));
-        assertFalse(WebAddresses.isLocalhostIp(WebUtil.validUri("http://example.test:8000")));
-        assertFalse(WebAddresses.isLocalhostIp(Uri.parse("http://127.0.0.1:5000/path")));
-        assertFalse(WebAddresses.isLocalhostIp(Uri.parse("http://127.0.0.1/path")));
-        assertFalse(WebAddresses.isLocalhostIp(Uri.parse("127.0.0.1:5000/path")));
-        assertFalse(WebAddresses.isLocalhostIp(Uri.parse("127.0.0.1/path")));
+        List<Uri> uris =
+                List.of(
+                        Uri.parse("android-app://com.example"),
+                        WebUtil.validUri("http://example.test:8000"),
+                        Uri.parse("http://127.0.0.1:5000/path"),
+                        Uri.parse("http://127.0.0.1/path"),
+                        Uri.parse("127.0.0.1:5000/path"),
+                        Uri.parse("127.0.0.1/path"));
+
+        for (Uri uri : uris) {
+            expect.withMessage(uri.toSafeString()).that(WebAddresses.isLocalhostIp(uri)).isFalse();
+        }
     }
 
     @Test
     public void testIsLocalHostIp_wrongHost() {
-        assertFalse(WebAddresses.isLocalhostIp(Uri.parse("https://localhost")));
-        assertFalse(WebAddresses.isLocalhostIp(Uri.parse("https://localhost:5000/path")));
-        assertFalse(WebAddresses.isLocalhostIp(Uri.parse("https://localhost/path")));
-        assertFalse(WebAddresses.isLocalhostIp(Uri.parse("https://128.0.0.1")));
-        assertFalse(WebAddresses.isLocalhostIp(Uri.parse("https://127.56.0.1:5000/path")));
-        assertFalse(WebAddresses.isLocalhostIp(Uri.parse("https://127.0.1.1/path")));
-        assertFalse(WebAddresses.isLocalhostIp(Uri.parse("https://localhosts")));
-        assertFalse(WebAddresses.isLocalhostIp(Uri.parse("https://not-localhost:5000/path")));
-        assertFalse(WebAddresses.isLocalhostIp(Uri.parse("https://localyhost/path")));
+        List<String> uris =
+                List.of(
+                        "https://localhost",
+                        "https://localhost:5000/path",
+                        "https://localhost/path",
+                        "https://128.0.0.1",
+                        "https://127.56.0.1:5000/path",
+                        "https://127.0.1.1/path",
+                        "https://localhosts",
+                        "https://not-localhost:5000/path",
+                        "https://localyhost/path");
+
+        for (String uri : uris) {
+            expect.withMessage(uri).that(WebAddresses.isLocalhostIp(Uri.parse(uri))).isFalse();
+        }
     }
 }

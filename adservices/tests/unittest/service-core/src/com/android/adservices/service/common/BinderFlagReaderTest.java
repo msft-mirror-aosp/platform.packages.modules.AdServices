@@ -18,9 +18,11 @@ package com.android.adservices.service.common;
 
 import static org.junit.Assert.assertThrows;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
+
 import org.junit.Test;
 
-public class BinderFlagReaderTest {
+public final class BinderFlagReaderTest extends AdServicesUnitTestCase {
     @Test
     public void testReadFlagNullSupplier_throws() {
         assertThrows(NullPointerException.class, () -> BinderFlagReader.readFlag(null));

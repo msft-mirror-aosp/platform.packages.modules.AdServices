@@ -40,7 +40,6 @@ apex {
     systemserverclasspath_fragments: ["com.android.adservices-systemserverclasspath-fragment"],
     prebuilts: [
         "current_sdkinfo",
-        "com.android.adservices.sdksandbox.xml", // SdkSandbox requires this permission file.
     ],
     certificate: ":com.android.adservices.certificate",
     defaults: ["t-launched-apex-module"],

@@ -24,10 +24,12 @@ import static org.mockito.Mockito.when;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -113,6 +115,28 @@ public final class FilterMapTest extends AdServicesMockitoTestCase {
 
         // Assertion
         assertEquals(expected, actual);
+    }
+
+    @Test
+    public void buildFilterDataV2_lookbackWindowExceedsMaxValue_success() throws Exception {
+        when(mMockFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+
+        // Setup
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("_lookback_window", new BigInteger("9223372036854775808"));
+        jsonObject.put("type", new JSONArray(Arrays.asList("1", "2", "3", "4")));
+        jsonObject.put("ctid", new JSONArray(Collections.singletonList("id")));
+
+        // Build the FilterMap
+        FilterMap actual = new FilterMap.Builder().buildFilterDataV2(jsonObject).build();
+
+        // Assert that LOOKBACK_WINDOW is truncated to Long.MAX_VALUE
+        Map<String, FilterValue> expectedFilterMap = new HashMap<>();
+        expectedFilterMap.put("_lookback_window", FilterValue.ofLong(Long.MAX_VALUE));
+        expectedFilterMap.put("type", FilterValue.ofStringList(Arrays.asList("1", "2", "3", "4")));
+        expectedFilterMap.put("ctid", FilterValue.ofStringList(Collections.singletonList("id")));
+
+        assertEquals(expectedFilterMap, actual.getAttributionFilterMapWithLongValue());
     }
 
     @Test

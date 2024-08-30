@@ -96,9 +96,9 @@ public final class ConsentNotificationJobServiceTest extends AdServicesJobServic
     @Mock private SharedPreferences.Editor mEditor;
     @Mock UxStatesManager mUxStatesManager;
     private AdServicesJobServiceLogger mSpyLogger;
-    private long mIntervalEndMs = Duration.ofHours(17).toMillis();
-    private long mIntervalBeginMs = Duration.ofHours(9).toMillis();
-    private long mMinimalDelayBeforeIntervalEnds = Duration.ofHours(1).toMillis();
+    private final long mIntervalEndMs = Duration.ofHours(17).toMillis();
+    private final long mIntervalBeginMs = Duration.ofHours(9).toMillis();
+    private final long mMinimalDelayBeforeIntervalEnds = Duration.ofHours(1).toMillis();
 
     /** Initialize static spies. */
     @Before
@@ -110,8 +110,8 @@ public final class ConsentNotificationJobServiceTest extends AdServicesJobServic
         when(mMockFlags.getConsentNotificationMinimalDelayBeforeIntervalEnds())
                 .thenReturn(mMinimalDelayBeforeIntervalEnds);
         mSpyLogger = mockAdServicesJobServiceLogger(mContext, mMockFlags);
-        ExtendedMockito.doReturn(mUxStatesManager).when(() -> UxStatesManager.getInstance());
-        ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
+        ExtendedMockito.doReturn(mUxStatesManager).when(UxStatesManager::getInstance);
+        ExtendedMockito.doReturn(mConsentManager).when(ConsentManager::getInstance);
 
         mConsentNotificationJobService.setConsentManager(mConsentManager);
         mConsentNotificationJobService.setUxStatesManager(mUxStatesManager);
@@ -174,7 +174,7 @@ public final class ConsentNotificationJobServiceTest extends AdServicesJobServic
 
         doReturn(mPackageManager).when(mConsentNotificationJobService).getPackageManager();
         mConsentNotificationJobService.setConsentManager(consentManager);
-        doReturn(consentManager).when(() -> ConsentManager.getInstance());
+        doReturn(consentManager).when(ConsentManager::getInstance);
         Mockito.doReturn(true).when(mUxStatesManager).isEeaDevice();
         when(mMockJobParameters.getExtras()).thenReturn(mPersistableBundle);
         when(mPersistableBundle.getBoolean(eq(ADID_ENABLE_STATUS), anyBoolean())).thenReturn(true);
@@ -425,7 +425,7 @@ public final class ConsentNotificationJobServiceTest extends AdServicesJobServic
         when(mPersistableBundle.getBoolean(eq(ADID_ENABLE_STATUS), anyBoolean())).thenReturn(true);
         when(mPersistableBundle.getBoolean(eq(RE_CONSENT_STATUS), anyBoolean())).thenReturn(false);
         mConsentNotificationJobService.setConsentManager(mConsentManager);
-        doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
+        doReturn(mConsentManager).when(ConsentManager::getInstance);
         mockJobFinished();
     }
 
@@ -443,7 +443,7 @@ public final class ConsentNotificationJobServiceTest extends AdServicesJobServic
         doNothing().when(consentManager).recordNotificationDisplayed(true);
         doNothing().when(consentManager).recordGaUxNotificationDisplayed(true);
         mConsentNotificationJobService.setConsentManager(consentManager);
-        doReturn(consentManager).when(() -> ConsentManager.getInstance());
+        doReturn(consentManager).when(ConsentManager::getInstance);
         Mockito.doReturn(true).when(mUxStatesManager).isEeaDevice();
         when(mMockJobParameters.getExtras()).thenReturn(mPersistableBundle);
         when(mPersistableBundle.getBoolean(anyString(), anyBoolean())).thenReturn(true);

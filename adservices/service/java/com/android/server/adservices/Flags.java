@@ -22,7 +22,7 @@ package com.android.server.adservices;
  *
  * @hide
  */
-interface Flags {
+public interface Flags {
     /**
      * Whether to enable the AdServices System Service. By default, the AdServices System Service is
      * disabled.
@@ -31,5 +31,12 @@ interface Flags {
 
     default boolean getAdServicesSystemServiceEnabled() {
         return ADSERVICES_SYSTEM_SERVICE_ENABLED;
+    }
+
+    /** Whether to enable the client error logger. By default, it is disabled. */
+    boolean CLIENT_ERROR_LOGGING__ENABLE_CEL_FOR_SYSTEM_SERVER = false;
+
+    default boolean getEnableCelForSystemServer() {
+        return CLIENT_ERROR_LOGGING__ENABLE_CEL_FOR_SYSTEM_SERVER;
     }
 }

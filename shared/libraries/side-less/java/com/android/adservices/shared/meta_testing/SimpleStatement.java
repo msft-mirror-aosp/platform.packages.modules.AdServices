@@ -30,15 +30,17 @@ public final class SimpleStatement extends Statement {
 
     @Override
     public void evaluate() throws Throwable {
-        mLog.v("evaluate() called");
+        mLog.d("evaluate() called");
         mEvaluated = true;
         if (mThrowable != null) {
-            mLog.v("Throwing %s", mThrowable);
+            mLog.i("Throwing %s", mThrowable);
             throw mThrowable;
         }
+        mLog.d("Saul Goodman!");
     }
 
     public void failWith(Throwable t) {
+        mLog.d("failWith(%s)", t);
         mThrowable = t;
     }
 
@@ -52,5 +54,10 @@ public final class SimpleStatement extends Statement {
         if (mEvaluated) {
             throw new AssertionError("test statement was evaluated");
         }
+    }
+
+    @Override
+    public String toString() {
+        return "[SimpleStatement: mEvaluated=" + mEvaluated + ", mThrowable=" + mThrowable + ']';
     }
 }

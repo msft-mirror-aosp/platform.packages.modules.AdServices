@@ -53,6 +53,10 @@ interface ISdkSandboxManager {
     void logSandboxApiLatency(in SandboxLatencyInfo sandboxLatencyInfo);
     void logSandboxActivityApiLatency(int method, int callResult, int latencyMillis);
 
-    // TODO(b/282239822): Remove this workaround on Android VIC
+    // Notice: this is only needed on T as some devices have a SELinux allowlist that wouldn't
+    // allow adservices_manager to be published (b/262282035). It's not an issue on UDC anymore as
+    // there is a CTS test (on AdServicesJUnit4DeviceTest) that explicitly checks that the service
+    // is published on UDC devices, so this method could be removed once / if AdServices is only
+    // available on UDC+.
     IBinder getAdServicesManager();
 }
