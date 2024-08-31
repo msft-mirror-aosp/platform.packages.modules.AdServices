@@ -32,7 +32,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.android.adservices.shared.SharedMockitoTestCase;
+import com.android.adservices.shared.spe.SpeMockitoTestCase;
 import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 
 import org.junit.Before;
@@ -43,7 +43,7 @@ import org.mockito.Mock;
 import java.util.concurrent.Executors;
 
 /** Unit test for {@link JobSchedulingLogger}. */
-public final class JobSchedulingLoggerTest extends SharedMockitoTestCase {
+public final class JobSchedulingLoggerTest extends SpeMockitoTestCase {
     private static final int JOB_ID = 1;
     private static final int RESULT_CODE = SCHEDULING_RESULT_CODE_SUCCESSFUL;
 
@@ -86,7 +86,7 @@ public final class JobSchedulingLoggerTest extends SharedMockitoTestCase {
 
     @Test
     public void testRecordOnScheduling_disabled() {
-        when(mMockFlags.getJobSchedulingLoggingEnabled()).thenReturn(false);
+        mockGetJobSchedulingLoggingEnabled(false);
 
         syncLogSchedulingStatsHelper();
         mSpyJobSchedulingLogger.recordOnScheduling(JOB_ID, RESULT_CODE);
@@ -97,7 +97,7 @@ public final class JobSchedulingLoggerTest extends SharedMockitoTestCase {
 
     @Test
     public void testRecordOnScheduling_enabled() throws Exception {
-        when(mMockFlags.getJobSchedulingLoggingEnabled()).thenReturn(true);
+        mockGetJobSchedulingLoggingEnabled(true);
 
         ResultSyncCallback<Void> callback = syncLogSchedulingStatsHelper();
         mSpyJobSchedulingLogger.recordOnScheduling(JOB_ID, RESULT_CODE);
@@ -109,7 +109,7 @@ public final class JobSchedulingLoggerTest extends SharedMockitoTestCase {
 
     @Test
     public void testRecordOnSchedulingLagacy_disabled() {
-        when(mMockFlags.getJobSchedulingLoggingEnabled()).thenReturn(false);
+        mockGetJobSchedulingLoggingEnabled(false);
 
         syncLogSchedulingStatsHelper();
         mSpyJobSchedulingLogger.recordOnSchedulingLegacy(JOB_ID, RESULT_CODE);
@@ -120,7 +120,7 @@ public final class JobSchedulingLoggerTest extends SharedMockitoTestCase {
 
     @Test
     public void testRecordOnSchedulingLagacy_enabled() throws Exception {
-        when(mMockFlags.getJobSchedulingLoggingEnabled()).thenReturn(true);
+        mockGetJobSchedulingLoggingEnabled(true);
 
         ResultSyncCallback<Void> callback = syncLogSchedulingStatsHelper();
         mSpyJobSchedulingLogger.recordOnSchedulingLegacy(JOB_ID, RESULT_CODE);

@@ -15,6 +15,8 @@
  */
 package com.android.adservices.shared;
 
+import android.platform.test.ravenwood.RavenwoodRule;
+
 import com.android.adservices.shared.testing.CallSuper;
 import com.android.adservices.shared.testing.DeviceSideTestCase;
 import com.android.adservices.shared.testing.common.ApplicationContextSingletonRule;
@@ -31,8 +33,7 @@ public abstract class SharedUnitTestCase extends DeviceSideTestCase {
     public final TestName name = new TestName();
 
     @Rule(order = 5)
-    public final ApplicationContextSingletonRule appContext =
-            new ApplicationContextSingletonRule(/* restoreAfter= */ false);
+    public final ApplicationContextSingletonRule appContext = getApplicationContextSingletonRule();
 
     @Override
     public final String getTestName() {
@@ -45,5 +46,13 @@ public abstract class SharedUnitTestCase extends DeviceSideTestCase {
         super.assertValidTestCaseFixtures();
 
         assertTestClassHasNoFieldsFromSuperclass(SharedUnitTestCase.class, "name", "appContext");
+    }
+
+    // TODO(b/355286824): Hac^H^H^Hworkaround to run on Ravenwood, as it doesn't support
+    // Context.getApplicationContext() yet
+    private ApplicationContextSingletonRule getApplicationContextSingletonRule() {
+        var appContext =
+                RavenwoodRule.isOnRavenwood() ? mContext : mContext.getApplicationContext();
+        return new ApplicationContextSingletonRule(appContext, /* restoreAfter= */ false);
     }
 }

@@ -16,7 +16,6 @@
 
 package com.android.cobalt.crypto;
 
-import android.annotation.NonNull;
 
 import com.google.cobalt.EncryptedMessage;
 import com.google.cobalt.Envelope;
@@ -32,8 +31,7 @@ public interface Encrypter {
      * @return empty Optional if the {@link Envelope} to encrypt is empty
      * @throws EncryptionFailedException if encryption fails
      */
-    Optional<EncryptedMessage> encryptEnvelope(@NonNull Envelope envelope)
-            throws EncryptionFailedException;
+    Optional<EncryptedMessage> encryptEnvelope(Envelope envelope) throws EncryptionFailedException;
 
     /**
      * Encrypt an observation.
@@ -42,6 +40,6 @@ public interface Encrypter {
      *     encrypt is empty
      * @throws EncryptionFailedException if encryption fails
      */
-    Optional<EncryptedMessage> encryptObservation(@NonNull ObservationToEncrypt observation)
+    Optional<EncryptedMessage> encryptObservation(ObservationToEncrypt observation)
             throws EncryptionFailedException;
 }

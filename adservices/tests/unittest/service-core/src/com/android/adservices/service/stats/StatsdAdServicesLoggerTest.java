@@ -658,6 +658,7 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
 
     @Test
     public void logMeasurementAttribution_success() {
+        String enrollmentId = "enrollmentId";
         when(mMockFlags.getMeasurementEnableAppPackageNameLogging()).thenReturn(true);
         when(mMockFlags.getMeasurementAppPackageNameLoggingAllowlist())
                 .thenReturn(SOURCE_REGISTRANT);
@@ -699,7 +700,7 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                                         anyInt()));
 
         // Invoke logging call
-        mLogger.logMeasurementAttributionStats(stats);
+        mLogger.logMeasurementAttributionStats(stats, enrollmentId);
 
         // Verify only compat logging took place
         MockedVoidMethod writeInvocation =

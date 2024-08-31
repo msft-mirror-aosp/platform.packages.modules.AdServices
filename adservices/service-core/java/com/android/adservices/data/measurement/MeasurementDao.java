@@ -163,6 +163,9 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.TriggerContract.ATTRIBUTION_SCOPES,
                 trigger.getAttributionScopesString());
+        values.put(
+                MeasurementTables.TriggerContract.AGGREGATABLE_FILTERING_ID_MAX_BYTES,
+                trigger.getAggregatableFilteringIdMaxBytes());
 
         long rowId =
                 mSQLTransaction

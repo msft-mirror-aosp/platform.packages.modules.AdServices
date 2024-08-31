@@ -16,10 +16,8 @@
 
 package com.android.adservices.service.encryptionkey;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -31,8 +29,7 @@ import static org.mockito.Mockito.when;
 
 import android.net.Uri;
 
-import androidx.test.filters.SmallTest;
-
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.encryptionkey.EncryptionKeyFetcher.JSONResponseContract;
@@ -42,18 +39,14 @@ import com.android.adservices.service.stats.AdServicesEncryptionKeyFetchedStats;
 import com.android.adservices.service.stats.AdServicesEncryptionKeyFetchedStats.FetchJobType;
 import com.android.adservices.service.stats.AdServicesEncryptionKeyFetchedStats.FetchStatus;
 import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -66,8 +59,8 @@ import java.util.Optional;
 import javax.net.ssl.HttpsURLConnection;
 
 /** Unit tests for {@link EncryptionKeyFetcher} */
-@SmallTest
-public class EncryptionKeyFetcherTest {
+@SpyStatic(FlagsFactory.class)
+public final class EncryptionKeyFetcherTest extends AdServicesExtendedMockitoTestCase {
 
     private static final String ENROLLMENT_ID = "1";
     private static final String ENROLLED_APIS = "PRIVACY_SANDBOX_API_TOPICS";
@@ -83,9 +76,7 @@ public class EncryptionKeyFetcherTest {
     private static final long EXPIRATION1 = 100000L;
     private static final long EXPIRATION2 = 100001L;
     @Mock private HttpsURLConnection mURLConnection;
-    @Mock private Flags mMockFlags;
     @Mock private AdServicesLogger mAdServicesLogger;
-    private MockitoSession mStaticMockSession;
 
     EncryptionKeyFetcher mFetcher;
     EncryptionKeyFetcher mSpyFetcher;
@@ -93,14 +84,6 @@ public class EncryptionKeyFetcherTest {
     /** Unit test set up. */
     @Before
     public void setUp() throws Exception {
-        MockitoAnnotations.initMocks(this);
-
-        // Start a mockitoSession to mock static method.
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
         doReturn(Flags.ENCRYPTION_KEY_NETWORK_CONNECT_TIMEOUT_MS)
                 .when(mMockFlags)
                 .getEncryptionKeyNetworkConnectTimeoutMs();
@@ -109,11 +92,6 @@ public class EncryptionKeyFetcherTest {
                 .getEncryptionKeyNetworkReadTimeoutMs();
         mFetcher = new EncryptionKeyFetcher(mAdServicesLogger);
         mSpyFetcher = spy(mFetcher);
-    }
-
-    @After
-    public void teardown() {
-        mStaticMockSession.finishMocking();
     }
 
     private static JSONObject constructEncryptionKeyJSON() throws JSONException {
@@ -225,7 +203,7 @@ public class EncryptionKeyFetcherTest {
         Optional<List<EncryptionKey>> encryptionKeyList =
                 mSpyFetcher.fetchEncryptionKeys(null, enrollmentData, true);
 
-        assertFalse(encryptionKeyList.isPresent());
+        expect.that(encryptionKeyList.isPresent()).isFalse();
         AdServicesEncryptionKeyFetchedStats stats =
                 AdServicesEncryptionKeyFetchedStats.builder()
                         .setFetchJobType(FetchJobType.ENCRYPTION_KEY_DAILY_FETCH_JOB)
@@ -248,7 +226,7 @@ public class EncryptionKeyFetcherTest {
         Optional<List<EncryptionKey>> encryptionKeyList =
                 mSpyFetcher.fetchEncryptionKeys(null, enrollmentData, true);
 
-        assertFalse(encryptionKeyList.isPresent());
+        expect.that(encryptionKeyList.isPresent()).isFalse();
         AdServicesEncryptionKeyFetchedStats stats =
                 AdServicesEncryptionKeyFetchedStats.builder()
                         .setFetchJobType(FetchJobType.ENCRYPTION_KEY_DAILY_FETCH_JOB)
@@ -271,7 +249,7 @@ public class EncryptionKeyFetcherTest {
         Optional<List<EncryptionKey>> encryptionKeyList =
                 mSpyFetcher.fetchEncryptionKeys(null, enrollmentData, true);
 
-        assertFalse(encryptionKeyList.isPresent());
+        expect.that(encryptionKeyList.isPresent()).isFalse();
         AdServicesEncryptionKeyFetchedStats stats =
                 AdServicesEncryptionKeyFetchedStats.builder()
                         .setFetchJobType(FetchJobType.ENCRYPTION_KEY_DAILY_FETCH_JOB)
@@ -293,7 +271,7 @@ public class EncryptionKeyFetcherTest {
         Optional<List<EncryptionKey>> encryptionKeyList =
                 mSpyFetcher.fetchEncryptionKeys(null, enrollmentData, true);
 
-        assertFalse(encryptionKeyList.isPresent());
+        expect.that(encryptionKeyList.isPresent()).isFalse();
         AdServicesEncryptionKeyFetchedStats stats =
                 AdServicesEncryptionKeyFetchedStats.builder()
                         .setFetchJobType(FetchJobType.ENCRYPTION_KEY_DAILY_FETCH_JOB)
@@ -316,7 +294,7 @@ public class EncryptionKeyFetcherTest {
         Optional<List<EncryptionKey>> encryptionKeyList =
                 mSpyFetcher.fetchEncryptionKeys(null, enrollmentData, true);
 
-        assertFalse(encryptionKeyList.isPresent());
+        expect.that(encryptionKeyList.isPresent()).isFalse();
         AdServicesEncryptionKeyFetchedStats stats =
                 AdServicesEncryptionKeyFetchedStats.builder()
                         .setFetchJobType(FetchJobType.ENCRYPTION_KEY_DAILY_FETCH_JOB)
@@ -342,7 +320,7 @@ public class EncryptionKeyFetcherTest {
         Optional<List<EncryptionKey>> encryptionKeyList =
                 mSpyFetcher.fetchEncryptionKeys(null, enrollmentData, true);
 
-        assertFalse(encryptionKeyList.isPresent());
+        expect.that(encryptionKeyList.isPresent()).isFalse();
         AdServicesEncryptionKeyFetchedStats stats =
                 AdServicesEncryptionKeyFetchedStats.builder()
                         .setFetchJobType(FetchJobType.ENCRYPTION_KEY_DAILY_FETCH_JOB)
@@ -364,7 +342,7 @@ public class EncryptionKeyFetcherTest {
         Optional<List<EncryptionKey>> encryptionKeyList =
                 mSpyFetcher.fetchEncryptionKeys(constructEncryptionKey(), enrollmentData, false);
 
-        assertTrue(encryptionKeyList.isEmpty());
+        expect.that(encryptionKeyList.isEmpty()).isTrue();
         verify(mURLConnection).setRequestMethod("GET");
         AdServicesEncryptionKeyFetchedStats stats =
                 AdServicesEncryptionKeyFetchedStats.builder()
@@ -402,37 +380,33 @@ public class EncryptionKeyFetcherTest {
     }
 
     private void assertEncryptionKeyListResult(List<EncryptionKey> encryptionKeys) {
-        assertEquals(2, encryptionKeys.size());
+        expect.that(encryptionKeys.size()).isEqualTo(2);
         EncryptionKey encryptionKey1 = encryptionKeys.get(0);
-        assertNotNull(encryptionKey1.getId());
-        assertEquals(EncryptionKey.KeyType.ENCRYPTION, encryptionKey1.getKeyType());
-        assertEquals(ENROLLMENT_ID, encryptionKey1.getEnrollmentId());
-        assertEquals(Uri.parse(SITE), encryptionKey1.getReportingOrigin());
-        assertEquals(
-                SITE + EncryptionKeyFetcher.ENCRYPTION_KEY_ENDPOINT,
-                encryptionKey1.getEncryptionKeyUrl());
-        assertEquals(
-                EncryptionKey.ProtocolType.valueOf(PROTOCOL_TYPE1),
-                encryptionKey1.getProtocolType());
-        assertEquals(KEY_COMMITMENT_ID1, encryptionKey1.getKeyCommitmentId());
-        assertEquals(BODY1, encryptionKey1.getBody());
-        assertEquals(EXPIRATION1, encryptionKey1.getExpiration());
-        assertNotEquals(0L, encryptionKey1.getLastFetchTime());
+        assertWithMessage("encryptionKey1.getId").that(encryptionKey1.getId()).isNotNull();
+        expect.that(encryptionKey1.getKeyType()).isEqualTo(EncryptionKey.KeyType.ENCRYPTION);
+        expect.that(encryptionKey1.getEnrollmentId()).isEqualTo(ENROLLMENT_ID);
+        expect.that(encryptionKey1.getReportingOrigin()).isEqualTo(Uri.parse(SITE));
+        expect.that(encryptionKey1.getEncryptionKeyUrl())
+                .isEqualTo(SITE + EncryptionKeyFetcher.ENCRYPTION_KEY_ENDPOINT);
+        expect.that(encryptionKey1.getProtocolType())
+                .isEqualTo(EncryptionKey.ProtocolType.valueOf(PROTOCOL_TYPE1));
+        expect.that(encryptionKey1.getKeyCommitmentId()).isEqualTo(KEY_COMMITMENT_ID1);
+        expect.that(encryptionKey1.getBody()).isEqualTo(BODY1);
+        expect.that(encryptionKey1.getExpiration()).isEqualTo(EXPIRATION1);
+        expect.that(encryptionKey1.getLastFetchTime()).isNotEqualTo(0L);
 
         EncryptionKey encryptionKey2 = encryptionKeys.get(1);
-        assertNotNull(encryptionKey2.getId());
-        assertEquals(EncryptionKey.KeyType.SIGNING, encryptionKey2.getKeyType());
-        assertEquals(ENROLLMENT_ID, encryptionKey2.getEnrollmentId());
-        assertEquals(Uri.parse(SITE), encryptionKey2.getReportingOrigin());
-        assertEquals(
-                SITE + EncryptionKeyFetcher.ENCRYPTION_KEY_ENDPOINT,
-                encryptionKey2.getEncryptionKeyUrl());
-        assertEquals(
-                EncryptionKey.ProtocolType.valueOf(PROTOCOL_TYPE2),
-                encryptionKey2.getProtocolType());
-        assertEquals(KEY_COMMITMENT_ID2, encryptionKey2.getKeyCommitmentId());
-        assertEquals(BODY2, encryptionKey2.getBody());
-        assertEquals(EXPIRATION2, encryptionKey2.getExpiration());
-        assertNotEquals(0L, encryptionKey2.getLastFetchTime());
+        assertWithMessage("encryptionKey2.getId").that(encryptionKey2.getId()).isNotNull();
+        expect.that(encryptionKey2.getKeyType()).isEqualTo(EncryptionKey.KeyType.SIGNING);
+        expect.that(encryptionKey2.getEnrollmentId()).isEqualTo(ENROLLMENT_ID);
+        expect.that(encryptionKey2.getReportingOrigin()).isEqualTo(Uri.parse(SITE));
+        expect.that(encryptionKey2.getEncryptionKeyUrl())
+                .isEqualTo(SITE + EncryptionKeyFetcher.ENCRYPTION_KEY_ENDPOINT);
+        expect.that(encryptionKey2.getProtocolType())
+                .isEqualTo(EncryptionKey.ProtocolType.valueOf(PROTOCOL_TYPE2));
+        expect.that(encryptionKey2.getKeyCommitmentId()).isEqualTo(KEY_COMMITMENT_ID2);
+        expect.that(encryptionKey2.getBody()).isEqualTo(BODY2);
+        expect.that(encryptionKey2.getExpiration()).isEqualTo(EXPIRATION2);
+        expect.that(encryptionKey2.getLastFetchTime()).isNotEqualTo(0L);
     }
 }

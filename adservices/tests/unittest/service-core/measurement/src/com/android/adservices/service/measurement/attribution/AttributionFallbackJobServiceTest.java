@@ -59,7 +59,6 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
@@ -80,17 +79,17 @@ import java.util.concurrent.TimeUnit;
 @SpyStatic(ImmediateAggregateReportingJobService.class)
 @SpyStatic(ReportingJobService.class)
 @MockStatic(ServiceCompatUtils.class)
-public final class AttributionFallbackJobServiceTest extends MeasurementJobServiceTestCase {
+public final class AttributionFallbackJobServiceTest
+        extends MeasurementJobServiceTestCase<AttributionFallbackJobService> {
     private static final long WAIT_IN_MILLIS = 200L;
     private static final long JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(24);
 
     private static final int MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID =
             MEASUREMENT_ATTRIBUTION_FALLBACK_JOB.getJobId();
-    private AttributionFallbackJobService mSpyService;
 
-    @Before
-    public void setUp() {
-        mSpyService = spy(new AttributionFallbackJobService());
+    @Override
+    protected AttributionFallbackJobService getSpiedService() {
+        return new AttributionFallbackJobService();
     }
 
     @Test
@@ -504,29 +503,8 @@ public final class AttributionFallbackJobServiceTest extends MeasurementJobServi
         execute.run();
     }
 
-    private void enableFeature() {
-        toggleFeature(true);
-    }
-
-    private void disableFeature() {
-        toggleFeature(false);
-    }
-
-    private void toggleFeature(boolean value) {
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        ExtendedMockito.doReturn(value)
-                .when(mMockFlags)
-                .getMeasurementAttributionFallbackJobEnabled();
-    }
-
-    private CountDownLatch createCountDownLatch() {
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
-        doAnswer(i -> countDown(countDownLatch)).when(mSpyService).jobFinished(any(), anyBoolean());
-        return countDownLatch;
-    }
-
-    private Object countDown(CountDownLatch countDownLatch) {
-        countDownLatch.countDown();
-        return null;
+    @Override
+    protected void toggleFeature(boolean value) {
+        when(mMockFlags.getMeasurementAttributionFallbackJobEnabled()).thenReturn(value);
     }
 }

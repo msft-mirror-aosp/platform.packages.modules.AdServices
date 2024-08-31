@@ -18,6 +18,7 @@ package com.android.adservices.service.measurement.registration;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -53,6 +54,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.quality.Strictness;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -309,6 +311,114 @@ public final class FetcherUtilTest {
     }
 
     @Test
+    public void extractIntegralValue_posIntegralNumber_success() throws Exception {
+        JSONObject obj = new JSONObject().put(KEY, 123);
+        assertWithMessage("extractValueOfValidPositiveIntegralNumber")
+                .that(FetcherUtil.extractIntegralValue(obj, KEY))
+                .isEqualTo(Optional.of(new BigDecimal(123)));
+    }
+
+    @Test
+    public void extractIntegralValue_negativeIntegralNumber_success() throws Exception {
+        JSONObject obj = new JSONObject().put(KEY, -123);
+        assertWithMessage("extractValueOfValidNegativeIntegralNumber")
+                .that(FetcherUtil.extractIntegralValue(obj, KEY))
+                .isEqualTo(Optional.of(new BigDecimal(-123)));
+    }
+
+    @Test
+    public void extractIntegralValue_zeroInput_success() throws Exception {
+        JSONObject obj = new JSONObject().put(KEY, 0);
+        assertWithMessage("extractValueOfZero")
+                .that(FetcherUtil.extractIntegralValue(obj, KEY))
+                .isEqualTo(Optional.of(new BigDecimal(0)));
+    }
+
+    @Test
+    public void extractIntegralValue_posNumWithDecimalZero_success() throws Exception {
+        JSONObject obj = new JSONObject().put(KEY, 12.0);
+        assertWithMessage("extractValueOfValidPosNumberWithDecimalOfZero")
+                .that(
+                        FetcherUtil.extractIntegralValue(obj, KEY)
+                                .get()
+                                .compareTo(new BigDecimal(12.0)))
+                .isEqualTo(0);
+    }
+
+    @Test
+    public void extractIntegralValue_negNumWithDecimalZero_success() throws Exception {
+        JSONObject obj = new JSONObject().put(KEY, -12.0);
+        assertWithMessage("extractValueOfValidNegNumberWithDecimalOfZero")
+                .that(
+                        FetcherUtil.extractIntegralValue(obj, KEY)
+                                .get()
+                                .compareTo(new BigDecimal(-12.0)))
+                .isEqualTo(0);
+    }
+
+    @Test
+    public void extractIntegralValue_posNumWithDecimalNonZero_fails() throws Exception {
+        JSONObject obj = new JSONObject().put(KEY, 3.4);
+        assertWithMessage("extractValueOfValidPosNumberWithDecimalNonZero")
+                .that(FetcherUtil.extractIntegralValue(obj, KEY))
+                .isEqualTo(Optional.empty());
+    }
+
+    @Test
+    public void extractIntegralValue_negNumWithDecimalNonZero_fails() throws Exception {
+        JSONObject obj = new JSONObject().put(KEY, -5.6);
+        assertWithMessage("extractValueOfValidNegNumberWithDecimalNonZero")
+                .that(FetcherUtil.extractIntegralValue(obj, KEY))
+                .isEqualTo(Optional.empty());
+    }
+
+    @Test
+    public void extractIntegralValue_posIntegralSciNotation_success() throws Exception {
+        JSONObject obj = new JSONObject().put(KEY, 1.23e3);
+        assertWithMessage("extractValueOfPosSciNotation")
+                .that(
+                        FetcherUtil.extractIntegralValue(obj, KEY)
+                                .get()
+                                .compareTo(new BigDecimal(1230.0)))
+                .isEqualTo(0);
+    }
+
+    @Test
+    public void extractIntegralValue_negIntegralSciNotation_success() throws Exception {
+        JSONObject obj = new JSONObject().put(KEY, -3.456e3);
+        assertWithMessage("extractValueOfNegSciNotation")
+                .that(
+                        FetcherUtil.extractIntegralValue(obj, KEY)
+                                .get()
+                                .compareTo(new BigDecimal(-3456.0)))
+                .isEqualTo(0);
+    }
+
+    @Test
+    public void extractIntegralValue_posNonIntegralSciNotation_fails() throws Exception {
+        JSONObject obj = new JSONObject().put(KEY, 1.23e1);
+        assertWithMessage("extractValueOfPosNonIntegralSciNotation")
+                .that(FetcherUtil.extractIntegralValue(obj, KEY))
+                .isEqualTo(Optional.empty());
+    }
+
+    @Test
+    public void extractIntegralValue_negNonIntegralSciNotation_fails() throws Exception {
+        JSONObject obj = new JSONObject().put(KEY, -0.345e2);
+        assertWithMessage("extractValueOfNegNonIntegralSciNotation")
+                .that(FetcherUtil.extractIntegralValue(obj, KEY))
+                .isEqualTo(Optional.empty());
+    }
+
+    @Test
+    public void extractIntegralValue_nonNumericInput_fails() throws Exception {
+        JSONObject obj = new JSONObject().put(KEY, "78");
+        assertWithMessage("extractValueOfNonNumericInput")
+                .that(FetcherUtil.extractIntegralValue(obj, KEY))
+                .isEqualTo(Optional.empty());
+    }
+
+    @Test
     public void testIsValidAggregateKeyId_valid() {
         assertTrue(FetcherUtil.isValidAggregateKeyId("abcd"));
     }
@@ -439,8 +549,8 @@ public final class FetcherUtilTest {
     }
 
     @Test
-    public void areValidAttributionFilters_validlLookbackWindowA_removeSizeConstrains_returnsTrue()
-            throws JSONException {
+    public void areValidAttributionFilters_validlLookbackWindowA_removeSizeConstraints_returnsTrue()
+            throws Exception {
         String json =
                 "[{"
                         + "\"filter-string-1\": [\"filter-value-1\"],"
@@ -455,6 +565,280 @@ public final class FetcherUtilTest {
                         mFlags,
                         /* canIncludeLookbackWindow= */ true,
                         /* shouldCheckFilterSize= */ false));
+    }
+
+    @Test
+    public void areValidAttributionFilters_lookbackWindowZeroDecimal_returnsTrue()
+            throws Exception {
+        String json =
+                "[{"
+                        + "\"filter-string-1\": [\"filter-value-1\"],"
+                        + "\"filter-string-2\": [\"filter-value-2\", \"filter-value-3\"],"
+                        + "\"_lookback_window\": 12.0"
+                        + "}]";
+        JSONArray filters = new JSONArray(json);
+        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        assertWithMessage("lookbackWindowZeroDecimalRetTrue")
+                .that(
+                        FetcherUtil.areValidAttributionFilters(
+                                filters,
+                                mFlags,
+                                /* canIncludeLookbackWindow= */ true,
+                                /* shouldCheckFilterSize= */ true))
+                .isTrue();
+    }
+
+    @Test
+    public void
+            areValidAttributionFilters_lookbackWindowZeroDecimal_removeSizeConstraints_returnsTrue()
+                    throws Exception {
+        String json =
+                "[{"
+                        + "\"filter-string-1\": [\"filter-value-1\"],"
+                        + "\"filter-string-2\": [\"filter-value-2\", \"filter-value-3\"],"
+                        + "\"_lookback_window\": 12.0"
+                        + "}]";
+        JSONArray filters = new JSONArray(json);
+        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        assertWithMessage("lookbackWindowZeroDecimalRetTrue_noConstraints")
+                .that(
+                        FetcherUtil.areValidAttributionFilters(
+                                filters,
+                                mFlags,
+                                /* canIncludeLookbackWindow= */ true,
+                                /* shouldCheckFilterSize= */ false))
+                .isTrue();
+    }
+
+    @Test
+    public void areValidAttributionFilters_negativeLookbackWindowDecimal_returnsFalse()
+            throws Exception {
+        String json =
+                "[{"
+                        + "\"filter-string-1\": [\"filter-value-1\"],"
+                        + "\"filter-string-2\": [\"filter-value-2\", \"filter-value-3\"],"
+                        + "\"_lookback_window\": -12.0"
+                        + "}]";
+        JSONArray filters = new JSONArray(json);
+        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        assertWithMessage("negativeLookbackWindow_withDecimalRetFalse")
+                .that(
+                        FetcherUtil.areValidAttributionFilters(
+                                filters,
+                                mFlags,
+                                /* canIncludeLookbackWindow= */ true,
+                                /* shouldCheckFilterSize= */ true))
+                .isFalse();
+    }
+
+    @Test
+    public void areValidAttributionFilters_lookbackWindowNonZeroDecimal_returnsFalse()
+            throws Exception {
+        String json =
+                "[{"
+                        + "\"filter-string-1\": [\"filter-value-1\"],"
+                        + "\"filter-string-2\": [\"filter-value-2\", \"filter-value-3\"],"
+                        + "\"_lookback_window\": 12.3"
+                        + "}]";
+        JSONArray filters = new JSONArray(json);
+        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        assertWithMessage("lookbackWindowNonZeroDecimalRetFalse")
+                .that(
+                        FetcherUtil.areValidAttributionFilters(
+                                filters,
+                                mFlags,
+                                /* canIncludeLookbackWindow= */ true,
+                                /* shouldCheckFilterSize= */ true))
+                .isFalse();
+    }
+
+    @Test
+    public void areValidAttributionFilters_negativeLookbackWindowNonZeroDecimal_returnsFalse()
+            throws Exception {
+        String json =
+                "[{"
+                        + "\"filter-string-1\": [\"filter-value-1\"],"
+                        + "\"filter-string-2\": [\"filter-value-2\", \"filter-value-3\"],"
+                        + "\"_lookback_window\": -12.3"
+                        + "}]";
+        JSONArray filters = new JSONArray(json);
+        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        assertWithMessage("negativeLookbackWindowNonZeroDecimalRetFalse")
+                .that(
+                        FetcherUtil.areValidAttributionFilters(
+                                filters,
+                                mFlags,
+                                /* canIncludeLookbackWindow= */ true,
+                                /* shouldCheckFilterSize= */ true))
+                .isFalse();
+    }
+
+    @Test
+    public void areValidAttributionFilters_lookbackWindowSciNotation_returnsTrue()
+            throws Exception {
+        String json =
+                "[{"
+                        + "\"filter-string-1\": [\"filter-value-1\"],"
+                        + "\"filter-string-2\": [\"filter-value-2\", \"filter-value-3\"],"
+                        + "\"_lookback_window\": 1.23e2"
+                        + "}]";
+        JSONArray filters = new JSONArray(json);
+        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        assertWithMessage("lookbackWindowScientificNotationRetTrue")
+                .that(
+                        FetcherUtil.areValidAttributionFilters(
+                                filters,
+                                mFlags,
+                                /* canIncludeLookbackWindow= */ true,
+                                /* shouldCheckFilterSize= */ true))
+                .isTrue();
+    }
+
+    @Test
+    public void
+            areValidAttributionFilters_lookbackWindowSciNotation_removeSizeConstraints_returnsTrue()
+                    throws Exception {
+        String json =
+                "[{"
+                        + "\"filter-string-1\": [\"filter-value-1\"],"
+                        + "\"filter-string-2\": [\"filter-value-2\", \"filter-value-3\"],"
+                        + "\"_lookback_window\": 1.23e2"
+                        + "}]";
+        JSONArray filters = new JSONArray(json);
+        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        assertWithMessage("lookbackWindowScientificNotationRetTrue_noConstraints")
+                .that(
+                        FetcherUtil.areValidAttributionFilters(
+                                filters,
+                                mFlags,
+                                /* canIncludeLookbackWindow= */ true,
+                                /* shouldCheckFilterSize= */ false))
+                .isTrue();
+    }
+
+    @Test
+    public void areValidAttributionFilters_lookbackWindowSciNotationAndNonZeroDecimal_returnsFalse()
+            throws Exception {
+        String json =
+                "[{"
+                        + "\"filter-string-1\": [\"filter-value-1\"],"
+                        + "\"filter-string-2\": [\"filter-value-2\", \"filter-value-3\"],"
+                        + "\"_lookback_window\": 1.234e2"
+                        + "}]";
+        JSONArray filters = new JSONArray(json);
+        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        assertWithMessage("lookbackWindowScientificNotation_nonZeroDecimalRetFalse")
+                .that(
+                        FetcherUtil.areValidAttributionFilters(
+                                filters,
+                                mFlags,
+                                /* canIncludeLookbackWindow= */ true,
+                                /* shouldCheckFilterSize= */ true))
+                .isFalse();
+    }
+
+    @Test
+    public void areValidAttributionFilters_lookbackWindowNegativeSciNotation_returnsFalse()
+            throws Exception {
+        String json =
+                "[{"
+                        + "\"filter-string-1\": [\"filter-value-1\"],"
+                        + "\"filter-string-2\": [\"filter-value-2\", \"filter-value-3\"],"
+                        + "\"_lookback_window\": -1.23e2"
+                        + "}]";
+        JSONArray filters = new JSONArray(json);
+        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        assertWithMessage("lookbackWindowNegativeScientificNotationRetFalse")
+                .that(
+                        FetcherUtil.areValidAttributionFilters(
+                                filters,
+                                mFlags,
+                                /* canIncludeLookbackWindow= */ true,
+                                /* shouldCheckFilterSize= */ true))
+                .isFalse();
+    }
+
+    @Test
+    public void areValidAttributionFilters_lookbackWindowAsStr_returnsFalse() throws Exception {
+        String json =
+                "[{"
+                        + "\"filter-string-1\": [\"filter-value-1\"],"
+                        + "\"filter-string-2\": [\"filter-value-2\", \"filter-value-3\"],"
+                        + "\"_lookback_window\": \"123\""
+                        + "}]";
+        JSONArray filters = new JSONArray(json);
+        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        assertWithMessage("stringLookbackWindowRetFalse")
+                .that(
+                        FetcherUtil.areValidAttributionFilters(
+                                filters,
+                                mFlags,
+                                /* canIncludeLookbackWindow= */ true,
+                                /* shouldCheckFilterSize= */ true))
+                .isFalse();
+    }
+
+    @Test
+    public void areValidAttributionFilters_lookbackWindowAsStr_removeSizeConstraints_returnsFalse()
+            throws Exception {
+        String json =
+                "[{"
+                        + "\"filter-string-1\": [\"filter-value-1\"],"
+                        + "\"filter-string-2\": [\"filter-value-2\", \"filter-value-3\"],"
+                        + "\"_lookback_window\": \"123\""
+                        + "}]";
+        JSONArray filters = new JSONArray(json);
+        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        assertWithMessage("StringLookbackWindowNoConstraintsRetFalse")
+                .that(
+                        FetcherUtil.areValidAttributionFilters(
+                                filters,
+                                mFlags,
+                                /* canIncludeLookbackWindow= */ true,
+                                /* shouldCheckFilterSize= */ false))
+                .isFalse();
+    }
+
+    @Test
+    public void areValidAttributionFilters_lookbackWindowGreaterThanLongMaxValue_returnsTrue()
+            throws Exception {
+        String json =
+                "[{"
+                        + "\"filter-string-1\": [\"filter-value-1\"],"
+                        + "\"filter-string-2\": [\"filter-value-2\", \"filter-value-3\"],"
+                        + "\"_lookback_window\": 9223372036854775808"
+                        + "}]";
+        JSONArray filters = new JSONArray(json);
+        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        assertWithMessage("lookbackWindowGreaterThanLongMAXVAL_retTrue")
+                .that(
+                        FetcherUtil.areValidAttributionFilters(
+                                filters,
+                                mFlags,
+                                /* canIncludeLookbackWindow= */ true,
+                                /* shouldCheckFilterSize= */ true))
+                .isTrue();
+    }
+
+    @Test
+    public void areValidAttributionFilters_lookbackWindowLongMax_removeSizeConstraints_returnsTrue()
+            throws Exception {
+        String json =
+                "[{"
+                        + "\"filter-string-1\": [\"filter-value-1\"],"
+                        + "\"filter-string-2\": [\"filter-value-2\", \"filter-value-3\"],"
+                        + "\"_lookback_window\": 9223372036854775808"
+                        + "}]";
+        JSONArray filters = new JSONArray(json);
+        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        assertWithMessage("lookbackWindowGreaterThanLongMAXVAL_noConstraintsRetTrue")
+                .that(
+                        FetcherUtil.areValidAttributionFilters(
+                                filters,
+                                mFlags,
+                                /* canIncludeLookbackWindow= */ true,
+                                /* shouldCheckFilterSize= */ false))
+                .isTrue();
     }
 
     @Test
@@ -497,8 +881,8 @@ public final class FetcherUtilTest {
     }
 
     @Test
-    public void areValidAttributionFilters_lookbackWindowDisllowed_returnsFalse()
-            throws JSONException {
+    public void areValidAttributionFilters_lookbackWindowDisallowed_returnsFalse()
+            throws Exception {
         String json =
                 "[{"
                         + "\"filter-string-1\": [\"filter-value-1\"],"
@@ -517,8 +901,8 @@ public final class FetcherUtilTest {
 
     @Test
     public void
-            areValidAttributionFilters_lookbackWindowDisllowed_removeSizeConstraints_returnsFalse()
-                    throws JSONException {
+            areValidAttributionFilters_lookbackWindowDisallowed_removeSizeConstraints_returnsFalse()
+                    throws Exception {
         String json =
                 "[{"
                         + "\"filter-string-1\": [\"filter-value-1\"],"
@@ -1042,6 +1426,7 @@ public final class FetcherUtilTest {
                                                 false,
                                                 false,
                                                 0,
+                                                false,
                                                 false)
                                         .setAdTechDomain(null)
                                         .build()),
@@ -1090,6 +1475,7 @@ public final class FetcherUtilTest {
                                                 false,
                                                 false,
                                                 0,
+                                                false,
                                                 false)
                                         .setAdTechDomain(REGISTRATION_URI.toString())
                                         .build()),
@@ -1141,6 +1527,7 @@ public final class FetcherUtilTest {
                                                 false,
                                                 false,
                                                 0,
+                                                false,
                                                 false)
                                         .setAdTechDomain(null)
                                         .build()),

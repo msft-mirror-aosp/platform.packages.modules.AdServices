@@ -54,4 +54,24 @@ public final class FakeCobaltOperationLoggerTest extends AdServicesUnitTestCase 
         assertThat(mLogger.getNumStringBufferMaxExceededOccurrences(METRIC_ID_1, REPORT_ID_1))
                 .isEqualTo(0);
     }
+
+    @Test
+    public void testLogEventVectorBufferMaxExceeded_success() throws Exception {
+        mLogger.logEventVectorBufferMaxExceeded(METRIC_ID_1, REPORT_ID_1);
+        mLogger.logEventVectorBufferMaxExceeded(METRIC_ID_1, REPORT_ID_1);
+        mLogger.logEventVectorBufferMaxExceeded(METRIC_ID_2, REPORT_ID_2);
+
+        assertThat(mLogger.getNumEventVectorBufferMaxExceededOccurrences(METRIC_ID_1, REPORT_ID_1))
+                .isEqualTo(2);
+        assertThat(mLogger.getNumEventVectorBufferMaxExceededOccurrences(METRIC_ID_2, REPORT_ID_2))
+                .isEqualTo(1);
+    }
+
+    @Test
+    public void
+            testGetNumLogEventVectorBufferMaxExceededOccurrences_notLoggedMetricReportReturnsZero()
+                    throws Exception {
+        assertThat(mLogger.getNumEventVectorBufferMaxExceededOccurrences(METRIC_ID_1, REPORT_ID_1))
+                .isEqualTo(0);
+    }
 }

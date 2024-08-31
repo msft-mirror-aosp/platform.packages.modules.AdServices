@@ -17,8 +17,7 @@ package com.android.adservices.shared;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
-import android.content.Context;
-import android.platform.test.annotations.DisabledOnRavenwood;
+import android.platform.test.ravenwood.RavenwoodRule;
 
 import org.junit.Test;
 
@@ -29,11 +28,18 @@ public final class SharedUnitTestCaseTest extends SharedUnitTestCase {
         assertWithMessage("name").that(name).isNotNull();
     }
 
-    // TODO(b/335935200): RavenwoodBaseContext.getApplicationContext() not supported
-    @DisabledOnRavenwood(blockedBy = Context.class)
     @Test
     public void testAppContext() {
         assertWithMessage("appContext").that(appContext).isNotNull();
+
+        // TODO(b/355286824): remove once Ravenwood supports it
+        if (RavenwoodRule.isOnRavenwood()) {
+            expect.withMessage("appContext.get()").that(appContext.get()).isNotNull();
+            expect.withMessage("appContext.get()")
+                    .that(appContext.get())
+                    .isSameInstanceAs(mContext);
+            return;
+        }
 
         expect.withMessage("appContext.get()")
                 .that(appContext.get())

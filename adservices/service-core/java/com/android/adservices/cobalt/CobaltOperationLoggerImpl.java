@@ -16,6 +16,7 @@
 package com.android.adservices.cobalt;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_COBALT_LOGGER_EVENT_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_COBALT_LOGGER_EVENT_REPORTED__COBALT_LOGGING_EVENT__LOGGING_EVENT_OVER_EVENT_VECTOR_BUFFER_MAX;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_COBALT_LOGGER_EVENT_REPORTED__COBALT_LOGGING_EVENT__LOGGING_EVENT_OVER_STRING_BUFFER_MAX;
 
 import com.android.adservices.service.stats.AdServicesStatsLog;
@@ -30,7 +31,7 @@ public final class CobaltOperationLoggerImpl implements CobaltOperationLogger {
     }
 
     /**
-     * Log a Cobalt logging event exceeding string buffer max to Cobalt operational metric.
+     * Logs a Cobalt logging event exceeding string buffer max to Cobalt operational metric.
      *
      * @param metricId the Cobalt metric id of the event that is being logged
      * @param reportId the Cobalt report id of the event that is being logged
@@ -45,5 +46,23 @@ public final class CobaltOperationLoggerImpl implements CobaltOperationLogger {
                 metricId,
                 reportId,
                 AD_SERVICES_COBALT_LOGGER_EVENT_REPORTED__COBALT_LOGGING_EVENT__LOGGING_EVENT_OVER_STRING_BUFFER_MAX);
+    }
+
+    /**
+     * Logs a Cobalt logging event exceeding event vector buffer max to Cobalt operational metric.
+     *
+     * @param metricId the Cobalt metric id of the event that is being logged
+     * @param reportId the Cobalt report id of the event that is being logged
+     */
+    public void logEventVectorBufferMaxExceeded(int metricId, int reportId) {
+        if (!mLoggerEnabled) {
+            return;
+        }
+
+        AdServicesStatsLog.write(
+                AD_SERVICES_COBALT_LOGGER_EVENT_REPORTED,
+                metricId,
+                reportId,
+                AD_SERVICES_COBALT_LOGGER_EVENT_REPORTED__COBALT_LOGGING_EVENT__LOGGING_EVENT_OVER_EVENT_VECTOR_BUFFER_MAX);
     }
 }
