@@ -22,6 +22,7 @@ import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JSON_
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JSON_PROCESSING_STATUS_SUCCESS;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -366,6 +367,71 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
     }
 
     @Test
+    public void testUpdateSignals_filterExceptionFromConsent_notifiesSuccess() throws Exception {
+        when(mProtectedSignalsServiceFilterMock.filterRequestAndExtractIdentifier(
+                        eq(URI),
+                        eq(PACKAGE),
+                        eq(false),
+                        eq(true),
+                        eq(false),
+                        eq(true),
+                        eq(UID),
+                        eq(API_NAME),
+                        eq(PROTECTED_SIGNAL_API_UPDATE_SIGNALS),
+                        eq(mDevContext)))
+                .thenThrow(new ConsentManager.RevokedConsentException());
+
+        mProtectedSignalsService.updateSignals(mInput, mUpdateSignalsCallbackMock);
+
+        verify(mUpdateSignalsCallbackMock).onSuccess();
+    }
+
+    @Test
+    public void testUpdateSignals_filterExceptionFromConsent_doesNotLogApiCalledLog()
+            throws Exception {
+        when(mProtectedSignalsServiceFilterMock.filterRequestAndExtractIdentifier(
+                        eq(URI),
+                        eq(PACKAGE),
+                        eq(false),
+                        eq(true),
+                        eq(false),
+                        eq(true),
+                        eq(UID),
+                        eq(API_NAME),
+                        eq(PROTECTED_SIGNAL_API_UPDATE_SIGNALS),
+                        eq(mDevContext)))
+                .thenThrow(new ConsentManager.RevokedConsentException());
+
+        mProtectedSignalsService.updateSignals(mInput, mUpdateSignalsCallbackMock);
+
+        verify(mAdServicesLoggerMock).logUpdateSignalsApiCalledStats(mStatsCaptor.capture());
+        assertEquals(
+                JSON_PROCESSING_STATUS_OTHER_ERROR,
+                mStatsCaptor.getValue().getJsonProcessingStatus());
+        verifyNoMoreInteractions(mAdServicesLoggerMock);
+    }
+
+    @Test
+    public void testUpdateSignals_filterExceptionFromConsent_doesNotScheduleJob() throws Exception {
+        when(mProtectedSignalsServiceFilterMock.filterRequestAndExtractIdentifier(
+                        eq(URI),
+                        eq(PACKAGE),
+                        eq(false),
+                        eq(true),
+                        eq(false),
+                        eq(true),
+                        eq(UID),
+                        eq(API_NAME),
+                        eq(PROTECTED_SIGNAL_API_UPDATE_SIGNALS),
+                        eq(mDevContext)))
+                .thenThrow(new ConsentManager.RevokedConsentException());
+
+        mProtectedSignalsService.updateSignals(mInput, mUpdateSignalsCallbackMock);
+
+        verify(() -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)), never());
+    }
+
+    @Test
     public void testUpdateSignalsIllegalArgumentException() throws Exception {
         IllegalArgumentException exception = new IllegalArgumentException(EXCEPTION_MESSAGE);
         SettableFuture<Object> future = SettableFuture.create();
@@ -392,7 +458,7 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
     }
 
     @Test
-    public void testUpdateSignalsNoConsentIfCallerNotHaveConsent() throws Exception {
+    public void testUpdateSignalsNoConsentIfCallerNotHaveApiConsent() throws Exception {
         // Does NOT have FLEDGE consent
         when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(eq(PACKAGE)))
                 .thenReturn(true);
