@@ -23,6 +23,7 @@ import androidx.annotation.NonNull;
 import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.cobalt.data.CobaltDatabase;
 import com.android.cobalt.data.DataService;
+import com.android.cobalt.logging.CobaltOperationLogger;
 
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
@@ -38,14 +39,17 @@ final class CobaltDataServiceFactory {
     private static final String DB_NAME = FileCompatUtils.getAdservicesFilename("cobalt_db");
 
     static DataService createDataService(
-            @NonNull Context context, @NonNull ExecutorService executorService) {
+            @NonNull Context context,
+            @NonNull ExecutorService executorService,
+            @NonNull CobaltOperationLogger operationLogger) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(executorService);
+        Objects.requireNonNull(operationLogger);
 
         CobaltDatabase cobaltDatabase =
                 FileCompatUtils.roomDatabaseBuilderHelper(context, CobaltDatabase.class, DB_NAME)
                         .fallbackToDestructiveMigration()
                         .build();
-        return new DataService(executorService, cobaltDatabase);
+        return new DataService(executorService, cobaltDatabase, operationLogger);
     }
 }
