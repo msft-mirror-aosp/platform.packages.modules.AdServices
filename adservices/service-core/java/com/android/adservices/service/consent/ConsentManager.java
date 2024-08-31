@@ -173,43 +173,41 @@ public class ConsentManager {
             @Flags.ConsentSourceOfTruth int consentSourceOfTruth,
             boolean enableAppsearchConsentData,
             boolean enableAdExtServiceConsentData) {
-        Objects.requireNonNull(topicsWorker);
-        Objects.requireNonNull(appConsentDao);
-        Objects.requireNonNull(measurementImpl);
-        Objects.requireNonNull(customAudienceDao);
-        Objects.requireNonNull(appInstallDao);
-        Objects.requireNonNull(protectedSignalsDao);
-        Objects.requireNonNull(frequencyCapDao);
-        Objects.requireNonNull(atomicFileDatastore);
-        Objects.requireNonNull(userProfileIdManager);
+        mTopicsWorker = Objects.requireNonNull(topicsWorker, "topicsWorker cannot be null");
+        mAppConsentDao = Objects.requireNonNull(appConsentDao, "appConsentDao cannot be null");
+        mMeasurementImpl =
+                Objects.requireNonNull(measurementImpl, "measurementImpl cannot be null");
+        mCustomAudienceDao =
+                Objects.requireNonNull(customAudienceDao, "customAudienceDao cannot be null");
+        mAppInstallDao = Objects.requireNonNull(appInstallDao, "appInstallDao cannot be null");
+        mProtectedSignalsDao =
+                Objects.requireNonNull(protectedSignalsDao, "protectedSignalsDao cannot be null");
+        mFrequencyCapDao =
+                Objects.requireNonNull(frequencyCapDao, "frequencyCapDao cannot be null");
+        mDatastore =
+                Objects.requireNonNull(atomicFileDatastore, "atomicFileDatastore cannot be null");
+        mUserProfileIdManager =
+                Objects.requireNonNull(userProfileIdManager, "userProfileIdManager cannot be null");
 
         if (consentSourceOfTruth == Flags.SYSTEM_SERVER_ONLY
                 || consentSourceOfTruth == Flags.PPAPI_AND_SYSTEM_SERVER) {
-            Objects.requireNonNull(adServicesManager);
+            Objects.requireNonNull(adServicesManager, "adServicesManager cannot be null");
         }
 
         if (enableAppsearchConsentData) {
-            Objects.requireNonNull(appSearchConsentManager);
+            Objects.requireNonNull(
+                    appSearchConsentManager, "appSearchConsentManager cannot be null");
         }
 
         if (enableAdExtServiceConsentData) {
-            Objects.requireNonNull(adExtDataManager);
+            Objects.requireNonNull(adExtDataManager, "adExtDataManager cannot be null");
         }
 
         mAdServicesManager = adServicesManager;
-        mTopicsWorker = topicsWorker;
-        mDatastore = atomicFileDatastore;
-        mAppConsentDao = appConsentDao;
         mEnrollmentDao = enrollmentDao;
-        mMeasurementImpl = measurementImpl;
-        mCustomAudienceDao = customAudienceDao;
-        mAppInstallDao = appInstallDao;
-        mProtectedSignalsDao = protectedSignalsDao;
-        mFrequencyCapDao = frequencyCapDao;
         mUxStatesDao = uxStatesDao;
 
         mAppSearchConsentManager = appSearchConsentManager;
-        mUserProfileIdManager = userProfileIdManager;
         mAdExtDataManager = adExtDataManager;
         mFlags = flags;
         mConsentSourceOfTruth = consentSourceOfTruth;
@@ -331,7 +329,7 @@ public class ConsentManager {
             ConsentManagerV2.getInstance().enable(context);
             return;
         }
-        Objects.requireNonNull(context);
+        Objects.requireNonNull(context, "context cannot be null");
 
         // Check current value, if it is already enabled, skip this enable process. so that the Api
         // won't be reset. Only add this logic to "enable" not "disable", since if it already
@@ -369,7 +367,7 @@ public class ConsentManager {
             ConsentManagerV2.getInstance().disable(context);
             return;
         }
-        Objects.requireNonNull(context);
+        Objects.requireNonNull(context, "context cannot be null");
 
         UiStatsLogger.logOptOutSelected();
         // Disable all the APIs
@@ -405,7 +403,7 @@ public class ConsentManager {
             ConsentManagerV2.getInstance().enable(context, apiType);
             return;
         }
-        Objects.requireNonNull(context);
+        Objects.requireNonNull(context, "context cannot be null");
         // Check current value, if it is already enabled, skip this enable process. so that the Api
         // won't be reset.
         if (mFlags.getConsentManagerLazyEnableMode()
@@ -446,7 +444,7 @@ public class ConsentManager {
             ConsentManagerV2.getInstance().disable(context, apiType);
             return;
         }
-        Objects.requireNonNull(context);
+        Objects.requireNonNull(context, "context cannot be null");
 
         UiStatsLogger.logOptOutSelected(apiType);
 
@@ -1644,7 +1642,7 @@ public class ConsentManager {
             AdServicesManager adServicesManager,
             @NonNull StatsdAdServicesLogger statsdAdServicesLogger,
             @Flags.ConsentSourceOfTruth int consentSourceOfTruth) {
-        Objects.requireNonNull(context);
+        Objects.requireNonNull(context, "context cannot be null");
         // On R/S, handleConsentMigrationIfNeeded should never be executed.
         // It is a T+ feature. On T+, this function should only execute if it's within the
         // AdServices
@@ -1655,10 +1653,10 @@ public class ConsentManager {
             LogUtil.d("Aborting attempt to migrate consent in ExtServices");
             return;
         }
-        Objects.requireNonNull(datastore);
+        Objects.requireNonNull(datastore, "datastore cannot be null");
         if (consentSourceOfTruth == Flags.PPAPI_AND_SYSTEM_SERVER
                 || consentSourceOfTruth == Flags.SYSTEM_SERVER_ONLY) {
-            Objects.requireNonNull(adServicesManager);
+            Objects.requireNonNull(adServicesManager, "adServicesManager cannot be null");
         }
 
         switch (consentSourceOfTruth) {
@@ -1760,7 +1758,7 @@ public class ConsentManager {
     @VisibleForTesting
     static void setConsentToSystemServer(
             @NonNull AdServicesManager adServicesManager, boolean isGiven) {
-        Objects.requireNonNull(adServicesManager);
+        Objects.requireNonNull(adServicesManager, "adServicesManager cannot be null");
 
         ConsentParcel consentParcel =
                 new ConsentParcel.Builder()
@@ -1774,7 +1772,7 @@ public class ConsentManager {
             @NonNull AdServicesManager adServicesManager,
             @ConsentParcel.ConsentApiType int consentApiType,
             boolean isGiven) {
-        Objects.requireNonNull(adServicesManager);
+        Objects.requireNonNull(adServicesManager, "adServicesManager cannot be null");
 
         if (isGiven) {
             adServicesManager.setConsent(ConsentParcel.createGivenConsent(consentApiType));
@@ -1787,13 +1785,13 @@ public class ConsentManager {
     static boolean getPerApiConsentFromSystemServer(
             @NonNull AdServicesManager adServicesManager,
             @ConsentParcel.ConsentApiType int consentApiType) {
-        Objects.requireNonNull(adServicesManager);
+        Objects.requireNonNull(adServicesManager, "adServicesManager cannot be null");
         return adServicesManager.getConsent(consentApiType).isIsGiven();
     }
 
     @VisibleForTesting
     static boolean getConsentFromSystemServer(@NonNull AdServicesManager adServicesManager) {
-        Objects.requireNonNull(adServicesManager);
+        Objects.requireNonNull(adServicesManager, "adServicesManager cannot be null");
         return getPerApiConsentFromSystemServer(adServicesManager, ConsentParcel.ALL_API);
     }
 
@@ -1806,9 +1804,9 @@ public class ConsentManager {
             @NonNull AtomicFileDatastore datastore,
             @NonNull AdServicesManager adServicesManager,
             @NonNull StatsdAdServicesLogger statsdAdServicesLogger) {
-        Objects.requireNonNull(context);
-        Objects.requireNonNull(datastore);
-        Objects.requireNonNull(adServicesManager);
+        Objects.requireNonNull(context, "context cannot be null");
+        Objects.requireNonNull(datastore, "datastore cannot be null");
+        Objects.requireNonNull(adServicesManager, "adServicesManager cannot be null");
 
         AppConsents appConsents = null;
         try {
@@ -1943,8 +1941,8 @@ public class ConsentManager {
     @VisibleForTesting
     static void resetSharedPreference(
             @NonNull Context context, @NonNull String sharedPreferenceKey) {
-        Objects.requireNonNull(context);
-        Objects.requireNonNull(sharedPreferenceKey);
+        Objects.requireNonNull(context, "context cannot be null");
+        Objects.requireNonNull(sharedPreferenceKey, "sharedPreferenceKey cannot be null");
 
         SharedPreferences sharedPreferences =
                 context.getSharedPreferences(
@@ -2045,8 +2043,8 @@ public class ConsentManager {
             @NonNull AppSearchConsentManager appSearchConsentManager,
             @NonNull AdServicesManager adServicesManager,
             @NonNull StatsdAdServicesLogger statsdAdServicesLogger) {
-        Objects.requireNonNull(context);
-        Objects.requireNonNull(appSearchConsentManager);
+        Objects.requireNonNull(context, "context cannot be null");
+        Objects.requireNonNull(appSearchConsentManager, "appSearchConsentManager cannot be null");
         LogUtil.d("Check migrating Consent from AppSearch to PPAPI and System Service");
 
         // On R/S, this function should never be executed because AppSearch to PPAPI and
