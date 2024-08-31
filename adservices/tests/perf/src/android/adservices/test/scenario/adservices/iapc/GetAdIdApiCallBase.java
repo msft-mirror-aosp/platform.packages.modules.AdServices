@@ -26,9 +26,9 @@ import android.adservices.adid.AdIdManager;
 import android.util.Log;
 
 import com.android.adservices.common.AdServicesFlagsSetterRule;
-import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.common.annotations.SetAllLogcatTags;
+import com.android.adservices.shared.testing.OutcomeReceiverForTests;
 
 import org.junit.Rule;
 
@@ -62,9 +62,8 @@ abstract class GetAdIdApiCallBase extends AdServicesUnitTestCase {
         Log.i(TAG, "Calling getAdId()");
         long start = System.currentTimeMillis();
 
-        AdServicesOutcomeReceiverForTests<AdId> callback =
-                new AdServicesOutcomeReceiverForTests<>();
-        AdIdManager adIdManager = AdIdManager.get(sContext);
+        OutcomeReceiverForTests<AdId> callback = new OutcomeReceiverForTests<>();
+        AdIdManager adIdManager = AdIdManager.get(mContext);
 
         adIdManager.getAdId(sCallbackExecutor, callback);
 

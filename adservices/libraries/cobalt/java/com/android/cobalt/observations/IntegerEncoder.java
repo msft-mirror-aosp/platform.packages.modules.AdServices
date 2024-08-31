@@ -18,8 +18,6 @@ package com.android.cobalt.observations;
 
 import static java.util.Objects.requireNonNull;
 
-import android.annotation.NonNull;
-
 import com.android.cobalt.data.EventRecordAndSystemProfile;
 
 import com.google.cobalt.IntegerObservation;
@@ -38,7 +36,7 @@ import java.security.SecureRandom;
 final class IntegerEncoder implements NonPrivateObservationGenerator.Encoder {
     private final SecureRandom mSecureRandom;
 
-    IntegerEncoder(@NonNull SecureRandom secureRandom) {
+    IntegerEncoder(SecureRandom secureRandom) {
         this.mSecureRandom = requireNonNull(secureRandom);
     }
 

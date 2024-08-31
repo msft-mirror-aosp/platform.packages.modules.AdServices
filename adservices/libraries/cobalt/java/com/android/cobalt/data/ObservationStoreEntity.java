@@ -63,7 +63,6 @@ public abstract class ObservationStoreEntity {
      *
      * <p>Used by Room to instantiate objects.
      */
-    @NonNull
     public static ObservationStoreEntity create(
             int observationStoreId, UnencryptedObservationBatch unencryptedObservationBatch) {
         return new AutoValue_ObservationStoreEntity(
@@ -72,7 +71,6 @@ public abstract class ObservationStoreEntity {
 
     /** Creates an {@link ObservationStoreEntity} to insert. */
     @Ignore
-    @NonNull
     static ObservationStoreEntity createForInsertion(
             UnencryptedObservationBatch unencryptedObservationBatch) {
         return new AutoValue_ObservationStoreEntity(0 /*unused */, unencryptedObservationBatch);
@@ -85,8 +83,7 @@ public abstract class ObservationStoreEntity {
      * @return an ObservationBatch
      * @throws EncryptionFailedException if encryption failed
      */
-    @NonNull
-    public ObservationBatch encrypt(@NonNull Encrypter encrypter) throws EncryptionFailedException {
+    public ObservationBatch encrypt(Encrypter encrypter) throws EncryptionFailedException {
         Objects.requireNonNull(encrypter);
 
         ObservationBatch.Builder encryptedObservations =

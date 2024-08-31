@@ -16,7 +16,6 @@
 
 package com.android.cobalt.testing.crypto;
 
-import android.annotation.NonNull;
 
 import androidx.annotation.VisibleForTesting;
 
@@ -34,7 +33,7 @@ import java.util.Optional;
 @VisibleForTesting
 public final class NoOpEncrypter implements Encrypter {
     /** Encrypt an envelope by serializing its bytes. */
-    public Optional<EncryptedMessage> encryptEnvelope(@NonNull Envelope envelope)
+    public Optional<EncryptedMessage> encryptEnvelope(Envelope envelope)
             throws EncryptionFailedException {
         Objects.requireNonNull(envelope);
 
@@ -46,7 +45,7 @@ public final class NoOpEncrypter implements Encrypter {
     }
 
     /** Encrypt an observation by serializing its bytes. */
-    public Optional<EncryptedMessage> encryptObservation(@NonNull ObservationToEncrypt observation)
+    public Optional<EncryptedMessage> encryptObservation(ObservationToEncrypt observation)
             throws EncryptionFailedException {
         Objects.requireNonNull(observation);
 

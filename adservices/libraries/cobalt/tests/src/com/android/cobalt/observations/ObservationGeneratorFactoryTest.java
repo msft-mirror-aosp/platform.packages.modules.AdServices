@@ -30,6 +30,7 @@ import com.android.cobalt.data.ReportKey;
 import com.android.cobalt.data.StringListEntry;
 import com.android.cobalt.domain.Project;
 import com.android.cobalt.system.SystemData;
+import com.android.cobalt.testing.logging.FakeCobaltOperationLogger;
 import com.android.cobalt.testing.observations.FakeSecureRandom;
 
 import com.google.cobalt.MetricDefinition;
@@ -58,18 +59,21 @@ public final class ObservationGeneratorFactoryTest extends AdServicesMockitoTest
 
     @Mock private DaoBuildingBlocks mDaoBuildingBlocks;
     private ObservationGeneratorFactory mFactory;
+    private FakeCobaltOperationLogger mOperationLogger;
 
     @Before
     public void setup() {
         Project project = Project.create(CUSTOMER_ID, PROJECT_ID, /* metrics= */ List.of());
         SecureRandom secureRandom = new FakeSecureRandom();
+        mOperationLogger = new FakeCobaltOperationLogger();
         mFactory =
                 new ObservationGeneratorFactory(
                         project,
                         new SystemData(),
                         mDaoBuildingBlocks,
                         new PrivacyGenerator(secureRandom),
-                        secureRandom);
+                        secureRandom,
+                        mOperationLogger);
     }
 
     @Test

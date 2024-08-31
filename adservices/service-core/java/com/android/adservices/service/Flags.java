@@ -3304,7 +3304,6 @@ public interface Flags extends ModuleSharedFlags {
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER = true;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS = true;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCES = true;
-    boolean MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH = false;
 
     /**
      * Returns true if Measurement Delete Registrations API should require that the calling API is
@@ -3362,10 +3361,6 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCES;
     }
 
-    /** Returns true if the Enrollment match is based on url origin matching */
-    default boolean getEnforceEnrollmentOriginMatch() {
-        return MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH;
-    }
 
     /** Returns true if Topics API should require that the calling API is running in foreground. */
     default boolean getEnforceForegroundStatusForTopics() {

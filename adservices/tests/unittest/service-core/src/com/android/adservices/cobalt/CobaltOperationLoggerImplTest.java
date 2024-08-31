@@ -16,6 +16,7 @@
 package com.android.adservices.cobalt;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_COBALT_LOGGER_EVENT_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_COBALT_LOGGER_EVENT_REPORTED__COBALT_LOGGING_EVENT__LOGGING_EVENT_OVER_EVENT_VECTOR_BUFFER_MAX;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_COBALT_LOGGER_EVENT_REPORTED__COBALT_LOGGING_EVENT__LOGGING_EVENT_OVER_STRING_BUFFER_MAX;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.staticMockMarker;
@@ -71,9 +72,40 @@ public final class CobaltOperationLoggerImplTest extends AdServicesExtendedMocki
     }
 
     @Test
-    public void testLogStringBufferMaxExceeded_noOp() {
+    public void testLogStringBufferMaxExceeded_noOpWhenLoggerDisabled() {
         // Invoke logging call
         mDisabledLogger.logStringBufferMaxExceeded(TEST_METRIC_ID, TEST_REPORT_ID);
+
+        // Verify No Op
+        verifyZeroInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testLogEventVectorBufferMaxExceeded_success() {
+        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt(), anyInt()));
+
+        // Invoke logging call
+        mLogger.logEventVectorBufferMaxExceeded(TEST_METRIC_ID, TEST_REPORT_ID);
+
+        // Verify correct value are logged
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(AD_SERVICES_COBALT_LOGGER_EVENT_REPORTED),
+                                eq(TEST_METRIC_ID),
+                                eq(TEST_REPORT_ID),
+                                eq(
+                                        AD_SERVICES_COBALT_LOGGER_EVENT_REPORTED__COBALT_LOGGING_EVENT__LOGGING_EVENT_OVER_EVENT_VECTOR_BUFFER_MAX));
+
+        verify(writeInvocation);
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testLogEventVectorBufferMaxExceeded_noOpWhenLoggerDisabled() {
+        // Invoke logging call
+        mDisabledLogger.logEventVectorBufferMaxExceeded(TEST_METRIC_ID, TEST_REPORT_ID);
 
         // Verify No Op
         verifyZeroInteractions(staticMockMarker(AdServicesStatsLog.class));

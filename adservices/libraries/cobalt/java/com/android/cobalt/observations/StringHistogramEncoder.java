@@ -18,8 +18,6 @@ package com.android.cobalt.observations;
 
 import static java.util.Objects.requireNonNull;
 
-import android.annotation.NonNull;
-
 import com.android.cobalt.data.EventRecordAndSystemProfile;
 import com.android.cobalt.data.StringListEntry;
 
@@ -47,8 +45,7 @@ final class StringHistogramEncoder implements NonPrivateObservationGenerator.Enc
     private final SecureRandom mSecureRandom;
 
     StringHistogramEncoder(
-            @NonNull ImmutableList<StringListEntry> stringListEntries,
-            @NonNull SecureRandom secureRandom) {
+            ImmutableList<StringListEntry> stringListEntries, SecureRandom secureRandom) {
         this.mStringListEntries =
                 ImmutableList.sortedCopyOf(
                         Comparator.comparingInt(StringListEntry::listIndex),

@@ -56,7 +56,6 @@ public abstract class EventRecordAndSystemProfile {
      *
      * <p>Used by Room to instantiate objects.
      */
-    @NonNull
     public static EventRecordAndSystemProfile create(
             SystemProfile systemProfile, EventVector eventVector, AggregateValue aggregateValue) {
         return new AutoValue_EventRecordAndSystemProfile(

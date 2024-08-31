@@ -18,8 +18,6 @@ package com.android.cobalt.observations;
 
 import static java.util.Objects.requireNonNull;
 
-import android.annotation.NonNull;
-
 import com.android.cobalt.data.EventVector;
 
 import com.google.cobalt.AggregateValue;
@@ -41,9 +39,7 @@ final class PrivateIntegerEncoder implements PrivateObservationGenerator.Encoder
     private final SecureRandom mSecureRandom;
 
     PrivateIntegerEncoder(
-            @NonNull SecureRandom secureRandom,
-            @NonNull MetricDefinition metric,
-            @NonNull ReportDefinition report) {
+            SecureRandom secureRandom, MetricDefinition metric, ReportDefinition report) {
         this.mSecureRandom = requireNonNull(secureRandom);
         this.mMetric = requireNonNull(metric);
         this.mReport = requireNonNull(report);

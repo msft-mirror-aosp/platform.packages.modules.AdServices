@@ -401,7 +401,6 @@ import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_TRIGGER_DE
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_XNA;
-import static com.android.adservices.service.Flags.MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENFORCE_FOREGROUND_STATUS_DELETE_REGISTRATIONS;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCE;
@@ -894,7 +893,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENAB
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_XNA;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_DELETE_REGISTRATIONS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCE;
@@ -1593,14 +1591,6 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS,
                 MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS,
                 Flags::getMeasurementEventFallbackReportingJobPeriodMs);
-    }
-
-    @Test
-    public void testGetEnrollmentOriginMatch() {
-        mFlagsTestHelper.testConfigFlag(
-                KEY_MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH,
-                MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH,
-                Flags::getEnforceEnrollmentOriginMatch);
     }
 
     @Test

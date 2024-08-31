@@ -16,7 +16,6 @@
 
 package com.android.adservices.cobalt;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 
 import com.android.adservices.HpkeJni;
@@ -36,8 +35,7 @@ public final class HpkeEncryptImpl implements HpkeEncrypt {
      * @return the encrypted ciphertext
      */
     @Override
-    public byte[] encrypt(
-            @NonNull byte[] publicKey, @NonNull byte[] plainText, @NonNull byte[] contextInfo) {
+    public byte[] encrypt(byte[] publicKey, byte[] plainText, byte[] contextInfo) {
         return HpkeJni.encrypt(publicKey, plainText, contextInfo);
     }
 }
