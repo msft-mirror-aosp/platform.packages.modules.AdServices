@@ -27,17 +27,15 @@ import com.android.adservices.common.AdServicesMockitoTestCase;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
 import java.util.function.BiConsumer;
 
 public final class AdservicesSyncUtilTest extends AdServicesMockitoTestCase {
     private AdServicesSyncUtil mAdservicesSyncUtil;
-    @Mock BiConsumer<Context, Boolean> mConsumer;
+    @Mock private BiConsumer<Context, Boolean> mConsumer;
 
     @Before
     public void setup() {
-        MockitoAnnotations.initMocks(this);
         mAdservicesSyncUtil = AdServicesSyncUtil.getInstance();
         doNothing().when(mConsumer).accept(any(Context.class), any(Boolean.class));
     }

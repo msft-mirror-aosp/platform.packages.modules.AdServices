@@ -16,14 +16,13 @@
 
 package com.android.cobalt.upload;
 
-import android.annotation.NonNull;
 
 import com.google.cobalt.EncryptedMessage;
 
 /** The API for uploading encrypted messages to Cobalt. */
 public interface Uploader {
     /** Upload an encrypted message to Cobalt. */
-    void upload(@NonNull EncryptedMessage encryptedMessage);
+    void upload(EncryptedMessage encryptedMessage);
 
     /** Uploads have been completed and resources can be released. */
     void uploadDone();

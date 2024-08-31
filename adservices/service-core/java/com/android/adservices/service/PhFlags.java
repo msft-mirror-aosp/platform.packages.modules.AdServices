@@ -2976,13 +2976,6 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getEnforceEnrollmentOriginMatch() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH,
-                MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH);
-    }
-
-    @Override
     public long getIsolateMaxHeapSizeBytes() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_ISOLATE_MAX_HEAP_SIZE_BYTES, ISOLATE_MAX_HEAP_SIZE_BYTES);
@@ -3952,11 +3945,6 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_ENABLE_SHARED_FILTER_DATA_KEYS_XNA
                         + " = "
                         + getMeasurementEnableSharedFilterDataKeysXNA());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH
-                        + " = "
-                        + getEnforceEnrollmentOriginMatch());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_MEASUREMENT_ENABLE_DEBUG_REPORT
