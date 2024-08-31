@@ -22,6 +22,7 @@ import android.annotation.NonNull;
 
 import com.android.cobalt.data.EventRecordAndSystemProfile;
 import com.android.cobalt.data.ObservationGenerator;
+import com.android.cobalt.logging.CobaltOperationLogger;
 
 import com.google.cobalt.Observation;
 import com.google.cobalt.ObservationMetadata;
@@ -52,6 +53,7 @@ final class NonPrivateObservationGenerator implements ObservationGenerator {
 
     private final SecureRandom mSecureRandom;
     private final Encoder mEncoder;
+    private final CobaltOperationLogger mOperationLogger;
     private final int mCustomerId;
     private final int mProjectId;
     private final int mMetricId;
@@ -60,12 +62,14 @@ final class NonPrivateObservationGenerator implements ObservationGenerator {
     NonPrivateObservationGenerator(
             @NonNull SecureRandom secureRandom,
             @NonNull Encoder encoder,
+            @NonNull CobaltOperationLogger operationLogger,
             int customerId,
             int projectId,
             int metricId,
             ReportDefinition report) {
         this.mSecureRandom = requireNonNull(secureRandom);
         this.mEncoder = requireNonNull(encoder);
+        this.mOperationLogger = requireNonNull(operationLogger);
         this.mCustomerId = customerId;
         this.mProjectId = projectId;
         this.mMetricId = metricId;
@@ -95,6 +99,7 @@ final class NonPrivateObservationGenerator implements ObservationGenerator {
                 // Each EventRecordAndSystemProfile contains a unique event vector for the
                 // system profile and day so the number of events can be compared to the event
                 // vector buffer max of the report.
+                mOperationLogger.logEventVectorBufferMaxExceeded(mMetricId, mReport.getId());
                 events = events.subList(0, (int) mReport.getEventVectorBufferMax());
             }
 
