@@ -80,7 +80,7 @@ public final class AdServicesManager {
                     // Get the AdServicesManagerService's Binder from the SdkSandboxManager.
                     // This is a workaround for bug 262282035 that's only needed on TM - there is
                     // a CTS test that guarantees the service is published on UDC+
-                    // (AdServicesJUnit4DeviceTest#testBinderServiceIsPublished , from
+                    // (AdServicesJUnit4DeviceTest#testBinderServiceIsPublished, from
                     // CtsAdServicesDeviceTestCases)
                     LogUtil.d(
                             "AdServicesManager.getInstance(): getting from SdkSandboxManager on"

@@ -16,8 +16,6 @@
 package com.android.adservices.common;
 
 import com.android.adservices.shared.testing.ConsoleLogger;
-import com.android.adservices.shared.testing.TestDeviceHelper;
-import com.android.tradefed.device.ITestDevice;
 
 /** See {@link AbstractAdServicesDeviceSupportedRule}. */
 public final class AdServicesHostSideDeviceSupportedRule
@@ -25,9 +23,5 @@ public final class AdServicesHostSideDeviceSupportedRule
 
     public AdServicesHostSideDeviceSupportedRule() {
         super(ConsoleLogger.getInstance(), AdServicesHostSideSupportHelper.getInstance());
-    }
-
-    public void setDevice(ITestDevice device) {
-        TestDeviceHelper.setTestDevice(device);
     }
 }

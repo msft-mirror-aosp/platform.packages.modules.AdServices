@@ -103,7 +103,7 @@ public class FledgeConsentFilter {
             boolean enforceNotificationShown,
             String callerPackageName,
             int apiName) {
-
+        sLogger.v("Checking whether user has seen a notification and opted into any PP API");
         boolean wasAnyNotificationDisplayed;
 
         if (!enforceNotificationShown) {
