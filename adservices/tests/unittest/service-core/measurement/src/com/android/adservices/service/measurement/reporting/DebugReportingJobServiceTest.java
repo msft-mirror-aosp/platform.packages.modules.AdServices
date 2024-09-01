@@ -58,14 +58,12 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.internal.stubbing.answers.AnswersWithDelay;
 import org.mockito.internal.stubbing.answers.CallsRealMethods;
 
 import java.util.Optional;
-import java.util.concurrent.CountDownLatch;
 
 /** Unit test for {@link DebugReportingJobService} */
 @SpyStatic(AdServicesConfig.class)
@@ -75,18 +73,17 @@ import java.util.concurrent.CountDownLatch;
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(AdServicesJobServiceLogger.class)
 @MockStatic(ServiceCompatUtils.class)
-public final class DebugReportingJobServiceTest extends MeasurementJobServiceTestCase {
+public final class DebugReportingJobServiceTest
+        extends MeasurementJobServiceTestCase<DebugReportingJobService> {
 
     private static final int MEASUREMENT_DEBUG_REPORT_JOB_ID =
             MEASUREMENT_DEBUG_REPORT_JOB.getJobId();
 
     private static final long WAIT_IN_MILLIS = 1_000L;
 
-    private DebugReportingJobService mSpyService;
-
-    @Before
-    public void setUp() {
-        mSpyService = spy(new DebugReportingJobService());
+    @Override
+    protected DebugReportingJobService getSpiedService() {
+        return new DebugReportingJobService();
     }
 
     @Test
@@ -402,29 +399,10 @@ public final class DebugReportingJobServiceTest extends MeasurementJobServiceTes
         execute.run();
     }
 
-    private void enableKillSwitch() {
-        toggleKillSwitch(true);
-    }
-
-    private void disableKillSwitch() {
-        toggleKillSwitch(false);
-    }
-
-    private void toggleKillSwitch(boolean value) {
-        mocker.mockGetFlags(mMockFlags);
-        when(mMockFlags.getMeasurementJobDebugReportingKillSwitch()).thenReturn(value);
+    @Override
+    protected void toggleFeature(boolean value) {
+        when(mMockFlags.getMeasurementJobDebugReportingKillSwitch()).thenReturn(!value);
         when(mMockFlags.getMeasurementDebugReportingJobRequiredNetworkType())
                 .thenReturn(JobInfo.NETWORK_TYPE_ANY);
-    }
-
-    private CountDownLatch createCountDownLatch() {
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
-        doAnswer(i -> countDown(countDownLatch)).when(mSpyService).jobFinished(any(), anyBoolean());
-        return countDownLatch;
-    }
-
-    private Object countDown(CountDownLatch countDownLatch) {
-        countDownLatch.countDown();
-        return null;
     }
 }

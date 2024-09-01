@@ -17,34 +17,21 @@
 package com.android.adservices.service.common;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
-import org.junit.Assert;
-
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-public class ValidatorTestUtil {
+public final class ValidatorTestUtil {
     public static void assertViolationContainsOnly(
             Collection<String> errors, String... expectedErrors) {
-        List<String> expectedErrorsList = Arrays.asList(expectedErrors);
-        Assert.assertEquals(
-                String.format("expected %s / actual %s", expectedErrorsList, errors),
-                expectedErrors.length,
-                errors.size());
-        Assert.assertTrue(
-                String.format("expected %s / actual %s", expectedErrorsList, errors),
-                errors.containsAll(expectedErrorsList));
-        Assert.assertTrue(
-                String.format("expected %s / actual %s", expectedErrorsList, errors),
-                expectedErrorsList.containsAll(errors));
+        assertWithMessage("errors").that(errors).containsExactlyElementsIn(expectedErrors);
     }
 
     public static void assertValidationFailuresMatch(
-            final IllegalArgumentException actualException,
-            final String expectedViolationsPrefix,
-            final List<String> expectedViolations) {
-
+            IllegalArgumentException actualException,
+            String expectedViolationsPrefix,
+            List<String> expectedViolations) {
         assertThat(actualException).hasMessageThat().startsWith(expectedViolationsPrefix);
         for (String violation : expectedViolations) {
             assertThat(actualException).hasMessageThat().contains(violation);

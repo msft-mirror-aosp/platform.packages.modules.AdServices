@@ -501,6 +501,9 @@ public class MeasurementDaoTest {
             assertEquals(
                     validTrigger.getAttributionScopesString(),
                     trigger.getAttributionScopesString());
+            assertEquals(
+                    validTrigger.getAggregatableFilteringIdMaxBytes(),
+                    trigger.getAggregatableFilteringIdMaxBytes());
         }
     }
 

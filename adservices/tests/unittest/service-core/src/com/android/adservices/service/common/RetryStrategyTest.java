@@ -16,15 +16,17 @@
 
 package com.android.adservices.service.common;
 
+import static com.google.common.truth.Truth.assertThat;
+
+import static org.junit.Assert.assertThrows;
+
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 
-import com.google.common.truth.Truth;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.Set;
@@ -33,7 +35,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class RetryStrategyTest extends AdServicesMockitoTestCase {
+public final class RetryStrategyTest extends AdServicesMockitoTestCase {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     public static final Set<Class<? extends Exception>> RETRYABLE_EXCEPTIONS =
             Set.of(RetryableException.class);
@@ -101,7 +103,7 @@ public class RetryStrategyTest extends AdServicesMockitoTestCase {
             RetryStrategyTestHelper test, Class<? extends Exception> exceptionClass) {
 
         Throwable exception =
-                Assert.assertThrows(
+                assertThrows(
                         ExecutionException.class,
                         () ->
                                 mRetryStrategy
@@ -111,15 +113,15 @@ public class RetryStrategyTest extends AdServicesMockitoTestCase {
                                                 sLogger,
                                                 CALLING_IDENTIFIER)
                                         .get(1, TimeUnit.SECONDS));
-        Truth.assertThat(exception).hasCauseThat().isInstanceOf(exceptionClass);
+        assertThat(exception).hasCauseThat().isInstanceOf(exceptionClass);
     }
 
-    static class RetryableException extends Exception {}
+    private static class RetryableException extends Exception {}
 
-    static class NonRetryableException extends Exception {}
+    private static class NonRetryableException extends Exception {}
 
     /** Class to facilitate testing for RetryStrategy. */
-    static class RetryStrategyTestHelper {
+    private static class RetryStrategyTestHelper {
         private final CountDownLatch mFailedCallCountLatch;
         private final Exception mExpectedExceptionOnFailure;
 

@@ -333,7 +333,8 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                                 /* isRedirectOnly= */ false,
                                 /* isPARequest= */ false,
                                 /* num entities deleted */ 5,
-                                /* isEventLevelEpsilonEnabled= */ false)
+                                /* isEventLevelEpsilonEnabled= */ false,
+                                /* isTriggerAggregatableValueFiltersConfigured= */ false)
                         .setAdTechDomain(null)
                         .build();
         mAdservicesLogger.logMeasurementRegistrationsResponseSize(stats, TEST_ENROLLMENT_ID);
@@ -358,6 +359,7 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
         expect.that(loggedStats.getAdTechDomain()).isNull();
         expect.that(loggedStats.getNumDeletedEntities()).isEqualTo(5);
         expect.that(loggedStats.isEventLevelEpsilonEnabled()).isFalse();
+        expect.that(loggedStats.isTriggerAggregatableValueFiltersConfigured()).isFalse();
         callback.assertCalled();
     }
 
@@ -432,13 +434,15 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                         testSurfaceType,
                         testSourceType,
                         testStatusCode,
-                        testFailureType);
+                        testFailureType,
+                        TEST_ENROLLMENT_ID);
         ArgumentCaptor<MeasurementAttributionStats> argumentCaptor =
                 ArgumentCaptor.forClass(MeasurementAttributionStats.class);
 
-        mAdservicesLogger.logMeasurementAttributionStats(stats);
+        mAdservicesLogger.logMeasurementAttributionStats(stats, TEST_ENROLLMENT_ID);
 
-        verify(mStatsdLoggerMock).logMeasurementAttributionStats(argumentCaptor.capture());
+        verify(mStatsdLoggerMock)
+                .logMeasurementAttributionStats(argumentCaptor.capture(), eq(TEST_ENROLLMENT_ID));
         MeasurementAttributionStats loggedStats = argumentCaptor.getValue();
         expect.that(loggedStats.getCode()).isEqualTo(AD_SERVICES_MEASUREMENT_ATTRIBUTION);
         expect.that(loggedStats.getSourceRegistrant()).isEqualTo(TEST_SOURCE_REGISTRATION);

@@ -22,48 +22,30 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS;
-import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplTest.sCallerMetadata;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplFixture.sCallerMetadata;
 
 import static org.junit.Assert.assertTrue;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.shared.util.Clock;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
-public class AdsRelevanceExecutionLoggerFactoryTest {
-    private MockitoSession mStaticMockSession = null;
-
+@SpyStatic(FlagsFactory.class)
+public final class AdsRelevanceExecutionLoggerFactoryTest
+        extends AdServicesExtendedMockitoTestCase {
     private AdServicesLogger mAdServicesLoggerMock;
 
     @Before
     public void setup() {
-        // Test applications don't have the required permissions to read config P/H flags, and
-        // injecting mocked flags everywhere is annoying and non-trivial for static methods
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .strictness(Strictness.WARN)
-                        .initMocks(this)
-                        .startMocking();
-
-        doReturn(FakeFlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
-
+        mocker.mockGetFlags(mMockFlags);
         mAdServicesLoggerMock = Mockito.spy(AdServicesLoggerImpl.getInstance());
-    }
-
-    @After
-    public void teardown() {
-        mStaticMockSession.finishMocking();
     }
 
     @Test

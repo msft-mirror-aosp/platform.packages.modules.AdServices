@@ -21,6 +21,7 @@ import android.annotation.NonNull;
 import com.android.adservices.shared.storage.AtomicFileDatastore;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
+import com.android.server.adservices.errorlogging.AdServicesErrorLoggerImpl;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -78,7 +79,11 @@ public class AppConsentManager {
 
         AtomicFileDatastore datastore =
                 new AtomicFileDatastore(
-                        consentDataStoreDir, DATASTORE_NAME, DATASTORE_VERSION, VERSION_KEY);
+                        consentDataStoreDir,
+                        DATASTORE_NAME,
+                        DATASTORE_VERSION,
+                        VERSION_KEY,
+                        AdServicesErrorLoggerImpl.getInstance());
         datastore.initialize();
 
         return new AppConsentManager(datastore);
