@@ -69,7 +69,7 @@ import java.util.List;
 @SetErrorLogUtilDefaultParams(
         throwable = Any.class,
         ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON)
-public class AdServicesBackCompatInitTest extends AdServicesExtendedMockitoTestCase {
+public final class AdServicesBackCompatInitTest extends AdServicesExtendedMockitoTestCase {
     private static final String TEST_PACKAGE_NAME = "test";
     private static final String AD_SERVICES_APK_PKG_SUFFIX = "android.adservices.api";
     private static final int AD_SERVICES_ATTRIBUTION_JOB_ID = 1;

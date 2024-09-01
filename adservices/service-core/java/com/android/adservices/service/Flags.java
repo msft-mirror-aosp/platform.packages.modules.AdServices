@@ -3304,7 +3304,6 @@ public interface Flags extends ModuleSharedFlags {
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER = true;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS = true;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCES = true;
-    boolean MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH = false;
 
     /**
      * Returns true if Measurement Delete Registrations API should require that the calling API is
@@ -3362,10 +3361,6 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCES;
     }
 
-    /** Returns true if the Enrollment match is based on url origin matching */
-    default boolean getEnforceEnrollmentOriginMatch() {
-        return MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH;
-    }
 
     /** Returns true if Topics API should require that the calling API is running in foreground. */
     default boolean getEnforceForegroundStatusForTopics() {
@@ -4825,6 +4820,30 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns whether Cobalt operational logging is enabled. */
     default boolean getCobaltOperationalLoggingEnabled() {
         return COBALT_OPERATIONAL_LOGGING_ENABLED;
+    }
+
+    /**
+     * The flag to enable falling back to the default base registry. It prevents Cobalt using merged
+     * registry. So in case the MDD downloaded registry and merged with default registry already, we
+     * can still fall back to use the default base registry.
+     */
+    @FeatureFlag Boolean COBALT__FALL_BACK_TO_DEFAULT_BASE_REGISTRY = false;
+
+    /** Returns the flag to enable falling back to the default base registry. */
+    default boolean getCobaltFallBackToDefaultBaseRegistry() {
+        return COBALT__FALL_BACK_TO_DEFAULT_BASE_REGISTRY;
+    }
+
+    /**
+     * The flag tells Cobalt to ignore specific list of report id(s). This flag is used for
+     * out-of-band registry update. The format is a comma-separated list of 4 colon separated ints,
+     * e.g. a single value is customer_id:project_id:metric_id:report_id.
+     */
+    @ConfigFlag String COBALT__IGNORED_REPORT_ID_LIST = "";
+
+    /** Returns the flag to ignore specific list of report id(s). */
+    default String getCobaltIgnoredReportIdList() {
+        return COBALT__IGNORED_REPORT_ID_LIST;
     }
 
     /**

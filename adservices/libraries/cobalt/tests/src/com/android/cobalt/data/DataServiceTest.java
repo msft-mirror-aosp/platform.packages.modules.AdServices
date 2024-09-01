@@ -107,7 +107,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
     private DaoBuildingBlocks mDaoBuildingBlocks;
     private TestOnlyDao mTestOnlyDao;
     private DataService mDataService;
-    @Mock private ObservationGenerator mGenerator;
+    @Mock private ObservationGenerator mMockGenerator;
     private Function<Integer, ObservationGenerator> mGeneratorSupplier;
     private FakeCobaltOperationLogger mOperationLogger;
 
@@ -116,9 +116,9 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
         mCobaltDatabase = Room.inMemoryDatabaseBuilder(mContext, CobaltDatabase.class).build();
         mDaoBuildingBlocks = mCobaltDatabase.daoBuildingBlocks();
         mTestOnlyDao = mCobaltDatabase.testOnlyDao();
-        mDataService = new DataService(EXECUTOR, mCobaltDatabase);
-        mGeneratorSupplier = (unused) -> mGenerator;
         mOperationLogger = new FakeCobaltOperationLogger();
+        mDataService = new DataService(EXECUTOR, mCobaltDatabase, mOperationLogger);
+        mGeneratorSupplier = (unused) -> mMockGenerator;
     }
 
     @After
@@ -160,14 +160,14 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void loggerEnabled_oneTime_stored() throws Exception {
+    public void testLoggerEnabled_oneTime_stored() throws Exception {
         assertThat(mDataService.loggerEnabled(TIME).get()).isEqualTo(TIME);
         assertThat(mDaoBuildingBlocks.queryEnablementTimes())
                 .containsExactly(GlobalValueEntity.Key.INITIAL_ENABLED_TIME, TIME.toString());
     }
 
     @Test
-    public void loggerEnabled_multipleTimes_firstIsStored() throws Exception {
+    public void testLoggerEnabled_multipleTimes_firstIsStored() throws Exception {
         // Set the logger as enabled, and again an hour later.
         mDataService.loggerEnabled(TIME).get();
         assertThat(mDataService.loggerEnabled(timePlusHours(1)).get()).isEqualTo(TIME);
@@ -179,7 +179,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void loggerDisabled_notYetEnabled_stored() throws Exception {
+    public void testLoggerDisabled_notYetEnabled_stored() throws Exception {
         // Set the logger as disabled.
         mDataService.loggerDisabled(TIME).get();
 
@@ -189,7 +189,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void loggerDisabled_afterEnabled_stored() throws Exception {
+    public void testLoggerDisabled_afterEnabled_stored() throws Exception {
         // Set the logger as enabled.
         Instant enabledTime = TIME.minus(Duration.ofDays(1));
         mDataService.loggerEnabled(enabledTime).get();
@@ -205,7 +205,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void loggerDisabled_multipleTimesAfterEnabled_stored() throws Exception {
+    public void testLoggerDisabled_multipleTimesAfterEnabled_stored() throws Exception {
         // Set the logger as enabled.
         Instant enabledTime = timeMinusDays(1);
         mDataService.loggerEnabled(enabledTime).get();
@@ -222,7 +222,8 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void loggerEnabled_reenabledShortlyAfterDisabled_originalEnabledTime() throws Exception {
+    public void testLoggerEnabled_reenabledShortlyAfterDisabled_originalEnabledTime()
+            throws Exception {
         // Set the logger as enabled.
         mDataService.loggerEnabled(TIME).get();
 
@@ -239,7 +240,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void loggerEnabled_reenabledAfterMoreThanTwoDaysDisabled_newEnabledTime()
+    public void testLoggerEnabled_reenabledAfterMoreThanTwoDaysDisabled_newEnabledTime()
             throws Exception {
         // Set the logger as enabled.
         mDataService.loggerEnabled(TIME).get();
@@ -258,7 +259,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void aggregateCount_multipleCalls_aggregatedTogether() throws Exception {
+    public void testAggregateCount_multipleCalls_aggregatedTogether() throws Exception {
         // Mark a Count report as having occurred.
         mDataService
                 .aggregateCount(
@@ -306,7 +307,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void aggregateCount_multipleReportsDaysEventVectors_aggregatedSeparately()
+    public void testAggregateCount_multipleReportsDaysEventVectors_aggregatedSeparately()
             throws Exception {
         // Mark a Count report as having occurred.
         mDataService
@@ -401,7 +402,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void aggregateCount_eventVectorBufferMaxLimit_firstEventVectorsAggregated()
+    public void testAggregateCount_eventVectorBufferMaxLimit_firstEventVectorsAggregated()
             throws Exception {
         // Two event vectors occur with counts and are aggregated.
         mDataService
@@ -483,7 +484,98 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void aggregateString_multipleCalls_aggregatedTogether() throws Exception {
+    public void testAggregateCount_eventVectorBufferMaxLimit_eventVectorBufferMaxExceededLogged()
+            throws Exception {
+        // Two event vectors occur with counts and are aggregated.
+        mDataService
+                .aggregateCount(
+                        REPORT_1,
+                        DAY_INDEX_1,
+                        SYSTEM_PROFILE_1,
+                        EVENT_VECTOR_1,
+                        /* eventVectorBufferMax= */ 2,
+                        100)
+                .get();
+        mDataService
+                .aggregateCount(
+                        REPORT_1,
+                        DAY_INDEX_1,
+                        SYSTEM_PROFILE_1,
+                        EVENT_VECTOR_2,
+                        /* eventVectorBufferMax= */ 2,
+                        150)
+                .get();
+        // A 3rd event vector is over the limit and is logged.
+        mDataService
+                .aggregateCount(
+                        REPORT_1,
+                        DAY_INDEX_1,
+                        SYSTEM_PROFILE_1,
+                        EVENT_VECTOR_3,
+                        /* eventVectorBufferMax= */ 2,
+                        175)
+                .get();
+        // A 4th event vector is over the limit and is logged.
+        mDataService
+                .aggregateCount(
+                        REPORT_1,
+                        DAY_INDEX_1,
+                        SYSTEM_PROFILE_1,
+                        EVENT_VECTOR_4,
+                        /* eventVectorBufferMax= */ 2,
+                        185)
+                .get();
+        // Check that it was recorded that event vector buffer max was exceeded twice for the metric
+        // id and report id.
+        assertThat(
+                        mOperationLogger.getNumEventVectorBufferMaxExceededOccurrences(
+                                METRIC_ID_1, REPORT_ID_1))
+                .isEqualTo(2);
+    }
+
+    @Test
+    public void
+            testAggregateCount_underEventVectorBufferMaxLimit_noEventVectorBufferMaxExceededLogged()
+                    throws Exception {
+        // Two event vectors occur with counts and are aggregated.
+        mDataService
+                .aggregateCount(
+                        REPORT_1,
+                        DAY_INDEX_1,
+                        SYSTEM_PROFILE_1,
+                        EVENT_VECTOR_1,
+                        /* eventVectorBufferMax= */ 2,
+                        100)
+                .get();
+        mDataService
+                .aggregateCount(
+                        REPORT_1,
+                        DAY_INDEX_1,
+                        SYSTEM_PROFILE_1,
+                        EVENT_VECTOR_2,
+                        /* eventVectorBufferMax= */ 2,
+                        150)
+                .get();
+        // 3rd event vector occurs but now with different system profile, not reach the event vector
+        // buffer max.
+        mDataService
+                .aggregateCount(
+                        REPORT_1,
+                        DAY_INDEX_1,
+                        SYSTEM_PROFILE_2,
+                        EVENT_VECTOR_3,
+                        /* eventVectorBufferMax= */ 2,
+                        175)
+                .get();
+        // Check that no event vector buffer max exceeded recorded for the metric id and report id.
+        assertThat(
+                        mOperationLogger.getNumEventVectorBufferMaxExceededOccurrences(
+                                METRIC_ID_1, REPORT_ID_1))
+                .isEqualTo(0);
+    }
+
+    @Test
+    public void testAggregateString_multipleCalls_aggregatedTogether() throws Exception {
         // Mark a string count report as having occurred.
         mDataService
                 .aggregateString(
@@ -493,8 +585,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_1,
                         /* eventVectorBufferMax= */ 0,
                         /* stringBufferMax= */ 0,
-                        "A",
-                        mOperationLogger)
+                        "A")
                 .get();
 
         // Check that the data is found in the database.
@@ -527,8 +618,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_1,
                         /* eventVectorBufferMax= */ 0,
                         /* stringBufferMax= */ 0,
-                        "A",
-                        mOperationLogger)
+                        "A")
                 .get();
 
         assertThat(mTestOnlyDao.getAllAggregates())
@@ -557,8 +647,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_1,
                         /* eventVectorBufferMax= */ 0,
                         /* stringBufferMax= */ 0,
-                        "B",
-                        mOperationLogger)
+                        "B")
                 .get();
 
         assertThat(mTestOnlyDao.getAllAggregates())
@@ -587,7 +676,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void aggregateString_multipleReportsDaysEventVectors_aggregatedSeparately()
+    public void testAggregateString_multipleReportsDaysEventVectors_aggregatedSeparately()
             throws Exception {
         // Mark various string count reports as having occurred on different days for different
         // event vectors.
@@ -599,8 +688,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_1,
                         /* eventVectorBufferMax= */ 0,
                         /* stringBufferMax= */ 0,
-                        "A",
-                        mOperationLogger)
+                        "A")
                 .get();
         mDataService
                 .aggregateString(
@@ -610,8 +698,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_1,
                         /* eventVectorBufferMax= */ 0,
                         /* stringBufferMax= */ 0,
-                        "B",
-                        mOperationLogger)
+                        "B")
                 .get();
         mDataService
                 .aggregateString(
@@ -621,8 +708,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_1,
                         /* eventVectorBufferMax= */ 0,
                         /* stringBufferMax= */ 0,
-                        "C",
-                        mOperationLogger)
+                        "C")
                 .get();
         mDataService
                 .aggregateString(
@@ -632,8 +718,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_1,
                         /* eventVectorBufferMax= */ 0,
                         /* stringBufferMax= */ 0,
-                        "D",
-                        mOperationLogger)
+                        "D")
                 .get();
         mDataService
                 .aggregateString(
@@ -643,8 +728,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_2,
                         /* eventVectorBufferMax= */ 0,
                         /* stringBufferMax= */ 0,
-                        "E",
-                        mOperationLogger)
+                        "E")
                 .get();
 
         // Check that the data is found in the database.
@@ -730,7 +814,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void aggregateString_eventVectorBufferMaxLimit_firstEventVectorsAggregated()
+    public void testAggregateString_eventVectorBufferMaxLimit_firstEventVectorsAggregated()
             throws Exception {
         // Two event vectors occur with different strings and are aggregated.
         mDataService
@@ -741,8 +825,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_1,
                         /* eventVectorBufferMax= */ 2,
                         /* stringBufferMax= */ 0,
-                        "A",
-                        mOperationLogger)
+                        "A")
                 .get();
         mDataService
                 .aggregateString(
@@ -752,8 +835,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_2,
                         /* eventVectorBufferMax= */ 2,
                         /* stringBufferMax= */ 0,
-                        "B",
-                        mOperationLogger)
+                        "B")
                 .get();
         // A 3rd event vector is over the limit and is dropped.
         mDataService
@@ -764,8 +846,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_3,
                         /* eventVectorBufferMax= */ 2,
                         /* stringBufferMax= */ 0,
-                        "C",
-                        mOperationLogger)
+                        "C")
                 .get();
         // A previous event vector occurs again and its string is aggregated.
         mDataService
@@ -776,8 +857,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_1,
                         /* eventVectorBufferMax= */ 2,
                         /* stringBufferMax= */ 0,
-                        "D",
-                        mOperationLogger)
+                        "D")
                 .get();
         // 3rd event vector occurs but now with a different system profile and is aggregated.
         mDataService
@@ -788,8 +868,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_3,
                         /* eventVectorBufferMax= */ 2,
                         /* stringBufferMax= */ 0,
-                        "E",
-                        mOperationLogger)
+                        "E")
                 .get();
 
         // Check that the data is found in the database.
@@ -849,7 +928,106 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void aggregateString_stringBufferMaxLimit_firstStringsAggregated() throws Exception {
+    public void testAggregateString_eventVectorBufferMaxLimit_eventVectorBufferMaxExceededLogged()
+            throws Exception {
+        // Two event vectors occur with different strings and are aggregated.
+        mDataService
+                .aggregateString(
+                        REPORT_1,
+                        DAY_INDEX_1,
+                        SYSTEM_PROFILE_1,
+                        EVENT_VECTOR_1,
+                        /* eventVectorBufferMax= */ 2,
+                        /* stringBufferMax= */ 0,
+                        "A")
+                .get();
+        mDataService
+                .aggregateString(
+                        REPORT_1,
+                        DAY_INDEX_1,
+                        SYSTEM_PROFILE_1,
+                        EVENT_VECTOR_2,
+                        /* eventVectorBufferMax= */ 2,
+                        /* stringBufferMax= */ 0,
+                        "B")
+                .get();
+        // A 3rd event vector is over the limit and is logged.
+        mDataService
+                .aggregateString(
+                        REPORT_1,
+                        DAY_INDEX_1,
+                        SYSTEM_PROFILE_1,
+                        EVENT_VECTOR_3,
+                        /* eventVectorBufferMax= */ 2,
+                        /* stringBufferMax= */ 0,
+                        "C")
+                .get();
+        // A 4th event vector is over the limit and is logged.
+        mDataService
+                .aggregateString(
+                        REPORT_1,
+                        DAY_INDEX_1,
+                        SYSTEM_PROFILE_1,
+                        EVENT_VECTOR_4,
+                        /* eventVectorBufferMax= */ 2,
+                        /* stringBufferMax= */ 0,
+                        "D")
+                .get();
+
+        // Check that it was recorded that event vector buffer max was exceeded twice for the metric
+        // id and report id.
+        assertThat(
+                        mOperationLogger.getNumEventVectorBufferMaxExceededOccurrences(
+                                METRIC_ID_1, REPORT_ID_1))
+                .isEqualTo(2);
+    }
+
+    @Test
+    public void
+            testAggregateString_underEventVectorBufferMaxLimit_noEventVectorBufferMaxExceededLogged()
+                    throws Exception {
+        // Two event vectors occur with different strings and are aggregated.
+        mDataService
+                .aggregateString(
+                        REPORT_1,
+                        DAY_INDEX_1,
+                        SYSTEM_PROFILE_1,
+                        EVENT_VECTOR_1,
+                        /* eventVectorBufferMax= */ 2,
+                        /* stringBufferMax= */ 0,
+                        "A")
+                .get();
+        mDataService
+                .aggregateString(
+                        REPORT_1,
+                        DAY_INDEX_1,
+                        SYSTEM_PROFILE_1,
+                        EVENT_VECTOR_2,
+                        /* eventVectorBufferMax= */ 2,
+                        /* stringBufferMax= */ 0,
+                        "B")
+                .get();
+        // 3rd event vector occurs but now with a different system profile, not reach the event
+        // vector buffer max.
+        mDataService
+                .aggregateString(
+                        REPORT_1,
+                        DAY_INDEX_1,
+                        SYSTEM_PROFILE_2,
+                        EVENT_VECTOR_3,
+                        /* eventVectorBufferMax= */ 2,
+                        /* stringBufferMax= */ 0,
+                        "E")
+                .get();
+        // Check that no event vector buffer max exceeded recorded for the metric id and report id.
+        assertThat(
+                        mOperationLogger.getNumEventVectorBufferMaxExceededOccurrences(
+                                METRIC_ID_1, REPORT_ID_1))
+                .isEqualTo(0);
+    }
+
+    @Test
+    public void testAggregateString_stringBufferMaxLimit_firstStringsAggregated() throws Exception {
         // Two strings occur and are aggregated.
         mDataService
                 .aggregateString(
@@ -859,8 +1037,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_1,
                         /* eventVectorBufferMax= */ 0,
                         /* stringBufferMax= */ 2,
-                        "A",
-                        mOperationLogger)
+                        "A")
                 .get();
         mDataService
                 .aggregateString(
@@ -870,8 +1047,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_2,
                         /* eventVectorBufferMax= */ 0,
                         /* stringBufferMax= */ 2,
-                        "B",
-                        mOperationLogger)
+                        "B")
                 .get();
         // A 3rd string is over the limit and is dropped.
         mDataService
@@ -882,8 +1058,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_3,
                         /* eventVectorBufferMax= */ 0,
                         /* stringBufferMax= */ 2,
-                        "C",
-                        mOperationLogger)
+                        "C")
                 .get();
         // A previous string occurs again and is aggregated.
         mDataService
@@ -894,8 +1069,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_4,
                         /* eventVectorBufferMax= */ 0,
                         /* stringBufferMax= */ 2,
-                        "A",
-                        mOperationLogger)
+                        "A")
                 .get();
         // A new string occurs but now for a different report and is aggregated.
         mDataService
@@ -906,8 +1080,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_1,
                         /* eventVectorBufferMax= */ 0,
                         /* stringBufferMax= */ 2,
-                        "D",
-                        mOperationLogger)
+                        "D")
                 .get();
 
         // Check that the data is found in the database.
@@ -977,7 +1150,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void aggregateString_stringBufferMaxLimit_stringBufferMaxExceededLogged()
+    public void testAggregateString_stringBufferMaxLimit_stringBufferMaxExceededLogged()
             throws Exception {
         // Two strings occur and are aggregated.
         mDataService
@@ -988,8 +1161,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_1,
                         /* eventVectorBufferMax= */ 0,
                         /* stringBufferMax= */ 2,
-                        "A",
-                        mOperationLogger)
+                        "A")
                 .get();
         mDataService
                 .aggregateString(
@@ -999,8 +1171,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_2,
                         /* eventVectorBufferMax= */ 0,
                         /* stringBufferMax= */ 2,
-                        "B",
-                        mOperationLogger)
+                        "B")
                 .get();
         // A 3rd string is over the limit and is logged.
         mDataService
@@ -1011,8 +1182,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_3,
                         /* eventVectorBufferMax= */ 0,
                         /* stringBufferMax= */ 2,
-                        "C",
-                        mOperationLogger)
+                        "C")
                 .get();
         // A 4th string is over the limit and is logged.
         mDataService
@@ -1023,8 +1193,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_4,
                         /* eventVectorBufferMax= */ 0,
                         /* stringBufferMax= */ 2,
-                        "D",
-                        mOperationLogger)
+                        "D")
                 .get();
 
         // Check that it was recorded that string buffer max was exceeded twice for the metric id
@@ -1036,7 +1205,39 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void generateObservations_oneEvent_oneObservationStored() throws Exception {
+    public void testAggregateString_underStringBufferMaxLimit_noStringBufferMaxExceededLogged()
+            throws Exception {
+        // Two strings occur and are aggregated.
+        mDataService
+                .aggregateString(
+                        REPORT_1,
+                        DAY_INDEX_1,
+                        SYSTEM_PROFILE_1,
+                        EVENT_VECTOR_1,
+                        /* eventVectorBufferMax= */ 0,
+                        /* stringBufferMax= */ 2,
+                        "A")
+                .get();
+        mDataService
+                .aggregateString(
+                        REPORT_1,
+                        DAY_INDEX_1,
+                        SYSTEM_PROFILE_1,
+                        EVENT_VECTOR_2,
+                        /* eventVectorBufferMax= */ 0,
+                        /* stringBufferMax= */ 2,
+                        "B")
+                .get();
+
+        // Check that no string buffer max exceeded recorded for the metric id and report id.
+        assertThat(
+                        mOperationLogger.getNumStringBufferMaxExceededOccurrences(
+                                METRIC_ID_1, REPORT_ID_1))
+                .isEqualTo(0);
+    }
+
+    @Test
+    public void testGenerateObservations_oneEvent_oneObservationStored() throws Exception {
         // Initialize a report as up to date for sending observations up to the previous day.
         mDaoBuildingBlocks.insertLastSentDayIndex(ReportEntity.create(REPORT_1, DAY_INDEX_1 - 1));
 
@@ -1054,7 +1255,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
         // Expect one EventRecordAndSystemProfile to be passed to the Obseration Generator.
         ImmutableListMultimap<SystemProfile, EventRecordAndSystemProfile> expectedEventRecord =
                 ImmutableListMultimap.of(SYSTEM_PROFILE_1, EVENT_RECORD_3);
-        when(mGenerator.generateObservations(DAY_INDEX_1, expectedEventRecord))
+        when(mMockGenerator.generateObservations(DAY_INDEX_1, expectedEventRecord))
                 .thenReturn(ImmutableList.of(OBSERVATION_1));
 
         // Generate and store the one observation for the current day.
@@ -1063,8 +1264,8 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                 .get();
 
         // Check that the Obseration Generator was called correctly.
-        verify(mGenerator).generateObservations(DAY_INDEX_1, expectedEventRecord);
-        verifyNoMoreInteractions(mGenerator);
+        verify(mMockGenerator).generateObservations(DAY_INDEX_1, expectedEventRecord);
+        verifyNoMoreInteractions(mMockGenerator);
 
         assertThat(mDaoBuildingBlocks.queryOldestObservations())
                 .containsExactly(ObservationStoreEntity.create(1, OBSERVATION_1));
@@ -1073,7 +1274,8 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void generateObservations_multipleEventVectors_oneObservationStored() throws Exception {
+    public void testGenerateObservations_multipleEventVectors_oneObservationStored()
+            throws Exception {
         // Initialize a report as up to date for sending observations up to the previous day.
         mDaoBuildingBlocks.insertLastSentDayIndex(ReportEntity.create(REPORT_1, DAY_INDEX_1 - 1));
 
@@ -1102,7 +1304,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
         ImmutableListMultimap<SystemProfile, EventRecordAndSystemProfile> expectedEventRecord =
                 ImmutableListMultimap.of(
                         SYSTEM_PROFILE_1, EVENT_RECORD_3, SYSTEM_PROFILE_1, EVENT_RECORD_4);
-        when(mGenerator.generateObservations(DAY_INDEX_1, expectedEventRecord))
+        when(mMockGenerator.generateObservations(DAY_INDEX_1, expectedEventRecord))
                 .thenReturn(ImmutableList.of(OBSERVATION_1));
 
         // Generate and store the one observation for the current day.
@@ -1111,8 +1313,8 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                 .get();
 
         // Check that the Obseration Generator was called correctly.
-        verify(mGenerator).generateObservations(DAY_INDEX_1, expectedEventRecord);
-        verifyNoMoreInteractions(mGenerator);
+        verify(mMockGenerator).generateObservations(DAY_INDEX_1, expectedEventRecord);
+        verifyNoMoreInteractions(mMockGenerator);
 
         assertThat(mDaoBuildingBlocks.queryOldestObservations())
                 .containsExactly(ObservationStoreEntity.create(1, OBSERVATION_1));
@@ -1121,7 +1323,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void generateObservations_multipleSystemProfiles_twoObservationsStored()
+    public void testGenerateObservations_multipleSystemProfiles_twoObservationsStored()
             throws Exception {
         // Initialize a report as up to date for sending observations up to the previous day.
         mDaoBuildingBlocks.insertLastSentDayIndex(ReportEntity.create(REPORT_1, DAY_INDEX_1 - 1));
@@ -1150,7 +1352,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                 ImmutableListMultimap.of(
                         SYSTEM_PROFILE_1, EVENT_RECORD_3,
                         SYSTEM_PROFILE_2, EVENT_RECORD_4_2);
-        when(mGenerator.generateObservations(DAY_INDEX_1, expectedEventRecord))
+        when(mMockGenerator.generateObservations(DAY_INDEX_1, expectedEventRecord))
                 .thenReturn(ImmutableList.of(OBSERVATION_1, OBSERVATION_2));
 
         // Generate and store the one observation for the current day.
@@ -1159,8 +1361,8 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                 .get();
 
         // Check that the Obseration Generator was called correctly.
-        verify(mGenerator).generateObservations(DAY_INDEX_1, expectedEventRecord);
-        verifyNoMoreInteractions(mGenerator);
+        verify(mMockGenerator).generateObservations(DAY_INDEX_1, expectedEventRecord);
+        verifyNoMoreInteractions(mMockGenerator);
 
         assertThat(mDaoBuildingBlocks.queryOldestObservations())
                 .containsExactly(
@@ -1171,7 +1373,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void generateObservations_multipleSystemProfilesAndEventVectors_allStored()
+    public void testGenerateObservations_multipleSystemProfilesAndEventVectors_allStored()
             throws Exception {
         // Initialize a report as up to date for sending observations up to the previous day.
         mDaoBuildingBlocks.insertLastSentDayIndex(ReportEntity.create(REPORT_1, DAY_INDEX_1 - 1));
@@ -1226,7 +1428,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_RECORD_3_2,
                         SYSTEM_PROFILE_2,
                         EVENT_RECORD_4_2);
-        when(mGenerator.generateObservations(DAY_INDEX_1, expectedEventRecord))
+        when(mMockGenerator.generateObservations(DAY_INDEX_1, expectedEventRecord))
                 .thenReturn(ImmutableList.of(OBSERVATION_1, OBSERVATION_2));
 
         // Generate and store the one observation for the current day.
@@ -1235,8 +1437,8 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                 .get();
 
         // Check that the Obseration Generator was called correctly.
-        verify(mGenerator).generateObservations(DAY_INDEX_1, expectedEventRecord);
-        verifyNoMoreInteractions(mGenerator);
+        verify(mMockGenerator).generateObservations(DAY_INDEX_1, expectedEventRecord);
+        verifyNoMoreInteractions(mMockGenerator);
 
         assertThat(mDaoBuildingBlocks.queryOldestObservations())
                 .containsExactly(
@@ -1247,14 +1449,14 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void generateObservations_newReport_noInitialBackfill() throws Exception {
+    public void testGenerateObservations_newReport_noInitialBackfill() throws Exception {
         // Generate and store the one observation for the current day.
         mDataService
                 .generateObservations(REPORT_1, DAY_INDEX_1, DAY_INDEX_ENABLED, mGeneratorSupplier)
                 .get();
 
         // Check that the Obseration Generator was called correctly.
-        verifyNoMoreInteractions(mGenerator);
+        verifyNoMoreInteractions(mMockGenerator);
 
         assertThat(mDaoBuildingBlocks.queryOldestObservations()).isEmpty();
         assertThat(mTestOnlyDao.queryLastSentDayIndex(REPORT_1))
@@ -1270,9 +1472,9 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
         // Expect empty EventRecordAndSystemProfile to be passed to the Obseration Generator
         // for the days since the
         // logger was re-enabled.
-        when(mGenerator.generateObservations(DAY_INDEX_1 - 1, EMPTY_EVENT_DATA))
+        when(mMockGenerator.generateObservations(DAY_INDEX_1 - 1, EMPTY_EVENT_DATA))
                 .thenReturn(EMPTY_OBSERVATIONS);
-        when(mGenerator.generateObservations(DAY_INDEX_1, EMPTY_EVENT_DATA))
+        when(mMockGenerator.generateObservations(DAY_INDEX_1, EMPTY_EVENT_DATA))
                 .thenReturn(EMPTY_OBSERVATIONS);
 
         // Generate and store the one observation for the current day.
@@ -1281,9 +1483,9 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                 .get();
 
         // Check that the Obseration Generator was called correctly.
-        verify(mGenerator).generateObservations(DAY_INDEX_1 - 1, EMPTY_EVENT_DATA);
-        verify(mGenerator).generateObservations(DAY_INDEX_1, EMPTY_EVENT_DATA);
-        verifyNoMoreInteractions(mGenerator);
+        verify(mMockGenerator).generateObservations(DAY_INDEX_1 - 1, EMPTY_EVENT_DATA);
+        verify(mMockGenerator).generateObservations(DAY_INDEX_1, EMPTY_EVENT_DATA);
+        verifyNoMoreInteractions(mMockGenerator);
 
         assertThat(mDaoBuildingBlocks.queryOldestObservations()).isEmpty();
         assertThat(mTestOnlyDao.queryLastSentDayIndex(REPORT_1))
@@ -1291,7 +1493,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void generateObservations_backfillDailyReport_twoDaysStored() throws Exception {
+    public void testGenerateObservations_backfillDailyReport_twoDaysStored() throws Exception {
         // Initialize a report as up to date for sending observations a week ago.
         mDaoBuildingBlocks.insertLastSentDayIndex(ReportEntity.create(REPORT_1, DAY_INDEX_1 - 8));
 
@@ -1319,14 +1521,14 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
         // each of the two days.
         ImmutableListMultimap<SystemProfile, EventRecordAndSystemProfile> expectedEventRecord =
                 ImmutableListMultimap.of(SYSTEM_PROFILE_1, EVENT_RECORD_3);
-        when(mGenerator.generateObservations(DAY_INDEX_1 - 3, EMPTY_EVENT_DATA))
+        when(mMockGenerator.generateObservations(DAY_INDEX_1 - 3, EMPTY_EVENT_DATA))
                 .thenReturn(EMPTY_OBSERVATIONS);
-        when(mGenerator.generateObservations(DAY_INDEX_1 - 2, expectedEventRecord))
+        when(mMockGenerator.generateObservations(DAY_INDEX_1 - 2, expectedEventRecord))
                 .thenReturn(ImmutableList.of(OBSERVATION_1));
-        when(mGenerator.generateObservations(DAY_INDEX_1 - 1, EMPTY_EVENT_DATA))
+        when(mMockGenerator.generateObservations(DAY_INDEX_1 - 1, EMPTY_EVENT_DATA))
                 .thenReturn(EMPTY_OBSERVATIONS);
         // After 7 days of generating observations, there should be no event data.
-        when(mGenerator.generateObservations(DAY_INDEX_1, expectedEventRecord))
+        when(mMockGenerator.generateObservations(DAY_INDEX_1, expectedEventRecord))
                 .thenReturn(ImmutableList.of(OBSERVATION_2));
 
         // Generate and store the observations for the three days of backfill.
@@ -1335,11 +1537,11 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                 .get();
 
         // Check that the Obseration Generator was called correctly.
-        verify(mGenerator).generateObservations(DAY_INDEX_1 - 3, EMPTY_EVENT_DATA);
-        verify(mGenerator).generateObservations(DAY_INDEX_1 - 2, expectedEventRecord);
-        verify(mGenerator).generateObservations(DAY_INDEX_1 - 1, EMPTY_EVENT_DATA);
-        verify(mGenerator).generateObservations(DAY_INDEX_1, expectedEventRecord);
-        verifyNoMoreInteractions(mGenerator);
+        verify(mMockGenerator).generateObservations(DAY_INDEX_1 - 3, EMPTY_EVENT_DATA);
+        verify(mMockGenerator).generateObservations(DAY_INDEX_1 - 2, expectedEventRecord);
+        verify(mMockGenerator).generateObservations(DAY_INDEX_1 - 1, EMPTY_EVENT_DATA);
+        verify(mMockGenerator).generateObservations(DAY_INDEX_1, expectedEventRecord);
+        verifyNoMoreInteractions(mMockGenerator);
 
         assertThat(mDaoBuildingBlocks.queryOldestObservations())
                 .containsExactly(
@@ -1350,7 +1552,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void cleanup_removesAggregates_beforeOldestDayIndex() throws Exception {
+    public void testCleanup_removesAggregates_beforeOldestDayIndex() throws Exception {
         int oldestDayIndex = 12345;
 
         mDataService
@@ -1361,8 +1563,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_1,
                         /* eventVectorBufferMax= */ 0,
                         /* stringBufferMax= */ 0,
-                        /* stringValue= */ "STRING",
-                        mOperationLogger)
+                        /* stringValue= */ "STRING")
                 .get();
         mDataService
                 .aggregateCount(
@@ -1406,7 +1607,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void cleanup_removesIrrelevantReports() throws Exception {
+    public void testCleanup_removesIrrelevantReports() throws Exception {
         int oldestDayIndex = 12345;
 
         mDataService
@@ -1417,8 +1618,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_1,
                         /* eventVectorBufferMax= */ 0,
                         /* stringBufferMax= */ 0,
-                        /* stringValue= */ "STRING",
-                        mOperationLogger)
+                        /* stringValue= */ "STRING")
                 .get();
         mDataService
                 .aggregateCount(
@@ -1445,7 +1645,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void cleanup_removesUnusedSystemProfileHashes() throws Exception {
+    public void testCleanup_removesUnusedSystemProfileHashes() throws Exception {
         int oldestDayIndex = 12345;
 
         mDaoBuildingBlocks.insertSystemProfile(
@@ -1477,7 +1677,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void cleanup_removesUnusedStringHashes() throws Exception {
+    public void testCleanup_removesUnusedStringHashes() throws Exception {
         mDataService
                 .aggregateString(
                         REPORT_1,
@@ -1486,8 +1686,7 @@ public final class DataServiceTest extends AdServicesMockitoTestCase {
                         EVENT_VECTOR_1,
                         /* eventVectorBufferMax= */ 0,
                         /* stringBufferMax= */ 0,
-                        /* stringValue= */ "STRING",
-                        mOperationLogger)
+                        /* stringValue= */ "STRING")
                 .get();
 
         // Insert a string hash with a bad report key.

@@ -66,7 +66,6 @@ import org.mockito.internal.stubbing.answers.AnswersWithDelay;
 import org.mockito.internal.stubbing.answers.CallsRealMethods;
 
 import java.util.Optional;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -78,17 +77,20 @@ import java.util.concurrent.TimeUnit;
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(AdServicesJobServiceLogger.class)
 @MockStatic(ServiceCompatUtils.class)
-public final class EventFallbackReportingJobServiceTest extends MeasurementJobServiceTestCase {
+public final class EventFallbackReportingJobServiceTest
+        extends MeasurementJobServiceTestCase<EventFallbackReportingJobService> {
     private static final int MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID =
             MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB.getJobId();
     private static final long WAIT_IN_MILLIS = 200L;
     private static final long JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(24);
 
-    private EventFallbackReportingJobService mSpyService;
+    @Override
+    protected EventFallbackReportingJobService getSpiedService() {
+        return new EventFallbackReportingJobService();
+    }
 
     @Before
     public void setUp() {
-        mSpyService = spy(new EventFallbackReportingJobService());
         when(mMockFlags.getMeasurementEventFallbackReportingJobPersisted()).thenReturn(true);
         when(mMockFlags.getMeasurementEventFallbackReportingJobRequiredNetworkType())
                 .thenReturn(JobInfo.NETWORK_TYPE_ANY);
@@ -469,29 +471,8 @@ public final class EventFallbackReportingJobServiceTest extends MeasurementJobSe
         execute.run();
     }
 
-    private void enableKillSwitch() {
-        toggleKillSwitch(true);
-    }
-
-    private void disableKillSwitch() {
-        toggleKillSwitch(false);
-    }
-
-    private void toggleKillSwitch(boolean value) {
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        ExtendedMockito.doReturn(value)
-                .when(mMockFlags)
-                .getMeasurementJobEventFallbackReportingKillSwitch();
-    }
-
-    private CountDownLatch createCountDownLatch() {
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
-        doAnswer(i -> countDown(countDownLatch)).when(mSpyService).jobFinished(any(), anyBoolean());
-        return countDownLatch;
-    }
-
-    private Object countDown(CountDownLatch countDownLatch) {
-        countDownLatch.countDown();
-        return null;
+    @Override
+    protected void toggleFeature(boolean value) {
+        when(mMockFlags.getMeasurementJobEventFallbackReportingKillSwitch()).thenReturn(!value);
     }
 }

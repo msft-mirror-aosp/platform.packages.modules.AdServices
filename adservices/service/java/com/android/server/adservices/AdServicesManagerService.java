@@ -185,7 +185,8 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
                 publishBinderService();
                 published = true;
             } catch (RuntimeException e) {
-                LogUtil.w(
+                // TODO(b/363070750): call AdServicesErrorLogger as well
+                LogUtil.e(
                         e,
                         "Failed to publish %s service; will piggyback it into SdkSandbox anyways",
                         AD_SERVICES_SYSTEM_SERVICE);

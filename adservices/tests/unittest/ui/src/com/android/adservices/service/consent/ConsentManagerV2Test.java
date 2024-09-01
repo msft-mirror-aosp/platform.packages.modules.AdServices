@@ -160,6 +160,7 @@ import com.android.adservices.service.topics.TopicsWorker;
 import com.android.adservices.service.ui.data.UxStatesDao;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
@@ -217,6 +218,7 @@ import java.util.stream.Collectors;
 public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCase {
     public static final int UX_TYPE_COUNT = 5;
     public static final int ENROLLMENT_CHANNEL_COUNT = 22;
+
     private AtomicFileDatastore mDatastore;
     private AtomicFileDatastore mConsentDatastore;
     private ConsentManagerV2 mConsentManager;
@@ -255,6 +257,8 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
     @Mock private UxStatesDao mUxStatesDaoMock;
     @Mock private StatsdAdServicesLogger mStatsdAdServicesLoggerMock;
 
+    @Mock private AdServicesErrorLogger mMockAdServicesErrorLogger;
+
     @Before
     public void setup() throws IOException {
         doReturn(mStatsdAdServicesLoggerMock).when(StatsdAdServicesLogger::getInstance);
@@ -263,10 +267,14 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
                         new AtomicFileDatastore(
                                 mSpyContext,
                                 AppConsentDao.DATASTORE_NAME,
-                                AppConsentDao.DATASTORE_VERSION));
+                                AppConsentDao.DATASTORE_VERSION,
+                                mMockAdServicesErrorLogger));
         // For each file, we should ensure there is only one instance of datastore that is able to
         // access it. (Refer to AtomicFileDatastore.class)
-        mConsentDatastore = spy(ConsentManagerV2.createAndInitializeDataStore(mSpyContext));
+        mConsentDatastore =
+                spy(
+                        ConsentManagerV2.createAndInitializeDataStore(
+                                mSpyContext, mMockAdServicesErrorLogger));
         mAppConsentDaoSpy = spy(new AppConsentDao(mDatastore, mSpyContext.getPackageManager()));
         mEnrollmentDaoSpy =
                 spy(
