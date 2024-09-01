@@ -79,7 +79,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
     private static final String PKG_NAME2 = "or.not";
 
     // Generic API - exact value doesn't matter
-    private static final @ApiType int API = API_TOPICS;
+    @ApiType private static final int API = API_TOPICS;
 
     private static final String KEY_PKG_NAME_API =
             String.format(Locale.US, PREFS_KEY_TEMPLATE, PKG_NAME, API);

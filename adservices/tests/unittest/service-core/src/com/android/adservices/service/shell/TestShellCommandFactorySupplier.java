@@ -18,6 +18,7 @@ package com.android.adservices.service.shell;
 
 import static android.adservices.customaudience.CustomAudienceFixture.CUSTOM_AUDIENCE_ACTIVE_FETCH_WINDOW_MS;
 
+import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.signals.EncoderLogicHandler;
@@ -60,6 +61,7 @@ public class TestShellCommandFactorySupplier extends ShellCommandFactorySupplier
     private final EncodingJobRunStatsLogger mEncodingJobRunStatsLogger;
     private final EncoderLogicMetadataDao mEncoderLogicMetadataDao;
     private final ConsentedDebugConfigurationGenerator mConsentedDebugConfigurationGenerator;
+    private final AdSelectionEntryDao mAdSelectionEntryDao;
 
     TestShellCommandFactorySupplier(
             boolean isCustomAudienceCLiEnabled,
@@ -76,7 +78,8 @@ public class TestShellCommandFactorySupplier extends ShellCommandFactorySupplier
             EncodingExecutionLogHelper encodingExecutionLogHelper,
             EncodingJobRunStatsLogger encodingJobRunStatsLogger,
             EncoderLogicMetadataDao encoderLogicMetadataDao,
-            ConsentedDebugConfigurationGenerator consentedDebugConfigurationGenerator) {
+            ConsentedDebugConfigurationGenerator consentedDebugConfigurationGenerator,
+            AdSelectionEntryDao adSelectionEntryDao) {
         mIsCustomAudienceCliEnabled = isCustomAudienceCLiEnabled;
         mIsConsentedDebugCliEnabled = isConsentedDebugCliEnabled;
         mIsSignalsCliEnabled = isSignalsCliEnabled;
@@ -114,6 +117,8 @@ public class TestShellCommandFactorySupplier extends ShellCommandFactorySupplier
                 Objects.requireNonNull(
                         consentedDebugConfigurationGenerator,
                         "ConsentedDebugConfigurationGenerator cannot be null");
+        mAdSelectionEntryDao =
+                Objects.requireNonNull(adSelectionEntryDao, "AdSelectionEntryDao cannot be null");
     }
 
     @Override
@@ -131,7 +136,8 @@ public class TestShellCommandFactorySupplier extends ShellCommandFactorySupplier
                         mConsentedDebugConfigurationDao,
                         mBuyerInputGenerator,
                         mAuctionServerDataCompressor,
-                        mConsentedDebugConfigurationGenerator),
+                        mConsentedDebugConfigurationGenerator,
+                        mAdSelectionEntryDao),
                 new SignalsShellCommandFactory(
                         mIsSignalsCliEnabled,
                         mSignalsProviderAndArgumentFactory,

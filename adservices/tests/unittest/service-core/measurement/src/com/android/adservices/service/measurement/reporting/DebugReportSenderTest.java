@@ -53,7 +53,9 @@ public class DebugReportSenderTest {
                 .when(spyDebugReportSender)
                 .createHttpUrlConnection(Mockito.any());
 
-        int responseCode = spyDebugReportSender.sendReport(reportingOrigin, eventReportJson);
+        int responseCode =
+                spyDebugReportSender.sendReportWithHeaders(
+                        reportingOrigin, eventReportJson, /* headers= */ null);
 
         assertEquals(outputStream.toString(), eventReportJson.toString());
         assertEquals(responseCode, 200);

@@ -19,8 +19,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import static java.util.Objects.requireNonNull;
 
-import android.annotation.NonNull;
-
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.auto.value.AutoValue;
@@ -43,8 +41,7 @@ public abstract class Project {
      * @return the parsed {@link Project}
      * @throws Exception if the provided registry has more than 1 customer or more than 1 project
      */
-    @NonNull
-    public static Project create(@NonNull CobaltRegistry registry) {
+    public static Project create(CobaltRegistry registry) {
         requireNonNull(registry);
         for (CustomerConfig customer : registry.getCustomersList()) {
             if (customer.getCustomerId() != CUSTOMER_ID) {
@@ -73,9 +70,8 @@ public abstract class Project {
      * @return a {@link Project} for the customer's project
      */
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PACKAGE)
-    @NonNull
     public static Project create(
-            int customerId, int projectId, @NonNull Iterable<MetricDefinition> metrics) {
+            int customerId, int projectId, Iterable<MetricDefinition> metrics) {
         return new AutoValue_Project(
                 customerId, projectId, ImmutableList.copyOf(requireNonNull(metrics)));
     }
@@ -93,6 +89,5 @@ public abstract class Project {
     /**
      * @return the metrics being collected by the customer for the project
      */
-    @NonNull
     public abstract ImmutableList<MetricDefinition> getMetrics();
 }

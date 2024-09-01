@@ -79,18 +79,21 @@ import java.util.concurrent.TimeUnit;
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(AdServicesJobServiceLogger.class)
 @MockStatic(ServiceCompatUtils.class)
-public final class AsyncRegistrationQueueJobServiceTest extends MeasurementJobServiceTestCase {
+public final class AsyncRegistrationQueueJobServiceTest
+        extends MeasurementJobServiceTestCase<AsyncRegistrationQueueJobService> {
     private static final int MEASUREMENT_ASYNC_REGISTRATION_JOB_ID =
             MEASUREMENT_ASYNC_REGISTRATION_JOB.getJobId();
     private static final long WAIT_IN_MILLIS = 5_000L;
     private static final long JOB_TRIGGER_MIN_DELAY_MS = TimeUnit.MINUTES.toMillis(2);
     private static final long JOB_TRIGGER_MAX_DELAY_MS = TimeUnit.MINUTES.toMillis(5);
-    private AsyncRegistrationQueueJobService mSpyService;
+
+    @Override
+    protected AsyncRegistrationQueueJobService getSpiedService() {
+        return new AsyncRegistrationQueueJobService();
+    }
 
     @Before
     public void setUp() {
-        mSpyService = spy(new AsyncRegistrationQueueJobService());
-
         when(mMockFlags.getMeasurementAsyncRegistrationQueueJobPersisted()).thenReturn(false);
         when(mMockFlags.getMeasurementAsyncRegistrationQueueJobRequiredNetworkType())
                 .thenReturn(JobInfo.NETWORK_TYPE_ANY);
@@ -695,16 +698,8 @@ public final class AsyncRegistrationQueueJobServiceTest extends MeasurementJobSe
         execute.run();
     }
 
-    private void enableKillSwitch() {
-        toggleKillSwitch(true);
-    }
-
-    private void disableKillSwitch() {
-        toggleKillSwitch(false);
-    }
-
-    private void toggleKillSwitch(boolean value) {
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        ExtendedMockito.doReturn(value).when(mMockFlags).getAsyncRegistrationJobQueueKillSwitch();
+    @Override
+    protected void toggleFeature(boolean value) {
+        when(mMockFlags.getAsyncRegistrationJobQueueKillSwitch()).thenReturn(!value);
     }
 }

@@ -16,17 +16,19 @@
 
 package com.android.adservices.service.common;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
-import org.junit.Assert;
+import com.android.adservices.common.AdServicesUnitTestCase;
+
 import org.junit.Test;
 
 import java.util.Locale;
 
-public class AdTechUriValidatorTest {
+public final class AdTechUriValidatorTest extends AdServicesUnitTestCase {
     private static final String CLASS_NAME = "class";
     private static final String URI_FIELD_NAME = "field";
 
@@ -39,11 +41,10 @@ public class AdTechUriValidatorTest {
 
     @Test
     public void testValidUri_hasNoViolation() {
-        Assert.assertTrue(
-                mValidator
-                        .getValidationViolations(
-                                Uri.parse("https://" + CommonFixture.VALID_BUYER_1 + "/valid/uri"))
-                        .isEmpty());
+        assertThat(
+                        mValidator.getValidationViolations(
+                                Uri.parse("https://" + CommonFixture.VALID_BUYER_1 + "/valid/uri")))
+                .isEmpty();
     }
 
     @Test

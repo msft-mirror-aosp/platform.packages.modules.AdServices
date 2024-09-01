@@ -43,9 +43,10 @@ import static org.mockito.Mockito.when;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.platform.test.annotations.DisabledOnRavenwood;
 
-import com.android.adservices.shared.SharedExtendedMockitoTestCase;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
+import com.android.adservices.shared.spe.SpeMockitoTestCase;
 import com.android.adservices.shared.util.Clock;
 
 import com.google.common.collect.ImmutableMap;
@@ -59,7 +60,11 @@ import org.mockito.Mock;
 import java.util.concurrent.Executors;
 
 /** Unit test for {@link JobServiceLogger}. */
-public final class JobServiceLoggerTest extends SharedExtendedMockitoTestCase {
+@DisabledOnRavenwood(
+        blockedBy =
+                Context.class) // TODO(b/362475922): remove when Context.deleteSharedPreferences()
+// is supported
+public final class JobServiceLoggerTest extends SpeMockitoTestCase {
     // Use an arbitrary job ID for testing. It won't have side effect to use production id as
     // the test doesn't actually schedule a job. This avoids complicated mocking logic.
     private static final int JOB_ID_1 = 1;
@@ -79,7 +84,7 @@ public final class JobServiceLoggerTest extends SharedExtendedMockitoTestCase {
         mLogger =
                 spy(
                         new JobServiceLogger(
-                                sContext,
+                                mContext,
                                 Clock.getInstance(),
                                 mMockStatsdLogger,
                                 mMockErrorLogger,
@@ -88,13 +93,13 @@ public final class JobServiceLoggerTest extends SharedExtendedMockitoTestCase {
                                 mMockFlags));
 
         // Clear shared preference
-        sContext.deleteSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS);
+        mContext.deleteSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS);
     }
 
     @After
     public void teardown() {
         // Clear shared preference
-        sContext.deleteSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS);
+        mContext.deleteSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS);
     }
 
     @Test
@@ -102,7 +107,7 @@ public final class JobServiceLoggerTest extends SharedExtendedMockitoTestCase {
         String keyJobStartTime = JobServiceLogger.getJobStartTimestampKey(JOB_ID_1);
         String keyExecutionPeriod = JobServiceLogger.getExecutionPeriodKey(JOB_ID_1);
         SharedPreferences sharedPreferences =
-                sContext.getSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS, Context.MODE_PRIVATE);
+                mContext.getSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS, Context.MODE_PRIVATE);
         long startJobTimestamp = 100L;
 
         mLogger.persistJobExecutionData(JOB_ID_1, startJobTimestamp);
@@ -129,7 +134,7 @@ public final class JobServiceLoggerTest extends SharedExtendedMockitoTestCase {
 
         // Store previous execution data.
         SharedPreferences sharedPreferences =
-                sContext.getSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS, Context.MODE_PRIVATE);
+                mContext.getSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putLong(keyJobStartTime, previousJobStartTime);
         editor.putLong(keyJobStopTime, previousJobStopTime);
@@ -175,7 +180,7 @@ public final class JobServiceLoggerTest extends SharedExtendedMockitoTestCase {
 
         // Store previous execution data.
         SharedPreferences sharedPreferences =
-                sContext.getSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS, Context.MODE_PRIVATE);
+                mContext.getSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putLong(keyJobStartTime, previousJobStartTime);
         editor.putLong(keyJobStopTime, previousJobStopTime);
@@ -215,7 +220,7 @@ public final class JobServiceLoggerTest extends SharedExtendedMockitoTestCase {
         String keyJobStartTime2 = JobServiceLogger.getJobStartTimestampKey(JOB_ID_2);
         String keyExecutionPeriod2 = JobServiceLogger.getExecutionPeriodKey(JOB_ID_2);
         SharedPreferences sharedPreferences =
-                sContext.getSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS, Context.MODE_PRIVATE);
+                mContext.getSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS, Context.MODE_PRIVATE);
         long startJobTimestamp1 = 100L;
         long startJobTimestamp2 = 200L;
 
@@ -255,7 +260,7 @@ public final class JobServiceLoggerTest extends SharedExtendedMockitoTestCase {
 
         // Store execution data.
         SharedPreferences sharedPreferences =
-                sContext.getSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS, Context.MODE_PRIVATE);
+                mContext.getSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putLong(keyJobStartTime, jobStartTime);
         editor.putLong(keyExecutionPeriod, executionPeriod);
@@ -289,7 +294,7 @@ public final class JobServiceLoggerTest extends SharedExtendedMockitoTestCase {
 
         // Store execution data.
         SharedPreferences sharedPreferences =
-                sContext.getSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS, Context.MODE_PRIVATE);
+                mContext.getSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         // Invalid start Time.
         editor.putLong(keyJobStartTime, UNAVAILABLE_JOB_EXECUTION_PERIOD);
@@ -319,7 +324,7 @@ public final class JobServiceLoggerTest extends SharedExtendedMockitoTestCase {
 
     @Test
     public void testRecordJobFinishedByExecutionResult_success() {
-        when(mMockFlags.getBackgroundJobsLoggingEnabled()).thenReturn(true);
+        mockGetBackgroundJobsLoggingEnabled(true);
 
         // Mock the logger to not actually do logging.
         doNothing().when(mLogger).recordJobFinished(anyInt(), anyBoolean(), anyBoolean());
@@ -332,7 +337,7 @@ public final class JobServiceLoggerTest extends SharedExtendedMockitoTestCase {
 
     @Test
     public void testRecordJobFinishedByExecutionResult_failureWithoutRetry() {
-        when(mMockFlags.getBackgroundJobsLoggingEnabled()).thenReturn(true);
+        mockGetBackgroundJobsLoggingEnabled(true);
 
         // Mock the logger to not actually do logging.
         doNothing().when(mLogger).recordJobFinished(anyInt(), anyBoolean(), anyBoolean());
@@ -345,7 +350,7 @@ public final class JobServiceLoggerTest extends SharedExtendedMockitoTestCase {
 
     @Test
     public void testRecordJobFinishedByExecutionResult_failureWithRetry() {
-        when(mMockFlags.getBackgroundJobsLoggingEnabled()).thenReturn(true);
+        mockGetBackgroundJobsLoggingEnabled(true);
 
         // Mock the logger to not actually do logging.
         doNothing().when(mLogger).recordJobFinished(anyInt(), anyBoolean(), anyBoolean());
@@ -358,7 +363,7 @@ public final class JobServiceLoggerTest extends SharedExtendedMockitoTestCase {
 
     @Test
     public void testRecordJobFinishedByExecutionResult_invalidResult() {
-        when(mMockFlags.getBackgroundJobsLoggingEnabled()).thenReturn(true);
+        mockGetBackgroundJobsLoggingEnabled(true);
 
         // Mock the logger to not actually do logging.
         doNothing().when(mLogger).recordJobFinished(anyInt(), anyBoolean(), anyBoolean());

@@ -96,8 +96,6 @@ public class MeasurementDefaultProfileSuite {
                             true)
                     // Set flag to pre seed enrollment.
                     .setFlag(FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED, true)
-                    // Set flag not match origin.
-                    .setFlag(FlagsConstants.KEY_MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH, false)
                     .setMeasurementTags()
                     .setCompatModeFlags();
 

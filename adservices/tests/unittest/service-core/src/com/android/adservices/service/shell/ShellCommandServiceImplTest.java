@@ -38,6 +38,7 @@ import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
+import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
@@ -110,6 +111,7 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
     @Mock private EncodingExecutionLogHelper mEncodingExecutionLogHelper;
     @Mock private EncodingJobRunStatsLogger mEncodingJobRunStatsLogger;
     @Mock private EncoderLogicMetadataDao mEncoderLogicMetadataDao;
+    @Mock private AdSelectionEntryDao mAdSelectionEntryDao;
 
     private final Flags mFakeFlags = FakeFlagsFactory.getFlagsForTest();
     private ShellCommandServiceImpl mShellCommandService;
@@ -204,7 +206,8 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
                         mEncodingExecutionLogHelper,
                         mEncodingJobRunStatsLogger,
                         mEncoderLogicMetadataDao,
-                        consentedDebugConfigurationGenerator);
+                        consentedDebugConfigurationGenerator,
+                        mAdSelectionEntryDao);
         mShellCommandService =
                 new ShellCommandServiceImpl(
                         adServicesShellCommandHandlerFactory,

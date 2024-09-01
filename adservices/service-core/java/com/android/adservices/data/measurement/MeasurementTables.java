@@ -197,6 +197,7 @@ public final class MeasurementTables {
                 "aggregatable_source_registration_time_config";
         String TRIGGER_CONTEXT_ID = "trigger_context_id";
         String ATTRIBUTION_SCOPES = "attribution_scope";
+        String AGGREGATABLE_FILTERING_ID_MAX_BYTES = "aggregatable_filtering_id_max_bytes";
     }
 
     /** Contract for EventReport. */
@@ -703,7 +704,9 @@ public final class MeasurementTables {
                     + TriggerContract.TRIGGER_CONTEXT_ID
                     + " TEXT, "
                     + TriggerContract.ATTRIBUTION_SCOPES
-                    + " TEXT"
+                    + " TEXT, "
+                    + TriggerContract.AGGREGATABLE_FILTERING_ID_MAX_BYTES
+                    + " INTEGER "
                     + ")";
 
     // Only used in V3

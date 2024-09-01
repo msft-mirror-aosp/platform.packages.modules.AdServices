@@ -244,6 +244,9 @@ public class ContentValueFixtures {
 
         // Added in V33
         public static final String ATTRIBUTION_SCOPE = "sample_attribution_scope";
+
+        // Added in V42
+        public static final int AGGREGATABLE_FILTERING_ID_MAX_BYTES = 1;
     }
 
     public static class AttributionValues {
@@ -1103,6 +1106,15 @@ public class ContentValueFixtures {
         values.put(
                 MeasurementTables.TriggerContract.ATTRIBUTION_SCOPES,
                 TriggerValues.ATTRIBUTION_SCOPE);
+        return values;
+    }
+
+    /** Get ContentValues for V42 */
+    public static ContentValues generateTriggerContentValuesV42() {
+        ContentValues values = generateTriggerContentValuesV34();
+        values.put(
+                MeasurementTables.TriggerContract.AGGREGATABLE_FILTERING_ID_MAX_BYTES,
+                TriggerValues.AGGREGATABLE_FILTERING_ID_MAX_BYTES);
         return values;
     }
 
