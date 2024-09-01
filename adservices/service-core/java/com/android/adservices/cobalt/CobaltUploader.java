@@ -24,7 +24,6 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 
 import android.adservices.cobalt.EncryptedCobaltEnvelopeParams;
 import android.adservices.cobalt.IAdServicesCobaltUploadService;
-import android.annotation.NonNull;
 import android.content.Context;
 import android.os.RemoteException;
 import android.util.Log;
@@ -46,7 +45,7 @@ final class CobaltUploader implements Uploader {
     private final ServiceBinder<IAdServicesCobaltUploadService> mServiceBinder;
     private final int mEnvironment;
 
-    CobaltUploader(@NonNull Context context, CobaltPipelineType pipelineType) {
+    CobaltUploader(Context context, CobaltPipelineType pipelineType) {
         Objects.requireNonNull(context);
         mServiceBinder =
                 ServiceBinder.getServiceBinder(

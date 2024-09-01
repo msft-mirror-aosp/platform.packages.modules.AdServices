@@ -145,6 +145,10 @@ public final class FlagsConstants {
             "cobalt_registry_out_of_band_update_enabled";
     public static final String KEY_COBALT_OPERATIONAL_LOGGING_ENABLED =
             "cobalt_operational_logging_enabled";
+    public static final String KEY_COBALT__FALL_BACK_TO_DEFAULT_BASE_REGISTRY =
+            "Cobalt__fall_back_to_default_base_registry";
+    public static final String KEY_COBALT__IGNORED_REPORT_ID_LIST =
+            "Cobalt__ignored_report_id_list";
 
     // Measurement keys
     public static final String KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS =
@@ -217,8 +221,6 @@ public final class FlagsConstants {
             "measurement_enforce_foreground_status_register_web_source";
     public static final String KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER =
             "measurement_enforce_foreground_status_register_web_trigger";
-    public static final String KEY_MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH =
-            "measurement_enforce_enrollment_origin_match";
     public static final String KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_DELETE_REGISTRATIONS =
             "measurement_enforce_foreground_status_delete_registrations";
     public static final String KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS =

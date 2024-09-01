@@ -16,8 +16,15 @@
 
 package com.android.adservices.service.stats;
 
-import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.START_ELAPSED_TIMESTAMP;
-import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplTest.BINDER_ELAPSED_TIMESTAMP;
+import static com.android.adservices.service.stats.AdFilteringLoggerImplTestFixture.AD_FILTERING_END;
+import static com.android.adservices.service.stats.AdFilteringLoggerImplTestFixture.AD_FILTERING_OVERALL_LATENCY_MS;
+import static com.android.adservices.service.stats.AdFilteringLoggerImplTestFixture.AD_FILTERING_START;
+import static com.android.adservices.service.stats.AdFilteringLoggerImplTestFixture.APP_INSTALL_FILTERING_END;
+import static com.android.adservices.service.stats.AdFilteringLoggerImplTestFixture.APP_INSTALL_FILTERING_LATENCY_MS;
+import static com.android.adservices.service.stats.AdFilteringLoggerImplTestFixture.APP_INSTALL_FILTERING_START;
+import static com.android.adservices.service.stats.AdFilteringLoggerImplTestFixture.FREQUENCY_CAP_FILTERING_LATENCY_MS;
+import static com.android.adservices.service.stats.AdFilteringLoggerImplTestFixture.FREQ_CAP_FILTERING_END;
+import static com.android.adservices.service.stats.AdFilteringLoggerImplTestFixture.FREQ_CAP_FILTERING_START;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.FILTER_PROCESS_TYPE_CONTEXTUAL_ADS;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.FILTER_PROCESS_TYPE_CUSTOM_AUDIENCES;
 
@@ -25,8 +32,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import android.adservices.common.CallerMetadata;
 
 import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.adservices.shared.util.Clock;
@@ -40,23 +45,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 public class AdFilteringLoggerImplTest {
-    public static final CallerMetadata sCallerMetadata =
-            new CallerMetadata.Builder()
-                    .setBinderElapsedTimestamp(BINDER_ELAPSED_TIMESTAMP)
-                    .build();
-    public static final int APP_INSTALL_FILTERING_LATENCY_MS = 3;
-    public static final int FREQUENCY_CAP_FILTERING_LATENCY_MS = 5;
-    public static final int AD_FILTERING_OVERALL_LATENCY_MS =
-            APP_INSTALL_FILTERING_LATENCY_MS + FREQUENCY_CAP_FILTERING_LATENCY_MS;
-    public static final long AD_FILTERING_START = START_ELAPSED_TIMESTAMP + 1L;
-    public static final long APP_INSTALL_FILTERING_START = AD_FILTERING_START;
-    public static final long APP_INSTALL_FILTERING_END =
-            APP_INSTALL_FILTERING_START + APP_INSTALL_FILTERING_LATENCY_MS;
-    public static final long FREQ_CAP_FILTERING_START = APP_INSTALL_FILTERING_END;
-    public static final long FREQ_CAP_FILTERING_END =
-            FREQ_CAP_FILTERING_START + FREQUENCY_CAP_FILTERING_LATENCY_MS;
-    public static final long AD_FILTERING_END = FREQ_CAP_FILTERING_END;
-
     @Captor ArgumentCaptor<AdFilteringProcessAdSelectionReportedStats> mAdFilteringLoggerCaptor;
     @Mock private Clock mMockClock;
     @Mock private AdServicesLogger mAdServicesLoggerMock;

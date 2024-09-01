@@ -117,7 +117,8 @@ public interface AdServicesLogger {
     void logMeasurementAdIdMatchForDebugKeysStats(MsmtAdIdMatchForDebugKeysStats stats);
 
     /** Logs measurement attribution stats. */
-    void logMeasurementAttributionStats(MeasurementAttributionStats measurementAttributionStats);
+    void logMeasurementAttributionStats(
+            MeasurementAttributionStats measurementAttributionStats, @Nullable String enrollmentId);
 
     /** Logs measurement wipeout stats. */
     void logMeasurementWipeoutStats(MeasurementWipeoutStats measurementWipeoutStats);

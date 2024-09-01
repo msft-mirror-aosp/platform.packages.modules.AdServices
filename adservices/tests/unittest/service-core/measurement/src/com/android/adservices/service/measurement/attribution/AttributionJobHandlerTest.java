@@ -6763,7 +6763,10 @@ public class AttributionJobHandlerTest {
 
         // Assertion
         assertEquals(AttributionJobHandler.ProcessingResult.FAILURE, result);
-        MeasurementAttributionStats measurementAttributionStats = getMeasurementAttributionStats();
+        ArgumentCaptor<MeasurementAttributionStats> statsArg =
+                ArgumentCaptor.forClass(MeasurementAttributionStats.class);
+        verify(mLogger).logMeasurementAttributionStats(statsArg.capture(), eq(null));
+        MeasurementAttributionStats measurementAttributionStats = statsArg.getValue();
         assertEquals(
                 measurementAttributionStats.getSourceType(),
                 AttributionStatus.SourceType.UNKNOWN.getValue());
@@ -6772,7 +6775,7 @@ public class AttributionJobHandlerTest {
                 AttributionStatus.AttributionSurface.UNKNOWN.getValue());
         assertEquals(
                 measurementAttributionStats.getResult(),
-                AttributionStatus.AttributionResult.UNKNOWN.getValue());
+                AttributionStatus.AttributionResult.NOT_ATTRIBUTED.getValue());
         assertEquals(
                 measurementAttributionStats.getFailureType(),
                 AttributionStatus.FailureType.TRIGGER_NOT_FOUND.getValue());
@@ -8295,7 +8298,9 @@ public class AttributionJobHandlerTest {
     private MeasurementAttributionStats getMeasurementAttributionStats() {
         ArgumentCaptor<MeasurementAttributionStats> statsArg =
                 ArgumentCaptor.forClass(MeasurementAttributionStats.class);
-        verify(mLogger).logMeasurementAttributionStats(statsArg.capture());
+        verify(mLogger)
+                .logMeasurementAttributionStats(
+                        statsArg.capture(), eq(TriggerFixture.ValidTriggerParams.ENROLLMENT_ID));
         MeasurementAttributionStats measurementAttributionStats = statsArg.getValue();
         return measurementAttributionStats;
     }

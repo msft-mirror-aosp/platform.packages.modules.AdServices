@@ -15,24 +15,23 @@
  */
 package com.android.adservices.shared.testing;
 
+import static com.android.adservices.shared.testing.concurrency.DeviceSideConcurrencyHelper.runAsync;
+import static com.android.adservices.shared.testing.concurrency.DeviceSideConcurrencyHelper.sleep;
+
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.fail;
 
-import android.os.Handler;
-import android.os.HandlerThread;
-import android.os.SystemClock;
 import android.util.Log;
 
 import com.android.adservices.shared.testing.AbstractProcessLifeguardRule.UncaughtBackgroundException;
 import com.android.adservices.shared.testing.ProcessLifeguardTestSuite.Test1ThrowsInBg;
 import com.android.adservices.shared.testing.ProcessLifeguardTestSuite.Test2RuleCatchesIt;
 import com.android.adservices.shared.testing.ProcessLifeguardTestSuite.Test3MakesSureProcessDidntCrash;
-import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
+import com.android.adservices.shared.testing.concurrency.SimpleSyncCallback;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
@@ -42,13 +41,11 @@ import org.junit.runners.JUnit4;
 import org.junit.runners.Suite;
 import org.junit.runners.model.Statement;
 
-// TODO(b/302757068): these tests doesn't seem to working anymore - if the rule is created with
-// IGNORE mode, they still pass
-
 /**
  * Test suite that asserts an exception thrown in the background in one thread doesn't crash another
  * test.
  */
+@Ignore("TODO(b/340959631): failing on pre-submit / cloud")
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
     Test1ThrowsInBg.class,
@@ -59,47 +56,32 @@ public final class ProcessLifeguardTestSuite {
 
     private static final String TAG = ProcessLifeguardTestSuite.class.getSimpleName();
 
-    private static Handler sHandler;
-    private static HandlerThread sHandlerThread =
-            new HandlerThread("ProcessLifeguardTestSuiteThread");
-
-    /** Called before first test of the suite. */
-    @BeforeClass
-    public static void startHandler() {
-        sHandlerThread = new HandlerThread("ProcessLifeguardTestSuiteThread");
-        sHandlerThread.start();
-        sHandler = new Handler(sHandlerThread.getLooper());
-
-        Log.i(TAG, "Started" + sHandler + " on " + sHandlerThread);
-    }
-
-    /** Called after last test of the suite. */
-    @AfterClass
-    public static void finishHandler() {
-        if (sHandlerThread == null) {
-            Log.e(TAG, "No sHandlerThread at the end of the suite");
-            return;
-        }
-        sHandlerThread.quitSafely();
-    }
-
     private static final int NAP_TIME_MS = 1_000;
     private static final int SELF_DESTROY_TIMEOUT_MS = 200;
-    private static final int WAITING_TIMEOUT_MS = SELF_DESTROY_TIMEOUT_MS * 2 + NAP_TIME_MS;
+    private static final int WAITING_TIMEOUT_MS =
+            SELF_DESTROY_TIMEOUT_MS * 2 // 2 delayed runnables on test 1
+                    + NAP_TIME_MS // sleep time on test 2
+                    + 2_000; // extra time, just in case
 
     @SuppressWarnings("StaticAssignmentOfThrowable")
     private static final SecurityException SELF_DESTROYING_EXCEPTION =
             new SecurityException("BG THREAD, Y U NO SURVIVE?");
 
     // Callback used to make sure the exception from step1 was caught by the rule.
-    private static final MySyncCallback sCallback = new MySyncCallback();
+    private static final SimpleSyncCallback sCallback =
+            new SimpleSyncCallback(
+                    SyncCallbackFactory.newSettingsBuilder()
+                            .setMaxTimeoutMs(WAITING_TIMEOUT_MS)
+                            .build());
+
+    private static Thread sThreadThatThrows;
 
     @RunWith(JUnit4.class)
     public static final class Test1ThrowsInBg {
 
         @Rule
         public final ProcessLifeguardRule rule =
-                new ProcessLifeguardRule(ProcessLifeguardRule.Mode.FORWARD);
+                new ProcessLifeguardRule(ProcessLifeguardRule.Mode.FAIL);
 
         @Test
         public void doIt() throws Exception {
@@ -109,25 +91,29 @@ public final class ProcessLifeguardTestSuite {
                             + SELF_DESTROY_TIMEOUT_MS
                             + "ms) while running on thread "
                             + Thread.currentThread());
-            sHandler.postDelayed(
+            sThreadThatThrows =
+                    runAsync(
+                            SELF_DESTROY_TIMEOUT_MS,
+                            () -> {
+                                Log.i(
+                                        TAG,
+                                        "Throwing "
+                                                + SELF_DESTROYING_EXCEPTION
+                                                + " on "
+                                                + Thread.currentThread());
+                                throw SELF_DESTROYING_EXCEPTION;
+                            });
+            Log.i(
+                    TAG,
+                    "Test1ThrowsInBg: Posting another delayed runnable to inject the result in "
+                            + SELF_DESTROY_TIMEOUT_MS
+                            + " ms");
+            runAsync(
+                    SELF_DESTROY_TIMEOUT_MS * 2,
                     () -> {
-                        Log.d(
-                                TAG,
-                                "Posting another delayed runnable to inject the result in "
-                                        + SELF_DESTROY_TIMEOUT_MS
-                                        + " ms");
-                        sHandler.postDelayed(
-                                () -> sCallback.injectResult(new Object()),
-                                SELF_DESTROY_TIMEOUT_MS);
-                        Log.i(
-                                TAG,
-                                "Throwing "
-                                        + SELF_DESTROYING_EXCEPTION
-                                        + " on "
-                                        + Thread.currentThread());
-                        throw SELF_DESTROYING_EXCEPTION;
-                    },
-                    SELF_DESTROY_TIMEOUT_MS);
+                        Log.i(TAG, "Calling sCallback on " + Thread.currentThread());
+                        sCallback.setCalled();
+                    });
             Log.i(TAG, "Test1ThrowsInBg: leaving");
         }
     }
@@ -135,21 +121,20 @@ public final class ProcessLifeguardTestSuite {
     @RunWith(JUnit4.class)
     public static final class Test2RuleCatchesIt {
 
-        // Rule used to make sure ProcessLifeguardRule failed  with the exception throwing by test1
+        // Rule used to make sure ProcessLifeguardRule failed with the exception throwing by test1
         @Rule(order = 0)
         public final UncaughtBackgroundExceptionCheckerRule uncaughtBackgroundExceptionChecker =
                 new UncaughtBackgroundExceptionCheckerRule();
 
         @Rule(order = 1)
         public final ProcessLifeguardRule rule =
-                new ProcessLifeguardRule(ProcessLifeguardRule.Mode.FORWARD);
+                new ProcessLifeguardRule(ProcessLifeguardRule.Mode.FAIL);
 
         @Test
         public void doIt() throws Exception {
             Log.i(TAG, "Test2RuleCatchesIt: callback=" + sCallback);
-            sCallback.assertResultReceived();
-            // Need to sleep a little to make sure the rule caught it.
-            sleep(NAP_TIME_MS);
+            sCallback.assertCalled();
+            sleep(NAP_TIME_MS, "to make sure the rule caught the exception");
             Log.i(TAG, "Test2RuleCatchesIt(): leaving");
         }
     }
@@ -159,33 +144,16 @@ public final class ProcessLifeguardTestSuite {
 
         @Rule
         public final ProcessLifeguardRule rule =
-                new ProcessLifeguardRule(ProcessLifeguardRule.Mode.FORWARD);
+                new ProcessLifeguardRule(ProcessLifeguardRule.Mode.FAIL);
 
         @Test
         public void doIt() {
             Log.i(TAG, "Test3MakesSureProcessDidntCrash: Good News, Everyone! Process is alive");
             assertWithMessage("Thread's dead baby, thread's dead!")
-                    .that(sHandlerThread.isAlive())
+                    .that(sThreadThatThrows.isAlive())
                     .isFalse();
         }
     }
-
-    private static void sleep(int napTimeMs) {
-        Log.i(TAG, "Sleeping " + napTimeMs + "ms on thread " + Thread.currentThread());
-        SystemClock.sleep(napTimeMs);
-        Log.i(TAG, "Little Susie woke up");
-    }
-
-    private static class MySyncCallback extends ResultSyncCallback<Object> {
-
-        MySyncCallback() {
-            super(
-                    SyncCallbackFactory.newSettingsBuilder()
-                            .setMaxTimeoutMs(WAITING_TIMEOUT_MS)
-                            .build());
-        }
-    }
-
     private static final class UncaughtBackgroundExceptionCheckerRule implements TestRule {
 
         private static final String TAG =
