@@ -16,7 +16,6 @@
 
 package com.android.adservices.cobalt;
 
-import android.annotation.NonNull;
 import android.content.Context;
 import android.content.res.AssetManager;
 
@@ -39,8 +38,7 @@ public final class CobaltRegistryLoader {
      * @return the CobaltRegistry
      */
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PACKAGE)
-    public static Project getRegistry(@NonNull Context context)
-            throws CobaltInitializationException {
+    public static Project getRegistry(Context context) throws CobaltInitializationException {
         if (!CobaltRegistryValidated.IS_REGISTRY_VALIDATED) {
             throw new AssertionError(
                     "Cobalt registry was not validated at build time, something is very wrong");
