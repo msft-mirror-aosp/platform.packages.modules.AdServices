@@ -16,6 +16,11 @@
 
 package com.android.adservices.service.shell.adselection;
 
+import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER;
+import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
+
+import static com.android.adservices.data.adselection.DBRegisteredAdInteractionFixture.INTERACTION_KEY_CLICK;
+import static com.android.adservices.data.adselection.DBRegisteredAdInteractionFixture.INTERACTION_KEY_VIEW;
 import static com.android.adservices.service.shell.adselection.AdSelectionShellCommandConstants.AD_SELECTION_ID;
 import static com.android.adservices.service.shell.adselection.AdSelectionShellCommandConstants.OUTPUT_PROTO_FIELD_NAME;
 import static com.android.adservices.service.shell.adselection.ViewAuctionResultCommand.CMD;
@@ -27,12 +32,14 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.Mockito.when;
 
+import android.net.Uri;
 import android.util.Base64;
 
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.DBAdSelectionEntry;
 import com.android.adservices.data.adselection.DBAdSelectionFixture;
 import com.android.adservices.data.adselection.ReportingDataFixture;
+import com.android.adservices.data.adselection.datahandlers.RegisteredAdInteraction;
 import com.android.adservices.data.adselection.datahandlers.ReportingData;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.AuctionResult;
 import com.android.adservices.service.shell.ShellCommandTestCase;
@@ -45,6 +52,8 @@ import org.json.JSONObject;
 import org.junit.Test;
 import org.mockito.Mock;
 
+import java.util.List;
+
 public class ViewAuctionResultCommandTest extends ShellCommandTestCase<ViewAuctionResultCommand> {
 
     @ShellCommandStats.Command
@@ -54,6 +63,20 @@ public class ViewAuctionResultCommandTest extends ShellCommandTestCase<ViewAucti
 
     private static final DBAdSelectionEntry AD_SELECTION_ENTRY =
             DBAdSelectionFixture.getValidDbAdSelectionEntryBuilder().build();
+    private static final RegisteredAdInteraction BUYER_CLICK_AD_INTERACTION =
+            RegisteredAdInteraction.builder()
+                    .setInteractionKey(INTERACTION_KEY_CLICK)
+                    .setInteractionReportingUri(
+                            Uri.parse(
+                                    "https://" + AD_SELECTION_ENTRY.getBiddingLogicUri().getHost()))
+                    .build();
+    private static final RegisteredAdInteraction SELLER_VIEW_AD_INTERACTION =
+            RegisteredAdInteraction.builder()
+                    .setInteractionKey(INTERACTION_KEY_VIEW)
+                    .setInteractionReportingUri(
+                            Uri.parse(
+                                    "https://" + AD_SELECTION_ENTRY.getBiddingLogicUri().getHost()))
+                    .build();
 
     @Test
     public void testRun_missingAdSelectionId_returnsHelp() {
@@ -69,6 +92,12 @@ public class ViewAuctionResultCommandTest extends ShellCommandTestCase<ViewAucti
     public void testRun_withUnknownAdSelectionId_throwsException() {
         when(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ENTRY.getAdSelectionId()))
                 .thenReturn(false);
+        when(mAdSelectionEntryDao.listRegisteredAdInteractions(
+                        AD_SELECTION_ENTRY.getAdSelectionId(), FLAG_REPORTING_DESTINATION_SELLER))
+                .thenReturn(List.of());
+        when(mAdSelectionEntryDao.listRegisteredAdInteractions(
+                        AD_SELECTION_ENTRY.getAdSelectionId(), FLAG_REPORTING_DESTINATION_BUYER))
+                .thenReturn(List.of());
 
         runAndExpectInvalidArgument(
                 new ViewAuctionResultCommand(mAdSelectionEntryDao),
@@ -81,7 +110,7 @@ public class ViewAuctionResultCommandTest extends ShellCommandTestCase<ViewAucti
     }
 
     @Test
-    public void testRun_withValidAdSelectionId_returnsSuccess()
+    public void testRun_withValidAdSelectionIdButNoInteractionUri_returnsSuccess()
             throws JSONException, InvalidProtocolBufferException {
         when(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ENTRY.getAdSelectionId()))
                 .thenReturn(true);
@@ -89,6 +118,12 @@ public class ViewAuctionResultCommandTest extends ShellCommandTestCase<ViewAucti
                 .thenReturn(AD_SELECTION_ENTRY);
         when(mAdSelectionEntryDao.getReportingUris(AD_SELECTION_ENTRY.getAdSelectionId()))
                 .thenReturn(ReportingDataFixture.REPORTING_DATA_WITHOUT_COMPUTATION_DATA);
+        when(mAdSelectionEntryDao.listRegisteredAdInteractions(
+                        AD_SELECTION_ENTRY.getAdSelectionId(), FLAG_REPORTING_DESTINATION_SELLER))
+                .thenReturn(List.of());
+        when(mAdSelectionEntryDao.listRegisteredAdInteractions(
+                        AD_SELECTION_ENTRY.getAdSelectionId(), FLAG_REPORTING_DESTINATION_BUYER))
+                .thenReturn(List.of());
 
         Result result =
                 run(
@@ -126,6 +161,106 @@ public class ViewAuctionResultCommandTest extends ShellCommandTestCase<ViewAucti
     }
 
     @Test
+    public void testRun_withRegisteredAdInteractionsButNoReportingUris_returnsSuccess()
+            throws JSONException, InvalidProtocolBufferException {
+        when(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ENTRY.getAdSelectionId()))
+                .thenReturn(true);
+        when(mAdSelectionEntryDao.getAdSelectionEntityById(AD_SELECTION_ENTRY.getAdSelectionId()))
+                .thenReturn(AD_SELECTION_ENTRY);
+        when(mAdSelectionEntryDao.getReportingUris(AD_SELECTION_ENTRY.getAdSelectionId()))
+                .thenReturn(null);
+        when(mAdSelectionEntryDao.listRegisteredAdInteractions(
+                        AD_SELECTION_ENTRY.getAdSelectionId(), FLAG_REPORTING_DESTINATION_BUYER))
+                .thenReturn(List.of(BUYER_CLICK_AD_INTERACTION));
+        when(mAdSelectionEntryDao.listRegisteredAdInteractions(
+                        AD_SELECTION_ENTRY.getAdSelectionId(), FLAG_REPORTING_DESTINATION_SELLER))
+                .thenReturn(List.of(SELLER_VIEW_AD_INTERACTION));
+
+        Result result =
+                run(
+                        new ViewAuctionResultCommand(mAdSelectionEntryDao),
+                        COMMAND_PREFIX,
+                        CMD,
+                        AD_SELECTION_ID,
+                        Long.toString(AD_SELECTION_ENTRY.getAdSelectionId()));
+
+        expectSuccess(result, EXPECTED_COMMAND);
+        AuctionResult auctionResult =
+                AuctionResult.parseFrom(
+                        Base64.decode(
+                                new JSONObject(result.mOut).getString(OUTPUT_PROTO_FIELD_NAME),
+                                Base64.DEFAULT));
+        assertThat(
+                        auctionResult
+                                .getWinReportingUrls()
+                                .getTopLevelSellerReportingUrls()
+                                .getInteractionReportingUrlsMap()
+                                .get(SELLER_VIEW_AD_INTERACTION.getInteractionKey()))
+                .isEqualTo(SELLER_VIEW_AD_INTERACTION.getInteractionReportingUri().toString());
+        assertThat(
+                        auctionResult
+                                .getWinReportingUrls()
+                                .getBuyerReportingUrls()
+                                .getInteractionReportingUrlsMap()
+                                .get(BUYER_CLICK_AD_INTERACTION.getInteractionKey()))
+                .isEqualTo(BUYER_CLICK_AD_INTERACTION.getInteractionReportingUri().toString());
+        assertThat(
+                        auctionResult
+                                .getWinReportingUrls()
+                                .getTopLevelSellerReportingUrls()
+                                .getReportingUrl())
+                .isEmpty();
+        assertThat(auctionResult.getWinReportingUrls().getBuyerReportingUrls().getReportingUrl())
+                .isEmpty();
+    }
+
+    @Test
+    public void testRun_withRegisteredAdInteractionsAndReportingUris_returnsSuccess()
+            throws JSONException, InvalidProtocolBufferException {
+        when(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ENTRY.getAdSelectionId()))
+                .thenReturn(true);
+        when(mAdSelectionEntryDao.getAdSelectionEntityById(AD_SELECTION_ENTRY.getAdSelectionId()))
+                .thenReturn(AD_SELECTION_ENTRY);
+        when(mAdSelectionEntryDao.getReportingUris(AD_SELECTION_ENTRY.getAdSelectionId()))
+                .thenReturn(ReportingDataFixture.REPORTING_DATA_WITHOUT_COMPUTATION_DATA);
+        when(mAdSelectionEntryDao.listRegisteredAdInteractions(
+                        AD_SELECTION_ENTRY.getAdSelectionId(), FLAG_REPORTING_DESTINATION_BUYER))
+                .thenReturn(List.of(BUYER_CLICK_AD_INTERACTION));
+        when(mAdSelectionEntryDao.listRegisteredAdInteractions(
+                        AD_SELECTION_ENTRY.getAdSelectionId(), FLAG_REPORTING_DESTINATION_SELLER))
+                .thenReturn(List.of(SELLER_VIEW_AD_INTERACTION));
+
+        Result result =
+                run(
+                        new ViewAuctionResultCommand(mAdSelectionEntryDao),
+                        COMMAND_PREFIX,
+                        CMD,
+                        AD_SELECTION_ID,
+                        Long.toString(AD_SELECTION_ENTRY.getAdSelectionId()));
+
+        expectSuccess(result, EXPECTED_COMMAND);
+        AuctionResult auctionResult =
+                AuctionResult.parseFrom(
+                        Base64.decode(
+                                new JSONObject(result.mOut).getString(OUTPUT_PROTO_FIELD_NAME),
+                                Base64.DEFAULT));
+        assertThat(
+                        auctionResult
+                                .getWinReportingUrls()
+                                .getTopLevelSellerReportingUrls()
+                                .getInteractionReportingUrlsMap()
+                                .get(SELLER_VIEW_AD_INTERACTION.getInteractionKey()))
+                .isEqualTo(SELLER_VIEW_AD_INTERACTION.getInteractionReportingUri().toString());
+        assertThat(
+                        auctionResult
+                                .getWinReportingUrls()
+                                .getBuyerReportingUrls()
+                                .getInteractionReportingUrlsMap()
+                                .get(BUYER_CLICK_AD_INTERACTION.getInteractionKey()))
+                .isEqualTo(BUYER_CLICK_AD_INTERACTION.getInteractionReportingUri().toString());
+    }
+
+    @Test
     public void testRun_withEmptyReportingUris_fieldNotPresent()
             throws JSONException, InvalidProtocolBufferException {
         when(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ENTRY.getAdSelectionId()))
@@ -134,6 +269,12 @@ public class ViewAuctionResultCommandTest extends ShellCommandTestCase<ViewAucti
                 .thenReturn(AD_SELECTION_ENTRY);
         when(mAdSelectionEntryDao.getReportingUris(AD_SELECTION_ENTRY.getAdSelectionId()))
                 .thenReturn(null);
+        when(mAdSelectionEntryDao.listRegisteredAdInteractions(
+                        AD_SELECTION_ENTRY.getAdSelectionId(), FLAG_REPORTING_DESTINATION_BUYER))
+                .thenReturn(List.of());
+        when(mAdSelectionEntryDao.listRegisteredAdInteractions(
+                        AD_SELECTION_ENTRY.getAdSelectionId(), FLAG_REPORTING_DESTINATION_SELLER))
+                .thenReturn(List.of());
 
         Result result =
                 run(
@@ -171,6 +312,12 @@ public class ViewAuctionResultCommandTest extends ShellCommandTestCase<ViewAucti
                         ReportingData.builder()
                                 .setBuyerWinReportingUri(ReportingDataFixture.BUYER_REPORTING_URI_1)
                                 .build());
+        when(mAdSelectionEntryDao.listRegisteredAdInteractions(
+                        AD_SELECTION_ENTRY.getAdSelectionId(), FLAG_REPORTING_DESTINATION_BUYER))
+                .thenReturn(List.of());
+        when(mAdSelectionEntryDao.listRegisteredAdInteractions(
+                        AD_SELECTION_ENTRY.getAdSelectionId(), FLAG_REPORTING_DESTINATION_SELLER))
+                .thenReturn(List.of());
 
         Result result =
                 run(
@@ -209,6 +356,12 @@ public class ViewAuctionResultCommandTest extends ShellCommandTestCase<ViewAucti
                                 .setSellerWinReportingUri(
                                         ReportingDataFixture.SELLER_REPORTING_URI_1)
                                 .build());
+        when(mAdSelectionEntryDao.listRegisteredAdInteractions(
+                        AD_SELECTION_ENTRY.getAdSelectionId(), FLAG_REPORTING_DESTINATION_BUYER))
+                .thenReturn(List.of());
+        when(mAdSelectionEntryDao.listRegisteredAdInteractions(
+                        AD_SELECTION_ENTRY.getAdSelectionId(), FLAG_REPORTING_DESTINATION_SELLER))
+                .thenReturn(List.of());
 
         Result result =
                 run(
