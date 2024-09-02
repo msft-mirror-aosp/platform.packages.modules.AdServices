@@ -218,6 +218,8 @@ public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
             "e7b292f49df28b8065992cdeadbc9d032a0e09e8476cb6d8d507212e7be3b9b4";
     private final String SERVER_PUBLIC_KEY =
             "f3b7b2f1764f5c077effecad2afd86154596e63f7375ea522761b881e6c3c323";
+    private final String SERVER_PARAMS_VERSION_JSON_KEY = "server_params_version";
+    private final String ACT_JSON_KEY = "act";
     private static final AdTechIdentifier SELLER = AdSelectionConfigFixture.SELLER;
     private static final AdTechIdentifier WINNER_BUYER = AdSelectionConfigFixture.BUYER;
     private static final DBAdData WINNER_AD =
@@ -1802,7 +1804,8 @@ public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
         assertThat(binaryHttpMessage.getContent()).isNotEmpty();
         JSONObject jsonBody = new JSONObject(new String(binaryHttpMessage.getContent()));
 
-        assertThat(jsonBody.get("act")).isNotNull();
+        assertThat(jsonBody.get(ACT_JSON_KEY)).isNotNull();
+        assertThat(jsonBody.get(SERVER_PARAMS_VERSION_JSON_KEY)).isEqualTo(SERVER_PARAM_VERSION);
 
         RequestControlData requestControlData = binaryHttpMessage.getRequestControlData();
 
