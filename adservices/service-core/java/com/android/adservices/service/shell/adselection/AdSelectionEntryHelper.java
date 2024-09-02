@@ -16,11 +16,16 @@
 
 package com.android.adservices.service.shell.adselection;
 
+import android.net.Uri;
+
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelectionEntry;
+import com.android.adservices.data.adselection.datahandlers.RegisteredAdInteraction;
 import com.android.adservices.data.adselection.datahandlers.ReportingData;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.AuctionResult;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.WinReportingUrls;
+
+import java.util.List;
 
 /** Helper for parting {@link DBAdSelectionEntry} objects into protobuf. */
 public class AdSelectionEntryHelper {
@@ -33,7 +38,10 @@ public class AdSelectionEntryHelper {
      * @return Valid proto.
      */
     static AuctionResult getAuctionResultFromAdSelectionEntry(
-            DBAdSelectionEntry adSelectionEntry, ReportingData reportingUris) {
+            DBAdSelectionEntry adSelectionEntry,
+            ReportingData reportingUris,
+            List<RegisteredAdInteraction> buyerAdInteractions,
+            List<RegisteredAdInteraction> sellerAdInteractions) {
         AuctionResult.Builder auctionResult =
                 AuctionResult.newBuilder()
                         .setBid(
@@ -41,7 +49,9 @@ public class AdSelectionEntryHelper {
                                         Double.toString(adSelectionEntry.getWinningAdBid())))
                         .setAdRenderUrl(adSelectionEntry.getWinningAdRenderUri().toString())
                         .setIsChaff(false)
-                        .setWinReportingUrls(getWinReportingUrls(reportingUris));
+                        .setWinReportingUrls(
+                                getWinReportingUrls(
+                                        reportingUris, buyerAdInteractions, sellerAdInteractions));
 
         if (adSelectionEntry.getCustomAudienceSignals() != null) {
             CustomAudienceSignals signals = adSelectionEntry.getCustomAudienceSignals();
@@ -54,21 +64,36 @@ public class AdSelectionEntryHelper {
         return auctionResult.build();
     }
 
-    private static WinReportingUrls getWinReportingUrls(ReportingData reportingData) {
+    private static WinReportingUrls getWinReportingUrls(
+            ReportingData reportingData,
+            List<RegisteredAdInteraction> buyerAdInteractions,
+            List<RegisteredAdInteraction> sellerAdInteractions) {
         WinReportingUrls.Builder builder = WinReportingUrls.newBuilder();
-        if (reportingData != null) {
-            if (reportingData.getBuyerWinReportingUri() != null) {
-                builder.setBuyerReportingUrls(
-                        WinReportingUrls.ReportingUrls.newBuilder()
-                                .setReportingUrl(reportingData.getBuyerWinReportingUri().toString())
-                                .build());
-            }
-            if (reportingData.getSellerWinReportingUri() != null) {
-                builder.setTopLevelSellerReportingUrls(
-                        WinReportingUrls.ReportingUrls.newBuilder()
-                                .setReportingUrl(
-                                        reportingData.getSellerWinReportingUri().toString())
-                                .build());
+        builder.setBuyerReportingUrls(
+                getWinReportingUrls(
+                        reportingData != null && reportingData.getBuyerWinReportingUri() != null
+                                ? reportingData.getBuyerWinReportingUri()
+                                : Uri.EMPTY,
+                        buyerAdInteractions));
+        builder.setTopLevelSellerReportingUrls(
+                getWinReportingUrls(
+                        reportingData != null && reportingData.getSellerWinReportingUri() != null
+                                ? reportingData.getSellerWinReportingUri()
+                                : Uri.EMPTY,
+                        sellerAdInteractions));
+        return builder.build();
+    }
+
+    private static WinReportingUrls.ReportingUrls getWinReportingUrls(
+            Uri winReportingUri, List<RegisteredAdInteraction> filteredAdInteractions) {
+        WinReportingUrls.ReportingUrls.Builder builder =
+                WinReportingUrls.ReportingUrls.newBuilder()
+                        .setReportingUrl(winReportingUri.toString());
+        if (!filteredAdInteractions.isEmpty()) {
+            for (RegisteredAdInteraction adInteraction : filteredAdInteractions) {
+                builder.putInteractionReportingUrls(
+                        adInteraction.getInteractionKey(),
+                        adInteraction.getInteractionReportingUri().toString());
             }
         }
         return builder.build();
