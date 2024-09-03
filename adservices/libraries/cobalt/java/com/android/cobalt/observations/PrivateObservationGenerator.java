@@ -18,8 +18,6 @@ package com.android.cobalt.observations;
 
 import static java.util.Objects.requireNonNull;
 
-import android.annotation.NonNull;
-
 import com.android.cobalt.data.EventRecordAndSystemProfile;
 import com.android.cobalt.data.EventVector;
 import com.android.cobalt.data.ObservationGenerator;
@@ -71,15 +69,15 @@ final class PrivateObservationGenerator implements ObservationGenerator {
     private final ReportDefinition mReport;
 
     PrivateObservationGenerator(
-            @NonNull SystemData systemData,
-            @NonNull PrivacyGenerator privacyGenerator,
-            @NonNull SecureRandom secureRandom,
-            @NonNull Encoder encoder,
-            @NonNull CobaltOperationLogger operationLogger,
+            SystemData systemData,
+            PrivacyGenerator privacyGenerator,
+            SecureRandom secureRandom,
+            Encoder encoder,
+            CobaltOperationLogger operationLogger,
             int customerId,
             int projectId,
-            @NonNull MetricDefinition metric,
-            @NonNull ReportDefinition report) {
+            MetricDefinition metric,
+            ReportDefinition report) {
         this.mSystemData = requireNonNull(systemData);
         this.mPrivacyGenerator = requireNonNull(privacyGenerator);
         this.mSecureRandom = requireNonNull(secureRandom);

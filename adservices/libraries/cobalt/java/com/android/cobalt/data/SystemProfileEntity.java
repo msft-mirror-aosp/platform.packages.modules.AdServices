@@ -52,7 +52,6 @@ abstract class SystemProfileEntity {
      *
      * <p>Used by Room to instantiate objects.
      */
-    @NonNull
     static SystemProfileEntity create(long systemProfileHash, SystemProfile systemProfile) {
         return new AutoValue_SystemProfileEntity(systemProfileHash, systemProfile);
     }

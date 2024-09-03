@@ -20,7 +20,6 @@ import static com.android.cobalt.collect.ImmutableHelpers.toImmutableListMultima
 
 import static java.util.stream.Collectors.toMap;
 
-import android.annotation.NonNull;
 import android.util.Log;
 
 import com.android.cobalt.logging.CobaltOperationLogger;
@@ -59,9 +58,9 @@ public final class DataService {
     private final CobaltOperationLogger mOperationLogger;
 
     public DataService(
-            @NonNull ExecutorService executor,
-            @NonNull CobaltDatabase cobaltDatabase,
-            @NonNull CobaltOperationLogger operationLogger) {
+            ExecutorService executor,
+            CobaltDatabase cobaltDatabase,
+            CobaltOperationLogger operationLogger) {
         this.mExecutorService = Objects.requireNonNull(executor);
         this.mCobaltDatabase = Objects.requireNonNull(cobaltDatabase);
         this.mOperationLogger = Objects.requireNonNull(operationLogger);
