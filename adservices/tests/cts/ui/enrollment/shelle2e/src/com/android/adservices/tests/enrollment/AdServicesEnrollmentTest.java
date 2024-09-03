@@ -19,18 +19,30 @@ import static com.android.adservices.service.shell.adservicesapi.AdServicesApiSh
 import static com.android.adservices.service.shell.adservicesapi.EnableAdServicesCommand.CMD_ENABLE_ADSERVICES;
 import static com.android.adservices.service.shell.adservicesapi.ResetConsentCommand.CMD_RESET_CONSENT_DATA;
 
+import android.adservices.common.AdServicesCommonManager;
+import android.adservices.common.AdServicesCommonResponse;
+import android.adservices.common.AdServicesModuleState;
+import android.adservices.common.AdServicesOutcomeReceiver;
+import android.adservices.common.NotificationTypeParams;
 import android.util.Log;
 
+import androidx.concurrent.futures.CallbackToFutureAdapter;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
 
 import com.android.adservices.common.AdServicesCtsTestCase;
 import com.android.adservices.common.AdServicesShellCommandHelper;
+import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.shared.testing.shell.CommandResult;
 import com.android.adservices.tests.ui.libs.AdservicesWorkflows;
 import com.android.adservices.tests.ui.libs.UiConstants;
 
+import com.google.common.util.concurrent.ListenableFuture;
+
 import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public final class AdServicesEnrollmentTest extends AdServicesCtsTestCase
         implements EnrollmentTestFlags {
@@ -50,6 +62,38 @@ public final class AdServicesEnrollmentTest extends AdServicesCtsTestCase
                 mTag,
                 "Invoked reset consent data through cli, output from cli:"
                         + commandResult.getOut());
+
+        AdServicesCommonManager commonManager = AdServicesCommonManager.get(mContext);
+
+        List<AdServicesModuleState> adServicesModuleStateList = new ArrayList<>();
+        adServicesModuleStateList.add(
+                new AdServicesModuleState.Builder().setModule(1).setModuleState(0).build());
+        NotificationTypeParams notificationTypeParams =
+                new NotificationTypeParams.Builder().setNotificationType(1).build();
+        ListenableFuture<Integer> responseFuture =
+                CallbackToFutureAdapter.getFuture(
+                        completer -> {
+                            commonManager.setAdServicesModuleOverrides(
+                                    adServicesModuleStateList,
+                                    notificationTypeParams,
+                                    AdServicesExecutors.getLightWeightExecutor(),
+                                    new AdServicesOutcomeReceiver<
+                                            AdServicesCommonResponse, Exception>() {
+                                        @Override
+                                        public void onResult(AdServicesCommonResponse result) {
+                                            completer.set(1);
+                                        }
+
+                                        @Override
+                                        public void onError(Exception error) {
+                                            completer.set(2);
+                                        }
+                                    });
+                            return "enableAdservices";
+                        });
+        int response = responseFuture.get();
+        expect.that(response).isAtLeast(0);
+
         commandResult =
                 adServicesShellCommandHelper.runCommandRwe(
                         COMMAND_PREFIX + " " + CMD_ENABLE_ADSERVICES);

@@ -33,6 +33,7 @@ import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCo
 
 import android.adservices.common.AdServicesModuleState;
 import android.adservices.common.AdServicesModuleState.ModuleStateCode;
+import android.adservices.common.AdServicesModuleUserChoice;
 import android.adservices.common.AdServicesModuleUserChoice.ModuleUserChoiceCode;
 import android.adservices.common.Module.ModuleCode;
 import android.annotation.IntDef;
@@ -2446,7 +2447,7 @@ public class ConsentManager {
      */
     @ModuleStateCode
     public int getModuleState(@ModuleCode int module) {
-        EnrollmentData data = EnrollmentData.deserialize(getModuleEnrollmentState());
+        EnrollmentData data = EnrollmentData.deserializeFromBase64(getModuleEnrollmentState());
         return data.getModuleState(module);
     }
 
@@ -2455,10 +2456,12 @@ public class ConsentManager {
      *
      * @param moduleState object to set
      */
-    public void setModuleState(AdServicesModuleState moduleState) {
-        EnrollmentData data = EnrollmentData.deserialize(getModuleEnrollmentState());
-        data.putModuleState(moduleState);
-        setModuleEnrollmentData(data.serialize());
+    public void setModuleStates(List<AdServicesModuleState> moduleStates) {
+        EnrollmentData data = EnrollmentData.deserializeFromBase64(getModuleEnrollmentState());
+        for (AdServicesModuleState moduleState : moduleStates) {
+            data.putModuleState(moduleState);
+        }
+        setModuleEnrollmentData(EnrollmentData.serializeBase64(data));
     }
 
     /**
@@ -2469,7 +2472,7 @@ public class ConsentManager {
      */
     @ModuleUserChoiceCode
     public int getUserChoice(@ModuleCode int module) {
-        EnrollmentData data = EnrollmentData.deserialize(getModuleEnrollmentState());
+        EnrollmentData data = EnrollmentData.deserializeFromBase64(getModuleEnrollmentState());
         return data.getUserChoice(module);
     }
 
@@ -2477,12 +2480,14 @@ public class ConsentManager {
      * Sets user choice for a module.
      *
      * @param module Module to set
-     * @param userChoice User choice to store
+     * @param userChoices User choices to store
      */
-    public void setUserChoice(@ModuleCode int module, @ModuleUserChoiceCode int userChoice) {
-        EnrollmentData data = EnrollmentData.deserialize(getModuleEnrollmentState());
-        data.putUserChoice(module, userChoice);
-        setModuleEnrollmentData(data.serialize());
+    public void setUserChoices(List<AdServicesModuleUserChoice> userChoices) {
+        EnrollmentData data = EnrollmentData.deserializeFromBase64(getModuleEnrollmentState());
+        for (AdServicesModuleUserChoice userChoice : userChoices) {
+            data.putUserChoice(userChoice);
+        }
+        setModuleEnrollmentData(EnrollmentData.serializeBase64(data));
     }
 
     /** Set module enrollment data to storage based on consent_source_of_truth. */

@@ -20,13 +20,9 @@ import static com.android.adservices.service.enrollment.EnrollmentData.SEPARATOR
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-
-
-import androidx.test.filters.SmallTest;
-
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.service.proto.PrivacySandboxApi;
+import com.android.adservices.shared.testing.EqualsTester;
 
 import com.google.common.collect.ImmutableList;
 
@@ -36,8 +32,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /** Unit tests for {@link EnrollmentData} */
-@SmallTest
-public final class EnrollmentDataTest {
+public final class EnrollmentDataTest extends AdServicesUnitTestCase {
     private static final String ENROLLMENT_ID = "1";
     private static final String ENROLLED_API_NAMES =
             "PRIVACY_SANDBOX_API_TOPICS PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE TEST1";
@@ -75,19 +70,19 @@ public final class EnrollmentDataTest {
     public void testCreation() throws Exception {
         EnrollmentData enrollmentData = createEnrollmentData();
 
-        assertEquals(ENROLLMENT_ID, enrollmentData.getEnrollmentId());
-        assertThat(enrollmentData.getEnrolledAPIs()).containsExactlyElementsIn(ENROLLED_API_ENUMS);
-        assertEquals(ENROLLED_API_NAMES, enrollmentData.getEnrolledAPIsString());
-        assertThat(enrollmentData.getSdkNames()).containsExactlyElementsIn(SDK_NAMES);
-        assertThat(enrollmentData.getAttributionSourceRegistrationUrl())
+        expect.that(enrollmentData.getEnrollmentId()).isEqualTo(ENROLLMENT_ID);
+        expect.that(enrollmentData.getEnrolledAPIs()).containsExactlyElementsIn(ENROLLED_API_ENUMS);
+        expect.that(enrollmentData.getEnrolledAPIsString()).isEqualTo(ENROLLED_API_NAMES);
+        expect.that(enrollmentData.getSdkNames()).containsExactlyElementsIn(SDK_NAMES);
+        expect.that(enrollmentData.getAttributionSourceRegistrationUrl())
                 .containsExactlyElementsIn(ATTRIBUTION_SOURCE_REGISTRATION_URLS);
-        assertThat(enrollmentData.getAttributionTriggerRegistrationUrl())
+        expect.that(enrollmentData.getAttributionTriggerRegistrationUrl())
                 .containsExactlyElementsIn(ATTRIBUTION_TRIGGER_REGISTRATION_URLS);
-        assertThat(enrollmentData.getAttributionReportingUrl())
+        expect.that(enrollmentData.getAttributionReportingUrl())
                 .containsExactlyElementsIn(ATTRIBUTION_REPORTING_REGISTRATION_URLS);
-        assertThat(enrollmentData.getRemarketingResponseBasedRegistrationUrl())
+        expect.that(enrollmentData.getRemarketingResponseBasedRegistrationUrl())
                 .containsExactlyElementsIn(REMARKETING_RESPONSE_BASED_REGISTRATION_URLS);
-        assertEquals(ENCRYPTION_KEY_URL, enrollmentData.getEncryptionKeyUrl());
+        expect.that(enrollmentData.getEncryptionKeyUrl()).isEqualTo(ENCRYPTION_KEY_URL);
     }
 
     @Test
@@ -109,19 +104,19 @@ public final class EnrollmentDataTest {
                         .setEncryptionKeyUrl(ENCRYPTION_KEY_URL)
                         .build();
 
-        assertEquals(ENROLLMENT_ID, enrollmentData.getEnrollmentId());
-        assertThat(enrollmentData.getEnrolledAPIs()).containsExactlyElementsIn(ENROLLED_API_ENUMS);
-        assertEquals(ENROLLED_API_NAMES, enrollmentData.getEnrolledAPIsString());
-        assertThat(enrollmentData.getSdkNames()).containsExactlyElementsIn(SDK_NAMES);
-        assertThat(enrollmentData.getAttributionSourceRegistrationUrl())
+        expect.that(enrollmentData.getEnrollmentId()).isEqualTo(ENROLLMENT_ID);
+        expect.that(enrollmentData.getEnrolledAPIs()).containsExactlyElementsIn(ENROLLED_API_ENUMS);
+        expect.that(enrollmentData.getEnrolledAPIsString()).isEqualTo(ENROLLED_API_NAMES);
+        expect.that(enrollmentData.getSdkNames()).containsExactlyElementsIn(SDK_NAMES);
+        expect.that(enrollmentData.getAttributionSourceRegistrationUrl())
                 .containsExactlyElementsIn(ATTRIBUTION_SOURCE_REGISTRATION_URLS);
-        assertThat(enrollmentData.getAttributionTriggerRegistrationUrl())
+        expect.that(enrollmentData.getAttributionTriggerRegistrationUrl())
                 .containsExactlyElementsIn(ATTRIBUTION_TRIGGER_REGISTRATION_URLS);
-        assertThat(enrollmentData.getAttributionReportingUrl())
+        expect.that(enrollmentData.getAttributionReportingUrl())
                 .containsExactlyElementsIn(ATTRIBUTION_REPORTING_REGISTRATION_URLS);
-        assertThat(enrollmentData.getRemarketingResponseBasedRegistrationUrl())
+        expect.that(enrollmentData.getRemarketingResponseBasedRegistrationUrl())
                 .containsExactlyElementsIn(REMARKETING_RESPONSE_BASED_REGISTRATION_URLS);
-        assertEquals(ENCRYPTION_KEY_URL, enrollmentData.getEncryptionKeyUrl());
+        expect.that(enrollmentData.getEncryptionKeyUrl()).isEqualTo(ENCRYPTION_KEY_URL);
     }
 
     @Test
@@ -146,15 +141,15 @@ public final class EnrollmentDataTest {
     @Test
     public void testDefaults() throws Exception {
         EnrollmentData enrollmentData = new EnrollmentData.Builder().build();
-        assertNull(enrollmentData.getEnrollmentId());
-        assertEquals(0, enrollmentData.getEnrolledAPIs().size());
-        assertNull(enrollmentData.getEnrolledAPIsString());
-        assertEquals(enrollmentData.getSdkNames().size(), 0);
-        assertEquals(enrollmentData.getAttributionSourceRegistrationUrl().size(), 0);
-        assertEquals(enrollmentData.getAttributionTriggerRegistrationUrl().size(), 0);
-        assertEquals(enrollmentData.getAttributionReportingUrl().size(), 0);
-        assertEquals(enrollmentData.getRemarketingResponseBasedRegistrationUrl().size(), 0);
-        assertNull(enrollmentData.getEncryptionKeyUrl());
+        expect.that(enrollmentData.getEnrollmentId()).isNull();
+        expect.that(enrollmentData.getEnrolledAPIs()).hasSize(0);
+        expect.that(enrollmentData.getEnrolledAPIsString()).isNull();
+        expect.that(enrollmentData.getSdkNames()).hasSize(0);
+        expect.that(enrollmentData.getAttributionSourceRegistrationUrl()).hasSize(0);
+        expect.that(enrollmentData.getAttributionTriggerRegistrationUrl()).hasSize(0);
+        expect.that(enrollmentData.getAttributionReportingUrl()).hasSize(0);
+        expect.that(enrollmentData.getRemarketingResponseBasedRegistrationUrl()).hasSize(0);
+        expect.that(enrollmentData.getEncryptionKeyUrl()).isNull();
     }
 
     @Test
@@ -189,7 +184,9 @@ public final class EnrollmentDataTest {
                                 Arrays.asList("https://2test.com"))
                         .setEncryptionKeyUrl("https://2test.com/keys")
                         .build();
-        assertEquals(e1, e2);
+
+        EqualsTester et = new EqualsTester(expect);
+        et.expectObjectsAreEqual(e1, e2);
     }
 
     @Test
@@ -211,10 +208,10 @@ public final class EnrollmentDataTest {
                         .build();
 
         String enrolledAPIsString = e1.getEnrolledAPIsString();
-        assertEquals("foo-inc", enrolledAPIsString);
+        expect.that(enrolledAPIsString).isEqualTo("foo-inc");
         ImmutableList<PrivacySandboxApi> enrolledAPIUnknown =
                 ImmutableList.of(PrivacySandboxApi.PRIVACY_SANDBOX_API_UNKNOWN);
-        assertEquals(1, e1.getEnrolledAPIs().size());
-        assertThat(e1.getEnrolledAPIs()).containsExactlyElementsIn(enrolledAPIUnknown);
+        expect.that(e1.getEnrolledAPIs()).hasSize(1);
+        expect.that(e1.getEnrolledAPIs()).containsExactlyElementsIn(enrolledAPIUnknown);
     }
 }

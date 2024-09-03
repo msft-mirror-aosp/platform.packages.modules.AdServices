@@ -16,18 +16,15 @@
 
 package com.android.adservices.service.encryptionkey;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNull;
-
 import android.net.Uri;
+
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.EqualsTester;
 
 import org.junit.Test;
 
-import java.util.Set;
-
 /** Unit tests for {@link EncryptionKey} */
-public class EncryptionKeyTest {
+public final class EncryptionKeyTest extends AdServicesUnitTestCase {
 
     private static final String ID = "1";
     private static final String ENROLLMENT_ID1 = "10";
@@ -59,16 +56,16 @@ public class EncryptionKeyTest {
     public void testCreation() throws Exception {
         EncryptionKey result = createKeyCommitment(ENROLLMENT_ID1);
 
-        assertEquals(ID, result.getId());
-        assertEquals(EncryptionKey.KeyType.ENCRYPTION, result.getKeyType());
-        assertEquals(ENROLLMENT_ID1, result.getEnrollmentId());
-        assertEquals(REPORTING_ORIGIN, result.getReportingOrigin());
-        assertEquals(ENCRYPTION_KEY_URL, result.getEncryptionKeyUrl());
-        assertEquals(EncryptionKey.ProtocolType.HPKE, result.getProtocolType());
-        assertEquals(KEY_COMMITMENT_ID, result.getKeyCommitmentId());
-        assertEquals(BODY, result.getBody());
-        assertEquals(EXPIRATION, result.getExpiration());
-        assertEquals(LAST_FETCH_TIME, result.getLastFetchTime());
+        expect.that(result.getId()).isEqualTo(ID);
+        expect.that(result.getKeyType()).isEqualTo(EncryptionKey.KeyType.ENCRYPTION);
+        expect.that(result.getEnrollmentId()).isEqualTo(ENROLLMENT_ID1);
+        expect.that(result.getReportingOrigin()).isEqualTo(REPORTING_ORIGIN);
+        expect.that(result.getEncryptionKeyUrl()).isEqualTo(ENCRYPTION_KEY_URL);
+        expect.that(result.getProtocolType()).isEqualTo(EncryptionKey.ProtocolType.HPKE);
+        expect.that(result.getKeyCommitmentId()).isEqualTo(KEY_COMMITMENT_ID);
+        expect.that(result.getBody()).isEqualTo(BODY);
+        expect.that(result.getExpiration()).isEqualTo(EXPIRATION);
+        expect.that(result.getLastFetchTime()).isEqualTo(LAST_FETCH_TIME);
     }
 
     /** Unit test for encryption key default creation. */
@@ -76,41 +73,27 @@ public class EncryptionKeyTest {
     public void testDefaults() throws Exception {
         EncryptionKey result = new EncryptionKey.Builder().build();
 
-        assertNull(result.getId());
-        assertEquals(EncryptionKey.KeyType.ENCRYPTION, result.getKeyType());
-        assertNull(result.getEnrollmentId());
-        assertNull(result.getReportingOrigin());
-        assertNull(result.getEncryptionKeyUrl());
-        assertEquals(EncryptionKey.ProtocolType.HPKE, result.getProtocolType());
-        assertEquals(0, result.getKeyCommitmentId());
-        assertNull(result.getBody());
-        assertEquals(0L, result.getExpiration());
-        assertEquals(0L, result.getLastFetchTime());
+        expect.that(result.getId()).isNull();
+        expect.that(result.getKeyType()).isEqualTo(EncryptionKey.KeyType.ENCRYPTION);
+        expect.that(result.getEnrollmentId()).isNull();
+        expect.that(result.getReportingOrigin()).isNull();
+        expect.that(result.getEncryptionKeyUrl()).isNull();
+        expect.that(result.getProtocolType()).isEqualTo(EncryptionKey.ProtocolType.HPKE);
+        expect.that(result.getKeyCommitmentId()).isEqualTo(0);
+        expect.that(result.getBody()).isNull();
+        expect.that(result.getExpiration()).isEqualTo(0L);
+        expect.that(result.getLastFetchTime()).isEqualTo(0L);
     }
 
     /** Unit test for encryption key hashcode equals. */
     @Test
     public void testHashCode_equals() throws Exception {
-        final EncryptionKey result1 = createKeyCommitment(ENROLLMENT_ID1);
-        final EncryptionKey result2 = createKeyCommitment(ENROLLMENT_ID1);
-        final Set<EncryptionKey> resultSet1 = Set.of(result1);
-        final Set<EncryptionKey> resultSet2 = Set.of(result2);
+        EncryptionKey result1 = createKeyCommitment(ENROLLMENT_ID1);
+        EncryptionKey result2 = createKeyCommitment(ENROLLMENT_ID1);
+        EncryptionKey result3 = createKeyCommitment(ENROLLMENT_ID2);
 
-        assertEquals(result1.hashCode(), result2.hashCode());
-        assertEquals(result1, result2);
-        assertEquals(resultSet1, resultSet2);
-    }
-
-    /** Unit test for encryption key hashcode not equals. */
-    @Test
-    public void testHashCode_notEquals() throws Exception {
-        final EncryptionKey result1 = createKeyCommitment(ENROLLMENT_ID1);
-        final EncryptionKey result2 = createKeyCommitment(ENROLLMENT_ID2);
-        final Set<EncryptionKey> resultSet1 = Set.of(result1);
-        final Set<EncryptionKey> resultSet2 = Set.of(result2);
-
-        assertNotEquals(result1.hashCode(), result2.hashCode());
-        assertNotEquals(result1, result2);
-        assertNotEquals(resultSet1, resultSet2);
+        EqualsTester et = new EqualsTester(expect);
+        et.expectObjectsAreEqual(result1, result2);
+        et.expectObjectsAreNotEqual(result1, result3);
     }
 }

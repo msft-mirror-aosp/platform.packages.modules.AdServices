@@ -28,6 +28,8 @@ import android.annotation.CallbackExecutor;
 import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
+import android.annotation.SdkConstant;
+import android.annotation.SdkConstant.SdkConstantType;
 import android.annotation.SystemApi;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
@@ -226,6 +228,35 @@ public class AdServicesCommonManager {
                 executor,
                 OutcomeReceiverConverter.toAdServicesOutcomeReceiver(callback));
     }
+
+    /**
+     * Broadcast action: notify that a consent notification has been displayed to the user, and the
+     * user consent choices can be set by calling {@link #setAdServicesModuleUserChoices()}.
+     *
+     * @hide
+     */
+    @SdkConstant(SdkConstantType.BROADCAST_INTENT_ACTION)
+    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
+    @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
+    public static final String ACTION_ADSERVICES_NOTIFICATION_DISPLAY =
+            "android.adservices.common.action.ADSERVICES_NOTIFICATION_DISPLAY";
+
+    /**
+     * Activity Action: Open the consent landing page activity on notification click. In the
+     * activity, user consent choices can be set, depending on user action, by calling {@link
+     * #setAdServicesModuleUserChoices()}.
+     *
+     * <p>Input: nothing
+     *
+     * <p>Output: nothing
+     *
+     * @hide
+     */
+    @SdkConstant(SdkConstantType.ACTIVITY_INTENT_ACTION)
+    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
+    @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
+    public static final String ACTION_ADSERVICES_NOTIFICATION_CLICK =
+            "android.adservices.common.action.ADSERVICES_NOTIFICATION_CLICK";
 
     /**
      * Sets overrides for the AdServices Module(s).
