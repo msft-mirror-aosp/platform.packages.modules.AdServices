@@ -52,8 +52,6 @@ public final class TriggerEncodingCommandTest extends ShellCommandTestCase<Trigg
     @ShellCommandStats.Command
     private static final int EXPECTED_COMMAND = COMMAND_APP_SIGNALS_TRIGGER_ENCODING;
 
-    public static final String ADSERVICES_PACKAGE = "com.google.android.adservices.api";
-
     @Mock private PeriodicEncodingJobRunner mPeriodicEncodingJobRunner;
     @Mock private EncoderLogicHandler mEncoderLogicHandler;
     @Mock private EncodingExecutionLogHelper mEncodingExecutionLogHelper;
