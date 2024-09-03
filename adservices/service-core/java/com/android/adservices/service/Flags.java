@@ -2644,18 +2644,6 @@ public interface Flags extends ModuleSharedFlags {
         return getLegacyMeasurementKillSwitch() || MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH;
     }
 
-    /** Flag for storing Measurement Rollback data in External Storage for Android R. */
-    boolean MEASUREMENT_ROLLBACK_DELETION_R_ENABLED = !SdkLevel.isAtLeastS();
-
-    /**
-     * Returns whether storing Measurement rollback deletion handling data in AdServices external
-     * storage is enabled. Rollback deletion handling on Android R will be disabled if this value is
-     * false.
-     */
-    default boolean getMeasurementRollbackDeletionREnabled() {
-        return MEASUREMENT_ROLLBACK_DELETION_R_ENABLED;
-    }
-
     /**
      * Kill Switch for storing Measurement Rollback data in App Search for Android S. The default
      * value is false which means storing the rollback handling data in App Search is enabled. This

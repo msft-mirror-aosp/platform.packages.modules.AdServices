@@ -20,14 +20,12 @@ import static com.android.adservices.service.DeviceConfigAndSystemPropertiesExpe
 import static com.android.adservices.service.Flags.DEFAULT_CLASSIFIER_TYPE;
 import static com.android.adservices.service.Flags.MAINTENANCE_JOB_FLEX_MS;
 import static com.android.adservices.service.Flags.MAINTENANCE_JOB_PERIOD_MS;
-import static com.android.adservices.service.Flags.MEASUREMENT_ROLLBACK_DELETION_R_ENABLED;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.service.Flags.TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
 import static com.android.adservices.service.FlagsConstants.KEY_ADID_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_APPSETID_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_CLASSIFIER_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_COBALT_LOGGING_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_BACK_COMPAT;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
@@ -62,7 +60,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REGI
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ROLLBACK_DELETION_R_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_KILL_SWITCH;
@@ -287,23 +284,6 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
                 KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH,
                 "TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH",
                 Flags::getTopicsOnDeviceClassifierKillSwitch);
-    }
-
-    @Test
-    public void testGetMeasurementRollbackDeletionREnabled() {
-        // Disable global_kill_switch so that this flag can be tested.
-        mFlagsTestHelper.setGlobalKillSwitch(false);
-        mockGetAdServicesFlag(KEY_ENABLE_BACK_COMPAT, true);
-        mocker.mockIsAtLeastT(false);
-        mocker.mockIsAtLeastS(false);
-
-        expect.that(mPhFlags.getMeasurementRollbackDeletionREnabled())
-                .isEqualTo(MEASUREMENT_ROLLBACK_DELETION_R_ENABLED);
-
-        boolean phOverridingValue = !MEASUREMENT_ROLLBACK_DELETION_R_ENABLED;
-        mockGetAdServicesFlag(KEY_MEASUREMENT_ROLLBACK_DELETION_R_ENABLED, phOverridingValue);
-
-        expect.that(mPhFlags.getMeasurementRollbackDeletionREnabled()).isEqualTo(phOverridingValue);
     }
 
     @Test
