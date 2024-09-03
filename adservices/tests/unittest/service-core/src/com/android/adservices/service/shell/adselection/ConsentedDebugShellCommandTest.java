@@ -68,7 +68,7 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.UUID;
 
-public class ConsentedDebugShellCommandTest
+public final class ConsentedDebugShellCommandTest
         extends ShellCommandTestCase<ConsentedDebugShellCommand> {
     private static final String DEBUG_TOKEN = UUID.randomUUID().toString();
     private static final int EXPIRY_IN_HOURS_INT = 48;
