@@ -230,10 +230,13 @@ public class AdServicesCommonManager {
     /**
      * Sets overrides for the AdServices Module(s).
      *
-     * <p>Api that will enable/disable adServices modules. Once the value is off, the modules being
-     * not available in the platform side, it is equivalent to the modules is not available on the
-     * device. This Api also sets the notification type through NotificationTypeParams
-     * (Ongoing|Regular|None).
+     * <p>This API can enable/disable AdServices modules. Setting a module to off will hide the
+     * settings controls for any PPAPIs (Privacy Preserving APIs) associated with it. In addition,
+     * those PPAPIs will not operate for that user.
+     *
+     * <p>A notification type is also required to determine what type of notification should be
+     * shown to the user to notify them of these changes. The NotificationTypeParams can be Ongoing,
+     * Regular, or None.
      *
      * @param adServicesModuleStateList parcel containing state information for modules.
      * @param notificationType parcel containing notification type.
@@ -281,9 +284,11 @@ public class AdServicesCommonManager {
     }
 
     /**
-     * Sets the AdServices Module(s) user choices.
+     * Sets the user choices for AdServices Module(s).
      *
-     * <p>Api sets the user consent value for each AdServices module(Pas/Measurement/Topic etc).
+     * <p>This API sets the user consent value for each AdServices module (PAS, Measurement, Topic,
+     * etc). The user consent controls whether the PPAPIs associated with that module can operate or
+     * not.
      *
      * @param adServicesModuleUserChoiceList parcel containing user choices for modules.
      * @param executor the executor for the callback.
