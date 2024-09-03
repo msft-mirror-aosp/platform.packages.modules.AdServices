@@ -36,7 +36,7 @@ public final class DeviceSideTestCaseTest extends DeviceSideTestCase {
                     .isNotNull();
             return;
         }
-        Context expectedContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        Context expectedContext = InstrumentationRegistry.getInstrumentation().getContext();
         expect.withMessage("sContext").that(sContext).isSameInstanceAs(expectedContext);
     }
 
@@ -49,8 +49,8 @@ public final class DeviceSideTestCaseTest extends DeviceSideTestCase {
     public void testContext() {
         Context expectedContext =
                 isOnRavenwood()
-                        ? sContext
-                        : InstrumentationRegistry.getInstrumentation().getTargetContext();
+                        ? mContext
+                        : InstrumentationRegistry.getInstrumentation().getContext();
         expect.withMessage("mContext").that(mContext).isSameInstanceAs(expectedContext);
     }
 

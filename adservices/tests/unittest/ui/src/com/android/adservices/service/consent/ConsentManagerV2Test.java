@@ -106,11 +106,10 @@ import androidx.test.filters.SmallTest;
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.cobalt.CobaltJobService;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
+import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
-import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.common.AtomicFileDatastore;
@@ -122,7 +121,6 @@ import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.download.MddJob;
-import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
@@ -162,6 +160,7 @@ import com.android.adservices.service.topics.TopicsWorker;
 import com.android.adservices.service.ui.data.UxStatesDao;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
@@ -171,7 +170,6 @@ import com.google.common.collect.ImmutableList;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mock;
@@ -200,7 +198,6 @@ import java.util.stream.Collectors;
 @SpyStatic(DeleteUninstalledJobService.class)
 @SpyStatic(DeviceRegionProvider.class)
 @SpyStatic(EpochJob.class)
-@SpyStatic(ErrorLogUtil.class)
 @SpyStatic(EventFallbackReportingJobService.class)
 @SpyStatic(EventReportingJobService.class)
 @SpyStatic(DebugReportingFallbackJobService.class)
@@ -221,6 +218,7 @@ import java.util.stream.Collectors;
 public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCase {
     public static final int UX_TYPE_COUNT = 5;
     public static final int ENROLLMENT_CHANNEL_COUNT = 22;
+
     private AtomicFileDatastore mDatastore;
     private AtomicFileDatastore mConsentDatastore;
     private ConsentManagerV2 mConsentManager;
@@ -251,7 +249,6 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
     @Mock private EpochManager mMockEpochManager;
 
     @Mock private PackageManager mPackageManager;
-    @Mock private Flags mMockFlags;
     @Mock private JobScheduler mJobSchedulerMock;
     @Mock private IAdServicesManager mMockIAdServicesManager;
     @Mock private AppSearchConsentStorageManager mAppSearchConsentManagerMock;
@@ -260,9 +257,7 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
     @Mock private UxStatesDao mUxStatesDaoMock;
     @Mock private StatsdAdServicesLogger mStatsdAdServicesLoggerMock;
 
-    @Rule(order = 11)
-    public final AdServicesLoggingUsageRule errorLogUtilUsageRule =
-            AdServicesLoggingUsageRule.errorLogUtilUsageRule();
+    @Mock private AdServicesErrorLogger mMockAdServicesErrorLogger;
 
     @Before
     public void setup() throws IOException {
@@ -272,10 +267,14 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
                         new AtomicFileDatastore(
                                 mSpyContext,
                                 AppConsentDao.DATASTORE_NAME,
-                                AppConsentDao.DATASTORE_VERSION));
+                                AppConsentDao.DATASTORE_VERSION,
+                                mMockAdServicesErrorLogger));
         // For each file, we should ensure there is only one instance of datastore that is able to
         // access it. (Refer to AtomicFileDatastore.class)
-        mConsentDatastore = spy(ConsentManagerV2.createAndInitializeDataStore(mSpyContext));
+        mConsentDatastore =
+                spy(
+                        ConsentManagerV2.createAndInitializeDataStore(
+                                mSpyContext, mMockAdServicesErrorLogger));
         mAppConsentDaoSpy = spy(new AppConsentDao(mDatastore, mSpyContext.getPackageManager()));
         mEnrollmentDaoSpy =
                 spy(

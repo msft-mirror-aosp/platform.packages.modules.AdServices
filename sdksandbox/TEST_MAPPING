@@ -256,6 +256,9 @@
       "name": "CtsApacheHttpTestCases"
     },
     {
+      "name": "CtsBluetoothTestCases"
+    },
+    {
       "name": "CtsContentTestCases"
     },
     {
@@ -263,6 +266,12 @@
     },
     {
       "name": "CtsGraphicsTestCases"
+    },
+    {
+      "name": "CtsIcu4cTestCases"
+    },
+    {
+      "name": "CtsIcuTestCases"
     },
     {
       "name": "CtsLocationCoarseTestCases"
@@ -307,10 +316,16 @@
       "name": "CtsOsTestCases"
     },
     {
+      "name": "CtsPreferenceTestCases"
+    },
+    {
       "name": "CtsProviderTestCases"
     },
     {
       "name": "CtsTextTestCases"
+    },
+    {
+      "name": "CtsTransitionTestCases"
     },
     {
       "name": "CtsUtilTestCases"

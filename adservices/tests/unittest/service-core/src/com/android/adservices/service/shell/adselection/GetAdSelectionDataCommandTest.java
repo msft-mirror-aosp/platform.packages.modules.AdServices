@@ -16,6 +16,14 @@
 
 package com.android.adservices.service.shell.adselection;
 
+import static com.android.adservices.service.shell.adselection.AdSelectionShellCommandConstants.OUTPUT_PROTO_FIELD_NAME;
+import static com.android.adservices.service.shell.adselection.GetAdSelectionDataCommand.APP_PACKAGE_NAME_HINT;
+import static com.android.adservices.service.shell.adselection.GetAdSelectionDataCommand.BUYER_KV_EXPERIMENT_ID_HINT;
+import static com.android.adservices.service.shell.adselection.GetAdSelectionDataCommand.CMD;
+import static com.android.adservices.service.shell.adselection.GetAdSelectionDataCommand.ERROR_UNKNOWN_BUYER_FORMAT;
+import static com.android.adservices.service.shell.adselection.GetAdSelectionDataCommand.HELP;
+import static com.android.adservices.service.shell.adselection.GetAdSelectionDataCommand.SELLER_HINT;
+import static com.android.adservices.service.shell.adselection.GetAdSelectionDataCommand.TOP_LEVEL_SELLER_HINT;
 import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_AD_SELECTION_GET_AD_SELECTION_DATA;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -29,8 +37,10 @@ import android.util.Base64;
 import com.android.adservices.service.adselection.AuctionServerDataCompressor;
 import com.android.adservices.service.adselection.AuctionServerDataCompressorGzip;
 import com.android.adservices.service.adselection.BuyerInputGenerator;
+import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGenerator;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.BuyerInput;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.BuyerInput.CustomAudience;
+import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ConsentedDebugConfiguration;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.GetBidsRequest.GetBidsRawRequest;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ProtectedAppSignals;
 import com.android.adservices.service.shell.ShellCommandTestCase;
@@ -49,6 +59,7 @@ import org.mockito.Mock;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.Optional;
 
 public class GetAdSelectionDataCommandTest extends ShellCommandTestCase<GetAdSelectionDataCommand> {
 
@@ -58,6 +69,7 @@ public class GetAdSelectionDataCommandTest extends ShellCommandTestCase<GetAdSel
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("example.com");
 
     @Mock private BuyerInputGenerator mBuyerInputGenerator;
+    @Mock private ConsentedDebugConfigurationGenerator mConsentedDebugConfigurationGenerator;
     private AuctionServerDataCompressor mAuctionServerDataCompressor;
 
     @Before
@@ -68,21 +80,27 @@ public class GetAdSelectionDataCommandTest extends ShellCommandTestCase<GetAdSel
     @Test
     public void testRun_missingBothArguments_returnsHelp() {
         runAndExpectInvalidArgument(
-                new GetAdSelectionDataCommand(mBuyerInputGenerator, mAuctionServerDataCompressor),
-                GetAdSelectionDataCommand.HELP,
+                new GetAdSelectionDataCommand(
+                        mBuyerInputGenerator,
+                        mAuctionServerDataCompressor,
+                        mConsentedDebugConfigurationGenerator),
+                HELP,
                 EXPECTED_COMMAND,
                 AdSelectionShellCommandFactory.COMMAND_PREFIX,
-                GetAdSelectionDataCommand.CMD);
+                CMD);
     }
 
     @Test
     public void testRun_missingBuyerArgument_returnsHelp() {
         runAndExpectInvalidArgument(
-                new GetAdSelectionDataCommand(mBuyerInputGenerator, mAuctionServerDataCompressor),
-                GetAdSelectionDataCommand.HELP,
+                new GetAdSelectionDataCommand(
+                        mBuyerInputGenerator,
+                        mAuctionServerDataCompressor,
+                        mConsentedDebugConfigurationGenerator),
+                HELP,
                 EXPECTED_COMMAND,
                 AdSelectionShellCommandFactory.COMMAND_PREFIX,
-                GetAdSelectionDataCommand.CMD);
+                CMD);
     }
 
     @Test
@@ -93,15 +111,17 @@ public class GetAdSelectionDataCommandTest extends ShellCommandTestCase<GetAdSel
         Result result =
                 run(
                         new GetAdSelectionDataCommand(
-                                mBuyerInputGenerator, mAuctionServerDataCompressor),
+                                mBuyerInputGenerator,
+                                mAuctionServerDataCompressor,
+                                mConsentedDebugConfigurationGenerator),
                         AdSelectionShellCommandFactory.COMMAND_PREFIX,
-                        GetAdSelectionDataCommand.CMD,
-                        GetAdSelectionDataArgs.BUYER,
+                        CMD,
+                        AdSelectionShellCommandConstants.BUYER,
                         BUYER.toString());
 
         expectFailure(
                 result,
-                String.format(GetAdSelectionDataCommand.ERROR_UNKNOWN_BUYER_FORMAT, BUYER),
+                String.format(ERROR_UNKNOWN_BUYER_FORMAT, BUYER),
                 EXPECTED_COMMAND,
                 ShellCommandStats.RESULT_GENERIC_ERROR);
     }
@@ -109,6 +129,8 @@ public class GetAdSelectionDataCommandTest extends ShellCommandTestCase<GetAdSel
     @Test
     public void testRun_withAllArguments_returnsSuccess()
             throws InvalidProtocolBufferException, JSONException {
+        when(mConsentedDebugConfigurationGenerator.getConsentedDebugConfiguration())
+                .thenReturn(Optional.empty());
         ProtectedAppSignals protectedAppSignals =
                 ProtectedAppSignals.newBuilder()
                         .setEncodingVersion(1)
@@ -136,10 +158,12 @@ public class GetAdSelectionDataCommandTest extends ShellCommandTestCase<GetAdSel
         Result result =
                 run(
                         new GetAdSelectionDataCommand(
-                                mBuyerInputGenerator, mAuctionServerDataCompressor),
+                                mBuyerInputGenerator,
+                                mAuctionServerDataCompressor,
+                                mConsentedDebugConfigurationGenerator),
                         AdSelectionShellCommandFactory.COMMAND_PREFIX,
-                        GetAdSelectionDataCommand.CMD,
-                        GetAdSelectionDataArgs.BUYER,
+                        CMD,
+                        AdSelectionShellCommandConstants.BUYER,
                         BUYER.toString());
 
         expectSuccess(result, EXPECTED_COMMAND);
@@ -147,14 +171,83 @@ public class GetAdSelectionDataCommandTest extends ShellCommandTestCase<GetAdSel
         GetBidsRawRequest request =
                 GetBidsRawRequest.parseFrom(
                         Base64.decode(
-                                new JSONObject(result.mOut)
-                                        .getString(
-                                                GetAdSelectionDataCommand.OUTPUT_PROTO_FIELD_NAME),
+                                new JSONObject(result.mOut).getString(OUTPUT_PROTO_FIELD_NAME),
                                 Base64.DEFAULT));
         assertThat(request.getProtectedAppSignalsBuyerInput().getProtectedAppSignals())
                 .isEqualTo(buyerInput.getProtectedAppSignals());
         assertThat(request.getBuyerInput().getCustomAudiencesCount()).isEqualTo(1);
         assertThat(request.getBuyerInput().getCustomAudiences(0)).isEqualTo(customAudience);
+        assertThat(request.getConsentedDebugConfig().getIsConsented()).isFalse();
+        assertThat(request.getEnableDebugReporting()).isTrue();
+        assertThat(request.getEnableUnlimitedEgress()).isTrue();
+        assertThat(request.getSeller()).isEqualTo(SELLER_HINT);
+        assertThat(request.getTopLevelSeller()).isEqualTo(TOP_LEVEL_SELLER_HINT);
+        assertThat(request.getPublisherName()).isEqualTo(APP_PACKAGE_NAME_HINT);
+        assertThat(request.getBuyerKvExperimentGroupId()).isEqualTo(BUYER_KV_EXPERIMENT_ID_HINT);
+    }
+
+    @Test
+    public void testRun_withConsentedDebugConfiguration_returnsSuccess()
+            throws InvalidProtocolBufferException, JSONException {
+        String consentedToken = "123456";
+        ConsentedDebugConfiguration consentedDebugConfiguration =
+                ConsentedDebugConfiguration.newBuilder()
+                        .setIsConsented(true)
+                        .setToken(consentedToken)
+                        .setIsDebugInfoInResponse(false)
+                        .build();
+        when(mConsentedDebugConfigurationGenerator.getConsentedDebugConfiguration())
+                .thenReturn(Optional.of(consentedDebugConfiguration));
+        ProtectedAppSignals protectedAppSignals =
+                ProtectedAppSignals.newBuilder()
+                        .setEncodingVersion(1)
+                        .setAppInstallSignals(ByteString.copyFrom("hello", StandardCharsets.UTF_8))
+                        .build();
+        CustomAudience customAudience =
+                CustomAudience.newBuilder()
+                        .setName("shoes")
+                        .setOwner("com.example")
+                        .addBiddingSignalsKeys("abc")
+                        .addAdRenderIds("123")
+                        .setUserBiddingSignals("{}")
+                        .build();
+        BuyerInput buyerInput =
+                BuyerInput.newBuilder()
+                        .setProtectedAppSignals(protectedAppSignals)
+                        .addCustomAudiences(customAudience)
+                        .build();
+        when(mBuyerInputGenerator.createCompressedBuyerInputs(any(), any()))
+                .thenReturn(
+                        FluentFuture.from(
+                                Futures.immediateFuture(
+                                        getCompressedBuyerInput(BUYER, buyerInput))));
+
+        Result result =
+                run(
+                        new GetAdSelectionDataCommand(
+                                mBuyerInputGenerator,
+                                mAuctionServerDataCompressor,
+                                mConsentedDebugConfigurationGenerator),
+                        AdSelectionShellCommandFactory.COMMAND_PREFIX,
+                        CMD,
+                        AdSelectionShellCommandConstants.BUYER,
+                        BUYER.toString());
+
+        expectSuccess(result, EXPECTED_COMMAND);
+        // Verify that the written proto conforms to the BuyerInput specification.
+        GetBidsRawRequest request =
+                GetBidsRawRequest.parseFrom(
+                        Base64.decode(
+                                new JSONObject(result.mOut).getString(OUTPUT_PROTO_FIELD_NAME),
+                                Base64.DEFAULT));
+        assertThat(request.getProtectedAppSignalsBuyerInput().getProtectedAppSignals())
+                .isEqualTo(buyerInput.getProtectedAppSignals());
+        assertThat(request.getBuyerInput().getCustomAudiencesCount()).isEqualTo(1);
+        assertThat(request.getBuyerInput().getCustomAudiences(0)).isEqualTo(customAudience);
+        assertThat(request.getConsentedDebugConfig().getIsConsented()).isTrue();
+        assertThat(request.getConsentedDebugConfig().getToken()).isEqualTo(consentedToken);
+        assertThat(request.getEnableDebugReporting()).isTrue();
+        assertThat(request.getEnableUnlimitedEgress()).isTrue();
     }
 
     private Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData>

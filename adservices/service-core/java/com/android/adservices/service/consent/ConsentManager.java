@@ -31,6 +31,10 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
 import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.U18_UX;
 
+import android.adservices.common.AdServicesModuleState;
+import android.adservices.common.AdServicesModuleState.ModuleStateCode;
+import android.adservices.common.AdServicesModuleUserChoice.ModuleUserChoiceCode;
+import android.adservices.common.Module.ModuleCode;
 import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.annotation.SuppressLint;
@@ -58,6 +62,7 @@ import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsTables;
+import com.android.adservices.errorlogging.AdServicesErrorLoggerImpl;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -76,8 +81,10 @@ import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.service.topics.TopicsWorker;
 import com.android.adservices.service.ui.data.UxStatesDao;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
+import com.android.adservices.service.ui.util.EnrollmentData;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
 import com.android.modules.utils.build.SdkLevel;
@@ -224,7 +231,9 @@ public class ConsentManager {
                 if (sConsentManager == null) {
                     // Execute one-time consent migration if needed.
                     int consentSourceOfTruth = FlagsFactory.getFlags().getConsentSourceOfTruth();
-                    AtomicFileDatastore datastore = createAndInitializeDataStore(context);
+                    AtomicFileDatastore datastore =
+                            createAndInitializeDataStore(
+                                    context, AdServicesErrorLoggerImpl.getInstance());
                     AdServicesManager adServicesManager = AdServicesManager.getInstance(context);
                     AppConsentDao appConsentDao = AppConsentDao.getInstance(context);
 
@@ -457,13 +466,11 @@ public class ConsentManager {
         }
     }
 
-    private boolean areAllApisDisabled() {
-        if (getConsent(AdServicesApiType.TOPICS).isGiven()
-                || getConsent(AdServicesApiType.MEASUREMENTS).isGiven()
-                || getConsent(AdServicesApiType.FLEDGE).isGiven()) {
-            return false;
-        }
-        return true;
+    /** Returns true if all APIs are disabled. */
+    public boolean areAllApisDisabled() {
+        return !getConsent(AdServicesApiType.TOPICS).isGiven()
+                && !getConsent(AdServicesApiType.MEASUREMENTS).isGiven()
+                && !getConsent(AdServicesApiType.FLEDGE).isGiven();
     }
 
     /**
@@ -1582,12 +1589,14 @@ public class ConsentManager {
     }
 
     @VisibleForTesting
-    static AtomicFileDatastore createAndInitializeDataStore(@NonNull Context context) {
+    static AtomicFileDatastore createAndInitializeDataStore(
+            Context context, AdServicesErrorLogger adServicesErrorLogger) {
         AtomicFileDatastore atomicFileDatastore =
                 new AtomicFileDatastore(
                         context,
                         ConsentConstants.STORAGE_XML_IDENTIFIER,
-                        ConsentConstants.STORAGE_VERSION);
+                        ConsentConstants.STORAGE_VERSION,
+                        adServicesErrorLogger);
 
         try {
             atomicFileDatastore.initialize();
@@ -2426,6 +2435,74 @@ public class ConsentManager {
                 () -> mAppSearchConsentManager.setUx(ux),
                 () -> // Same as PPAPI_ONLY. Doesn't need to be rollback safe
                 mUxStatesDao.setUx(ux),
+                /* errorLogger= */ null);
+    }
+
+    /**
+     * Get module state for desired module.
+     *
+     * @param module desired module
+     * @return module state
+     */
+    @ModuleStateCode
+    public int getModuleState(@ModuleCode int module) {
+        EnrollmentData data = EnrollmentData.deserialize(getModuleEnrollmentState());
+        return data.getModuleState(module);
+    }
+
+    /**
+     * Sets module state for a module.
+     *
+     * @param moduleState object to set
+     */
+    public void setModuleState(AdServicesModuleState moduleState) {
+        EnrollmentData data = EnrollmentData.deserialize(getModuleEnrollmentState());
+        data.putModuleState(moduleState);
+        setModuleEnrollmentData(data.serialize());
+    }
+
+    /**
+     * Gets user choice for a module.
+     *
+     * @param module Module to get
+     * @return User choice of the module
+     */
+    @ModuleUserChoiceCode
+    public int getUserChoice(@ModuleCode int module) {
+        EnrollmentData data = EnrollmentData.deserialize(getModuleEnrollmentState());
+        return data.getUserChoice(module);
+    }
+
+    /**
+     * Sets user choice for a module.
+     *
+     * @param module Module to set
+     * @param userChoice User choice to store
+     */
+    public void setUserChoice(@ModuleCode int module, @ModuleUserChoiceCode int userChoice) {
+        EnrollmentData data = EnrollmentData.deserialize(getModuleEnrollmentState());
+        data.putUserChoice(module, userChoice);
+        setModuleEnrollmentData(data.serialize());
+    }
+
+    /** Set module enrollment data to storage based on consent_source_of_truth. */
+    private String getModuleEnrollmentState() {
+        return executeGettersByConsentSourceOfTruth(
+                "",
+                () -> mDatastore.getString(ConsentConstants.MODULE_ENROLLMENT_STATE),
+                () -> mAdServicesManager.getModuleEnrollmentState(),
+                () -> mAppSearchConsentManager.getModuleEnrollmentState(),
+                () -> "", // TODO(b/348473253): implement datastore if needed
+                /* errorLogger= */ null);
+    }
+
+    /** Set module enrollment data to storage based on consent_source_of_truth. */
+    private void setModuleEnrollmentData(String data) {
+        executeSettersByConsentSourceOfTruth(
+                () -> mDatastore.putString(ConsentConstants.MODULE_ENROLLMENT_STATE, data),
+                () -> mAdServicesManager.setModuleEnrollmentState(data),
+                () -> mAppSearchConsentManager.setModuleEnrollmentState(data),
+                () -> {}, // TODO(b/348473253): implement datastore if needed
                 /* errorLogger= */ null);
     }
 

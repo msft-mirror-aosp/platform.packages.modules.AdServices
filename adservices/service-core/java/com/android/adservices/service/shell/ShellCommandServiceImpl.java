@@ -22,8 +22,11 @@ import android.adservices.shell.IShellCommand;
 import android.adservices.shell.IShellCommandCallback;
 import android.adservices.shell.ShellCommandParam;
 import android.adservices.shell.ShellCommandResult;
+import android.os.Build;
 import android.os.RemoteException;
 import android.util.Log;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -48,6 +51,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @hide
  */
+@RequiresApi(Build.VERSION_CODES.S)
 public final class ShellCommandServiceImpl extends IShellCommand.Stub {
 
     @VisibleForTesting

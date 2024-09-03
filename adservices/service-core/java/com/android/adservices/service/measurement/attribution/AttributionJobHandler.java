@@ -18,6 +18,8 @@ package com.android.adservices.service.measurement.attribution;
 
 import static com.android.adservices.service.measurement.PrivacyParams.AGGREGATE_REPORT_DELAY_SPAN;
 import static com.android.adservices.service.measurement.PrivacyParams.AGGREGATE_REPORT_MIN_DELAY;
+import static com.android.adservices.service.measurement.attribution.AttributionStatus.AttributionResult;
+import static com.android.adservices.service.measurement.attribution.AttributionStatus.FailureType;
 import static com.android.adservices.service.measurement.util.Time.roundDownToDay;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_ATTRIBUTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DELAYED_SOURCE_REGISTRATION;
@@ -173,7 +175,6 @@ class AttributionJobHandler {
         for (int i = 0; i < numRecordsToProcess; i++) {
             AttributionStatus attributionStatus = new AttributionStatus();
             boolean success = performAttribution(pendingTriggers.get(i), attributionStatus);
-            logAttributionStats(attributionStatus);
             if (!success) {
                 // Failure during trigger attribution
                 // Reschedule for retry
@@ -196,19 +197,28 @@ class AttributionJobHandler {
     private boolean performAttribution(String triggerId, AttributionStatus attributionStatus) {
         return mDatastoreManager.runInTransaction(
                 measurementDao -> {
+                    String enrollmentId = null;
                     Trigger trigger;
                     try {
                         trigger = measurementDao.getTrigger(triggerId);
+                        enrollmentId = trigger.getEnrollmentId();
                     } catch (DatastoreException e) {
-                        attributionStatus.setFailureType(
-                                AttributionStatus.FailureType.TRIGGER_NOT_FOUND);
+                        setAndLogAttributionStatus(
+                                attributionStatus,
+                                AttributionResult.NOT_ATTRIBUTED,
+                                FailureType.TRIGGER_NOT_FOUND,
+                                enrollmentId);
                         throw e;
                     }
                     attributionStatus.setAttributionDelay(
                             System.currentTimeMillis() - trigger.getTriggerTime());
 
                     if (trigger.getStatus() != Trigger.Status.PENDING) {
-                        attributionStatus.setFailureTypeFromTriggerStatus(trigger.getStatus());
+                        setAndLogAttributionStatus(
+                                attributionStatus,
+                                AttributionResult.NOT_ATTRIBUTED,
+                                getFailureTypeFromTriggerStatus(trigger.getStatus()),
+                                enrollmentId);
                         return;
                     }
 
@@ -216,10 +226,11 @@ class AttributionJobHandler {
                         if (!getTriggerHasAggregatableData(trigger)
                                 && trigger.parseEventTriggers(mFlags).isEmpty()) {
                             ignoreTrigger(trigger, measurementDao);
-                            attributionStatus.setAttributionResult(
-                                    AttributionStatus.AttributionResult.NOT_ATTRIBUTED);
-                            attributionStatus.setFailureType(
-                                    AttributionStatus.FailureType.TRIGGER_IGNORED);
+                            setAndLogAttributionStatus(
+                                    attributionStatus,
+                                    AttributionResult.NOT_ATTRIBUTED,
+                                    FailureType.TRIGGER_IGNORED,
+                                    enrollmentId);
                             return;
                         }
                     } catch (JSONException e) {
@@ -244,13 +255,14 @@ class AttributionJobHandler {
                     if (sourceOpt.isEmpty()) {
                         mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
                                 trigger, measurementDao, Type.TRIGGER_NO_MATCHING_SOURCE);
-                        attributionStatus.setAttributionResult(
-                                AttributionStatus.AttributionResult.NOT_ATTRIBUTED);
-                        attributionStatus.setFailureType(
-                                AttributionStatus.FailureType.NO_MATCHING_SOURCE);
                         generateNullAggregateReportForNonAttributedTrigger(
                                 measurementDao, trigger, attributionStatus);
                         ignoreTrigger(trigger, measurementDao);
+                        setAndLogAttributionStatus(
+                                attributionStatus,
+                                AttributionResult.NOT_ATTRIBUTED,
+                                FailureType.NO_MATCHING_SOURCE,
+                                enrollmentId);
                         return;
                     }
 
@@ -270,6 +282,12 @@ class AttributionJobHandler {
                                             "AttributionJobHandler::performAttribution cannot build"
                                                     + " trigger specs");
                             ignoreTrigger(trigger, measurementDao);
+                            // TODO(b/361166071): Add a new failure type.
+                            setAndLogAttributionStatus(
+                                    attributionStatus,
+                                    AttributionResult.NOT_ATTRIBUTED,
+                                    FailureType.UNKNOWN,
+                                    enrollmentId);
                             return;
                         }
                     }
@@ -285,13 +303,14 @@ class AttributionJobHandler {
                     }
 
                     if (!doTopLevelFiltersMatch(source, trigger, measurementDao)) {
-                        attributionStatus.setAttributionResult(
-                                AttributionStatus.AttributionResult.NOT_ATTRIBUTED);
-                        attributionStatus.setFailureType(
-                                AttributionStatus.FailureType.TOP_LEVEL_FILTER_MATCH_FAILURE);
                         generateNullAggregateReportForNonAttributedTrigger(
                                 measurementDao, trigger, attributionStatus);
                         ignoreTrigger(trigger, measurementDao);
+                        setAndLogAttributionStatus(
+                                attributionStatus,
+                                AttributionResult.NOT_ATTRIBUTED,
+                                FailureType.TOP_LEVEL_FILTER_MATCH_FAILURE,
+                                enrollmentId);
                         return;
                     }
 
@@ -303,27 +322,24 @@ class AttributionJobHandler {
                     }
 
                     if (shouldAttributionBeBlockedByRateLimits(source, trigger, measurementDao)) {
-                        attributionStatus.setAttributionResult(
-                                AttributionStatus.AttributionResult.NOT_ATTRIBUTED);
-                        attributionStatus.setFailureType(
-                                AttributionStatus.FailureType.RATE_LIMIT_EXCEEDED);
+                        generateNullAggregateReportForNonAttributedTrigger(
+                                measurementDao, trigger, attributionStatus);
                         ignoreTrigger(trigger, measurementDao);
+                        setAndLogAttributionStatus(
+                                attributionStatus,
+                                AttributionResult.NOT_ATTRIBUTED,
+                                FailureType.RATE_LIMIT_EXCEEDED,
+                                enrollmentId);
                         return;
                     }
 
                     TriggeringStatus aggregateTriggeringStatus =
                             maybeGenerateAggregateReport(
-                                    source,
-                                    trigger,
-                                    measurementDao,
-                                    attributionStatus);
+                                    source, trigger, measurementDao, attributionStatus);
 
                     TriggeringStatus eventTriggeringStatus =
                             maybeGenerateEventReport(
-                                    source,
-                                    trigger,
-                                    measurementDao,
-                                    attributionStatus);
+                                    source, trigger, measurementDao, attributionStatus);
 
                     if (aggregateTriggeringStatus == TriggeringStatus.DROPPED) {
                         generateNullAggregateReportForNonAttributedTrigger(
@@ -343,17 +359,22 @@ class AttributionJobHandler {
                                     trigger.getEnrollmentId());
                         }
                         attributeTrigger(trigger, measurementDao);
-                        attributionStatus.setAttributionResult(
-                                isAggregateTriggeringStatusAttributed,
-                                isEventTriggeringStatusAttributed);
+                        setAndLogAttributionStatus(
+                                attributionStatus,
+                                getAttributionResultFromGeneratedReports(
+                                        isAggregateTriggeringStatusAttributed,
+                                        isEventTriggeringStatusAttributed),
+                                FailureType.UNKNOWN,
+                                enrollmentId);
                     } else {
-                        attributionStatus.setAttributionResult(
-                                AttributionStatus.AttributionResult.NOT_ATTRIBUTED);
+                        ignoreTrigger(trigger, measurementDao);
                         // TODO (b/309323690) Consider logging implications for scoped attribution
                         // rate limit.
-                        attributionStatus.setFailureType(
-                                AttributionStatus.FailureType.NO_REPORTS_GENERATED);
-                        ignoreTrigger(trigger, measurementDao);
+                        setAndLogAttributionStatus(
+                                attributionStatus,
+                                AttributionResult.NOT_ATTRIBUTED,
+                                FailureType.NO_REPORTS_GENERATED,
+                                enrollmentId);
                     }
                 });
     }
@@ -438,26 +459,23 @@ class AttributionJobHandler {
             return TriggeringStatus.DROPPED;
         }
 
-        if (mFlags.getMeasurementEnableMaxAggregateReportsPerSource()) {
-            int numReportsPerSource =
-                    measurementDao.getNumAggregateReportsPerSource(source.getId());
-            if (numReportsPerSource >= mFlags.getMeasurementMaxAggregateReportsPerSource()) {
-                LoggerFactory.getMeasurementLogger()
-                        .d(
-                                String.format(
-                                        Locale.ENGLISH,
-                                        "Aggregate reports for source %1$s exceeds system"
-                                                + " health limit of %2$d.",
-                                        source.getId(),
-                                        mFlags.getMeasurementMaxAggregateReportsPerSource()));
-                mDebugReportApi.scheduleTriggerDebugReport(
-                        source,
-                        trigger,
-                        String.valueOf(mFlags.getMeasurementMaxAggregateReportsPerSource()),
-                        measurementDao,
-                        Type.TRIGGER_AGGREGATE_EXCESSIVE_REPORTS);
-                return TriggeringStatus.DROPPED;
-            }
+        if (measurementDao.getNumAggregateReportsPerSource(source.getId())
+                >= mFlags.getMeasurementMaxAggregateReportsPerSource()) {
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            String.format(
+                                    Locale.ENGLISH,
+                                    "Aggregate reports for source %1$s exceeds system"
+                                            + " health limit of %2$d.",
+                                    source.getId(),
+                                    mFlags.getMeasurementMaxAggregateReportsPerSource()));
+            mDebugReportApi.scheduleTriggerDebugReport(
+                    source,
+                    trigger,
+                    String.valueOf(mFlags.getMeasurementMaxAggregateReportsPerSource()),
+                    measurementDao,
+                    Type.TRIGGER_AGGREGATE_EXCESSIVE_REPORTS);
+            return TriggeringStatus.DROPPED;
         }
 
         try {
@@ -542,7 +560,8 @@ class AttributionJobHandler {
                             .setSourceId(source.getId())
                             .setTriggerId(trigger.getId())
                             .setRegistrationOrigin(trigger.getRegistrationOrigin())
-                            .setTriggerContextId(trigger.getTriggerContextId());
+                            .setTriggerContextId(trigger.getTriggerContextId())
+                            .setTriggerTime(trigger.getTriggerTime());
             if (trigger.getAggregationCoordinatorOrigin() != null) {
                 aggregateReportBuilder.setAggregationCoordinatorOrigin(
                         trigger.getAggregationCoordinatorOrigin());
@@ -1658,7 +1677,7 @@ class AttributionJobHandler {
         } else {
             LoggerFactory.getMeasurementLogger()
                     .d(
-                            "isEnrollmentWithinPrivacyBounds:"
+                            "isReportingOriginWithinPrivacyBounds:"
                                     + " getPublisherAndDestinationTopPrivateDomains failed. %s %s",
                             source.getPublisher(), trigger.getAttributionDestination());
             return true;
@@ -1810,7 +1829,41 @@ class AttributionJobHandler {
         return false;
     }
 
-    private void logAttributionStats(AttributionStatus attributionStatus) {
+    private AttributionResult getAttributionResultFromGeneratedReports(
+            boolean aggregateReportGenerated, boolean eventReportGenerated) {
+        if (aggregateReportGenerated && eventReportGenerated) {
+            return AttributionResult.AGGREGATE_AND_EVENT_REPORTS_GENERATED_SUCCESS_STATUS;
+        }
+        if (aggregateReportGenerated) {
+            return AttributionResult.AGGREGATE_REPORT_GENERATED_SUCCESS_STATUS;
+        }
+        if (eventReportGenerated) {
+            return AttributionResult.EVENT_REPORT_GENERATED_SUCCESS_STATUS;
+        }
+        return AttributionResult.UNKNOWN;
+    }
+
+    private FailureType getFailureTypeFromTriggerStatus(int triggerStatus) {
+        return switch (triggerStatus) {
+            case Trigger.Status.IGNORED -> FailureType.TRIGGER_IGNORED;
+            case Trigger.Status.ATTRIBUTED -> FailureType.TRIGGER_ALREADY_ATTRIBUTED;
+            case Trigger.Status.MARKED_TO_DELETE -> FailureType.TRIGGER_MARKED_FOR_DELETION;
+            default -> FailureType.UNKNOWN;
+        };
+    }
+
+    private void setAndLogAttributionStatus(
+            AttributionStatus attributionStatus,
+            AttributionResult attributionResult,
+            FailureType failureType,
+            @Nullable String enrollmentId) {
+        attributionStatus.setAttributionResult(attributionResult);
+        attributionStatus.setFailureType(failureType);
+        logAttributionStats(attributionStatus, enrollmentId);
+    }
+
+    private void logAttributionStats(
+            AttributionStatus attributionStatus, @Nullable String enrollmentId) {
         mLogger.logMeasurementAttributionStats(
                 new MeasurementAttributionStats.Builder()
                         .setCode(AD_SERVICES_MEASUREMENT_ATTRIBUTION)
@@ -1829,7 +1882,8 @@ class AttributionJobHandler {
                         .setEventDebugReportCount(attributionStatus.getEventDebugReportCount())
                         .setNullAggregateReportCount(
                                 attributionStatus.getNullAggregateReportCount())
-                        .build());
+                        .build(),
+                enrollmentId);
     }
 
     private void logDelayedSourceRegistrationStats(Source source, Trigger trigger) {

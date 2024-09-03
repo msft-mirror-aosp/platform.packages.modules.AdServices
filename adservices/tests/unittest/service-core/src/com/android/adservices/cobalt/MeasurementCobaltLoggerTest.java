@@ -16,11 +16,6 @@
 
 package com.android.adservices.cobalt;
 
-import static com.android.adservices.mockito.MockitoExpectations.mockCobaltLoggingEnabled;
-import static com.android.adservices.mockito.MockitoExpectations.mockCobaltLoggingFlags;
-import static com.android.adservices.mockito.MockitoExpectations.mockMsmtAttributionCobaltLoggingEnabled;
-import static com.android.adservices.mockito.MockitoExpectations.mockMsmtRegistrationCobaltLoggingEnabled;
-import static com.android.adservices.mockito.MockitoExpectations.mockMsmtReportingCobaltLoggingEnabled;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_ATTRIBUTION__ATTRIBUTION_SURFACE_COMBINATION__APP_APP_ATTRIBUTION_SURFACE_COMBINATION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_ATTRIBUTION__ATTRIBUTION_SURFACE_COMBINATION__UNKNOWN_ATTRIBUTION_SURFACE_COMBINATION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_ATTRIBUTION__ATTRIBUTION_SURFACE_COMBINATION__WEB_APP_ATTRIBUTION_SURFACE_COMBINATION;
@@ -63,9 +58,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.cobalt.CobaltLogger;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -157,9 +152,10 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
     private static final int REPORTING_UNKNOWN_STATUS_CODE = 200;
 
     private static final String APP_PACKAGE_NAME = "test.app.name";
+    private static final String ENROLLMENT_ID = "enrollmentId";
+    private static final int HASHED_ENROLLMENT = 964172550;
 
     @Mock private CobaltLogger mMockCobaltLogger;
-    @Mock private Flags mMockFlags;
 
     @Before
     public void setUp() {
@@ -168,7 +164,7 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
 
     @Test
     public void testGetInstance() {
-        mockCobaltLoggingFlags(mMockFlags, true);
+        mockCobaltLoggingFlags(true);
 
         MeasurementCobaltLogger instance = MeasurementCobaltLogger.getInstance();
         assertThat(instance).isNotNull();
@@ -179,8 +175,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
 
     @Test
     public void testIsEnabled_cobaltInitializationException() {
-        mockCobaltLoggingEnabled(mMockFlags, true);
-        mockMsmtRegistrationCobaltLoggingEnabled(mMockFlags, true);
+        mockCobaltLoggingEnabled(true);
+        mockMsmtRegistrationCobaltLoggingEnabled(true);
         mockThrowExceptionOnGetCobaltLogger();
 
         MeasurementCobaltLogger logger = MeasurementCobaltLogger.getInstance();
@@ -191,7 +187,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__SOURCE_TYPE__EVENT_SOURCE_TYPE,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__SUCCESS_STATUS,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__FAILURE_TYPE__UNKNOWN_REGISTRATION_FAILURE_TYPE,
-                /* isEeaDevice= */ true);
+                /* isEeaDevice= */ true,
+                ENROLLMENT_ID);
 
         verifyLoggedEvent(
                 APP_PACKAGE_NAME,
@@ -199,12 +196,13 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 EVENT_SOURCE_TYPE,
                 SUCCESS_STATUS_CODE,
                 EEA_REGION_CODE,
+                HASHED_ENROLLMENT,
                 never());
     }
 
     @Test
     public void testIsEnabled_cobaltLoggingDisabled() {
-        mockCobaltLoggingFlags(mMockFlags, false);
+        mockCobaltLoggingFlags(false);
 
         MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
         logger.logRegistrationStatus(
@@ -214,7 +212,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__SOURCE_TYPE__EVENT_SOURCE_TYPE,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__SUCCESS_STATUS,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__FAILURE_TYPE__UNKNOWN_REGISTRATION_FAILURE_TYPE,
-                /* isEeaDevice= */ true);
+                /* isEeaDevice= */ true,
+                ENROLLMENT_ID);
 
         verifyLoggedEvent(
                 APP_PACKAGE_NAME,
@@ -222,13 +221,14 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 EVENT_SOURCE_TYPE,
                 SUCCESS_STATUS_CODE,
                 EEA_REGION_CODE,
+                HASHED_ENROLLMENT,
                 never());
     }
 
     @Test
     public void testIsEnabled_msmtRegistrationCobaltLoggingDisabled() {
-        mockCobaltLoggingFlags(mMockFlags, true);
-        mockMsmtRegistrationCobaltLoggingEnabled(mMockFlags, false);
+        mockCobaltLoggingFlags(true);
+        mockMsmtRegistrationCobaltLoggingEnabled(false);
 
         MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
 
@@ -239,7 +239,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__SOURCE_TYPE__EVENT_SOURCE_TYPE,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__SUCCESS_STATUS,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__FAILURE_TYPE__UNKNOWN_REGISTRATION_FAILURE_TYPE,
-                /* isEeaDevice= */ true);
+                /* isEeaDevice= */ true,
+                ENROLLMENT_ID);
 
         verifyLoggedEvent(
                 APP_PACKAGE_NAME,
@@ -247,13 +248,14 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 EVENT_SOURCE_TYPE,
                 SUCCESS_STATUS_CODE,
                 EEA_REGION_CODE,
+                HASHED_ENROLLMENT,
                 never());
     }
 
     @Test
     public void testLogRegistrationStatus_nullAppPackageName() {
-        mockCobaltLoggingFlags(mMockFlags, true);
-        mockMsmtRegistrationCobaltLoggingEnabled(mMockFlags, true);
+        mockCobaltLoggingFlags(true);
+        mockMsmtRegistrationCobaltLoggingEnabled(true);
         MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
 
         assertThrows(
@@ -266,13 +268,14 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__SOURCE_TYPE__EVENT_SOURCE_TYPE,
                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__FAILURE_STATUS,
                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__FAILURE_TYPE__PARSING_REGISTRATION_FAILURE_TYPE,
-                                /* isEeaDevice= */ true));
+                                /* isEeaDevice= */ true,
+                                ENROLLMENT_ID));
     }
 
     @Test
     public void testLogRegistrationStatus_negativeSourceTypeAndFailureType() {
-        mockCobaltLoggingFlags(mMockFlags, true);
-        mockMsmtRegistrationCobaltLoggingEnabled(mMockFlags, true);
+        mockCobaltLoggingFlags(true);
+        mockMsmtRegistrationCobaltLoggingEnabled(true);
         MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
 
         logger.logRegistrationStatus(
@@ -282,7 +285,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 /* sourceType= */ -1,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__FAILURE_STATUS,
                 /* errorCode= */ -1,
-                /* isEeaDevice= */ true);
+                /* isEeaDevice= */ true,
+                ENROLLMENT_ID);
 
         verifyLoggedEvent(
                 APP_PACKAGE_NAME,
@@ -290,13 +294,14 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 UNKNOWN_SOURCE_TYPE,
                 UNKNOWN_FAILURE_TYPE,
                 EEA_REGION_CODE,
+                HASHED_ENROLLMENT,
                 times(1));
     }
 
     @Test
     public void testLogRegistrationStatus_webSourceRegistrationSuccessLogged() {
-        mockCobaltLoggingFlags(mMockFlags, true);
-        mockMsmtRegistrationCobaltLoggingEnabled(mMockFlags, true);
+        mockCobaltLoggingFlags(true);
+        mockMsmtRegistrationCobaltLoggingEnabled(true);
         MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
 
         logger.logRegistrationStatus(
@@ -306,7 +311,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__SOURCE_TYPE__EVENT_SOURCE_TYPE,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__SUCCESS_STATUS,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__FAILURE_TYPE__UNKNOWN_REGISTRATION_FAILURE_TYPE,
-                /* isEeaDevice= */ true);
+                /* isEeaDevice= */ true,
+                ENROLLMENT_ID);
 
         verifyLoggedEvent(
                 APP_PACKAGE_NAME,
@@ -314,13 +320,14 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 EVENT_SOURCE_TYPE,
                 SUCCESS_STATUS_CODE,
                 EEA_REGION_CODE,
+                HASHED_ENROLLMENT,
                 times(1));
     }
 
     @Test
     public void testLogRegistrationStatus_appTriggerRegistrationParsingFailureLogged() {
-        mockCobaltLoggingFlags(mMockFlags, true);
-        mockMsmtRegistrationCobaltLoggingEnabled(mMockFlags, true);
+        mockCobaltLoggingFlags(true);
+        mockMsmtRegistrationCobaltLoggingEnabled(true);
         MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
 
         logger.logRegistrationStatus(
@@ -330,7 +337,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__SOURCE_TYPE__UNKNOWN_SOURCE_TYPE,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__FAILURE_STATUS,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__FAILURE_TYPE__PARSING_REGISTRATION_FAILURE_TYPE,
-                /* isEeaDevice= */ false);
+                /* isEeaDevice= */ false,
+                ENROLLMENT_ID);
 
         verifyLoggedEvent(
                 APP_PACKAGE_NAME,
@@ -338,13 +346,14 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 TRIGGER_TYPE_CODE,
                 PARSING_FAILURE_TYPE,
                 ROW_REGION_CODE,
+                HASHED_ENROLLMENT,
                 times(1));
     }
 
     @Test
     public void testLogRegistrationStatus_unknownSurfaceAndTypeLogged() {
-        mockCobaltLoggingFlags(mMockFlags, true);
-        mockMsmtRegistrationCobaltLoggingEnabled(mMockFlags, true);
+        mockCobaltLoggingFlags(true);
+        mockMsmtRegistrationCobaltLoggingEnabled(true);
         MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
 
         logger.logRegistrationStatus(
@@ -354,7 +363,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__SOURCE_TYPE__UNKNOWN_SOURCE_TYPE,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__UNKNOWN_STATUS,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__FAILURE_TYPE__UNKNOWN_REGISTRATION_FAILURE_TYPE,
-                /* isEeaDevice= */ true);
+                /* isEeaDevice= */ true,
+                ENROLLMENT_ID);
 
         verifyLoggedEvent(
                 APP_PACKAGE_NAME,
@@ -362,12 +372,39 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 UNKNOWN_TYPE,
                 UNKNOWN_STATUS_CODE,
                 EEA_REGION_CODE,
+                HASHED_ENROLLMENT,
+                times(1));
+    }
+
+    @Test
+    public void testLogRegistrationStatus_nullEnrollment() {
+        mockCobaltLoggingFlags(true);
+        mockMsmtRegistrationCobaltLoggingEnabled(true);
+        MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
+
+        logger.logRegistrationStatus(
+                APP_PACKAGE_NAME,
+                UNKNOWN_SURFACE_TYPE,
+                AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__UNKNOWN_REGISTRATION,
+                AD_SERVICES_MEASUREMENT_REGISTRATIONS__SOURCE_TYPE__UNKNOWN_SOURCE_TYPE,
+                AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__UNKNOWN_STATUS,
+                AD_SERVICES_MEASUREMENT_REGISTRATIONS__FAILURE_TYPE__UNKNOWN_REGISTRATION_FAILURE_TYPE,
+                /* isEeaDevice= */ true,
+                /* enrollmentId= */ null);
+
+        verifyLoggedEvent(
+                APP_PACKAGE_NAME,
+                UNKNOWN_SURFACE_TYPE,
+                UNKNOWN_TYPE,
+                UNKNOWN_STATUS_CODE,
+                EEA_REGION_CODE,
+                /* enrollment= */ 0,
                 times(1));
     }
 
     @Test
     public void testLogRegistrationStatus_cobaltLoggingDisabled() {
-        mockCobaltLoggingEnabled(mMockFlags, false);
+        mockCobaltLoggingEnabled(false);
         MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
 
         logger.logRegistrationStatus(
@@ -377,7 +414,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__SOURCE_TYPE__EVENT_SOURCE_TYPE,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__SUCCESS_STATUS,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__FAILURE_TYPE__UNKNOWN_REGISTRATION_FAILURE_TYPE,
-                /* isEeaDevice= */ true);
+                /* isEeaDevice= */ true,
+                ENROLLMENT_ID);
 
         verifyLoggedEvent(
                 APP_PACKAGE_NAME,
@@ -385,13 +423,14 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 EVENT_SOURCE_TYPE,
                 SUCCESS_STATUS_CODE,
                 EEA_REGION_CODE,
+                HASHED_ENROLLMENT,
                 never());
     }
 
     @Test
     public void testLogRegistrationStatus_msmtRegistrationCobaltLogDisabled() {
-        mockCobaltLoggingEnabled(mMockFlags, true);
-        mockMsmtRegistrationCobaltLoggingEnabled(mMockFlags, false);
+        mockCobaltLoggingEnabled(true);
+        mockMsmtRegistrationCobaltLoggingEnabled(false);
         MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
 
         logger.logRegistrationStatus(
@@ -401,7 +440,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__SOURCE_TYPE__UNKNOWN_SOURCE_TYPE,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__FAILURE_STATUS,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__FAILURE_TYPE__PARSING_REGISTRATION_FAILURE_TYPE,
-                /* isEeaDevice= */ false);
+                /* isEeaDevice= */ false,
+                ENROLLMENT_ID);
 
         verifyLoggedEvent(
                 APP_PACKAGE_NAME,
@@ -409,6 +449,7 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 TRIGGER_TYPE_CODE,
                 PARSING_FAILURE_TYPE,
                 ROW_REGION_CODE,
+                HASHED_ENROLLMENT,
                 never());
     }
 
@@ -418,18 +459,20 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
             int sourceTriggerType,
             int statusEvent,
             int region,
+            int enrollment,
             VerificationMode mode) {
         verify(mMockCobaltLogger, mode)
                 .logString(
                         METRIC_ID,
                         appPackageName,
-                        ImmutableList.of(surfaceType, sourceTriggerType, statusEvent, region));
+                        ImmutableList.of(
+                                surfaceType, sourceTriggerType, statusEvent, region, enrollment));
     }
 
     @Test
-    public void testLogAttributionStatus_negativeErrorCode() {
-        mockCobaltLoggingFlags(mMockFlags, true);
-        mockMsmtAttributionCobaltLoggingEnabled(mMockFlags, true);
+    public void testLogAttributionStatus_nullEnrollment() {
+        mockCobaltLoggingFlags(true);
+        mockMsmtAttributionCobaltLoggingEnabled(true);
         MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
 
         logger.logAttributionStatusWithAppName(
@@ -437,7 +480,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 AD_SERVICES_MEASUREMENT_ATTRIBUTION__ATTRIBUTION_SURFACE_COMBINATION__WEB_APP_ATTRIBUTION_SURFACE_COMBINATION,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__SOURCE_TYPE__EVENT_SOURCE_TYPE,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__FAILURE_STATUS,
-                /* errorCode= */ -10);
+                AD_SERVICES_MEASUREMENT_ATTRIBUTION__FAILURE_TYPE__UNKNOWN_ATTRIBUTION_FAILURE_TYPE,
+                /* enrollmentId= */ null);
 
         verify(mMockCobaltLogger, times(1))
                 .logString(
@@ -446,13 +490,39 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                         ImmutableList.of(
                                 ATTRIBUTION_WEB_APP_SURFACE,
                                 ATTRIBUTION_EVENT_SOURCE_TYPE,
-                                ATTRIBUTION_UNKNOWN_FAILURE_STATUS_CODE));
+                                ATTRIBUTION_UNKNOWN_FAILURE_STATUS_CODE,
+                                /* enrollment= */ 0));
+    }
+
+    @Test
+    public void testLogAttributionStatus_negativeErrorCode() {
+        mockCobaltLoggingFlags(true);
+        mockMsmtAttributionCobaltLoggingEnabled(true);
+        MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
+
+        logger.logAttributionStatusWithAppName(
+                APP_PACKAGE_NAME,
+                AD_SERVICES_MEASUREMENT_ATTRIBUTION__ATTRIBUTION_SURFACE_COMBINATION__WEB_APP_ATTRIBUTION_SURFACE_COMBINATION,
+                AD_SERVICES_MEASUREMENT_REGISTRATIONS__SOURCE_TYPE__EVENT_SOURCE_TYPE,
+                AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__FAILURE_STATUS,
+                /* errorCode= */ -10,
+                ENROLLMENT_ID);
+
+        verify(mMockCobaltLogger, times(1))
+                .logString(
+                        ATTRIBUTION_METRIC_ID,
+                        APP_PACKAGE_NAME,
+                        ImmutableList.of(
+                                ATTRIBUTION_WEB_APP_SURFACE,
+                                ATTRIBUTION_EVENT_SOURCE_TYPE,
+                                ATTRIBUTION_UNKNOWN_FAILURE_STATUS_CODE,
+                                HASHED_ENROLLMENT));
     }
 
     @Test
     public void testLogAttributionStatus_failureStatusLogged() {
-        mockCobaltLoggingFlags(mMockFlags, true);
-        mockMsmtAttributionCobaltLoggingEnabled(mMockFlags, true);
+        mockCobaltLoggingFlags(true);
+        mockMsmtAttributionCobaltLoggingEnabled(true);
         MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
 
         logger.logAttributionStatusWithAppName(
@@ -460,7 +530,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 AD_SERVICES_MEASUREMENT_ATTRIBUTION__ATTRIBUTION_SURFACE_COMBINATION__APP_APP_ATTRIBUTION_SURFACE_COMBINATION,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__SOURCE_TYPE__NAVIGATION_SOURCE_TYPE,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__FAILURE_STATUS,
-                AD_SERVICES_MEASUREMENT_ATTRIBUTION__FAILURE_TYPE__NO_MATCHING_SOURCE_ATTRIBUTION_FAILURE_TYPE);
+                AD_SERVICES_MEASUREMENT_ATTRIBUTION__FAILURE_TYPE__NO_MATCHING_SOURCE_ATTRIBUTION_FAILURE_TYPE,
+                ENROLLMENT_ID);
 
         verify(mMockCobaltLogger, times(1))
                 .logString(
@@ -469,13 +540,14 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                         ImmutableList.of(
                                 ATTRIBUTION_APP_APP_SURFACE,
                                 ATTRIBUTION_NAVIGATION_SOURCE_TYPE,
-                                ATTRIBUTION_NO_MATCHING_SOURCE_FAILURE_STATUS_CODE));
+                                ATTRIBUTION_NO_MATCHING_SOURCE_FAILURE_STATUS_CODE,
+                                HASHED_ENROLLMENT));
     }
 
     @Test
     public void testLogAttributionStatus_successStatusLogged() {
-        mockCobaltLoggingFlags(mMockFlags, true);
-        mockMsmtAttributionCobaltLoggingEnabled(mMockFlags, true);
+        mockCobaltLoggingFlags(true);
+        mockMsmtAttributionCobaltLoggingEnabled(true);
         MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
 
         logger.logAttributionStatusWithAppName(
@@ -483,7 +555,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 AD_SERVICES_MEASUREMENT_ATTRIBUTION__ATTRIBUTION_SURFACE_COMBINATION__APP_APP_ATTRIBUTION_SURFACE_COMBINATION,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__SOURCE_TYPE__NAVIGATION_SOURCE_TYPE,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__SUCCESS_STATUS,
-                AD_SERVICES_MEASUREMENT_ATTRIBUTION__FAILURE_TYPE__UNKNOWN_ATTRIBUTION_FAILURE_TYPE);
+                AD_SERVICES_MEASUREMENT_ATTRIBUTION__FAILURE_TYPE__UNKNOWN_ATTRIBUTION_FAILURE_TYPE,
+                ENROLLMENT_ID);
 
         verify(mMockCobaltLogger, times(1))
                 .logString(
@@ -492,13 +565,14 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                         ImmutableList.of(
                                 ATTRIBUTION_APP_APP_SURFACE,
                                 ATTRIBUTION_NAVIGATION_SOURCE_TYPE,
-                                ATTRIBUTION_SUCCESS_STATUS_CODE));
+                                ATTRIBUTION_SUCCESS_STATUS_CODE,
+                                HASHED_ENROLLMENT));
     }
 
     @Test
     public void testLogAttributionStatus_successAggregateReportLogged() {
-        mockCobaltLoggingFlags(mMockFlags, true);
-        mockMsmtAttributionCobaltLoggingEnabled(mMockFlags, true);
+        mockCobaltLoggingFlags(true);
+        mockMsmtAttributionCobaltLoggingEnabled(true);
         MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
 
         logger.logAttributionStatusWithAppName(
@@ -506,7 +580,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 AD_SERVICES_MEASUREMENT_ATTRIBUTION__ATTRIBUTION_SURFACE_COMBINATION__APP_APP_ATTRIBUTION_SURFACE_COMBINATION,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__SOURCE_TYPE__NAVIGATION_SOURCE_TYPE,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__AGGREGATE_REPORT_GENERATED_SUCCESS_STATUS,
-                AD_SERVICES_MEASUREMENT_ATTRIBUTION__FAILURE_TYPE__UNKNOWN_ATTRIBUTION_FAILURE_TYPE);
+                AD_SERVICES_MEASUREMENT_ATTRIBUTION__FAILURE_TYPE__UNKNOWN_ATTRIBUTION_FAILURE_TYPE,
+                ENROLLMENT_ID);
 
         verify(mMockCobaltLogger, times(1))
                 .logString(
@@ -515,13 +590,14 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                         ImmutableList.of(
                                 ATTRIBUTION_APP_APP_SURFACE,
                                 ATTRIBUTION_NAVIGATION_SOURCE_TYPE,
-                                AGGREGATE_REPORT_GENERATED_SUCCESS_STATUS));
+                                AGGREGATE_REPORT_GENERATED_SUCCESS_STATUS,
+                                HASHED_ENROLLMENT));
     }
 
     @Test
     public void testLogAttributionStatus_successEventReportLogged() {
-        mockCobaltLoggingFlags(mMockFlags, true);
-        mockMsmtAttributionCobaltLoggingEnabled(mMockFlags, true);
+        mockCobaltLoggingFlags(true);
+        mockMsmtAttributionCobaltLoggingEnabled(true);
         MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
 
         logger.logAttributionStatusWithAppName(
@@ -529,7 +605,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 AD_SERVICES_MEASUREMENT_ATTRIBUTION__ATTRIBUTION_SURFACE_COMBINATION__APP_APP_ATTRIBUTION_SURFACE_COMBINATION,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__SOURCE_TYPE__NAVIGATION_SOURCE_TYPE,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__EVENT_REPORT_GENERATED_SUCCESS_STATUS,
-                AD_SERVICES_MEASUREMENT_ATTRIBUTION__FAILURE_TYPE__UNKNOWN_ATTRIBUTION_FAILURE_TYPE);
+                AD_SERVICES_MEASUREMENT_ATTRIBUTION__FAILURE_TYPE__UNKNOWN_ATTRIBUTION_FAILURE_TYPE,
+                ENROLLMENT_ID);
 
         verify(mMockCobaltLogger, times(1))
                 .logString(
@@ -538,13 +615,14 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                         ImmutableList.of(
                                 ATTRIBUTION_APP_APP_SURFACE,
                                 ATTRIBUTION_NAVIGATION_SOURCE_TYPE,
-                                EVENT_REPORT_GENERATED_SUCCESS_STATUS));
+                                EVENT_REPORT_GENERATED_SUCCESS_STATUS,
+                                HASHED_ENROLLMENT));
     }
 
     @Test
     public void testLogAttributionStatus_successEventAndAggregateReportLogged() {
-        mockCobaltLoggingFlags(mMockFlags, true);
-        mockMsmtAttributionCobaltLoggingEnabled(mMockFlags, true);
+        mockCobaltLoggingFlags(true);
+        mockMsmtAttributionCobaltLoggingEnabled(true);
         MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
 
         logger.logAttributionStatusWithAppName(
@@ -552,7 +630,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 AD_SERVICES_MEASUREMENT_ATTRIBUTION__ATTRIBUTION_SURFACE_COMBINATION__APP_APP_ATTRIBUTION_SURFACE_COMBINATION,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__SOURCE_TYPE__NAVIGATION_SOURCE_TYPE,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__AGGREGATE_AND_EVENT_REPORTS_GENERATED_SUCCESS_STATUS,
-                AD_SERVICES_MEASUREMENT_ATTRIBUTION__FAILURE_TYPE__UNKNOWN_ATTRIBUTION_FAILURE_TYPE);
+                AD_SERVICES_MEASUREMENT_ATTRIBUTION__FAILURE_TYPE__UNKNOWN_ATTRIBUTION_FAILURE_TYPE,
+                ENROLLMENT_ID);
 
         verify(mMockCobaltLogger, times(1))
                 .logString(
@@ -561,13 +640,14 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                         ImmutableList.of(
                                 ATTRIBUTION_APP_APP_SURFACE,
                                 ATTRIBUTION_NAVIGATION_SOURCE_TYPE,
-                                AGGREGATE_AND_EVENT_REPORTS_GENERATED_SUCCESS_STATUS));
+                                AGGREGATE_AND_EVENT_REPORTS_GENERATED_SUCCESS_STATUS,
+                                HASHED_ENROLLMENT));
     }
 
     @Test
     public void testLogAttributionStatus_unknownSurfaceAndTypeLogged() {
-        mockCobaltLoggingFlags(mMockFlags, true);
-        mockMsmtAttributionCobaltLoggingEnabled(mMockFlags, true);
+        mockCobaltLoggingFlags(true);
+        mockMsmtAttributionCobaltLoggingEnabled(true);
         MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
 
         logger.logAttributionStatusWithAppName(
@@ -575,7 +655,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 AD_SERVICES_MEASUREMENT_ATTRIBUTION__ATTRIBUTION_SURFACE_COMBINATION__UNKNOWN_ATTRIBUTION_SURFACE_COMBINATION,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__SOURCE_TYPE__UNKNOWN_SOURCE_TYPE,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__UNKNOWN_STATUS,
-                AD_SERVICES_MEASUREMENT_REGISTRATIONS__FAILURE_TYPE__UNKNOWN_REGISTRATION_FAILURE_TYPE);
+                AD_SERVICES_MEASUREMENT_REGISTRATIONS__FAILURE_TYPE__UNKNOWN_REGISTRATION_FAILURE_TYPE,
+                ENROLLMENT_ID);
 
         verify(mMockCobaltLogger, times(1))
                 .logString(
@@ -584,12 +665,13 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                         ImmutableList.of(
                                 ATTRIBUTION_UNKNOWN_SURFACE_TYPE,
                                 ATTRIBUTION_UNKNOWN_SOURCE_TYPE,
-                                ATTRIBUTION_UNKNOWN_STATUS_CODE));
+                                ATTRIBUTION_UNKNOWN_STATUS_CODE,
+                                HASHED_ENROLLMENT));
     }
 
     @Test
     public void testLogAttributionStatus_cobaltLoggingDisabled() {
-        mockCobaltLoggingEnabled(mMockFlags, false);
+        mockCobaltLoggingEnabled(false);
         MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
 
         logger.logAttributionStatusWithAppName(
@@ -597,7 +679,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 AD_SERVICES_MEASUREMENT_ATTRIBUTION__ATTRIBUTION_SURFACE_COMBINATION__UNKNOWN_ATTRIBUTION_SURFACE_COMBINATION,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__SOURCE_TYPE__UNKNOWN_SOURCE_TYPE,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__UNKNOWN_STATUS,
-                AD_SERVICES_MEASUREMENT_REGISTRATIONS__FAILURE_TYPE__UNKNOWN_REGISTRATION_FAILURE_TYPE);
+                AD_SERVICES_MEASUREMENT_REGISTRATIONS__FAILURE_TYPE__UNKNOWN_REGISTRATION_FAILURE_TYPE,
+                ENROLLMENT_ID);
 
         verify(mMockCobaltLogger, never())
                 .logString(
@@ -606,13 +689,14 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                         ImmutableList.of(
                                 ATTRIBUTION_UNKNOWN_SURFACE_TYPE,
                                 ATTRIBUTION_UNKNOWN_SOURCE_TYPE,
-                                ATTRIBUTION_UNKNOWN_STATUS_CODE));
+                                ATTRIBUTION_UNKNOWN_STATUS_CODE,
+                                HASHED_ENROLLMENT));
     }
 
     @Test
     public void testLogAttributionStatus_msmtAttributionCobaltLogDisabled() {
-        mockCobaltLoggingEnabled(mMockFlags, true);
-        mockMsmtAttributionCobaltLoggingEnabled(mMockFlags, false);
+        mockCobaltLoggingEnabled(true);
+        mockMsmtAttributionCobaltLoggingEnabled(false);
         MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
 
         logger.logAttributionStatusWithAppName(
@@ -620,7 +704,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 AD_SERVICES_MEASUREMENT_ATTRIBUTION__ATTRIBUTION_SURFACE_COMBINATION__UNKNOWN_ATTRIBUTION_SURFACE_COMBINATION,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__SOURCE_TYPE__UNKNOWN_SOURCE_TYPE,
                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__STATUS__UNKNOWN_STATUS,
-                AD_SERVICES_MEASUREMENT_REGISTRATIONS__FAILURE_TYPE__UNKNOWN_REGISTRATION_FAILURE_TYPE);
+                AD_SERVICES_MEASUREMENT_REGISTRATIONS__FAILURE_TYPE__UNKNOWN_REGISTRATION_FAILURE_TYPE,
+                ENROLLMENT_ID);
 
         verify(mMockCobaltLogger, never())
                 .logString(
@@ -629,13 +714,14 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                         ImmutableList.of(
                                 ATTRIBUTION_UNKNOWN_SURFACE_TYPE,
                                 ATTRIBUTION_UNKNOWN_SOURCE_TYPE,
-                                ATTRIBUTION_UNKNOWN_STATUS_CODE));
+                                ATTRIBUTION_UNKNOWN_STATUS_CODE,
+                                HASHED_ENROLLMENT));
     }
 
     @Test
     public void testLogReportingStatus_failureStatusLogged() {
-        mockCobaltLoggingFlags(mMockFlags, true);
-        mockMsmtReportingCobaltLoggingEnabled(mMockFlags, true);
+        mockCobaltLoggingFlags(true);
+        mockMsmtReportingCobaltLoggingEnabled(true);
         MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
 
         logger.logReportingStatusWithAppName(
@@ -657,8 +743,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
 
     @Test
     public void testLogReportingStatus_successStatusLogged() {
-        mockCobaltLoggingFlags(mMockFlags, true);
-        mockMsmtReportingCobaltLoggingEnabled(mMockFlags, true);
+        mockCobaltLoggingFlags(true);
+        mockMsmtReportingCobaltLoggingEnabled(true);
         MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
 
         logger.logReportingStatusWithAppName(
@@ -680,8 +766,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
 
     @Test
     public void testLogReportingStatus_unknownSurfaceAndTypeLogged() {
-        mockCobaltLoggingFlags(mMockFlags, true);
-        mockMsmtReportingCobaltLoggingEnabled(mMockFlags, true);
+        mockCobaltLoggingFlags(true);
+        mockMsmtReportingCobaltLoggingEnabled(true);
         MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
 
         logger.logReportingStatusWithAppName(
@@ -703,7 +789,7 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
 
     @Test
     public void testLogReportingStatus_cobaltLoggingDisabled() {
-        mockCobaltLoggingEnabled(mMockFlags, false);
+        mockCobaltLoggingEnabled(false);
         MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
 
         logger.logReportingStatusWithAppName(
@@ -725,8 +811,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
 
     @Test
     public void testLogReportingStatus_msmtReportingCobaltLogDisabled() {
-        mockCobaltLoggingEnabled(mMockFlags, true);
-        mockMsmtReportingCobaltLoggingEnabled(mMockFlags, false);
+        mockCobaltLoggingEnabled(true);
+        mockMsmtReportingCobaltLoggingEnabled(false);
         MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
 
         logger.logReportingStatusWithAppName(
@@ -744,6 +830,26 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                                 UNKNOWN_REPORT_TYPE,
                                 UNKNOWN_REPORT_UPLOAD_METHOD,
                                 REPORTING_UNKNOWN_STATUS_CODE));
+    }
+
+    private void mockCobaltLoggingFlags(boolean value) {
+        mocker.mockAllCobaltLoggingFlags(value);
+    }
+
+    private void mockCobaltLoggingEnabled(boolean value) {
+        mocker.mockGetCobaltLoggingEnabled(value);
+    }
+
+    private void mockMsmtRegistrationCobaltLoggingEnabled(boolean value) {
+        when(mMockFlags.getMsmtRegistrationCobaltLoggingEnabled()).thenReturn(value);
+    }
+
+    private void mockMsmtAttributionCobaltLoggingEnabled(boolean value) {
+        when(mMockFlags.getMsmtAttributionCobaltLoggingEnabled()).thenReturn(value);
+    }
+
+    private void mockMsmtReportingCobaltLoggingEnabled(boolean value) {
+        when(mMockFlags.getMsmtReportingCobaltLoggingEnabled()).thenReturn(value);
     }
 
     private static void mockThrowExceptionOnGetCobaltLogger() {

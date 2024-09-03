@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.stats;
 
+import android.annotation.Nullable;
 
 import com.android.adservices.cobalt.AppNameApiErrorLogger;
 import com.android.adservices.cobalt.MeasurementCobaltLogger;
@@ -33,8 +34,10 @@ import com.android.adservices.service.stats.pas.EncodingJobRunStats;
 import com.android.adservices.service.stats.pas.EncodingJsExecutionStats;
 import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedStats;
 import com.android.internal.annotations.VisibleForTesting;
 
+import java.util.Objects;
 import java.util.concurrent.Executor;
 
 import javax.annotation.concurrent.ThreadSafe;
@@ -78,10 +81,15 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     public void logApiCallStats(ApiCallStats apiCallStats) {
         mStatsdAdServicesLogger.logApiCallStats(apiCallStats);
 
+        // Package name should never be null in "real life" (as ApiCallStats builder would prevent
+        // it), but it doesn't hurt to check - in particular, it could be null on unit tests if
+        // mocked.
+        String packageName = apiCallStats.getAppPackageName();
+        com.android.internal.util.Preconditions.checkArgument(
+                packageName != null, "ApiCallStats have null packageName: %s", apiCallStats);
+
         cobaltLogAppNameApiError(
-                apiCallStats.getAppPackageName(),
-                apiCallStats.getApiName(),
-                apiCallStats.getResultCode());
+                packageName, apiCallStats.getApiName(), apiCallStats.getResultCode());
     }
 
     @Override
@@ -97,6 +105,8 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     @Override
     public void logFledgeApiCallStats(
             int apiName, String appPackageName, int resultCode, int latencyMs) {
+        Objects.requireNonNull(appPackageName, "appPackageName cannot be null");
+
         mStatsdAdServicesLogger.logFledgeApiCallStats(
                 apiName, appPackageName, resultCode, latencyMs);
 
@@ -105,11 +115,11 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
 
     @Override
     public void logMeasurementRegistrationsResponseSize(
-            MeasurementRegistrationResponseStats stats) {
-        mStatsdAdServicesLogger.logMeasurementRegistrationsResponseSize(stats);
+            MeasurementRegistrationResponseStats stats, @Nullable String enrollmentId) {
+        mStatsdAdServicesLogger.logMeasurementRegistrationsResponseSize(stats, enrollmentId);
 
         // Log to Cobalt system in parallel with existing logging.
-        cobaltLogMsmtRegistration(stats);
+        cobaltLogMsmtRegistration(stats, enrollmentId);
     }
 
     @Override
@@ -171,9 +181,11 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
 
     @Override
     public void logMeasurementAttributionStats(
-            MeasurementAttributionStats measurementAttributionStats) {
-        mStatsdAdServicesLogger.logMeasurementAttributionStats(measurementAttributionStats);
-        cobaltLogMsmtAttribution(measurementAttributionStats);
+            MeasurementAttributionStats measurementAttributionStats,
+            @Nullable String enrollmentId) {
+        mStatsdAdServicesLogger.logMeasurementAttributionStats(
+                measurementAttributionStats, enrollmentId);
+        cobaltLogMsmtAttribution(measurementAttributionStats, enrollmentId);
     }
 
     @Override
@@ -385,11 +397,6 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     }
 
     @Override
-    public void logUpdateSignalsApiCalledStats(UpdateSignalsApiCalledStats stats) {
-        mStatsdAdServicesLogger.logUpdateSignalsApiCalledStats(stats);
-    }
-
-    @Override
     public void logEncodingJsExecutionStats(EncodingJsExecutionStats stats) {
         mStatsdAdServicesLogger.logEncodingJsExecutionStats(stats);
     }
@@ -397,6 +404,11 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     @Override
     public void logEncodingJobRunStats(EncodingJobRunStats stats) {
         mStatsdAdServicesLogger.logEncodingJobRunStats(stats);
+    }
+
+    @Override
+    public void logUpdateSignalsProcessReportedStats(UpdateSignalsProcessReportedStats stats) {
+        mStatsdAdServicesLogger.logUpdateSignalsProcessReportedStats(stats);
     }
 
     @Override
@@ -414,8 +426,19 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
         mStatsdAdServicesLogger.logReportImpressionApiCalledStats(stats);
     }
 
+    @Override
+    public void logUpdateSignalsApiCalledStats(UpdateSignalsApiCalledStats stats) {
+        mStatsdAdServicesLogger.logUpdateSignalsApiCalledStats(stats);
+    }
+
     /** Logs api call error status using {@code CobaltLogger}. */
-    private void cobaltLogAppNameApiError(String appPackageName, int apiName, int errorCode) {
+    @VisibleForTesting // used by testCobaltLogAppNameApiError_nullPackageName only
+    void cobaltLogAppNameApiError(String appPackageName, int apiName, int errorCode) {
+        // Callers should have checked for appPackageName already, but it doesn't hurt to double
+        // check (otherwise it would have been thrown on background
+        Objects.requireNonNull(
+                appPackageName, "INTERNAL ERROR: caller didn't check for null appPackageName");
+
         sBackgroundExecutor.execute(
                 () -> {
                     AppNameApiErrorLogger appNameApiErrorLogger =
@@ -426,7 +449,8 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     }
 
     /** Logs measurement registration status using {@code CobaltLogger}. */
-    private void cobaltLogMsmtRegistration(MeasurementRegistrationResponseStats stats) {
+    private void cobaltLogMsmtRegistration(
+            MeasurementRegistrationResponseStats stats, @Nullable String enrollmentId) {
         sBackgroundExecutor.execute(
                 () -> {
                     MeasurementCobaltLogger measurementCobaltLogger =
@@ -438,12 +462,14 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
                             /* sourceType= */ stats.getInteractionType(),
                             /* statusCode= */ stats.getRegistrationStatus(),
                             /* errorCode= */ stats.getFailureType(),
-                            /* isEeaDevice= */ FlagsFactory.getFlags().isEeaDevice());
+                            /* isEeaDevice= */ FlagsFactory.getFlags().isEeaDevice(),
+                            enrollmentId);
                 });
     }
 
     /** Logs measurement attribution status using {@code CobaltLogger}. */
-    private void cobaltLogMsmtAttribution(MeasurementAttributionStats stats) {
+    private void cobaltLogMsmtAttribution(
+            MeasurementAttributionStats stats, @Nullable String enrollmentId) {
         sBackgroundExecutor.execute(
                 () -> {
                     MeasurementCobaltLogger measurementCobaltLogger =
@@ -453,7 +479,8 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
                             /* attrSurfaceType= */ stats.getSurfaceType(),
                             /* sourceType= */ stats.getSourceType(),
                             /* statusCode= */ stats.getResult(),
-                            /* errorCode= */ stats.getFailureType());
+                            /* errorCode= */ stats.getFailureType(),
+                            enrollmentId);
                 });
     }
 
