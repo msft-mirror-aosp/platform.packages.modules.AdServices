@@ -16,20 +16,22 @@
 
 package com.android.adservices.service.profiling;
 
-import static org.junit.Assert.assertTrue;
+import static com.google.common.truth.Truth.assertThat;
+
+import com.android.adservices.common.AdServicesUnitTestCase;
 
 import org.junit.Test;
 
-public class ProfilingTest {
+public final class ProfilingTest extends AdServicesUnitTestCase {
     @Test
     public void testStartReturnsActualStopWatch() {
         Profiler profiler = Profiler.createInstance("foo");
-        assertTrue(profiler.start("myName") instanceof LogcatStopWatch);
+        assertThat(profiler.start("myName")).isInstanceOf(LogcatStopWatch.class);
     }
 
     @Test
     public void testStartReturnsFakeStopWatch() {
         Profiler profiler = Profiler.createNoOpInstance("foo");
-        assertTrue(profiler.start("myName") instanceof FakeStopWatch);
+        assertThat(profiler.start("myName")).isInstanceOf(FakeStopWatch.class);
     }
 }
