@@ -18,7 +18,7 @@ package com.android.adservices.service.common.bhttp;
 
 import java.util.Arrays;
 
-public class BinaryHttpTestUtil {
+public final class BinaryHttpTestUtil {
 
     static byte[] combineSections(byte[]... sections) {
         int pointer = 0;

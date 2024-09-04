@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
+import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
@@ -30,6 +31,7 @@ import android.os.Process;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -53,6 +55,9 @@ public class PackageManagerHelperUnitTest {
                             "com.android.property_sdkprovider_classname_not_present_1"));
     private PackageManagerHelper mPackageManagerHelper;
     private int mClientAppUid;
+
+    @Rule(order = 0)
+    public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
 
     @Before
     public void setUp() {

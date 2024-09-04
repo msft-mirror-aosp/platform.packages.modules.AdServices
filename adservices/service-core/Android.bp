@@ -159,6 +159,7 @@ android_library {
         "framework-sdksandbox.impl",
         "framework-ondevicepersonalization",
         "framework-statsd.stubs.module_lib", // For WW logging
+        "gson",
         "jsr305",
         "auto_value_annotations",
     ],
@@ -192,7 +193,6 @@ android_library {
     lint: {
         extra_check_modules: ["AdServicesProdLintChecker"],
         baseline_filename: "lint-baseline.xml",
-
     },
 }
 

@@ -37,6 +37,7 @@ import com.android.adservices.common.AdservicesTestHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -121,6 +122,7 @@ public class TopicsEpochComputationOnDeviceClassifier {
 
     @Test
     @FlakyTest(bugId = 290122696)
+    @Ignore("b/353956086")
     public void testEpochComputation() throws Exception {
         // The Test App has 1 SDK: sdk3
         // sdk3 calls the Topics API.

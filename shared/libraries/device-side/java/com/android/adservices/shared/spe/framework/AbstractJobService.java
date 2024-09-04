@@ -16,6 +16,7 @@
 
 package com.android.adservices.shared.spe.framework;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_FUTURE_CANCELLATION_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_EXECUTION_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_JOB_ON_STOP_EXECUTION_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
@@ -121,9 +122,8 @@ public abstract class AbstractJobService extends JobService {
         // Cancel the unfinished future for the same job. This should rarely happen due to
         // JobScheduler doesn't call onStartJob() again before the end of previous call on the same
         // job (with the same job ID). Nevertheless, do the defensive programming here.
-        if (executionFuture != null) {
-            executionFuture.cancel(/* mayInterruptIfRunning= */ true);
-        }
+        safelyCancelFuture(executionFuture);
+
         executionFuture = worker.getExecutionFuture(this, convertJobParameters(params));
         mRunningFuturesMap.put(jobId, executionFuture);
 
@@ -150,11 +150,10 @@ public abstract class AbstractJobService extends JobService {
             return false;
         }
 
-        // Cancel the running execution future.
+        // Cancel the execution future if it hasn't started. Let the running future complete
+        // gracefully.
         ListenableFuture<ExecutionResult> executionFuture = mRunningFuturesMap.get(jobId);
-        if (executionFuture != null) {
-            executionFuture.cancel(/* mayInterruptIfRunning= */ true);
-        }
+        safelyCancelFuture(executionFuture);
 
         // Execute customized logic if the execution is stopped by the JobScheduler.
         // TODO(b/326150705): Add a callback for this future and maybe log the result.
@@ -279,6 +278,23 @@ public abstract class AbstractJobService extends JobService {
                             return null;
                         },
                         mExecutor);
+    }
+
+    @VisibleForTesting
+    <T> void safelyCancelFuture(@Nullable ListenableFuture<T> executionFuture) {
+        if (executionFuture == null || executionFuture.isDone() || executionFuture.isCancelled()) {
+            return;
+        }
+
+        try {
+            executionFuture.cancel(/* mayInterruptIfRunning= */ false);
+        } catch (Exception e) {
+            LogUtil.e(e, "Execution Future Cancellation is failed. Safely exit...");
+            mErrorLogger.logErrorWithExceptionInfo(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SPE_FUTURE_CANCELLATION_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
+        }
     }
 
     @VisibleForTesting

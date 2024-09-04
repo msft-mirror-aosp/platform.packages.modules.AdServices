@@ -34,7 +34,7 @@ public final class IsAllowedProtectedSignalsAccessCommandTest
     private static final String ENROLLMENT_ID = "42";
 
     @Test
-    public void testRun_invalid() throws Exception {
+    public void testRun_invalid() {
         IsAllowedProtectedSignalsAccessCommand cmd = new IsAllowedProtectedSignalsAccessCommand();
 
         // no args
@@ -53,7 +53,7 @@ public final class IsAllowedProtectedSignalsAccessCommandTest
     }
 
     @Test
-    public void testRun_valid() throws Exception {
+    public void testRun_valid() {
         IsAllowedProtectedSignalsAccessCommand cmd = new IsAllowedProtectedSignalsAccessCommand();
         doReturn(true)
                 .when(

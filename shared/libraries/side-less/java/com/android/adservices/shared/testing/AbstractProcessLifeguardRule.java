@@ -17,6 +17,8 @@ package com.android.adservices.shared.testing;
 
 import com.android.adservices.shared.testing.Logger.RealLogger;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
@@ -24,6 +26,8 @@ import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 // TODO(b/340959631): add unit tests
 
@@ -43,10 +47,17 @@ public abstract class AbstractProcessLifeguardRule extends AbstractRule {
     // TODO(b/303112789): set mode through annotations as well, so subclasses can override
     protected final Mode mMode;
 
+    // TODO(b/340959631): should not be static
+    // TODO(b/303112789): should use SimpleSyncCallback, but it's not available on sideless
+    // Callback used by ProcessLifeguardRuleTest to block until DreamCatcher catches an exception
+    private static @Nullable CountDownLatch sBgFailureCallback;
+    private static final long EXPECTED_FAILURE_TIMEOUT_MS = 15_000;
+
     /** Default constructor. */
     protected AbstractProcessLifeguardRule(RealLogger logger, Mode mode) {
         super(logger);
         mMode = Objects.requireNonNull(mode);
+        mLog.i("Created with mode %s", mode);
     }
 
     /**
@@ -57,7 +68,7 @@ public abstract class AbstractProcessLifeguardRule extends AbstractRule {
      */
     protected abstract boolean isMainThread();
 
-    // TODO(b/303112789): add unit tests
+    // TODO(b/340959631): add unit tests
     protected void ignoreUncaughtBackgroundException(
             String testName,
             Thread thread,
@@ -93,7 +104,7 @@ public abstract class AbstractProcessLifeguardRule extends AbstractRule {
                         + " for list)");
     }
 
-    // TODO(b/303112789): add unit tests
+    // TODO(b/340959631): add unit tests
     protected UncaughtBackgroundException newUncaughtBackgroundException(
             String testName,
             Thread thread,
@@ -125,8 +136,16 @@ public abstract class AbstractProcessLifeguardRule extends AbstractRule {
                         + " for full stack trace and name of these tests");
     }
 
+    @VisibleForTesting
+    void expectBgFailure() {
+        sBgFailureCallback = new CountDownLatch(1);
+        mLog.i("expectBgFailure() called; setting sBgFailureCallback=%s", sBgFailureCallback);
+    }
+
     @Override
     protected void evaluate(Statement base, Description description) throws Throwable {
+        String testName = getTestName();
+        mLog.d("evaluate(%s)", testName);
         if (sRealHandler == null) {
             sRealHandler = Thread.getDefaultUncaughtExceptionHandler();
             if (sRealHandler != null) {
@@ -147,13 +166,27 @@ public abstract class AbstractProcessLifeguardRule extends AbstractRule {
         }
 
         Throwable testFailure = null;
-        String testName = getTestName();
         sAllTestsSoFar.add(testName);
         sTestsSinceLastUncaughtFailure.add(testName);
         try {
             base.evaluate();
         } catch (Throwable t) {
+            mLog.v("base.evaluate() threw %s", t);
             testFailure = t;
+        }
+
+        CountDownLatch callback = sBgFailureCallback;
+        if (callback != null) {
+            mLog.v("Waiting for sBgFailureCallback to be called...");
+            if (callback.await(EXPECTED_FAILURE_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
+                mLog.v("Called!");
+            } else {
+                mLog.e(
+                        "Not called in "
+                                + EXPECTED_FAILURE_TIMEOUT_MS
+                                + " ms - test will most likely fail");
+            }
+            sBgFailureCallback = null;
         }
 
         if (sMyHandler.uncaughtThrowable != null) {
@@ -186,18 +219,16 @@ public abstract class AbstractProcessLifeguardRule extends AbstractRule {
                         mLog.e("Invalid mode: %s", mMode);
                 }
             } else {
-                // TODO(b/303112789): add unit tests for this scenario
-                throw newUncaughtBackgroundException(
-                        testName,
-                        thread,
-                        sAllTestsSoFar,
-                        lastTests,
-                        testFailure,
-                        uncaughtThrowable);
+                // Don't need to log stack trace - uncaughtThrowable trace is already logged and
+                // testFailure is re-thrown...
+                mLog.w(
+                        "Ignoring uncaught failure (%s) because test case threw an exception (%s)"
+                                + " as well",
+                        uncaughtThrowable, testFailure);
+                throw testFailure;
             }
         }
         if (testFailure != null) {
-            // TODO(b/340959631): add unit tests for this scenario
             throw testFailure;
         }
     }
@@ -207,6 +238,8 @@ public abstract class AbstractProcessLifeguardRule extends AbstractRule {
         return getClass().getSimpleName()
                 + "[mLog="
                 + mLog
+                + ", sBgFailureCallback="
+                + sBgFailureCallback
                 + ", sRealHandler="
                 + sRealHandler
                 + ", sMyHandler="
@@ -231,15 +264,19 @@ public abstract class AbstractProcessLifeguardRule extends AbstractRule {
                     t,
                     isMain,
                     sRealHandler);
-            mLog.e(
-                    e,
+            mLog.d(
                     "%d tests executed since last failure: %s",
-                    sTestsSinceLastUncaughtFailure.size(),
-                    sTestsSinceLastUncaughtFailure);
-            mLog.e(e, "%d tests executed so far: %s", sAllTestsSoFar.size(), sAllTestsSoFar);
+                    sTestsSinceLastUncaughtFailure.size(), sTestsSinceLastUncaughtFailure);
+            mLog.v("%d tests executed so far: %s", sAllTestsSoFar.size(), sAllTestsSoFar);
             if (isMain && !(sRealHandler instanceof DreamCatcher)) {
                 mLog.e("passing uncaught exception to %s", sRealHandler);
                 sRealHandler.uncaughtException(t, e);
+            }
+
+            CountDownLatch callback = sBgFailureCallback;
+            if (callback != null) {
+                mLog.i("calling sBgFailureCallback: %s", callback);
+                callback.countDown();
             }
         }
 
@@ -249,6 +286,8 @@ public abstract class AbstractProcessLifeguardRule extends AbstractRule {
                     + uncaughtThrowable
                     + ", thread="
                     + thread
+                    + ", sBgFailureCallback="
+                    + sBgFailureCallback
                     + ", isMain="
                     + isMain
                     + "]";

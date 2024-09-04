@@ -21,6 +21,7 @@ import android.app.adservices.consent.ConsentParcel;
 import com.android.adservices.shared.storage.AtomicFileDatastore;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.adservices.LogUtil;
+import com.android.server.adservices.errorlogging.AdServicesErrorLoggerImpl;
 import com.android.server.adservices.feature.PrivacySandboxEnrollmentChannelCollection;
 import com.android.server.adservices.feature.PrivacySandboxFeatureType;
 import com.android.server.adservices.feature.PrivacySandboxUxCollection;
@@ -114,7 +115,11 @@ public final class ConsentManager {
         // Create the DataStore and initialize it.
         AtomicFileDatastore datastore =
                 new AtomicFileDatastore(
-                        consentDataStoreDir, STORAGE_XML_IDENTIFIER, STORAGE_VERSION, VERSION_KEY);
+                        consentDataStoreDir,
+                        STORAGE_XML_IDENTIFIER,
+                        STORAGE_VERSION,
+                        VERSION_KEY,
+                        AdServicesErrorLoggerImpl.getInstance());
         datastore.initialize();
         // TODO(b/259607624): implement a method in the datastore which would support
         // this exact scenario - if the value is null, return default value provided
@@ -632,6 +637,19 @@ public final class ConsentManager {
         setValueWithLock(IS_PA_DATA_RESET, isPaDataReset, /* callerName */ "isPaDataReset");
     }
 
+    @VisibleForTesting static final String MODULE_ENROLLMENT_STATE = "MODULE_ENROLLMENT_STATE";
+
+    /** Returns the enrollmentState. */
+    public String getModuleEnrollmentState() {
+        return getStringValueWithLock(MODULE_ENROLLMENT_STATE);
+    }
+
+    /** Set enrollmentState in system server. */
+    public void setModuleEnrollmentState(String enrollmentState) throws IOException {
+        setStringValueWithLock(
+                MODULE_ENROLLMENT_STATE, enrollmentState, /* callerName */ "enrollmentState");
+    }
+
     private boolean getValueWithLock(String key) {
         mReadWriteLock.readLock().lock();
         try {
@@ -653,6 +671,31 @@ public final class ConsentManager {
         mReadWriteLock.writeLock().lock();
         try {
             mDatastore.putBoolean(key, value);
+        } catch (IOException e) {
+            LogUtil.e(
+                    e,
+                    callerName
+                            + " operation failed due to IOException thrown by Datastore: "
+                            + e.getMessage());
+        } finally {
+            mReadWriteLock.writeLock().unlock();
+        }
+    }
+
+    private String getStringValueWithLock(String key) {
+        mReadWriteLock.readLock().lock();
+        try {
+            String value = mDatastore.getString(key);
+            return value != null ? value : "";
+        } finally {
+            mReadWriteLock.readLock().unlock();
+        }
+    }
+
+    private void setStringValueWithLock(String key, String value, String callerName) {
+        mReadWriteLock.writeLock().lock();
+        try {
+            mDatastore.putString(key, value);
         } catch (IOException e) {
             LogUtil.e(
                     e,

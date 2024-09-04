@@ -28,6 +28,8 @@ import android.annotation.CallbackExecutor;
 import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
+import android.annotation.SdkConstant;
+import android.annotation.SdkConstant.SdkConstantType;
 import android.annotation.SystemApi;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
@@ -228,6 +230,35 @@ public class AdServicesCommonManager {
     }
 
     /**
+     * Broadcast action: notify that a consent notification has been displayed to the user, and the
+     * user consent choices can be set by calling {@link #setAdServicesModuleUserChoices()}.
+     *
+     * @hide
+     */
+    @SdkConstant(SdkConstantType.BROADCAST_INTENT_ACTION)
+    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
+    @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
+    public static final String ACTION_ADSERVICES_NOTIFICATION_DISPLAY =
+            "android.adservices.common.action.ADSERVICES_NOTIFICATION_DISPLAY";
+
+    /**
+     * Activity Action: Open the consent landing page activity on notification click. In the
+     * activity, user consent choices can be set, depending on user action, by calling {@link
+     * #setAdServicesModuleUserChoices()}.
+     *
+     * <p>Input: nothing
+     *
+     * <p>Output: nothing
+     *
+     * @hide
+     */
+    @SdkConstant(SdkConstantType.ACTIVITY_INTENT_ACTION)
+    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
+    @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
+    public static final String ACTION_ADSERVICES_NOTIFICATION_CLICK =
+            "android.adservices.common.action.ADSERVICES_NOTIFICATION_CLICK";
+
+    /**
      * Sets overrides for the AdServices Module(s).
      *
      * <p>Api that will enable/disable adServices modules. Once the value is off, the modules being
@@ -249,7 +280,35 @@ public class AdServicesCommonManager {
             @NonNull NotificationTypeParams notificationType,
             @NonNull @CallbackExecutor Executor executor,
             @NonNull AdServicesOutcomeReceiver<AdServicesCommonResponse, Exception> callback) {
-        // TODO: Add implementation
+        Objects.requireNonNull(adServicesModuleStateList);
+        Objects.requireNonNull(notificationType);
+        Objects.requireNonNull(executor);
+        Objects.requireNonNull(callback);
+
+        final IAdServicesCommonService service = getService();
+        try {
+            service.setAdServicesModuleOverrides(
+                    adServicesModuleStateList,
+                    notificationType,
+                    new ISetAdServicesModuleOverridesCallback.Stub() {
+                        @Override
+                        public void onResult(AdServicesCommonResponse adServicesCommonResponse)
+                                throws RemoteException {
+                            callback.onResult(adServicesCommonResponse);
+                        }
+
+                        @Override
+                        public void onFailure(int statusCode) throws RemoteException {
+                            callback.onError(
+                                    new IllegalStateException(
+                                            "Internal Error! status code: " + statusCode));
+                        }
+                    });
+        } catch (RemoteException e) {
+            LogUtil.e(e, "RemoteException");
+            executor.execute(
+                    () -> callback.onError(new IllegalStateException("Internal Error!", e)));
+        }
     }
 
     /**
@@ -269,7 +328,33 @@ public class AdServicesCommonManager {
             @NonNull List<AdServicesModuleUserChoice> adServicesModuleUserChoiceList,
             @NonNull @CallbackExecutor Executor executor,
             @NonNull AdServicesOutcomeReceiver<AdServicesCommonResponse, Exception> callback) {
-        // TODO: Add implementation
+        Objects.requireNonNull(adServicesModuleUserChoiceList);
+        Objects.requireNonNull(executor);
+        Objects.requireNonNull(callback);
+
+        final IAdServicesCommonService service = getService();
+        try {
+            service.setAdServicesModuleUserChoices(
+                    adServicesModuleUserChoiceList,
+                    new ISetAdServicesModuleUserChoicesCallback.Stub() {
+                        @Override
+                        public void onResult(AdServicesCommonResponse adServicesCommonResponse)
+                                throws RemoteException {
+                            callback.onResult(adServicesCommonResponse);
+                        }
+
+                        @Override
+                        public void onFailure(int statusCode) throws RemoteException {
+                            callback.onError(
+                                    new IllegalStateException(
+                                            "Internal Error! status code: " + statusCode));
+                        }
+                    });
+        } catch (RemoteException e) {
+            LogUtil.e(e, "RemoteException");
+            executor.execute(
+                    () -> callback.onError(new IllegalStateException("Internal Error!", e)));
+        }
     }
 
     /**
