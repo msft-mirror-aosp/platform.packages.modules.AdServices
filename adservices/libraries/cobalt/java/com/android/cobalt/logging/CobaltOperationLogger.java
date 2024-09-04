@@ -20,10 +20,18 @@ package com.android.cobalt.logging;
 public interface CobaltOperationLogger {
 
     /**
-     * Log that a Cobalt logging event exceeds the string buffer max.
+     * Logs that a Cobalt logging event exceeds the string buffer max.
      *
      * @param metricId the Cobalt metric id of the event that is being logged
      * @param reportId the Cobalt report id of the event that is being logged
      */
     void logStringBufferMaxExceeded(int metricId, int reportId);
+
+    /**
+     * Logs that a Cobalt logging event exceeds the event vector buffer max.
+     *
+     * @param metricId the Cobalt metric id of the event that is being logged
+     * @param reportId the Cobalt report id of the event that is being logged
+     */
+    void logEventVectorBufferMaxExceeded(int metricId, int reportId);
 }

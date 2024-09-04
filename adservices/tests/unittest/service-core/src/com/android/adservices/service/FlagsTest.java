@@ -18,6 +18,7 @@ package com.android.adservices.service;
 
 import static com.android.adservices.service.Flags.AD_SERVICES_MODULE_JOB_POLICY;
 import static com.android.adservices.service.Flags.APPSEARCH_ONLY;
+import static com.android.adservices.service.Flags.COBALT__IGNORED_REPORT_ID_LIST;
 import static com.android.adservices.service.Flags.DEFAULT_ADEXT_READ_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_ADEXT_WRITE_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_ADID_CACHE_TTL_MS;
@@ -42,6 +43,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_SCOPE
 import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT;
 import static com.android.adservices.service.Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION;
 import static com.android.adservices.service.Flags.MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM;
+import static com.android.adservices.service.Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES;
 import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT;
 import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW_IN_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW;
@@ -603,6 +605,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetCobaltFallBackToDefaultBaseRegistry() {
+        testFeatureFlag(
+                "COBALT__FALL_BACK_TO_DEFAULT_BASE_REGISTRY",
+                Flags::getCobaltFallBackToDefaultBaseRegistry);
+    }
+
+    @Test
     public void testGetRNotificationDefaultConsentFixEnabled() {
         testFeatureFlag(
                 "DEFAULT_R_NOTIFICATION_DEFAULT_CONSENT_FIX_ENABLED",
@@ -906,6 +915,21 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetMeasurementDefaultFilteringIdMaxBytes() {
+        testFlag(
+                "getMeasurementDefaultFilteringIdMaxBytes",
+                MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES,
+                Flags::getMeasurementDefaultFilteringIdMaxBytes);
+    }
+
+    @Test
+    public void testGetMeasurementEnableFlexibleContributionFiltering() {
+        testFeatureFlag(
+                "MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING",
+                Flags::getMeasurementEnableFlexibleContributionFiltering);
+    }
+
+    @Test
     public void testGetFledgeGetAdSelectionDataBuyerInputCreatorVersion() {
         testFlag(
                 "getFledgeGetAdSelectionDataBuyerInputCreatorVersion",
@@ -926,6 +950,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
         testFeatureFlag(
                 "PAS_ENCODING_JOB_IMPROVEMENTS_ENABLED",
                 Flags::getPasEncodingJobImprovementsEnabled);
+    }
+
+    @Test
+    public void testGetCobaltIgnoredReportIdList() {
+        testFlag(
+                "getCobaltIgnoredReportIdList",
+                COBALT__IGNORED_REPORT_ID_LIST,
+                Flags::getCobaltIgnoredReportIdList);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

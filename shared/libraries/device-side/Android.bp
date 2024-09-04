@@ -31,6 +31,8 @@ java_library {
         "framework-annotations-lib",
     ],
     static_libs: [
+        "adservices-shared-error-logging",
+        "adservices-statsd",
         "adservices-shared-util",
         "modules-utils-build",
         "modules-utils-preconditions",
@@ -49,6 +51,49 @@ java_library {
         extra_check_modules: ["AdServicesProdLintChecker"],
         baseline_filename: "lint-baseline-adservices-shared-storage.xml", // TODO(b/356688417): Clean up baseline file.
     },
+}
+
+java_library {
+    name: "adservices-shared-datastore",
+    min_sdk_version: "30",
+    sdk_version: "module_current",
+    srcs: [
+        "java/com/android/adservices/shared/datastore/**/*.java",
+        "java/com/android/adservices/shared/datastore/**/*.kt",
+    ],
+    static_libs: [
+        "libprotobuf-java-lite",
+        "androidx.datastore_datastore",
+        "androidx.datastore_datastore-guava",
+    ],
+    apex_available: [
+        "com.android.adservices",
+        "com.android.extservices",
+        "com.android.ondevicepersonalization",
+    ],
+}
+
+java_library {
+    name: "adservices-statsd",
+    sdk_version: "module_current",
+    min_sdk_version: "30",
+    srcs: [
+        ":statslog-adservices-java-gen",
+    ],
+    libs: [
+        "androidx.annotation_annotation",
+        "framework-statsd.stubs.module_lib",
+    ],
+    visibility: [
+        "//packages/modules/AdServices:__subpackages__",
+        "//packages/modules/ExtServices:__subpackages__",
+        "//packages/modules/OnDevicePersonalization:__subpackages__",
+    ],
+    apex_available: [
+        "com.android.adservices",
+        "com.android.extservices",
+        "com.android.ondevicepersonalization",
+    ],
 }
 
 java_library {
@@ -362,6 +407,10 @@ java_defaults {
     // modules-utils-extended-mockito-rule-defaults once it have
     // compile_multilib: "both",
     defaults: ["modules-utils-testable-device-config-defaults"],
+    // TODO(b/345219434, b/354885695): explictily adding compile_multilib just
+    // in case the build is using the modules-utils-testable-device-config-defaults
+    // version that removed it
+    compile_multilib: "both",
     visibility: [
         "//packages/modules/AdServices:__subpackages__",
         "//packages/modules/ExtServices:__subpackages__",
@@ -390,6 +439,36 @@ java_library {
         "com.android.adservices",
         "com.android.extservices",
         "com.android.ondevicepersonalization",
+    ],
+    lint: {
+        extra_check_modules: ["AdServicesProdLintChecker"],
+    },
+}
+
+// Note: This lib contains an example for datastore usage which is used for testing the proto data
+// store. This should be not added as a production code dependency.
+java_library {
+    name: "adservices-datastore_testing",
+    sdk_version: "module_current",
+    proto: {
+        type: "lite",
+        include_dirs: [
+            "external/protobuf/java",
+            "external/protobuf/src",
+        ],
+        canonical_path_from_root: false, // Use relative path instead of Android root
+    },
+    srcs: [
+        "java/com/android/adservices/shared/datastore_testing/*.java",
+        "java/com/android/adservices/shared/datastore_testing/*.proto",
+        ":libprotobuf-internal-protos",
+    ],
+    static_libs: [
+        "adservices-shared-common",
+        "adservices-shared-datastore",
+    ],
+    visibility: [
+        "//packages/modules/AdServices/shared/tests:__subpackages__",
     ],
     lint: {
         extra_check_modules: ["AdServicesProdLintChecker"],

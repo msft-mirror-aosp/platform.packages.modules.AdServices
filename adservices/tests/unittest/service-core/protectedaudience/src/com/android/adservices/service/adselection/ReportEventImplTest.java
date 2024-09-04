@@ -30,7 +30,9 @@ import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
 import static com.android.adservices.service.adselection.EventReporter.INTERACTION_DATA_SIZE_MAX_EXCEEDED;
 import static com.android.adservices.service.adselection.EventReporter.INTERACTION_KEY_SIZE_MAX_EXCEEDED;
+import static com.android.adservices.service.common.AppManifestConfigCall.API_AD_SELECTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
@@ -46,7 +48,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import android.adservices.adselection.CustomAudienceSignalsFixture;
@@ -68,6 +69,7 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
@@ -89,8 +91,7 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ReportInteractionApiCalledStats;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
@@ -102,16 +103,13 @@ import com.google.mockwebserver.MockWebServer;
 import com.google.mockwebserver.RecordedRequest;
 
 import org.json.JSONObject;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoSession;
 import org.mockito.Spy;
-import org.mockito.quality.Strictness;
 import org.mockito.stubbing.Answer;
 
 import java.time.Instant;
@@ -119,7 +117,8 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class ReportEventImplTest {
+@RequiresSdkLevelAtLeastS()
+public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase {
     private static final Instant ACTIVATION_TIME = Instant.now();
     private static final int MY_UID = Process.myUid();
 
@@ -155,7 +154,7 @@ public class ReportEventImplTest {
             AdServicesExecutors.getBackgroundExecutor();
 
     @Mock FledgeAuthorizationFilter mFledgeAuthorizationFilterMock;
-    private Flags mFlags = FakeFlagsFactory.getFlagsForTest();
+    private Flags mFakeFlags = FakeFlagsFactory.getFlagsForTest();
 
     private static final Flags FLAGS_ENROLLMENT_CHECK =
             new Flags() {
@@ -166,10 +165,10 @@ public class ReportEventImplTest {
             };
 
     private final long mMaxRegisteredAdBeaconsTotalCount =
-            mFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount();
+            mFakeFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount();
 
     private final long mMaxRegisteredAdBeaconsPerDestination =
-            mFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount();
+            mFakeFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount();
 
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
 
@@ -182,19 +181,8 @@ public class ReportEventImplTest {
 
     private AdTechIdentifier mAdTech = AdTechIdentifier.fromString("localhost");
 
-    private MockitoSession mStaticMockSession = null;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Before
     public void setup() throws Exception {
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .strictness(Strictness.LENIENT)
-                        .initMocks(this)
-                        .startMocking();
-
         mAdSelectionEntryDao =
                 Room.inMemoryDatabaseBuilder(
                                 ApplicationProvider.getApplicationContext(),
@@ -209,7 +197,7 @@ public class ReportEventImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFakeFlags,
                         mAdSelectionServiceFilterMock,
                         MY_UID,
                         mFledgeAuthorizationFilterMock,
@@ -259,13 +247,6 @@ public class ReportEventImplTest {
                         .build();
 
         mInteractionData = new JSONObject().put("x", "10").put("y", "12").toString();
-    }
-
-    @After
-    public void tearDown() {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
     }
 
     @Test
@@ -323,12 +304,99 @@ public class ReportEventImplTest {
                         BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT);
 
         // Verifies ReportInteractionApiCalledStats get the correct values.
-        Mockito.verify(mAdServicesLoggerMock, times(1))
+        Mockito.verify(mAdServicesLoggerMock)
                 .logReportInteractionApiCalledStats(argumentCaptor.capture());
         ReportInteractionApiCalledStats stats = argumentCaptor.getValue();
         assertThat(stats.getBeaconReportingDestinationType())
                 .isEqualTo(SELLER_AND_BUYER_DESTINATION);
         assertThat(stats.getNumMatchingUris()).isEqualTo(2);
+    }
+
+    @Test
+    public void
+            testImplSuccessfullyReportsRegisteredInteractionsWithUXNotificationEnforcementDisabled()
+                    throws Exception {
+        Flags flagsWithoutUxNotificationEnforcement =
+                new Flags() {
+                    @Override
+                    public boolean getConsentNotificationDebugMode() {
+                        return true;
+                    }
+                };
+
+        mEventReporter =
+                new ReportEventImpl(
+                        mAdSelectionEntryDao,
+                        mHttpClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mAdServicesLoggerMock,
+                        flagsWithoutUxNotificationEnforcement,
+                        mAdSelectionServiceFilterMock,
+                        MY_UID,
+                        mFledgeAuthorizationFilterMock,
+                        DevContext.createForDevOptionsDisabled(),
+                        false);
+
+        mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionBuyerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                BUYER_DESTINATION);
+
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionSellerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                SELLER_DESTINATION);
+
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(new MockResponse(), new MockResponse()));
+
+        ReportInteractionInput inputParams =
+                new ReportInteractionInput.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
+                        .setInteractionKey(CLICK_EVENT)
+                        .setInteractionData(mInteractionData)
+                        .setReportingDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
+                        .build();
+
+        // Count down callback + log interaction.
+        ReportInteractionTestCallback callback = callReportInteraction(inputParams, true);
+
+        assertTrue(callback.mIsSuccess);
+
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
+
+        List<String> notifications =
+                ImmutableList.of(server.takeRequest().getPath(), server.takeRequest().getPath());
+
+        assertThat(notifications)
+                .containsExactly(
+                        SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT,
+                        BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT);
+
+        verify(mAdSelectionServiceFilterMock)
+                .filterRequest(
+                        null,
+                        TEST_PACKAGE_NAME,
+                        true,
+                        true,
+                        false,
+                        MY_UID,
+                        AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION,
+                        Throttler.ApiKey.FLEDGE_API_REPORT_INTERACTION,
+                        DevContext.createForDevOptionsDisabled());
     }
 
     @Test
@@ -408,7 +476,7 @@ public class ReportEventImplTest {
                 BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT, server.takeRequest().getPath());
 
         // Verifies ReportInteractionApiCalledStats get the correct values.
-        Mockito.verify(mAdServicesLoggerMock, times(1))
+        Mockito.verify(mAdServicesLoggerMock)
                 .logReportInteractionApiCalledStats(argumentCaptor.capture());
         ReportInteractionApiCalledStats stats = argumentCaptor.getValue();
         assertThat(stats.getBeaconReportingDestinationType())
@@ -493,7 +561,7 @@ public class ReportEventImplTest {
                 SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT, server.takeRequest().getPath());
 
         // Verifies ReportInteractionApiCalledStats get the correct values.
-        Mockito.verify(mAdServicesLoggerMock, times(1))
+        Mockito.verify(mAdServicesLoggerMock)
                 .logReportInteractionApiCalledStats(argumentCaptor.capture());
         ReportInteractionApiCalledStats stats = argumentCaptor.getValue();
         assertThat(stats.getBeaconReportingDestinationType())
@@ -564,7 +632,7 @@ public class ReportEventImplTest {
                 BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT, server.takeRequest().getPath());
 
         // Verifies ReportInteractionApiCalledStats get the correct values.
-        Mockito.verify(mAdServicesLoggerMock, times(1))
+        Mockito.verify(mAdServicesLoggerMock)
                 .logReportInteractionApiCalledStats(argumentCaptor.capture());
         ReportInteractionApiCalledStats stats = argumentCaptor.getValue();
         assertThat(stats.getBeaconReportingDestinationType())
@@ -635,7 +703,7 @@ public class ReportEventImplTest {
                 SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT, server.takeRequest().getPath());
 
         // Verifies ReportInteractionApiCalledStats get the correct values.
-        Mockito.verify(mAdServicesLoggerMock, times(1))
+        Mockito.verify(mAdServicesLoggerMock)
                 .logReportInteractionApiCalledStats(argumentCaptor.capture());
         ReportInteractionApiCalledStats stats = argumentCaptor.getValue();
         assertThat(stats.getBeaconReportingDestinationType())
@@ -660,7 +728,7 @@ public class ReportEventImplTest {
                 mMaxRegisteredAdBeaconsPerDestination,
                 SELLER_DESTINATION);
 
-        mFlags = FLAGS_ENROLLMENT_CHECK;
+        mFakeFlags = FLAGS_ENROLLMENT_CHECK;
 
         // Re init interaction reporter
         mEventReporter =
@@ -670,7 +738,7 @@ public class ReportEventImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFakeFlags,
                         mAdSelectionServiceFilterMock,
                         MY_UID,
                         mFledgeAuthorizationFilterMock,
@@ -681,8 +749,10 @@ public class ReportEventImplTest {
         doNothing()
                 .doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
                 .when(mFledgeAuthorizationFilterMock)
-                .assertAdTechEnrolled(
-                        mAdTech, AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION);
+                .assertAdTechFromUriEnrolled(
+                        any(Uri.class),
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(API_AD_SELECTION));
 
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(
@@ -745,7 +815,7 @@ public class ReportEventImplTest {
                 mMaxRegisteredAdBeaconsPerDestination,
                 SELLER_DESTINATION);
 
-        mFlags = FLAGS_ENROLLMENT_CHECK;
+        mFakeFlags = FLAGS_ENROLLMENT_CHECK;
 
         // Re init event reporter
         mEventReporter =
@@ -755,7 +825,7 @@ public class ReportEventImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFakeFlags,
                         mAdSelectionServiceFilterMock,
                         MY_UID,
                         mFledgeAuthorizationFilterMock,
@@ -764,8 +834,10 @@ public class ReportEventImplTest {
 
         doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
                 .when(mFledgeAuthorizationFilterMock)
-                .assertAdTechEnrolled(
-                        mAdTech, AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION);
+                .assertAdTechFromUriEnrolled(
+                        any(Uri.class),
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(API_AD_SELECTION));
 
         mMockWebServerRule.startMockWebServer(
                 new Dispatcher() {
@@ -820,6 +892,7 @@ public class ReportEventImplTest {
                 .filterRequest(
                         null,
                         TEST_PACKAGE_NAME,
+                        true,
                         true,
                         true,
                         MY_UID,
@@ -888,6 +961,7 @@ public class ReportEventImplTest {
                 .filterRequest(
                         null,
                         TEST_PACKAGE_NAME,
+                        true,
                         true,
                         true,
                         MY_UID,
@@ -983,7 +1057,7 @@ public class ReportEventImplTest {
         ReportInteractionTestCallback callbackFirstCall = callReportInteraction(inputParams, true);
 
         // Verifies ReportInteractionApiCalledStats get the correct values.
-        Mockito.verify(mAdServicesLoggerMock, times(1))
+        Mockito.verify(mAdServicesLoggerMock)
                 .logReportInteractionApiCalledStats(argumentCaptor.capture());
         ReportInteractionApiCalledStats stats = argumentCaptor.getValue();
         assertThat(stats.getBeaconReportingDestinationType())
@@ -995,6 +1069,7 @@ public class ReportEventImplTest {
                 .filterRequest(
                         null,
                         TEST_PACKAGE_NAME,
+                        true,
                         true,
                         true,
                         MY_UID,
@@ -1064,6 +1139,7 @@ public class ReportEventImplTest {
                         TEST_PACKAGE_NAME,
                         true,
                         true,
+                        true,
                         MY_UID,
                         AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION,
                         Throttler.ApiKey.FLEDGE_API_REPORT_INTERACTION,
@@ -1124,6 +1200,7 @@ public class ReportEventImplTest {
                 .filterRequest(
                         null,
                         TEST_PACKAGE_NAME,
+                        true,
                         true,
                         true,
                         MY_UID,
@@ -1326,7 +1403,7 @@ public class ReportEventImplTest {
                         anyInt());
 
         // Verifies ReportInteractionApiCalledStats get the correct values.
-        Mockito.verify(mAdServicesLoggerMock, times(1))
+        Mockito.verify(mAdServicesLoggerMock)
                 .logReportInteractionApiCalledStats(argumentCaptor.capture());
         ReportInteractionApiCalledStats stats = argumentCaptor.getValue();
         assertThat(stats.getBeaconReportingDestinationType())

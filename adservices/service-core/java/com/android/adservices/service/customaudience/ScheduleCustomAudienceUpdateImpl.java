@@ -185,6 +185,7 @@ public class ScheduleCustomAudienceUpdateImpl {
                                         mDisableFledgeEnrollmentCheck,
                                         mEnforceForegroundStatus,
                                         ENFORCE_CONSENT,
+                                        !mFlags.getConsentNotificationDebugMode(),
                                         mCallingAppUid,
                                         API_NAME,
                                         FLEDGE_API_SCHEDULE_CUSTOM_AUDIENCE_UPDATE,

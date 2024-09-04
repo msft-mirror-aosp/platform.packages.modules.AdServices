@@ -32,6 +32,7 @@ import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
 import static com.android.adservices.service.adselection.EventReporter.INTERACTION_DATA_SIZE_MAX_EXCEEDED;
 import static com.android.adservices.service.adselection.EventReporter.INTERACTION_KEY_SIZE_MAX_EXCEEDED;
+import static com.android.adservices.service.common.AppManifestConfigCall.API_AD_SELECTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
@@ -41,13 +42,10 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
-import static com.google.common.truth.Truth.assertThat;
-
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 
 import android.adservices.adselection.CustomAudienceSignalsFixture;
 import android.adservices.adselection.DataHandlersFixture;
@@ -65,6 +63,7 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
@@ -91,10 +90,10 @@ import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ReportInteractionApiCalledStats;
 import com.android.adservices.shared.testing.AnswerSyncCallback;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -102,21 +101,21 @@ import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
 
 import org.json.JSONObject;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoSession;
 import org.mockito.Spy;
-import org.mockito.quality.Strictness;
 
 import java.time.Instant;
 import java.util.List;
 
-public class ReportAndRegisterEventImplTest {
+@RequiresSdkLevelAtLeastS()
+@MockStatic(ConsentManager.class)
+@MockStatic(PermissionHelper.class)
+public final class ReportAndRegisterEventImplTest extends AdServicesExtendedMockitoTestCase {
     private static final Instant ACTIVATION_TIME = Instant.now();
     private static final int MY_UID = Process.myUid();
     private static final String CALLER_SDK_NAME = "sdk.package.name";
@@ -153,7 +152,7 @@ public class ReportAndRegisterEventImplTest {
             new IllegalStateException("Exception for test!");
 
     @Mock FledgeAuthorizationFilter mFledgeAuthorizationFilterMock;
-    private Flags mFlags = new ReportEventTestFlags();
+    private Flags mFakeFlags = new ReportEventTestFlags();
     private static final Flags ENABLE_ENROLLMENT_CHECK_FLAGS =
             new ReportEventTestFlags() {
                 @Override
@@ -162,36 +161,23 @@ public class ReportAndRegisterEventImplTest {
                 }
             };
     private final long mMaxRegisteredAdBeaconsTotalCount =
-            mFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount();
+            mFakeFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount();
     private final long mMaxRegisteredAdBeaconsPerDestination =
-            mFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount();
+            mFakeFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount();
 
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
     @Mock private MeasurementImpl mMeasurementServiceMock;
     @Mock private ConsentManager mConsentManagerMock;
-    @Mock private Context mContextMock;
     private ReportAndRegisterEventImpl mEventReporter;
     private DBAdSelection mDBAdSelection;
     private DBRegisteredAdInteraction mDBRegisteredAdInteractionSellerClick;
     private DBRegisteredAdInteraction mDBRegisteredAdInteractionBuyerClick;
     private String mEventData;
     private ReportInteractionInput.Builder mInputBuilder;
-    private MockitoSession mStaticMockSession = null;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() throws Exception {
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .strictness(Strictness.LENIENT)
-                        .mockStatic(ConsentManager.class)
-                        .mockStatic(PermissionHelper.class)
-                        .initMocks(this)
-                        .startMocking();
-
         mAdSelectionEntryDao =
                 Room.inMemoryDatabaseBuilder(
                                 ApplicationProvider.getApplicationContext(),
@@ -199,7 +185,7 @@ public class ReportAndRegisterEventImplTest {
                         .build()
                         .adSelectionEntryDao();
 
-        mEventReporter = getReportAndRegisterEventImpl(mFlags);
+        mEventReporter = getReportAndRegisterEventImpl(mFakeFlags);
 
         CustomAudienceSignals customAudienceSignals =
                 CustomAudienceSignalsFixture.aCustomAudienceSignalsBuilder()
@@ -248,13 +234,6 @@ public class ReportAndRegisterEventImplTest {
                         .setInteractionData(mEventData)
                         .setReportingDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
                         .setCallerSdkName(CALLER_SDK_NAME);
-    }
-
-    @After
-    public void tearDown() {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
     }
 
     @Test
@@ -420,8 +399,10 @@ public class ReportAndRegisterEventImplTest {
         doNothing()
                 .doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
                 .when(mFledgeAuthorizationFilterMock)
-                .assertAdTechEnrolled(
-                        AD_TECH, AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION);
+                .assertAdTechFromUriEnrolled(
+                        any(Uri.class),
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(API_AD_SELECTION));
 
         // Call report event with input.
         ReportInteractionInput input = mInputBuilder.build();
@@ -442,12 +423,12 @@ public class ReportAndRegisterEventImplTest {
                         anyInt());
 
         // Verifies ReportInteractionApiCalledStats get the correct values.
-        Mockito.verify(mAdServicesLoggerMock, times(1))
+        Mockito.verify(mAdServicesLoggerMock)
                 .logReportInteractionApiCalledStats(argumentCaptor.capture());
         ReportInteractionApiCalledStats stats = argumentCaptor.getValue();
-        assertThat(stats.getBeaconReportingDestinationType())
+        expect.that(stats.getBeaconReportingDestinationType())
                 .isEqualTo(SELLER_AND_BUYER_DESTINATION);
-        assertThat(stats.getNumMatchingUris()).isEqualTo(1);
+        expect.that(stats.getNumMatchingUris()).isEqualTo(1);
     }
 
     @Test
@@ -466,8 +447,10 @@ public class ReportAndRegisterEventImplTest {
         // Filter the call.
         doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
                 .when(mFledgeAuthorizationFilterMock)
-                .assertAdTechEnrolled(
-                        AD_TECH, AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION);
+                .assertAdTechFromUriEnrolled(
+                        any(Uri.class),
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(API_AD_SELECTION));
 
         // Call report event with input.
         ReportInteractionInput input = mInputBuilder.build();
@@ -489,12 +472,12 @@ public class ReportAndRegisterEventImplTest {
                         anyInt());
 
         // Verifies ReportInteractionApiCalledStats get the correct values.
-        Mockito.verify(mAdServicesLoggerMock, times(1))
+        Mockito.verify(mAdServicesLoggerMock)
                 .logReportInteractionApiCalledStats(argumentCaptor.capture());
         ReportInteractionApiCalledStats stats = argumentCaptor.getValue();
-        assertThat(stats.getBeaconReportingDestinationType())
+        expect.that(stats.getBeaconReportingDestinationType())
                 .isEqualTo(SELLER_AND_BUYER_DESTINATION);
-        assertThat(stats.getNumMatchingUris()).isEqualTo(0);
+        expect.that(stats.getNumMatchingUris()).isEqualTo(0);
     }
 
     @Test
@@ -508,6 +491,7 @@ public class ReportAndRegisterEventImplTest {
                 .filterRequest(
                         null,
                         TEST_PACKAGE_NAME,
+                        true,
                         true,
                         true,
                         MY_UID,
@@ -550,6 +534,7 @@ public class ReportAndRegisterEventImplTest {
                 .filterRequest(
                         null,
                         TEST_PACKAGE_NAME,
+                        true,
                         true,
                         true,
                         MY_UID,
@@ -595,6 +580,7 @@ public class ReportAndRegisterEventImplTest {
                 .filterRequest(
                         null,
                         TEST_PACKAGE_NAME,
+                        true,
                         true,
                         true,
                         MY_UID,
@@ -650,6 +636,7 @@ public class ReportAndRegisterEventImplTest {
                         TEST_PACKAGE_NAME,
                         true,
                         true,
+                        true,
                         MY_UID,
                         AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION,
                         Throttler.ApiKey.FLEDGE_API_REPORT_INTERACTION,
@@ -683,6 +670,7 @@ public class ReportAndRegisterEventImplTest {
                 .filterRequest(
                         null,
                         TEST_PACKAGE_NAME,
+                        true,
                         true,
                         true,
                         MY_UID,
@@ -855,18 +843,18 @@ public class ReportAndRegisterEventImplTest {
         // Verify the mock server handled requests with exact paths.
         List<String> notifications =
                 ImmutableList.of(server.takeRequest().getPath(), server.takeRequest().getPath());
-        assertThat(notifications)
+        expect.that(notifications)
                 .containsExactly(
                         SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT,
                         BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT);
 
         // Verifies ReportInteractionApiCalledStats get the correct values.
-        Mockito.verify(mAdServicesLoggerMock, times(1))
+        Mockito.verify(mAdServicesLoggerMock)
                 .logReportInteractionApiCalledStats(argumentCaptor.capture());
         ReportInteractionApiCalledStats stats = argumentCaptor.getValue();
-        assertThat(stats.getBeaconReportingDestinationType())
+        expect.that(stats.getBeaconReportingDestinationType())
                 .isEqualTo(SELLER_AND_BUYER_DESTINATION);
-        assertThat(stats.getNumMatchingUris()).isEqualTo(2);
+        expect.that(stats.getNumMatchingUris()).isEqualTo(2);
     }
 
     @Test
@@ -917,18 +905,18 @@ public class ReportAndRegisterEventImplTest {
         // Verify the mock server handled requests with exact paths.
         List<String> notifications =
                 ImmutableList.of(server.takeRequest().getPath(), server.takeRequest().getPath());
-        assertThat(notifications)
+        expect.that(notifications)
                 .containsExactly(
                         SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT,
                         BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT);
 
         // Verifies ReportInteractionApiCalledStats get the correct values.
-        Mockito.verify(mAdServicesLoggerMock, times(1))
+        Mockito.verify(mAdServicesLoggerMock)
                 .logReportInteractionApiCalledStats(argumentCaptor.capture());
         ReportInteractionApiCalledStats stats = argumentCaptor.getValue();
-        assertThat(stats.getBeaconReportingDestinationType())
+        expect.that(stats.getBeaconReportingDestinationType())
                 .isEqualTo(SELLER_AND_BUYER_DESTINATION);
-        assertThat(stats.getNumMatchingUris()).isEqualTo(2);
+        expect.that(stats.getNumMatchingUris()).isEqualTo(2);
     }
 
     @Test
@@ -971,7 +959,7 @@ public class ReportAndRegisterEventImplTest {
         // Verify the mock server handled requests with exact paths.
         List<String> notifications =
                 ImmutableList.of(server.takeRequest().getPath(), server.takeRequest().getPath());
-        assertThat(notifications)
+        expect.that(notifications)
                 .containsExactly(
                         SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT,
                         BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT);
@@ -1017,7 +1005,7 @@ public class ReportAndRegisterEventImplTest {
         // Verify the mock server handled requests with exact paths.
         List<String> notifications =
                 ImmutableList.of(server.takeRequest().getPath(), server.takeRequest().getPath());
-        assertThat(notifications)
+        expect.that(notifications)
                 .containsExactly(
                         SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT,
                         BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT);
@@ -1100,12 +1088,12 @@ public class ReportAndRegisterEventImplTest {
         verifyRegisterEvent(BUYER_INTERACTION_REPORTING_PATH + CLICK_EVENT, inputParams);
 
         // Verifies ReportInteractionApiCalledStats get the correct values.
-        Mockito.verify(mAdServicesLoggerMock, times(1))
+        Mockito.verify(mAdServicesLoggerMock)
                 .logReportInteractionApiCalledStats(argumentCaptor.capture());
         ReportInteractionApiCalledStats stats = argumentCaptor.getValue();
-        assertThat(stats.getBeaconReportingDestinationType())
+        expect.that(stats.getBeaconReportingDestinationType())
                 .isEqualTo(SELLER_AND_BUYER_DESTINATION);
-        assertThat(stats.getNumMatchingUris()).isEqualTo(2);
+        expect.that(stats.getNumMatchingUris()).isEqualTo(2);
     }
 
     private void persistReportingArtifacts() {
@@ -1196,7 +1184,7 @@ public class ReportAndRegisterEventImplTest {
                 DevContext.createForDevOptionsDisabled(),
                 mMeasurementServiceMock,
                 mConsentManagerMock,
-                mContextMock,
+                mMockContext,
                 false);
     }
 

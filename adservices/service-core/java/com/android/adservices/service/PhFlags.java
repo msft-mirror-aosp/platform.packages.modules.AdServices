@@ -190,6 +190,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public long getTopicsEpochJobFlexMs() {
         long topicsEpochJobFlexMs =
                 SystemProperties.getLong(
@@ -204,6 +206,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public int getTopicsPercentageForRandomTopic() {
         int topicsPercentageForRandomTopic =
                 SystemProperties.getInt(
@@ -308,6 +312,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public int getClassifierType() {
         return SystemProperties.getInt(
                 getSystemPropertyName(FlagsConstants.KEY_CLASSIFIER_TYPE),
@@ -315,6 +321,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public int getClassifierNumberOfTopLabels() {
         return SystemProperties.getInt(
                 getSystemPropertyName(FlagsConstants.KEY_CLASSIFIER_NUMBER_OF_TOP_LABELS),
@@ -455,6 +463,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getCobaltLoggingEnabled() {
         return !getGlobalKillSwitch()
                 && SystemProperties.getBoolean(
@@ -485,6 +495,21 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getCobaltFallBackToDefaultBaseRegistry() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_COBALT__FALL_BACK_TO_DEFAULT_BASE_REGISTRY,
+                COBALT__FALL_BACK_TO_DEFAULT_BASE_REGISTRY);
+    }
+
+    @Override
+    public String getCobaltIgnoredReportIdList() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_COBALT__IGNORED_REPORT_ID_LIST, COBALT__IGNORED_REPORT_ID_LIST);
+    }
+
+    @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public long getMaintenanceJobPeriodMs() {
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig) and then
         // hard-coded value.
@@ -501,6 +526,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public long getMaintenanceJobFlexMs() {
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig) and then
         // hard-coded value.
@@ -1481,6 +1508,8 @@ public final class PhFlags implements Flags {
 
     // Group of All Killswitches
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getGlobalKillSwitch() {
         return SdkLevel.isAtLeastT()
                 ? SystemProperties.getBoolean(
@@ -1506,6 +1535,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getMeasurementApiDeleteRegistrationsKillSwitch() {
         final boolean defaultValue = MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH;
         return getLegacyMeasurementKillSwitch()
@@ -1519,6 +1550,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getMeasurementApiStatusKillSwitch() {
         return getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
@@ -1530,6 +1563,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getMeasurementApiRegisterSourceKillSwitch() {
         return getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
@@ -1541,6 +1576,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getMeasurementApiRegisterTriggerKillSwitch() {
         return getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
@@ -1552,6 +1589,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getMeasurementApiRegisterWebSourceKillSwitch() {
         boolean defaultValue = MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH;
         return getLegacyMeasurementKillSwitch()
@@ -1564,6 +1603,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getMeasurementApiRegisterSourcesKillSwitch() {
         boolean defaultValue = MEASUREMENT_API_REGISTER_SOURCES_KILL_SWITCH;
         return getLegacyMeasurementKillSwitch()
@@ -1576,6 +1617,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getMeasurementApiRegisterWebTriggerKillSwitch() {
         boolean defaultValue = MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH;
         return getLegacyMeasurementKillSwitch()
@@ -1589,6 +1632,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getMeasurementJobAggregateFallbackReportingKillSwitch() {
         String flagName =
                 FlagsConstants.KEY_MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH;
@@ -1600,6 +1645,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getMeasurementJobAggregateReportingKillSwitch() {
         boolean defaultValue = MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH;
         return getLegacyMeasurementKillSwitch()
@@ -1612,6 +1659,9 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
+
     public boolean getMeasurementJobImmediateAggregateReportingKillSwitch() {
         return !getMeasurementEnabled()
                 || getDeviceConfigFlag(
@@ -1621,6 +1671,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getMeasurementJobAttributionKillSwitch() {
         return getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
@@ -1632,6 +1684,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getMeasurementJobDeleteExpiredKillSwitch() {
         return getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
@@ -1643,6 +1697,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getMeasurementJobDeleteUninstalledKillSwitch() {
         return getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
@@ -1654,6 +1710,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getMeasurementJobEventFallbackReportingKillSwitch() {
         String flagName = FlagsConstants.KEY_MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH;
         boolean defaultValue = MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH;
@@ -1664,6 +1722,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getMeasurementJobEventReportingKillSwitch() {
         return getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
@@ -1675,6 +1735,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getAsyncRegistrationJobQueueKillSwitch() {
         String flagName = FlagsConstants.KEY_MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
         boolean defaultValue = MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
@@ -1685,6 +1747,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getAsyncRegistrationFallbackJobKillSwitch() {
         String flagName = FlagsConstants.KEY_MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH;
         return getLegacyMeasurementKillSwitch()
@@ -1695,6 +1759,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getMeasurementReceiverInstallAttributionKillSwitch() {
         String flagName = FlagsConstants.KEY_MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH;
         boolean defaultValue = MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH;
@@ -1705,6 +1771,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getMeasurementReceiverDeletePackagesKillSwitch() {
         boolean defaultValue = MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH;
         return getLegacyMeasurementKillSwitch()
@@ -1718,6 +1786,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getMeasurementRollbackDeletionKillSwitch() {
         final boolean defaultValue = MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH;
         return getLegacyMeasurementKillSwitch()
@@ -1730,6 +1800,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getMeasurementRollbackDeletionAppSearchKillSwitch() {
         final boolean defaultValue = MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH;
         return getLegacyMeasurementKillSwitch()
@@ -1745,6 +1817,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getMeasurementRollbackDeletionREnabled() {
         String flagName = FlagsConstants.KEY_MEASUREMENT_ROLLBACK_DELETION_R_ENABLED;
         return !getGlobalKillSwitch()
@@ -1791,6 +1865,8 @@ public final class PhFlags implements Flags {
 
     // ADID Killswitches
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getAdIdKillSwitch() {
         // Ignore Global Killswitch for adid.
         return SystemProperties.getBoolean(
@@ -1800,6 +1876,9 @@ public final class PhFlags implements Flags {
 
     // APPSETID Killswitch.
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
+
     public boolean getAppSetIdKillSwitch() {
         // Ignore Global Killswitch for appsetid.
         return SystemProperties.getBoolean(
@@ -1809,6 +1888,8 @@ public final class PhFlags implements Flags {
 
     // TOPICS Killswitches
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getTopicsKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
         return getGlobalKillSwitch()
@@ -1819,6 +1900,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getTopicsOnDeviceClassifierKillSwitch() {
         // This is an emergency flag that could be used to divert all traffic from on-device
         // classifier to precomputed classifier in case of fatal ML model crashes in Topics.
@@ -1831,6 +1914,8 @@ public final class PhFlags implements Flags {
 
     // MDD Killswitches
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getMddBackgroundTaskKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
         return getGlobalKillSwitch()
@@ -1844,6 +1929,8 @@ public final class PhFlags implements Flags {
     // TODO(b/326254556): ideally it should be removed and the logic moved to getBillEnabled(), but
     // this is a legacy flag that also reads system properties, and the system properties workflow
     // is not unit tested.
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     private boolean getMddLoggerKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
         return getGlobalKillSwitch()
@@ -1864,6 +1951,8 @@ public final class PhFlags implements Flags {
     // FLEDGE Kill switches
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getFledgeSelectAdsKillSwitch() {
         // We check the Global Kill switch first. As a result, it overrides all other kill switches.
         return getGlobalKillSwitch()
@@ -1875,6 +1964,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getFledgeCustomAudienceServiceKillSwitch() {
         // We check the Global Kill switch first. As a result, it overrides all other kill switches.
         return getGlobalKillSwitch()
@@ -1887,6 +1978,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getProtectedSignalsEnabled() {
         // We check the Global Kill switch first. As a result, it overrides all other kill switches.
         return getGlobalKillSwitch()
@@ -1899,6 +1992,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getFledgeAuctionServerKillSwitch() {
         return getFledgeSelectAdsKillSwitch()
                 || SystemProperties.getBoolean(
@@ -1909,6 +2004,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getFledgeOnDeviceAuctionKillSwitch() {
         return getFledgeSelectAdsKillSwitch()
                 || SystemProperties.getBoolean(
@@ -1920,6 +2017,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getEncryptionKeyNewEnrollmentFetchKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
         return getGlobalKillSwitch()
@@ -1932,6 +2031,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getEncryptionKeyPeriodicFetchKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
         return getGlobalKillSwitch()
@@ -2095,6 +2196,8 @@ public final class PhFlags implements Flags {
                 FLEDGE_REPORT_INTERACTION_REQUEST_PERMITS_PER_SECOND);
     }
 
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     private float getPermitsPerSecond(String flagName, float defaultValue) {
         try {
             final String permitString = SystemProperties.get(getSystemPropertyName(flagName));
@@ -2110,6 +2213,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public String getUiOtaStringsManifestFileUrl() {
         return SystemProperties.get(
                 getSystemPropertyName(FlagsConstants.KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL),
@@ -2119,6 +2224,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getUiOtaStringsFeatureEnabled() {
         if (getGlobalKillSwitch()) {
             return false;
@@ -2131,6 +2238,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public String getUiOtaResourcesManifestFileUrl() {
         return SystemProperties.get(
                 getSystemPropertyName(FlagsConstants.KEY_UI_OTA_RESOURCES_MANIFEST_FILE_URL),
@@ -2140,6 +2249,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getUiOtaResourcesFeatureEnabled() {
         if (getGlobalKillSwitch()) {
             return false;
@@ -2535,6 +2646,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean isDisableTopicsEnrollmentCheck() {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK),
@@ -2544,6 +2657,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean isDisableMeasurementEnrollmentCheck() {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(FlagsConstants.KEY_DISABLE_MEASUREMENT_ENROLLMENT_CHECK),
@@ -2573,6 +2688,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getDisableFledgeEnrollmentCheck() {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK),
@@ -2582,6 +2699,9 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
+
     public boolean getEnforceForegroundStatusForTopics() {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_TOPICS),
@@ -2591,6 +2711,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getEnforceForegroundStatusForSignals() {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_SIGNALS),
@@ -2600,6 +2722,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getEnforceForegroundStatusForAdId() {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_ADID),
@@ -2609,6 +2733,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getEnforceForegroundStatusForAppSetId() {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_APPSETID),
@@ -2850,13 +2976,6 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getEnforceEnrollmentOriginMatch() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH,
-                MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH);
-    }
-
-    @Override
     public long getIsolateMaxHeapSizeBytes() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_ISOLATE_MAX_HEAP_SIZE_BYTES, ISOLATE_MAX_HEAP_SIZE_BYTES);
@@ -3004,6 +3123,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getGaUxFeatureEnabled() {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(FlagsConstants.KEY_GA_UX_FEATURE_ENABLED),
@@ -3185,13 +3306,6 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getMeasurementEnableMaxAggregateReportsPerSource() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE,
-                MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE);
-    }
-
-    @Override
     public int getMeasurementMaxAggregateReportsPerSource() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE,
@@ -3369,6 +3483,20 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_ENABLE_DESTINATION_LIMIT_ALGORITHM_FIELD,
                 MEASUREMENT_ENABLE_DESTINATION_LIMIT_ALGORITHM_FIELD);
+    }
+
+    @Override
+    public int getMeasurementDefaultFilteringIdMaxBytes() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES,
+                MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
+    }
+
+    @Override
+    public boolean getMeasurementEnableFlexibleContributionFiltering() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING,
+                MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING);
     }
 
     @Override
@@ -3817,11 +3945,6 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_ENABLE_SHARED_FILTER_DATA_KEYS_XNA
                         + " = "
                         + getMeasurementEnableSharedFilterDataKeysXNA());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH
-                        + " = "
-                        + getEnforceEnrollmentOriginMatch());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_MEASUREMENT_ENABLE_DEBUG_REPORT
@@ -4383,6 +4506,16 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM
                         + " = "
                         + getMeasurementDefaultSourceDestinationLimitAlgorithm());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES
+                        + " = "
+                        + getMeasurementDefaultFilteringIdMaxBytes());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING
+                        + " = "
+                        + getMeasurementEnableFlexibleContributionFiltering());
 
         writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
         writer.println(
@@ -5218,11 +5351,6 @@ public final class PhFlags implements Flags {
                         + getMeasurementRollbackDeletionAppSearchKillSwitch());
         writer.println(
                 "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE
-                        + " = "
-                        + getMeasurementEnableMaxAggregateReportsPerSource());
-        writer.println(
-                "\t"
                         + FlagsConstants.KEY_MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE
                         + " = "
                         + getMeasurementMaxAggregateReportsPerSource());
@@ -5492,10 +5620,11 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK
                         + " = "
                         + getMeasurementEnableNavigationReportingOriginCheck());
-        writer.println("\t"
-                + KEY_MEASUREMENT_ENABLE_SEPARATE_DEBUG_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT
-                + " = "
-                + getMeasurementEnableSeparateDebugReportTypesForAttributionRateLimit());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENABLE_SEPARATE_DEBUG_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT
+                        + " = "
+                        + getMeasurementEnableSeparateDebugReportTypesForAttributionRateLimit());
         writer.println(
                 "\t"
                         + KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH
@@ -5722,13 +5851,6 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getBackgroundJobsLoggingKillSwitch() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_BACKGROUND_JOBS_LOGGING_KILL_SWITCH,
-                BACKGROUND_JOBS_LOGGING_KILL_SWITCH);
-    }
-
-    @Override
     public boolean getEnableBackCompat() {
         // If SDK is T+, the value should always be false
         // Check the flag value for S Minus
@@ -5764,6 +5886,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getEnableAdExtServiceDebugProxy() {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_DEBUG_PROXY),
@@ -6405,6 +6529,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getMeasurementDebugReportingFallbackJobKillSwitch() {
         return getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
@@ -6418,6 +6544,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getMeasurementVerboseDebugReportingFallbackJobKillSwitch() {
         return getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
@@ -6445,6 +6573,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getMeasurementJobDebugReportingKillSwitch() {
         return getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
@@ -6456,6 +6586,8 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    @SuppressWarnings("AvoidSystemPropertiesUsage")
+    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getMeasurementJobVerboseDebugReportingKillSwitch() {
         return getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
@@ -6810,9 +6942,16 @@ public final class PhFlags implements Flags {
                 FLEDGE_DEFAULT_KANON_BACKGROUND_JOB_CONNECTION_TYPE);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>This method always return {@code true} because the underlying flag is fully launched on
+     * {@code Adservices} but the method cannot be removed (as it's defined on {@code
+     * ModuleSharedFlags}).
+     */
     @Override
     public boolean getBackgroundJobsLoggingEnabled() {
-        return !getBackgroundJobsLoggingKillSwitch();
+        return true;
     }
 
     @Override
@@ -6993,6 +7132,7 @@ public final class PhFlags implements Flags {
      *     should only be used to refactor existing methods in this class, not on new ones.
      */
     @Deprecated
+    @SuppressWarnings("AvoidSystemPropertiesUsage") // Helper method.
     private static boolean getFlagFromSystemPropertiesOrDeviceConfig(
             String name, boolean defaultValue) {
         return SystemProperties.getBoolean(

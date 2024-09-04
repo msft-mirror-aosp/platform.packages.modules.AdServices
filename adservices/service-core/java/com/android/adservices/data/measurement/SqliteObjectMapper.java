@@ -281,8 +281,10 @@ public class SqliteObjectMapper {
                 builder::setRegistrant);
         setTextColumn(cursor, MeasurementTables.TriggerContract.AGGREGATE_TRIGGER_DATA,
                 builder::setAggregateTriggerData);
-        setTextColumn(cursor, MeasurementTables.TriggerContract.AGGREGATE_VALUES,
-                builder::setAggregateValues);
+        setTextColumn(
+                cursor,
+                MeasurementTables.TriggerContract.AGGREGATE_VALUES,
+                builder::setAggregateValuesString);
         setTextColumn(
                 cursor,
                 MeasurementTables.TriggerContract.AGGREGATABLE_DEDUPLICATION_KEYS,
@@ -340,6 +342,10 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.TriggerContract.ATTRIBUTION_SCOPES,
                 builder::setAttributionScopesString);
+        setIntColumn(
+                cursor,
+                MeasurementTables.TriggerContract.AGGREGATABLE_FILTERING_ID_MAX_BYTES,
+                builder::setAggregatableFilteringIdMaxBytes);
         return builder.build();
     }
 
@@ -399,6 +405,8 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.AggregateReport.TRIGGER_CONTEXT_ID,
                 builder::setTriggerContextId);
+        setLongColumn(
+                cursor, MeasurementTables.AggregateReport.TRIGGER_TIME, builder::setTriggerTime);
         return builder.build();
     }
 

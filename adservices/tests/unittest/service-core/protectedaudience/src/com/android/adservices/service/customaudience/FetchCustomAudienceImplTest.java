@@ -42,6 +42,7 @@ import static android.adservices.customaudience.CustomAudienceFixture.INVALID_DE
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_EXPIRATION_TIME;
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_NAME;
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_OWNER;
+import static android.adservices.customaudience.CustomAudienceFixture.VALID_PRIORITY_1;
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS;
 import static android.adservices.customaudience.CustomAudienceFixture.getValidDailyUpdateUriByBuyer;
 import static android.adservices.exceptions.RetryableAdServicesNetworkException.DEFAULT_RETRY_AFTER_VALUE;
@@ -88,6 +89,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -107,7 +109,6 @@ import android.os.LimitExceededException;
 import android.os.Process;
 import android.os.RemoteException;
 
-import com.android.adservices.LoggerFactory;
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -133,6 +134,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.testutils.FetchCustomAudienceTestSyncCallback;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
@@ -220,6 +222,7 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                         false,
                         true,
                         true,
+                        true,
                         Process.myUid(),
                         API_NAME,
                         Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
@@ -230,6 +233,7 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                         mFetchUri,
                         VALID_OWNER,
                         false,
+                        true,
                         true,
                         true,
                         Process.myUid(),
@@ -274,10 +278,11 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                                                 getFullSuccessfulJsonResponseString(
                                                         VALID_BUYER_1))));
 
-        FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
+        FetchCustomAudienceTestSyncCallback callback =
+                callFetchCustomAudience(mInputBuilder.build());
 
         assertEquals(0, mockWebServer.getRequestCount());
-        assertFalse(callback.mIsSuccess);
+        callback.assertResultReceived();
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_INTERNAL_ERROR), anyInt());
@@ -295,20 +300,22 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                         false,
                         true,
                         true,
+                        true,
                         Process.myUid(),
                         API_NAME,
                         Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
                         DevContext.createForDevOptionsDisabled());
 
-        FetchCustomAudienceTestCallback callback =
+        FetchCustomAudienceTestSyncCallback callback =
                 callFetchCustomAudience(
                         mInputBuilder.setCallerPackageName(otherPackageName).build());
 
-        assertFalse(callback.mIsSuccess);
-        assertEquals(STATUS_UNAUTHORIZED, callback.mFledgeErrorResponse.getStatusCode());
+        FledgeErrorResponse errorResponse = callback.assertFailureReceived();
+        assertNotNull(errorResponse);
+        assertEquals(STATUS_UNAUTHORIZED, errorResponse.getStatusCode());
         assertEquals(
                 SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ON_BEHALF_ERROR_MESSAGE,
-                callback.mFledgeErrorResponse.getErrorMessage());
+                errorResponse.getErrorMessage());
 
         // Confirm a duplicate log entry does not exist.
         // CustomAudienceServiceFilter ensures the failing assertion is logged internally.
@@ -327,17 +334,19 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                         false,
                         true,
                         true,
+                        true,
                         Process.myUid(),
                         API_NAME,
                         Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
                         DevContext.createForDevOptionsDisabled());
 
-        FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
+        FetchCustomAudienceTestSyncCallback callback =
+                callFetchCustomAudience(mInputBuilder.build());
 
-        assertFalse(callback.mIsSuccess);
-        assertEquals(STATUS_RATE_LIMIT_REACHED, callback.mFledgeErrorResponse.getStatusCode());
-        assertEquals(
-                RATE_LIMIT_REACHED_ERROR_MESSAGE, callback.mFledgeErrorResponse.getErrorMessage());
+        FledgeErrorResponse errorResponse = callback.assertFailureReceived();
+        assertNotNull(errorResponse);
+        assertEquals(STATUS_RATE_LIMIT_REACHED, errorResponse.getStatusCode());
+        assertEquals(RATE_LIMIT_REACHED_ERROR_MESSAGE, errorResponse.getErrorMessage());
 
         // Confirm a duplicate log entry does not exist.
         // CustomAudienceServiceFilter ensures the failing assertion is logged internally.
@@ -359,18 +368,20 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                         false,
                         true,
                         true,
+                        true,
                         Process.myUid(),
                         API_NAME,
                         Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
                         DevContext.createForDevOptionsDisabled());
 
-        FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
+        FetchCustomAudienceTestSyncCallback callback =
+                callFetchCustomAudience(mInputBuilder.build());
 
-        assertFalse(callback.mIsSuccess);
-        assertEquals(STATUS_BACKGROUND_CALLER, callback.mFledgeErrorResponse.getStatusCode());
+        FledgeErrorResponse errorResponse = callback.assertFailureReceived();
+        assertNotNull(errorResponse);
+        assertEquals(STATUS_BACKGROUND_CALLER, errorResponse.getStatusCode());
         assertEquals(
-                ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE,
-                callback.mFledgeErrorResponse.getErrorMessage());
+                ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE, errorResponse.getErrorMessage());
 
         // Confirm a duplicate log entry does not exist.
         // CustomAudienceServiceFilter ensures the failing assertion is logged internally.
@@ -392,18 +403,21 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                         false,
                         true,
                         true,
+                        true,
                         Process.myUid(),
                         API_NAME,
                         Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
                         DevContext.createForDevOptionsDisabled());
 
-        FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
+        FetchCustomAudienceTestSyncCallback callback =
+                callFetchCustomAudience(mInputBuilder.build());
 
-        assertFalse(callback.mIsSuccess);
-        assertEquals(STATUS_CALLER_NOT_ALLOWED, callback.mFledgeErrorResponse.getStatusCode());
+        FledgeErrorResponse errorResponse = callback.assertFailureReceived();
+        assertNotNull(errorResponse);
+        assertEquals(STATUS_CALLER_NOT_ALLOWED, errorResponse.getStatusCode());
         assertEquals(
                 SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE,
-                callback.mFledgeErrorResponse.getErrorMessage());
+                errorResponse.getErrorMessage());
 
         // Confirm a duplicate log entry does not exist.
         // CustomAudienceServiceFilter ensures the failing assertion is logged internally.
@@ -425,18 +439,21 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                         false,
                         true,
                         true,
+                        true,
                         Process.myUid(),
                         API_NAME,
                         Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
                         DevContext.createForDevOptionsDisabled());
 
-        FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
+        FetchCustomAudienceTestSyncCallback callback =
+                callFetchCustomAudience(mInputBuilder.build());
 
-        assertFalse(callback.mIsSuccess);
-        assertEquals(STATUS_CALLER_NOT_ALLOWED, callback.mFledgeErrorResponse.getStatusCode());
+        FledgeErrorResponse errorResponse = callback.assertFailureReceived();
+        assertNotNull(errorResponse);
+        assertEquals(STATUS_CALLER_NOT_ALLOWED, errorResponse.getStatusCode());
         assertEquals(
                 SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE,
-                callback.mFledgeErrorResponse.getErrorMessage());
+                errorResponse.getErrorMessage());
 
         // Confirm a duplicate log entry does not exist.
         // CustomAudienceServiceFilter ensures the failing assertion is logged internally.
@@ -458,14 +475,16 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                         false,
                         true,
                         true,
+                        true,
                         Process.myUid(),
                         API_NAME,
                         Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
                         DevContext.createForDevOptionsDisabled());
 
-        FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
+        FetchCustomAudienceTestSyncCallback callback =
+                callFetchCustomAudience(mInputBuilder.build());
 
-        assertTrue(callback.mIsSuccess);
+        callback.assertResultReceived();
 
         // Confirm a duplicate log entry does not exist.
         // CustomAudienceServiceFilter ensures the failing assertion is logged internally.
@@ -475,6 +494,60 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                         eq(TEST_PACKAGE_NAME),
                         eq(STATUS_USER_CONSENT_REVOKED),
                         anyInt());
+    }
+
+    @Test
+    public void testImpl_revokedConsent_failsSilentlyUXNotificationDisabled() throws Exception {
+
+        mFetchCustomAudienceImpl =
+                getImplWithFlags(
+                        new FetchCustomAudienceFlags() {
+                            @Override
+                            public boolean getConsentNotificationDebugMode() {
+                                return true;
+                            }
+                        });
+
+        doThrow(new ConsentManager.RevokedConsentException())
+                .when(mCustomAudienceServiceFilterMock)
+                .filterRequestAndExtractIdentifier(
+                        mFetchUri,
+                        VALID_OWNER,
+                        false,
+                        true,
+                        true,
+                        false,
+                        Process.myUid(),
+                        API_NAME,
+                        Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
+                        DevContext.createForDevOptionsDisabled());
+
+        FetchCustomAudienceTestSyncCallback callback =
+                callFetchCustomAudience(mInputBuilder.build());
+        callback.assertResultReceived();
+        assertTrue(callback.getResult().booleanValue());
+
+        // Confirm a duplicate log entry does not exist.
+        // CustomAudienceServiceFilter ensures the failing assertion is logged internally.
+        verify(mAdServicesLoggerMock, never())
+                .logFledgeApiCallStats(
+                        eq(API_NAME),
+                        eq(TEST_PACKAGE_NAME),
+                        eq(STATUS_USER_CONSENT_REVOKED),
+                        anyInt());
+
+        verify(mCustomAudienceServiceFilterMock)
+                .filterRequestAndExtractIdentifier(
+                        mFetchUri,
+                        VALID_OWNER,
+                        false,
+                        true,
+                        true,
+                        false,
+                        Process.myUid(),
+                        API_NAME,
+                        Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
+                        DevContext.createForDevOptionsDisabled());
     }
 
     @Test
@@ -499,10 +572,12 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                             }
                         });
 
-        FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
+        FetchCustomAudienceTestSyncCallback callback =
+                callFetchCustomAudience(mInputBuilder.build());
 
-        assertFalse(callback.mIsSuccess);
-        assertEquals(STATUS_INVALID_ARGUMENT, callback.mFledgeErrorResponse.getStatusCode());
+        FledgeErrorResponse errorResponse = callback.assertFailureReceived();
+        assertNotNull(errorResponse);
+        assertEquals(STATUS_INVALID_ARGUMENT, errorResponse.getStatusCode());
         assertEquals(
                 String.format(
                         Locale.ENGLISH,
@@ -510,7 +585,7 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                         ImmutableList.of(
                                 THE_MAX_NUMBER_OF_CUSTOM_AUDIENCE_FOR_THE_DEVICE_HAD_REACHED,
                                 THE_MAX_NUMBER_OF_CUSTOM_AUDIENCE_FOR_THE_OWNER_HAD_REACHED)),
-                callback.mFledgeErrorResponse.getErrorMessage());
+                errorResponse.getErrorMessage());
 
         // Assert failure due to the invalid argument is logged.
         verify(mAdServicesLoggerMock)
@@ -530,10 +605,12 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                             }
                         });
 
-        FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
+        FetchCustomAudienceTestSyncCallback callback =
+                callFetchCustomAudience(mInputBuilder.build());
 
-        assertFalse(callback.mIsSuccess);
-        assertEquals(STATUS_INVALID_ARGUMENT, callback.mFledgeErrorResponse.getStatusCode());
+        FledgeErrorResponse errorResponse = callback.assertFailureReceived();
+        assertNotNull(errorResponse);
+        assertEquals(STATUS_INVALID_ARGUMENT, errorResponse.getStatusCode());
         assertEquals(
                 String.format(
                         Locale.ENGLISH,
@@ -545,7 +622,7 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                                         VIOLATION_NAME_TOO_LONG,
                                         1,
                                         VALID_NAME.getBytes(StandardCharsets.UTF_8).length))),
-                callback.mFledgeErrorResponse.getErrorMessage());
+                errorResponse.getErrorMessage());
 
         // Assert failure due to the invalid argument is logged.
         verify(mAdServicesLoggerMock)
@@ -557,10 +634,12 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
     public void testImpl_invalidRequest_invalidActivationTime_throws() throws Exception {
         mInputBuilder.setActivationTime(INVALID_DELAYED_ACTIVATION_TIME);
 
-        FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
+        FetchCustomAudienceTestSyncCallback callback =
+                callFetchCustomAudience(mInputBuilder.build());
 
-        assertFalse(callback.mIsSuccess);
-        assertEquals(STATUS_INVALID_ARGUMENT, callback.mFledgeErrorResponse.getStatusCode());
+        FledgeErrorResponse errorResponse = callback.assertFailureReceived();
+        assertNotNull(errorResponse);
+        assertEquals(STATUS_INVALID_ARGUMENT, errorResponse.getStatusCode());
         assertEquals(
                 String.format(
                         Locale.ENGLISH,
@@ -577,7 +656,7 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                                         VIOLATION_EXPIRE_BEFORE_ACTIVATION,
                                         INVALID_DELAYED_ACTIVATION_TIME,
                                         VALID_EXPIRATION_TIME))),
-                callback.mFledgeErrorResponse.getErrorMessage());
+                errorResponse.getErrorMessage());
 
         // Assert failure due to the invalid argument is logged.
         verify(mAdServicesLoggerMock)
@@ -589,10 +668,12 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
     public void testImpl_invalidRequest_invalidExpirationTime_throws() throws Exception {
         mInputBuilder.setExpirationTime(INVALID_BEYOND_MAX_EXPIRATION_TIME);
 
-        FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
+        FetchCustomAudienceTestSyncCallback callback =
+                callFetchCustomAudience(mInputBuilder.build());
 
-        assertFalse(callback.mIsSuccess);
-        assertEquals(STATUS_INVALID_ARGUMENT, callback.mFledgeErrorResponse.getStatusCode());
+        FledgeErrorResponse errorResponse = callback.assertFailureReceived();
+        assertNotNull(errorResponse);
+        assertEquals(STATUS_INVALID_ARGUMENT, errorResponse.getStatusCode());
         assertEquals(
                 String.format(
                         Locale.ENGLISH,
@@ -606,7 +687,7 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                                         FIXED_NOW_TRUNCATED_TO_MILLI,
                                         FIXED_NOW_TRUNCATED_TO_MILLI,
                                         INVALID_BEYOND_MAX_EXPIRATION_TIME))),
-                callback.mFledgeErrorResponse.getErrorMessage());
+                errorResponse.getErrorMessage());
 
         // Assert failure due to the invalid argument is logged.
         verify(mAdServicesLoggerMock)
@@ -626,10 +707,12 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                             }
                         });
 
-        FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
+        FetchCustomAudienceTestSyncCallback callback =
+                callFetchCustomAudience(mInputBuilder.build());
 
-        assertFalse(callback.mIsSuccess);
-        assertEquals(STATUS_INVALID_ARGUMENT, callback.mFledgeErrorResponse.getStatusCode());
+        FledgeErrorResponse errorResponse = callback.assertFailureReceived();
+        assertNotNull(errorResponse);
+        assertEquals(STATUS_INVALID_ARGUMENT, errorResponse.getStatusCode());
         assertEquals(
                 String.format(
                         Locale.ENGLISH,
@@ -641,7 +724,7 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                                         VIOLATION_USER_BIDDING_SIGNAL_TOO_BIG,
                                         1,
                                         VALID_USER_BIDDING_SIGNALS.getSizeInBytes()))),
-                callback.mFledgeErrorResponse.getErrorMessage());
+                errorResponse.getErrorMessage());
 
         // Assert failure due to the invalid argument is logged.
         verify(mAdServicesLoggerMock)
@@ -661,13 +744,14 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                             }
                         });
 
-        FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
+        FetchCustomAudienceTestSyncCallback callback =
+                callFetchCustomAudience(mInputBuilder.build());
 
-        assertFalse(callback.mIsSuccess);
-        assertEquals(STATUS_INVALID_ARGUMENT, callback.mFledgeErrorResponse.getStatusCode());
+        FledgeErrorResponse errorResponse = callback.assertFailureReceived();
+        assertNotNull(errorResponse);
+        assertEquals(STATUS_INVALID_ARGUMENT, errorResponse.getStatusCode());
         assertEquals(
-                REQUEST_CUSTOM_HEADER_EXCEEDS_SIZE_LIMIT_MESSAGE,
-                callback.mFledgeErrorResponse.getErrorMessage());
+                REQUEST_CUSTOM_HEADER_EXCEEDS_SIZE_LIMIT_MESSAGE, errorResponse.getErrorMessage());
 
         // Assert failure due to the invalid argument is logged.
         verify(mAdServicesLoggerMock)
@@ -682,16 +766,17 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                 mMockWebServerRule.startMockWebServer(
                         List.of(new MockResponse().setBody("Not[A]VALID[JSON]")));
 
-        FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
-
+        FetchCustomAudienceTestSyncCallback callback =
+                callFetchCustomAudience(mInputBuilder.build());
+        FledgeErrorResponse errorResponse = callback.assertFailureReceived();
+        assertNotNull(errorResponse);
         assertEquals(1, mockWebServer.getRequestCount());
-        assertFalse(callback.mIsSuccess);
-        assertEquals(STATUS_INVALID_OBJECT, callback.mFledgeErrorResponse.getStatusCode());
+        assertEquals(STATUS_INVALID_OBJECT, errorResponse.getStatusCode());
         assertEquals(
                 "Value Not of type "
                         + jsonString.getClass().getName()
                         + " cannot be converted to JSONObject",
-                callback.mFledgeErrorResponse.getErrorMessage());
+                errorResponse.getErrorMessage());
 
         // Assert failure due to the invalid response is logged.
         verify(mAdServicesLoggerMock)
@@ -703,21 +788,23 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
     public void testImpl_invalidFused_missingField() throws Exception {
         // Remove ads from the response, resulting in an incomplete fused custom audience.
         JSONObject validResponse =
-                getFullSuccessfulJsonResponse(BUYER, /* auctionServerRequestFlagsEnabled= */ false);
+                getFullSuccessfulJsonResponse(
+                        BUYER,
+                        /* auctionServerRequestFlagsEnabled= */ false,
+                        /* sellerConfigurationEnabled= */ false);
         validResponse.remove(ADS_KEY);
 
         MockWebServer mockWebServer =
                 mMockWebServerRule.startMockWebServer(
                         List.of(new MockResponse().setBody(validResponse.toString())));
 
-        FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
-
+        FetchCustomAudienceTestSyncCallback callback =
+                callFetchCustomAudience(mInputBuilder.build());
+        FledgeErrorResponse errorResponse = callback.assertFailureReceived();
+        assertNotNull(errorResponse);
         assertEquals(1, mockWebServer.getRequestCount());
-        assertFalse(callback.mIsSuccess);
-        assertEquals(STATUS_INVALID_OBJECT, callback.mFledgeErrorResponse.getStatusCode());
-        assertEquals(
-                FUSED_CUSTOM_AUDIENCE_INCOMPLETE_MESSAGE,
-                callback.mFledgeErrorResponse.getErrorMessage());
+        assertEquals(STATUS_INVALID_OBJECT, errorResponse.getStatusCode());
+        assertEquals(FUSED_CUSTOM_AUDIENCE_INCOMPLETE_MESSAGE, errorResponse.getErrorMessage());
 
         // Assert failure due to the invalid response is logged.
         verify(mAdServicesLoggerMock)
@@ -731,21 +818,54 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
 
         // Remove adsKey from the response, resulting in an incomplete fused custom audience.
         JSONObject validResponse =
-                getFullSuccessfulJsonResponse(BUYER, /* auctionServerRequestFlagsEnabled= */ true);
+                getFullSuccessfulJsonResponse(
+                        BUYER,
+                        /* auctionServerRequestFlagsEnabled= */ true,
+                        /* sellerConfigurationEnabled= */ false);
         validResponse.remove(ADS_KEY);
 
         MockWebServer mockWebServer =
                 mMockWebServerRule.startMockWebServer(
                         List.of(new MockResponse().setBody(validResponse.toString())));
 
-        FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
-
+        FetchCustomAudienceTestSyncCallback callback =
+                callFetchCustomAudience(mInputBuilder.build());
+        FledgeErrorResponse errorResponse = callback.assertFailureReceived();
+        assertNotNull(errorResponse);
         assertEquals(1, mockWebServer.getRequestCount());
-        assertFalse(callback.mIsSuccess);
-        assertEquals(STATUS_INVALID_OBJECT, callback.mFledgeErrorResponse.getStatusCode());
-        assertEquals(
-                FUSED_CUSTOM_AUDIENCE_INCOMPLETE_MESSAGE,
-                callback.mFledgeErrorResponse.getErrorMessage());
+        assertEquals(STATUS_INVALID_OBJECT, errorResponse.getStatusCode());
+        assertEquals(FUSED_CUSTOM_AUDIENCE_INCOMPLETE_MESSAGE, errorResponse.getErrorMessage());
+
+        // Assert failure due to the invalid response is logged.
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_INVALID_OBJECT), anyInt());
+    }
+
+    @Test
+    public void testImpl_invalidFused_missingFieldSellerConfigurationFlagEnabled()
+            throws Exception {
+        enableSellerConfigurationFlag();
+
+        // Remove adsKey from the response, resulting in an incomplete fused custom audience.
+        JSONObject validResponse =
+                getFullSuccessfulJsonResponse(
+                        BUYER,
+                        /* auctionServerRequestFlagsEnabled= */ false,
+                        /* sellerConfigurationEnabled= */ true);
+        validResponse.remove(ADS_KEY);
+
+        MockWebServer mockWebServer =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(new MockResponse().setBody(validResponse.toString())));
+
+        FetchCustomAudienceTestSyncCallback callback =
+                callFetchCustomAudience(mInputBuilder.build());
+        FledgeErrorResponse errorResponse = callback.assertFailureReceived();
+        assertNotNull(errorResponse);
+        assertEquals(1, mockWebServer.getRequestCount());
+        assertEquals(STATUS_INVALID_OBJECT, errorResponse.getStatusCode());
+        assertEquals(FUSED_CUSTOM_AUDIENCE_INCOMPLETE_MESSAGE, errorResponse.getErrorMessage());
 
         // Assert failure due to the invalid response is logged.
         verify(mAdServicesLoggerMock)
@@ -756,7 +876,11 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
     @Test
     public void testImpl_invalidFused_invalidField() throws Exception {
         // Replace buyer to cause mismatch.
-        JSONObject validResponse = getFullSuccessfulJsonResponse(BUYER, false);
+        JSONObject validResponse =
+                getFullSuccessfulJsonResponse(
+                        BUYER,
+                        /* auctionServerRequestFlagsEnabled= */ false,
+                        /* sellerConfigurationEnabled= */ false);
         validResponse.remove(DAILY_UPDATE_URI_KEY);
         JSONObject invalidResponse =
                 addDailyUpdateUri(
@@ -766,11 +890,12 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                 mMockWebServerRule.startMockWebServer(
                         List.of(new MockResponse().setBody(invalidResponse.toString())));
 
-        FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
-
+        FetchCustomAudienceTestSyncCallback callback =
+                callFetchCustomAudience(mInputBuilder.build());
+        FledgeErrorResponse errorResponse = callback.assertFailureReceived();
+        assertNotNull(errorResponse);
         assertEquals(1, mockWebServer.getRequestCount());
-        assertFalse(callback.mIsSuccess);
-        assertEquals(STATUS_INVALID_ARGUMENT, callback.mFledgeErrorResponse.getStatusCode());
+        assertEquals(STATUS_INVALID_ARGUMENT, errorResponse.getStatusCode());
         assertEquals(
                 String.format(
                         Locale.ENGLISH,
@@ -785,7 +910,7 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                                         AD_TECH_ROLE_BUYER,
                                         DAILY_UPDATE_URI_FIELD_NAME,
                                         VALID_BUYER_2))),
-                callback.mFledgeErrorResponse.getErrorMessage());
+                errorResponse.getErrorMessage());
 
         // Assert failure due to the invalid response is logged.
         verify(mAdServicesLoggerMock)
@@ -811,14 +936,14 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                                 new MockResponse()
                                         .setBody(getFullSuccessfulJsonResponseString(BUYER))));
 
-        FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
-
+        FetchCustomAudienceTestSyncCallback callback =
+                callFetchCustomAudience(mInputBuilder.build());
+        FledgeErrorResponse errorResponse = callback.assertFailureReceived();
+        assertNotNull(errorResponse);
         assertEquals(1, mockWebServer.getRequestCount());
-        assertFalse(callback.mIsSuccess);
-        assertEquals(STATUS_INVALID_OBJECT, callback.mFledgeErrorResponse.getStatusCode());
+        assertEquals(STATUS_INVALID_OBJECT, errorResponse.getStatusCode());
         assertEquals(
-                FUSED_CUSTOM_AUDIENCE_EXCEEDS_SIZE_LIMIT_MESSAGE,
-                callback.mFledgeErrorResponse.getErrorMessage());
+                FUSED_CUSTOM_AUDIENCE_EXCEEDS_SIZE_LIMIT_MESSAGE, errorResponse.getErrorMessage());
 
         // Assert failure due to the invalid response is logged.
         verify(mAdServicesLoggerMock)
@@ -829,7 +954,11 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
     @Test
     public void testImpl_runNormally_partialResponse() throws Exception {
         // Remove all fields from the response that the request itself has.
-        JSONObject partialResponse = getFullSuccessfulJsonResponse(BUYER, false);
+        JSONObject partialResponse =
+                getFullSuccessfulJsonResponse(
+                        BUYER,
+                        /* auctionServerRequestFlagsEnabled= */ false,
+                        /* sellerConfigurationEnabled= */ false);
         partialResponse.remove(OWNER_KEY);
         partialResponse.remove(BUYER_KEY);
         partialResponse.remove(NAME_KEY);
@@ -841,10 +970,11 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                 mMockWebServerRule.startMockWebServer(
                         List.of(new MockResponse().setBody(partialResponse.toString())));
 
-        FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
+        FetchCustomAudienceTestSyncCallback callback =
+                callFetchCustomAudience(mInputBuilder.build());
+        callback.assertResultReceived();
 
         assertEquals(1, mockWebServer.getRequestCount());
-        assertTrue(callback.mIsSuccess);
         verify(mCustomAudienceDaoMock)
                 .insertOrOverwriteCustomAudience(
                         FetchCustomAudienceFixture.getFullSuccessfulDBCustomAudience(),
@@ -858,7 +988,11 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
     @Test
     public void testImpl_runNormally_discardedResponseValues() throws Exception {
         // Replace response name with a valid but different name from the original request.
-        JSONObject validResponse = getFullSuccessfulJsonResponse(BUYER, false);
+        JSONObject validResponse =
+                getFullSuccessfulJsonResponse(
+                        BUYER,
+                        /* auctionServerRequestFlagsEnabled= */ false,
+                        /* sellerConfigurationEnabled= */ false);
         validResponse.remove(NAME_KEY);
         String validNameFromTheServer = VALID_NAME + "FromTheServer";
         validResponse = addName(validResponse, validNameFromTheServer, false);
@@ -867,10 +1001,11 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                 mMockWebServerRule.startMockWebServer(
                         List.of(new MockResponse().setBody(validResponse.toString())));
 
-        FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
+        FetchCustomAudienceTestSyncCallback callback =
+                callFetchCustomAudience(mInputBuilder.build());
+        callback.assertResultReceived();
 
         assertEquals(1, mockWebServer.getRequestCount());
-        assertTrue(callback.mIsSuccess);
         // Assert the response value is in fact discarded in favor of the request value.
         verify(mCustomAudienceDaoMock)
                 .insertOrOverwriteCustomAudience(
@@ -891,10 +1026,11 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                                 new MockResponse()
                                         .setBody(getFullSuccessfulJsonResponseString(BUYER))));
 
-        FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
+        FetchCustomAudienceTestSyncCallback callback =
+                callFetchCustomAudience(mInputBuilder.build());
+        callback.assertResultReceived();
 
         assertEquals(1, mockWebServer.getRequestCount());
-        assertTrue(callback.mIsSuccess);
         verify(mCustomAudienceDaoMock)
                 .insertOrOverwriteCustomAudience(
                         FetchCustomAudienceFixture.getFullSuccessfulDBCustomAudience(),
@@ -914,7 +1050,7 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                                 new MockResponse()
                                         .setBody(getFullSuccessfulJsonResponseString(BUYER))));
 
-        FetchCustomAudienceTestCallback callback =
+        FetchCustomAudienceTestThrowingCallback callback =
                 callFetchCustomAudienceWithErrorCallback(mInputBuilder.build(), 3);
 
         assertEquals(1, mockWebServer.getRequestCount());
@@ -939,12 +1075,13 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                         false,
                         true,
                         true,
+                        true,
                         Process.myUid(),
                         API_NAME,
                         Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
                         DevContext.createForDevOptionsDisabled());
 
-        FetchCustomAudienceTestCallback callback =
+        FetchCustomAudienceTestThrowingCallback callback =
                 callFetchCustomAudienceWithErrorCallback(mInputBuilder.build(), 1);
 
         assertFalse(callback.mIsSuccess);
@@ -968,13 +1105,19 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                         List.of(
                                 new MockResponse()
                                         .setBody(
-                                                getFullSuccessfulJsonResponse(BUYER, true)
+                                                getFullSuccessfulJsonResponse(
+                                                                BUYER,
+                                                                /*auctionServerRequestFlagsEnabled*/
+                                                                true,
+                                                                /* sellerConfigurationEnabled */
+                                                                false)
                                                         .toString())));
 
-        FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
+        FetchCustomAudienceTestSyncCallback callback =
+                callFetchCustomAudience(mInputBuilder.build());
+        callback.assertResultReceived();
 
         assertEquals(1, mockWebServer.getRequestCount());
-        assertTrue(callback.mIsSuccess);
         verify(mCustomAudienceDaoMock)
                 .insertOrOverwriteCustomAudience(
                         FetchCustomAudienceFixture
@@ -997,13 +1140,19 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                         List.of(
                                 new MockResponse()
                                         .setBody(
-                                                getFullSuccessfulJsonResponse(BUYER, true)
+                                                getFullSuccessfulJsonResponse(
+                                                                BUYER,
+                                                                /*auctionServerRequestFlagsEnabled*/
+                                                                false,
+                                                                /* sellerConfigurationEnabled */
+                                                                false)
                                                         .toString())));
 
-        FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
+        FetchCustomAudienceTestSyncCallback callback =
+                callFetchCustomAudience(mInputBuilder.build());
+        callback.assertResultReceived();
 
         assertEquals(1, mockWebServer.getRequestCount());
-        assertTrue(callback.mIsSuccess);
         // Expect a CA without auction server request flags
         verify(mCustomAudienceDaoMock)
                 .insertOrOverwriteCustomAudience(
@@ -1027,14 +1176,87 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                         List.of(
                                 new MockResponse()
                                         .setBody(
-                                                getFullSuccessfulJsonResponse(BUYER, false)
+                                                getFullSuccessfulJsonResponse(
+                                                                BUYER,
+                                                                /*auctionServerRequestFlagsEnabled*/
+                                                                false,
+                                                                /* sellerConfigurationEnabled */
+                                                                false)
                                                         .toString())));
 
-        FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
+        FetchCustomAudienceTestSyncCallback callback =
+                callFetchCustomAudience(mInputBuilder.build());
+        callback.assertResultReceived();
 
         assertEquals(1, mockWebServer.getRequestCount());
-        assertTrue(callback.mIsSuccess);
         // Expect a CA without auction server request flags
+        verify(mCustomAudienceDaoMock)
+                .insertOrOverwriteCustomAudience(
+                        FetchCustomAudienceFixture.getFullSuccessfulDBCustomAudience(),
+                        getValidDailyUpdateUriByBuyer(BUYER),
+                        DevContext.createForDevOptionsDisabled().getDevOptionsEnabled());
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_SUCCESS), anyInt());
+    }
+
+    @Test
+    public void testImpl_runNormally_completeResponseWithSellerConfigurationFlagEnabled()
+            throws Exception {
+        enableSellerConfigurationFlag();
+
+        MockWebServer mockWebServer =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(
+                                new MockResponse()
+                                        .setBody(
+                                                getFullSuccessfulJsonResponse(
+                                                                BUYER,
+                                                                /*auctionServerRequestFlagsEnabled*/
+                                                                false,
+                                                                /* sellerConfigurationEnabled */
+                                                                true)
+                                                        .toString())));
+
+        FetchCustomAudienceTestSyncCallback callback =
+                callFetchCustomAudience(mInputBuilder.build());
+        callback.assertResultReceived();
+
+        assertEquals(1, mockWebServer.getRequestCount());
+        verify(mCustomAudienceDaoMock)
+                .insertOrOverwriteCustomAudience(
+                        FetchCustomAudienceFixture.getFullSuccessfulDBCustomAudienceWithPriority(
+                                VALID_PRIORITY_1),
+                        getValidDailyUpdateUriByBuyer(BUYER),
+                        DevContext.createForDevOptionsDisabled().getDevOptionsEnabled());
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_SUCCESS), anyInt());
+    }
+
+    @Test
+    public void testImpl_runNormally_completeResponseWithSellerConfigurationFlagDisabled()
+            throws Exception {
+        enableSellerConfigurationFlag();
+
+        MockWebServer mockWebServer =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(
+                                new MockResponse()
+                                        .setBody(
+                                                getFullSuccessfulJsonResponse(
+                                                                BUYER,
+                                                                /*auctionServerRequestFlagsEnabled*/
+                                                                false,
+                                                                /* sellerConfigurationEnabled */
+                                                                false)
+                                                        .toString())));
+
+        FetchCustomAudienceTestSyncCallback callback =
+                callFetchCustomAudience(mInputBuilder.build());
+        callback.assertResultReceived();
+
+        assertEquals(1, mockWebServer.getRequestCount());
         verify(mCustomAudienceDaoMock)
                 .insertOrOverwriteCustomAudience(
                         FetchCustomAudienceFixture.getFullSuccessfulDBCustomAudience(),
@@ -1054,16 +1276,14 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                                 new MockResponse()
                                         .setBody(getFullSuccessfulJsonResponseString(BUYER))));
 
-        CountDownLatch resultLatch = new CountDownLatch(1);
-        FetchCustomAudienceTestCallback callback = new FetchCustomAudienceTestCallback(resultLatch);
+        FetchCustomAudienceTestSyncCallback callback = new FetchCustomAudienceTestSyncCallback();
         mFetchCustomAudienceImpl.doFetchCustomAudience(
                 mInputBuilder.build(),
                 callback,
                 DevContext.builder(mPackageName).setDevOptionsEnabled(true).build());
-        resultLatch.await();
 
+        callback.assertResultReceived();
         assertEquals(1, mockWebServer.getRequestCount());
-        assertTrue(callback.mIsSuccess);
         verify(mCustomAudienceDaoMock)
                 .insertOrOverwriteCustomAudience(
                         FetchCustomAudienceFixture.getFullSuccessfulDBCustomAudience(),
@@ -1096,10 +1316,11 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                                                 getFullSuccessfulJsonResponseStringWithAdRenderId(
                                                         BUYER))));
 
-        FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
+        FetchCustomAudienceTestSyncCallback callback =
+                callFetchCustomAudience(mInputBuilder.build());
+        callback.assertResultReceived();
 
         assertEquals(1, mockWebServer.getRequestCount());
-        assertTrue(callback.mIsSuccess);
         verify(mCustomAudienceDaoMock)
                 .insertOrOverwriteCustomAudience(
                         FetchCustomAudienceFixture
@@ -1138,11 +1359,12 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                                                 getFullJsonResponseStringWithInvalidAdRenderId(
                                                         BUYER))));
 
-        FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
-
+        FetchCustomAudienceTestSyncCallback callback =
+                callFetchCustomAudience(mInputBuilder.build());
+        FledgeErrorResponse errorResponse = callback.assertFailureReceived();
+        assertNotNull(errorResponse);
         assertEquals(1, mockWebServer.getRequestCount());
-        assertFalse(callback.mIsSuccess);
-        assertEquals(STATUS_INVALID_ARGUMENT, callback.mFledgeErrorResponse.getStatusCode());
+        assertEquals(STATUS_INVALID_ARGUMENT, errorResponse.getStatusCode());
 
         // Assert failure due to the invalid response is logged.
         verify(mAdServicesLoggerMock)
@@ -1172,13 +1394,14 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                                                 getFullSuccessfulJsonResponseStringWithAdRenderId(
                                                         BUYER))));
 
-        FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
+        FetchCustomAudienceTestSyncCallback callback =
+                callFetchCustomAudience(mInputBuilder.build());
+        callback.assertResultReceived();
 
         ArgumentCaptor<DBCustomAudience> argumentDBCustomAudience =
                 ArgumentCaptor.forClass(DBCustomAudience.class);
 
         assertEquals(1, mockWebServer.getRequestCount());
-        assertTrue(callback.mIsSuccess);
         verify(mCustomAudienceDaoMock)
                 .insertOrOverwriteCustomAudience(
                         argumentDBCustomAudience.capture(),
@@ -1197,41 +1420,49 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
     @Test
     public void testImpl_runNormally_differentResponsesToSameFetchUri() throws Exception {
         // Respond with a complete custom audience including the request values as is.
-        JSONObject response1 = getFullSuccessfulJsonResponse(BUYER, false);
+        JSONObject response1 =
+                getFullSuccessfulJsonResponse(
+                        BUYER,
+                        /* auctionServerRequestFlagsEnabled= */ false,
+                        /* sellerConfigurationEnabled= */ false);
         Uri differentDailyUpdateUri = CommonFixture.getUri(BUYER, "/differentUpdate");
         JSONObject response2 =
-                getFullSuccessfulJsonResponse(BUYER, false)
+                getFullSuccessfulJsonResponse(
+                                BUYER,
+                                /* auctionServerRequestFlagsEnabled= */ false,
+                                /* sellerConfigurationEnabled= */ false)
                         .put(DAILY_UPDATE_URI_KEY, differentDailyUpdateUri.toString());
 
-        MockWebServer mockWebServer =
-                mMockWebServerRule.startMockWebServer(
-                        new Dispatcher() {
-                            AtomicInteger mNumCalls = new AtomicInteger(0);
+        mMockWebServerRule.startMockWebServer(
+                new Dispatcher() {
+                    final AtomicInteger mNumCalls = new AtomicInteger(0);
 
-                            @Override
-                            public MockResponse dispatch(RecordedRequest request) {
-                                if (mNumCalls.get() == 0) {
-                                    mNumCalls.addAndGet(1);
-                                    return new MockResponse().setBody(response1.toString());
-                                } else if (mNumCalls.get() == 1) {
-                                    mNumCalls.addAndGet(1);
-                                    return new MockResponse().setBody(response2.toString());
-                                } else {
-                                    throw new IllegalStateException("Expected only 2 calls!");
-                                }
-                            }
-                        });
+                    @Override
+                    public MockResponse dispatch(RecordedRequest request) {
+                        if (mNumCalls.get() == 0) {
+                            mNumCalls.addAndGet(1);
+                            return new MockResponse().setBody(response1.toString());
+                        } else if (mNumCalls.get() == 1) {
+                            mNumCalls.addAndGet(1);
+                            return new MockResponse().setBody(response2.toString());
+                        } else {
+                            throw new IllegalStateException("Expected only 2 calls!");
+                        }
+                    }
+                });
 
-        FetchCustomAudienceTestCallback callback1 = callFetchCustomAudience(mInputBuilder.build());
-        assertTrue(callback1.mIsSuccess);
+        FetchCustomAudienceTestSyncCallback callback1 =
+                callFetchCustomAudience(mInputBuilder.build());
+        callback1.assertResultReceived();
         verify(mCustomAudienceDaoMock)
                 .insertOrOverwriteCustomAudience(
                         FetchCustomAudienceFixture.getFullSuccessfulDBCustomAudience(),
                         getValidDailyUpdateUriByBuyer(BUYER),
                         DevContext.createForDevOptionsDisabled().getDevOptionsEnabled());
 
-        FetchCustomAudienceTestCallback callback2 = callFetchCustomAudience(mInputBuilder.build());
-        assertTrue(callback2.mIsSuccess);
+        FetchCustomAudienceTestSyncCallback callback2 =
+                callFetchCustomAudience(mInputBuilder.build());
+        callback2.assertResultReceived();
         verify(mCustomAudienceDaoMock)
                 .insertOrOverwriteCustomAudience(
                         FetchCustomAudienceFixture.getFullSuccessfulDBCustomAudience(),
@@ -1250,10 +1481,12 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                 mMockWebServerRule.startMockWebServer(
                         List.of(new MockResponse().setResponseCode(403)));
 
-        FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
+        FetchCustomAudienceTestSyncCallback callback =
+                callFetchCustomAudience(mInputBuilder.build());
+        FledgeErrorResponse errorResponse = callback.assertFailureReceived();
+        assertNotNull(errorResponse);
         assertEquals(1, mockWebServer.getRequestCount());
-        assertFalse(callback.mIsSuccess);
-        assertEquals(STATUS_INTERNAL_ERROR, callback.mFledgeErrorResponse.getStatusCode());
+        assertEquals(STATUS_INTERNAL_ERROR, errorResponse.getStatusCode());
         verify(mCustomAudienceDaoMock, times(/* wantedNumberOfInvocations= */ 0))
                 .insertOrOverwriteCustomAudience(any(), any(), anyBoolean());
         verify(mAdServicesLoggerMock)
@@ -1268,11 +1501,12 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                 mMockWebServerRule.startMockWebServer(
                         List.of(new MockResponse().setResponseCode(429)));
 
-        FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
+        FetchCustomAudienceTestSyncCallback callback =
+                callFetchCustomAudience(mInputBuilder.build());
+        FledgeErrorResponse errorResponse = callback.assertFailureReceived();
+        assertNotNull(errorResponse);
         assertEquals(1, mockWebServer.getRequestCount());
-        assertFalse(callback.mIsSuccess);
-        assertEquals(
-                STATUS_SERVER_RATE_LIMIT_REACHED, callback.mFledgeErrorResponse.getStatusCode());
+        assertEquals(STATUS_SERVER_RATE_LIMIT_REACHED, errorResponse.getStatusCode());
         verify(mCustomAudienceDaoMock)
                 .safelyInsertCustomAudienceQuarantine(
                         any(DBCustomAudienceQuarantine.class), anyLong());
@@ -1295,10 +1529,11 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                 .when(mCustomAudienceDaoMock)
                 .getCustomAudienceQuarantineExpiration(VALID_OWNER, BUYER);
 
-        FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
-        assertFalse(callback.mIsSuccess);
-        assertEquals(
-                STATUS_SERVER_RATE_LIMIT_REACHED, callback.mFledgeErrorResponse.getStatusCode());
+        FetchCustomAudienceTestSyncCallback callback =
+                callFetchCustomAudience(mInputBuilder.build());
+        FledgeErrorResponse errorResponse = callback.assertFailureReceived();
+        assertNotNull(errorResponse);
+        assertEquals(STATUS_SERVER_RATE_LIMIT_REACHED, errorResponse.getStatusCode());
         verify(mCustomAudienceDaoMock).doesCustomAudienceQuarantineExist(VALID_OWNER, BUYER);
         verify(mCustomAudienceDaoMock).getCustomAudienceQuarantineExpiration(VALID_OWNER, BUYER);
         verify(mAdServicesLoggerMock)
@@ -1326,9 +1561,11 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                                 new MockResponse()
                                         .setBody(getFullSuccessfulJsonResponseString(BUYER))));
 
-        FetchCustomAudienceTestCallback callback = callFetchCustomAudience(mInputBuilder.build());
+        FetchCustomAudienceTestSyncCallback callback =
+                callFetchCustomAudience(mInputBuilder.build());
+        callback.assertResultReceived();
+
         assertEquals(1, mockWebServer.getRequestCount());
-        assertTrue(callback.mIsSuccess);
 
         verify(mCustomAudienceDaoMock).doesCustomAudienceQuarantineExist(VALID_OWNER, BUYER);
         verify(mCustomAudienceDaoMock).getCustomAudienceQuarantineExpiration(VALID_OWNER, BUYER);
@@ -1356,17 +1593,27 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                         });
     }
 
-    private FetchCustomAudienceTestCallback callFetchCustomAudience(
-            FetchAndJoinCustomAudienceInput input) throws Exception {
-        CountDownLatch resultLatch = new CountDownLatch(1);
-        FetchCustomAudienceTestCallback callback = new FetchCustomAudienceTestCallback(resultLatch);
+    private void enableSellerConfigurationFlag() {
+        // Helper method to enable seller configuration flag along with default flags
+        mFetchCustomAudienceImpl =
+                getImplWithFlags(
+                        new FetchCustomAudienceFlags() {
+                            @Override
+                            public boolean getFledgeGetAdSelectionDataSellerConfigurationEnabled() {
+                                return true;
+                            }
+                        });
+    }
+
+    private FetchCustomAudienceTestSyncCallback callFetchCustomAudience(
+            FetchAndJoinCustomAudienceInput input) {
+        FetchCustomAudienceTestSyncCallback callback = new FetchCustomAudienceTestSyncCallback();
         mFetchCustomAudienceImpl.doFetchCustomAudience(
                 input, callback, DevContext.createForDevOptionsDisabled());
-        resultLatch.await();
         return callback;
     }
 
-    private FetchCustomAudienceTestCallback callFetchCustomAudienceWithErrorCallback(
+    private FetchCustomAudienceTestThrowingCallback callFetchCustomAudienceWithErrorCallback(
             FetchAndJoinCustomAudienceInput input, int numCountDown) throws Exception {
         CountDownLatch resultLatch = new CountDownLatch(numCountDown);
         Answer<Void> countDownAnswer =
@@ -1400,41 +1647,14 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                 AD_DATA_CONVERSION_STRATEGY);
     }
 
-    public static class FetchCustomAudienceTestCallback
+    private static final class FetchCustomAudienceTestThrowingCallback
             extends FetchAndJoinCustomAudienceCallback.Stub {
-        protected final CountDownLatch mCountDownLatch;
+        private final CountDownLatch mCountDownLatch;
         boolean mIsSuccess = false;
         FledgeErrorResponse mFledgeErrorResponse;
 
-        public FetchCustomAudienceTestCallback(CountDownLatch countDownLatch) {
-            mCountDownLatch = countDownLatch;
-        }
-
-        public boolean isSuccess() {
-            return mIsSuccess;
-        }
-
-        @Override
-        public void onSuccess() throws RemoteException {
-            LoggerFactory.getFledgeLogger()
-                    .v("Reporting success to FetchCustomAudienceTestCallback.");
-            mIsSuccess = true;
-            mCountDownLatch.countDown();
-        }
-
-        @Override
-        public void onFailure(FledgeErrorResponse fledgeErrorResponse) throws RemoteException {
-            LoggerFactory.getFledgeLogger()
-                    .v("Reporting failure to FetchCustomAudienceTestCallback.");
-            mFledgeErrorResponse = fledgeErrorResponse;
-            mCountDownLatch.countDown();
-        }
-    }
-
-    public static class FetchCustomAudienceTestThrowingCallback
-            extends FetchCustomAudienceTestCallback {
         public FetchCustomAudienceTestThrowingCallback(CountDownLatch countDownLatch) {
-            super(countDownLatch);
+            mCountDownLatch = countDownLatch;
         }
 
         @Override

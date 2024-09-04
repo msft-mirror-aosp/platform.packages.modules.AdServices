@@ -421,7 +421,7 @@ public class DbState {
                 .setEnrollmentId(tJSON.getString("enrollmentId"))
                 .setEventTriggers(tJSON.getString("eventTriggers"))
                 .setAggregateTriggerData(tJSON.optString("aggregatableTriggerData", null))
-                .setAggregateValues(tJSON.optString("aggregatableValues", null))
+                .setAggregateValuesString(tJSON.optString("aggregatableValues", null))
                 .setTriggerTime(tJSON.getLong("triggerTime"))
                 .setStatus(tJSON.getInt("status"))
                 .setRegistrant(Uri.parse(tJSON.getString("registrant")))

@@ -32,6 +32,7 @@ import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
 import static com.android.adservices.service.adselection.EventReporter.INTERACTION_DATA_SIZE_MAX_EXCEEDED;
 import static com.android.adservices.service.adselection.EventReporter.INTERACTION_KEY_SIZE_MAX_EXCEEDED;
+import static com.android.adservices.service.common.AppManifestConfigCall.API_AD_SELECTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
@@ -65,6 +66,7 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
@@ -91,10 +93,10 @@ import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ReportInteractionApiCalledStats;
 import com.android.adservices.shared.testing.AnswerSyncCallback;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
@@ -106,22 +108,23 @@ import com.google.mockwebserver.MockWebServer;
 import com.google.mockwebserver.RecordedRequest;
 
 import org.json.JSONObject;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoSession;
 import org.mockito.Spy;
-import org.mockito.quality.Strictness;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class ReportAndRegisterEventFallbackImplTest {
+@RequiresSdkLevelAtLeastS()
+@MockStatic(ConsentManager.class)
+@MockStatic(PermissionHelper.class)
+public final class ReportAndRegisterEventFallbackImplTest
+        extends AdServicesExtendedMockitoTestCase {
     private static final Instant ACTIVATION_TIME = Instant.now();
     private static final int MY_UID = Process.myUid();
     private static final String CALLER_SDK_NAME = "sdk.package.name";
@@ -156,7 +159,7 @@ public class ReportAndRegisterEventFallbackImplTest {
     private final ListeningExecutorService mBackgroundExecutorService =
             AdServicesExecutors.getBackgroundExecutor();
     @Mock FledgeAuthorizationFilter mFledgeAuthorizationFilterMock;
-    private Flags mFlags = new ReportEventTestFlags();
+    private Flags mFakeFlags = new ReportEventTestFlags();
     private static final Flags FLAGS_ENROLLMENT_CHECK =
             new ReportEventTestFlags() {
                 @Override
@@ -165,9 +168,9 @@ public class ReportAndRegisterEventFallbackImplTest {
                 }
             };
     private final long mMaxRegisteredAdBeaconsTotalCount =
-            mFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount();
+            mFakeFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount();
     private final long mMaxRegisteredAdBeaconsPerDestination =
-            mFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount();
+            mFakeFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount();
 
     private final IllegalStateException mRuntimeException =
             new IllegalStateException("Exception for test!");
@@ -176,28 +179,15 @@ public class ReportAndRegisterEventFallbackImplTest {
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
     @Mock private MeasurementImpl mMeasurementServiceMock;
     @Mock private ConsentManager mConsentManagerMock;
-    @Mock private Context mContextMock;
     private ReportAndRegisterEventFallbackImpl mEventReporter;
     private DBAdSelection mDBAdSelection;
     private DBRegisteredAdInteraction mDBRegisteredAdInteractionSellerClick;
     private DBRegisteredAdInteraction mDBRegisteredAdInteractionBuyerClick;
     private String mEventData;
     private ReportInteractionInput.Builder mInputBuilder;
-    private MockitoSession mStaticMockSession = null;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() throws Exception {
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .strictness(Strictness.LENIENT)
-                        .mockStatic(ConsentManager.class)
-                        .mockStatic(PermissionHelper.class)
-                        .initMocks(this)
-                        .startMocking();
-
         mAdSelectionEntryDao =
                 Room.inMemoryDatabaseBuilder(
                                 ApplicationProvider.getApplicationContext(),
@@ -205,7 +195,7 @@ public class ReportAndRegisterEventFallbackImplTest {
                         .build()
                         .adSelectionEntryDao();
 
-        mEventReporter = getReportAndRegisterEventFallbackImpl(mFlags);
+        mEventReporter = getReportAndRegisterEventFallbackImpl(mFakeFlags);
 
         CustomAudienceSignals customAudienceSignals =
                 CustomAudienceSignalsFixture.aCustomAudienceSignalsBuilder()
@@ -254,13 +244,6 @@ public class ReportAndRegisterEventFallbackImplTest {
                         .setInteractionData(mEventData)
                         .setReportingDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
                         .setCallerSdkName(CALLER_SDK_NAME);
-    }
-
-    @After
-    public void tearDown() {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
     }
 
     @Test
@@ -649,8 +632,10 @@ public class ReportAndRegisterEventFallbackImplTest {
         doNothing()
                 .doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
                 .when(mFledgeAuthorizationFilterMock)
-                .assertAdTechEnrolled(
-                        AD_TECH, AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION);
+                .assertAdTechFromUriEnrolled(
+                        any(Uri.class),
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(API_AD_SELECTION));
 
         // Mock server to report the event in addition to being registered by measurement.
         MockWebServer server =
@@ -716,8 +701,10 @@ public class ReportAndRegisterEventFallbackImplTest {
         // Filter the call.
         doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
                 .when(mFledgeAuthorizationFilterMock)
-                .assertAdTechEnrolled(
-                        AD_TECH, AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION);
+                .assertAdTechFromUriEnrolled(
+                        any(Uri.class),
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(API_AD_SELECTION));
 
         // Mock server to report the event in addition to being registered by measurement.
         mMockWebServerRule.startMockWebServer(
@@ -770,6 +757,7 @@ public class ReportAndRegisterEventFallbackImplTest {
                         TEST_PACKAGE_NAME,
                         true,
                         true,
+                        true,
                         MY_UID,
                         AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION,
                         Throttler.ApiKey.FLEDGE_API_REPORT_INTERACTION,
@@ -820,6 +808,7 @@ public class ReportAndRegisterEventFallbackImplTest {
                 .filterRequest(
                         null,
                         TEST_PACKAGE_NAME,
+                        true,
                         true,
                         true,
                         MY_UID,
@@ -875,6 +864,7 @@ public class ReportAndRegisterEventFallbackImplTest {
                 .filterRequest(
                         null,
                         TEST_PACKAGE_NAME,
+                        true,
                         true,
                         true,
                         MY_UID,
@@ -956,6 +946,7 @@ public class ReportAndRegisterEventFallbackImplTest {
                         TEST_PACKAGE_NAME,
                         true,
                         true,
+                        true,
                         MY_UID,
                         AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION,
                         Throttler.ApiKey.FLEDGE_API_REPORT_INTERACTION,
@@ -999,6 +990,7 @@ public class ReportAndRegisterEventFallbackImplTest {
                 .filterRequest(
                         null,
                         TEST_PACKAGE_NAME,
+                        true,
                         true,
                         true,
                         MY_UID,
@@ -1552,7 +1544,7 @@ public class ReportAndRegisterEventFallbackImplTest {
                 DevContext.createForDevOptionsDisabled(),
                 mMeasurementServiceMock,
                 mConsentManagerMock,
-                mContextMock,
+                mMockContext,
                 false);
     }
 

@@ -16,12 +16,15 @@
 
 package com.android.adservices.service.common;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
+
+import com.android.adservices.common.AdServicesUnitTestCase;
 
 import org.junit.Test;
 
-public class JsonValidatorTest {
+public final class JsonValidatorTest extends AdServicesUnitTestCase {
     private static final String CLASS_NAME = "class";
     private static final String FIELD_NAME = "field";
 
@@ -30,15 +33,12 @@ public class JsonValidatorTest {
     @Test
     public void testNullJson() {
         assertThrows(
-                NullPointerException.class,
-                () -> {
-                    mJsonValidator.getValidationViolations(null);
-                });
+                NullPointerException.class, () -> mJsonValidator.getValidationViolations(null));
     }
 
     @Test
     public void testValidJsonObject() {
-        assertTrue(mJsonValidator.getValidationViolations("{\"a\":5}").isEmpty());
+        assertThat(mJsonValidator.getValidationViolations("{\"a\":5}")).isEmpty();
     }
 
     @Test

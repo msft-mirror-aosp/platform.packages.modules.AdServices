@@ -88,12 +88,10 @@ public final class CobaltFactory {
                                 getRegistry(context),
                                 CobaltReleaseStages.getReleaseStage(
                                         flags.getAdservicesReleaseStageForCobalt()),
-                                getDataService(context),
+                                getDataService(context, flags),
                                 getSystemData(context),
                                 getExecutor(),
                                 new SystemClockImpl(),
-                                new CobaltOperationLoggerImpl(
-                                        flags.getCobaltOperationalLoggingEnabled()),
                                 flags.getCobaltLoggingEnabled());
             }
             return sSingletonCobaltLogger;
@@ -119,7 +117,7 @@ public final class CobaltFactory {
                                 getRegistry(context),
                                 CobaltReleaseStages.getReleaseStage(
                                         flags.getAdservicesReleaseStageForCobalt()),
-                                getDataService(context),
+                                getDataService(context, flags),
                                 getExecutor(),
                                 getScheduledExecutor(),
                                 new SystemClockImpl(),
@@ -132,6 +130,8 @@ public final class CobaltFactory {
                                 CobaltApiKeys.copyFromHexApiKey(
                                         flags.getCobaltAdservicesApiKeyHex()),
                                 Duration.ofMillis(flags.getCobaltUploadServiceUnbindDelayMs()),
+                                new CobaltOperationLoggerImpl(
+                                        flags.getCobaltOperationalLoggingEnabled()),
                                 flags.getCobaltLoggingEnabled());
             }
             return sSingletonCobaltPeriodicJob;
@@ -155,11 +155,15 @@ public final class CobaltFactory {
         return sSingletonCobaltRegistryProject;
     }
 
-    private static DataService getDataService(Context context) {
+    private static DataService getDataService(Context context, Flags flags) {
         Objects.requireNonNull(context);
         if (sSingletonDataService == null) {
             sSingletonDataService =
-                    CobaltDataServiceFactory.createDataService(context, getExecutor());
+                    CobaltDataServiceFactory.createDataService(
+                            context,
+                            getExecutor(),
+                            new CobaltOperationLoggerImpl(
+                                    flags.getCobaltOperationalLoggingEnabled()));
         }
 
         return sSingletonDataService;

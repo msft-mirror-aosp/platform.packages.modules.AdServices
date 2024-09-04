@@ -54,7 +54,6 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.Spy;
 
 import java.util.concurrent.TimeUnit;
 
@@ -63,7 +62,8 @@ import java.util.concurrent.TimeUnit;
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(AdServicesJobServiceLogger.class)
 @MockStatic(ServiceCompatUtils.class)
-public final class DeleteUninstalledJobServiceTest extends MeasurementJobServiceTestCase {
+public final class DeleteUninstalledJobServiceTest
+        extends MeasurementJobServiceTestCase<DeleteUninstalledJobService> {
     private static final int MEASUREMENT_DELETE_UNINSTALLED_JOB_ID =
             MEASUREMENT_DELETE_UNINSTALLED_JOB.getJobId();
     private static final long WAIT_IN_MILLIS = 1_000L;
@@ -71,25 +71,15 @@ public final class DeleteUninstalledJobServiceTest extends MeasurementJobService
 
     @Mock private MeasurementImpl mMockMeasurementImpl;
 
-    @Spy private DeleteUninstalledJobService mSpyService;
-
-    @Test
-    public void onStartJob_killSwitchOn_withoutLogging() throws Exception {
-        runWithMocks(
-                () -> {
-                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
-
-                    onStartJob_killSwitchOn();
-
-                    verifyLoggingNotHappened(mSpyLogger);
-                });
+    @Override
+    protected DeleteUninstalledJobService getSpiedService() {
+        return new DeleteUninstalledJobService();
     }
 
     @Test
     public void onStartJob_killSwitchOn_withLogging() throws Exception {
         runWithMocks(
                 () -> {
-                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
                     JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
 
                     onStartJob_killSwitchOn();
@@ -99,22 +89,9 @@ public final class DeleteUninstalledJobServiceTest extends MeasurementJobService
     }
 
     @Test
-    public void onStartJob_killSwitchOff_withoutLogging() throws Exception {
-        runWithMocks(
-                () -> {
-                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
-
-                    onStartJob_killSwitchOff();
-
-                    verifyLoggingNotHappened(mSpyLogger);
-                });
-    }
-
-    @Test
     public void onStartJob_killSwitchOff_withLogging() throws Exception {
         runWithMocks(
                 () -> {
-                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
                     JobServiceLoggingCallback onStartJobCallback =
                             syncPersistJobExecutionData(mSpyLogger);
                     JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
@@ -126,24 +103,10 @@ public final class DeleteUninstalledJobServiceTest extends MeasurementJobService
     }
 
     @Test
-    public void onStartJob_shouldDisableJobTrue_withoutLogging() throws Exception {
-        runWithMocks(
-                () -> {
-                    ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
-
-                    onStartJob_shouldDisableJobTrue();
-
-                    verifyLoggingNotHappened(mSpyLogger);
-                });
-    }
-
-    @Test
     public void onStartJob_shouldDisableJobTrue_withLoggingEnabled() throws Exception {
         runWithMocks(
                 () -> {
-                    ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
+                    mocker.mockGetFlags(mMockFlags);
 
                     onStartJob_shouldDisableJobTrue();
 
@@ -404,19 +367,9 @@ public final class DeleteUninstalledJobServiceTest extends MeasurementJobService
         execute.run();
     }
 
-    private void enableKillSwitch() {
-        toggleKillSwitch(true);
-    }
-
-    private void disableKillSwitch() {
-        toggleKillSwitch(false);
-    }
-
-    private void toggleKillSwitch(boolean value) {
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        ExtendedMockito.doReturn(value)
-                .when(mMockFlags)
-                .getMeasurementJobDeleteUninstalledKillSwitch();
+    @Override
+    protected void toggleFeature(boolean value) {
+        when(mMockFlags.getMeasurementJobDeleteUninstalledKillSwitch()).thenReturn(!value);
         when(mMockFlags.getMeasurementDeleteUninstalledJobPersisted()).thenReturn(true);
         when(mMockFlags.getMeasurementDeleteUninstalledJobPeriodMs()).thenReturn(JOB_PERIOD_MS);
     }

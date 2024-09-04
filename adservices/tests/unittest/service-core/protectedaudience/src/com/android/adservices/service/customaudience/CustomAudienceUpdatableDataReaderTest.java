@@ -17,6 +17,8 @@
 package com.android.adservices.service.customaudience;
 
 import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
+import static android.adservices.customaudience.CustomAudience.PRIORITY_DEFAULT;
+import static android.adservices.customaudience.CustomAudienceFixture.VALID_PRIORITY_1;
 
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.ADS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.AD_RENDER_ID_KEY;
@@ -194,6 +196,51 @@ public class CustomAudienceUpdatableDataReaderTest {
                         mFlags.getFledgeAuctionServerAdRenderIdMaxLength());
 
         assertThrows(JSONException.class, reader::getAuctionServerRequestFlags);
+    }
+
+    @Test
+    public void testGetPriorityValueSuccess() throws JSONException {
+        JSONObject responseObject =
+                CustomAudienceUpdatableDataFixture.addPriorityValueToJsonObject(
+                        /* jsonResponse= */ null,
+                        VALID_PRIORITY_1,
+                        /* shouldAddHarmlessJunk= */ true);
+        CustomAudienceUpdatableDataReader reader =
+                new CustomAudienceUpdatableDataReader(
+                        responseObject,
+                        RESPONSE_IDENTIFIER,
+                        CommonFixture.VALID_BUYER_1,
+                        mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
+                        mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
+                        mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
+                        mFlags.getFledgeCustomAudienceMaxNumAds(),
+                        mFlags.getFledgeFrequencyCapFilteringEnabled(),
+                        mFlags.getFledgeAppInstallFilteringEnabled(),
+                        mFlags.getFledgeAuctionServerAdRenderIdEnabled(),
+                        mFlags.getFledgeAuctionServerAdRenderIdMaxLength());
+
+        assertEquals(0, Double.compare(VALID_PRIORITY_1, reader.getPriority()));
+    }
+
+    @Test
+    public void testGetPriorityValueNoFieldSet() throws JSONException {
+        JSONObject responseObject = new JSONObject();
+        JsonFixture.addHarmlessJunkValues(responseObject);
+        CustomAudienceUpdatableDataReader reader =
+                new CustomAudienceUpdatableDataReader(
+                        responseObject,
+                        RESPONSE_IDENTIFIER,
+                        CommonFixture.VALID_BUYER_1,
+                        mFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
+                        mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
+                        mFlags.getFledgeCustomAudienceMaxAdsSizeB(),
+                        mFlags.getFledgeCustomAudienceMaxNumAds(),
+                        mFlags.getFledgeFrequencyCapFilteringEnabled(),
+                        mFlags.getFledgeAppInstallFilteringEnabled(),
+                        mFlags.getFledgeAuctionServerAdRenderIdEnabled(),
+                        mFlags.getFledgeAuctionServerAdRenderIdMaxLength());
+
+        assertEquals(0, Double.compare(PRIORITY_DEFAULT, reader.getPriority()));
     }
 
     @Test

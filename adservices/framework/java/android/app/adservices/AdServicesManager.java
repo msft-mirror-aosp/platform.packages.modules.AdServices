@@ -32,8 +32,8 @@ import android.os.RemoteException;
 
 import androidx.annotation.RequiresApi;
 
+import com.android.adservices.LogUtil;
 import com.android.internal.annotations.GuardedBy;
-import com.android.internal.annotations.VisibleForTesting;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -66,7 +66,6 @@ public final class AdServicesManager {
 
     // TODO(b/267789077): Create bit for other APIs.
 
-    @VisibleForTesting
     public AdServicesManager(@NonNull IAdServicesManager iAdServicesManager) {
         Objects.requireNonNull(iAdServicesManager, "AdServicesManager is NULL!");
         mService = iAdServicesManager;
@@ -77,12 +76,28 @@ public final class AdServicesManager {
     public static AdServicesManager getInstance(@NonNull Context context) {
         synchronized (SINGLETON_LOCK) {
             if (sSingleton == null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                // TODO(b/262282035): Fix this work around in U+.
-                // Get the AdServicesManagerService's Binder from the SdkSandboxManager.
-                // This is a workaround for b/262282035.
-                IBinder iBinder =
-                        context.getSystemService(SdkSandboxManager.class).getAdServicesManager();
-                sSingleton = new AdServicesManager(IAdServicesManager.Stub.asInterface(iBinder));
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    // Get the AdServicesManagerService's Binder from the SdkSandboxManager.
+                    // This is a workaround for bug 262282035 that's only needed on TM - there is
+                    // a CTS test that guarantees the service is published on UDC+
+                    // (AdServicesJUnit4DeviceTest#testBinderServiceIsPublished, from
+                    // CtsAdServicesDeviceTestCases)
+                    LogUtil.d(
+                            "AdServicesManager.getInstance(): getting from SdkSandboxManager on"
+                                    + " TM");
+                    IBinder iBinder =
+                            context.getSystemService(SdkSandboxManager.class)
+                                    .getAdServicesManager();
+
+                    sSingleton =
+                            new AdServicesManager(IAdServicesManager.Stub.asInterface(iBinder));
+                } else {
+                    LogUtil.d(
+                            "AdServicesManager.getInstance(): getting from AdServicesManager on"
+                                    + " UDC+");
+                    sSingleton = context.getSystemService(AdServicesManager.class);
+                }
+                LogUtil.v("AdServicesManager.getInstance(): singleton set");
             }
         }
         return sSingleton;

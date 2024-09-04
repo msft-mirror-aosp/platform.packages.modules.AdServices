@@ -95,7 +95,6 @@ public final class PeriodicEncodingJobWorker {
             EncoderLogicHandler encoderLogicHandler,
             EncoderLogicMetadataDao encoderLogicMetadataDao,
             EncodedPayloadDao encodedPayloadDao,
-            SignalsProviderImpl signalStorageManager,
             ProtectedSignalsDao protectedSignalsDao,
             SignalsScriptEngine scriptEngine,
             ListeningExecutorService backgroundExecutor,
@@ -103,8 +102,7 @@ public final class PeriodicEncodingJobWorker {
             Flags flags,
             EnrollmentDao enrollmentDao,
             Clock clock,
-            AdServicesLogger adServicesLogger,
-            ProtectedSignalsArgument protectedSignalsArgument) {
+            AdServicesLogger adServicesLogger) {
         mEncoderLogicHandler = encoderLogicHandler;
         mEncoderLogicMetadataDao = encoderLogicMetadataDao;
         mEncodedPayloadDao = encodedPayloadDao;
@@ -118,7 +116,8 @@ public final class PeriodicEncodingJobWorker {
         mPerBuyerEncodingTimeoutMs = mFlags.getPasScriptExecutionTimeoutMs();
         mPeriodicEncodingJobRunner =
                 new PeriodicEncodingJobRunner(
-                        signalStorageManager,
+                        new SignalsProviderAndArgumentFactory(
+                                protectedSignalsDao, flags.getPasEncodingJobImprovementsEnabled()),
                         protectedSignalsDao,
                         scriptEngine,
                         mFlags.getProtectedSignalsMaxJsFailureExecutionOnCertainVersionBeforeStop(),
@@ -126,8 +125,7 @@ public final class PeriodicEncodingJobWorker {
                         mEncoderLogicHandler,
                         mEncodedPayloadDao,
                         mBackgroundExecutor,
-                        mLightWeightExecutor,
-                        protectedSignalsArgument);
+                        mLightWeightExecutor);
     }
 
     /**
@@ -152,15 +150,10 @@ public final class PeriodicEncodingJobWorker {
                                     AdServicesExecutors.getLightWeightExecutor())
                             .createRetryStrategy(
                                     flags.getAdServicesJsScriptEngineMaxRetryAttempts());
-            ProtectedSignalsArgument protectedSignalsArgument =
-                    flags.getPasEncodingJobImprovementsEnabled()
-                            ? new ProtectedSignalsArgumentFastImpl()
-                            : new ProtectedSignalsArgumentImpl();
             return new PeriodicEncodingJobWorker(
                     new EncoderLogicHandler(context),
                     signalsDatabase.getEncoderLogicMetadataDao(),
                     signalsDatabase.getEncodedPayloadDao(),
-                    new SignalsProviderImpl(signalsDatabase.protectedSignalsDao()),
                     signalsDatabase.protectedSignalsDao(),
                     new SignalsScriptEngine(
                             flags::getIsolateMaxHeapSizeBytes,
@@ -173,8 +166,7 @@ public final class PeriodicEncodingJobWorker {
                     flags,
                     EnrollmentDao.getInstance(),
                     Clock.getInstance(),
-                    AdServicesLoggerImpl.getInstance(),
-                    protectedSignalsArgument);
+                    AdServicesLoggerImpl.getInstance());
         }
     }
 
