@@ -49,9 +49,9 @@ final class ConcurrencyHelper {
         mSleeper = sleeper;
     }
 
-    Thread runAsync(long timeoutMs, Runnable r) {
+    Thread runAsync(long delayMs, Runnable r) {
         Objects.requireNonNull(r, "Runnable cannot be null");
-        return startNewThread(() -> sleep(timeoutMs, r, "runAsync() call"));
+        return startNewThread(() -> sleep(delayMs, r, "runAsync() call"));
     }
 
     Thread startNewThread(Runnable r) {
@@ -69,25 +69,39 @@ final class ConcurrencyHelper {
     }
 
     @FormatMethod
+    void sleepOnly(long timeMs, @FormatString String reasonFmt, @Nullable Object... reasonArgs)
+            throws InterruptedException {
+        sleepAndLog(timeMs, reasonFmt, reasonArgs);
+    }
+
+    @FormatMethod
+    private void sleepAndLog(
+            long timeMs, @FormatString String reasonFmt, @Nullable Object... reasonArgs)
+            throws InterruptedException {
+        String reason =
+                String.format(
+                        Objects.requireNonNull(reasonFmt, "reasonFmt cannot be null"), reasonArgs);
+
+        mLogger.i(
+                "Napping %dms on thread %s. Reason: %s",
+                timeMs, Thread.currentThread().toString(), reason);
+        mSleeper.sleep(timeMs);
+        mLogger.i("Little Suzie woke up!");
+    }
+
+    @FormatMethod
     private void sleep(
             long timeMs,
             @Nullable Runnable postSleepRunnable,
             @FormatString String reasonFmt,
             @Nullable Object... reasonArgs) {
-        String reason =
-                String.format(
-                        Objects.requireNonNull(reasonFmt, "reasonFmt cannot be null"), reasonArgs);
-
-        String threadName = Thread.currentThread().toString();
-        mLogger.i("Napping %dms on thread %s. Reason: %s", timeMs, threadName, reason);
         try {
-            mSleeper.sleep(timeMs);
-            mLogger.i("Little Suzie woke up!");
+            sleepAndLog(timeMs, reasonFmt, reasonArgs);
             if (postSleepRunnable != null) {
                 postSleepRunnable.run();
             }
         } catch (InterruptedException e) {
-            mLogger.e(e, "Thread %s interrupted while sleeping", threadName);
+            mLogger.e(e, "Thread %s interrupted while sleeping", Thread.currentThread().toString());
             Thread.currentThread().interrupt();
         }
     }

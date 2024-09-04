@@ -258,6 +258,7 @@ public class OutcomeSelectionRunner {
                                             mFlags
                                                     .getEnforceForegroundStatusForFledgeRunAdSelection(),
                                             true,
+                                            !mFlags.getConsentNotificationDebugMode(),
                                             mCallerUid,
                                             AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS_FROM_OUTCOMES,
                                             Throttler.ApiKey.FLEDGE_API_SELECT_ADS,

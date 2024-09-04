@@ -145,6 +145,10 @@ public final class FlagsConstants {
             "cobalt_registry_out_of_band_update_enabled";
     public static final String KEY_COBALT_OPERATIONAL_LOGGING_ENABLED =
             "cobalt_operational_logging_enabled";
+    public static final String KEY_COBALT__FALL_BACK_TO_DEFAULT_BASE_REGISTRY =
+            "Cobalt__fall_back_to_default_base_registry";
+    public static final String KEY_COBALT__IGNORED_REPORT_ID_LIST =
+            "Cobalt__ignored_report_id_list";
 
     // Measurement keys
     public static final String KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS =
@@ -217,8 +221,6 @@ public final class FlagsConstants {
             "measurement_enforce_foreground_status_register_web_source";
     public static final String KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER =
             "measurement_enforce_foreground_status_register_web_trigger";
-    public static final String KEY_MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH =
-            "measurement_enforce_enrollment_origin_match";
     public static final String KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_DELETE_REGISTRATIONS =
             "measurement_enforce_foreground_status_delete_registrations";
     public static final String KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS =
@@ -944,8 +946,7 @@ public final class FlagsConstants {
             "fledge_custom_audience_service_kill_switch";
     public static final String KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH =
             "fledge_auction_server_kill_switch";
-    public static final String KEY_BACKGROUND_JOBS_LOGGING_KILL_SWITCH =
-            "background_jobs_logging_kill_switch";
+
     public static final String KEY_FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH =
             "fledge_on_device_auction_kill_switch";
 
@@ -1286,9 +1287,6 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION =
             "measurement_max_event_reports_per_destination";
 
-    public static final String KEY_MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE =
-            "measurement_enable_max_aggregate_reports_per_source";
-
     public static final String KEY_MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE =
             "measurement_max_aggregate_reports_per_source";
 
@@ -1383,6 +1381,15 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_ENABLE_EVENT_LEVEL_EPSILON_IN_SOURCE =
             "measurement_enable_event_level_epsilon_in_source";
+
+    public static final String KEY_MEASUREMENT_ENABLE_AGGREGATE_VALUE_FILTERS =
+            "measurement_enable_aggregate_value_filters";
+
+    public static final String KEY_MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES =
+            "measurement_default_filtering_id_max_bytes";
+
+    public static final String KEY_MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING =
+            "measurement_enable_flexible_contribution_filtering";
 
     // Database Schema Version Flags
     public static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_8 =
@@ -1610,4 +1617,11 @@ public final class FlagsConstants {
     /** Key for enabling R notification default consent fix. */
     public static final String KEY_R_NOTIFICATION_DEFAULT_CONSENT_FIX_ENABLED =
             "r_notification_default_consent_fix_enabled";
+
+    /** Key for the PAS encoding job performance improvements. */
+    public static final String KEY_PAS_ENCODING_JOB_IMPROVEMENTS_ENABLED =
+            "pas_encoding_job_improvements_enabled";
+
+    /** Key for ad id cache ttl. */
+    public static final String KEY_AD_ID_CACHE_TTL_MS = "ad_id_cache_ttl_ms";
 }

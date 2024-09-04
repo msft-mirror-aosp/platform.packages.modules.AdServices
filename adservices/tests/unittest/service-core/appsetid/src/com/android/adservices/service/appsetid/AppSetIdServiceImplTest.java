@@ -21,8 +21,6 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 import static android.content.pm.PackageManager.NameNotFoundException;
 
-import static com.android.adservices.mockito.MockitoExpectations.mockCobaltLoggingFlags;
-import static com.android.adservices.mockito.MockitoExpectations.mockLogApiCallStats;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__APPSETID;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_APPSETID;
@@ -59,7 +57,6 @@ import com.android.adservices.NoOpServiceBinder;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
@@ -102,7 +99,6 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
     private GetAppSetIdParam mRequest;
 
     @Mock private PackageManager mPackageManager;
-    @Mock private Flags mMockFlags;
     @Mock private Clock mClock;
     @Mock private Context mMockSdkContext;
     @Mock private Throttler mMockThrottler;
@@ -132,7 +128,7 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
 
         mocker.mockGetFlags(mMockFlags);
 
-        mockCobaltLoggingFlags(mMockFlags, false);
+        mocker.mockAllCobaltLoggingFlags(false);
     }
 
     @Test
@@ -350,7 +346,7 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
                         .build();
 
         ResultSyncCallback<ApiCallStats> logApiCallStatsCallback =
-                mockLogApiCallStats(mAdServicesLogger, BACKGROUND_THREAD_TIMEOUT_MS);
+                mocker.mockLogApiCallStats(mAdServicesLogger, BACKGROUND_THREAD_TIMEOUT_MS);
 
         GetAppSetIdResult getAppSetIdResult = getAppSetIdResults(appSetIdServiceImpl);
 

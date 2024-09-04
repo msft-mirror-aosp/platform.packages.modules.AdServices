@@ -19,18 +19,21 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import static java.util.Objects.requireNonNull;
 
-import android.annotation.NonNull;
-
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.auto.value.AutoValue;
 import com.google.cobalt.CobaltRegistry;
+import com.google.cobalt.CustomerConfig;
 import com.google.cobalt.MetricDefinition;
+import com.google.cobalt.ProjectConfig;
 import com.google.common.collect.ImmutableList;
 
 /** Domain object for Cobalt's registry proto that supports a single customer and project. */
 @AutoValue
 public abstract class Project {
+    public static final int CUSTOMER_ID = 200004;
+    public static final int PROJECT_ID = 2;
+
     /**
      * Parses a Project from a {@link com.google.cobalt.CobaltRegistry}.
      *
@@ -38,16 +41,24 @@ public abstract class Project {
      * @return the parsed {@link Project}
      * @throws Exception if the provided registry has more than 1 customer or more than 1 project
      */
-    @NonNull
-    public static Project create(@NonNull CobaltRegistry registry) {
+    public static Project create(CobaltRegistry registry) {
         requireNonNull(registry);
-        checkArgument(registry.getCustomersCount() == 1, "must be one customer");
-        checkArgument(registry.getCustomers(0).getProjectsCount() == 1, "must be one project");
+        for (CustomerConfig customer : registry.getCustomersList()) {
+            if (customer.getCustomerId() != CUSTOMER_ID) {
+                continue;
+            }
+            for (ProjectConfig project : customer.getProjectsList()) {
+                if (project.getProjectId() == PROJECT_ID) {
+                    return Project.create(
+                            customer.getCustomerId(),
+                            project.getProjectId(),
+                            project.getMetricsList());
+                }
+            }
+        }
 
-        return Project.create(
-                registry.getCustomers(0).getCustomerId(),
-                registry.getCustomers(0).getProjects(0).getProjectId(),
-                registry.getCustomers(0).getProjects(0).getMetricsList());
+        checkArgument(false, "AdServices project not found...");
+        return Project.create(-1, -1, ImmutableList.of());
     }
 
     /**
@@ -59,9 +70,8 @@ public abstract class Project {
      * @return a {@link Project} for the customer's project
      */
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PACKAGE)
-    @NonNull
     public static Project create(
-            int customerId, int projectId, @NonNull Iterable<MetricDefinition> metrics) {
+            int customerId, int projectId, Iterable<MetricDefinition> metrics) {
         return new AutoValue_Project(
                 customerId, projectId, ImmutableList.copyOf(requireNonNull(metrics)));
     }
@@ -79,6 +89,5 @@ public abstract class Project {
     /**
      * @return the metrics being collected by the customer for the project
      */
-    @NonNull
     public abstract ImmutableList<MetricDefinition> getMetrics();
 }

@@ -19,6 +19,9 @@ package com.android.adservices.service.js;
 import static java.util.Arrays.asList;
 
 import android.adservices.common.AdSelectionSignals;
+import android.os.Trace;
+
+import com.android.adservices.service.profiling.Tracing;
 
 import com.google.common.collect.ImmutableList;
 
@@ -63,8 +66,44 @@ public abstract class JSScriptArgument {
      */
     public static JSScriptJsonArrayArgument jsonArrayArg(String name, String value)
             throws JSONException {
-        new JSONArray(value);
-        return new JSScriptJsonArrayArgument(name, value);
+        Trace.beginSection(Tracing.JS_ARRAY_ARG + ":validation");
+        try {
+            new JSONArray(value);
+        } finally {
+            Trace.endSection();
+        }
+
+        Trace.beginSection(Tracing.JS_ARRAY_ARG + ":conversion");
+        JSScriptJsonArrayArgument result = new JSScriptJsonArrayArgument(name, value);
+        Trace.endSection();
+        return result;
+    }
+
+    /**
+     * @return a JS array object with the given {@code name} and {@code values} obtained by
+     *     marshaling each value using the {@code valueMarshaller}. It does not validate input.
+     */
+    public static <T> JSScriptJsonArrayArgument jsonArrayArgNoValidation(
+            String name, Iterable<T> values, AccumulatingJsonMarshaller<T> valueMarshaller) {
+        Trace.beginSection(Tracing.JS_ARRAY_ARG_NO_VALIDATION);
+        StringBuilder sb = new StringBuilder();
+        sb.append("[");
+
+        for (T item : values) {
+            valueMarshaller.serializeEntryToJson(item, sb);
+            sb.append(",");
+        }
+
+        // Delete the last comma
+        if (sb.length() > 1) {
+            sb.deleteCharAt(sb.length() - 1);
+        }
+
+        sb.append("]");
+
+        JSScriptJsonArrayArgument result = new JSScriptJsonArrayArgument(name, sb.toString());
+        Trace.endSection();
+        return result;
     }
 
     /**

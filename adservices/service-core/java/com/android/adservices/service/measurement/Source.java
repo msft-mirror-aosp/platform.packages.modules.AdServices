@@ -320,7 +320,11 @@ public class Source {
                 : flags.getMeasurementFlexApiMaxInformationGainNavigation();
     }
 
-    private double getAttributionScopeInfoGainThreshold(Flags flags) {
+    /**
+     * @param flags flag values
+     * @return the information gain thereshold for attribution scopes.
+     */
+    public double getAttributionScopeInfoGainThreshold(Flags flags) {
         if (getDestinationTypeMultiplier(flags) == 2) {
             return mSourceType == SourceType.EVENT
                     ? flags.getMeasurementAttributionScopeMaxInfoGainDualDestinationEvent()

@@ -15,54 +15,13 @@
  */
 package com.android.adservices.mockito;
 
-import static org.junit.Assert.assertThrows;
+import com.android.adservices.shared.meta_testing.AndroidStaticMockerTestCase;
 
-import android.os.Binder;
-import android.os.Process;
+public final class AndroidExtendedMockitoMockerTest
+        extends AndroidStaticMockerTestCase<AndroidExtendedMockitoMocker> {
 
-import com.android.adservices.mockito.AbstractStaticMocker.ClassNotSpiedOrMockedException;
-import com.android.adservices.shared.SharedExtendedMockitoTestCase;
-import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
-
-import org.junit.Test;
-import org.junit.function.ThrowingRunnable;
-
-public final class AndroidExtendedMockitoMockerTest extends SharedExtendedMockitoTestCase {
-
-    private final AndroidExtendedMockitoMocker mMocker =
-            new AndroidExtendedMockitoMocker(extendedMockito);
-
-    @Test
-    public void testMockGetCallingUidOrThrow_noArgs_notSpied() {
-        assertFailsWhenClassNotSpied(Binder.class, () -> mMocker.mockGetCallingUidOrThrow());
-    }
-
-    @Test
-    @SpyStatic(Binder.class)
-    public void testMockGetCallingUidOrThrow_noArgs() {
-        int myUid = Process.myUid();
-
-        mMocker.mockGetCallingUidOrThrow();
-
-        expect.withMessage("uid").that(Binder.getCallingUidOrThrow()).isEqualTo(myUid);
-    }
-
-    @Test
-    public void testMockGetCallingUidOrThrow_notSpied() {
-        assertFailsWhenClassNotSpied(Binder.class, () -> mMocker.mockGetCallingUidOrThrow(42));
-    }
-
-    @Test
-    @SpyStatic(Binder.class)
-    public void testMockGetCallingUidOrThrow() {
-        mMocker.mockGetCallingUidOrThrow(42);
-
-        expect.withMessage("uid").that(Binder.getCallingUidOrThrow()).isEqualTo(42);
-    }
-
-    private void assertFailsWhenClassNotSpied(Class<?> clazz, ThrowingRunnable r) {
-        ClassNotSpiedOrMockedException e = assertThrows(ClassNotSpiedOrMockedException.class, r);
-        expect.withMessage("missing class").that(e.getMissingClass()).isEqualTo(clazz);
-        expect.withMessage("spied / mocked classes").that(e.getSpiedOrMockedClasses()).isEmpty();
+    @Override
+    protected AndroidExtendedMockitoMocker getMocker(StaticClassChecker checker) {
+        return new AndroidExtendedMockitoMocker(checker);
     }
 }

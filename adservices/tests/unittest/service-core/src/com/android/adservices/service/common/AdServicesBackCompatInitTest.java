@@ -49,7 +49,6 @@ import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.modules.utils.build.SdkLevel;
@@ -70,7 +69,7 @@ import java.util.List;
 @SetErrorLogUtilDefaultParams(
         throwable = Any.class,
         ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON)
-public class AdServicesBackCompatInitTest extends AdServicesExtendedMockitoTestCase {
+public final class AdServicesBackCompatInitTest extends AdServicesExtendedMockitoTestCase {
     private static final String TEST_PACKAGE_NAME = "test";
     private static final String AD_SERVICES_APK_PKG_SUFFIX = "android.adservices.api";
     private static final int AD_SERVICES_ATTRIBUTION_JOB_ID = 1;
@@ -94,7 +93,6 @@ public class AdServicesBackCompatInitTest extends AdServicesExtendedMockitoTestC
                     "com.android.adservices.topics.TopicsService",
                     "com.android.adservices.appsetid.AppSetIdService");
 
-    @Mock private Flags mMockFlags;
     @Mock private PackageManager mPackageManager;
     @Mock private JobScheduler mJobScheduler;
 

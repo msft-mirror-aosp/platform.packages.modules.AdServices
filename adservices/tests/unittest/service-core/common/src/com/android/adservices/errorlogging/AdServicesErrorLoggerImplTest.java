@@ -28,7 +28,6 @@ import static org.mockito.Mockito.when;
 import android.database.sqlite.SQLiteException;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
-import com.android.adservices.service.Flags;
 import com.android.adservices.shared.errorlogging.AdServicesErrorStats;
 import com.android.adservices.shared.errorlogging.ErrorCodeSampler;
 import com.android.adservices.shared.errorlogging.StatsdAdServicesErrorLogger;
@@ -48,7 +47,6 @@ public final class AdServicesErrorLoggerImplTest extends AdServicesMockitoTestCa
     private static final int LINE_NUMBER = 11;
     private static final String SQ_LITE_EXCEPTION = "SQLiteException";
 
-    @Mock private Flags mFlags;
     @Mock private StatsdAdServicesErrorLogger mStatsdLoggerMock;
     @Mock private ErrorCodeSampler mErrorCodeSampler;
 
@@ -57,7 +55,7 @@ public final class AdServicesErrorLoggerImplTest extends AdServicesMockitoTestCa
     @Before
     public void setUp() {
         enableCustomErrorCodeSampling(/*enable=*/ false);
-        mErrorLogger = new AdServicesErrorLoggerImpl(mFlags, mStatsdLoggerMock);
+        mErrorLogger = new AdServicesErrorLoggerImpl(mMockFlags, mStatsdLoggerMock);
         mockErrorCodeLoggingDenyList(ImmutableList.of());
     }
 
@@ -172,7 +170,7 @@ public final class AdServicesErrorLoggerImplTest extends AdServicesMockitoTestCa
         int errorCode = 1;
         when(mErrorCodeSampler.shouldLog(errorCode)).thenReturn(true);
         AdServicesErrorLoggerImpl errorLogger =
-                new AdServicesErrorLoggerImpl(mFlags, mStatsdLoggerMock, mErrorCodeSampler);
+                new AdServicesErrorLoggerImpl(mMockFlags, mStatsdLoggerMock, mErrorCodeSampler);
 
         expect.withMessage("shouldLog(%s)", errorCode)
                 .that(errorLogger.isEnabled(errorCode))
@@ -185,7 +183,7 @@ public final class AdServicesErrorLoggerImplTest extends AdServicesMockitoTestCa
         int errorCode = 1;
         when(mErrorCodeSampler.shouldLog(errorCode)).thenReturn(false);
         AdServicesErrorLoggerImpl errorLogger =
-                new AdServicesErrorLoggerImpl(mFlags, mStatsdLoggerMock, mErrorCodeSampler);
+                new AdServicesErrorLoggerImpl(mMockFlags, mStatsdLoggerMock, mErrorCodeSampler);
 
         expect.withMessage("shouldLog(%s)", errorCode)
                 .that(errorLogger.isEnabled(errorCode))
@@ -204,10 +202,10 @@ public final class AdServicesErrorLoggerImplTest extends AdServicesMockitoTestCa
     }
 
     private void mockErrorCodeLoggingDenyList(ImmutableList<Integer> errorCodeLoggingDenyList) {
-        when(mFlags.getErrorCodeLoggingDenyList()).thenReturn(errorCodeLoggingDenyList);
+        when(mMockFlags.getErrorCodeLoggingDenyList()).thenReturn(errorCodeLoggingDenyList);
     }
 
     private void enableCustomErrorCodeSampling(boolean enable) {
-        when(mFlags.getCustomErrorCodeSamplingEnabled()).thenReturn(enable);
+        when(mMockFlags.getCustomErrorCodeSamplingEnabled()).thenReturn(enable);
     }
 }

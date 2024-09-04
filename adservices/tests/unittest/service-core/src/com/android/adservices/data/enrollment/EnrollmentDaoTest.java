@@ -41,7 +41,6 @@ import static org.mockito.Mockito.when;
 
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
-import android.content.Context;
 import android.database.DatabaseUtils;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
@@ -49,13 +48,10 @@ import android.database.sqlite.SQLiteException;
 import android.net.Uri;
 import android.util.Pair;
 
-import androidx.test.core.app.ApplicationProvider;
-
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.data.shared.SharedDbHelper;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.enrollment.EnrollmentStatus;
 import com.android.adservices.service.enrollment.EnrollmentUtil;
@@ -76,11 +72,9 @@ import java.util.Set;
 
 public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
 
-    protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private SharedDbHelper mDbHelper;
     private EnrollmentDao mEnrollmentDao;
 
-    @Mock private Flags mMockFlags;
     @Mock private AdServicesLogger mLogger;
     @Mock private EnrollmentUtil mEnrollmentUtil;
     @Mock private SharedDbHelper mMockDbHelper;
@@ -1015,7 +1009,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
         AdTechIdentifier adtechIdentifier = AdTechIdentifier.fromString("2test.com", false);
         EnrollmentData e =
                 mEnrollmentDao.getEnrollmentDataForFledgeByAdTechIdentifier(adtechIdentifier);
-        assertEquals(e, ENROLLMENT_DATA2);
+        assertWithMessage("Found enrollment").that(e).isEqualTo(ENROLLMENT_DATA2);
         verify(mEnrollmentUtil, times(1))
                 .logEnrollmentDataStats(
                         eq(mLogger),

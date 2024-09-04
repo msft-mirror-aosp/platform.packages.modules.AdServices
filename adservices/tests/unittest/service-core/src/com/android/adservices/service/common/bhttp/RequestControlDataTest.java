@@ -19,13 +19,16 @@ package com.android.adservices.service.common.bhttp;
 import static com.android.adservices.service.common.bhttp.BinaryHttpTestUtil.combineSections;
 import static com.android.adservices.service.common.bhttp.Frc9000VariableLengthIntegerUtil.toFrc9000Int;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
+
+import com.android.adservices.common.AdServicesUnitTestCase;
 
 import org.junit.Test;
 
-public class RequestControlDataTest {
+public final class RequestControlDataTest extends AdServicesUnitTestCase {
     private static final byte[] METHOD = new byte[] {'G', 'E', 'T'};
     private static final byte[] SCHEME = new byte[] {'h', 't', 't', 'p', 's'};
     private static final byte[] AUTHORITY =
@@ -55,20 +58,20 @@ public class RequestControlDataTest {
                 },
                 requestControlData.knownLengthSerialize());
 
-        assertEquals(
-                BinaryHttpMessageDeserializer.deserializeKnownLengthRequestControlData(
-                        new BinaryHttpMessageDeserializer.BinaryHttpByteArrayReader(
-                                combineSections(
-                                        new byte[] {0},
-                                        toFrc9000Int(METHOD.length),
-                                        METHOD,
-                                        toFrc9000Int(SCHEME.length),
-                                        SCHEME,
-                                        toFrc9000Int(AUTHORITY.length),
-                                        AUTHORITY,
-                                        toFrc9000Int(PATH.length),
-                                        PATH))),
-                requestControlData);
+        assertThat(
+                        BinaryHttpMessageDeserializer.deserializeKnownLengthRequestControlData(
+                                new BinaryHttpMessageDeserializer.BinaryHttpByteArrayReader(
+                                        combineSections(
+                                                new byte[] {0},
+                                                toFrc9000Int(METHOD.length),
+                                                METHOD,
+                                                toFrc9000Int(SCHEME.length),
+                                                SCHEME,
+                                                toFrc9000Int(AUTHORITY.length),
+                                                AUTHORITY,
+                                                toFrc9000Int(PATH.length),
+                                                PATH))))
+                .isEqualTo(requestControlData);
     }
 
     @Test

@@ -32,7 +32,6 @@ import android.os.IBinder;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adid.AdIdWorker;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -47,7 +46,6 @@ import java.util.function.Supplier;
 @SpyStatic(FlagsFactory.class)
 public final class AdIdServiceTest extends AdServicesExtendedMockitoTestCase {
 
-    @Mock private Flags mMockFlags;
     @Mock private AdIdWorker mMockAdIdWorker;
     @Mock private AppImportanceFilter mMockAppImportanceFilter;
     @Mock private PackageManager mMockPackageManager;

@@ -30,7 +30,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.Objects;
 
 /**
- * Represents the user's opted-in/opted-out choice for individual module in AdServices.
+ * Represents the user's choice for the modules in AdServices. Can be unknown, opted-in, or
+ * opted-out.
  *
  * @hide
  */

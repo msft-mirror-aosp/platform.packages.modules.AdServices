@@ -16,14 +16,6 @@
 
 package com.android.adservices.service.topics;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdServicesJobServiceLogger;
-import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
-import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
-import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobExecutionData;
-import static com.android.adservices.mockito.MockitoExpectations.verifyBackgroundJobsSkipLogged;
-import static com.android.adservices.mockito.MockitoExpectations.verifyJobFinishedLogged;
-import static com.android.adservices.mockito.MockitoExpectations.verifyLoggingNotHappened;
-import static com.android.adservices.mockito.MockitoExpectations.verifyOnStopJobLogged;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
 import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_SKIPPED;
@@ -46,7 +38,7 @@ import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
 import android.content.ComponentName;
 
-import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.AdServicesJobServiceTestCase;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.service.FakeFlagsFactory;
@@ -79,7 +71,7 @@ import org.mockito.Spy;
 @SpyStatic(TopicsWorker.class)
 @RequiresSdkLevelAtLeastS
 @SetErrorLogUtilDefaultParams(ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS)
-public class EpochJobServiceTest extends AdServicesExtendedMockitoTestCase {
+public class EpochJobServiceTest extends AdServicesJobServiceTestCase {
     private static final int TOPICS_EPOCH_JOB_ID = TOPICS_EPOCH_JOB.getJobId();
     // Set a minimum delay of 1 hour so scheduled jobs don't run immediately
     private static final long MINIMUM_SCHEDULING_DELAY_MS = 60L * 60L * 1000L;
@@ -90,7 +82,6 @@ public class EpochJobServiceTest extends AdServicesExtendedMockitoTestCase {
     @Spy private EpochJobService mSpyEpochJobService;
     @Mock private TopicsWorker mMockTopicsWorker;
     @Mock private JobParameters mMockJobParameters;
-    @Mock private Flags mMockFlags;
     @Mock private JobScheduler mMockJobScheduler;
     @Mock private AdServicesJobScheduler mMockAdServicesJobScheduler;
 
@@ -127,75 +118,13 @@ public class EpochJobServiceTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    public void testOnStartJob_killSwitchOff_withoutLogging() throws InterruptedException {
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
-
-        testOnStartJob_killSwitchOff();
-
-        verifyLoggingNotHappened(mSpyLogger);
-    }
-
-    @Test
-    public void testOnStartJob_killSwitchOff_withLogging() throws InterruptedException {
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
-        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(mSpyLogger);
-        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
-
-        testOnStartJob_killSwitchOff();
-
-        verifyJobFinishedLogged(mSpyLogger, onStartJobCallback, onJobDoneCallback);
-    }
-
-    @Test
-    @ExpectErrorLogUtilCall(errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED)
-    public void testOnStartJob_killSwitchOn_withoutLogging() {
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
-
-        testOnStartJob_killSwitchOn();
-
-        verifyLoggingNotHappened(mSpyLogger);
-    }
-
-    @Test
-    @ExpectErrorLogUtilCall(errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED)
-    public void testOnStartJob_killSwitchOn_withLogging() throws InterruptedException {
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
-        JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
-
-        testOnStartJob_killSwitchOn();
-
-        verifyBackgroundJobsSkipLogged(mSpyLogger, callback);
-    }
-
-    @Test
-    public void testOnStartJob_shouldDisableJobTrue_withoutLogging() {
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
-
-        testOnStartJob_shouldDisableJobTrue();
-
-        verifyLoggingNotHappened(mSpyLogger);
-    }
-
-    @Test
-    public void testOnStartJob_shouldDisableJobTrue_withLoggingEnabled() {
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
-
-        testOnStartJob_shouldDisableJobTrue();
-
-        // Verify logging has not happened even though logging is enabled because this field is not
-        // logged
-        verifyLoggingNotHappened(mSpyLogger);
-    }
-
-    @Test
     public void testOnStartJob_speEnabled() throws Exception {
         when(mMockFlags.getSpeOnEpochJobEnabled()).thenReturn(true);
         doReturn(false).when(mMockFlags).getGlobalKillSwitch();
         mocker.mockSpeJobScheduler(mMockAdServicesJobScheduler);
         // Mock not to run actual execution logic.
         doReturn(mMockTopicsWorker).when(TopicsWorker::getInstance);
-        // Verify logging for current execution.
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
+
         JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(mSpyLogger);
         JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
 
@@ -206,7 +135,7 @@ public class EpochJobServiceTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    public void testOnStartJob_rescheduleEpochJobEnabled() throws InterruptedException {
+    public void testOnStartJob_rescheduleEpochJobEnabled() throws Exception {
         when(mMockFlags.getTopicsKillSwitch()).thenReturn(false);
         when(mMockFlags.getTopicsEpochJobPeriodMs())
                 .thenReturn(TEST_FLAGS.getTopicsEpochJobPeriodMs());
@@ -234,17 +163,7 @@ public class EpochJobServiceTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    public void testOnStopJob_withoutLogging() {
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
-
-        testOnStopJob();
-
-        verifyLoggingNotHappened(mSpyLogger);
-    }
-
-    @Test
-    public void testOnStopJob_withLogging() throws InterruptedException {
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
+    public void testOnStopJob_withLogging() throws Exception {
         JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
 
         testOnStopJob();
@@ -412,7 +331,11 @@ public class EpochJobServiceTest extends AdServicesExtendedMockitoTestCase {
         assertThat(argumentCaptor.getValue().isRequireBatteryNotLow()).isTrue();
     }
 
-    private void testOnStartJob_killSwitchOff() throws InterruptedException {
+    @Test
+    public void testOnStartJob_killSwitchOff() throws Exception {
+        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(mSpyLogger);
+        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
+
         // Kill switch is off.
         doReturn(false).when(mMockFlags).getTopicsKillSwitch();
 
@@ -431,9 +354,15 @@ public class EpochJobServiceTest extends AdServicesExtendedMockitoTestCase {
         assertThat(mSpyEpochJobService.onStartJob(mMockJobParameters)).isTrue();
 
         callback.assertJobFinished();
+
+        verifyJobFinishedLogged(mSpyLogger, onStartJobCallback, onJobDoneCallback);
     }
 
-    private void testOnStartJob_killSwitchOn() {
+    @Test
+    @ExpectErrorLogUtilCall(errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED)
+    public void testOnStartJob_killSwitchOn() throws Exception {
+        JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
+
         // Kill switch is on.
         doReturn(true).when(mMockFlags).getTopicsKillSwitch();
 
@@ -442,9 +371,12 @@ public class EpochJobServiceTest extends AdServicesExtendedMockitoTestCase {
         scheduleJobWithMinimumLatency();
 
         verifyJobStartAndCancelled();
+
+        verifyBackgroundJobsSkipLogged(mSpyLogger, callback);
     }
 
-    private void testOnStartJob_shouldDisableJobTrue() {
+    @Test
+    public void testOnStartJob_shouldDisableJobTrue() {
         doReturn(true).when(() -> ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(any()));
 
         doNothing().when(mSpyEpochJobService).jobFinished(mMockJobParameters, false);
@@ -452,6 +384,10 @@ public class EpochJobServiceTest extends AdServicesExtendedMockitoTestCase {
         scheduleJobWithMinimumLatency();
 
         verifyJobStartAndCancelled();
+
+        // Verify logging has not happened even though logging is enabled because this field is not
+        // logged
+        verifyLoggingNotHappened(mSpyLogger);
     }
 
     // Verify that when the Job starts, it will unschedule itself.

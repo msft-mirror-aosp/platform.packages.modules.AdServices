@@ -16,9 +16,8 @@
 
 package com.android.adservices.service.common;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.ErrorLogUtilCallback;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockErrorLogUtilWithThrowable;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockErrorLogUtilWithoutThrowable;
+import static com.android.adservices.common.logging.ErrorLogUtilCallback.mockErrorLogUtilWithThrowable;
+import static com.android.adservices.common.logging.ErrorLogUtilCallback.mockErrorLogUtilWithoutThrowable;
 import static com.android.adservices.service.common.AppManifestConfigCall.API_ATTRIBUTION;
 import static com.android.adservices.service.common.AppManifestConfigCall.API_TOPICS;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_ALLOWED_APP_ALLOWS_ALL;
@@ -45,13 +44,12 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import android.content.Context;
 import android.util.Log;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.logging.ErrorLogUtilCallback;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppManifestConfigCall.ApiType;
 import com.android.adservices.service.common.AppManifestConfigCall.Result;
@@ -81,13 +79,11 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
     private static final String PKG_NAME2 = "or.not";
 
     // Generic API - exact value doesn't matter
-    private static final @ApiType int API = API_TOPICS;
+    @ApiType private static final int API = API_TOPICS;
 
     private static final String KEY_PKG_NAME_API =
             String.format(Locale.US, PREFS_KEY_TEMPLATE, PKG_NAME, API);
 
-    @Mock private Context mMockContext;
-    @Mock private Flags mMockFlags;
     @Mock private StatsdAdServicesLogger mStatsdLogger;
 
     private final FakeSharedPreferences mPrefs = new FakeSharedPreferences();

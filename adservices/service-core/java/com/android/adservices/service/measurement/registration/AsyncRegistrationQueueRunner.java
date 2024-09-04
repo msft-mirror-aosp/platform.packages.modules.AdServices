@@ -281,7 +281,8 @@ public class AsyncRegistrationQueueRunner {
                 mFlags.getMaxResponseBasedRegistrationPayloadSizeBytes(),
                 mLogger,
                 asyncRegistration,
-                asyncFetchStatus);
+                asyncFetchStatus,
+                resultSource.map(Source::getEnrollmentId).orElse(null));
     }
 
     /** Visible only for testing. */
@@ -357,19 +358,14 @@ public class AsyncRegistrationQueueRunner {
 
                 if (source.getSourceType() == Source.SourceType.NAVIGATION
                         && source.getAttributionScopes() != null) {
-                    for (Pair<Integer, String> destination :
-                            source.getAllAttributionDestinations()) {
-                        Set<String> navigationAttributionScopes =
-                                dao.getNavigationAttributionScopesForRegistration(
-                                        source.getRegistrationId(),
-                                        source.getRegistrationOrigin().toString(),
-                                        destination.first,
-                                        destination.second);
-                        if (!navigationAttributionScopes.isEmpty()
-                                && !navigationAttributionScopes.equals(
-                                        new HashSet<>(source.getAttributionScopes()))) {
-                            return false;
-                        }
+                    Set<String> navigationAttributionScopes =
+                            dao.getNavigationAttributionScopesForRegistration(
+                                    source.getRegistrationId(),
+                                    source.getRegistrationOrigin().toString());
+                    if (!navigationAttributionScopes.isEmpty()
+                            && !navigationAttributionScopes.equals(
+                                    new HashSet<>(source.getAttributionScopes()))) {
+                        return false;
                     }
                 }
             }
@@ -419,7 +415,11 @@ public class AsyncRegistrationQueueRunner {
                         ? mFlags.getMaxTriggerRegistrationHeaderSizeBytes()
                         : mFlags.getMaxResponseBasedRegistrationPayloadSizeBytes();
         FetcherUtil.emitHeaderMetrics(
-                headerSizeLimitBytes, mLogger, asyncRegistration, asyncFetchStatus);
+                headerSizeLimitBytes,
+                mLogger,
+                asyncRegistration,
+                asyncFetchStatus,
+                resultTrigger.map(Trigger::getEnrollmentId).orElse(null));
     }
 
     /** Visible only for testing. */

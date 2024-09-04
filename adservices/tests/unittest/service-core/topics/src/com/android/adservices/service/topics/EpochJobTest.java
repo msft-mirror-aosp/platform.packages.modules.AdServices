@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.topics;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockJobSchedulingLogger;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_PERIOD_MS;
 import static com.android.adservices.shared.proto.JobPolicy.BatteryType.BATTERY_TYPE_REQUIRE_CHARGING;
@@ -37,8 +36,7 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
-import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.service.Flags;
+import com.android.adservices.common.AdServicesJobTestCase;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.shared.proto.JobPolicy;
 import com.android.adservices.shared.spe.framework.ExecutionResult;
@@ -61,11 +59,10 @@ import org.mockito.Mock;
 @SpyStatic(EpochJobService.class)
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(TopicsWorker.class)
-public final class EpochJobTest extends AdServicesExtendedMockitoTestCase {
+public final class EpochJobTest extends AdServicesJobTestCase {
     private final EpochJob mEpochJob = new EpochJob();
 
     @Mock private TopicsWorker mMockTopicsWorker;
-    @Mock private Flags mMockFlags;
     @Mock private ExecutionRuntimeParameters mMockParams;
     @Mock private AdServicesJobScheduler mMockAdServicesJobScheduler;
     @Mock private AdServicesJobServiceFactory mMockAdServicesJobServiceFactory;

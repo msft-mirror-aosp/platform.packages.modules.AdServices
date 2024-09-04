@@ -43,12 +43,12 @@ public final class TestDeviceHelper {
 
     private static final ThreadLocal<ITestDevice> sDevice = new ThreadLocal<>();
 
-    /** Sets the singleton. */
+    /** Sets the singleton {@link ITestDevice}. */
     public static void setTestDevice(ITestDevice device) {
         sDevice.set(Objects.requireNonNull(device));
     }
 
-    /** Gets the singleton. */
+    /** Gets the singleton {@link ITestDevice}. */
     public static ITestDevice getTestDevice() {
         ITestDevice device = sDevice.get();
         if (device == null) {
@@ -57,6 +57,11 @@ public final class TestDeviceHelper {
                             + " extend AdServicesHostSideTestCase");
         }
         return device;
+    }
+
+    /** Checks whether the singleton {@link ITestDevice} has been set yet. */
+    public static boolean isTestDeviceSet() {
+        return sDevice.get() != null;
     }
 
     // cmdFmt must be final because it's being passed to a method taking @FormatString
