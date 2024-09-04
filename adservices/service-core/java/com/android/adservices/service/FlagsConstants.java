@@ -1624,4 +1624,28 @@ public final class FlagsConstants {
 
     /** Key for ad id cache ttl. */
     public static final String KEY_AD_ID_CACHE_TTL_MS = "ad_id_cache_ttl_ms";
+
+    /** Key for package deny service enabled. */
+    public static final String KEY_PACKAGE_DENY__ENABLE_PACKAGE_DENY_SERVICE =
+            "PackageDeny__enable_package_deny_service";
+
+    /** Key for package deny mdd file download enabled */
+    public static final String KEY_PACKAGE_DENY__ENABLE_PACKAGE_DENY_MDD =
+            "PackageDeny__enable_package_deny_mdd";
+
+    /** Key for package deny preprocess job on package add */
+    public static final String KEY_PACKAGE_DENY__ENABLE_PACKAGE_DENY_JOB_ON_PACKAGE_ADD =
+            "PackageDeny__enable_package_deny_job_on_package_add";
+
+    /** Key for package deny preprocess periodic job */
+    public static final String KEY_PACKAGE_DENY__ENABLE_PACKAGE_DENY_BG_JOB =
+            "PackageDeny__enable_package_deny_bg_job";
+
+    /** Key for package deny preprocess job on mdd file download */
+    public static final String KEY_PACKAGE_DENY__ENABLE_PACKAGE_DENY_JOB_ON_MDD_DOWNLOAD =
+            "PackageDeny__enable_package_deny_job_on_mdd_download";
+
+    /** Key for MDD Package Deny registry manifest file url */
+    public static final String KEY_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL =
+            "DownloadConfig__default_mdd_package_deny_manifest_file_url";
 }

@@ -7149,4 +7149,46 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_AD_ID_CACHE_TTL_MS, DEFAULT_ADID_CACHE_TTL_MS);
     }
+
+    @Override
+    public boolean getEnablePackageDenyService() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_PACKAGE_DENY__ENABLE_PACKAGE_DENY_SERVICE,
+                DEFAULT_ENABLE_PACKAGE_DENY_SERVICE);
+    }
+
+    @Override
+    public boolean getEnablePackageDenyMdd() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_PACKAGE_DENY__ENABLE_PACKAGE_DENY_MDD,
+                DEFAULT_ENABLE_PACKAGE_DENY_MDD);
+    }
+
+    @Override
+    public boolean getEnablePackageDenyJobOnPackageAdd() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_PACKAGE_DENY__ENABLE_PACKAGE_DENY_JOB_ON_PACKAGE_ADD,
+                DEFAULT_ENABLE_PACKAGE_DENY_JOB_ON_PACKAGE_ADD);
+    }
+
+    @Override
+    public boolean getEnablePackageDenyBgJob() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_PACKAGE_DENY__ENABLE_PACKAGE_DENY_BG_JOB,
+                DEFAULT_ENABLE_PACKAGE_DENY_BG_JOB);
+    }
+
+    @Override
+    public boolean getEnablePackageDenyJobOnMddDownload() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_PACKAGE_DENY__ENABLE_PACKAGE_DENY_JOB_ON_MDD_DOWNLOAD,
+                DEFAULT_ENABLE_PACKAGE_DENY_JOB_ON_MDD_DOWNLOAD);
+    }
+
+    @Override
+    public String getMddPackageDenyRegistryManifestFileUrl() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL,
+                DEFAULT_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL);
+    }
 }
