@@ -5800,6 +5800,64 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_ADID_CACHE_TTL_MS;
     }
 
+    /** Feature flag to ramp up use of package deny service. */
+    @FeatureFlag boolean DEFAULT_ENABLE_PACKAGE_DENY_SERVICE = false;
+
+    /**
+     * @return whether to enable use of package deny service.
+     */
+    default boolean getEnablePackageDenyService() {
+        return DEFAULT_ENABLE_PACKAGE_DENY_SERVICE;
+    }
+
+    /** Feature flag to ramp up use of mdd package deny proto file. */
+    @FeatureFlag boolean DEFAULT_ENABLE_PACKAGE_DENY_MDD = false;
+
+    /**
+     * @return whether to enable use of package deny mdd file.
+     */
+    default boolean getEnablePackageDenyMdd() {
+        return DEFAULT_ENABLE_PACKAGE_DENY_MDD;
+    }
+
+    /** Feature flag to ramp up use of package deny service on adding a package. */
+    @FeatureFlag boolean DEFAULT_ENABLE_PACKAGE_DENY_JOB_ON_PACKAGE_ADD = false;
+
+    /**
+     * @return whether to enable use of package deny service on adding a package.
+     */
+    default boolean getEnablePackageDenyJobOnPackageAdd() {
+        return DEFAULT_ENABLE_PACKAGE_DENY_JOB_ON_PACKAGE_ADD;
+    }
+
+    /** Feature flag to ramp up use of package deny preprocessing background job. */
+    @FeatureFlag boolean DEFAULT_ENABLE_PACKAGE_DENY_BG_JOB = false;
+
+    /**
+     * @return whether to enable use of package deny preprocessing background job.
+     */
+    default boolean getEnablePackageDenyBgJob() {
+        return DEFAULT_ENABLE_PACKAGE_DENY_BG_JOB;
+    }
+
+    /** Feature flag to ramp up use of package deny preprocessing on mdd file download. */
+    @FeatureFlag boolean DEFAULT_ENABLE_PACKAGE_DENY_JOB_ON_MDD_DOWNLOAD = false;
+
+    /**
+     * @return whether to enable use of package deny preprocessing job on mdd file download.
+     */
+    default boolean getEnablePackageDenyJobOnMddDownload() {
+        return DEFAULT_ENABLE_PACKAGE_DENY_JOB_ON_MDD_DOWNLOAD;
+    }
+
+    /** MDD package deny registry manifest url. */
+    @ConfigFlag String DEFAULT_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL = "";
+
+    /** Returns MDD package deny registry manifest url. */
+    default String getMddPackageDenyRegistryManifestFileUrl() {
+        return DEFAULT_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL;
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // NOTE: Add new getters either above this comment, or closer to the relevant getters         //
     ////////////////////////////////////////////////////////////////////////////////////////////////
