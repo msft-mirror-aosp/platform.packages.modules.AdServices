@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.encryptionkey;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import android.net.Uri;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
@@ -56,6 +58,7 @@ public final class EncryptionKeyTest extends AdServicesUnitTestCase {
     public void testCreation() throws Exception {
         EncryptionKey result = createKeyCommitment(ENROLLMENT_ID1);
 
+        assertThat(result).isNotNull();
         expect.that(result.getId()).isEqualTo(ID);
         expect.that(result.getKeyType()).isEqualTo(EncryptionKey.KeyType.ENCRYPTION);
         expect.that(result.getEnrollmentId()).isEqualTo(ENROLLMENT_ID1);
@@ -73,6 +76,7 @@ public final class EncryptionKeyTest extends AdServicesUnitTestCase {
     public void testDefaults() throws Exception {
         EncryptionKey result = new EncryptionKey.Builder().build();
 
+        assertThat(result).isNotNull();
         expect.that(result.getId()).isNull();
         expect.that(result.getKeyType()).isEqualTo(EncryptionKey.KeyType.ENCRYPTION);
         expect.that(result.getEnrollmentId()).isNull();

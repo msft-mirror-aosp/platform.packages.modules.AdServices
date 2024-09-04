@@ -138,7 +138,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
     }
 
     /** log method for measurement reporting. */
-    public void logMeasurementReports(MeasurementReportsStats measurementReportsStats) {
+    public void logMeasurementReports(
+            MeasurementReportsStats measurementReportsStats, @Nullable String enrollmentId) {
         AdServicesStatsLog.write(
                 measurementReportsStats.getCode(),
                 measurementReportsStats.getType(),

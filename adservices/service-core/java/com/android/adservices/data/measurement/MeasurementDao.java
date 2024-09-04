@@ -125,7 +125,8 @@ class MeasurementDao implements IMeasurementDao {
                 MeasurementTables.TriggerContract.AGGREGATE_TRIGGER_DATA,
                 trigger.getAggregateTriggerData());
         values.put(
-                MeasurementTables.TriggerContract.AGGREGATE_VALUES, trigger.getAggregateValues());
+                MeasurementTables.TriggerContract.AGGREGATE_VALUES,
+                trigger.getAggregateValuesString());
         values.put(
                 MeasurementTables.TriggerContract.AGGREGATABLE_DEDUPLICATION_KEYS,
                 trigger.getAggregateDeduplicationKeys());

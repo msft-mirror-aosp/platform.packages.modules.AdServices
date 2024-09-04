@@ -35,7 +35,8 @@ import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedStat
 /** No-op version of {@link AdServicesLogger}. */
 public class NoOpLoggerImpl implements AdServicesLogger {
     @Override
-    public void logMeasurementReports(MeasurementReportsStats measurementReportsStats) {}
+    public void logMeasurementReports(
+            MeasurementReportsStats measurementReportsStats, @Nullable String enrollmentId) {}
 
     @Override
     public void logApiCallStats(ApiCallStats apiCallStats) {}

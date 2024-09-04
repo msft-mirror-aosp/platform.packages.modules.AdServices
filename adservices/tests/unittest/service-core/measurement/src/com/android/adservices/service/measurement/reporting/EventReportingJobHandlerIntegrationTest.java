@@ -108,12 +108,21 @@ public class EventReportingJobHandlerIntegrationTest extends AbstractDbIntegrati
                                 startValue, endValue));
                 break;
             case SINGLE_REPORT:
-                final int result = ((Number) Objects.requireNonNull(get("result"))).intValue();
+                final int uploadStatus =
+                        ((Number) Objects.requireNonNull(get("uploadStatus"))).intValue();
+                final int failureStatus =
+                        ((Number) Objects.requireNonNull(get("failureStatus"))).intValue();
                 final String id = (String) get("id");
+                ReportingStatus reportingStatus = new ReportingStatus();
+                spyReportingService.performReport(id, reportingStatus);
                 Assert.assertEquals(
-                        "Event report failed.",
-                        result,
-                        spyReportingService.performReport(id, new ReportingStatus()));
+                        "Event report failed: uploadStatus mismatch. ",
+                        uploadStatus,
+                        reportingStatus.getUploadStatus().getValue());
+                Assert.assertEquals(
+                        "Event report failed: failureStatus mismatch. ",
+                        failureStatus,
+                        reportingStatus.getFailureStatus().getValue());
                 break;
         }
     }

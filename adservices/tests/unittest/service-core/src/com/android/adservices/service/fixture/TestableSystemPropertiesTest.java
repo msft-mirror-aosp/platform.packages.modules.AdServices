@@ -29,7 +29,7 @@ import org.junit.Test;
 /** Unit test for {@link TestableSystemProperties} */
 public final class TestableSystemPropertiesTest {
     @Rule
-    public AdServicesExtendedMockitoRule mAdServicesExtendedMockitoRule =
+    public final AdServicesExtendedMockitoRule mAdServicesExtendedMockitoRule =
             new AdServicesExtendedMockitoRule(TestableSystemProperties::new);
 
     @Test

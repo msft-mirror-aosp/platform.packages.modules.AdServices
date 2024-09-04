@@ -24,7 +24,6 @@ import com.android.adservices.service.measurement.util.Filter;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -34,7 +33,6 @@ import java.util.Optional;
 public class AggregatableAttributionTrigger {
 
     private List<AggregateTriggerData> mTriggerData;
-    @Nullable private Map<String, Integer> mValues;
     @Nullable private List<AggregatableValuesConfig> mValueConfigs;
     private Optional<List<AggregateDeduplicationKey>> mAggregateDeduplicationKeys;
 
@@ -49,13 +47,12 @@ public class AggregatableAttributionTrigger {
         }
         AggregatableAttributionTrigger attributionTrigger = (AggregatableAttributionTrigger) obj;
         return Objects.equals(mTriggerData, attributionTrigger.mTriggerData)
-                && Objects.equals(mValues, attributionTrigger.mValues)
                 && Objects.equals(mValueConfigs, attributionTrigger.mValueConfigs);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mTriggerData, mValues, mValueConfigs);
+        return Objects.hash(mTriggerData, mValueConfigs);
     }
 
     /**
@@ -64,12 +61,6 @@ public class AggregatableAttributionTrigger {
      */
     public List<AggregateTriggerData> getTriggerData() {
         return mTriggerData;
-    }
-
-    /** Returns the value map which contains the value for each aggregatable_source. */
-    @Nullable
-    public Map<String, Integer> getValues() {
-        return mValues;
     }
 
     /**
@@ -132,12 +123,6 @@ public class AggregatableAttributionTrigger {
          */
         public Builder setTriggerData(List<AggregateTriggerData> triggerData) {
             mBuilding.mTriggerData = triggerData;
-            return this;
-        }
-
-        /** See {@link AggregatableAttributionTrigger#getValues()}. */
-        public Builder setValues(@Nullable Map<String, Integer> values) {
-            mBuilding.mValues = values;
             return this;
         }
 

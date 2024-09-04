@@ -16,12 +16,13 @@
 
 package com.android.adservices.service.shell.signals;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.mockito.Mockito.when;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.data.signals.EncoderLogicHandler;
 import com.android.adservices.data.signals.EncoderLogicMetadataDao;
-import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.service.shell.NoOpShellCommand;
 import com.android.adservices.service.shell.ShellCommand;
 import com.android.adservices.service.shell.ShellCommandFactory;
@@ -32,17 +33,15 @@ import com.android.adservices.service.stats.pas.EncodingExecutionLogHelper;
 import com.android.adservices.service.stats.pas.EncodingJobRunStatsLogger;
 
 import com.google.common.collect.Sets;
-import com.google.common.truth.Truth;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
-public class SignalsShellCommandFactoryTest extends AdServicesMockitoTestCase {
+public final class SignalsShellCommandFactoryTest extends AdServicesMockitoTestCase {
     private static final boolean SIGNALS_CLI_ENABLED = true;
     private ShellCommandFactory mFactory;
 
-    @Mock private ProtectedSignalsDao mMockProtectedSignalsDao;
     @Mock private PeriodicEncodingJobRunner mMockPeriodicEncodingJobRunner;
     @Mock private EncoderLogicHandler mMockEncoderLogicHandler;
     @Mock private EncodingExecutionLogHelper mMockEncodingExecutionLogHelper;
@@ -69,25 +68,25 @@ public class SignalsShellCommandFactoryTest extends AdServicesMockitoTestCase {
     @Test
     public void test_generateInputCmd() {
         ShellCommand shellCommand = mFactory.getShellCommand(GenerateInputForEncodingCommand.CMD);
-        Truth.assertThat(shellCommand).isInstanceOf(GenerateInputForEncodingCommand.class);
+        assertThat(shellCommand).isInstanceOf(GenerateInputForEncodingCommand.class);
     }
 
     @Test
     public void test_invalidCmd() {
         ShellCommand shellCommand = mFactory.getShellCommand("invalid");
-        Truth.assertThat(shellCommand).isNull();
+        assertThat(shellCommand).isNull();
     }
 
     @Test
     public void test_nullCmd() {
         ShellCommand shellCommand = mFactory.getShellCommand(null);
-        Truth.assertThat(shellCommand).isNull();
+        assertThat(shellCommand).isNull();
     }
 
     @Test
     public void test_emptyCmd() {
         ShellCommand shellCommand = mFactory.getShellCommand("");
-        Truth.assertThat(shellCommand).isNull();
+        assertThat(shellCommand).isNull();
     }
 
     @Test
@@ -102,7 +101,7 @@ public class SignalsShellCommandFactoryTest extends AdServicesMockitoTestCase {
                         mMockEncodingJobRunStatsLogger,
                         mMockEncoderLogicMetadataDao);
         ShellCommand shellCommand = mFactory.getShellCommand(GenerateInputForEncodingCommand.CMD);
-        Truth.assertThat(shellCommand).isInstanceOf(NoOpShellCommand.class);
+        assertThat(shellCommand).isInstanceOf(NoOpShellCommand.class);
     }
 
     @Test
@@ -117,7 +116,7 @@ public class SignalsShellCommandFactoryTest extends AdServicesMockitoTestCase {
                         mMockEncodingJobRunStatsLogger,
                         mMockEncoderLogicMetadataDao);
         ShellCommand shellCommand = mFactory.getShellCommand("invalid");
-        Truth.assertThat(shellCommand).isNull();
+        assertThat(shellCommand).isNull();
     }
 
     @Test
@@ -132,7 +131,7 @@ public class SignalsShellCommandFactoryTest extends AdServicesMockitoTestCase {
                         mMockEncodingJobRunStatsLogger,
                         mMockEncoderLogicMetadataDao);
 
-        Truth.assertThat(Sets.newHashSet(mFactory.getAllCommandsHelp()))
+        assertThat(Sets.newHashSet(mFactory.getAllCommandsHelp()))
                 .containsExactlyElementsIn(
                         Sets.newHashSet(
                                 GenerateInputForEncodingCommand.HELP, TriggerEncodingCommand.HELP));

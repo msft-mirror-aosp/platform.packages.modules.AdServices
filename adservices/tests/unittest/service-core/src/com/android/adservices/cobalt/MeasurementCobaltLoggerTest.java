@@ -729,7 +729,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__AGGREGATE,
                 AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__UPLOAD_METHOD__REGULAR_REPORT_UPLOAD_METHOD,
                 AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__RESPONSE_CODE__FAILURE,
-                AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__FAILURE_TYPE__NETWORK_ERROR_REPORT_UPLOAD_FAILURE_TYPE);
+                AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__FAILURE_TYPE__NETWORK_ERROR_REPORT_UPLOAD_FAILURE_TYPE,
+                ENROLLMENT_ID);
 
         verify(mMockCobaltLogger, times(1))
                 .logString(
@@ -738,7 +739,33 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                         ImmutableList.of(
                                 AGGREGATE_REPORT_TYPE,
                                 REGULAR_REPORT_UPLOAD_METHOD,
-                                REPORTING_NETWORK_FAILURE_STATUS_CODE));
+                                REPORTING_NETWORK_FAILURE_STATUS_CODE,
+                                HASHED_ENROLLMENT));
+    }
+
+    @Test
+    public void testLogReportingStatus_nullEnrollmentIdLogged() {
+        mockCobaltLoggingFlags(true);
+        mockMsmtReportingCobaltLoggingEnabled(true);
+        MeasurementCobaltLogger logger = new MeasurementCobaltLogger(mMockCobaltLogger, mMockFlags);
+
+        logger.logReportingStatusWithAppName(
+                APP_PACKAGE_NAME,
+                AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__EVENT,
+                AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__UPLOAD_METHOD__FALLBACK_REPORT_UPLOAD_METHOD,
+                AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__RESPONSE_CODE__SUCCESS,
+                AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__FAILURE_TYPE__UNKNOWN_REPORT_UPLOAD_FAILURE_TYPE,
+                /* enrollmentId= */ null);
+
+        verify(mMockCobaltLogger, times(1))
+                .logString(
+                        REPORTING_METRIC_ID,
+                        APP_PACKAGE_NAME,
+                        ImmutableList.of(
+                                EVENT_REPORT_TYPE,
+                                FALLBACK_REPORT_UPLOAD_METHOD,
+                                REPORTING_SUCCESS_STATUS_CODE,
+                                /* enrollment= */ 0));
     }
 
     @Test
@@ -752,7 +779,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__EVENT,
                 AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__UPLOAD_METHOD__FALLBACK_REPORT_UPLOAD_METHOD,
                 AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__RESPONSE_CODE__SUCCESS,
-                AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__FAILURE_TYPE__UNKNOWN_REPORT_UPLOAD_FAILURE_TYPE);
+                AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__FAILURE_TYPE__UNKNOWN_REPORT_UPLOAD_FAILURE_TYPE,
+                ENROLLMENT_ID);
 
         verify(mMockCobaltLogger, times(1))
                 .logString(
@@ -761,7 +789,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                         ImmutableList.of(
                                 EVENT_REPORT_TYPE,
                                 FALLBACK_REPORT_UPLOAD_METHOD,
-                                REPORTING_SUCCESS_STATUS_CODE));
+                                REPORTING_SUCCESS_STATUS_CODE,
+                                HASHED_ENROLLMENT));
     }
 
     @Test
@@ -775,7 +804,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__UNKNOWN_REPORT,
                 AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__UPLOAD_METHOD__UNKNOWN_REPORT_UPLOAD_METHOD,
                 AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__RESPONSE_CODE__UNKNOWN_STATUS,
-                AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__FAILURE_TYPE__UNKNOWN_REPORT_UPLOAD_FAILURE_TYPE);
+                AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__FAILURE_TYPE__UNKNOWN_REPORT_UPLOAD_FAILURE_TYPE,
+                ENROLLMENT_ID);
 
         verify(mMockCobaltLogger, times(1))
                 .logString(
@@ -784,7 +814,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                         ImmutableList.of(
                                 UNKNOWN_REPORT_TYPE,
                                 UNKNOWN_REPORT_UPLOAD_METHOD,
-                                REPORTING_UNKNOWN_STATUS_CODE));
+                                REPORTING_UNKNOWN_STATUS_CODE,
+                                HASHED_ENROLLMENT));
     }
 
     @Test
@@ -797,7 +828,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__UNKNOWN_REPORT,
                 AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__UPLOAD_METHOD__UNKNOWN_REPORT_UPLOAD_METHOD,
                 AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__RESPONSE_CODE__UNKNOWN_STATUS,
-                AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__FAILURE_TYPE__UNKNOWN_REPORT_UPLOAD_FAILURE_TYPE);
+                AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__FAILURE_TYPE__UNKNOWN_REPORT_UPLOAD_FAILURE_TYPE,
+                ENROLLMENT_ID);
 
         verify(mMockCobaltLogger, never())
                 .logString(
@@ -806,7 +838,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                         ImmutableList.of(
                                 UNKNOWN_REPORT_TYPE,
                                 UNKNOWN_REPORT_UPLOAD_METHOD,
-                                REPORTING_UNKNOWN_STATUS_CODE));
+                                REPORTING_UNKNOWN_STATUS_CODE,
+                                HASHED_ENROLLMENT));
     }
 
     @Test
@@ -820,7 +853,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                 AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__UNKNOWN_REPORT,
                 AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__UPLOAD_METHOD__UNKNOWN_REPORT_UPLOAD_METHOD,
                 AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__RESPONSE_CODE__UNKNOWN_STATUS,
-                AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__FAILURE_TYPE__UNKNOWN_REPORT_UPLOAD_FAILURE_TYPE);
+                AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__FAILURE_TYPE__UNKNOWN_REPORT_UPLOAD_FAILURE_TYPE,
+                ENROLLMENT_ID);
 
         verify(mMockCobaltLogger, never())
                 .logString(
@@ -829,7 +863,8 @@ public final class MeasurementCobaltLoggerTest extends AdServicesExtendedMockito
                         ImmutableList.of(
                                 UNKNOWN_REPORT_TYPE,
                                 UNKNOWN_REPORT_UPLOAD_METHOD,
-                                REPORTING_UNKNOWN_STATUS_CODE));
+                                REPORTING_UNKNOWN_STATUS_CODE,
+                                HASHED_ENROLLMENT));
     }
 
     private void mockCobaltLoggingFlags(boolean value) {

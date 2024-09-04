@@ -25,9 +25,31 @@ import org.junit.Test;
 @SmallTest
 public final class AggregatableKeyValueTest {
     @Test
-    public void testBuilderWithInt() throws Exception {
+    public void testBuilderWithInt() {
+        AggregatableKeyValue aggregatableKeyValue = createSimpleAggregatableKeyValue();
+        assertThat(aggregatableKeyValue.getValue()).isEqualTo(1664);
+    }
+
+    @Test
+    public void testHashCode_equals() {
+        final AggregatableKeyValue aggregatableKeyValue1 = createSimpleAggregatableKeyValue();
+        final AggregatableKeyValue aggregatableKeyValue2 = createSimpleAggregatableKeyValue();
+        assertThat(aggregatableKeyValue1.hashCode()).isEqualTo(aggregatableKeyValue2.hashCode());
+        assertThat(aggregatableKeyValue1).isEqualTo(aggregatableKeyValue2);
+    }
+
+    @Test
+    public void testHashCode_notEquals() {
+        final AggregatableKeyValue aggregatableKeyValue1 = createSimpleAggregatableKeyValue();
+        final AggregatableKeyValue aggregatableKeyValue2 =
+                new AggregatableKeyValue.Builder(1663).build();
+        assertThat(aggregatableKeyValue1.hashCode()).isNotEqualTo(aggregatableKeyValue2.hashCode());
+        assertThat(aggregatableKeyValue1).isNotEqualTo(aggregatableKeyValue2);
+    }
+
+    private AggregatableKeyValue createSimpleAggregatableKeyValue() {
         int value = 1664;
         AggregatableKeyValue aggregatableKeyValue = new AggregatableKeyValue.Builder(value).build();
-        assertThat(aggregatableKeyValue.getValue()).isEqualTo(1664);
+        return aggregatableKeyValue;
     }
 }

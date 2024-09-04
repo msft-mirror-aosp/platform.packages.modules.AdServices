@@ -117,7 +117,7 @@ public final class GenerateInputForEncodingCommandTest
     public void killAndRecreateJavascriptSandboxIsolate()
             throws ExecutionException, InterruptedException, TimeoutException {
         if (mJSScriptEngine == null) {
-            mJSScriptEngine = JSScriptEngine.getInstance(sContext, sLogger);
+            mJSScriptEngine = JSScriptEngine.getInstance(mContext, sLogger);
         }
         // Kill the JSScriptEngine to ensure it re-creates the JavascriptEngine isolate.
         mJSScriptEngine.shutdown().get(JS_SCRIPT_ENGINE_TIMEOUT_SEC, TimeUnit.SECONDS);
@@ -167,7 +167,8 @@ public final class GenerateInputForEncodingCommandTest
 
         // We expect that ad techs need to define the encodeSignals() logic for this to
         // execute, but there should be no parsing errors.
-        assertThat(exception.getMessage())
+        assertThat(exception)
+                .hasMessageThat()
                 .contains("Uncaught ReferenceError: encodeSignals is not defined");
         assertThat(jsScript).contains(ProtectedSignalsFixture.PACKAGE_NAME_PREFIX);
         assertThat(jsScript)

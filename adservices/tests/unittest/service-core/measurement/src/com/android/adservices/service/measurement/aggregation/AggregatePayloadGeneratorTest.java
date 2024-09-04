@@ -33,8 +33,10 @@ import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.TriggerFixture;
 import com.android.adservices.service.measurement.XNetworkData;
+import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
@@ -133,14 +135,15 @@ public final class AggregatePayloadGeneratorTest {
                         .setKey(BigInteger.valueOf(2688L))
                         .setSourceKeys(new HashSet<>(Arrays.asList("geoValue", "nonMatch")))
                         .build());
-
-        Map<String, Integer> values = new HashMap<>();
-        values.put("campaignCounts", 32768);
-        values.put("geoValue", 1664);
         AggregatableAttributionTrigger attributionTrigger =
                 new AggregatableAttributionTrigger.Builder()
                         .setTriggerData(triggerDataList)
-                        .setValues(values).build();
+                        .setValueConfigs(
+                                List.of(
+                                        new AggregatableValuesConfig.Builder(
+                                                        createSimpleValuesMap())
+                                                .build()))
+                        .build();
 
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -228,14 +231,10 @@ public final class AggregatePayloadGeneratorTest {
                         .setKey(BigInteger.valueOf(2688L))
                         .setSourceKeys(new HashSet<>(Arrays.asList("geoValue", "nonMatch")))
                         .build());
-
-        Map<String, Integer> values = new HashMap<>();
-        values.put("campaignCounts", 32768);
-        values.put("geoValue", 1664);
         AggregatableAttributionTrigger attributionTrigger =
                 new AggregatableAttributionTrigger.Builder()
                         .setTriggerData(triggerDataList)
-                        .setValues(values)
+                        .setValueConfigs(createSimpleAggregatableValuesConfig())
                         .build();
 
         Source source =
@@ -321,14 +320,10 @@ public final class AggregatePayloadGeneratorTest {
                         .setKey(BigInteger.valueOf(2688L))
                         .setSourceKeys(new HashSet<>(Arrays.asList("geoValue", "nonMatch")))
                         .build());
-
-        Map<String, Integer> values = new HashMap<>();
-        values.put("campaignCounts", 32768);
-        values.put("geoValue", 1664);
         AggregatableAttributionTrigger attributionTrigger =
                 new AggregatableAttributionTrigger.Builder()
                         .setTriggerData(triggerDataList)
-                        .setValues(values)
+                        .setValueConfigs(createSimpleAggregatableValuesConfig())
                         .build();
 
         Source source =
@@ -417,14 +412,11 @@ public final class AggregatePayloadGeneratorTest {
                         .setKey(BigInteger.valueOf(2688L))
                         .setSourceKeys(new HashSet<>(Arrays.asList("geoValue", "nonMatch")))
                         .build());
-
-        Map<String, Integer> values = new HashMap<>();
-        values.put("campaignCounts", 32768);
-        values.put("geoValue", 1664);
         AggregatableAttributionTrigger attributionTrigger =
                 new AggregatableAttributionTrigger.Builder()
                         .setTriggerData(triggerDataList)
-                        .setValues(values).build();
+                        .setValueConfigs(createSimpleAggregatableValuesConfig())
+                        .build();
 
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -488,14 +480,11 @@ public final class AggregatePayloadGeneratorTest {
                         .setKey(BigInteger.valueOf(2688L))
                         .setSourceKeys(new HashSet<>(Arrays.asList("geoValue", "nonMatch")))
                         .build());
-
-        Map<String, Integer> values = new HashMap<>();
-        values.put("campaignCounts", 32768);
-        values.put("geoValue", 1664);
         AggregatableAttributionTrigger attributionTrigger =
                 new AggregatableAttributionTrigger.Builder()
                         .setTriggerData(triggerDataList)
-                        .setValues(values).build();
+                        .setValueConfigs(createSimpleAggregatableValuesConfig())
+                        .build();
 
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -559,14 +548,11 @@ public final class AggregatePayloadGeneratorTest {
                         .setKey(BigInteger.valueOf(2688L))
                         .setSourceKeys(new HashSet<>(Arrays.asList("geoValue", "nonMatch")))
                         .build());
-
-        Map<String, Integer> values = new HashMap<>();
-        values.put("campaignCounts", 32768);
-        values.put("geoValue", 1664);
         AggregatableAttributionTrigger attributionTrigger =
                 new AggregatableAttributionTrigger.Builder()
                         .setTriggerData(triggerDataList)
-                        .setValues(values).build();
+                        .setValueConfigs(createSimpleAggregatableValuesConfig())
+                        .build();
 
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -631,15 +617,15 @@ public final class AggregatePayloadGeneratorTest {
                         .setSourceKeys(new HashSet<>(Arrays.asList("geoValue", "nonMatch")))
                         .build());
 
-        Map<String, Integer> values = new HashMap<>();
-        values.put("campaignCounts", 32768);
-        values.put("geoValue", 1664);
+        Map<String, AggregatableKeyValue> values = createSimpleValuesMap();
         // "thirdSource" is matched although it appears in values but not in trigger data.
-        values.put("thirdSource", 100);
+        values.put("thirdSource", new AggregatableKeyValue.Builder(100).build());
+        AggregatableValuesConfig config = new AggregatableValuesConfig.Builder(values).build();
         AggregatableAttributionTrigger attributionTrigger =
                 new AggregatableAttributionTrigger.Builder()
                         .setTriggerData(triggerDataList)
-                        .setValues(values).build();
+                        .setValueConfigs(List.of(config))
+                        .build();
 
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -723,13 +709,11 @@ public final class AggregatePayloadGeneratorTest {
                                 .setAttributionFilterMap(triggerDataFilter2).build()))
                         .build());
 
-        Map<String, Integer> values = new HashMap<>();
-        values.put("campaignCounts", 32768);
-        values.put("geoValue", 1664);
         AggregatableAttributionTrigger attributionTrigger =
                 new AggregatableAttributionTrigger.Builder()
                         .setTriggerData(triggerDataList)
-                        .setValues(values).build();
+                        .setValueConfigs(createSimpleAggregatableValuesConfig())
+                        .build();
 
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -782,12 +766,14 @@ public final class AggregatePayloadGeneratorTest {
                         .setFilterSet(List.of(new FilterMap.Builder()
                                 .setAttributionFilterMap(triggerDataFilter1).build())).build());
 
-        Map<String, Integer> values = new HashMap<>();
-        values.put("campaignCounts", 32768);
+        Map<String, AggregatableKeyValue> values = new HashMap<>();
+        values.put("campaignCounts", new AggregatableKeyValue.Builder(32768).build());
+        AggregatableValuesConfig config = new AggregatableValuesConfig.Builder(values).build();
         AggregatableAttributionTrigger attributionTrigger =
                 new AggregatableAttributionTrigger.Builder()
                         .setTriggerData(triggerDataList)
-                        .setValues(values).build();
+                        .setValueConfigs(List.of(config))
+                        .build();
 
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -838,12 +824,14 @@ public final class AggregatePayloadGeneratorTest {
                         .setFilterSet(List.of(new FilterMap.Builder()
                                 .setAttributionFilterMap(triggerDataFilter1).build())).build());
 
-        Map<String, Integer> values = new HashMap<>();
-        values.put("campaignCounts", 32768);
+        Map<String, AggregatableKeyValue> values = new HashMap<>();
+        values.put("campaignCounts", new AggregatableKeyValue.Builder(32768).build());
+        AggregatableValuesConfig config = new AggregatableValuesConfig.Builder(values).build();
         AggregatableAttributionTrigger attributionTrigger =
                 new AggregatableAttributionTrigger.Builder()
                         .setTriggerData(triggerDataList)
-                        .setValues(values).build();
+                        .setValueConfigs(List.of(config))
+                        .build();
 
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -903,12 +891,13 @@ public final class AggregatePayloadGeneratorTest {
                                         .build())
                         .build());
 
-        Map<String, Integer> values = new HashMap<>();
-        values.put("campaignCounts", 32768);
+        Map<String, AggregatableKeyValue> values = new HashMap<>();
+        values.put("campaignCounts", new AggregatableKeyValue.Builder(32768).build());
+        AggregatableValuesConfig config = new AggregatableValuesConfig.Builder(values).build();
         AggregatableAttributionTrigger attributionTrigger =
                 new AggregatableAttributionTrigger.Builder()
                         .setTriggerData(triggerDataList)
-                        .setValues(values)
+                        .setValueConfigs(List.of(config))
                         .build();
 
         Source source =
@@ -992,13 +981,14 @@ public final class AggregatePayloadGeneratorTest {
                         .setXNetworkData(null)
                         .build());
 
-        Map<String, Integer> values = new HashMap<>();
-        values.put("campaignCounts", 32768);
-        values.put("key2", 16384);
+        Map<String, AggregatableKeyValue> values = new HashMap<>();
+        values.put("campaignCounts", new AggregatableKeyValue.Builder(32768).build());
+        values.put("key2", new AggregatableKeyValue.Builder(16384).build());
+        AggregatableValuesConfig config = new AggregatableValuesConfig.Builder(values).build();
         AggregatableAttributionTrigger attributionTrigger =
                 new AggregatableAttributionTrigger.Builder()
                         .setTriggerData(triggerDataList)
-                        .setValues(values)
+                        .setValueConfigs(List.of(config))
                         .build();
 
         Source source =
@@ -1075,12 +1065,13 @@ public final class AggregatePayloadGeneratorTest {
                                         .build())
                         .build());
 
-        Map<String, Integer> values = new HashMap<>();
-        values.put("campaignCounts", 32768);
+        Map<String, AggregatableKeyValue> values = new HashMap<>();
+        values.put("campaignCounts", new AggregatableKeyValue.Builder(32768).build());
+        AggregatableValuesConfig config = new AggregatableValuesConfig.Builder(values).build();
         AggregatableAttributionTrigger attributionTrigger =
                 new AggregatableAttributionTrigger.Builder()
                         .setTriggerData(triggerDataList)
-                        .setValues(values)
+                        .setValueConfigs(List.of(config))
                         .build();
 
         Source source =
@@ -1146,12 +1137,13 @@ public final class AggregatePayloadGeneratorTest {
                         .setXNetworkData(null)
                         .build());
 
-        Map<String, Integer> values = new HashMap<>();
-        values.put("campaignCounts", 32768);
+        Map<String, AggregatableKeyValue> values = new HashMap<>();
+        values.put("campaignCounts", new AggregatableKeyValue.Builder(32768).build());
+        AggregatableValuesConfig config = new AggregatableValuesConfig.Builder(values).build();
         AggregatableAttributionTrigger attributionTrigger =
                 new AggregatableAttributionTrigger.Builder()
                         .setTriggerData(triggerDataList)
-                        .setValues(values)
+                        .setValueConfigs(List.of(config))
                         .build();
 
         Source source =
@@ -1219,12 +1211,13 @@ public final class AggregatePayloadGeneratorTest {
                         .setXNetworkData(new XNetworkData.Builder().setKeyOffset(null).build())
                         .build());
 
-        Map<String, Integer> values = new HashMap<>();
-        values.put("campaignCounts", 32768);
+        Map<String, AggregatableKeyValue> values = new HashMap<>();
+        values.put("campaignCounts", new AggregatableKeyValue.Builder(32768).build());
+        AggregatableValuesConfig config = new AggregatableValuesConfig.Builder(values).build();
         AggregatableAttributionTrigger attributionTrigger =
                 new AggregatableAttributionTrigger.Builder()
                         .setTriggerData(triggerDataList)
-                        .setValues(values)
+                        .setValueConfigs(List.of(config))
                         .build();
 
         Source source =
@@ -1253,5 +1246,296 @@ public final class AggregatePayloadGeneratorTest {
                                 .setKey(new BigInteger("1000000000000000E", 16))
                                 .setValue(32768)
                                 .build()));
+    }
+
+    @Test
+    public void generateAttributionReport_aggregateValueFiltersJsonArray_createsOneContribution()
+            throws Exception {
+        when(mFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true);
+        // Build AggregatableAttributionSource.
+        TreeMap<String, BigInteger> aggregatableSource = new TreeMap<>();
+        aggregatableSource.put("campaignCounts", BigInteger.valueOf(345L));
+        aggregatableSource.put("geoValue", BigInteger.valueOf(5L));
+        Map<String, List<String>> sourceFilterMap = new HashMap<>();
+        sourceFilterMap.put("product", Arrays.asList("1234"));
+        FilterMap sourceFilter =
+                new FilterMap.Builder().setAttributionFilterMap(sourceFilterMap).build();
+        AggregatableAttributionSource attributionSource =
+                new AggregatableAttributionSource.Builder()
+                        .setAggregatableSource(aggregatableSource)
+                        .setFilterMap(sourceFilter)
+                        .build();
+        // Build AggregatableAttributionTrigger.
+        List<AggregateTriggerData> triggerDataList = new ArrayList<>();
+        // Apply this key_piece to "campaignCounts".
+        triggerDataList.add(
+                new AggregateTriggerData.Builder()
+                        .setKey(BigInteger.valueOf(1024L))
+                        .setSourceKeys(new HashSet<>(Collections.singletonList("campaignCounts")))
+                        .build());
+        // Apply this key_piece to "geoValue".
+        triggerDataList.add(
+                new AggregateTriggerData.Builder()
+                        .setKey(BigInteger.valueOf(2688L))
+                        .setSourceKeys(new HashSet<>(Arrays.asList("geoValue", "nonMatch")))
+                        .build());
+        // Build unmatchedAggregatableValuesConfig. Filters do not match, do not apply to
+        // contributions.
+        JSONObject geoValue = new JSONObject().put("geoValue", 4);
+        JSONObject invalidFilters = new JSONObject().put("product", new JSONArray().put("12345"));
+        JSONObject builderObj = new JSONObject();
+        builderObj.put("values", geoValue);
+        builderObj.put("filters", invalidFilters);
+        AggregatableValuesConfig unmatchedAggregatableValuesConfig =
+                new AggregatableValuesConfig.Builder(builderObj, mFlags).build();
+        // Build matchedAggregatableValuesConfig. Filters match, apply to contributions
+        JSONObject campaignCounts = new JSONObject().put("campaignCounts", 3);
+        JSONObject filters = new JSONObject().put("product", new JSONArray().put("1234"));
+        JSONObject builderObj2 = new JSONObject();
+        builderObj2.put("values", campaignCounts);
+        builderObj2.put("filters", filters);
+        AggregatableValuesConfig matchedAggregatableValuesConfig =
+                new AggregatableValuesConfig.Builder(builderObj2, mFlags).build();
+        AggregatableAttributionTrigger attributionTrigger =
+                new AggregatableAttributionTrigger.Builder()
+                        .setTriggerData(triggerDataList)
+                        .setValueConfigs(
+                                List.of(
+                                        unmatchedAggregatableValuesConfig,
+                                        matchedAggregatableValuesConfig))
+                        .build();
+        // Generate Histogram
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAggregatableAttributionSource(attributionSource)
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAggregatableAttributionTrigger(attributionTrigger)
+                        .build();
+        Optional<List<AggregateHistogramContribution>> aggregateHistogramContributions =
+                mAggregatePayloadGenerator.generateAttributionReport(source, trigger);
+        assertThat(aggregateHistogramContributions.isPresent()).isTrue();
+        List<AggregateHistogramContribution> contributions = aggregateHistogramContributions.get();
+        assertThat(contributions.size()).isEqualTo(1);
+        assertThat(contributions)
+                .contains(
+                        new AggregateHistogramContribution.Builder()
+                                .setKey(BigInteger.valueOf(1369L))
+                                .setValue(3)
+                                .build());
+    }
+
+    @Test
+    public void generateAttributionReport_aggregateValueFiltersJsonArray_createsNoContribution()
+            throws Exception {
+        when(mFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true);
+        // Build AggregatableAttributionSource.
+        TreeMap<String, BigInteger> aggregatableSource = new TreeMap<>();
+        aggregatableSource.put("campaignCounts", BigInteger.valueOf(345L));
+        aggregatableSource.put("geoValue", BigInteger.valueOf(5L));
+        Map<String, List<String>> sourceFilterMap = new HashMap<>();
+        sourceFilterMap.put("product", Arrays.asList("1234"));
+        FilterMap sourceFilter =
+                new FilterMap.Builder().setAttributionFilterMap(sourceFilterMap).build();
+        AggregatableAttributionSource attributionSource =
+                new AggregatableAttributionSource.Builder()
+                        .setAggregatableSource(aggregatableSource)
+                        .setFilterMap(sourceFilter)
+                        .build();
+        // Build AggregatableAttributionTrigger.
+        List<AggregateTriggerData> triggerDataList = new ArrayList<>();
+        // Apply this key_piece to "campaignCounts".
+        triggerDataList.add(
+                new AggregateTriggerData.Builder()
+                        .setKey(BigInteger.valueOf(1024L))
+                        .setSourceKeys(new HashSet<>(Collections.singletonList("campaignCounts")))
+                        .build());
+        // Apply this key_piece to "geoValue".
+        triggerDataList.add(
+                new AggregateTriggerData.Builder()
+                        .setKey(BigInteger.valueOf(2688L))
+                        .setSourceKeys(new HashSet<>(Arrays.asList("geoValue", "nonMatch")))
+                        .build());
+        // Build unmatchedAggregatableValuesConfig. Filters do not match, do not apply to
+        // contributions.
+        JSONObject geoValue = new JSONObject().put("geoValue", 4);
+        JSONObject invalidFilters = new JSONObject().put("product", new JSONArray().put("12345"));
+        JSONObject builderObj = new JSONObject();
+        builderObj.put("values", geoValue);
+        builderObj.put("filters", invalidFilters);
+        AggregatableValuesConfig unmatchedAggregatableValuesConfig =
+                new AggregatableValuesConfig.Builder(builderObj, mFlags).build();
+        // Build unmatchedAggregatableValuesConfig. Filters do not match, do not apply to
+        // contributions.
+        JSONObject campaignCounts = new JSONObject().put("campaignCounts", 3);
+        JSONObject notFilters = new JSONObject().put("product", new JSONArray().put("2345"));
+        JSONObject builderObj2 = new JSONObject();
+        builderObj2.put("values", campaignCounts);
+        builderObj2.put("filters", notFilters);
+        AggregatableValuesConfig matchedAggregatableValuesConfig =
+                new AggregatableValuesConfig.Builder(builderObj2, mFlags).build();
+        AggregatableAttributionTrigger attributionTrigger =
+                new AggregatableAttributionTrigger.Builder()
+                        .setTriggerData(triggerDataList)
+                        .setValueConfigs(
+                                List.of(
+                                        unmatchedAggregatableValuesConfig,
+                                        matchedAggregatableValuesConfig))
+                        .build();
+        // Generate Histogram
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAggregatableAttributionSource(attributionSource)
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAggregatableAttributionTrigger(attributionTrigger)
+                        .build();
+        Optional<List<AggregateHistogramContribution>> aggregateHistogramContributions =
+                mAggregatePayloadGenerator.generateAttributionReport(source, trigger);
+        assertThat(aggregateHistogramContributions).isEqualTo(Optional.empty());
+    }
+
+    @Test
+    public void getMatchedValueMap_unmatchedConfigsReturnsEmpty_success() throws Exception {
+        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        FilterMap sourceFilter =
+                new FilterMap.Builder()
+                        .addStringListValue("product", List.of("1234", "234"))
+                        .build();
+        // Invalid aggregatableValuesConfig because filters don't match
+        JSONObject campaignCounts = new JSONObject().put("campaignCounts", 3);
+        JSONObject filters = new JSONObject().put("product", new JSONArray().put("12345"));
+        JSONObject builderObj = new JSONObject();
+        builderObj.put("values", campaignCounts);
+        builderObj.put("filters", filters);
+        AggregatableValuesConfig aggregatableValuesConfig =
+                new AggregatableValuesConfig.Builder(builderObj, mFlags).build();
+        // Invalid aggregatableValuesConfig because not_filters match
+        JSONObject geoValue = new JSONObject().put("geoValue", 3);
+        JSONObject notFilters = new JSONObject().put("product", new JSONArray().put("1234"));
+        JSONObject builderObj2 = new JSONObject();
+        builderObj2.put("values", geoValue);
+        builderObj2.put("not_filters", notFilters);
+        AggregatableValuesConfig aggregatableValuesConfig2 =
+                new AggregatableValuesConfig.Builder(builderObj2, mFlags).build();
+        // Build AggregatableAttributionTrigger
+        AggregatableAttributionTrigger attributionTrigger =
+                new AggregatableAttributionTrigger.Builder()
+                        .setValueConfigs(
+                                List.of(aggregatableValuesConfig, aggregatableValuesConfig2))
+                        .build();
+        Filter filter = new Filter(mFlags);
+        Optional<Map<String, Integer>> valueMap =
+                mAggregatePayloadGenerator.getMatchedValueMap(
+                        attributionTrigger, sourceFilter, filter);
+        assertThat(valueMap).isEqualTo(Optional.empty());
+    }
+
+    @Test
+    public void getMatchedValueMap_matchedFiltersReturnsFromValueConfig_success() throws Exception {
+        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        FilterMap sourceFilter =
+                new FilterMap.Builder()
+                        .addStringListValue("product", List.of("1234", "234"))
+                        .build();
+        // Valid AggregatableValuesConfig because filters match
+        JSONObject campaignCounts = new JSONObject().put("campaignCounts", 3);
+        JSONObject filters = new JSONObject().put("product", new JSONArray().put("1234"));
+        JSONObject builderObj = new JSONObject();
+        builderObj.put("values", campaignCounts);
+        builderObj.put("filters", filters);
+        AggregatableValuesConfig aggregatableValuesConfig =
+                new AggregatableValuesConfig.Builder(builderObj, mFlags).build();
+        // Invalid AggregatableValuesConfig because filters don't match
+        JSONObject geoValue = new JSONObject().put("geoValue", 3);
+        JSONObject invalidFilters = new JSONObject().put("product", new JSONArray().put("12345"));
+        JSONObject builderObj2 = new JSONObject();
+        builderObj2.put("values", geoValue);
+        builderObj2.put("filters", invalidFilters);
+        AggregatableValuesConfig invalidAggregatableValuesConfig =
+                new AggregatableValuesConfig.Builder(builderObj2, mFlags).build();
+        AggregatableAttributionTrigger attributionTrigger =
+                new AggregatableAttributionTrigger.Builder()
+                        .setValueConfigs(
+                                List.of(aggregatableValuesConfig, invalidAggregatableValuesConfig))
+                        .build();
+        Filter filter = new Filter(mFlags);
+        Optional<Map<String, Integer>> valueMap =
+                mAggregatePayloadGenerator.getMatchedValueMap(
+                        attributionTrigger, sourceFilter, filter);
+        assertThat(valueMap.get().keySet().contains("campaignCounts")).isTrue();
+    }
+
+    @Test
+    public void getMatchedValueMap_returnsFromValueMap_success() {
+        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        FilterMap sourceFilter =
+                new FilterMap.Builder()
+                        .addStringListValue("product", List.of("1234", "234"))
+                        .build();
+        Map<String, AggregatableKeyValue> values = new HashMap<>();
+        values.put("campaignCounts", new AggregatableKeyValue.Builder(32768).build());
+        AggregatableAttributionTrigger attributionTrigger =
+                new AggregatableAttributionTrigger.Builder()
+                        .setValueConfigs(
+                                List.of(new AggregatableValuesConfig.Builder(values).build()))
+                        .build();
+        Filter filter = new Filter(mFlags);
+        Optional<Map<String, Integer>> valueMap =
+                mAggregatePayloadGenerator.getMatchedValueMap(
+                        attributionTrigger, sourceFilter, filter);
+        assertThat(valueMap.get().keySet().contains("campaignCounts")).isTrue();
+    }
+
+    @Test
+    public void getMatchedValueMap_unmatchedNotFiltersReturnsFromValueMap_success()
+            throws Exception {
+        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        FilterMap sourceFilter =
+                new FilterMap.Builder()
+                        .addStringListValue("product", List.of("1234", "234"))
+                        .build();
+        // Invalid AggregatableValuesConfig because not_filters match
+        JSONObject campaignCounts = new JSONObject().put("campaignCounts", 3);
+        JSONObject matchedNotFilters = new JSONObject().put("product", new JSONArray().put("1234"));
+        JSONObject builderObj = new JSONObject();
+        builderObj.put("values", campaignCounts);
+        builderObj.put("not_filters", matchedNotFilters);
+        AggregatableValuesConfig unmatchedAggregatableValuesConfig =
+                new AggregatableValuesConfig.Builder(builderObj, mFlags).build();
+        // Valid AggregatableValuesConfig because not_filters does not match
+        JSONObject geoValue = new JSONObject().put("geoValue", 3);
+        JSONObject unmatchedNotFilters =
+                new JSONObject().put("product", new JSONArray().put("345"));
+        JSONObject matchedBuilderObj = new JSONObject();
+        matchedBuilderObj.put("values", geoValue);
+        matchedBuilderObj.put("not_filters", unmatchedNotFilters);
+        AggregatableValuesConfig matchedAggregatableValuesConfig =
+                new AggregatableValuesConfig.Builder(matchedBuilderObj, mFlags).build();
+        AggregatableAttributionTrigger attributionTrigger =
+                new AggregatableAttributionTrigger.Builder()
+                        .setValueConfigs(
+                                List.of(
+                                        unmatchedAggregatableValuesConfig,
+                                        matchedAggregatableValuesConfig))
+                        .build();
+        Filter filter = new Filter(mFlags);
+        Optional<Map<String, Integer>> valueMap =
+                mAggregatePayloadGenerator.getMatchedValueMap(
+                        attributionTrigger, sourceFilter, filter);
+        assertThat(valueMap.get().keySet().contains("geoValue")).isTrue();
+    }
+
+    private Map<String, AggregatableKeyValue> createSimpleValuesMap() {
+        Map<String, AggregatableKeyValue> values = new HashMap<>();
+        values.put("campaignCounts", new AggregatableKeyValue.Builder(32768).build());
+        values.put("geoValue", new AggregatableKeyValue.Builder(1664).build());
+        return values;
+    }
+
+    private List<AggregatableValuesConfig> createSimpleAggregatableValuesConfig() {
+        return List.of(new AggregatableValuesConfig.Builder(createSimpleValuesMap()).build());
     }
 }

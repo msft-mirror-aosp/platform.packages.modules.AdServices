@@ -40,7 +40,7 @@ import org.mockito.Mock;
 
 @ExtendedMockitoRule.SpyStatic(ConsentManager.class)
 public final class ResetConsentCommandTest extends ShellCommandTestCase<ResetConsentCommand> {
-    @Mock ConsentManager mMockAdServicesCommonManager;
+    @Mock private ConsentManager mMockAdServicesCommonManager;
 
     @Before
     public void setup() {

@@ -1,4 +1,5 @@
 # Statically included android internal util.
-rule com.android.internal.util.** com.android.server.adservices.internal.util.@1
-rule com.android.modules.utils.** com.android.server.adservices.@1
-rule com.google.protobuf.** com.android.server.adservices.protobuf.@1
+# Use "jarjar." after ".adservices" on maintenance purpose
+rule com.android.internal.util.** com.android.adservices.jarjar.server.internal.util.@1
+rule com.android.modules.utils.** com.android.adservices.jarjar.server.module.utils.@1
+rule com.google.protobuf.** com.android.adservices.jarjar.server.protobuf.@1

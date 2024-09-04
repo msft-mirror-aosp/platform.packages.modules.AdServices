@@ -1,1 +1,2 @@
-rule com.android.internal.util.Preconditions* com.android.adservices.internal.util.Preconditions@1
+# Use "jarjar." after ".adservices" on maintenance purpose
+rule com.android.internal.util.Preconditions* com.android.adservices.jarjar.internal.util.Preconditions@1

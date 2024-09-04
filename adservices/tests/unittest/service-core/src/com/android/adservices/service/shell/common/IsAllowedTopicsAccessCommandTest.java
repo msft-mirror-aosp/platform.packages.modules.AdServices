@@ -35,7 +35,7 @@ public final class IsAllowedTopicsAccessCommandTest
     private static final String USES_SDK = "true";
 
     @Test
-    public void testRun_invalid() throws Exception {
+    public void testRun_invalid() {
         IsAllowedTopicsAccessCommand cmd = new IsAllowedTopicsAccessCommand();
 
         // no args
@@ -73,7 +73,7 @@ public final class IsAllowedTopicsAccessCommandTest
     }
 
     @Test
-    public void testRun_valid() throws Exception {
+    public void testRun_valid() {
         IsAllowedTopicsAccessCommand cmd = new IsAllowedTopicsAccessCommand();
         doReturn(true)
                 .when(

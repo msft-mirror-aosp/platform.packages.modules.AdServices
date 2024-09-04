@@ -34,7 +34,7 @@ public final class IsAllowedAdSelectionAccessCommandTest
     private static final String ENROLLMENT_ID = "42";
 
     @Test
-    public void testRun_invalid() throws Exception {
+    public void testRun_invalid() {
         IsAllowedAdSelectionAccessCommand cmd = new IsAllowedAdSelectionAccessCommand();
 
         // no args
@@ -53,7 +53,7 @@ public final class IsAllowedAdSelectionAccessCommandTest
     }
 
     @Test
-    public void testRun_valid() throws Exception {
+    public void testRun_valid() {
         IsAllowedAdSelectionAccessCommand cmd = new IsAllowedAdSelectionAccessCommand();
         doReturn(true)
                 .when(

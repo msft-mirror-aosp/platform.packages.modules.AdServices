@@ -128,13 +128,21 @@ public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbInteg
                                 startValue, endValue));
                 break;
             case SINGLE_REPORT:
-                final int result = ((Number) Objects.requireNonNull(get("result"))).intValue();
+                final int uploadStatus =
+                        ((Number) Objects.requireNonNull(get("uploadStatus"))).intValue();
+                final int failureStatus =
+                        ((Number) Objects.requireNonNull(get("failureStatus"))).intValue();
                 final String id = (String) get("id");
+                ReportingStatus status = new ReportingStatus();
+                spyReportingService.performReport(id, AggregateCryptoFixture.getKey(), status);
                 Assert.assertEquals(
-                        "Aggregate report failed.",
-                        result,
-                        spyReportingService.performReport(
-                                id, AggregateCryptoFixture.getKey(), new ReportingStatus()));
+                        "Aggregate report failed: report upload status mismatch.",
+                        uploadStatus,
+                        status.getUploadStatus().getValue());
+                Assert.assertEquals(
+                        "Aggregate report failed: failure status mismatch",
+                        failureStatus,
+                        status.getFailureStatus().getValue());
                 break;
         }
     }

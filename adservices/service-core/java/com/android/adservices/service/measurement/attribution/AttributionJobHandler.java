@@ -52,6 +52,7 @@ import com.android.adservices.service.measurement.TriggerSpec;
 import com.android.adservices.service.measurement.TriggerSpecs;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
+import com.android.adservices.service.measurement.aggregation.AggregatableValuesConfig;
 import com.android.adservices.service.measurement.aggregation.AggregateAttributionData;
 import com.android.adservices.service.measurement.aggregation.AggregateDeduplicationKey;
 import com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution;
@@ -388,9 +389,13 @@ class AttributionJobHandler {
 
         AggregatableAttributionTrigger aggregatableAttributionTrigger =
                 aggregatableAttributionTriggerOpt.get();
-
-        return !aggregatableAttributionTrigger.getTriggerData().isEmpty()
-                || !aggregatableAttributionTrigger.getValues().isEmpty();
+        for (AggregatableValuesConfig aggValuesConfig :
+                aggregatableAttributionTrigger.getValueConfigs()) {
+            if (!aggValuesConfig.getValues().isEmpty()) {
+                return true;
+            }
+        }
+        return !aggregatableAttributionTrigger.getTriggerData().isEmpty();
     }
 
     private boolean shouldAttributionBeBlockedByRateLimits(

@@ -202,7 +202,8 @@ public final class MeasurementCobaltLogger {
             int reportType,
             int reportUploadMethod,
             int statusCode,
-            int errorCode) {
+            int errorCode,
+            @Nullable String enrollmentId) {
         if (!isReportingCobaltLoggingEnabled()) {
             LogUtil.w("Skip logReportingStatusWithAppName because Cobalt logger is not available.");
             return;
@@ -215,7 +216,8 @@ public final class MeasurementCobaltLogger {
                 ImmutableList.of(
                         reportType,
                         reportUploadMethod,
-                        getReportingStatusEvent(statusCode, errorCode)));
+                        getReportingStatusEvent(statusCode, errorCode),
+                        hashEnrollmentIntoUint(enrollmentId)));
     }
 
     private boolean isRegistrationCobaltLoggingEnabled() {

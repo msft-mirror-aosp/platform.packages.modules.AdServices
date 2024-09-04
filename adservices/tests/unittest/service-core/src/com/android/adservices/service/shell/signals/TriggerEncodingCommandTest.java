@@ -49,10 +49,9 @@ import java.time.Instant;
 public final class TriggerEncodingCommandTest extends ShellCommandTestCase<TriggerEncodingCommand> {
     private static final AdTechIdentifier BUYER = CommonFixture.VALID_BUYER_1;
 
+
     @ShellCommandStats.Command
     private static final int EXPECTED_COMMAND = COMMAND_APP_SIGNALS_TRIGGER_ENCODING;
-
-    public static final String ADSERVICES_PACKAGE = "com.google.android.adservices.api";
 
     @Mock private PeriodicEncodingJobRunner mPeriodicEncodingJobRunner;
     @Mock private EncoderLogicHandler mEncoderLogicHandler;

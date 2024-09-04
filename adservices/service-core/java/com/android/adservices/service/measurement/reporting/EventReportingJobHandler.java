@@ -16,13 +16,14 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import static com.android.adservices.service.measurement.reporting.ReportingStatus.FailureStatus;
+import static com.android.adservices.service.measurement.reporting.ReportingStatus.UploadStatus;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_NETWORK_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_PARSING_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_UNKNOWN_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MESUREMENT_REPORTS_UPLOADED;
 
-import android.adservices.common.AdServicesStatusUtils;
 import android.annotation.Nullable;
 import android.content.Context;
 import android.net.Uri;
@@ -58,7 +59,7 @@ import java.util.concurrent.TimeUnit;
  * Class for handling event level reporting.
  */
 public class EventReportingJobHandler {
-
+    private static final int MAX_HTTP_SUCCESS_CODE = 299;
     private final DatastoreManager mDatastoreManager;
     private boolean mIsDebugInstance;
     private final Flags mFlags;
@@ -162,13 +163,9 @@ public class EventReportingJobHandler {
             if (mUploadMethod != null) {
                 reportingStatus.setUploadMethod(mUploadMethod);
             }
-            @AdServicesStatusUtils.StatusCode
-            int result = performReport(eventReportId, reportingStatus);
+            performReport(eventReportId, reportingStatus);
 
-            if (result == AdServicesStatusUtils.STATUS_SUCCESS) {
-                reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.SUCCESS);
-            } else {
-                reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.FAILURE);
+            if (reportingStatus.getUploadStatus() == UploadStatus.FAILURE) {
                 mDatastoreManager.runInTransaction(
                         (dao) -> {
                             int retryCount =
@@ -182,7 +179,6 @@ public class EventReportingJobHandler {
                             reportingStatus.setRetryCount(retryCount);
                         });
             }
-            logReportingStats(reportingStatus);
         }
         return true;
     }
@@ -210,31 +206,46 @@ public class EventReportingJobHandler {
      * to the specified report to URL with the report data as a JSON in the body.
      *
      * @param eventReportId for the datastore id of the {@link EventReport}
-     * @return success
      */
-    synchronized int performReport(String eventReportId, ReportingStatus reportingStatus) {
+    synchronized void performReport(String eventReportId, ReportingStatus reportingStatus) {
+        String enrollmentId = null;
         Optional<EventReport> eventReportOpt =
                 mDatastoreManager.runInTransactionWithResult((dao)
                         -> dao.getEventReport(eventReportId));
-        if (!eventReportOpt.isPresent()) {
+        if (eventReportOpt.isEmpty()) {
             LoggerFactory.getMeasurementLogger().d("Event report not found");
-            reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.REPORT_NOT_FOUND);
-            return AdServicesStatusUtils.STATUS_IO_ERROR;
+            setAndLogReportingStatus(
+                    reportingStatus,
+                    UploadStatus.FAILURE,
+                    FailureStatus.REPORT_NOT_FOUND,
+                    enrollmentId);
+            return;
         }
         EventReport eventReport = eventReportOpt.get();
+        enrollmentId = eventReport.getEnrollmentId();
         reportingStatus.setReportingDelay(System.currentTimeMillis() - eventReport.getReportTime());
         reportingStatus.setSourceRegistrant(getAppPackageName(eventReport));
         if (mIsDebugInstance
                 && eventReport.getDebugReportStatus() != EventReport.DebugReportStatus.PENDING) {
             LoggerFactory.getMeasurementLogger().d("debugging status is not pending");
-            reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.REPORT_NOT_PENDING);
-            return AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+            setAndLogReportingStatus(
+                    reportingStatus,
+                    UploadStatus.FAILURE,
+                    FailureStatus.REPORT_NOT_PENDING,
+                    enrollmentId);
+            return;
         }
+
         if (!mIsDebugInstance && eventReport.getStatus() != EventReport.Status.PENDING) {
             LoggerFactory.getMeasurementLogger().d("event report status is not pending");
-            reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.REPORT_NOT_PENDING);
-            return AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+            setAndLogReportingStatus(
+                    reportingStatus,
+                    UploadStatus.FAILURE,
+                    FailureStatus.REPORT_NOT_PENDING,
+                    enrollmentId);
+            return;
         }
+
         try {
             Uri reportingOrigin = eventReport.getRegistrationOrigin();
             JSONObject eventReportJsonPayload = createReportJsonPayload(eventReport);
@@ -251,50 +262,58 @@ public class EventReportingJobHandler {
                     makeHttpPostRequest(
                             reportingOrigin, eventReportJsonPayload, triggerDebuggingAvailable);
 
-            if (returnCode >= HttpURLConnection.HTTP_OK
-                    && returnCode <= 299) {
-                boolean success =
-                        mDatastoreManager.runInTransaction(
-                                (dao) -> {
-                                    if (mIsDebugInstance) {
-                                        dao.markEventDebugReportDelivered(eventReportId);
-                                    } else {
-                                        dao.markEventReportStatus(
-                                                eventReportId, EventReport.Status.DELIVERED);
-                                    }
-                                    if (mFlags.getMeasurementEnableReinstallReattribution()) {
-                                        updateAppReportHistory(eventReport, dao);
-                                    }
-                                });
-
-                if (success) {
-                    return AdServicesStatusUtils.STATUS_SUCCESS;
-                } else {
-                    reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.DATASTORE);
-                    return AdServicesStatusUtils.STATUS_IO_ERROR;
-                }
-            } else {
-                reportingStatus.setFailureStatus(
-                        ReportingStatus.FailureStatus.UNSUCCESSFUL_HTTP_RESPONSE_CODE);
-                // TODO: Determine behavior for other response codes?
-                return AdServicesStatusUtils.STATUS_IO_ERROR;
+            // Code outside [200, 299] is a failure according to HTTP protocol.
+            if (returnCode < HttpURLConnection.HTTP_OK || returnCode > MAX_HTTP_SUCCESS_CODE) {
+                setAndLogReportingStatus(
+                        reportingStatus,
+                        UploadStatus.FAILURE,
+                        FailureStatus.UNSUCCESSFUL_HTTP_RESPONSE_CODE,
+                        enrollmentId);
+                return;
             }
+
+            boolean success =
+                    mDatastoreManager.runInTransaction(
+                            (dao) -> {
+                                if (mIsDebugInstance) {
+                                    dao.markEventDebugReportDelivered(eventReportId);
+                                } else {
+                                    dao.markEventReportStatus(
+                                            eventReportId, EventReport.Status.DELIVERED);
+                                }
+                                if (mFlags.getMeasurementEnableReinstallReattribution()) {
+                                    updateAppReportHistory(eventReport, dao);
+                                }
+                            });
+            if (!success) {
+                setAndLogReportingStatus(
+                        reportingStatus,
+                        UploadStatus.FAILURE,
+                        FailureStatus.DATASTORE,
+                        enrollmentId);
+                return;
+            }
+
+            setAndLogReportingStatus(
+                    reportingStatus, UploadStatus.SUCCESS, FailureStatus.UNKNOWN, enrollmentId);
+
         } catch (IOException e) {
             LoggerFactory.getMeasurementLogger()
                     .d(e, "Network error occurred when attempting to deliver event report.");
-            reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.NETWORK);
-            // TODO(b/298330312): Change to defined error codes
+            setAndLogReportingStatus(
+                    reportingStatus, UploadStatus.FAILURE, FailureStatus.NETWORK, enrollmentId);
             ErrorLogUtil.e(
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_NETWORK_ERROR,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
-            return AdServicesStatusUtils.STATUS_IO_ERROR;
         } catch (JSONException e) {
             LoggerFactory.getMeasurementLogger()
                     .d(e, "Serialization error occurred at event report delivery.");
-            // TODO(b/298330312): Indicate serialization error
-            reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.SERIALIZATION_ERROR);
-            // TODO(b/298330312): Change to defined error codes
+            setAndLogReportingStatus(
+                    reportingStatus,
+                    UploadStatus.FAILURE,
+                    FailureStatus.SERIALIZATION_ERROR,
+                    enrollmentId);
             ErrorLogUtil.e(
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_PARSING_ERROR,
@@ -314,11 +333,11 @@ public class EventReportingJobHandler {
                 throw new IllegalStateException(
                         "Serialization error occurred at event report delivery", e);
             }
-            return AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         } catch (Exception e) {
             LoggerFactory.getMeasurementLogger()
                     .e(e, "Unexpected exception occurred when attempting to deliver event report.");
-            reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.UNKNOWN);
+            setAndLogReportingStatus(
+                    reportingStatus, UploadStatus.FAILURE, FailureStatus.UNKNOWN, enrollmentId);
             ErrorLogUtil.e(
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_UNKNOWN_ERROR,
@@ -328,7 +347,6 @@ public class EventReportingJobHandler {
                             < mFlags.getMeasurementThrowUnknownExceptionSamplingRate()) {
                 throw e;
             }
-            return AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         }
     }
 
@@ -422,7 +440,17 @@ public class EventReportingJobHandler {
         return hasTriggerArDebug;
     }
 
-    private void logReportingStats(ReportingStatus reportingStatus) {
+    private void setAndLogReportingStatus(
+            ReportingStatus reportingStatus,
+            ReportingStatus.UploadStatus uploadStatus,
+            ReportingStatus.FailureStatus failureStatus,
+            String enrollmentId) {
+        reportingStatus.setFailureStatus(failureStatus);
+        reportingStatus.setUploadStatus(uploadStatus);
+        logReportingStats(reportingStatus, enrollmentId);
+    }
+
+    private void logReportingStats(ReportingStatus reportingStatus, String enrollmentId) {
         mLogger.logMeasurementReports(
                 new MeasurementReportsStats.Builder()
                         .setCode(AD_SERVICES_MESUREMENT_REPORTS_UPLOADED)
@@ -433,6 +461,7 @@ public class EventReportingJobHandler {
                         .setReportingDelay(reportingStatus.getReportingDelay())
                         .setSourceRegistrant(reportingStatus.getSourceRegistrant())
                         .setRetryCount(reportingStatus.getRetryCount())
-                        .build());
+                        .build(),
+                enrollmentId);
     }
 }

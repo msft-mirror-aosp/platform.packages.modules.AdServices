@@ -187,13 +187,15 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                         testReportType,
                         testUploadMethod,
                         testResultCode,
-                        testFailureType);
+                        testFailureType,
+                        TEST_ENROLLMENT_ID);
         ArgumentCaptor<MeasurementReportsStats> argumentCaptor =
                 ArgumentCaptor.forClass(MeasurementReportsStats.class);
 
-        mAdservicesLogger.logMeasurementReports(stats);
+        mAdservicesLogger.logMeasurementReports(stats, TEST_ENROLLMENT_ID);
 
-        verify(mStatsdLoggerMock).logMeasurementReports(argumentCaptor.capture());
+        verify(mStatsdLoggerMock)
+                .logMeasurementReports(argumentCaptor.capture(), eq(TEST_ENROLLMENT_ID));
         MeasurementReportsStats loggedStats = argumentCaptor.getValue();
         expect.that(loggedStats.getCode()).isEqualTo(AD_SERVICES_MESUREMENT_REPORTS_UPLOADED);
         expect.that(loggedStats.getType()).isEqualTo(testReportType);

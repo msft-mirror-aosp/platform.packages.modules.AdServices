@@ -28,8 +28,6 @@ import static com.android.adservices.service.shell.adselection.ViewAuctionResult
 import static com.android.adservices.service.shell.signals.SignalsShellCommandFactory.COMMAND_PREFIX;
 import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_AD_SELECTION_VIEW_AUCTION_RESULT;
 
-import static com.google.common.truth.Truth.assertThat;
-
 import static org.mockito.Mockito.when;
 
 import android.net.Uri;
@@ -54,7 +52,8 @@ import org.mockito.Mock;
 
 import java.util.List;
 
-public class ViewAuctionResultCommandTest extends ShellCommandTestCase<ViewAuctionResultCommand> {
+public final class ViewAuctionResultCommandTest
+        extends ShellCommandTestCase<ViewAuctionResultCommand> {
 
     @ShellCommandStats.Command
     private static final int EXPECTED_COMMAND = COMMAND_AD_SELECTION_VIEW_AUCTION_RESULT;
@@ -139,24 +138,24 @@ public class ViewAuctionResultCommandTest extends ShellCommandTestCase<ViewAucti
                         Base64.decode(
                                 new JSONObject(result.mOut).getString(OUTPUT_PROTO_FIELD_NAME),
                                 Base64.DEFAULT));
-        assertThat(auctionResult.getAdRenderUrl())
+        expect.that(auctionResult.getAdRenderUrl())
                 .isEqualTo(AD_SELECTION_ENTRY.getWinningAdRenderUri().toString());
-        assertThat(auctionResult.getBid())
+        expect.that(auctionResult.getBid())
                 .isEqualTo(Float.parseFloat(Double.toString(AD_SELECTION_ENTRY.getWinningAdBid())));
-        assertThat(auctionResult.getIsChaff()).isFalse();
-        assertThat(auctionResult.getBuyer())
+        expect.that(auctionResult.getIsChaff()).isFalse();
+        expect.that(auctionResult.getBuyer())
                 .isEqualTo(AD_SELECTION_ENTRY.getCustomAudienceSignals().getBuyer().toString());
-        assertThat(auctionResult.getCustomAudienceOwner())
+        expect.that(auctionResult.getCustomAudienceOwner())
                 .isEqualTo(AD_SELECTION_ENTRY.getCustomAudienceSignals().getOwner());
-        assertThat(auctionResult.getCustomAudienceName())
+        expect.that(auctionResult.getCustomAudienceName())
                 .isEqualTo(AD_SELECTION_ENTRY.getCustomAudienceSignals().getName());
-        assertThat(
+        expect.that(
                         auctionResult
                                 .getWinReportingUrls()
                                 .getTopLevelSellerReportingUrls()
                                 .getReportingUrl())
                 .isEqualTo(ReportingDataFixture.SELLER_REPORTING_URI_1.toString());
-        assertThat(auctionResult.getWinReportingUrls().getBuyerReportingUrls().getReportingUrl())
+        expect.that(auctionResult.getWinReportingUrls().getBuyerReportingUrls().getReportingUrl())
                 .isEqualTo(ReportingDataFixture.BUYER_REPORTING_URI_1.toString());
     }
 
@@ -190,27 +189,27 @@ public class ViewAuctionResultCommandTest extends ShellCommandTestCase<ViewAucti
                         Base64.decode(
                                 new JSONObject(result.mOut).getString(OUTPUT_PROTO_FIELD_NAME),
                                 Base64.DEFAULT));
-        assertThat(
+        expect.that(
                         auctionResult
                                 .getWinReportingUrls()
                                 .getTopLevelSellerReportingUrls()
                                 .getInteractionReportingUrlsMap()
                                 .get(SELLER_VIEW_AD_INTERACTION.getInteractionKey()))
                 .isEqualTo(SELLER_VIEW_AD_INTERACTION.getInteractionReportingUri().toString());
-        assertThat(
+        expect.that(
                         auctionResult
                                 .getWinReportingUrls()
                                 .getBuyerReportingUrls()
                                 .getInteractionReportingUrlsMap()
                                 .get(BUYER_CLICK_AD_INTERACTION.getInteractionKey()))
                 .isEqualTo(BUYER_CLICK_AD_INTERACTION.getInteractionReportingUri().toString());
-        assertThat(
+        expect.that(
                         auctionResult
                                 .getWinReportingUrls()
                                 .getTopLevelSellerReportingUrls()
                                 .getReportingUrl())
                 .isEmpty();
-        assertThat(auctionResult.getWinReportingUrls().getBuyerReportingUrls().getReportingUrl())
+        expect.that(auctionResult.getWinReportingUrls().getBuyerReportingUrls().getReportingUrl())
                 .isEmpty();
     }
 
@@ -244,14 +243,14 @@ public class ViewAuctionResultCommandTest extends ShellCommandTestCase<ViewAucti
                         Base64.decode(
                                 new JSONObject(result.mOut).getString(OUTPUT_PROTO_FIELD_NAME),
                                 Base64.DEFAULT));
-        assertThat(
+        expect.that(
                         auctionResult
                                 .getWinReportingUrls()
                                 .getTopLevelSellerReportingUrls()
                                 .getInteractionReportingUrlsMap()
                                 .get(SELLER_VIEW_AD_INTERACTION.getInteractionKey()))
                 .isEqualTo(SELLER_VIEW_AD_INTERACTION.getInteractionReportingUri().toString());
-        assertThat(
+        expect.that(
                         auctionResult
                                 .getWinReportingUrls()
                                 .getBuyerReportingUrls()
@@ -290,13 +289,13 @@ public class ViewAuctionResultCommandTest extends ShellCommandTestCase<ViewAucti
                         Base64.decode(
                                 new JSONObject(result.mOut).getString(OUTPUT_PROTO_FIELD_NAME),
                                 Base64.DEFAULT));
-        assertThat(
+        expect.that(
                         auctionResult
                                 .getWinReportingUrls()
                                 .getTopLevelSellerReportingUrls()
                                 .getReportingUrl())
                 .isEmpty();
-        assertThat(auctionResult.getWinReportingUrls().getBuyerReportingUrls().getReportingUrl())
+        expect.that(auctionResult.getWinReportingUrls().getBuyerReportingUrls().getReportingUrl())
                 .isEmpty();
     }
 
@@ -333,13 +332,13 @@ public class ViewAuctionResultCommandTest extends ShellCommandTestCase<ViewAucti
                         Base64.decode(
                                 new JSONObject(result.mOut).getString(OUTPUT_PROTO_FIELD_NAME),
                                 Base64.DEFAULT));
-        assertThat(
+        expect.that(
                         auctionResult
                                 .getWinReportingUrls()
                                 .getTopLevelSellerReportingUrls()
                                 .getReportingUrl())
                 .isEmpty();
-        assertThat(auctionResult.getWinReportingUrls().getBuyerReportingUrls().getReportingUrl())
+        expect.that(auctionResult.getWinReportingUrls().getBuyerReportingUrls().getReportingUrl())
                 .isEqualTo(ReportingDataFixture.BUYER_REPORTING_URI_1.toString());
     }
 
@@ -377,13 +376,13 @@ public class ViewAuctionResultCommandTest extends ShellCommandTestCase<ViewAucti
                         Base64.decode(
                                 new JSONObject(result.mOut).getString(OUTPUT_PROTO_FIELD_NAME),
                                 Base64.DEFAULT));
-        assertThat(
+        expect.that(
                         auctionResult
                                 .getWinReportingUrls()
                                 .getTopLevelSellerReportingUrls()
                                 .getReportingUrl())
                 .isEqualTo(ReportingDataFixture.SELLER_REPORTING_URI_1.toString());
-        assertThat(auctionResult.getWinReportingUrls().getBuyerReportingUrls().getReportingUrl())
+        expect.that(auctionResult.getWinReportingUrls().getBuyerReportingUrls().getReportingUrl())
                 .isEmpty();
     }
 }
