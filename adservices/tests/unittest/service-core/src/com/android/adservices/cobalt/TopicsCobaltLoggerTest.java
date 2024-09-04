@@ -68,7 +68,7 @@ public final class TopicsCobaltLoggerTest extends AdServicesMockitoTestCase {
         // See
         // //packages/modules/AdServices/adservices/service-core/resources/cobalt_registry.textpb
         // for the actual registy.
-        Project cobaltRegistry = CobaltRegistryLoader.getRegistry(sContext);
+        Project cobaltRegistry = CobaltRegistryLoader.getRegistry(sContext, mMockFlags);
         MetricDefinition topicsMetric =
                 cobaltRegistry.getMetrics().stream()
                         .filter(m -> m.getMetricName().equals("returned_topics"))

@@ -85,7 +85,7 @@ public final class CobaltFactory {
             if (sSingletonCobaltLogger == null) {
                 sSingletonCobaltLogger =
                         new CobaltLoggerImpl(
-                                getRegistry(context),
+                                getRegistry(context, flags),
                                 CobaltReleaseStages.getReleaseStage(
                                         flags.getAdservicesReleaseStageForCobalt()),
                                 getDataService(context, flags),
@@ -116,7 +116,7 @@ public final class CobaltFactory {
             if (sSingletonCobaltPeriodicJob == null) {
                 sSingletonCobaltPeriodicJob =
                         new CobaltPeriodicJobImpl(
-                                getRegistry(context),
+                                getRegistry(context, flags),
                                 CobaltReleaseStages.getReleaseStage(
                                         flags.getAdservicesReleaseStageForCobalt()),
                                 getDataService(context, flags),
@@ -152,9 +152,10 @@ public final class CobaltFactory {
         return AdServicesExecutors.getScheduler();
     }
 
-    private static Project getRegistry(Context context) throws CobaltInitializationException {
+    private static Project getRegistry(Context context, Flags flags)
+            throws CobaltInitializationException {
         if (sSingletonCobaltRegistryProject == null) {
-            sSingletonCobaltRegistryProject = CobaltRegistryLoader.getRegistry(context);
+            sSingletonCobaltRegistryProject = CobaltRegistryLoader.getRegistry(context, flags);
         }
         return sSingletonCobaltRegistryProject;
     }
