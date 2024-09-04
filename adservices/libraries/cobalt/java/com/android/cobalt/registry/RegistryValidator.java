@@ -41,10 +41,12 @@ import com.google.cobalt.ReportDefinition.LocalAggregationProcedure;
 import com.google.cobalt.ReportDefinition.PrivacyMechanism;
 import com.google.cobalt.ReportDefinition.ReportType;
 import com.google.cobalt.ReportDefinition.ReportingInterval;
+import com.google.cobalt.ReportDefinition.ShuffledDifferentialPrivacyConfig;
 import com.google.cobalt.StringSketchParameters;
 import com.google.cobalt.SystemProfileField;
 import com.google.cobalt.SystemProfileSelectionPolicy;
 import com.google.cobalt.WindowSize;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -68,6 +70,18 @@ public final class RegistryValidator {
                             ImmutableSet.of(DE_IDENTIFICATION));
 
     /**
+     * Checks that two metrics have equivalent dimensions and therefore private reports can be
+     * merged.
+     *
+     * @return true if the dimensions are equivalent
+     */
+    public static boolean dimensionsAreEquivalent(
+            Iterable<MetricDimension> dimensions1, Iterable<MetricDimension> dimensions2) {
+        return getMaxEventCodes(dimensions1).equals(getMaxEventCodes(dimensions2))
+                && getEventCodes(dimensions1).equals(getEventCodes(dimensions2));
+    }
+
+    /**
      * Checks that an input metric and report combination is valid and supported by the Cobalt
      * implementation.
      *
@@ -75,8 +89,7 @@ public final class RegistryValidator {
      * @param report the report being validated
      * @return true if metric and report are a valid and supported combination
      */
-    public static boolean isValidReportTypeAndPrivacyMechanism(
-            MetricDefinition metric, ReportDefinition report) {
+    public static boolean isValid(MetricDefinition metric, ReportDefinition report) {
         if (!validateReportType(metric.getMetricType(), report.getReportType())) {
             logValidationFailure(
                     "Metric type (%s) and report type (%s) failed validation",
@@ -203,10 +216,10 @@ public final class RegistryValidator {
             return false;
         }
 
-        // TODO(b/343722587): Add remaining validations:
-        // * that private reports can't be added if the new and old metrics don't have the same
-        //   dimensions
-        // * the fields used for privacy are known to the client.
+        if (!validateShuffledDp(report.getPrivacyMechanism(), report.getShuffledDp())) {
+            logValidationFailure("Shuffled differential privacy config failed validation");
+            return false;
+        }
 
         return true;
     }
@@ -402,6 +415,38 @@ public final class RegistryValidator {
         }
 
         return reportMaxReleaseStage.getNumber() <= metricMaxReleaseStage.getNumber();
+    }
+
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    static boolean validateShuffledDp(
+            PrivacyMechanism privacyMechanism, ShuffledDifferentialPrivacyConfig shuffledDpConfig) {
+        if (!privacyMechanism.equals(SHUFFLED_DIFFERENTIAL_PRIVACY)) {
+            return true;
+        }
+
+        return shuffledDpConfig.getPoissonMean() > 0
+                && shuffledDpConfig
+                        .getDevicePrivacyDependencySet()
+                        .equals(ShuffledDifferentialPrivacyConfig.DevicePrivacyDependencySet.V1);
+    }
+
+    private static ImmutableList<Integer> getMaxEventCodes(Iterable<MetricDimension> dimensions) {
+        ImmutableList.Builder<Integer> maxEventCodes = ImmutableList.builder();
+        for (MetricDimension dimension : dimensions) {
+            maxEventCodes.add(dimension.getMaxEventCode());
+        }
+        return maxEventCodes.build();
+    }
+
+    private static ImmutableList<ImmutableList<Integer>> getEventCodes(
+            Iterable<MetricDimension> dimensions) {
+        ImmutableList.Builder<ImmutableList<Integer>> eventCodes = ImmutableList.builder();
+        for (MetricDimension dimension : dimensions) {
+            // The order of event codes in a dimension doesn't matter.
+            eventCodes.add(ImmutableList.sortedCopyOf(dimension.getEventCodesMap().keySet()));
+        }
+
+        return eventCodes.build();
     }
 
     private static void logValidationFailure(String format, Object... params) {

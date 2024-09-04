@@ -15,26 +15,28 @@
  */
 package com.android.adservices.tests.adid;
 
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import android.adservices.adid.AdId;
 import android.adservices.adid.AdIdProviderService;
 import android.adservices.adid.GetAdIdResult;
 import android.adservices.adid.IAdIdProviderService;
 import android.adservices.adid.IGetAdIdProviderCallback;
-import android.adservices.common.AdServicesOutcomeReceiver;
 import android.content.Intent;
 import android.os.IBinder;
 
 import androidx.test.runner.AndroidJUnit4;
 
-import org.junit.Assert;
+import com.android.adservices.common.AdServicesCtsTestCase;
+import com.android.adservices.shared.testing.concurrency.FailableOnResultSyncCallback;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.io.IOException;
-import java.util.concurrent.CompletableFuture;
 
 @RunWith(AndroidJUnit4.class)
-public class AdIdProviderTest {
+public final class AdIdProviderTest extends AdServicesCtsTestCase {
 
     private static final String ZEROED_OUT_AD_ID = "00000000-0000-0000-0000-000000000000";
     private static final boolean DEFAULT_IS_LIMIT_AD_TRACKING_ENABLED = false;
@@ -54,41 +56,28 @@ public class AdIdProviderTest {
         Intent intent = new Intent();
         intent.setAction(AdIdProviderService.SERVICE_INTERFACE);
         IBinder remoteObject = proxy.onBind(intent);
-        Assert.assertNotNull(remoteObject);
+        assertWithMessage("remoteObject").that(remoteObject).isNotNull();
 
         IAdIdProviderService service = IAdIdProviderService.Stub.asInterface(remoteObject);
-        Assert.assertNotNull(service);
+        assertWithMessage("service").that(service).isNotNull();
 
-        CompletableFuture<AdId> future = new CompletableFuture<>();
-        AdServicesOutcomeReceiver<AdId, Exception> callback =
-                new AdServicesOutcomeReceiver<>() {
-                    @Override
-                    public void onResult(AdId adId) {
-                        future.complete(adId);
-                    }
+        SyncGetAdIdProviderCallback callback = new SyncGetAdIdProviderCallback();
+        service.getAdIdProvider(/* testAppUId */ 0, "testPackageName", callback);
 
-                    @Override
-                    public void onError(Exception error) {
-                        Assert.fail();
-                    }
-                };
-        service.getAdIdProvider(
-                /* testAppUId */ 0,
-                "testPackageName",
-                new IGetAdIdProviderCallback.Stub() {
-                    @Override
-                    public void onResult(GetAdIdResult result) {
-                        callback.onResult(new AdId(result.getAdId(), result.isLatEnabled()));
-                    }
+        GetAdIdResult adIdResult = callback.assertResultReceived();
+        assertWithMessage("adIdResult").that(adIdResult).isNotNull();
+        expect.withMessage("getAdId").that(adIdResult.getAdId()).isEqualTo(ZEROED_OUT_AD_ID);
+        expect.withMessage("isLimitedAdTrackingEnabled")
+                .that(adIdResult.isLatEnabled())
+                .isEqualTo(DEFAULT_IS_LIMIT_AD_TRACKING_ENABLED);
+    }
 
-                    @Override
-                    public void onError(String errorMessage) {
-                        Assert.fail();
-                    }
-                });
-        AdId resultAdId = future.get();
-        Assert.assertEquals(ZEROED_OUT_AD_ID, resultAdId.getAdId());
-        Assert.assertEquals(
-                DEFAULT_IS_LIMIT_AD_TRACKING_ENABLED, resultAdId.isLimitAdTrackingEnabled());
+    private static final class SyncGetAdIdProviderCallback
+            extends FailableOnResultSyncCallback<GetAdIdResult, String>
+            implements IGetAdIdProviderCallback {
+        @Override
+        public void onError(String errorMessage) {
+            onFailure(errorMessage);
+        }
     }
 }

@@ -332,8 +332,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 MultiCloudSupportStrategyFactory.getStrategy(
                         FlagsFactory.getFlags().getFledgeAuctionServerMultiCloudEnabled(),
                         FlagsFactory.getFlags().getFledgeAuctionServerCoordinatorUrlAllowlist()),
-                AdSelectionDebugReportingDatabase.getInstance(context)
-                        .getAdSelectionDebugReportDao(),
+                AdSelectionDebugReportingDatabase.getInstance().getAdSelectionDebugReportDao(),
                 new AdIdFetcher(
                         context,
                         AdIdWorker.getInstance(),
@@ -382,6 +381,9 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             GetAdSelectionDataCallback callback)
             throws RemoteException {
         int e2eTraceCookie = Tracing.beginAsyncSection(Tracing.GET_AD_SELECTION_DATA);
+        int onBinderThreadTraceCookie =
+                Tracing.beginAsyncSection(Tracing.GET_AD_SELECTION_ON_DATA_BINDER_THREAD);
+
         int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA;
 
         AdsRelevanceExecutionLoggerFactory adsRelevanceExecutionLoggerFactory =
@@ -425,6 +427,9 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         int callingUid = getCallingUid(apiName);
         final DevContext devContext = mDevContextFilter.createDevContext();
+        Tracing.endAsyncSection(
+                Tracing.GET_AD_SELECTION_ON_DATA_BINDER_THREAD, onBinderThreadTraceCookie);
+
         mLightweightExecutor.execute(
                 () -> {
                     runGetAdSelectionData(
@@ -619,6 +624,9 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             DevContext devContext,
             AdsRelevanceExecutionLogger adsRelevanceExecutionLogger,
             int e2eTraceCookie) {
+        int offBinderThreadTraceCookie =
+                Tracing.beginAsyncSection(Tracing.GET_AD_SELECTION_DATA_OFF_BINDER_THREAD);
+
         ListenableFuture<AuctionServerDebugReporting> auctionServerDebugReportingFuture =
                 AuctionServerDebugReporting.createInstance(
                         mFlags,
@@ -664,6 +672,9 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                                 mEgressConfigurationGenerator,
                                                 mAdFilteringFeatureFactory
                                                         .getAppInstallAdFilterer());
+                                Tracing.endAsyncSection(
+                                        Tracing.GET_AD_SELECTION_DATA_OFF_BINDER_THREAD,
+                                        offBinderThreadTraceCookie);
                                 runner.run(inputParams, callback);
                             }
 
@@ -701,6 +712,9 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                                 mEgressConfigurationGenerator,
                                                 mAdFilteringFeatureFactory
                                                         .getAppInstallAdFilterer());
+                                Tracing.endAsyncSection(
+                                        Tracing.GET_AD_SELECTION_DATA_OFF_BINDER_THREAD,
+                                        offBinderThreadTraceCookie);
                                 runner.run(inputParams, callback);
                             }
                         },

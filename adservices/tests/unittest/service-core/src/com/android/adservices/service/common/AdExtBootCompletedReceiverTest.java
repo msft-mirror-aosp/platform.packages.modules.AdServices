@@ -27,23 +27,16 @@ import static com.google.common.truth.Truth.assertWithMessage;
 
 import android.content.Intent;
 
-import androidx.test.filters.SmallTest;
-
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
-import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
-@SmallTest
 @SpyStatic(AdServicesBackCompatInit.class)
-@SpyStatic(ErrorLogUtil.class)
 @SetErrorLogUtilDefaultParams(
         throwable = Any.class,
         errorCode =
@@ -52,10 +45,6 @@ import org.mockito.Spy;
 public class AdExtBootCompletedReceiverTest extends AdServicesExtendedMockitoTestCase {
     @Mock private AdServicesBackCompatInit mMockBackCompatInit;
     @Spy private AdExtBootCompletedReceiver mSpyReceiver;
-
-    @Rule(order = 11)
-    public final AdServicesLoggingUsageRule errorLogUtilUsageRule =
-            AdServicesLoggingUsageRule.errorLogUtilUsageRule();
 
     @Test
     public void testOnReceive_withNoException_executesBackCompatInit() {

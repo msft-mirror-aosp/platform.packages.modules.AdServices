@@ -15,15 +15,7 @@
  */
 package com.android.adservices.common;
 
-import android.os.SystemClock;
-import android.util.Log;
-
-import androidx.annotation.Nullable;
-
 import com.android.adservices.shared.testing.DeviceSideTestCase;
-
-import com.google.errorprone.annotations.FormatMethod;
-import com.google.errorprone.annotations.FormatString;
 
 import org.junit.Rule;
 
@@ -32,8 +24,6 @@ import org.junit.Rule;
 /** Superclass for all other "base classes" on {@code AdServices} projects. */
 abstract class AdServicesTestCase extends DeviceSideTestCase {
 
-    private static final String TAG = AdServicesTestCase.class.getSimpleName();
-
     @Rule(order = 1)
     public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
             new AdServicesDeviceSupportedRule();
@@ -41,23 +31,5 @@ abstract class AdServicesTestCase extends DeviceSideTestCase {
     @Override
     public final String getTestName() {
         return processLifeguard.getTestName();
-    }
-
-    /** Sleeps for the given amount of time. */
-    @FormatMethod
-    protected final void sleep(
-            int timeMs, @FormatString String reasonFmt, @Nullable Object... reasonArgs) {
-        String reason = String.format(reasonFmt, reasonArgs);
-        Log.i(
-                TAG,
-                getTestName()
-                        + ": napping "
-                        + timeMs
-                        + "ms on thread "
-                        + Thread.currentThread()
-                        + ". Reason: "
-                        + reason);
-        SystemClock.sleep(timeMs);
-        Log.i(TAG, "Little Suzie woke up!");
     }
 }

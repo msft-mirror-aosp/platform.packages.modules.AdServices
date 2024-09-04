@@ -30,7 +30,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.Objects;
 
 /**
- * Represents the user's opted-in/opted-out choice for individual module in AdServices.
+ * Represents the user's choice for the modules in AdServices. Can be unknown, opted-in, or
+ * opted-out.
  *
  * @hide
  */
@@ -42,7 +43,7 @@ public final class AdServicesModuleUserChoice implements Parcelable {
     public static final int USER_CHOICE_UNKNOWN = 0;
 
     /** User opted in state */
-    public static final int USER_CHOICE_OPTED_ID = 1;
+    public static final int USER_CHOICE_OPTED_IN = 1;
 
     /** User opted out state */
     public static final int USER_CHOICE_OPTED_OUT = 2;
@@ -54,7 +55,7 @@ public final class AdServicesModuleUserChoice implements Parcelable {
      */
     @IntDef(
             prefix = {""},
-            value = {USER_CHOICE_UNKNOWN, USER_CHOICE_OPTED_ID, USER_CHOICE_OPTED_OUT})
+            value = {USER_CHOICE_UNKNOWN, USER_CHOICE_OPTED_IN, USER_CHOICE_OPTED_OUT})
     @Retention(RetentionPolicy.SOURCE)
     public @interface ModuleUserChoiceCode {}
 
