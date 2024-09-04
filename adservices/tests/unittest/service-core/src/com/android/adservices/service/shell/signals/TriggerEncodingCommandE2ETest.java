@@ -119,10 +119,10 @@ import java.util.concurrent.TimeUnit;
 @EnableDebugFlag(KEY_AD_SELECTION_CLI_ENABLED)
 @EnableDebugFlag(KEY_PROTECTED_APP_SIGNALS_CLI_ENABLED)
 @RequiresSdkLevelAtLeastT(reason = "Protected App Signals is available on T+")
-public class TriggerEncodingCommandE2ETest extends AdServicesExtendedMockitoTestCase {
+public final class TriggerEncodingCommandE2ETest extends AdServicesExtendedMockitoTestCase {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
-    public static final String PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
+    private static final String PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("localhost");
     private static final String SIGNALS_ENCODING_SCRIPT_PATH = "/script";
     private static final String SIGNALS_ENCODING_SCRIPT =
@@ -161,22 +161,21 @@ public class TriggerEncodingCommandE2ETest extends AdServicesExtendedMockitoTest
     private EncodedPayloadDao mEncodedPayloadDao;
     private TriggerEncodingCommand mTriggerEncodingCommand;
 
-    private MockWebServerRule mMockWebServerRule =
+    private final MockWebServerRule mMockWebServerRule =
             MockWebServerRule.forHttps(
-                    sContext, "adservices_untrusted_test_server.p12", "adservices_test");
+                    mContext, "adservices_untrusted_test_server.p12", "adservices_test");
     private EncoderEndpointsDao mEncoderEndpointDao;
     private EncoderLogicMetadataDao mEncoderLogicMetadataDao;
     private ProtectedSignalsServiceImpl mProtectedSignalsService;
     @Mock private ConsentManager mConsentManagerMock;
     @Mock private UpdateSignalsProcessReportedLoggerImpl mUpdateSignalsProcessReportedLoggerMock;
     private ProtectedSignalsDao mProtectedSignalsDao;
-    private SignalsProviderAndArgumentFactory mSignalsProviderAndArgumentFactory;
 
     @Before
     public void setUp() throws Exception {
-        AdservicesTestHelper.killAdservicesProcess(sContext);
+        AdservicesTestHelper.killAdservicesProcess(mContext);
         ProtectedSignalsDatabase protectedSignalsDatabase =
-                Room.inMemoryDatabaseBuilder(sContext, ProtectedSignalsDatabase.class).build();
+                Room.inMemoryDatabaseBuilder(mContext, ProtectedSignalsDatabase.class).build();
         AdServicesLogger logger = AdServicesLoggerImpl.getInstance();
         Flags flags = new TestFlags();
         mEncodedPayloadDao = protectedSignalsDatabase.getEncodedPayloadDao();
@@ -189,7 +188,7 @@ public class TriggerEncodingCommandE2ETest extends AdServicesExtendedMockitoTest
                         CacheProviderFactory.createNoOpCache());
         EncoderLogicHandler encoderLogicHandler =
                 new EncoderLogicHandler(
-                        EncoderPersistenceDao.getInstance(sContext),
+                        EncoderPersistenceDao.getInstance(mContext),
                         mEncoderEndpointDao,
                         mEncoderLogicMetadataDao,
                         mProtectedSignalsDao,
@@ -203,15 +202,15 @@ public class TriggerEncodingCommandE2ETest extends AdServicesExtendedMockitoTest
                                 AdServicesExecutors.getLightWeightExecutor())
                         .createRetryStrategy(flags.getAdServicesJsScriptEngineMaxRetryAttempts());
         mocker.mockGetFlags(flags);
-        final int maxJsFailures =
+        int maxJsFailures =
                 flags.getProtectedSignalsMaxJsFailureExecutionOnCertainVersionBeforeStop();
-        final boolean jsIsolateMessagesInLogs = true;
-        mSignalsProviderAndArgumentFactory =
+        boolean jsIsolateMessagesInLogs = true;
+        SignalsProviderAndArgumentFactory signalsProviderAndArgumentFactory =
                 new SignalsProviderAndArgumentFactory(mProtectedSignalsDao, true);
         mTriggerEncodingCommand =
                 new TriggerEncodingCommand(
                         new PeriodicEncodingJobRunner(
-                                mSignalsProviderAndArgumentFactory,
+                                signalsProviderAndArgumentFactory,
                                 mProtectedSignalsDao,
                                 new SignalsScriptEngine(
                                         flags::getIsolateMaxHeapSizeBytes,
@@ -231,7 +230,7 @@ public class TriggerEncodingCommandE2ETest extends AdServicesExtendedMockitoTest
 
         mProtectedSignalsService =
                 new ProtectedSignalsServiceImpl(
-                        sContext,
+                        mContext,
                         new UpdateSignalsOrchestrator(
                                 AdServicesExecutors.getBackgroundExecutor(),
                                 new UpdatesDownloader(
@@ -248,7 +247,7 @@ public class TriggerEncodingCommandE2ETest extends AdServicesExtendedMockitoTest
                                         TriggerEncodingCommandE2ETest.class.getName(),
                                         "updateUri"),
                                 java.time.Clock.systemUTC()),
-                        FledgeAuthorizationFilter.create(sContext, logger),
+                        FledgeAuthorizationFilter.create(mContext, logger),
                         mConsentManagerMock,
                         new TestDevContextFilter(),
                         AdServicesExecutors.getBackgroundExecutor(),
@@ -256,12 +255,12 @@ public class TriggerEncodingCommandE2ETest extends AdServicesExtendedMockitoTest
                         flags,
                         new CallingAppUidSupplierProcessImpl(),
                         new ProtectedSignalsServiceFilter(
-                                sContext,
+                                mContext,
                                 new FledgeConsentFilter(mConsentManagerMock, logger),
                                 flags,
                                 AppImportanceFilter.create(
-                                        sContext, flags::getForegroundStatuslLevelForValidation),
-                                FledgeAuthorizationFilter.create(sContext, logger),
+                                        mContext, flags::getForegroundStatuslLevelForValidation),
+                                FledgeAuthorizationFilter.create(mContext, logger),
                                 new FledgeAllowListsFilter(flags, logger),
                                 new FledgeApiThrottleFilter(Throttler.getInstance(flags), logger)),
                         EnrollmentDao.getInstance(),

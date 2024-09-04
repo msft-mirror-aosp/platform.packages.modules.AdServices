@@ -97,9 +97,9 @@ public final class CustomAudienceViewCommandTest
         Result actualResult = runCommandAndGetResult();
 
         expectSuccess(actualResult, EXPECTED_COMMAND);
-        assertThat(getCustomAudienceFromJson(new JSONObject(actualResult.mOut)))
+        expect.that(getCustomAudienceFromJson(new JSONObject(actualResult.mOut)))
                 .isEqualTo(CUSTOM_AUDIENCE_1);
-        assertThat(getCustomAudienceBackgroundFetchDataFromJson(new JSONObject(actualResult.mOut)))
+        expect.that(getCustomAudienceBackgroundFetchDataFromJson(new JSONObject(actualResult.mOut)))
                 .isEqualTo(CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA_1);
     }
 
@@ -124,12 +124,12 @@ public final class CustomAudienceViewCommandTest
         Result actualResult = runCommandAndGetResult();
 
         expectSuccess(actualResult, EXPECTED_COMMAND);
-        assertThat(getCustomAudienceFromJson(new JSONObject(actualResult.mOut)))
+        expect.that(getCustomAudienceFromJson(new JSONObject(actualResult.mOut)))
                 .isEqualTo(CUSTOM_AUDIENCE_1);
         JSONObject jsonObject = new JSONObject(actualResult.mOut);
-        assertThat(getCustomAudienceBackgroundFetchDataFromJson(jsonObject))
+        expect.that(getCustomAudienceBackgroundFetchDataFromJson(jsonObject))
                 .isEqualTo(CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA_1);
-        assertThat(jsonObject.getBoolean(CustomAudienceHelper.IS_ELIGIBLE_FOR_ON_DEVICE_AUCTION))
+        expect.that(jsonObject.getBoolean(CustomAudienceHelper.IS_ELIGIBLE_FOR_ON_DEVICE_AUCTION))
                 .isEqualTo(true);
     }
 
@@ -154,12 +154,12 @@ public final class CustomAudienceViewCommandTest
         Result actualResult = runCommandAndGetResult();
 
         expectSuccess(actualResult, EXPECTED_COMMAND);
-        assertThat(getCustomAudienceFromJson(new JSONObject(actualResult.mOut)))
+        expect.that(getCustomAudienceFromJson(new JSONObject(actualResult.mOut)))
                 .isEqualTo(CUSTOM_AUDIENCE_1);
         JSONObject jsonObject = new JSONObject(actualResult.mOut);
-        assertThat(getCustomAudienceBackgroundFetchDataFromJson(jsonObject))
+        expect.that(getCustomAudienceBackgroundFetchDataFromJson(jsonObject))
                 .isEqualTo(CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA_1);
-        assertThat(jsonObject.getBoolean(CustomAudienceHelper.IS_ELIGIBLE_FOR_ON_DEVICE_AUCTION))
+        expect.that(jsonObject.getBoolean(CustomAudienceHelper.IS_ELIGIBLE_FOR_ON_DEVICE_AUCTION))
                 .isEqualTo(false);
     }
 

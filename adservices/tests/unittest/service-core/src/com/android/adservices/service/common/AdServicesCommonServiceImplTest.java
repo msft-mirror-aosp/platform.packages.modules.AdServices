@@ -998,10 +998,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
 
         AdServicesCommonResponse response = callback.assertSuccess();
         assertThat(response.getStatusCode()).isEqualTo(STATUS_SUCCESS);
-        for (AdServicesModuleState adServicesModuleState : adServicesModuleStates) {
-            verify(mConsentManager, atLeastOnce()).setModuleState(adServicesModuleState);
-        }
-        verify(mConsentManager, times(2)).setModuleState(any());
+        verify(mConsentManager, atLeastOnce()).setModuleStates(eq(adServicesModuleStates));
     }
 
     @Test
@@ -1015,7 +1012,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
 
         SetAdServicesModuleUserChoicesCallback callback =
                 new SetAdServicesModuleUserChoicesCallback(BINDER_CONNECTION_TIMEOUT_MS);
-        List<AdServicesModuleUserChoice> adServicesModuleStates =
+        List<AdServicesModuleUserChoice> adServicesModuleUserChoices =
                 List.of(
                         new AdServicesModuleUserChoice.Builder()
                                 .setModule(1)
@@ -1025,16 +1022,10 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
                                 .setModule(2)
                                 .setUserChoice(3)
                                 .build());
-        mCommonService.setAdServicesModuleUserChoices(adServicesModuleStates, callback);
+        mCommonService.setAdServicesModuleUserChoices(adServicesModuleUserChoices, callback);
         AdServicesCommonResponse response = callback.assertSuccess();
         assertThat(response.getStatusCode()).isEqualTo(STATUS_SUCCESS);
-        for (AdServicesModuleUserChoice adServicesModuleUserChoice : adServicesModuleStates) {
-            verify(mConsentManager, atLeastOnce())
-                    .setUserChoice(
-                            eq(adServicesModuleUserChoice.getModule()),
-                            eq(adServicesModuleUserChoice.getUserChoice()));
-        }
-        verify(mConsentManager, times(2)).setUserChoice(anyInt(), anyInt());
+        verify(mConsentManager, atLeastOnce()).setUserChoices(eq(adServicesModuleUserChoices));
     }
 
     private IsAdServicesEnabledResult getStatusResult() throws Exception {
