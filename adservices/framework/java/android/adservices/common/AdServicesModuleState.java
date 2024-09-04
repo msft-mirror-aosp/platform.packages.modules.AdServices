@@ -30,7 +30,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.Objects;
 
 /**
- * Represents the module states of AdServices.
+ * Represents the module states of AdServices. Can be unknown, enabled, or disabled.
  *
  * @hide
  */

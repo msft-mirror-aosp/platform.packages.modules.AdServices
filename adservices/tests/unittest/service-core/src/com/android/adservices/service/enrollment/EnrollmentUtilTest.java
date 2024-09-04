@@ -27,7 +27,7 @@ import org.mockito.Mock;
 
 /** Unit tests for {@link EnrollmentUtil} */
 public final class EnrollmentUtilTest extends AdServicesMockitoTestCase {
-    @Mock AdServicesLogger mLogger;
+    @Mock private AdServicesLogger mLogger;
 
     @Test
     public void logEnrollmentFileDownloadStats_nullInput_defaultValuesUsed() {

@@ -18,11 +18,18 @@ package com.android.adservices.service.shell.signals;
 
 import static com.android.adservices.service.CommonFlagsConstants.KEY_ADSERVICES_SHELL_COMMAND_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_AD_SELECTION_CLI_ENABLED;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_PROTECTED_APP_SIGNALS_CLI_ENABLED;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_PROTECTED_APP_SIGNALS_ENCODER_LOGIC_REGISTERED_BROADCAST_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
+import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_SIGNALS;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_APP_ALLOW_LIST;
+import static com.android.adservices.service.FlagsConstants.KEY_PPAPI_APP_ALLOW_LIST;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.PPAPI_AND_SYSTEM_SERVER;
+import static com.android.adservices.service.signals.updateprocessors.UpdateEncoderEventHandler.ACTION_REGISTER_ENCODER_LOGIC_COMPLETE;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -53,8 +60,6 @@ import com.android.adservices.data.signals.EncoderLogicMetadataDao;
 import com.android.adservices.data.signals.EncoderPersistenceDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
-import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -83,15 +88,18 @@ import com.android.adservices.service.signals.evict.SignalEvictionController;
 import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEventHandler;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorSelector;
 import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.NoOpLoggerImpl;
 import com.android.adservices.service.stats.pas.EncodingExecutionLogHelperImpl;
 import com.android.adservices.service.stats.pas.EncodingJobRunStats;
 import com.android.adservices.service.stats.pas.EncodingJobRunStatsLoggerImpl;
 import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLoggerImpl;
+import com.android.adservices.shared.testing.BroadcastReceiverSyncCallback;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
+import com.android.adservices.shared.testing.annotations.SetStringFlag;
+import com.android.adservices.shared.testing.concurrency.SimpleSyncCallback;
 import com.android.adservices.shared.util.Clock;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -100,29 +108,31 @@ import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.RecordedRequest;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 @SpyStatic(FlagsFactory.class)
 @SetFlagEnabled(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
+@SetFlagEnabled(KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED)
 @SetFlagEnabled(KEY_PROTECTED_SIGNALS_ENABLED)
+@SetFlagEnabled(KEY_ENFORCE_FOREGROUND_STATUS_SIGNALS)
+@SetStringFlag(name = KEY_PPAPI_APP_ALLOW_LIST, value = "*")
+@SetStringFlag(name = KEY_PAS_APP_ALLOW_LIST, value = "*")
 @SetIntegerFlag(name = KEY_CONSENT_SOURCE_OF_TRUTH, value = PPAPI_AND_SYSTEM_SERVER)
+@EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
 @EnableDebugFlag(KEY_ADSERVICES_SHELL_COMMAND_ENABLED)
+@EnableDebugFlag(KEY_PROTECTED_APP_SIGNALS_ENCODER_LOGIC_REGISTERED_BROADCAST_ENABLED)
 @EnableDebugFlag(KEY_AD_SELECTION_CLI_ENABLED)
 @EnableDebugFlag(KEY_PROTECTED_APP_SIGNALS_CLI_ENABLED)
 @RequiresSdkLevelAtLeastT(reason = "Protected App Signals is available on T+")
-public class TriggerEncodingCommandE2ETest extends AdServicesExtendedMockitoTestCase {
+public final class TriggerEncodingCommandE2ETest extends AdServicesExtendedMockitoTestCase {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
-    public static final String PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
+    private static final String PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("localhost");
     private static final String SIGNALS_ENCODING_SCRIPT_PATH = "/script";
     private static final String SIGNALS_ENCODING_SCRIPT =
@@ -154,31 +164,28 @@ public class TriggerEncodingCommandE2ETest extends AdServicesExtendedMockitoTest
                     + "\"\n"
                     + "  }\n"
                     + "}";
-    private static final int PAS_API_TIMEOUT_SEC = 5;
-    // Use a very low value as we are using a Room in-memory database here.
-    public static final int PAS_DATABASE_WRITE_LATENCY_SLEEP_MS = 1000;
+    private static final int ENCODER_LOGIC_MAXIMUM_FAILURE = 3;
+    private static final int ENCODED_PAY_LOAD_MAX_SIZE_BYTES = 100;
 
     private EncodedPayloadDao mEncodedPayloadDao;
     private TriggerEncodingCommand mTriggerEncodingCommand;
 
-    private MockWebServerRule mMockWebServerRule =
+    private final MockWebServerRule mMockWebServerRule =
             MockWebServerRule.forHttps(
-                    sContext, "adservices_untrusted_test_server.p12", "adservices_test");
+                    mContext, "adservices_untrusted_test_server.p12", "adservices_test");
     private EncoderEndpointsDao mEncoderEndpointDao;
     private EncoderLogicMetadataDao mEncoderLogicMetadataDao;
     private ProtectedSignalsServiceImpl mProtectedSignalsService;
     @Mock private ConsentManager mConsentManagerMock;
     @Mock private UpdateSignalsProcessReportedLoggerImpl mUpdateSignalsProcessReportedLoggerMock;
     private ProtectedSignalsDao mProtectedSignalsDao;
-    private SignalsProviderAndArgumentFactory mSignalsProviderAndArgumentFactory;
 
     @Before
     public void setUp() throws Exception {
-        AdservicesTestHelper.killAdservicesProcess(sContext);
+        AdservicesTestHelper.killAdservicesProcess(mContext);
         ProtectedSignalsDatabase protectedSignalsDatabase =
-                Room.inMemoryDatabaseBuilder(sContext, ProtectedSignalsDatabase.class).build();
-        AdServicesLogger logger = AdServicesLoggerImpl.getInstance();
-        Flags flags = new TestFlags();
+                Room.inMemoryDatabaseBuilder(mContext, ProtectedSignalsDatabase.class).build();
+        AdServicesLogger logger = new NoOpLoggerImpl();
         mEncodedPayloadDao = protectedSignalsDatabase.getEncodedPayloadDao();
         mProtectedSignalsDao = protectedSignalsDatabase.protectedSignalsDao();
         mEncoderEndpointDao = protectedSignalsDatabase.getEncoderEndpointsDao();
@@ -189,36 +196,35 @@ public class TriggerEncodingCommandE2ETest extends AdServicesExtendedMockitoTest
                         CacheProviderFactory.createNoOpCache());
         EncoderLogicHandler encoderLogicHandler =
                 new EncoderLogicHandler(
-                        EncoderPersistenceDao.getInstance(sContext),
+                        EncoderPersistenceDao.getInstance(mContext),
                         mEncoderEndpointDao,
                         mEncoderLogicMetadataDao,
                         mProtectedSignalsDao,
                         httpClient,
                         AdServicesExecutors.getBackgroundExecutor(),
                         logger,
-                        flags);
+                        mMockFlags);
         RetryStrategy retryStrategy =
                 RetryStrategyFactory.createInstance(
-                                flags.getAdServicesRetryStrategyEnabled(),
+                                mMockFlags.getAdServicesRetryStrategyEnabled(),
                                 AdServicesExecutors.getLightWeightExecutor())
-                        .createRetryStrategy(flags.getAdServicesJsScriptEngineMaxRetryAttempts());
-        mocker.mockGetFlags(flags);
-        final int maxJsFailures =
-                flags.getProtectedSignalsMaxJsFailureExecutionOnCertainVersionBeforeStop();
-        final boolean jsIsolateMessagesInLogs = true;
-        mSignalsProviderAndArgumentFactory =
+                        .createRetryStrategy(
+                                mMockFlags.getAdServicesJsScriptEngineMaxRetryAttempts());
+        mocker.mockGetFlags(mMockFlags);
+        boolean jsIsolateMessagesInLogs = true;
+        SignalsProviderAndArgumentFactory signalsProviderAndArgumentFactory =
                 new SignalsProviderAndArgumentFactory(mProtectedSignalsDao, true);
         mTriggerEncodingCommand =
                 new TriggerEncodingCommand(
                         new PeriodicEncodingJobRunner(
-                                mSignalsProviderAndArgumentFactory,
+                                signalsProviderAndArgumentFactory,
                                 mProtectedSignalsDao,
                                 new SignalsScriptEngine(
-                                        flags::getIsolateMaxHeapSizeBytes,
+                                        mMockFlags::getIsolateMaxHeapSizeBytes,
                                         retryStrategy,
                                         () -> jsIsolateMessagesInLogs),
-                                maxJsFailures,
-                                flags.getProtectedSignalsEncodedPayloadMaxSizeBytes(),
+                                ENCODER_LOGIC_MAXIMUM_FAILURE,
+                                ENCODED_PAY_LOAD_MAX_SIZE_BYTES,
                                 encoderLogicHandler,
                                 protectedSignalsDatabase.getEncodedPayloadDao(),
                                 AdServicesExecutors.getBackgroundExecutor(),
@@ -231,7 +237,7 @@ public class TriggerEncodingCommandE2ETest extends AdServicesExtendedMockitoTest
 
         mProtectedSignalsService =
                 new ProtectedSignalsServiceImpl(
-                        sContext,
+                        mContext,
                         new UpdateSignalsOrchestrator(
                                 AdServicesExecutors.getBackgroundExecutor(),
                                 new UpdatesDownloader(
@@ -240,7 +246,11 @@ public class TriggerEncodingCommandE2ETest extends AdServicesExtendedMockitoTest
                                         mProtectedSignalsDao,
                                         new UpdateProcessorSelector(),
                                         new UpdateEncoderEventHandler(
-                                                mEncoderEndpointDao, encoderLogicHandler),
+                                                mEncoderEndpointDao,
+                                                encoderLogicHandler,
+                                                /* context= */ mContext,
+                                                AdServicesExecutors.getBackgroundExecutor(),
+                                                /* isCompletionBroadcastEnabled= */ true),
                                         new SignalEvictionController()),
                                 new AdTechUriValidator(
                                         "caller",
@@ -248,31 +258,36 @@ public class TriggerEncodingCommandE2ETest extends AdServicesExtendedMockitoTest
                                         TriggerEncodingCommandE2ETest.class.getName(),
                                         "updateUri"),
                                 java.time.Clock.systemUTC()),
-                        FledgeAuthorizationFilter.create(sContext, logger),
+                        FledgeAuthorizationFilter.create(mContext, logger),
                         mConsentManagerMock,
                         new TestDevContextFilter(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         logger,
-                        flags,
+                        mMockFlags,
                         new CallingAppUidSupplierProcessImpl(),
                         new ProtectedSignalsServiceFilter(
-                                sContext,
+                                mContext,
                                 new FledgeConsentFilter(mConsentManagerMock, logger),
-                                flags,
+                                mMockFlags,
                                 AppImportanceFilter.create(
-                                        sContext, flags::getForegroundStatuslLevelForValidation),
-                                FledgeAuthorizationFilter.create(sContext, logger),
-                                new FledgeAllowListsFilter(flags, logger),
-                                new FledgeApiThrottleFilter(Throttler.getInstance(flags), logger)),
+                                        mContext,
+                                        mMockFlags::getForegroundStatuslLevelForValidation),
+                                FledgeAuthorizationFilter.create(mContext, logger),
+                                new FledgeAllowListsFilter(mMockFlags, logger),
+                                new FledgeApiThrottleFilter(
+                                        Throttler.getInstance(mMockFlags), logger)),
                         EnrollmentDao.getInstance(),
                         mUpdateSignalsProcessReportedLoggerMock);
         when(mConsentManagerMock.isPasFledgeConsentGiven()).thenReturn(true);
         when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(any()))
                 .thenReturn(false);
-        MockitoAnnotations.initMocks(this);
+        // TODO(b/364311897): Add this to AdServicesFlagsMocker.
+        when(mMockFlags.getConsentNotificationDebugMode()).thenReturn(true);
+        when(mMockFlags.getDisableFledgeEnrollmentCheck()).thenReturn(true);
+        when(mMockFlags.getPasAppAllowList()).thenReturn("*");
+        when(mMockFlags.getPpapiAppAllowList()).thenReturn("*");
     }
 
-    @Ignore("b/359519167")
     @Test
     public void run_happyPath_encodedSignalsArePresentInDb() throws Exception {
         mMockWebServerRule.startMockWebServer(
@@ -295,7 +310,7 @@ public class TriggerEncodingCommandE2ETest extends AdServicesExtendedMockitoTest
                     }
                 });
         assertThat(mEncoderEndpointDao.getEndpoint(BUYER)).isNull();
-        CountDownLatch latch = new CountDownLatch(1);
+        SimpleSyncCallback syncCallback = new SimpleSyncCallback();
         mProtectedSignalsService.updateSignals(
                 new UpdateSignalsInput.Builder(
                                 mMockWebServerRule.uriForPath(SIGNALS_UPDATE_PATH), PACKAGE_NAME)
@@ -304,26 +319,21 @@ public class TriggerEncodingCommandE2ETest extends AdServicesExtendedMockitoTest
                 new UpdateSignalsCallback() {
                     @Override
                     public void onSuccess() {
-                        latch.countDown();
+                        syncCallback.setCalled();
                     }
 
                     @Override
-                    public void onFailure(FledgeErrorResponse responseParcel) {
-                        latch.countDown();
-                    }
+                    public void onFailure(FledgeErrorResponse responseParcel) {}
 
                     @Override
                     public IBinder asBinder() {
                         return null;
                     }
                 });
-        assertThat(latch.await(PAS_API_TIMEOUT_SEC, TimeUnit.SECONDS)).isTrue();
-        // Wait for database event before continuing. PAS updates are asynchronous so this is the
-        // only way to consistently wait. Adding this after the updateSignals API returns lowers any
-        // potential flakiness.
-        sLogger.v("Sleeping while PAS update writes take place...");
-        Thread.sleep(PAS_DATABASE_WRITE_LATENCY_SLEEP_MS);
-        sLogger.v("Checking if encoding endpoint is registered...");
+        BroadcastReceiverSyncCallback broadcastReceiverSyncCallback =
+                new BroadcastReceiverSyncCallback(mContext, ACTION_REGISTER_ENCODER_LOGIC_COMPLETE);
+        syncCallback.assertCalled();
+        broadcastReceiverSyncCallback.assertResultReceived();
         assertThat(mEncoderEndpointDao.getEndpoint(BUYER)).isNotNull();
         assertThat(mEncodedPayloadDao.doesEncodedPayloadExist(BUYER)).isFalse();
         assertThat(mProtectedSignalsDao.getSignalsByBuyer(BUYER)).isNotEmpty();
@@ -361,29 +371,6 @@ public class TriggerEncodingCommandE2ETest extends AdServicesExtendedMockitoTest
         @Override
         public DevContext createDevContext() throws IllegalStateException {
             return DevContext.createForDevIdentity();
-        }
-    }
-
-    private static final class TestFlags implements Flags {
-
-        @Override
-        public boolean getDisableFledgeEnrollmentCheck() {
-            return true;
-        }
-
-        @Override
-        public boolean getProtectedSignalsEnabled() {
-            return true;
-        }
-
-        @Override
-        public int getConsentSourceOfTruth() {
-            return FlagsConstants.PPAPI_AND_SYSTEM_SERVER;
-        }
-
-        @Override
-        public boolean getEnforceForegroundStatusForSignals() {
-            return false;
         }
     }
 }

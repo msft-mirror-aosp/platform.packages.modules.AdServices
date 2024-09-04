@@ -93,9 +93,9 @@ public final class CustomAudienceListCommandTest
         assertWithMessage("Length of JsonArray (%s)", jsonArray)
                 .that(jsonArray.length())
                 .isEqualTo(1);
-        assertThat(getCustomAudienceFromJson(jsonArray.getJSONObject(0)))
+        expect.that(getCustomAudienceFromJson(jsonArray.getJSONObject(0)))
                 .isEqualTo(CUSTOM_AUDIENCE_1);
-        assertThat(getCustomAudienceBackgroundFetchDataFromJson(jsonArray.getJSONObject(0)))
+        expect.that(getCustomAudienceBackgroundFetchDataFromJson(jsonArray.getJSONObject(0)))
                 .isEqualTo(CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA_1);
     }
 
@@ -115,14 +115,14 @@ public final class CustomAudienceListCommandTest
         assertWithMessage("Length of JsonArray (%s)", jsonArray)
                 .that(jsonArray.length())
                 .isEqualTo(1);
-        assertThat(getCustomAudienceFromJson(jsonArray.getJSONObject(0)))
+        expect.that(getCustomAudienceFromJson(jsonArray.getJSONObject(0)))
                 .isEqualTo(CUSTOM_AUDIENCE_2);
-        assertThat(getCustomAudienceBackgroundFetchDataFromJson(jsonArray.getJSONObject(0)))
+        expect.that(getCustomAudienceBackgroundFetchDataFromJson(jsonArray.getJSONObject(0)))
                 .isEqualTo(CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA_2);
     }
 
     @Test
-    public void testRun_missingArgument_returnsGenericError() throws Exception {
+    public void testRun_missingArgument_returnsGenericError() {
         runAndExpectInvalidArgument(
                 new CustomAudienceListCommand(
                         mCustomAudienceDao, mClock, CUSTOM_AUDIENCE_ACTIVE_FETCH_WINDOW_MS),
@@ -168,13 +168,13 @@ public final class CustomAudienceListCommandTest
         assertWithMessage("Length of JsonArray (%s)", jsonArray)
                 .that(jsonArray.length())
                 .isEqualTo(2);
-        assertThat(getCustomAudienceFromJson(jsonArray.getJSONObject(0)))
+        expect.that(getCustomAudienceFromJson(jsonArray.getJSONObject(0)))
                 .isEqualTo(CUSTOM_AUDIENCE_1);
-        assertThat(getCustomAudienceBackgroundFetchDataFromJson(jsonArray.getJSONObject(0)))
+        expect.that(getCustomAudienceBackgroundFetchDataFromJson(jsonArray.getJSONObject(0)))
                 .isEqualTo(CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA_1);
-        assertThat(getCustomAudienceFromJson(jsonArray.getJSONObject(1)))
+        expect.that(getCustomAudienceFromJson(jsonArray.getJSONObject(1)))
                 .isEqualTo(CUSTOM_AUDIENCE_2);
-        assertThat(getCustomAudienceBackgroundFetchDataFromJson(jsonArray.getJSONObject(1)))
+        expect.that(getCustomAudienceBackgroundFetchDataFromJson(jsonArray.getJSONObject(1)))
                 .isEqualTo(CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA_2);
     }
 
