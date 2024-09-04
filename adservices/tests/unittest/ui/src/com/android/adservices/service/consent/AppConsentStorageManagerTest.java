@@ -31,7 +31,6 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 
 import android.annotation.NonNull;
-import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 
@@ -47,6 +46,7 @@ import com.android.adservices.service.common.feature.PrivacySandboxFeatureType;
 import com.android.adservices.service.ui.data.UxStatesDao;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -56,7 +56,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -68,28 +67,32 @@ import java.util.stream.Collectors;
 @SpyStatic(FlagsFactory.class)
 public final class AppConsentStorageManagerTest extends AdServicesExtendedMockitoTestCase {
 
-    private Context mContextSpy;
     private AtomicFileDatastore mAppDaoDatastore;
     private AtomicFileDatastore mConsentDatastore;
     private AppConsentDao mAppConsentDaoSpy;
     private AppConsentStorageManager mAppConsentStorageManager;
     @Mock private UxStatesDao mUxStatesDaoMock;
 
+    @Mock private AdServicesErrorLogger mMockAdServicesErrorLogger;
+
     @Before
     public void setup() {
-        mContextSpy = Mockito.spy(appContext.get());
         mConsentDatastore =
                 new AtomicFileDatastore(
-                        mContextSpy,
+                        mSpyContext,
                         ConsentConstants.STORAGE_XML_IDENTIFIER,
-                        ConsentConstants.STORAGE_VERSION);
+                        ConsentConstants.STORAGE_VERSION,
+                        mMockAdServicesErrorLogger);
 
         mAppDaoDatastore =
                 new AtomicFileDatastore(
-                        mContextSpy, AppConsentDao.DATASTORE_NAME, AppConsentDao.DATASTORE_VERSION);
+                        mSpyContext,
+                        AppConsentDao.DATASTORE_NAME,
+                        AppConsentDao.DATASTORE_VERSION,
+                        mMockAdServicesErrorLogger);
 
         mAppConsentDaoSpy =
-                spy(new AppConsentDao(mAppDaoDatastore, mContextSpy.getPackageManager()));
+                spy(new AppConsentDao(mAppDaoDatastore, mSpyContext.getPackageManager()));
         mAppConsentStorageManager =
                 spy(
                         new AppConsentStorageManager(

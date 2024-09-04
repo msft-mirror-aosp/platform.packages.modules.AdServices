@@ -222,7 +222,7 @@ public class BackgroundFetchRunner {
         // connection from a debuggable app.
         DevContext devContext =
                 isDebuggable
-                        ? DevContext.builder().setDevOptionsEnabled(true).build()
+                        ? DevContext.createForDevIdentity()
                         : DevContext.createForDevOptionsDisabled();
 
         // TODO(b/234884352): Perform k-anon check on daily fetch URI

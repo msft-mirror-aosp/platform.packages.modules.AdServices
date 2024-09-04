@@ -16,8 +16,10 @@
 
 package android.adservices.debuggablects;
 
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_APP_ALLOW_LIST;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_ENABLED;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -25,6 +27,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.clients.signals.ProtectedSignalsClient;
+import android.adservices.common.CommonFixture;
 import android.adservices.signals.UpdateSignalsRequest;
 import android.adservices.utils.CtsWebViewSupportUtil;
 import android.adservices.utils.MockWebServerRule;
@@ -34,6 +37,7 @@ import android.net.Uri;
 
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
+import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
@@ -49,6 +53,7 @@ import java.util.concurrent.Executors;
 @SetFlagEnabled(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
 @SetFlagEnabled(KEY_PROTECTED_SIGNALS_ENABLED)
 @SetFlagEnabled(KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED) // Enabled retry for java script engine
+@EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
 @RequiresSdkLevelAtLeastT
 public final class SignalsCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     private static final String POSTFIX = "/signals";
@@ -61,20 +66,22 @@ public final class SignalsCtsDebuggableTest extends ForegroundDebuggableCtsTest 
 
     @Rule(order = 11)
     public final SupportedByConditionRule webViewSupportsJSSandbox =
-            CtsWebViewSupportUtil.createJSSandboxAvailableRule(sContext);
+            CtsWebViewSupportUtil.createJSSandboxAvailableRule(mContext);
 
     @Rule(order = 12)
     public MockWebServerRule mMockWebServerRule =
             MockWebServerRule.forHttps(
-                    sContext, "adservices_untrusted_test_server.p12", "adservices_test");
+                    mContext, "adservices_untrusted_test_server.p12", "adservices_test");
 
     @Before
     public void setUp() throws Exception {
-        AdservicesTestHelper.killAdservicesProcess(sContext);
+        flags.setFlag(KEY_PAS_APP_ALLOW_LIST, new String[] {CommonFixture.TEST_PACKAGE_NAME}, ",");
+
+        AdservicesTestHelper.killAdservicesProcess(mContext);
         ExecutorService executor = Executors.newCachedThreadPool();
         mProtectedSignalsClient =
                 new ProtectedSignalsClient.Builder()
-                        .setContext(sContext)
+                        .setContext(mContext)
                         .setExecutor(executor)
                         .build();
     }

@@ -23,7 +23,6 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 
 import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
-import static com.android.adservices.mockito.MockitoExpectations.mockCobaltLoggingFlags;
 import static com.android.adservices.service.Flags.AD_ID_API_APP_BLOCK_LIST;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__ADID;
@@ -49,6 +48,7 @@ import android.adservices.adid.GetAdIdParam;
 import android.adservices.adid.GetAdIdResult;
 import android.adservices.adid.IGetAdIdCallback;
 import android.adservices.common.CallerMetadata;
+import android.adservices.common.CommonFixture;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -58,11 +58,8 @@ import android.os.Process;
 import androidx.annotation.NonNull;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
-import com.android.adservices.errorlogging.ErrorLogUtil;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
@@ -76,7 +73,6 @@ import com.android.adservices.shared.util.Clock;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
@@ -90,18 +86,16 @@ import java.util.concurrent.TimeUnit;
 /** Unit test for {@link com.android.adservices.service.adid.AdIdServiceImpl}. */
 @SpyStatic(Binder.class)
 @SpyStatic(FlagsFactory.class)
-@SpyStatic(ErrorLogUtil.class)
 @SetErrorLogUtilDefaultParams(
         throwable = Any.class,
         ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID)
 public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase {
-    private static final String TEST_APP_PACKAGE_NAME = "com.android.adservices.servicecoretest";
+    private static final String TEST_APP_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     private static final String INVALID_PACKAGE_NAME = "com.do_not_exists";
     private static final String SOME_SDK_NAME = "SomeSdkName";
     private static final int BINDER_CONNECTION_TIMEOUT_MS = 5_000;
     private static final int LOGGER_EVENT_TIMEOUT_MS = 5_000;
     private static final String SDK_PACKAGE_NAME = "test_package_name";
-    private static final String ADID_API_ALLOW_LIST = "com.android.adservices.servicecoretest";
     // See android.os.Process, that FIRST_SDK_SANDBOX_UID = 20000 and LAST_SDK_SANDBOX_UID = 29999.
     private static final int SANDBOX_UID = 25000;
 
@@ -111,16 +105,11 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
     private GetAdIdParam mRequest;
 
     @Mock private PackageManager mMockPackageManager;
-    @Mock private Flags mMockFlags;
     @Mock private Clock mClock;
     @Mock private Context mMockSdkContext;
     @Mock private Throttler mMockThrottler;
     @Mock private AdIdServiceImpl mAdIdServiceImpl;
     @Mock private AppImportanceFilter mMockAppImportanceFilter;
-
-    @Rule(order = 11)
-    public final AdServicesLoggingUsageRule errorLogUtilUsageRule =
-            AdServicesLoggingUsageRule.errorLogUtilUsageRule();
 
     @Before
     public void setup() throws Exception {
@@ -153,7 +142,7 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
         mocker.mockGetFlags(mMockFlags);
         mocker.mockGetCallingUidOrThrow(); // expected calling by its test uid by default
 
-        mockCobaltLoggingFlags(mMockFlags, false);
+        mocker.mockAllCobaltLoggingFlags(false);
     }
 
     @Test

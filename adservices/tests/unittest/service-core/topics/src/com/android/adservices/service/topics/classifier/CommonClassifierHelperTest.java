@@ -16,8 +16,6 @@
 
 package com.android.adservices.service.topics.classifier;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mocker;
 import static com.android.adservices.service.topics.classifier.CommonClassifierHelper.computeClassifierAssetChecksum;
 import static com.android.adservices.service.topics.classifier.CommonClassifierHelper.getTopTopics;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
@@ -26,18 +24,15 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
-import android.content.Context;
-
-import androidx.test.core.app.ApplicationProvider;
-
 import com.android.adservices.MockRandom;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.topics.Topic;
-import com.android.adservices.errorlogging.ErrorLogUtil;
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.EpochComputationGetTopTopicsStats;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.SkipLoggingUsageRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.android.libraries.mobiledatadownload.file.SynchronousFileStorage;
 import com.google.common.collect.ImmutableList;
@@ -45,7 +40,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.mobiledatadownload.ClientConfigProto.ClientFile;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -66,8 +60,11 @@ import java.util.stream.Collectors;
  * use Random() or MockRandom() to generate random integer index to get random topicIds. Topics will
  * be selected from the topics list in order by their index in the topics list. </b>
  */
-public class CommonClassifierHelperTest {
-    private static final Context sContext = ApplicationProvider.getApplicationContext();
+@SpyStatic(FlagsFactory.class)
+@RequiresSdkLevelAtLeastS
+// TODO (b/359964245): Remove after bug is resolved.
+@SkipLoggingUsageRule(reason = "b/359964245")
+public final class CommonClassifierHelperTest extends AdServicesExtendedMockitoTestCase {
     private static final String TEST_LABELS_FILE_PATH = "classifier/labels_test_topics.txt";
     private static final String TEST_PRECOMPUTED_FILE_PATH =
             "classifier/precomputed_test_app_list.csv";
@@ -95,19 +92,9 @@ public class CommonClassifierHelperTest {
     private long mProductionTaxonomyVersion;
     private long mProductionModelVersion;
 
-    @Mock SynchronousFileStorage mMockFileStorage;
-    @Mock Map<String, ClientFile> mMockDownloadedFiles;
-    @Mock AdServicesLogger mLogger;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
-    @Rule(order = 1)
-    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder(this)
-                    .spyStatic(FlagsFactory.class)
-                    .spyStatic(ErrorLogUtil.class)
-                    .build();
+    @Mock private SynchronousFileStorage mMockFileStorage;
+    @Mock private Map<String, ClientFile> mMockDownloadedFiles;
+    @Mock private AdServicesLogger mLogger;
 
     @Before
     public void setUp() {
@@ -115,7 +102,7 @@ public class CommonClassifierHelperTest {
 
         mTestModelManager =
                 new ModelManager(
-                        sContext,
+                        mContext,
                         TEST_LABELS_FILE_PATH,
                         TEST_PRECOMPUTED_FILE_PATH,
                         TEST_CLASSIFIER_ASSETS_METADATA_PATH,
@@ -126,7 +113,7 @@ public class CommonClassifierHelperTest {
 
         mProductionModelManager =
                 new ModelManager(
-                        sContext,
+                        mContext,
                         PRODUCTION_LABELS_FILE_PATH,
                         PRODUCTION_APPS_FILE_PATH,
                         PRODUCTION_CLASSIFIER_ASSETS_METADATA_PATH,
@@ -135,6 +122,7 @@ public class CommonClassifierHelperTest {
                         mMockFileStorage,
                         mMockDownloadedFiles);
 
+        // TODO (b/359964245): Delete after bug is resolved and use annotations to verify calls.
         doNothingOnErrorLogUtilError();
 
         testLabels = mTestModelManager.retrieveLabels();
@@ -538,14 +526,14 @@ public class CommonClassifierHelperTest {
         // Compute SHA256 checksum of labels topics file in test assets and check the result
         // can match the checksum saved in the test classifier assets metadata file.
         String labelsTestTopicsChecksum =
-                computeClassifierAssetChecksum(sContext.getAssets(), TEST_LABELS_FILE_PATH);
+                computeClassifierAssetChecksum(mContext.getAssets(), TEST_LABELS_FILE_PATH);
         assertThat(labelsTestTopicsChecksum)
                 .isEqualTo(testClassifierAssetsMetadata.get("labels_topics").get("checksum"));
 
         // Compute SHA256 checksum of precomputed apps topics file in test assets
         // and check the result can match the checksum saved in the classifier assets metadata file.
         String precomputedAppsTestChecksum =
-                computeClassifierAssetChecksum(sContext.getAssets(), TEST_PRECOMPUTED_FILE_PATH);
+                computeClassifierAssetChecksum(mContext.getAssets(), TEST_PRECOMPUTED_FILE_PATH);
         assertThat(precomputedAppsTestChecksum)
                 .isEqualTo(
                         testClassifierAssetsMetadata.get("precomputed_app_list").get("checksum"));
@@ -556,14 +544,14 @@ public class CommonClassifierHelperTest {
         // Compute SHA256 checksum of labels topics file in production assets and check the result
         // can match the checksum saved in the production classifier assets metadata file.
         String labelsProductionTopicsChecksum =
-                computeClassifierAssetChecksum(sContext.getAssets(), PRODUCTION_LABELS_FILE_PATH);
+                computeClassifierAssetChecksum(mContext.getAssets(), PRODUCTION_LABELS_FILE_PATH);
         assertThat(labelsProductionTopicsChecksum)
                 .isEqualTo(productionClassifierAssetsMetadata.get("labels_topics").get("checksum"));
 
         // Compute SHA256 checksum of precomputed apps topics file in production assets
         // and check the result can match the checksum saved in the classifier assets metadata file.
         String precomputedAppsProductionChecksum =
-                computeClassifierAssetChecksum(sContext.getAssets(), PRODUCTION_APPS_FILE_PATH);
+                computeClassifierAssetChecksum(mContext.getAssets(), PRODUCTION_APPS_FILE_PATH);
         assertThat(precomputedAppsProductionChecksum)
                 .isEqualTo(
                         productionClassifierAssetsMetadata
@@ -576,12 +564,12 @@ public class CommonClassifierHelperTest {
         // Verify bundled model build_id. This should be changed along with model update.
         assertThat(
                         CommonClassifierHelper.getBundledModelBuildId(
-                                sContext, PRODUCTION_CLASSIFIER_ASSETS_METADATA_PATH))
+                                mContext, PRODUCTION_CLASSIFIER_ASSETS_METADATA_PATH))
                 .isEqualTo(1986);
         // Verify test model build_id.
         assertThat(
                         CommonClassifierHelper.getBundledModelBuildId(
-                                sContext, TEST_CLASSIFIER_ASSETS_METADATA_PATH))
+                                mContext, TEST_CLASSIFIER_ASSETS_METADATA_PATH))
                 .isEqualTo(8);
     }
 
