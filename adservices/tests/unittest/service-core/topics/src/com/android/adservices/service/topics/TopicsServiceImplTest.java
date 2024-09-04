@@ -28,17 +28,19 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
+import static android.content.pm.PackageManager.NameNotFoundException;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
-import static com.android.adservices.mockito.MockitoExpectations.mockLogApiCallStats;
+import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
 import static com.android.adservices.service.enrollment.EnrollmentUtil.BUILD_ID;
 import static com.android.adservices.service.enrollment.EnrollmentUtil.ENROLLMENT_SHARED_PREF;
 import static com.android.adservices.service.enrollment.EnrollmentUtil.FILE_GROUP_STATUS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__TARGETING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS_PREVIEW_API;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_MANIFEST_CONFIG_PARSING_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_REQUEST_EMPTY_SDK_NAME;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -78,12 +80,14 @@ import androidx.annotation.NonNull;
 import com.android.adservices.cobalt.TopicsCobaltLogger;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.DbTestUtil;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
-import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.appsearch.AppSearchConsentManager;
@@ -132,11 +136,14 @@ import java.util.stream.Collectors;
                         + " PackageManager APIs.")
 @SpyStatic(Binder.class)
 @SpyStatic(AllowLists.class)
-@SpyStatic(ErrorLogUtil.class)
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(AppManifestConfigMetricsLogger.class)
+@SetErrorLogUtilDefaultParams(
+        throwable = Any.class,
+        ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS)
 public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCase {
-    private static final String TEST_APP_PACKAGE_NAME = "com.android.adservices.servicecore.topics.unittest";
+    private static final String TEST_APP_PACKAGE_NAME =
+            "com.android.adservices.servicecore.topics.unittest";
     private static final String INVALID_PACKAGE_NAME = "com.do_not_exists";
     private static final String SOME_SDK_NAME = "SomeSdkName";
     private static final int BINDER_CONNECTION_TIMEOUT_MS = 10_000;
@@ -164,7 +171,6 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
     @Mock private EpochManager mMockEpochManager;
     @Mock private ConsentManager mConsentManager;
     @Mock private PackageManager mPackageManager;
-    @Mock private Flags mMockFlags;
     @Mock private Clock mClock;
     @Mock private Context mMockSdkContext;
     @Mock private Context mMockAppContext;
@@ -274,7 +280,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
         when(mMockFlags.isEnrollmentBlocklisted(Mockito.any())).thenReturn(false);
 
         // TODO(b/310270746): expectations below (and spying FlagsFactory,
-        // AppManifestConfigMetricsLogger, and possibly ErrorLogUtil) wouldn't be needed if thests
+        // AppManifestConfigMetricsLogger, and possibly ErrorLogUtil) wouldn't be needed if tests
         // mocked AppManifestConfigHelper.isAllowedTopicsAccess() directly (instead of mocking the
         // contents of the app manifests)
 
@@ -282,9 +288,6 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
         // currently guarded by a flag
         mocker.mockGetFlags(mMockFlags);
 
-        // Similarly, AppManifestConfigHelper.isAllowedTopicsAccess() is failing to parse the XML
-        // (which returns false), but logging the error on ErrorLogUtil, so we need to ignored that.
-        doNothingOnErrorLogUtilError();
         // And AppManifestConfigHelper calls AppManifestConfigMetricsLogger, which in turn does
         // stuff in a bg thread - chances are the test is done by the time the thread runs,
         // which could cause test failures (like lack of permission when calling Flags)
@@ -304,8 +307,9 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_REQUEST_EMPTY_SDK_NAME)
     public void checkEmptySdkNameRequests() throws Exception {
-        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
         mockGetTopicsDisableDirectAppCalls(true);
 
         GetTopicsParam request =
@@ -316,15 +320,11 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
                         .build();
 
         invokeGetTopicsAndVerifyError(mSpyContext, STATUS_INVALID_ARGUMENT, request, true);
-        ExtendedMockito.verify(
-                () ->
-                        ErrorLogUtil.e(
-                                eq(
-                                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_REQUEST_EMPTY_SDK_NAME),
-                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS)));
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_REQUEST_EMPTY_SDK_NAME)
     public void checkNoSdkNameRequests() throws Exception {
         mockGetTopicsDisableDirectAppCalls(true);
 
@@ -550,6 +550,9 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_MANIFEST_CONFIG_PARSING_ERROR,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON)
     public void checkSdkEnrollmentIdIsDisallowed() throws Exception {
         EnrollmentData fakeEnrollmentData =
                 new EnrollmentData.Builder().setEnrollmentId(DISALLOWED_SDK_ID).build();
@@ -847,7 +850,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
         // service side to calculate the latency
         SyncGetTopicsCallback callback = new SyncGetTopicsCallback();
         ResultSyncCallback<ApiCallStats> logApiCallStatsCallback =
-                mockLogApiCallStats(mAdServicesLogger);
+                mocker.mockLogApiCallStats(mAdServicesLogger);
 
         topicsServiceImpl.getTopics(mRequest, mCallerMetadata, callback);
 
@@ -877,8 +880,9 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION)
     public void testGetTopics_enforceCallingPackage_invalidPackage() throws Exception {
-        doNothingOnErrorLogUtilError();
         long currentEpochId = 4L;
         int numberOfLookBackEpochs = 3;
 
@@ -896,29 +900,22 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
                         .build();
 
         ResultSyncCallback<ApiCallStats> logApiCallStatsCallback =
-                mockLogApiCallStats(mAdServicesLogger);
+                mocker.mockLogApiCallStats(mAdServicesLogger);
 
         SyncGetTopicsCallback callback = new SyncGetTopicsCallback();
         topicsService.getTopics(mRequest, mCallerMetadata, callback);
         callback.assertFailed(STATUS_UNAUTHORIZED);
 
         logApiCallStatsCallback.assertResultReceived();
-
-        ExtendedMockito.verify(
-                () ->
-                        ErrorLogUtil.e(
-                                any(Throwable.class),
-                                eq(
-                                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION),
-                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS)));
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION)
     public void testGetTopics_enforceCallingPackage_logCallingPackageNotFound() throws Exception {
-        doNothingOnErrorLogUtilError();
         when(mMockAppContext.getPackageManager()).thenReturn(mPackageManager);
         when(mPackageManager.getPackageUid(TEST_APP_PACKAGE_NAME, 0))
-                .thenThrow(new PackageManager.NameNotFoundException());
+                .thenThrow(new NameNotFoundException());
 
         invokeGetTopicsAndVerifyError(
                 mMockAppContext, STATUS_UNAUTHORIZED, /* checkLoggingStatus */ mRequest, true);
@@ -926,7 +923,6 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
 
     @Test
     public void testGetTopics_enforceCallingPackage_logCallingPackageIdMismatch() throws Exception {
-        doNothingOnErrorLogUtilError();
         when(mMockAppContext.getPackageManager()).thenReturn(mPackageManager);
         when(mPackageManager.getPackageUid(TEST_APP_PACKAGE_NAME, 0)).thenReturn(/* uid */ -1);
 
@@ -957,7 +953,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
 
         SyncGetTopicsCallback callback = new SyncGetTopicsCallback();
         ResultSyncCallback<ApiCallStats> logApiCallStatsCallback =
-                mockLogApiCallStats(mAdServicesLogger);
+                mocker.mockLogApiCallStats(mAdServicesLogger);
 
         topicsService.getTopics(mRequest, mCallerMetadata, callback);
         // NOTE: not awaiting for the callback result but for apiCallStats instead
@@ -991,7 +987,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
 
         SyncGetTopicsCallback callback = new SyncGetTopicsCallback();
         ResultSyncCallback<ApiCallStats> logApiCallStatsCallback =
-                mockLogApiCallStats(mAdServicesLogger);
+                mocker.mockLogApiCallStats(mAdServicesLogger);
 
         topicsService.getTopics(mRequest, mCallerMetadata, callback);
 
@@ -1036,7 +1032,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
             throws InterruptedException {
 
         ResultSyncCallback<ApiCallStats> logApiCallStatsCallback =
-                mockLogApiCallStats(mAdServicesLogger);
+                mocker.mockLogApiCallStats(mAdServicesLogger);
 
         mTopicsServiceImpl =
                 new TopicsServiceImpl(
@@ -1112,7 +1108,7 @@ public final class TopicsServiceImplTest extends AdServicesExtendedMockitoTestCa
     private GetTopicsResult getTopicsResults(TopicsServiceImpl topicsServiceImpl)
             throws InterruptedException {
         ResultSyncCallback<ApiCallStats> logApiCallStatsCallback =
-                mockLogApiCallStats(mAdServicesLogger);
+                mocker.mockLogApiCallStats(mAdServicesLogger);
 
         SyncGetTopicsCallback callback = new SyncGetTopicsCallback();
         topicsServiceImpl.getTopics(mRequest, mCallerMetadata, callback);

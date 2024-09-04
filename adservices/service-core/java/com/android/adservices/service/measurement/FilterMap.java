@@ -20,11 +20,13 @@ import android.annotation.Nullable;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.measurement.registration.FetcherUtil;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -234,7 +236,16 @@ public class FilterMap {
                 if (LOOKBACK_WINDOW.equals(key)) {
                     String value = jsonObject.getString(key);
                     try {
-                        filterMap.put(key, FilterValue.ofLong(Long.parseLong(value)));
+                        BigInteger lookbackWindowValue = new BigInteger(value);
+                        filterMap.put(
+                                key,
+                                FilterValue.ofLong(
+                                        lookbackWindowValue.compareTo(
+                                                                FetcherUtil
+                                                                        .BIG_INTEGER_LONG_MAX_VALUE)
+                                                        > 0
+                                                ? Long.MAX_VALUE
+                                                : Long.parseLong(value)));
                     } catch (NumberFormatException e) {
                         throw new JSONException(
                                 String.format(

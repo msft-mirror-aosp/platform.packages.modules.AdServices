@@ -16,6 +16,8 @@
 
 package android.adservices.cts;
 
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
+
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.adselection.AdSelectionConfig;
@@ -24,6 +26,7 @@ import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
+import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
@@ -37,6 +40,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 @RequiresSdkLevelAtLeastS
+@EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
 public final class AdSelectionTest extends CtsAdServicesDeviceTestCase {
     private static final Executor sCallbackExecutor = Executors.newCachedThreadPool();
 

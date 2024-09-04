@@ -18,7 +18,7 @@ function scoreAd(ad, bid, auction_config, seller_signals, trusted_scoring_signal
   contextual_signal, custom_audience_signal) {
   forDebuggingOnly.reportAdAuctionWin('<seller-win-debug-reporting-uri>' + "?wb=${winningBid}&madeWb=${madeWinningBid}");
   forDebuggingOnly.reportAdAuctionLoss('<seller-loss-debug-reporting-uri>' + "?wb=${winningBid}&madeWb=${madeWinningBid}");
-    
+
   if ('bid_floor' in seller_signals && bid < seller_signals.bid_floor) {
       bid = -1;
   }

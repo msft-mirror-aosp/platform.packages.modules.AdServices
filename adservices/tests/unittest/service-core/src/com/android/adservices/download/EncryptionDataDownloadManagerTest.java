@@ -30,15 +30,12 @@ import static org.mockito.Mockito.when;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.DbTestUtil;
-import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.encryptionkey.EncryptionKeyTables;
 import com.android.adservices.data.shared.SharedDbHelper;
-import com.android.adservices.errorlogging.ErrorLogUtil;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.encryptionkey.EncryptionKey;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
@@ -53,7 +50,6 @@ import com.google.mobiledatadownload.ClientConfigProto;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 
@@ -63,7 +59,6 @@ import java.util.List;
 
 /** Tests for {@link EncryptionDataDownloadManager}. */
 @SpyStatic(FlagsFactory.class)
-@SpyStatic(ErrorLogUtil.class)
 @MockStatic(MobileDataDownloadFactory.class)
 @RequiresSdkLevelAtLeastS
 @SetErrorLogUtilDefaultParams(
@@ -83,12 +78,7 @@ public final class EncryptionDataDownloadManagerTest extends AdServicesExtendedM
     @Mock private ClientConfigProto.ClientFile mMockFile;
 
     @Mock private MobileDataDownload mMockMdd;
-    @Mock private Flags mMockFlags;
     @Mock private Clock mMockClock;
-
-    @Rule(order = 11)
-    public final AdServicesLoggingUsageRule errorLogUtilUsageRule =
-            AdServicesLoggingUsageRule.errorLogUtilUsageRule();
 
     @Before
     public void setup() {

@@ -185,7 +185,8 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
                 publishBinderService();
                 published = true;
             } catch (RuntimeException e) {
-                LogUtil.w(
+                // TODO(b/363070750): call AdServicesErrorLogger as well
+                LogUtil.e(
                         e,
                         "Failed to publish %s service; will piggyback it into SdkSandbox anyways",
                         AD_SERVICES_SYSTEM_SERVICE);
@@ -1414,6 +1415,34 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
                     .setPaDataReset(isPaDataReset);
         } catch (IOException e) {
             LogUtil.e(e, "Failed to call isPaDataReset().");
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public String getModuleEnrollmentState() {
+        return executeGetter(
+                /* defaultReturn= */ "",
+                (userId) ->
+                        mUserInstanceManager
+                                .getOrCreateUserConsentManagerInstance(userId)
+                                .getModuleEnrollmentState());
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void setModuleEnrollmentState(String enrollmentState) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("setModuleEnrollmentState() for User Identifier %d", userIdentifier);
+
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .setModuleEnrollmentState(enrollmentState);
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to call setModuleEnrollmentState().");
         }
     }
 

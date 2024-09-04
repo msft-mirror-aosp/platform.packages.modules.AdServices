@@ -25,7 +25,6 @@ import android.adservices.common.AdServicesCommonStatesResponse;
 import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.common.AdServicesStates;
 import android.adservices.common.ConsentStatus;
-import android.content.Context;
 import android.os.OutcomeReceiver;
 import android.os.Parcel;
 import android.platform.test.rule.ScreenRecordRule;
@@ -64,8 +63,6 @@ public final class CommonServicesTest extends AdServicesCommonStatesServicesTest
 
     private OutcomeReceiver<Boolean, Exception> mCallback;
 
-    private static final Context sContext =
-            InstrumentationRegistry.getInstrumentation().getContext();
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
     private static final String TEST_PACKAGE_NAME = "com.android.adservices.tests.ui.common";
@@ -78,8 +75,8 @@ public final class CommonServicesTest extends AdServicesCommonStatesServicesTest
         mTestName = getTestName();
 
         UiUtils.setBinderTimeout(flags);
-        AdservicesTestHelper.killAdservicesProcess(sContext);
-        UiUtils.resetAdServicesConsentData(sContext, flags);
+        AdservicesTestHelper.killAdservicesProcess(mContext);
+        UiUtils.resetAdServicesConsentData(mContext, flags);
         UiUtils.enableNotificationPermission();
         UiUtils.enableGa(flags);
         UiUtils.enablePas(flags);
@@ -91,7 +88,7 @@ public final class CommonServicesTest extends AdServicesCommonStatesServicesTest
 
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
-        mCommonManager = AdServicesCommonManager.get(sContext);
+        mCommonManager = AdServicesCommonManager.get(mContext);
 
         // General purpose callback used for expected success calls.
         mCallback =
@@ -141,18 +138,18 @@ public final class CommonServicesTest extends AdServicesCommonStatesServicesTest
     public void tearDown() throws Exception {
         UiUtils.takeScreenshot(mDevice, getClass().getSimpleName() + "_" + mTestName + "_");
         UiUtils.disablePas(flags);
-        AdservicesTestHelper.killAdservicesProcess(sContext);
+        AdservicesTestHelper.killAdservicesProcess(mContext);
     }
 
     /** Verify that for GA, ROW devices get adservices common states of opt-in consent. */
     @Test
     public void testGetAdservicesCommonStatesOptIn() throws Exception {
         UiUtils.setAsRowDevice(flags);
-        AdservicesTestHelper.killAdservicesProcess(sContext);
+        AdservicesTestHelper.killAdservicesProcess(mContext);
 
         // Set consents to true.
         AdservicesWorkflows.testSettingsPageFlow(
-                sContext,
+                mContext,
                 mDevice,
                 flags,
                 /* ux type */ UX.GA_UX,
@@ -172,7 +169,7 @@ public final class CommonServicesTest extends AdServicesCommonStatesServicesTest
 
         // Trigger Pas re-notify notification.
         NotificationPages.verifyNotification(
-                sContext,
+                mContext,
                 mDevice,
                 /* isDisplayed */ true,
                 /* isEuTest */ false,
@@ -196,11 +193,11 @@ public final class CommonServicesTest extends AdServicesCommonStatesServicesTest
         UiUtils.setFlipFlow(flags, true);
         UiUtils.setAsRowDevice(flags);
         UiUtils.setGetAdservicesCommonStatesServiceEnable(flags, true);
-        AdservicesTestHelper.killAdservicesProcess(sContext);
+        AdservicesTestHelper.killAdservicesProcess(mContext);
 
         // Set consents to true.
         AdservicesWorkflows.testSettingsPageFlow(
-                sContext,
+                mContext,
                 mDevice,
                 flags,
                 /* ux type */ UX.GA_UX,
@@ -219,7 +216,7 @@ public final class CommonServicesTest extends AdServicesCommonStatesServicesTest
                 adServicesStates, Executors.newCachedThreadPool(), mCallback);
 
         AdservicesWorkflows.testClickNotificationFlow(
-                sContext,
+                mContext,
                 mDevice,
                 /* isDisplayed */ true,
                 /* isEuTest */ false,
@@ -231,7 +228,7 @@ public final class CommonServicesTest extends AdServicesCommonStatesServicesTest
 
         // Set consents to false.
         SettingsPages.testSettingsPageConsents(
-                sContext,
+                mContext,
                 mDevice,
                 /* ux type */ UX.GA_UX,
                 /* consent opt-in */ false,
@@ -252,7 +249,7 @@ public final class CommonServicesTest extends AdServicesCommonStatesServicesTest
     public void testGetAdservicesCommonStatesNotEnabled() throws Exception {
         UiUtils.setAsRowDevice(flags);
         UiUtils.setGetAdservicesCommonStatesServiceEnable(flags, false);
-        AdservicesTestHelper.killAdservicesProcess(sContext);
+        AdservicesTestHelper.killAdservicesProcess(mContext);
 
         ListenableFuture<AdServicesCommonStatesResponse> adServicesCommonStatesResponse =
                 getAdservicesCommonStates();
@@ -268,7 +265,7 @@ public final class CommonServicesTest extends AdServicesCommonStatesServicesTest
         UiUtils.setAsRowDevice(flags);
         UiUtils.setGetAdservicesCommonStatesServiceEnable(flags, false);
         UiUtils.setGetAdservicesCommonStatesAllowList(flags, INVALID_PACKAGE_NAME);
-        AdservicesTestHelper.killAdservicesProcess(sContext);
+        AdservicesTestHelper.killAdservicesProcess(mContext);
 
         ListenableFuture<AdServicesCommonStatesResponse> adServicesCommonStatesResponse =
                 getAdservicesCommonStates();

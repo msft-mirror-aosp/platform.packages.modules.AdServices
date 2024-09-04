@@ -16,10 +16,10 @@
 
 package com.android.adservices.service.topics;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockJobSchedulingLogger;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_PERIOD_MS;
 import static com.android.adservices.shared.proto.JobPolicy.BatteryType.BATTERY_TYPE_REQUIRE_CHARGING;
+import static com.android.adservices.shared.proto.JobPolicy.BatteryType.BATTERY_TYPE_REQUIRE_NOT_LOW;
 import static com.android.adservices.shared.spe.JobServiceConstants.JOB_ENABLED_STATUS_DISABLED_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.shared.spe.JobServiceConstants.JOB_ENABLED_STATUS_ENABLED;
 import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_SUCCESSFUL;
@@ -36,8 +36,7 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
-import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.service.Flags;
+import com.android.adservices.common.AdServicesJobTestCase;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.shared.proto.JobPolicy;
 import com.android.adservices.shared.spe.framework.ExecutionResult;
@@ -60,11 +59,10 @@ import org.mockito.Mock;
 @SpyStatic(EpochJobService.class)
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(TopicsWorker.class)
-public final class EpochJobTest extends AdServicesExtendedMockitoTestCase {
+public final class EpochJobTest extends AdServicesJobTestCase {
     private final EpochJob mEpochJob = new EpochJob();
 
     @Mock private TopicsWorker mMockTopicsWorker;
-    @Mock private Flags mMockFlags;
     @Mock private ExecutionRuntimeParameters mMockParams;
     @Mock private AdServicesJobScheduler mMockAdServicesJobScheduler;
     @Mock private AdServicesJobServiceFactory mMockAdServicesJobServiceFactory;
@@ -130,13 +128,36 @@ public final class EpochJobTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    public void testCreateDefaultJobSpec() {
+    public void testCreateDefaultJobSpec_schedulerRequiresChargingEnabled() {
+        when(mMockFlags.getTopicsEpochJobBatteryNotLowInsteadOfCharging()).thenReturn(false);
         JobSpec jobSpec = EpochJob.createDefaultJobSpec();
 
         JobPolicy expectedJobPolicy =
                 JobPolicy.newBuilder()
                         .setJobId(TOPICS_EPOCH_JOB.getJobId())
                         .setBatteryType(BATTERY_TYPE_REQUIRE_CHARGING)
+                        .setIsPersisted(true)
+                        .setPeriodicJobParams(
+                                JobPolicy.PeriodicJobParams.newBuilder()
+                                        .setPeriodicIntervalMs(TOPICS_EPOCH_JOB_PERIOD_MS)
+                                        .setFlexInternalMs(TOPICS_EPOCH_JOB_FLEX_MS)
+                                        .build())
+                        .build();
+
+        assertWithMessage("createJobSpec() for EpochJob")
+                .that(jobSpec.getJobPolicy())
+                .isEqualTo(expectedJobPolicy);
+    }
+
+    @Test
+    public void testCreateDefaultJobSpec_schedulerRequiresChargingDisabled() {
+        when(mMockFlags.getTopicsEpochJobBatteryNotLowInsteadOfCharging()).thenReturn(true);
+        JobSpec jobSpec = EpochJob.createDefaultJobSpec();
+
+        JobPolicy expectedJobPolicy =
+                JobPolicy.newBuilder()
+                        .setJobId(TOPICS_EPOCH_JOB.getJobId())
+                        .setBatteryType(BATTERY_TYPE_REQUIRE_NOT_LOW)
                         .setIsPersisted(true)
                         .setPeriodicJobParams(
                                 JobPolicy.PeriodicJobParams.newBuilder()

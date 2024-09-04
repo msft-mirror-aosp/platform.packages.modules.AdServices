@@ -16,14 +16,6 @@
 
 package com.android.adservices.service.topics;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdServicesJobServiceLogger;
-import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
-import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
-import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobExecutionData;
-import static com.android.adservices.mockito.MockitoExpectations.verifyBackgroundJobsSkipLogged;
-import static com.android.adservices.mockito.MockitoExpectations.verifyJobFinishedLogged;
-import static com.android.adservices.mockito.MockitoExpectations.verifyLoggingNotHappened;
-import static com.android.adservices.mockito.MockitoExpectations.verifyOnStopJobLogged;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
 import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_SKIPPED;
@@ -46,11 +38,9 @@ import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
 import android.content.ComponentName;
 
-import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
+import com.android.adservices.common.AdServicesJobServiceTestCase;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
-import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -66,7 +56,6 @@ import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -77,13 +66,12 @@ import org.mockito.Spy;
 @SpyStatic(AdServicesJobScheduler.class)
 @SpyStatic(AdServicesJobServiceLogger.class)
 @SpyStatic(EpochJobService.class)
-@SpyStatic(ErrorLogUtil.class)
 @SpyStatic(FlagsFactory.class)
 @MockStatic(ServiceCompatUtils.class)
 @SpyStatic(TopicsWorker.class)
 @RequiresSdkLevelAtLeastS
 @SetErrorLogUtilDefaultParams(ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS)
-public class EpochJobServiceTest extends AdServicesExtendedMockitoTestCase {
+public class EpochJobServiceTest extends AdServicesJobServiceTestCase {
     private static final int TOPICS_EPOCH_JOB_ID = TOPICS_EPOCH_JOB.getJobId();
     // Set a minimum delay of 1 hour so scheduled jobs don't run immediately
     private static final long MINIMUM_SCHEDULING_DELAY_MS = 60L * 60L * 1000L;
@@ -94,13 +82,8 @@ public class EpochJobServiceTest extends AdServicesExtendedMockitoTestCase {
     @Spy private EpochJobService mSpyEpochJobService;
     @Mock private TopicsWorker mMockTopicsWorker;
     @Mock private JobParameters mMockJobParameters;
-    @Mock private Flags mMockFlags;
     @Mock private JobScheduler mMockJobScheduler;
     @Mock private AdServicesJobScheduler mMockAdServicesJobScheduler;
-
-    @Rule(order = 11)
-    public final AdServicesLoggingUsageRule errorLogUtilUsageRule =
-            AdServicesLoggingUsageRule.errorLogUtilUsageRule();
 
     private AdServicesJobServiceLogger mSpyLogger;
 
@@ -120,6 +103,9 @@ public class EpochJobServiceTest extends AdServicesExtendedMockitoTestCase {
 
         // By default, do not use SPE.
         when(mMockFlags.getSpeOnEpochJobEnabled()).thenReturn(false);
+
+        // By default, do not set requiresBatteryNotLow to true in EpochJobService.
+        when(mMockFlags.getTopicsEpochJobBatteryNotLowInsteadOfCharging()).thenReturn(false);
     }
 
     @After
@@ -132,75 +118,13 @@ public class EpochJobServiceTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    public void testOnStartJob_killSwitchOff_withoutLogging() throws InterruptedException {
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
-
-        testOnStartJob_killSwitchOff();
-
-        verifyLoggingNotHappened(mSpyLogger);
-    }
-
-    @Test
-    public void testOnStartJob_killSwitchOff_withLogging() throws InterruptedException {
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
-        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(mSpyLogger);
-        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
-
-        testOnStartJob_killSwitchOff();
-
-        verifyJobFinishedLogged(mSpyLogger, onStartJobCallback, onJobDoneCallback);
-    }
-
-    @Test
-    @ExpectErrorLogUtilCall(errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED)
-    public void testOnStartJob_killSwitchOn_withoutLogging() {
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
-
-        testOnStartJob_killSwitchOn();
-
-        verifyLoggingNotHappened(mSpyLogger);
-    }
-
-    @Test
-    @ExpectErrorLogUtilCall(errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED)
-    public void testOnStartJob_killSwitchOn_withLogging() throws InterruptedException {
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
-        JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
-
-        testOnStartJob_killSwitchOn();
-
-        verifyBackgroundJobsSkipLogged(mSpyLogger, callback);
-    }
-
-    @Test
-    public void testOnStartJob_shouldDisableJobTrue_withoutLogging() {
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
-
-        testOnStartJob_shouldDisableJobTrue();
-
-        verifyLoggingNotHappened(mSpyLogger);
-    }
-
-    @Test
-    public void testOnStartJob_shouldDisableJobTrue_withLoggingEnabled() {
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
-
-        testOnStartJob_shouldDisableJobTrue();
-
-        // Verify logging has not happened even though logging is enabled because this field is not
-        // logged
-        verifyLoggingNotHappened(mSpyLogger);
-    }
-
-    @Test
     public void testOnStartJob_speEnabled() throws Exception {
         when(mMockFlags.getSpeOnEpochJobEnabled()).thenReturn(true);
         doReturn(false).when(mMockFlags).getGlobalKillSwitch();
         mocker.mockSpeJobScheduler(mMockAdServicesJobScheduler);
         // Mock not to run actual execution logic.
         doReturn(mMockTopicsWorker).when(TopicsWorker::getInstance);
-        // Verify logging for current execution.
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
+
         JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(mSpyLogger);
         JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
 
@@ -211,17 +135,35 @@ public class EpochJobServiceTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    public void testOnStopJob_withoutLogging() {
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
+    public void testOnStartJob_rescheduleEpochJobEnabled() throws Exception {
+        when(mMockFlags.getTopicsKillSwitch()).thenReturn(false);
+        when(mMockFlags.getTopicsEpochJobPeriodMs())
+                .thenReturn(TEST_FLAGS.getTopicsEpochJobPeriodMs());
+        when(mMockFlags.getTopicsEpochJobFlexMs()).thenReturn(TEST_FLAGS.getTopicsEpochJobFlexMs());
 
-        testOnStopJob();
+        // The first invocation of scheduleIfNeeded() schedules the job
+        // with requires charging setting.
+        assertThat(EpochJobService.scheduleIfNeeded(/* forceSchedule */ false))
+                .isEqualTo(SCHEDULING_RESULT_CODE_SUCCESSFUL);
+        JobInfo pendingJobInfo1 = mJobScheduler.getPendingJob(TOPICS_EPOCH_JOB_ID);
+        assertThat(pendingJobInfo1).isNotNull();
+        assertThat(pendingJobInfo1.isRequireCharging()).isTrue();
 
-        verifyLoggingNotHappened(mSpyLogger);
+        // Then disable requires charging setting and verify the job is rescheduled in onStartJob.
+        when(mMockFlags.getTopicsEpochJobBatteryNotLowInsteadOfCharging()).thenReturn(true);
+        when(mMockFlags.getTopicsJobSchedulerRescheduleEnabled()).thenReturn(true);
+
+        testOnStartJob_killSwitchOff();
+        assertThat(EpochJobService.scheduleIfNeeded(/* forceSchedule */ false))
+                .isEqualTo(SCHEDULING_RESULT_CODE_SKIPPED);
+        JobInfo pendingJobInfo2 = mJobScheduler.getPendingJob(TOPICS_EPOCH_JOB_ID);
+        assertThat(pendingJobInfo2).isNotNull();
+        assertThat(pendingJobInfo2.isRequireCharging()).isFalse();
+        assertThat(pendingJobInfo2.isRequireBatteryNotLow()).isTrue();
     }
 
     @Test
-    public void testOnStopJob_withLogging() throws InterruptedException {
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
+    public void testOnStopJob_withLogging() throws Exception {
         JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
 
         testOnStopJob();
@@ -239,12 +181,24 @@ public class EpochJobServiceTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    public void testScheduleIfNeeded_RequiresBatteryNotLow_Success() {
+        when(mMockFlags.getGlobalKillSwitch()).thenReturn(false);
+        when(mMockFlags.getTopicsJobSchedulerRescheduleEnabled()).thenReturn(true);
+        when(mMockFlags.getTopicsEpochJobBatteryNotLowInsteadOfCharging()).thenReturn(true);
+
+        // The first invocation of scheduleIfNeeded() schedules the job.
+        assertThat(EpochJobService.scheduleIfNeeded(/* forceSchedule= */ false))
+                .isEqualTo(SCHEDULING_RESULT_CODE_SUCCESSFUL);
+    }
+
+    @Test
     public void testScheduleIfNeeded_ScheduledWithSameParameters() {
         doReturn(false).when(mMockFlags).getGlobalKillSwitch();
         doReturn(TEST_FLAGS.getTopicsEpochJobPeriodMs())
                 .when(mMockFlags)
                 .getTopicsEpochJobPeriodMs();
         doReturn(TEST_FLAGS.getTopicsEpochJobFlexMs()).when(mMockFlags).getTopicsEpochJobFlexMs();
+        doReturn(false).when(mMockFlags).getTopicsEpochJobBatteryNotLowInsteadOfCharging();
 
         // The first invocation of scheduleIfNeeded() schedules the job.
         assertThat(EpochJobService.scheduleIfNeeded(/* forceSchedule */ false))
@@ -301,6 +255,29 @@ public class EpochJobServiceTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    public void testScheduleIfNeeded_RequiresBatteryNotLow_ForceRun() {
+        when(mMockFlags.getGlobalKillSwitch()).thenReturn(false);
+        when(mMockFlags.getTopicsEpochJobPeriodMs())
+                .thenReturn(TEST_FLAGS.getTopicsEpochJobPeriodMs());
+        when(mMockFlags.getTopicsEpochJobFlexMs()).thenReturn(TEST_FLAGS.getTopicsEpochJobFlexMs());
+        when(mMockFlags.getTopicsJobSchedulerRescheduleEnabled()).thenReturn(true);
+        when(mMockFlags.getTopicsEpochJobBatteryNotLowInsteadOfCharging()).thenReturn(true);
+
+        // The first invocation of scheduleIfNeeded() schedules the job.
+        assertThat(EpochJobService.scheduleIfNeeded(/* forceSchedule */ false))
+                .isEqualTo(SCHEDULING_RESULT_CODE_SUCCESSFUL);
+        assertThat(mJobScheduler.getPendingJob(TOPICS_EPOCH_JOB_ID)).isNotNull();
+
+        // The second invocation of scheduleIfNeeded() with same parameters skips the scheduling.
+        assertThat(EpochJobService.scheduleIfNeeded(/* forceSchedule */ false))
+                .isEqualTo(SCHEDULING_RESULT_CODE_SKIPPED);
+
+        // The third invocation of scheduleIfNeeded() is forced and re-schedules the job.
+        assertThat(EpochJobService.scheduleIfNeeded(/* forceSchedule */ true))
+                .isEqualTo(SCHEDULING_RESULT_CODE_SUCCESSFUL);
+    }
+
+    @Test
     @ExpectErrorLogUtilCall(errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED)
     public void testScheduleIfNeeded_scheduledWithKillSwitchOn() {
         // Kill switch is on.
@@ -317,15 +294,48 @@ public class EpochJobServiceTest extends AdServicesExtendedMockitoTestCase {
         ArgumentCaptor<JobInfo> argumentCaptor = ArgumentCaptor.forClass(JobInfo.class);
         long epoch_period = 10_000L;
         long flex_period = 1_000L;
+        boolean topics_epoch_job_battery_not_low_instead_of_charging = false;
 
-        EpochJobService.schedule(mContext, mMockJobScheduler, epoch_period, flex_period);
+        EpochJobService.schedule(
+                mContext,
+                mMockJobScheduler,
+                epoch_period,
+                flex_period,
+                topics_epoch_job_battery_not_low_instead_of_charging);
 
         verify(mMockJobScheduler).schedule(argumentCaptor.capture());
         assertThat(argumentCaptor.getValue()).isNotNull();
         assertThat(argumentCaptor.getValue().isPersisted()).isTrue();
     }
 
-    private void testOnStartJob_killSwitchOff() throws InterruptedException {
+    @Test
+    public void testSchedule_disableTopicsJobSchedulerRequiresCharging() {
+        when(mMockFlags.getTopicsJobSchedulerRescheduleEnabled()).thenReturn(true);
+        ArgumentCaptor<JobInfo> argumentCaptor = ArgumentCaptor.forClass(JobInfo.class);
+
+        long epoch_period = 10_000L;
+        long flex_period = 1_000L;
+        boolean topics_epoch_job_battery_not_low_instead_of_charging = true;
+
+        EpochJobService.schedule(
+                mContext,
+                mMockJobScheduler,
+                epoch_period,
+                flex_period,
+                topics_epoch_job_battery_not_low_instead_of_charging);
+
+        // Verify the JobScheduler has scheduled a new background job with new JobInfo.
+        verify(mMockJobScheduler).schedule(argumentCaptor.capture());
+        assertThat(argumentCaptor.getValue()).isNotNull();
+        assertThat(argumentCaptor.getValue().isRequireCharging()).isFalse();
+        assertThat(argumentCaptor.getValue().isRequireBatteryNotLow()).isTrue();
+    }
+
+    @Test
+    public void testOnStartJob_killSwitchOff() throws Exception {
+        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(mSpyLogger);
+        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
+
         // Kill switch is off.
         doReturn(false).when(mMockFlags).getTopicsKillSwitch();
 
@@ -344,9 +354,15 @@ public class EpochJobServiceTest extends AdServicesExtendedMockitoTestCase {
         assertThat(mSpyEpochJobService.onStartJob(mMockJobParameters)).isTrue();
 
         callback.assertJobFinished();
+
+        verifyJobFinishedLogged(mSpyLogger, onStartJobCallback, onJobDoneCallback);
     }
 
-    private void testOnStartJob_killSwitchOn() {
+    @Test
+    @ExpectErrorLogUtilCall(errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED)
+    public void testOnStartJob_killSwitchOn() throws Exception {
+        JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
+
         // Kill switch is on.
         doReturn(true).when(mMockFlags).getTopicsKillSwitch();
 
@@ -355,9 +371,12 @@ public class EpochJobServiceTest extends AdServicesExtendedMockitoTestCase {
         scheduleJobWithMinimumLatency();
 
         verifyJobStartAndCancelled();
+
+        verifyBackgroundJobsSkipLogged(mSpyLogger, callback);
     }
 
-    private void testOnStartJob_shouldDisableJobTrue() {
+    @Test
+    public void testOnStartJob_shouldDisableJobTrue() {
         doReturn(true).when(() -> ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(any()));
 
         doNothing().when(mSpyEpochJobService).jobFinished(mMockJobParameters, false);
@@ -365,6 +384,10 @@ public class EpochJobServiceTest extends AdServicesExtendedMockitoTestCase {
         scheduleJobWithMinimumLatency();
 
         verifyJobStartAndCancelled();
+
+        // Verify logging has not happened even though logging is enabled because this field is not
+        // logged
+        verifyLoggingNotHappened(mSpyLogger);
     }
 
     // Verify that when the Job starts, it will unschedule itself.
