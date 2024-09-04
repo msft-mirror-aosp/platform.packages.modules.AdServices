@@ -1990,6 +1990,17 @@ public interface Flags extends ModuleSharedFlags {
         return FLEDGE_GET_AD_SELECTION_DATA_MAX_NUM_ENTIRE_PAYLOAD_COMPRESSIONS;
     }
 
+    @FeatureFlag boolean FLEDGE_GET_AD_SELECTION_DATA_DESERIALIZE_ONLY_AD_RENDER_IDS = false;
+
+    /**
+     * Returns whether querying custom audiences from the DB, for the getAdSelectionData API, will
+     * deserialize only ad render ids or the entire ad. When enabled, the DB query will only
+     * deserialize ad render ids.
+     */
+    default boolean getFledgeGetAdSelectionDataDeserializeOnlyAdRenderIds() {
+        return FLEDGE_GET_AD_SELECTION_DATA_DESERIALIZE_ONLY_AD_RENDER_IDS;
+    }
+
     // Protected signals cleanup feature flag disabled by default
     boolean PROTECTED_SIGNALS_CLEANUP_ENABLED = false;
 
