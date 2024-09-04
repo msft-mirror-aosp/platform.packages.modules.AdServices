@@ -31,9 +31,7 @@ import static com.android.adservices.service.Flags.DEFAULT_PAS_SCRIPT_DOWNLOAD_R
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SCRIPT_EXECUTION_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS;
-import static com.android.adservices.service.Flags.ENABLE_ADEXT_SERVICE_CONSENT_DATA;
 import static com.android.adservices.service.Flags.ENABLE_APPSEARCH_CONSENT_DATA;
-import static com.android.adservices.service.Flags.ENABLE_MIGRATION_FROM_ADEXT_SERVICE;
 import static com.android.adservices.service.Flags.FLEDGE_GET_AD_SELECTION_DATA_BUYER_INPUT_CREATOR_VERSION;
 import static com.android.adservices.service.Flags.FLEDGE_GET_AD_SELECTION_DATA_DESERIALIZE_ONLY_AD_RENDER_IDS;
 import static com.android.adservices.service.Flags.FLEDGE_GET_AD_SELECTION_DATA_MAX_NUM_ENTIRE_PAYLOAD_COMPRESSIONS;
@@ -62,7 +60,6 @@ import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_REQ
 import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS;
 import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_SERVICE_MIN_EXECUTION_WINDOW_MILLIS;
 import static com.android.adservices.service.Flags.MEASUREMENT_TRIGGER_DEBUG_SIGNAL_PROBABILITY_FOR_FAKE_REPORTS;
-import static com.android.adservices.service.Flags.PPAPI_AND_ADEXT_SERVICE;
 import static com.android.adservices.service.Flags.PPAPI_AND_SYSTEM_SERVER;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.shared.common.flags.ModuleSharedFlags.DEFAULT_JOB_SCHEDULING_LOGGING_ENABLED;
@@ -75,7 +72,6 @@ import android.util.Log;
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.shared.common.flags.ConfigFlag;
 import com.android.adservices.shared.common.flags.FeatureFlag;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.testing.annotations.RequiresSdkRange;
 import com.android.internal.util.Preconditions;
@@ -115,12 +111,6 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Test
-    @RequiresSdkRange(atMost = RVC, reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
-    public void testConsentSourceOfTruth_isR() {
-        assertConsentSourceOfTruth(PPAPI_AND_ADEXT_SERVICE);
-    }
-
-    @Test
     @RequiresSdkRange(atLeast = SC, atMost = SC_V2, reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
     public void testConsentSourceOfTruth_isS() {
         assertConsentSourceOfTruth(APPSEARCH_ONLY);
@@ -140,12 +130,6 @@ public final class FlagsTest extends AdServicesUnitTestCase {
         expect.withMessage("getConsentSourceOfTruth()")
                 .that(mFlags.getConsentSourceOfTruth())
                 .isEqualTo(expected);
-    }
-
-    @Test
-    @RequiresSdkRange(atMost = RVC, reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
-    public void testBlockedTopicsConsentSourceOfTruth_isR() {
-        assertBlockedTopicsSourceOfTruth(PPAPI_AND_ADEXT_SERVICE);
     }
 
     @Test
@@ -195,50 +179,6 @@ public final class FlagsTest extends AdServicesUnitTestCase {
 
         expect.withMessage("getEnableAppsearchConsentData()")
                 .that(mFlags.getEnableAppsearchConsentData())
-                .isEqualTo(expected);
-    }
-
-    @Test
-    @RequiresSdkRange(atMost = RVC, reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
-    public void testEnableAdExtServiceConsentData_isR() {
-        assertEnableAdExtServiceConsentData(true);
-    }
-
-    @Test
-    @RequiresSdkLevelAtLeastS(reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
-    public void testEnableAdExtServiceConsentData_isAtLeastS() {
-        assertEnableAdExtServiceConsentData(false);
-    }
-
-    private void assertEnableAdExtServiceConsentData(boolean expected) {
-        expect.withMessage("ENABLE_ADEXT_SERVICE_CONSENT_DATA")
-                .that(ENABLE_ADEXT_SERVICE_CONSENT_DATA)
-                .isEqualTo(expected);
-
-        expect.withMessage("getEnableAdExtServiceConsentData()")
-                .that(mFlags.getEnableAdExtServiceConsentData())
-                .isEqualTo(expected);
-    }
-
-    @Test
-    @RequiresSdkRange(atMost = RVC, reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
-    public void testEnableMigrationFromAdExtService_isR() {
-        assertEnableMigrationFromAdExtService(false);
-    }
-
-    @Test
-    @RequiresSdkLevelAtLeastS(reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
-    public void testEnableMigrationFromAdExtService_isAtLeastS() {
-        assertEnableMigrationFromAdExtService(true);
-    }
-
-    private void assertEnableMigrationFromAdExtService(boolean expected) {
-        expect.withMessage("ENABLE_MIGRATION_FROM_ADEXT_SERVICE")
-                .that(ENABLE_MIGRATION_FROM_ADEXT_SERVICE)
-                .isEqualTo(expected);
-
-        expect.withMessage("getEnableMigrationFromAdExtService()")
-                .that(mFlags.getEnableMigrationFromAdExtService())
                 .isEqualTo(expected);
     }
 

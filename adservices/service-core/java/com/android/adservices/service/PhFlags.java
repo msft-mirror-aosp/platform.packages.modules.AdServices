@@ -5396,11 +5396,6 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA
                         + " = "
                         + getEnableAppsearchConsentData());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_ENABLE_ADEXT_SERVICE_CONSENT_DATA
-                        + " = "
-                        + getEnableAdExtServiceConsentData());
 
         writer.println(
                 "\t"
@@ -5412,11 +5407,6 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_ENABLE_U18_APPSEARCH_MIGRATION
                         + " = "
                         + getEnableU18AppsearchMigration());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_ENABLE_MIGRATION_FROM_ADEXT_SERVICE
-                        + " = "
-                        + getEnableMigrationFromAdExtService());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED
@@ -5943,24 +5933,10 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getEnableAdExtServiceConsentData() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_ENABLE_ADEXT_SERVICE_CONSENT_DATA,
-                ENABLE_ADEXT_SERVICE_CONSENT_DATA);
-    }
-
-    @Override
     public boolean getEnableU18AppsearchMigration() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_ENABLE_U18_APPSEARCH_MIGRATION,
                 DEFAULT_ENABLE_U18_APPSEARCH_MIGRATION);
-    }
-
-    @Override
-    public boolean getEnableMigrationFromAdExtService() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_ENABLE_MIGRATION_FROM_ADEXT_SERVICE,
-                ENABLE_MIGRATION_FROM_ADEXT_SERVICE);
     }
 
     @Override
