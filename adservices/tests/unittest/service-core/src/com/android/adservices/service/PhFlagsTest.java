@@ -48,8 +48,6 @@ import static com.android.adservices.service.Flags.COMPAT_LOGGING_KILL_SWITCH;
 import static com.android.adservices.service.Flags.CONSENT_ALREADY_INTERACTED_FIX_ENABLE;
 import static com.android.adservices.service.Flags.CONSENT_NOTIFICATION_RESET_TOKEN;
 import static com.android.adservices.service.Flags.DEBUG_UX;
-import static com.android.adservices.service.Flags.DEFAULT_ADEXT_READ_TIMEOUT_MS;
-import static com.android.adservices.service.Flags.DEFAULT_ADEXT_WRITE_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_ADID_CACHE_TTL_MS;
 import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED;
@@ -69,7 +67,6 @@ import static com.android.adservices.service.Flags.DEFAULT_CUSTOM_ERROR_CODE_SAM
 import static com.android.adservices.service.Flags.DEFAULT_DEVELOPER_MODE_FEATURE_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_EEA_PAS_UX_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_ADEXT_DATA_SERVICE_APIS;
-import static com.android.adservices.service.Flags.DEFAULT_ENABLE_ADEXT_SERVICE_DEBUG_PROXY;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_ADSERVICES_API_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_BACK_COMPAT_INIT;
@@ -552,8 +549,6 @@ import static com.android.adservices.service.Flags.UI_EEA_COUNTRIES;
 import static com.android.adservices.service.Flags.UI_FEATURE_TYPE_LOGGING_ENABLED;
 import static com.android.adservices.service.Flags.UI_OTA_RESOURCES_MANIFEST_FILE_URL;
 import static com.android.adservices.service.Flags.UI_OTA_STRINGS_MANIFEST_FILE_URL;
-import static com.android.adservices.service.FlagsConstants.KEY_ADEXT_READ_TIMEOUT_MS;
-import static com.android.adservices.service.FlagsConstants.KEY_ADEXT_WRITE_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ADID_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_APK_SHA_CERTS;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED;
@@ -605,7 +600,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_DOWNLOADER_MAX_D
 import static com.android.adservices.service.FlagsConstants.KEY_DOWNLOADER_READ_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_EEA_PAS_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_APIS;
-import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_DEBUG_PROXY;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ADSERVICES_API_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_AD_SERVICES_SYSTEM_API;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA;
@@ -5062,14 +5056,6 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    public void testGetEnableAdExtServiceProxy() {
-        mFlagsTestHelper.testConfigFlag(
-                KEY_ENABLE_ADEXT_DATA_SERVICE_DEBUG_PROXY,
-                DEFAULT_ENABLE_ADEXT_SERVICE_DEBUG_PROXY,
-                Flags::getEnableAdExtServiceDebugProxy);
-    }
-
-    @Test
     public void testGetMeasurementNullAggregateReportEnabled() {
         mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED,
@@ -5321,22 +5307,6 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_APPSEARCH_READ_TIMEOUT_MS,
                 DEFAULT_APPSEARCH_READ_TIMEOUT_MS,
                 Flags::getAppSearchReadTimeout);
-    }
-
-    @Test
-    public void testGetAdExtWriteTimeoutMs() {
-        mFlagsTestHelper.testConfigFlag(
-                KEY_ADEXT_WRITE_TIMEOUT_MS,
-                DEFAULT_ADEXT_WRITE_TIMEOUT_MS,
-                Flags::getAdExtWriteTimeoutMs);
-    }
-
-    @Test
-    public void testGetAdExtReadTimeoutMs() {
-        mFlagsTestHelper.testConfigFlag(
-                KEY_ADEXT_READ_TIMEOUT_MS,
-                DEFAULT_ADEXT_READ_TIMEOUT_MS,
-                Flags::getAdExtReadTimeoutMs);
     }
 
     @Test

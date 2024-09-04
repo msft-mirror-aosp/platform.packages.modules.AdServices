@@ -17,8 +17,6 @@
 package com.android.adservices.service;
 
 import static com.android.adservices.service.DeviceConfigFlagsHelper.getDeviceConfigFlag;
-import static com.android.adservices.service.FlagsConstants.KEY_ADEXT_READ_TIMEOUT_MS;
-import static com.android.adservices.service.FlagsConstants.KEY_ADEXT_WRITE_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_JS_SCRIPT_ENGINE_MAX_RETRY_ATTEMPTS;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_MODULE_JOB_POLICY;
@@ -5399,11 +5397,6 @@ public final class PhFlags implements Flags {
 
         writer.println(
                 "\t"
-                        + FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_DEBUG_PROXY
-                        + " = "
-                        + getEnableAdExtServiceDebugProxy());
-        writer.println(
-                "\t"
                         + FlagsConstants.KEY_ENABLE_U18_APPSEARCH_MIGRATION
                         + " = "
                         + getEnableU18AppsearchMigration());
@@ -5730,8 +5723,6 @@ public final class PhFlags implements Flags {
                         + getMeasurementEnableFakeReportTriggerTime());
         writer.println("\t" + KEY_APPSEARCH_WRITE_TIMEOUT_MS + " = " + getAppSearchWriteTimeout());
         writer.println("\t" + KEY_APPSEARCH_READ_TIMEOUT_MS + " = " + getAppSearchReadTimeout());
-        writer.println("\t" + KEY_ADEXT_WRITE_TIMEOUT_MS + " = " + getAdExtWriteTimeoutMs());
-        writer.println("\t" + KEY_ADEXT_READ_TIMEOUT_MS + " = " + getAdExtReadTimeoutMs());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED
@@ -5937,17 +5928,6 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_ENABLE_U18_APPSEARCH_MIGRATION,
                 DEFAULT_ENABLE_U18_APPSEARCH_MIGRATION);
-    }
-
-    @Override
-    @SuppressWarnings("AvoidSystemPropertiesUsage")
-    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
-    public boolean getEnableAdExtServiceDebugProxy() {
-        return SystemProperties.getBoolean(
-                getSystemPropertyName(FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_DEBUG_PROXY),
-                getDeviceConfigFlag(
-                        FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_DEBUG_PROXY,
-                        DEFAULT_ENABLE_ADEXT_SERVICE_DEBUG_PROXY));
     }
 
     @Override
@@ -6830,16 +6810,6 @@ public final class PhFlags implements Flags {
     public int getAppSearchReadTimeout() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_APPSEARCH_READ_TIMEOUT_MS, DEFAULT_APPSEARCH_READ_TIMEOUT_MS);
-    }
-
-    @Override
-    public int getAdExtWriteTimeoutMs() {
-        return getDeviceConfigFlag(KEY_ADEXT_WRITE_TIMEOUT_MS, DEFAULT_ADEXT_WRITE_TIMEOUT_MS);
-    }
-
-    @Override
-    public int getAdExtReadTimeoutMs() {
-        return getDeviceConfigFlag(KEY_ADEXT_READ_TIMEOUT_MS, DEFAULT_ADEXT_READ_TIMEOUT_MS);
     }
 
     @Override

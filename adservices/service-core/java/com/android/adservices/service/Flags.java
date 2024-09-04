@@ -5161,20 +5161,6 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     /**
-     * Enable AdServicesExtDataStorageServiceProxy read for consent data feature flag. Its meant to
-     * enable the proxy service for testing when the actual service is unavailable The default value
-     * is false.
-     */
-    boolean DEFAULT_ENABLE_ADEXT_SERVICE_DEBUG_PROXY = false;
-
-    /**
-     * @return value of enable AdExt service proxy.
-     */
-    default boolean getEnableAdExtServiceDebugProxy() {
-        return DEFAULT_ENABLE_ADEXT_SERVICE_DEBUG_PROXY;
-    }
-
-    /**
      * Default value to determine how many logging events {@link AdServicesJobServiceLogger} should
      * upload to the server.
      *
@@ -5212,36 +5198,6 @@ public interface Flags extends ModuleSharedFlags {
      */
     default int getAppSearchReadTimeout() {
         return DEFAULT_APPSEARCH_READ_TIMEOUT_MS;
-    }
-
-    /** Default value of the timeout for AdExtDataStorageService write operations */
-    @ConfigFlag int DEFAULT_ADEXT_WRITE_TIMEOUT_MS = 3000;
-
-    /**
-     * Gets the value of the timeout for AdExtDataStorageService write operations, in milliseconds.
-     * Note that this is the platform side timeout which awaits for the operation to be completed by
-     * the chimera service, which does not reside in AdServices. Ensure timeout on platform side is
-     * greater with ~100 ms buffer to take into account binder communication latency.
-     *
-     * @return the timeout, in milliseconds, for AdExtDataStorageService write operations
-     */
-    default int getAdExtWriteTimeoutMs() {
-        return DEFAULT_ADEXT_WRITE_TIMEOUT_MS;
-    }
-
-    /** Default value of the timeout for AdExtDataStorageService read operations */
-    @ConfigFlag int DEFAULT_ADEXT_READ_TIMEOUT_MS = 1000;
-
-    /**
-     * Gets the value of the timeout for AdExtDataStorageService read operations, in milliseconds.
-     * Note that this is the platform side timeout which awaits for the operation to be completed by
-     * the chimera service, which does not reside in AdServices. Ensure timeout on platform side is
-     * greater with ~100 ms buffer to take into account binder communication latency.
-     *
-     * @return the timeout, in milliseconds, for AdExtDataStoreageService read operations
-     */
-    default int getAdExtReadTimeoutMs() {
-        return DEFAULT_ADEXT_READ_TIMEOUT_MS;
     }
 
     /** default value for get adservices common states enabled */
