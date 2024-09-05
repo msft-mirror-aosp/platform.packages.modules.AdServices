@@ -15,6 +15,7 @@
  */
 package com.android.adservices.common;
 
+import android.annotation.CallSuper;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
@@ -24,7 +25,6 @@ import com.android.adservices.mockito.AndroidMockitoMocker;
 import com.android.adservices.service.Flags;
 
 import org.junit.Rule;
-import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnit;
@@ -61,9 +61,13 @@ public abstract class AdServicesMockitoTestCase extends AdServicesUnitTestCase {
         }
     }
 
-    @Test
-    public final void testAdServicesMockitoTestCaseFixtures() throws Exception {
-        AdServicesExtendedMockitoTestCase.checkProhibitedMockitoFields(
-                AdServicesMockitoTestCase.class, this);
+    // TODO(b/361555631): rename to testAdServicesMockitoTestCaseFixtures() and annotate
+    // it with @MetaTest
+    @CallSuper
+    @Override
+    protected void assertValidTestCaseFixtures() throws Exception {
+        super.assertValidTestCaseFixtures();
+
+        checkProhibitedMockitoFields(AdServicesMockitoTestCase.class, this);
     }
 }

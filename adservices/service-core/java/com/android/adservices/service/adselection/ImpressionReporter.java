@@ -243,6 +243,7 @@ public class ImpressionReporter {
                                         mFlags
                                                 .getEnforceForegroundStatusForFledgeReportImpression(),
                                         true,
+                                        !mFlags.getConsentNotificationDebugMode(),
                                         mCallerUid,
                                         AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
                                         Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS,

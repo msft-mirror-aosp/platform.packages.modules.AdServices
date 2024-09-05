@@ -52,6 +52,21 @@ public class UpdateOutput {
         return mKeysTouched;
     }
 
+    /** The size of the list of signals from the JSON to add. */
+    public int getToAddSize() {
+        return mToAdd.size();
+    }
+
+    /** The size of the list of signals from the JSON to remove. */
+    public int getToRemoveSize() {
+        return mToRemove.size();
+    }
+
+    /** The size of the set of keys this process modified or could have modified. */
+    public int getKeysTouchedSize() {
+        return mKeysTouched.size();
+    }
+
     /** Sets the {@link UpdateEncoderEvent} for the UpdateOutput, there can be only one */
     public void setUpdateEncoderEvent(@NonNull UpdateEncoderEvent event) {
         mUpdateEncoderEvent = event;

@@ -125,7 +125,8 @@ class MeasurementDao implements IMeasurementDao {
                 MeasurementTables.TriggerContract.AGGREGATE_TRIGGER_DATA,
                 trigger.getAggregateTriggerData());
         values.put(
-                MeasurementTables.TriggerContract.AGGREGATE_VALUES, trigger.getAggregateValues());
+                MeasurementTables.TriggerContract.AGGREGATE_VALUES,
+                trigger.getAggregateValuesString());
         values.put(
                 MeasurementTables.TriggerContract.AGGREGATABLE_DEDUPLICATION_KEYS,
                 trigger.getAggregateDeduplicationKeys());
@@ -163,6 +164,9 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.TriggerContract.ATTRIBUTION_SCOPES,
                 trigger.getAttributionScopesString());
+        values.put(
+                MeasurementTables.TriggerContract.AGGREGATABLE_FILTERING_ID_MAX_BYTES,
+                trigger.getAggregatableFilteringIdMaxBytes());
 
         long rowId =
                 mSQLTransaction
@@ -2776,6 +2780,8 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.AggregateReport.TRIGGER_CONTEXT_ID,
                 aggregateReport.getTriggerContextId());
+        values.put(
+                MeasurementTables.AggregateReport.TRIGGER_TIME, aggregateReport.getTriggerTime());
         long rowId =
                 mSQLTransaction
                         .getDatabase()

@@ -244,6 +244,9 @@ public class ContentValueFixtures {
 
         // Added in V33
         public static final String ATTRIBUTION_SCOPE = "sample_attribution_scope";
+
+        // Added in V42
+        public static final int AGGREGATABLE_FILTERING_ID_MAX_BYTES = 1;
     }
 
     public static class AttributionValues {
@@ -337,6 +340,9 @@ public class ContentValueFixtures {
 
         // Added in V33
         public static final String TRIGGER_CONTEXT_ID = "trigger_context_id";
+
+        // Added in V41
+        public static final long TRIGGER_TIME = 8630000000L;
     }
 
     public static class AggregateEncryptionKeyValues {
@@ -1103,6 +1109,15 @@ public class ContentValueFixtures {
         return values;
     }
 
+    /** Get ContentValues for V42 */
+    public static ContentValues generateTriggerContentValuesV42() {
+        ContentValues values = generateTriggerContentValuesV34();
+        values.put(
+                MeasurementTables.TriggerContract.AGGREGATABLE_FILTERING_ID_MAX_BYTES,
+                TriggerValues.AGGREGATABLE_FILTERING_ID_MAX_BYTES);
+        return values;
+    }
+
     public static ContentValues generateAttributionContentValuesV1() {
         ContentValues attribution = new ContentValues();
 
@@ -1554,6 +1569,14 @@ public class ContentValueFixtures {
         values.put(
                 MeasurementTables.AggregateReport.TRIGGER_CONTEXT_ID,
                 AggregateReportValues.TRIGGER_CONTEXT_ID);
+        return values;
+    }
+
+    /** Returns content values for aggregate report version 41 */
+    public static ContentValues generateAggregateReportContentValuesV41() {
+        ContentValues values = generateAggregateReportContentValuesV33();
+        values.put(
+                MeasurementTables.AggregateReport.TRIGGER_TIME, AggregateReportValues.TRIGGER_TIME);
         return values;
     }
 

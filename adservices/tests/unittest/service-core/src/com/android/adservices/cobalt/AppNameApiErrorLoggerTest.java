@@ -64,7 +64,7 @@ public final class AppNameApiErrorLoggerTest extends AdServicesExtendedMockitoTe
 
     @Test
     public void testGetInstance() {
-        mocker.mockAllCobaltLoggingFlags(mMockFlags, true);
+        mocker.mockAllCobaltLoggingFlags(true);
 
         AppNameApiErrorLogger instance = AppNameApiErrorLogger.getInstance();
         assertThat(instance).isNotNull();
@@ -75,7 +75,7 @@ public final class AppNameApiErrorLoggerTest extends AdServicesExtendedMockitoTe
 
     @Test
     public void testIsEnabled_cobaltInitializationException() {
-        mocker.mockGetCobaltLoggingEnabled(mMockFlags, true);
+        mocker.mockGetCobaltLoggingEnabled(true);
         mockThrowExceptionOnGetCobaltLogger();
 
         AppNameApiErrorLogger logger = new AppNameApiErrorLogger();
@@ -85,7 +85,7 @@ public final class AppNameApiErrorLoggerTest extends AdServicesExtendedMockitoTe
 
     @Test
     public void testIsEnabled_cobaltLoggingDisabled() {
-        mocker.mockAllCobaltLoggingFlags(mMockFlags, false);
+        mocker.mockAllCobaltLoggingFlags(false);
 
         AppNameApiErrorLogger logger = new AppNameApiErrorLogger();
 
@@ -94,7 +94,7 @@ public final class AppNameApiErrorLoggerTest extends AdServicesExtendedMockitoTe
 
     @Test
     public void testLogErrorOccurrence_cobaltLoggingDisabled() {
-        mocker.mockGetCobaltLoggingEnabled(mMockFlags, false);
+        mocker.mockGetCobaltLoggingEnabled(false);
         // Passing a null cobaltLogger because COBALT_LOGGING_ENABLED is false.
         AppNameApiErrorLogger logger = new AppNameApiErrorLogger(/* cobaltLogger */ null);
 
@@ -105,7 +105,7 @@ public final class AppNameApiErrorLoggerTest extends AdServicesExtendedMockitoTe
 
     @Test
     public void testLogErrorOccurrence_appNameApiErrorLoggingDisabled() {
-        mocker.mockGetAppNameApiErrorCobaltLoggingEnabled(mMockFlags, false);
+        mocker.mockGetAppNameApiErrorCobaltLoggingEnabled(false);
         // Passing a null cobaltLogger because COBALT_LOGGING_ENABLED is false.
         AppNameApiErrorLogger logger = new AppNameApiErrorLogger(/* cobaltLogger */ null);
 
@@ -116,7 +116,7 @@ public final class AppNameApiErrorLoggerTest extends AdServicesExtendedMockitoTe
 
     @Test
     public void testLogErrorOccurrence_featureEnabled() {
-        mocker.mockAllCobaltLoggingFlags(mMockFlags, true);
+        mocker.mockAllCobaltLoggingFlags(true);
         AppNameApiErrorLogger logger = new AppNameApiErrorLogger(mMockCobaltLogger);
 
         logger.logErrorOccurrence(APP_PACKAGE_NAME, FIRST_ERROR_CODE, FIRST_ERROR_CODE);
@@ -126,7 +126,7 @@ public final class AppNameApiErrorLoggerTest extends AdServicesExtendedMockitoTe
 
     @Test
     public void testLogErrorOccurrence_nullAppPackageName() {
-        mocker.mockAllCobaltLoggingFlags(mMockFlags, true);
+        mocker.mockAllCobaltLoggingFlags(true);
         AppNameApiErrorLogger logger = new AppNameApiErrorLogger(mMockCobaltLogger);
 
         assertThrows(
@@ -138,7 +138,7 @@ public final class AppNameApiErrorLoggerTest extends AdServicesExtendedMockitoTe
 
     @Test
     public void testLogErrorOccurrence_apiCodeBelowLimit() {
-        mocker.mockAllCobaltLoggingFlags(mMockFlags, true);
+        mocker.mockAllCobaltLoggingFlags(true);
         AppNameApiErrorLogger logger = new AppNameApiErrorLogger(mMockCobaltLogger);
 
         logger.logErrorOccurrence(APP_PACKAGE_NAME, FIRST_ERROR_CODE - 1, FIRST_ERROR_CODE);
@@ -148,7 +148,7 @@ public final class AppNameApiErrorLoggerTest extends AdServicesExtendedMockitoTe
 
     @Test
     public void testLogErrorOccurrence_apiCodeOverLimit() {
-        mocker.mockAllCobaltLoggingFlags(mMockFlags, true);
+        mocker.mockAllCobaltLoggingFlags(true);
         AppNameApiErrorLogger logger = new AppNameApiErrorLogger(mMockCobaltLogger);
 
         logger.logErrorOccurrence(APP_PACKAGE_NAME, LAST_API_NAME_CODE + 1, LAST_ERROR_CODE);
@@ -158,7 +158,7 @@ public final class AppNameApiErrorLoggerTest extends AdServicesExtendedMockitoTe
 
     @Test
     public void testLogErrorOccurrence_errorCodeBelowLimit() {
-        mocker.mockAllCobaltLoggingFlags(mMockFlags, true);
+        mocker.mockAllCobaltLoggingFlags(true);
         AppNameApiErrorLogger logger = new AppNameApiErrorLogger(mMockCobaltLogger);
 
         logger.logErrorOccurrence(APP_PACKAGE_NAME, FIRST_API_NAME_CODE, SUCCESS_RESULT_CODE - 1);
@@ -168,7 +168,7 @@ public final class AppNameApiErrorLoggerTest extends AdServicesExtendedMockitoTe
 
     @Test
     public void testLogErrorOccurrence_errorCodeOverLimit() {
-        mocker.mockAllCobaltLoggingFlags(mMockFlags, true);
+        mocker.mockAllCobaltLoggingFlags(true);
         AppNameApiErrorLogger logger = new AppNameApiErrorLogger(mMockCobaltLogger);
 
         logger.logErrorOccurrence(APP_PACKAGE_NAME, LAST_API_NAME_CODE, LAST_ERROR_CODE + 1);
@@ -178,7 +178,7 @@ public final class AppNameApiErrorLoggerTest extends AdServicesExtendedMockitoTe
 
     @Test
     public void testLogErrorOccurrence_successApiCode() {
-        mocker.mockAllCobaltLoggingFlags(mMockFlags, true);
+        mocker.mockAllCobaltLoggingFlags(true);
         AppNameApiErrorLogger logger = new AppNameApiErrorLogger(mMockCobaltLogger);
 
         logger.logErrorOccurrence(APP_PACKAGE_NAME, FIRST_API_NAME_CODE, SUCCESS_RESULT_CODE);
@@ -188,7 +188,7 @@ public final class AppNameApiErrorLoggerTest extends AdServicesExtendedMockitoTe
 
     @Test
     public void testLogErrorOccurrence_correctValue() {
-        mocker.mockAllCobaltLoggingFlags(mMockFlags, true);
+        mocker.mockAllCobaltLoggingFlags(true);
         AppNameApiErrorLogger logger = new AppNameApiErrorLogger(mMockCobaltLogger);
 
         logger.logErrorOccurrence(APP_PACKAGE_NAME, FIRST_API_NAME_CODE, LAST_ERROR_CODE);

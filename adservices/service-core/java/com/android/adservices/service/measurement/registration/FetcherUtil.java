@@ -37,6 +37,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -53,6 +55,7 @@ import java.util.regex.Pattern;
  */
 public class FetcherUtil {
     static final Pattern HEX_PATTERN = Pattern.compile("\\p{XDigit}+");
+    public static final BigInteger BIG_INTEGER_LONG_MAX_VALUE = BigInteger.valueOf(Long.MAX_VALUE);
 
     /**
      * Determine all redirects.
@@ -131,25 +134,56 @@ public class FetcherUtil {
         }
     }
 
-    private static Optional<Long> extractLookbackWindow(JSONObject obj) {
+    private static boolean isIntegral(BigDecimal value) {
+        // Simplified check using scale only
+        return value.stripTrailingZeros().scale() <= 0;
+    }
+
+    /** Extract value of a numeric integral object */
+    public static Optional<BigDecimal> extractIntegralValue(JSONObject obj, String key) {
         try {
-            long lookbackWindow = Long.parseLong(obj.optString(FilterMap.LOOKBACK_WINDOW));
-            if (lookbackWindow <= 0) {
+            Object maybeIntegralValue = obj.get(key);
+            if (!(maybeIntegralValue instanceof Number)) {
                 LoggerFactory.getMeasurementLogger()
                         .e(
-                                "extractLookbackWindow: non positive lookback window found: %d",
-                                lookbackWindow);
+                                "extractIntegralValue: non numeric object given: %s",
+                                String.valueOf(maybeIntegralValue));
                 return Optional.empty();
             }
-            return Optional.of(lookbackWindow);
-        } catch (NumberFormatException e) {
+
+            BigDecimal bd = new BigDecimal(maybeIntegralValue.toString());
+            if (!isIntegral(bd)) {
+                LoggerFactory.getMeasurementLogger()
+                        .e(
+                                "extractIntegralValue: non integral value found: %s",
+                                String.valueOf(maybeIntegralValue));
+                return Optional.empty();
+            }
+
+            return Optional.of(bd);
+        } catch (JSONException | NumberFormatException e) {
             LoggerFactory.getMeasurementLogger()
-                    .e(
-                            e,
-                            "extractLookbackWindow: caught exception. Key: %s",
-                            FilterMap.LOOKBACK_WINDOW);
+                    .e(e, "extractIntegralValue: caught exception. Key: %s", key);
             return Optional.empty();
         }
+    }
+
+    private static boolean isValidLookbackWindow(JSONObject obj) {
+        Optional<BigDecimal> bd = extractIntegralValue(obj, FilterMap.LOOKBACK_WINDOW);
+        if (bd.isEmpty()) {
+            return false;
+        }
+
+        BigDecimal lookbackWindowValue = bd.get();
+        if (lookbackWindowValue.compareTo(BigDecimal.ZERO) <= 0) {
+            LoggerFactory.getMeasurementLogger()
+                    .e(
+                            "isValidLookbackWindow: non positive lookback window found: %s",
+                            lookbackWindowValue.toString());
+            return false;
+        }
+
+        return true;
     }
 
     /** Extract string from an obj with max length. */
@@ -333,7 +367,7 @@ public class FetcherUtil {
             // catch-all.
             if (flags.getMeasurementEnableLookbackWindowFilter()
                     && FilterMap.LOOKBACK_WINDOW.equals(key)) {
-                if (!canIncludeLookbackWindow || extractLookbackWindow(filtersObj).isEmpty()) {
+                if (!canIncludeLookbackWindow || !isValidLookbackWindow(filtersObj)) {
                     return false;
                 }
                 continue;
@@ -380,7 +414,8 @@ public class FetcherUtil {
             long headerSizeLimitBytes,
             AdServicesLogger logger,
             AsyncRegistration asyncRegistration,
-            AsyncFetchStatus asyncFetchStatus) {
+            AsyncFetchStatus asyncFetchStatus,
+            @Nullable String enrollmentId) {
         long headerSize = asyncFetchStatus.getResponseSize();
         String adTechDomain = null;
 
@@ -406,9 +441,11 @@ public class FetcherUtil {
                                 asyncFetchStatus.isRedirectOnly(),
                                 asyncFetchStatus.isPARequest(),
                                 asyncFetchStatus.getNumDeletedEntities(),
-                                asyncFetchStatus.isEventLevelEpsilonConfigured())
+                                asyncFetchStatus.isEventLevelEpsilonConfigured(),
+                                asyncFetchStatus.isTriggerAggregatableValueFiltersConfigured())
                         .setAdTechDomain(adTechDomain)
-                        .build());
+                        .build(),
+                enrollmentId);
     }
 
     private static List<Uri> parseListRedirects(Map<String, List<String>> headers) {

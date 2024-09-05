@@ -19,8 +19,11 @@ package com.android.adservices.shell;
 import android.annotation.Nullable;
 import android.app.Service;
 import android.content.Intent;
+import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.shell.ShellCommandServiceImpl;
@@ -29,6 +32,7 @@ import com.android.internal.annotations.VisibleForTesting;
 import java.util.Objects;
 
 /** Implements a service which runs the shell command in the adservices process. */
+@RequiresApi(Build.VERSION_CODES.S)
 public final class AdServicesShellCommandService extends Service {
     @VisibleForTesting static final String TAG = "AdServicesShellCommand";
 

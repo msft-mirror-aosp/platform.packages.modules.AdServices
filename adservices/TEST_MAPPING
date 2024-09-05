@@ -97,7 +97,23 @@
       ]
     },
     {
+      "name": "AdServicesServiceCoreDatabaseMigrationUnitTests",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
       "name": "AdServicesJsEngineUnitTests",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "AdServicesMddIntegrationTests",
       "options": [
         {
           "exclude-annotation": "androidx.test.filters.FlakyTest"
@@ -428,6 +444,14 @@
       ]
     },
     {
+      "name": "AdExtServicesMddIntegrationTests",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
       "name": "CtsAdExtServicesDeviceTestCases",
       "options": [
         {
@@ -692,6 +716,24 @@
       ]
     },
     {
+      // Install com.google.android.adservices.apex and run AdServicesMddIntegrationTests.
+      "name": "AdServicesMddIntegrationTests[com.google.android.adservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      // Install com.google.android.extservices.apex and run AdExtServicesMddIntegrationTests.
+      "name": "AdExtServicesMddIntegrationTests[com.google.android.extservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
       // Install com.google.android.adservices.apex and run AdServicesFrameworkUnitTests.
       "name": "AdServicesFrameworkUnitTests[com.google.android.adservices.apex]",
       "options": [
@@ -843,6 +885,16 @@
       // Install com.google.android.adservices.apex and run
       // AdServicesServiceCoreProtectedAudienceUnitTests.
       "name": "AdServicesServiceCoreProtectedAudienceUnitTests[com.google.android.adservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      // Install com.google.android.adservices.apex and run
+      // AdServicesServiceCoreDatabaseMigrationUnitTests.
+      "name": "AdServicesServiceCoreDatabaseMigrationUnitTests[com.google.android.adservices.apex]",
       "options": [
         {
           "exclude-annotation": "androidx.test.filters.FlakyTest"
@@ -1513,6 +1565,14 @@
     },
     {
       "name": "AdServicesApkUISettingsGaOtaTests",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "AdServicesServiceCoreDatabaseMigrationUnitTests",
       "options": [
         {
           "exclude-annotation": "androidx.test.filters.FlakyTest"

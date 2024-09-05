@@ -197,6 +197,7 @@ public final class MeasurementTables {
                 "aggregatable_source_registration_time_config";
         String TRIGGER_CONTEXT_ID = "trigger_context_id";
         String ATTRIBUTION_SCOPES = "attribution_scope";
+        String AGGREGATABLE_FILTERING_ID_MAX_BYTES = "aggregatable_filtering_id_max_bytes";
     }
 
     /** Contract for EventReport. */
@@ -265,6 +266,7 @@ public final class MeasurementTables {
         String AGGREGATION_COORDINATOR_ORIGIN = "aggregation_coordinator_origin";
         String IS_FAKE_REPORT = "is_fake_report";
         String TRIGGER_CONTEXT_ID = "trigger_context_id";
+        String TRIGGER_TIME = "trigger_time";
     }
 
     /** Contract for aggregate encryption key. */
@@ -702,7 +704,9 @@ public final class MeasurementTables {
                     + TriggerContract.TRIGGER_CONTEXT_ID
                     + " TEXT, "
                     + TriggerContract.ATTRIBUTION_SCOPES
-                    + " TEXT"
+                    + " TEXT, "
+                    + TriggerContract.AGGREGATABLE_FILTERING_ID_MAX_BYTES
+                    + " INTEGER "
                     + ")";
 
     // Only used in V3
@@ -996,6 +1000,8 @@ public final class MeasurementTables {
                     + " INTEGER, "
                     + AggregateReport.TRIGGER_CONTEXT_ID
                     + " TEXT, "
+                    + AggregateReport.TRIGGER_TIME
+                    + " INTEGER, "
                     + "FOREIGN KEY ("
                     + AggregateReport.SOURCE_ID
                     + ") REFERENCES "

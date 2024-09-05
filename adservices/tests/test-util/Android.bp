@@ -125,6 +125,10 @@ filegroup {
         "java/com/android/adservices/mockito/AdServicesJobMocker.java",
         // ... and implementation
         "java/com/android/adservices/mockito/AdServicesMockitoJobMocker.java",
+        // Flags-related - interface and implementation
+        "java/com/android/adservices/mockito/AdServicesFlagsMocker.java",
+        // ... and implementation
+        "java/com/android/adservices/mockito/AdServicesMockitoFlagsMocker.java",
     ],
     path: "java",
     visibility: [

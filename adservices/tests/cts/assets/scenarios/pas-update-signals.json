@@ -6,8 +6,7 @@
       },
       "response": {
         "body": "UpdateSignalsResponse.json"
-      },
-      "verify_called": true
+      }
     },
     {
       "request": {
@@ -15,8 +14,7 @@
       },
       "response": {
         "body": "EncodeSignalsResponse.js"
-      },
-      "verify_called": true
+      }
     }
   ],
   "substitutions": {
