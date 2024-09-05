@@ -1110,7 +1110,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     private final PhFlagsTestHelper mFlagsTestHelper = new PhFlagsTestHelper(mPhFlags, expect);
 
     private final FlagGuard mMsmtKillSwitchGuard =
-            value -> mFlagsTestHelper.setMsmmtKillSwitch(!value);
+            value -> mFlagsTestHelper.setMsmtKillSwitch(!value);
 
     @Override
     protected AdServicesExtendedMockitoRule getAdServicesExtendedMockitoRule() {
