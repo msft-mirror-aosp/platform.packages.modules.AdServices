@@ -787,7 +787,7 @@ class AttributionJobHandler {
             } catch (JSONException e) {
                 throw new IllegalArgumentException("Failed to parse trigger attribution scopes.");
             }
-            if (triggerAttributionScopes != null) {
+            if (triggerAttributionScopes != null && !triggerAttributionScopes.isEmpty()) {
                 Set<String> triggerAttributionScopesSet = new HashSet<>(triggerAttributionScopes);
                 // Filter based on whether any of the trigger attribution scope is in the source
                 // attribution scopes.

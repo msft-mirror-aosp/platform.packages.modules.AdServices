@@ -7855,6 +7855,94 @@ public class AttributionJobHandlerTest {
     }
 
     @Test
+    public void performAttributions_emptyTriggerScopes_ignoresSourceScopes()
+            throws DatastoreException {
+        when(mFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
+        // Source with scope and higher priority, the scopes are ignored at attribution time.
+        // The source should be attributed due to higher priority.
+        Source olderSourceWithScopeAndHigherPriority =
+                SourceFixture.getMinimalValidSourceWithAttributionScope()
+                        .setId("olderSourceWithScopeAndHigherPriority")
+                        .setEventTime(SOURCE_TIME)
+                        .setExpiryTime(EXPIRY_TIME)
+                        .setPriority(102)
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .build();
+
+        // Source with scope and lower priority, the scopes are ignored at attribution time.
+        Source newerSourceWithScopeAndLowerPriority =
+                SourceFixture.getMinimalValidSourceWithAttributionScope()
+                        .setId("newerSourceWithScopeAndLowerPriority")
+                        .setEventTime(SOURCE_TIME + 1)
+                        .setExpiryTime(EXPIRY_TIME)
+                        .setAttributionScopes(List.of("1"))
+                        .setPriority(101)
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .build();
+
+        // Most recent source without scopes.
+        Source sourceWithoutAttributionScope =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId("sourceWithoutAttributionScope")
+                        .setEventTime(SOURCE_TIME + 2)
+                        .setExpiryTime(EXPIRY_TIME)
+                        .setPriority(100)
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .build();
+
+        Trigger triggerWithAttributionScope =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("triggerId1")
+                        .setTriggerTime(TRIGGER_TIME)
+                        .setStatus(Trigger.Status.PENDING)
+                        .setEventTriggers(EVENT_TRIGGERS)
+                        .setAttributionScopesString("[]")
+                        .build();
+
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(triggerWithAttributionScope.getId()));
+        when(mMeasurementDao.getTrigger(triggerWithAttributionScope.getId()))
+                .thenReturn(triggerWithAttributionScope);
+        when(mMeasurementDao.getMatchingActiveSources(triggerWithAttributionScope))
+                .thenReturn(
+                        new ArrayList<>(
+                                List.of(
+                                        olderSourceWithScopeAndHigherPriority,
+                                        newerSourceWithScopeAndLowerPriority,
+                                        sourceWithoutAttributionScope)));
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(anyInt(), any(), any()))
+                .thenReturn(5L);
+        when(mMeasurementDao.getSourceEventReports(any())).thenReturn(new ArrayList<>());
+        when(mMeasurementDao.getSourceDestinations(any()))
+                .thenReturn(
+                        Pair.create(
+                                olderSourceWithScopeAndHigherPriority.getAppDestinations(),
+                                olderSourceWithScopeAndHigherPriority.getWebDestinations()));
+
+        mHandler.performPendingAttributions();
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(List.of(triggerWithAttributionScope.getId())),
+                        eq(Trigger.Status.ATTRIBUTED));
+        // The source scopes should be ignored as the trigger has empty attribution scopes.
+        // All sources will be selected for attribution, and
+        // olderSourceWithScopeAndHigherPriority is attributed due to higher priority.
+        verify(mMeasurementDao)
+                .updateSourceAttributedTriggers(
+                        eq(olderSourceWithScopeAndHigherPriority.getId()), any());
+        verify(mMeasurementDao)
+                .updateSourceStatus(
+                        eq(
+                                List.of(
+                                        newerSourceWithScopeAndLowerPriority.getId(),
+                                        sourceWithoutAttributionScope.getId())),
+                        eq(Source.Status.IGNORED));
+
+        verify(mTransaction, times(2)).begin();
+        verify(mTransaction, times(2)).end();
+    }
+
+    @Test
     public void performAttribution_triggerNoAggrDataNoEventTriggerData_returnAndIgnoreTrigger()
             throws DatastoreException {
         Trigger trigger =
