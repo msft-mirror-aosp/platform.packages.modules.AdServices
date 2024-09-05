@@ -82,6 +82,9 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                         "basic_aggregatable.json",
                         "channel_capacity.json",
                         "clamp_aggregatable_report_window.json",
+                        "clamp_event_report_window.json",
+                        "clamp_expiry.json",
+                        "custom_trigger_data.json",
                         "destination_limit.json",
                         "destination_rate_limit.json",
                         "destination_validation.json",
@@ -90,11 +93,14 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                         "event_level_storage_limit.json",
                         "event_level_trigger_filter_data.json",
                         "event_report_window.json",
+                        "event_report_windows.json",
+                        "expired_source.json",
                         "fenced.json",
                         "filter_data_validation.json",
                         "header_presence.json",
                         "lookback_window_precision.json",
                         "max_aggregatable_reports_per_source.json",
+                        "max_event_level_reports_per_source.json",
                         "max_trigger_state_cardinality.json",
                         "multiple_destinations.json",
                         "null_aggregatable_report.json",
@@ -190,10 +196,15 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                                     .KEY_MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION));
 
     private static String preprocessor(String json) {
-        return json.replaceAll("\\.test(?=[\"\\/])", ".com")
+        // In a header response provided in string format, .test could also be surrounded by escaped
+        // quotes.
+        return json.replaceAll("\\.test(?=[\"\\/\\\\])", ".com")
                 // Remove comments
                 .replaceAll("^\\s*\\/\\/.+\\n", "")
-                .replaceAll("\"destination\":", "\"web_destination\":");
+                .replaceAll("\"destination\":", "\"web_destination\":")
+                // In a header response provided in string format, destination may be surronded by
+                // escaped quotes.
+                .replaceAll("\\\\\"destination\\\\\":", "\\\\\"web_destination\\\\\":");
     }
 
     private static final Map<String, String> sPhFlagsForInterop =
