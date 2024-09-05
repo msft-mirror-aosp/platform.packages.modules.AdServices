@@ -9198,7 +9198,8 @@ public class MeasurementDaoTest {
                         .setEventTriggers(TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS)
                         .setAggregateTriggerData(
                                 TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA)
-                        .setAggregateValues(TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES)
+                        .setAggregateValuesString(
+                                TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES_STRING)
                         .setFilters(TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING)
                         .setNotFilters(
                                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING)

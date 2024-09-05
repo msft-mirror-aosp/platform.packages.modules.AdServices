@@ -217,7 +217,12 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
                         mAdServicesLoggerMock,
                         mFakeFlags);
         mUpdateEncoderEventHandler =
-                new UpdateEncoderEventHandler(mEncoderEndpointsDao, mEncoderLogicHandler);
+                new UpdateEncoderEventHandler(
+                        mEncoderEndpointsDao,
+                        mEncoderLogicHandler,
+                        mSpyContext,
+                        AdServicesExecutors.getBackgroundExecutor(),
+                        /* isCompletionBroadcastEnabled= */ false);
         mSignalEvictionController = new SignalEvictionController(ImmutableList.of(), 0, 0);
         mUpdateProcessingOrchestrator =
                 new UpdateProcessingOrchestrator(
