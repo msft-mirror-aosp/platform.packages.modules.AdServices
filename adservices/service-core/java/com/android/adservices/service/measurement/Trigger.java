@@ -63,7 +63,7 @@ public class Trigger {
     @Status private int mStatus;
     private Uri mRegistrant;
     private String mAggregateTriggerData;
-    private String mAggregateValues;
+    private String mAggregateValuesString;
     private String mAggregateDeduplicationKeys;
     private boolean mIsDebugReporting;
     private Optional<AggregatableAttributionTrigger> mAggregatableAttributionTrigger;
@@ -126,7 +126,7 @@ public class Trigger {
                         == trigger.mAggregatableSourceRegistrationTimeConfig
                 && Objects.equals(mRegistrant, trigger.mRegistrant)
                 && Objects.equals(mAggregateTriggerData, trigger.mAggregateTriggerData)
-                && Objects.equals(mAggregateValues, trigger.mAggregateValues)
+                && Objects.equals(mAggregateValuesString, trigger.mAggregateValuesString)
                 && Objects.equals(
                         mAggregatableAttributionTrigger, trigger.mAggregatableAttributionTrigger)
                 && Objects.equals(mFilters, trigger.mFilters)
@@ -155,7 +155,7 @@ public class Trigger {
                 mEventTriggers,
                 mStatus,
                 mAggregateTriggerData,
-                mAggregateValues,
+                mAggregateValuesString,
                 mAggregatableAttributionTrigger,
                 mFilters,
                 mNotFilters,
@@ -259,8 +259,8 @@ public class Trigger {
      *   "not_filters": {"category": ["filter_3", "filter_4"]}
      * }]
      */
-    public String getAggregateValues() {
-        return mAggregateValues;
+    public String getAggregateValuesString() {
+        return mAggregateValuesString;
     }
 
     /**
@@ -411,7 +411,7 @@ public class Trigger {
      */
     private Optional<AggregatableAttributionTrigger> parseAggregateTrigger(Flags flags)
             throws JSONException, NumberFormatException {
-        if (mAggregateValues == null) {
+        if (mAggregateValuesString == null) {
             return Optional.empty();
         }
         JSONArray triggerDataArray =
@@ -486,7 +486,8 @@ public class Trigger {
                 new AggregatableAttributionTrigger.Builder()
                         .setTriggerData(triggerDataList)
                         .setAggregateDeduplicationKeys(dedupKeyList);
-        Optional<JSONArray> maybeAggregateValuesArr = JsonUtil.maybeGetJsonArray(mAggregateValues);
+        Optional<JSONArray> maybeAggregateValuesArr =
+                JsonUtil.maybeGetJsonArray(mAggregateValuesString);
         if (maybeAggregateValuesArr.isPresent()) {
             if (!flags.getMeasurementEnableAggregateValueFilters()) {
                 return Optional.empty();
@@ -500,12 +501,12 @@ public class Trigger {
             }
             aggregatableAttributionTriggerBuilder.setValueConfigs(aggregatableValuesConfigList);
         } else {
-            JSONObject values = new JSONObject(mAggregateValues);
-            Map<String, Integer> valueMap = new HashMap<>();
-            for (String key : values.keySet()) {
-                valueMap.put(key, values.getInt(key));
-            }
-            aggregatableAttributionTriggerBuilder.setValues(valueMap);
+            // Default case: Convert value from integer to AggregatableKeyValue.
+            AggregatableValuesConfig aggregatableValuesConfig =
+                    new AggregatableValuesConfig.Builder(new JSONObject(mAggregateValuesString))
+                            .build();
+            aggregatableAttributionTriggerBuilder.setValueConfigs(
+                    List.of(aggregatableValuesConfig));
         }
         return Optional.of(aggregatableAttributionTriggerBuilder.build());
     }
@@ -704,10 +705,10 @@ public class Trigger {
             return this;
         }
 
-        /** See {@link Trigger#getAggregateValues()} */
+        /** See {@link Trigger#getAggregateValuesString()} */
         @NonNull
-        public Builder setAggregateValues(@Nullable String aggregateValues) {
-            mBuilding.mAggregateValues = aggregateValues;
+        public Builder setAggregateValuesString(@Nullable String aggregateValuesString) {
+            mBuilding.mAggregateValuesString = aggregateValuesString;
             return this;
         }
 

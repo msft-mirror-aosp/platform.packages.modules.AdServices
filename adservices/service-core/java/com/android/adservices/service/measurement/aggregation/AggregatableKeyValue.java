@@ -15,7 +15,7 @@
  */
 package com.android.adservices.service.measurement.aggregation;
 
-import org.json.JSONException;
+import java.util.Objects;
 
 /** POJO for AggregatableKeyValue */
 public class AggregatableKeyValue {
@@ -30,10 +30,23 @@ public class AggregatableKeyValue {
         return mValue;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof AggregatableKeyValue)) return false;
+        AggregatableKeyValue that = (AggregatableKeyValue) o;
+        return mValue == that.mValue;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(mValue);
+    }
+
     public static final class Builder {
         private int mValue;
 
-        public Builder(int value) throws JSONException {
+        public Builder(int value) {
             mValue = value;
         }
 

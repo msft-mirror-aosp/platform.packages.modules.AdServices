@@ -469,7 +469,7 @@ public class AsyncTriggerFetcher {
                     return false;
                 }
                 asyncFetchStatus.setIsTriggerAggregatableValueFiltersConfigured(true);
-                builder.setAggregateValues(
+                builder.setAggregateValuesString(
                         json.getString(TriggerHeaderContract.AGGREGATABLE_VALUES));
             } else {
                 if (!isValidAggregateValues(
@@ -483,7 +483,7 @@ public class AsyncTriggerFetcher {
                                                     .HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER));
                     return false;
                 }
-                builder.setAggregateValues(
+                builder.setAggregateValuesString(
                         json.getString(TriggerHeaderContract.AGGREGATABLE_VALUES));
             }
         }
