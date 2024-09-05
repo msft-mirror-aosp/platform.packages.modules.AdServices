@@ -1475,6 +1475,7 @@ public class Source {
             builder.setAttributedTriggers(copyFrom.mAttributedTriggers);
             builder.setTriggerSpecs(copyFrom.mTriggerSpecs);
             builder.setTriggerDataMatching(copyFrom.mTriggerDataMatching);
+            builder.setTriggerData(copyFrom.mTriggerData);
             builder.setCoarseEventReportDestinations(copyFrom.mCoarseEventReportDestinations);
             builder.setSharedDebugKey(copyFrom.mSharedDebugKey);
             builder.setDropSourceIfInstalled(copyFrom.mDropSourceIfInstalled);
