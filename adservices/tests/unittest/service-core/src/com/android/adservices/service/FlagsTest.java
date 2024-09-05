@@ -675,6 +675,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 Flags::getTopicsEpochJobBatteryNotLowInsteadOfCharging);
     }
 
+    @Test
+    public void testGetTopicsEpochJobBatteryConstraintLoggingEnabled() {
+        testFlag(
+                "TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_LOGGING_ENABLED",
+                /* defaultValue */ false,
+                Flags::getTopicsEpochJobBatteryConstraintLoggingEnabled);
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Tests for (legacy) kill-switch flags that will be refactored as feature flag - they should //
     // move to the block above once refactored.                                                   //
