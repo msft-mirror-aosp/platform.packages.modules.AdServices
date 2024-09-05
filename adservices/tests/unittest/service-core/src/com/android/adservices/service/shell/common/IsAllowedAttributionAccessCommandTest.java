@@ -34,7 +34,7 @@ public final class IsAllowedAttributionAccessCommandTest
     private static final String ENROLLMENT_ID = "42";
 
     @Test
-    public void testRun_invalid() throws Exception {
+    public void testRun_invalid() {
         IsAllowedAttributionAccessCommand cmd = new IsAllowedAttributionAccessCommand();
 
         // no args
@@ -53,7 +53,7 @@ public final class IsAllowedAttributionAccessCommandTest
     }
 
     @Test
-    public void testRun_valid() throws Exception {
+    public void testRun_valid() {
         IsAllowedAttributionAccessCommand cmd = new IsAllowedAttributionAccessCommand();
         doReturn(true)
                 .when(
