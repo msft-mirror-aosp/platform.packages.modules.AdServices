@@ -23,9 +23,7 @@ import android.test.mock.MockContentResolver;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.data.measurement.DatastoreManager;
-import com.android.adservices.data.measurement.SQLDatastoreManager;
 import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
@@ -50,9 +48,7 @@ class TestObjectProvider {
                         ApplicationProvider.getApplicationContext(),
                         flags,
                         new EventReportWindowCalcDelegate(flags),
-                        new SourceNoiseHandler(flags),
-                        new SQLDatastoreManager(
-                                DbTestUtil.getMeasurementDbHelperForTest(), errorLogger)),
+                        new SourceNoiseHandler(flags)),
                 new EventReportWindowCalcDelegate(flags),
                 new SourceNoiseHandler(flags),
                 AdServicesLoggerImpl.getInstance());

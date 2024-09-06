@@ -205,12 +205,10 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
                         EnrollmentUtil.getInstance());
         mDebugReportApi =
                 new DebugReportApi(
-                        sContext,
+                        ApplicationProvider.getApplicationContext(),
                         mFlags,
                         new EventReportWindowCalcDelegate(mFlags),
-                        new SourceNoiseHandler(mFlags),
-                        new SQLDatastoreManager(
-                                DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger));
+                        new SourceNoiseHandler(mFlags));
 
         mImpressionNoiseUtil = spy(new ImpressionNoiseUtil());
 

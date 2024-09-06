@@ -7600,6 +7600,9 @@ public class MeasurementDaoTest {
         values.put(SourceContract.DESTINATION_LIMIT_PRIORITY, source.getDestinationLimitPriority());
         values.put(SourceContract.IS_INSTALL_ATTRIBUTED, source.isInstallAttributed());
         values.put(
+                SourceContract.AGGREGATE_DEBUG_REPORT_CONTRIBUTIONS,
+                source.getAggregateDebugReportContributions());
+        values.put(
                 SourceContract.REINSTALL_REATTRIBUTION_WINDOW,
                 source.getReinstallReattributionWindow());
         long row = db.insert(SourceContract.TABLE, null, values);
@@ -12190,6 +12193,46 @@ public class MeasurementDaoTest {
                                                 /* windowEndTime= */ 1001L))
                         .get();
         assertThat(budget3).isEqualTo((49 + 64));
+    }
+
+    @Test
+    public void updateSourceAggregateDebugContributions_updateFromPreValue_success() {
+        // Setup
+        mFlags = mock(Flags.class);
+        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(true).when(mFlags).getMeasurementEnableAggregateDebugReporting();
+        doReturn(MEASUREMENT_DB_SIZE_LIMIT).when(mFlags).getMeasurementDbSizeLimit();
+        int initialContributions = 1024;
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setAggregateDebugReportContributions(initialContributions)
+                        .build();
+        insertSource(source, source.getId());
+
+        // Verify persisted value
+        assertThat(getFirstSourceFromDb().getAggregateDebugReportContributions())
+                .isEqualTo(initialContributions);
+
+        // Execution
+        // Update the value
+        int expectedUpdatedContributions = 65536;
+        source.setAggregateDebugContributions(expectedUpdatedContributions);
+        mDatastoreManager.runInTransaction(
+                measurementDao -> measurementDao.updateSourceAggregateDebugContributions(source));
+
+        // Verification
+        assertThat(getFirstSourceFromDb().getAggregateDebugReportContributions())
+                .isEqualTo(expectedUpdatedContributions);
+    }
+
+    private Source getFirstSourceFromDb() {
+        return mDatastoreManager
+                .runInTransactionWithResult(
+                        measurementDao ->
+                                measurementDao.getSource(
+                                        getFirstIdFromDatastore(
+                                                SourceContract.TABLE, SourceContract.ID)))
+                .orElseThrow();
     }
 
     private static Consumer<AggregateReport> getAggregateReportConsumer(SQLiteDatabase db) {

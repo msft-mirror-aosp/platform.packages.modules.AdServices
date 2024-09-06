@@ -25,8 +25,6 @@ import androidx.annotation.Nullable;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.measurement.DatastoreException;
-import com.android.adservices.data.measurement.DatastoreManager;
-import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.WebAddresses;
@@ -143,7 +141,6 @@ public class DebugReportApi {
 
     private final Context mContext;
     private final Flags mFlags;
-    private final DatastoreManager mDatastoreManager;
     private final EventReportWindowCalcDelegate mEventReportWindowCalcDelegate;
     private final SourceNoiseHandler mSourceNoiseHandler;
 
@@ -155,32 +152,16 @@ public class DebugReportApi {
                 new SourceNoiseHandler(flags));
     }
 
-    // TODO(b/292009320): Keep only one constructor in DebugReportApi
     @VisibleForTesting
-    DebugReportApi(
+    public DebugReportApi(
             Context context,
             Flags flags,
             EventReportWindowCalcDelegate eventReportWindowCalcDelegate,
             SourceNoiseHandler sourceNoiseHandler) {
         mContext = context;
         mFlags = flags;
-        mDatastoreManager = DatastoreManagerFactory.getDatastoreManager(context);
         mEventReportWindowCalcDelegate = eventReportWindowCalcDelegate;
         mSourceNoiseHandler = sourceNoiseHandler;
-    }
-
-    @VisibleForTesting
-    public DebugReportApi(
-            Context context,
-            Flags flags,
-            EventReportWindowCalcDelegate eventReportWindowCalcDelegate,
-            SourceNoiseHandler sourceNoiseHandler,
-            DatastoreManager datastoreManager) {
-        mContext = context;
-        mFlags = flags;
-        mEventReportWindowCalcDelegate = eventReportWindowCalcDelegate;
-        mSourceNoiseHandler = sourceNoiseHandler;
-        mDatastoreManager = datastoreManager;
     }
 
     /** Schedules the Source Success Debug Report */

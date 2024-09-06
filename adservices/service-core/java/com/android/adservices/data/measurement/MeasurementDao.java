@@ -1151,6 +1151,26 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
+    public void updateSourceAggregateDebugContributions(@NonNull Source source)
+            throws DatastoreException {
+        ContentValues values = new ContentValues();
+        values.put(
+                SourceContract.AGGREGATE_DEBUG_REPORT_CONTRIBUTIONS,
+                source.getAggregateDebugReportContributions());
+        long rows =
+                mSQLTransaction
+                        .getDatabase()
+                        .update(
+                                SourceContract.TABLE,
+                                values,
+                                SourceContract.ID + " = ?",
+                                new String[] {source.getId()});
+        if (rows != 1) {
+            throw new DatastoreException("Source aggregate debug contributions update failed.");
+        }
+    }
+
+    @Override
     public void markEventReportStatus(@NonNull String eventReportId, @EventReport.Status int status)
             throws DatastoreException {
         ContentValues values = new ContentValues();
