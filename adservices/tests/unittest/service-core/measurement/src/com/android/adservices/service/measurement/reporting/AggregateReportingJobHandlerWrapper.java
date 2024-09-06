@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.verify;
@@ -80,7 +81,7 @@ public class AggregateReportingJobHandlerWrapper {
                                 .setIsDebugInstance(isDebugInstance));
         Mockito.doReturn(200)
                 .when(aggregateReportingJobHandler)
-                .makeHttpPostRequest(any(), any(), any());
+                .makeHttpPostRequest(any(), any(), any(), anyString());
 
         // Perform aggregate reports and capture arguments
         aggregateReportingJobHandler.performScheduledPendingReportsInWindow(
@@ -90,7 +91,10 @@ public class AggregateReportingJobHandlerWrapper {
         ArgumentCaptor<JSONObject> aggregatePayload = ArgumentCaptor.forClass(JSONObject.class);
         verify(aggregateReportingJobHandler, atLeast(0))
                 .makeHttpPostRequest(
-                        aggregateDestination.capture(), aggregatePayload.capture(), any());
+                        aggregateDestination.capture(),
+                        aggregatePayload.capture(),
+                        any(),
+                        anyString());
 
         ArgumentCaptor<AggregateReport> aggregateReport =
                 ArgumentCaptor.forClass(AggregateReport.class);
