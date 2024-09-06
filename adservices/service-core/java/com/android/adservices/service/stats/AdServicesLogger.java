@@ -36,7 +36,8 @@ import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedStat
 /** Interface for Adservices logger. */
 public interface AdServicesLogger {
     /** log method for MeasurementReportsStats. */
-    void logMeasurementReports(MeasurementReportsStats measurementReportsStats);
+    void logMeasurementReports(
+            MeasurementReportsStats measurementReportsStats, @Nullable String enrollmentId);
 
     /** log ApiCallStats which has stats about the API call such as the status. */
     void logApiCallStats(ApiCallStats apiCallStats);

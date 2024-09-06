@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -34,7 +35,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import android.adservices.common.AdServicesStatusUtils;
 import android.net.Uri;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
@@ -51,7 +51,6 @@ import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -70,6 +69,7 @@ public final class DebugReportingJobHandlerTest extends AdServicesExtendedMockit
 
     private static final Uri REGISTRATION_URI = WebUtil.validUri("https://subdomain.example.test");
     private static final Uri SOURCE_REGISTRANT = Uri.parse("android-app://com.example.abc");
+    private static final String ENROLLMENT_ID = "enrollmentId";
 
     private final DatastoreManager mDatastoreManager = new FakeDatasoreManager();
 
@@ -118,18 +118,18 @@ public final class DebugReportingJobHandlerTest extends AdServicesExtendedMockit
         when(mMeasurementDao.getDebugReport(debugReport.getId())).thenReturn(debugReport);
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyDebugReportingJobHandler)
-                .makeHttpPostRequest(Mockito.eq(REGISTRATION_URI), Mockito.any());
+                .makeHttpPostRequest(eq(REGISTRATION_URI), any());
         doReturn(debugReportPayload)
                 .when(mSpyDebugReportingJobHandler)
-                .createReportJsonPayload(Mockito.any());
+                .createReportJsonPayload(any());
 
         doNothing().when(mMeasurementDao).deleteDebugReport(debugReport.getId());
+        ReportingStatus reportingStatus = new ReportingStatus();
 
-        Assert.assertEquals(
-                AdServicesStatusUtils.STATUS_SUCCESS,
-                mSpyDebugReportingJobHandler.performReport(
-                        debugReport.getId(), new ReportingStatus()));
+        mSpyDebugReportingJobHandler.performReport(debugReport.getId(), reportingStatus);
 
+        assertEquals(ReportingStatus.UploadStatus.SUCCESS, reportingStatus.getUploadStatus());
+        assertEquals(ReportingStatus.FailureStatus.UNKNOWN, reportingStatus.getFailureStatus());
         verify(mMeasurementDao).deleteDebugReport(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
@@ -143,15 +143,19 @@ public final class DebugReportingJobHandlerTest extends AdServicesExtendedMockit
         when(mMeasurementDao.getDebugReport(debugReport.getId())).thenReturn(debugReport);
         doReturn(HttpURLConnection.HTTP_BAD_REQUEST)
                 .when(mSpyDebugReportingJobHandler)
-                .makeHttpPostRequest(Mockito.eq(REGISTRATION_URI), Mockito.any());
+                .makeHttpPostRequest(eq(REGISTRATION_URI), any());
         doReturn(debugReportPayload)
                 .when(mSpyDebugReportingJobHandler)
-                .createReportJsonPayload(Mockito.any());
+                .createReportJsonPayload(any());
 
-        Assert.assertEquals(
-                AdServicesStatusUtils.STATUS_IO_ERROR,
-                mSpyDebugReportingJobHandler.performReport(
-                        debugReport.getId(), new ReportingStatus()));
+        ReportingStatus reportingStatus = new ReportingStatus();
+
+        mSpyDebugReportingJobHandler.performReport(debugReport.getId(), reportingStatus);
+
+        assertEquals(ReportingStatus.UploadStatus.FAILURE, reportingStatus.getUploadStatus());
+        assertEquals(
+                ReportingStatus.FailureStatus.UNSUCCESSFUL_HTTP_RESPONSE_CODE,
+                reportingStatus.getFailureStatus());
 
         verify(mMeasurementDao, never()).deleteDebugReport(any());
         verify(mTransaction).begin();
@@ -173,7 +177,7 @@ public final class DebugReportingJobHandlerTest extends AdServicesExtendedMockit
         when(mMeasurementDao.getDebugReport(debugReport2.getId())).thenReturn(debugReport2);
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyDebugReportingJobHandler)
-                .makeHttpPostRequest(Mockito.eq(REGISTRATION_URI), any());
+                .makeHttpPostRequest(eq(REGISTRATION_URI), any());
         doReturn(debugReportPayload1)
                 .when(mSpyDebugReportingJobHandler)
                 .createReportJsonPayload(debugReport1);
@@ -203,7 +207,7 @@ public final class DebugReportingJobHandlerTest extends AdServicesExtendedMockit
         when(mMeasurementDao.getDebugReport(debugReport2.getId())).thenReturn(debugReport2);
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyDebugReportingJobHandler)
-                .makeHttpPostRequest(Mockito.eq(REGISTRATION_URI), any());
+                .makeHttpPostRequest(eq(REGISTRATION_URI), any());
         doReturn(debugReportPayload1)
                 .when(mSpyDebugReportingJobHandler)
                 .createReportJsonPayload(debugReport1);
@@ -233,7 +237,7 @@ public final class DebugReportingJobHandlerTest extends AdServicesExtendedMockit
         when(mMeasurementDao.getDebugReport(debugReport1.getId())).thenReturn(debugReport1);
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyDebugReportingJobHandler)
-                .makeHttpPostRequest(Mockito.eq(REGISTRATION_URI), any());
+                .makeHttpPostRequest(eq(REGISTRATION_URI), any());
         doReturn(debugReportPayload1)
                 .when(mSpyDebugReportingJobHandler)
                 .createReportJsonPayload(debugReport1);
@@ -242,7 +246,7 @@ public final class DebugReportingJobHandlerTest extends AdServicesExtendedMockit
 
         ArgumentCaptor<MeasurementReportsStats> statusArg =
                 ArgumentCaptor.forClass(MeasurementReportsStats.class);
-        verify(mLogger).logMeasurementReports(statusArg.capture());
+        verify(mLogger).logMeasurementReports(statusArg.capture(), eq(ENROLLMENT_ID));
         MeasurementReportsStats measurementReportsStats = statusArg.getValue();
         assertTrue(
                 measurementReportsStats.getType()
@@ -273,7 +277,7 @@ public final class DebugReportingJobHandlerTest extends AdServicesExtendedMockit
 
         ArgumentCaptor<MeasurementReportsStats> statusArg =
                 ArgumentCaptor.forClass(MeasurementReportsStats.class);
-        verify(mLogger).logMeasurementReports(statusArg.capture());
+        verify(mLogger).logMeasurementReports(statusArg.capture(), eq(null));
         MeasurementReportsStats measurementReportsStats = statusArg.getValue();
         assertEquals(
                 measurementReportsStats.getType(),
@@ -300,19 +304,19 @@ public final class DebugReportingJobHandlerTest extends AdServicesExtendedMockit
         when(mMeasurementDao.getDebugReport(debugReport.getId())).thenReturn(debugReport);
         doThrow(new IOException())
                 .when(mSpyDebugReportingJobHandler)
-                .makeHttpPostRequest(Mockito.eq(REGISTRATION_URI), any());
+                .makeHttpPostRequest(eq(REGISTRATION_URI), any());
         doReturn(new JSONArray(Collections.singletonList(debugReport.toPayloadJson())))
                 .when(mSpyDebugReportingJobHandler)
-                .createReportJsonPayload(Mockito.any());
+                .createReportJsonPayload(any());
+        ReportingStatus reportingStatus = new ReportingStatus();
 
-        assertEquals(
-                AdServicesStatusUtils.STATUS_IO_ERROR,
-                mSpyDebugReportingJobHandler.performReport(
-                        debugReport.getId(), new ReportingStatus()));
+        mSpyDebugReportingJobHandler.performReport(debugReport.getId(), reportingStatus);
+
+        assertEquals(ReportingStatus.UploadStatus.FAILURE, reportingStatus.getUploadStatus());
+        assertEquals(ReportingStatus.FailureStatus.NETWORK, reportingStatus.getFailureStatus());
 
         verify(mMeasurementDao, never()).deleteDebugReport(anyString());
-        verify(mSpyDebugReportingJobHandler)
-                .makeHttpPostRequest(Mockito.eq(REGISTRATION_URI), Mockito.any());
+        verify(mSpyDebugReportingJobHandler).makeHttpPostRequest(eq(REGISTRATION_URI), any());
         verify(mTransaction).begin();
         verify(mTransaction).end();
     }
@@ -332,15 +336,19 @@ public final class DebugReportingJobHandlerTest extends AdServicesExtendedMockit
         doReturn(debugReport).when(mMeasurementDao).getDebugReport(debugReport.getId());
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyDebugReportingJobHandler)
-                .makeHttpPostRequest(Mockito.eq(REGISTRATION_URI), Mockito.any());
+                .makeHttpPostRequest(eq(REGISTRATION_URI), any());
         doThrow(new JSONException("cause message"))
                 .when(mSpyDebugReportingJobHandler)
-                .createReportJsonPayload(Mockito.any());
+                .createReportJsonPayload(any());
 
+        ReportingStatus reportingStatus = new ReportingStatus();
+
+        mSpyDebugReportingJobHandler.performReport(debugReport.getId(), reportingStatus);
+
+        assertEquals(ReportingStatus.UploadStatus.FAILURE, reportingStatus.getUploadStatus());
         assertEquals(
-                AdServicesStatusUtils.STATUS_UNKNOWN_ERROR,
-                mSpyDebugReportingJobHandler.performReport(
-                        debugReport.getId(), new ReportingStatus()));
+                ReportingStatus.FailureStatus.SERIALIZATION_ERROR,
+                reportingStatus.getFailureStatus());
         verify(mMeasurementDao, never()).deleteDebugReport(anyString());
         verify(mTransaction).begin();
         verify(mTransaction).end();
@@ -362,10 +370,10 @@ public final class DebugReportingJobHandlerTest extends AdServicesExtendedMockit
         doReturn(debugReport).when(mMeasurementDao).getDebugReport(debugReport.getId());
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyDebugReportingJobHandler)
-                .makeHttpPostRequest(Mockito.eq(REGISTRATION_URI), Mockito.any());
+                .makeHttpPostRequest(eq(REGISTRATION_URI), any());
         doThrow(new JSONException("cause message"))
                 .when(mSpyDebugReportingJobHandler)
-                .createReportJsonPayload(Mockito.any());
+                .createReportJsonPayload(any());
 
         try {
             mSpyDebugReportingJobHandler.performReport(debugReport.getId(), new ReportingStatus());
@@ -396,15 +404,19 @@ public final class DebugReportingJobHandlerTest extends AdServicesExtendedMockit
         doReturn(debugReport).when(mMeasurementDao).getDebugReport(debugReport.getId());
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyDebugReportingJobHandler)
-                .makeHttpPostRequest(Mockito.eq(REGISTRATION_URI), Mockito.any());
+                .makeHttpPostRequest(eq(REGISTRATION_URI), any());
         doThrow(new JSONException("cause message"))
                 .when(mSpyDebugReportingJobHandler)
-                .createReportJsonPayload(Mockito.any());
+                .createReportJsonPayload(any());
 
+        ReportingStatus reportingStatus = new ReportingStatus();
+
+        mSpyDebugReportingJobHandler.performReport(debugReport.getId(), reportingStatus);
+
+        assertEquals(ReportingStatus.UploadStatus.FAILURE, reportingStatus.getUploadStatus());
         assertEquals(
-                AdServicesStatusUtils.STATUS_UNKNOWN_ERROR,
-                mSpyDebugReportingJobHandler.performReport(
-                        debugReport.getId(), new ReportingStatus()));
+                ReportingStatus.FailureStatus.SERIALIZATION_ERROR,
+                reportingStatus.getFailureStatus());
         verify(mMeasurementDao).deleteDebugReport(debugReport.getId());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
@@ -424,15 +436,17 @@ public final class DebugReportingJobHandlerTest extends AdServicesExtendedMockit
         doReturn(debugReport).when(mMeasurementDao).getDebugReport(debugReport.getId());
         doThrow(new RuntimeException("unknown exception"))
                 .when(mSpyDebugReportingJobHandler)
-                .makeHttpPostRequest(Mockito.eq(REGISTRATION_URI), Mockito.any());
+                .makeHttpPostRequest(eq(REGISTRATION_URI), any());
         doReturn(new JSONArray(Collections.singletonList(debugReport.toPayloadJson())))
                 .when(mSpyDebugReportingJobHandler)
-                .createReportJsonPayload(Mockito.any());
+                .createReportJsonPayload(any());
 
-        assertEquals(
-                AdServicesStatusUtils.STATUS_UNKNOWN_ERROR,
-                mSpyDebugReportingJobHandler.performReport(
-                        debugReport.getId(), new ReportingStatus()));
+        ReportingStatus reportingStatus = new ReportingStatus();
+
+        mSpyDebugReportingJobHandler.performReport(debugReport.getId(), reportingStatus);
+
+        assertEquals(ReportingStatus.UploadStatus.FAILURE, reportingStatus.getUploadStatus());
+        assertEquals(ReportingStatus.FailureStatus.UNKNOWN, reportingStatus.getFailureStatus());
         verify(mMeasurementDao, never()).deleteDebugReport(anyString());
         verify(mTransaction).begin();
         verify(mTransaction).end();
@@ -452,10 +466,10 @@ public final class DebugReportingJobHandlerTest extends AdServicesExtendedMockit
         doReturn(debugReport).when(mMeasurementDao).getDebugReport(debugReport.getId());
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyDebugReportingJobHandler)
-                .makeHttpPostRequest(Mockito.eq(REGISTRATION_URI), Mockito.any());
+                .makeHttpPostRequest(eq(REGISTRATION_URI), any());
         doThrow(new RuntimeException("unknown exception"))
                 .when(mSpyDebugReportingJobHandler)
-                .createReportJsonPayload(Mockito.any());
+                .createReportJsonPayload(any());
         doReturn(1.0f).when(mMockFlags).getMeasurementThrowUnknownExceptionSamplingRate();
 
         try {
@@ -483,16 +497,18 @@ public final class DebugReportingJobHandlerTest extends AdServicesExtendedMockit
         doReturn(debugReport).when(mMeasurementDao).getDebugReport(debugReport.getId());
         doReturn(HttpURLConnection.HTTP_OK)
                 .when(mSpyDebugReportingJobHandler)
-                .makeHttpPostRequest(Mockito.eq(REGISTRATION_URI), Mockito.any());
+                .makeHttpPostRequest(eq(REGISTRATION_URI), any());
         doThrow(new RuntimeException("unknown exception"))
                 .when(mSpyDebugReportingJobHandler)
-                .createReportJsonPayload(Mockito.any());
+                .createReportJsonPayload(any());
         doReturn(0.0f).when(mMockFlags).getMeasurementThrowUnknownExceptionSamplingRate();
 
-        assertEquals(
-                AdServicesStatusUtils.STATUS_UNKNOWN_ERROR,
-                mSpyDebugReportingJobHandler.performReport(
-                        debugReport.getId(), new ReportingStatus()));
+        ReportingStatus reportingStatus = new ReportingStatus();
+
+        mSpyDebugReportingJobHandler.performReport(debugReport.getId(), reportingStatus);
+
+        assertEquals(ReportingStatus.UploadStatus.FAILURE, reportingStatus.getUploadStatus());
+        assertEquals(ReportingStatus.FailureStatus.UNKNOWN, reportingStatus.getFailureStatus());
         verify(mMeasurementDao, never()).deleteDebugReport(anyString());
         verify(mTransaction).begin();
         verify(mTransaction).end();
@@ -508,7 +524,7 @@ public final class DebugReportingJobHandlerTest extends AdServicesExtendedMockit
                                 + " \"https://destination.example\",\n"
                                 + "      \"source_event_id\": \"45623\"\n"
                                 + "    }")
-                .setEnrollmentId("1")
+                .setEnrollmentId(ENROLLMENT_ID)
                 .setRegistrationOrigin(REGISTRATION_URI)
                 .setInsertionTime(0L)
                 .setRegistrant(SOURCE_REGISTRANT)
@@ -525,7 +541,7 @@ public final class DebugReportingJobHandlerTest extends AdServicesExtendedMockit
                                 + " \"https://destination.example\",\n"
                                 + "      \"source_event_id\": \"45623\"\n"
                                 + "    }")
-                .setEnrollmentId("1")
+                .setEnrollmentId(ENROLLMENT_ID)
                 .setRegistrationOrigin(REGISTRATION_URI)
                 .setInsertionTime(0L)
                 .setRegistrant(SOURCE_REGISTRANT)

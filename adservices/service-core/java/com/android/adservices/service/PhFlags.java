@@ -4516,6 +4516,11 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING
                         + " = "
                         + getMeasurementEnableFlexibleContributionFiltering());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATE_DEBUG_REPORTING
+                        + " = "
+                        + getMeasurementEnableAggregateDebugReporting());
 
         writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
         writer.println(
@@ -6699,6 +6704,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getMeasurementEnableAggregateDebugReporting() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATE_DEBUG_REPORTING,
+                MEASUREMENT_ENABLE_AGGREGATE_DEBUG_REPORTING);
+    }
+
+    @Override
     public long getMeasurementReportingJobServiceBatchWindowMillis() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS,
@@ -7148,5 +7160,47 @@ public final class PhFlags implements Flags {
     public long getAdIdCacheTtlMs() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_AD_ID_CACHE_TTL_MS, DEFAULT_ADID_CACHE_TTL_MS);
+    }
+
+    @Override
+    public boolean getEnablePackageDenyService() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_PACKAGE_DENY__ENABLE_PACKAGE_DENY_SERVICE,
+                DEFAULT_ENABLE_PACKAGE_DENY_SERVICE);
+    }
+
+    @Override
+    public boolean getEnablePackageDenyMdd() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_PACKAGE_DENY__ENABLE_PACKAGE_DENY_MDD,
+                DEFAULT_ENABLE_PACKAGE_DENY_MDD);
+    }
+
+    @Override
+    public boolean getEnablePackageDenyJobOnPackageAdd() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_PACKAGE_DENY__ENABLE_PACKAGE_DENY_JOB_ON_PACKAGE_ADD,
+                DEFAULT_ENABLE_PACKAGE_DENY_JOB_ON_PACKAGE_ADD);
+    }
+
+    @Override
+    public boolean getEnablePackageDenyBgJob() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_PACKAGE_DENY__ENABLE_PACKAGE_DENY_BG_JOB,
+                DEFAULT_ENABLE_PACKAGE_DENY_BG_JOB);
+    }
+
+    @Override
+    public boolean getEnablePackageDenyJobOnMddDownload() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_PACKAGE_DENY__ENABLE_PACKAGE_DENY_JOB_ON_MDD_DOWNLOAD,
+                DEFAULT_ENABLE_PACKAGE_DENY_JOB_ON_MDD_DOWNLOAD);
+    }
+
+    @Override
+    public String getMddPackageDenyRegistryManifestFileUrl() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL,
+                DEFAULT_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL);
     }
 }
