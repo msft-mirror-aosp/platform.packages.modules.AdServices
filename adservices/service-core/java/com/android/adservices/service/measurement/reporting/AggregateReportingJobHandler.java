@@ -65,12 +65,34 @@ import java.util.concurrent.TimeUnit;
 
 public class AggregateReportingJobHandler {
     private static final int MAX_HTTP_SUCCESS_CODE = 299;
+
+    /** {@link Uri} where attribution-success aggregate reports are sent with a delay. */
+    @VisibleForTesting
+    public static final String AGGREGATE_ATTRIBUTION_REPORT_URI_PATH =
+            ".well-known/attribution-reporting/report-aggregate-attribution";
+
+    /**
+     * {@link Uri} where debug attribution-success aggregate reports are sent, which are essentially
+     * a copy of regular trigger attribution aggregate reports, but sent immediately.
+     */
+    @VisibleForTesting
+    public static final String DEBUG_AGGREGATE_ATTRIBUTION_REPORT_URI_PATH =
+            ".well-known/attribution-reporting/debug/report-aggregate-attribution";
+
+    /**
+     * {@link Uri} where registration/attribution error related aggregate debug reports are sent
+     * that consume from source level L1 budget.
+     */
+    @VisibleForTesting
+    public static final String AGGREGATE_DEBUG_REPORT_URI_PATH =
+            ".well-known/attribution-reporting/debug/report-aggregate-debug";
+
     private final DatastoreManager mDatastoreManager;
     private final AggregateEncryptionKeyManager mAggregateEncryptionKeyManager;
     private boolean mIsDebugInstance;
     private final Flags mFlags;
-    private ReportingStatus.ReportType mReportType;
-    private ReportingStatus.UploadMethod mUploadMethod;
+    private final ReportingStatus.ReportType mReportType;
+    private final ReportingStatus.UploadMethod mUploadMethod;
     private final AdServicesLogger mLogger;
 
     private final Context mContext;
@@ -141,7 +163,7 @@ public class AggregateReportingJobHandler {
                                         windowStartTime, windowEndTime);
                             }
                         });
-        if (!pendingAggregateReportsInWindowOpt.isPresent()) {
+        if (pendingAggregateReportsInWindowOpt.isEmpty()) {
             // Failure during aggregate report retrieval
             return true;
         }
@@ -279,7 +301,10 @@ public class AggregateReportingJobHandler {
 
             int returnCode =
                     makeHttpPostRequest(
-                            reportingOrigin, aggregateReportJsonBody, triggerDebugHeaderAvailable);
+                            reportingOrigin,
+                            aggregateReportJsonBody,
+                            triggerDebugHeaderAvailable,
+                            aggregateReport.getApi());
 
             // Code outside [200, 299] is a failure according to HTTP protocol.
             if (returnCode < HttpURLConnection.HTTP_OK || returnCode > MAX_HTTP_SUCCESS_CODE) {
@@ -421,6 +446,7 @@ public class AggregateReportingJobHandler {
                                 TimeUnit.MILLISECONDS.toSeconds(
                                         aggregateReport.getScheduledReportTime())))
                 .setApiVersion(aggregateReport.getApiVersion())
+                .setApi(aggregateReport.getApi())
                 .setReportingOrigin(reportingOrigin.toString())
                 .setDebugCleartextPayload(aggregateReport.getDebugCleartextPayload())
                 .setSourceDebugKey(aggregateReport.getSourceDebugKey())
@@ -439,16 +465,32 @@ public class AggregateReportingJobHandler {
     /** Makes the POST request to the reporting URL. */
     @VisibleForTesting
     public int makeHttpPostRequest(
-            Uri adTechDomain, JSONObject aggregateReportBody, @Nullable Boolean hasTriggerDebug)
+            Uri adTechDomain,
+            JSONObject aggregateReportBody,
+            @Nullable Boolean hasTriggerDebug,
+            String api)
             throws IOException {
         AggregateReportSender aggregateReportSender =
-                new AggregateReportSender(mIsDebugInstance, mContext);
+                new AggregateReportSender(mContext, getReportUriPath(api));
         Map<String, String> headers =
                 hasTriggerDebug == null
                         ? null
                         : Map.of("Trigger-Debugging-Available", hasTriggerDebug.toString());
         return aggregateReportSender.sendReportWithHeaders(
                 adTechDomain, aggregateReportBody, headers);
+    }
+
+    @VisibleForTesting
+    String getReportUriPath(String api) {
+        if (!mIsDebugInstance) {
+            return AGGREGATE_ATTRIBUTION_REPORT_URI_PATH;
+        }
+
+        if (AggregateDebugReportApi.AGGREGATE_DEBUG_REPORT_API.equals(api)) {
+            return AGGREGATE_DEBUG_REPORT_URI_PATH;
+        }
+
+        return DEBUG_AGGREGATE_ATTRIBUTION_REPORT_URI_PATH;
     }
 
     @Nullable

@@ -462,7 +462,8 @@ public interface IMeasurementDao {
     void deleteExpiredRecords(
             long earliestValidInsertion,
             int registrationRetryLimit,
-            @Nullable Long earliestValidAppReportInsertion)
+            @Nullable Long earliestValidAppReportInsertion,
+            long earliestValidAggregateDebugReportInsertion)
             throws DatastoreException;
 
     /**
