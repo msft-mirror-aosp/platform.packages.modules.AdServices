@@ -108,6 +108,7 @@ import java.util.stream.Collectors;
 public class AttributionJobHandlerTest {
     public static final String TEST_TRIGGER_CONTEXT_ID = "test_trigger_context_id";
     private static final String AGGREGATE_REPORT_DELAY_DELIMITER = ",";
+    private static final String API = "attribution-reporting";
 
     @Rule
     public final TestableDeviceConfig.TestableDeviceConfigRule mDeviceConfigRule =
@@ -1111,6 +1112,7 @@ public class AttributionJobHandlerTest {
                                                                 .build()))
                                         .build())
                         .setSourceRegistrationTime(null)
+                        .setApi(API)
                         .build();
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
@@ -1194,6 +1196,7 @@ public class AttributionJobHandlerTest {
                                         .build())
                         .setSourceRegistrationTime(null)
                         .setTriggerContextId(trigger.getTriggerContextId())
+                        .setApi(API)
                         .build();
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
@@ -1310,6 +1313,7 @@ public class AttributionJobHandlerTest {
                                                                 .build()))
                                         .build())
                         .setIsFakeReport(false)
+                        .setApi(API)
                         .build();
 
         when(mMeasurementDao.getPendingTriggerIds())
@@ -1466,6 +1470,7 @@ public class AttributionJobHandlerTest {
                                         .build())
                         .setSourceRegistrationTime(SOURCE_TIME)
                         .setIsFakeReport(false)
+                        .setApi(API)
                         .build();
 
         setupTestForNullAggregateReport(trigger, source);
@@ -2716,6 +2721,7 @@ public class AttributionJobHandlerTest {
                                                                 .build()))
                                         .build())
                         .setSourceRegistrationTime(SOURCE_TIME)
+                        .setApi(API)
                         .build();
 
         when(mMeasurementDao.getPendingTriggerIds())
@@ -2886,6 +2892,7 @@ public class AttributionJobHandlerTest {
                                                                 .build()))
                                         .build())
                         .setSourceRegistrationTime(SOURCE_TIME)
+                        .setApi(API)
                         .build();
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
@@ -2959,6 +2966,7 @@ public class AttributionJobHandlerTest {
                                                                 .build()))
                                         .build())
                         .setSourceRegistrationTime(SOURCE_TIME)
+                        .setApi(API)
                         .build();
 
         when(mMeasurementDao.getPendingTriggerIds())
@@ -8544,6 +8552,7 @@ public class AttributionJobHandlerTest {
                 actualReport.getSourceRegistrationTime());
         assertEquals(expectedReport.isFakeReport(), actualReport.isFakeReport());
         assertEquals(expectedReport.getTriggerContextId(), actualReport.getTriggerContextId());
+        assertEquals(expectedReport.getApi(), actualReport.getApi());
     }
 
     private static AggregateReport.Builder getExpectedAggregateReportBuilder(
@@ -8576,7 +8585,8 @@ public class AttributionJobHandlerTest {
                                                         .setValue(1644)
                                                         .build()))
                                 .build())
-                .setIsFakeReport(false);
+                .setIsFakeReport(false)
+                .setApi(API);
     }
 
     private static JSONArray getAggregateTriggerData() throws JSONException {

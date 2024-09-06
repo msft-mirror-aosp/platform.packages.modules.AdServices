@@ -68,6 +68,7 @@ public final class TriggerFixture {
                 .setAttributionScopesString(ValidTriggerParams.ATTRIBUTION_SCOPES)
                 .setAggregatableFilteringIdMaxBytes(
                         ValidTriggerParams.AGGREGATABLE_FILTERING_ID_MAX_BYTES)
+                .setAggregateDebugReportingString(ValidTriggerParams.AGGREGATE_DEBUG_REPORT)
                 .build();
     }
 
@@ -174,5 +175,27 @@ public final class TriggerFixture {
         public static final String TRIGGER_CONTEXT_ID = "test-trigger-context-id";
         public static final String ATTRIBUTION_SCOPES = "[\"1\"]";
         public static final int AGGREGATABLE_FILTERING_ID_MAX_BYTES = 1;
+        public static final String AGGREGATE_DEBUG_REPORT =
+                "{\"key_piece\":\"0x222\","
+                        + "\"data\":["
+                        + "{"
+                        + "\"types\": [\"trigger-aggregate-insufficient-budget\", "
+                        + "\"trigger-aggregate-deduplicated\"],"
+                        + "\"key_piece\": \"0x333\","
+                        + "\"value\": 333"
+                        + "},"
+                        + "{"
+                        + "\"types\": [\"trigger-aggregate-report-window-passed\", "
+                        + "\"trigger-event-low-priority\"],"
+                        + "\"key_piece\": \"0x444\","
+                        + "\"value\": 444"
+                        + "},"
+                        + "{"
+                        + "\"types\": [\"default\"],"
+                        + "\"key_piece\": \"0x555\","
+                        + "\"value\": 555"
+                        + "}"
+                        + "],"
+                        + "\"aggregation_coordinator_origin\":\"https://aws.example\"}";
     }
 }
