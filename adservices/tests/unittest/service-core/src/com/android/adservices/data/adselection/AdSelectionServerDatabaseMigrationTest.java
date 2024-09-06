@@ -27,7 +27,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -125,5 +125,38 @@ public class AdSelectionServerDatabaseMigrationTest {
         assertEquals(
                 protectedServersEncryptionConfigTable,
                 c.getString(c.getColumnIndex(COLUMN_NAME_NAME)));
+    }
+
+    @Test
+    public void testMigration4To5() throws IOException {
+        String auctionServerAdSelection = "auction_server_ad_selection";
+        SupportSQLiteDatabase db = helper.createDatabase(TEST_DB, 4);
+        Cursor cursor =
+                db.query(String.format(QUERY_TABLES_FROM_SQL_MASTER, auctionServerAdSelection));
+        // The table should already exist
+        assertEquals(1, cursor.getCount());
+
+        // Re-open the database with version 5 and provide MIGRATION_4_5 as the migration process.
+        db = helper.runMigrationsAndValidate(TEST_DB, 5, true);
+        cursor = db.query(String.format(QUERY_TABLES_FROM_SQL_MASTER, auctionServerAdSelection));
+        assertEquals(1, cursor.getCount());
+        cursor.moveToFirst();
+
+        assertEquals(
+                auctionServerAdSelection,
+                cursor.getString(cursor.getColumnIndex(COLUMN_NAME_NAME)));
+
+        cursor = db.query("PRAGMA table_info(encryption_context)");
+        boolean hasMediaTypeChangedColumnExists = false;
+        if (cursor.moveToFirst()) {
+            do {
+                if (Objects.equals(cursor.getString(1), "has_media_type_changed")) {
+                    hasMediaTypeChangedColumnExists = true;
+                    break;
+                }
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        assertTrue(hasMediaTypeChangedColumnExists);
     }
 }

@@ -15,6 +15,8 @@
  */
 package com.android.adservices.ui.ganotifications;
 
+import static com.android.adservices.service.FlagsConstants.KEY_EEA_PAS_UX_ENABLED;
+import static com.android.adservices.service.consent.ConsentManager.MANUAL_INTERACTIONS_RECORDED;
 import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.CONFIRMATION_PAGE_DISMISSED;
 import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.CONFIRMATION_PAGE_DISPLAYED;
 import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.CONFIRMATION_PAGE_OPT_OUT_MORE_INFO_CLICKED;
@@ -41,7 +43,7 @@ import androidx.fragment.app.Fragment;
 import com.android.adservices.api.R;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.ui.UxUtil;
+import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.ui.notifications.ConsentNotificationActivity;
 import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
 
@@ -51,11 +53,16 @@ import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActiv
  */
 @RequiresApi(Build.VERSION_CODES.S)
 public class ConsentNotificationPasFragment extends Fragment {
+    public static final String IS_RENOTIFY_KEY = "IS_RENOTIFY_KEY";
+
+    /** This includes EEA devices and ROW AdID disabled devices */
+    public static final String IS_STRICT_CONSENT_BEHAVIOR = "IS_STRICT_CONSENT_BEHAVIOR";
+
     public static final String INFO_VIEW_EXPANDED_1 = "info_view_expanded_1";
     public static final String INFO_VIEW_EXPANDED_2 = "info_view_expanded_2";
     private boolean mIsInfoViewExpanded1 = false;
     private boolean mIsInfoViewExpanded2 = false;
-    private boolean mIsEUDevice;
+    private boolean mIsStrictConsentBehavior;
     private boolean mIsRenotify;
     private boolean mIsFirstTimeRow;
     private @Nullable ScrollToBottomController mScrollToBottomController;
@@ -64,8 +71,9 @@ public class ConsentNotificationPasFragment extends Fragment {
     public View onCreateView(
             @NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View inflatedView;
-        mIsEUDevice = UxUtil.isEeaDevice(requireActivity(), getContext());
-        mIsRenotify = isFledgeOrMsmtEnabled();
+        mIsStrictConsentBehavior =
+                requireActivity().getIntent().getBooleanExtra(IS_STRICT_CONSENT_BEHAVIOR, false);
+        mIsRenotify = requireActivity().getIntent().getBooleanExtra(IS_RENOTIFY_KEY, false);
         mIsFirstTimeRow = false;
         if (mIsRenotify) {
             // renotify version
@@ -73,7 +81,7 @@ public class ConsentNotificationPasFragment extends Fragment {
                     inflater.inflate(R.layout.consent_notification_screen_1_pas, container, false);
             TextView title = inflatedView.findViewById(R.id.notification_title);
             title.setText(R.string.notificationUI_pas_renotify_header_title);
-        } else if (mIsEUDevice) {
+        } else if (mIsStrictConsentBehavior) {
             // first-time version
             inflatedView =
                     inflater.inflate(R.layout.consent_notification_screen_1_pas, container, false);
@@ -90,7 +98,22 @@ public class ConsentNotificationPasFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         setupListeners(savedInstanceState);
-
+        ConsentManager consentManager = ConsentManager.getInstance();
+        boolean isNotRenotifyNoManualInteraction =
+                !mIsRenotify
+                        && consentManager.getUserManualInteractionWithConsent()
+                                != MANUAL_INTERACTIONS_RECORDED;
+        boolean isAdultFromRvcMsmtEnabled =
+                consentManager.isOtaAdultUserFromRvc()
+                        && consentManager.getConsent(AdServicesApiType.MEASUREMENTS).isGiven();
+        if (UxStatesManager.getInstance().getFlag(KEY_EEA_PAS_UX_ENABLED)) {
+            consentManager.recordPasNotificationOpened(true);
+            if (mIsStrictConsentBehavior
+                    && (isNotRenotifyNoManualInteraction || isAdultFromRvcMsmtEnabled)) {
+                consentManager.enable(requireContext(), AdServicesApiType.FLEDGE);
+                consentManager.enable(requireContext(), AdServicesApiType.MEASUREMENTS);
+            }
+        }
         ConsentNotificationActivity.handleAction(CONFIRMATION_PAGE_DISPLAYED, getContext());
     }
 
@@ -115,7 +138,7 @@ public class ConsentNotificationPasFragment extends Fragment {
 
                     setInfoViewState1(!mIsInfoViewExpanded1);
                 });
-        ((TextView) requireActivity().findViewById(R.id.learn_more_from_privacy_policy))
+        ((TextView) requireActivity().findViewById(R.id.learn_more_from_privacy_policy1))
                 .setMovementMethod(LinkMovementMethod.getInstance());
 
         if (!mIsFirstTimeRow) {
@@ -176,11 +199,10 @@ public class ConsentNotificationPasFragment extends Fragment {
         if (expanded) {
             text.setVisibility(View.VISIBLE);
             expander.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                    0, 0, R.drawable.ic_chevron_up, 0);
+                    0, 0, R.drawable.ic_minimize, 0);
         } else {
             text.setVisibility(View.GONE);
-            expander.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                    0, 0, R.drawable.ic_chevron_down, 0);
+            expander.setCompoundDrawablesRelativeWithIntrinsicBounds(0, 0, R.drawable.ic_expand, 0);
         }
         return expanded;
     }
@@ -197,12 +219,6 @@ public class ConsentNotificationPasFragment extends Fragment {
                 .setReorderingAllowed(true)
                 .addToBackStack(null)
                 .commit();
-    }
-
-    private static boolean isFledgeOrMsmtEnabled() {
-        ConsentManager consentManager = ConsentManager.getInstance();
-        return consentManager.getConsent(AdServicesApiType.FLEDGE).isGiven()
-                || consentManager.getConsent(AdServicesApiType.MEASUREMENTS).isGiven();
     }
 
     /**
@@ -264,10 +280,10 @@ public class ConsentNotificationPasFragment extends Fragment {
         private void onMoreOrAcceptClicked(View view) {
             if (mHasScrolledToBottom) {
                 // screen 2
-                if (!mIsRenotify && mIsEUDevice) {
+                if (!mIsRenotify && mIsStrictConsentBehavior) {
                     startTopicsConsentNotificationFragment();
                 } else {
-                    requireActivity().finish();
+                    requireActivity().finishAndRemoveTask();
                 }
             } else {
                 mScrollContainer.smoothScrollTo(

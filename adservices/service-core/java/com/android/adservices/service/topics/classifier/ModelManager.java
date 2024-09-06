@@ -51,6 +51,7 @@ import com.android.adservices.download.MobileDataDownloadFactory;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.topics.classifier.ClassifierInputConfig.ClassifierInputField;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.android.libraries.mobiledatadownload.GetFileGroupRequest;
@@ -88,7 +89,6 @@ import java.util.concurrent.ExecutionException;
  *
  * <p>ModelManager will select the right model to serve Classifier.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class ModelManager {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
@@ -163,19 +163,19 @@ public class ModelManager {
 
     /** Returns the singleton instance of the {@link ModelManager} given a context. */
     @NonNull
-    public static ModelManager getInstance(@NonNull Context context) {
+    public static ModelManager getInstance() {
         synchronized (ModelManager.class) {
             if (sSingleton == null) {
                 sSingleton =
                         new ModelManager(
-                                context,
+                                ApplicationContextSingleton.get(),
                                 BUNDLED_LABELS_FILE_PATH,
                                 BUNDLED_TOP_APP_FILE_PATH,
                                 BUNDLED_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
                                 BUNDLED_CLASSIFIER_INPUT_CONFIG_FILE_PATH,
                                 BUNDLED_MODEL_FILE_PATH,
-                                MobileDataDownloadFactory.getFileStorage(context),
-                                getDownloadedFiles(context));
+                                MobileDataDownloadFactory.getFileStorage(),
+                                getDownloadedFiles());
             }
         }
         return sSingleton;
@@ -189,8 +189,8 @@ public class ModelManager {
      *     downloaded files found.
      */
     @VisibleForTesting
-    static @Nullable Map<String, ClientFile> getDownloadedFiles(@NonNull Context context) {
-        ClientFileGroup fileGroup = getClientFileGroup(context);
+    static @Nullable Map<String, ClientFile> getDownloadedFiles() {
+        ClientFileGroup fileGroup = getClientFileGroup();
         if (fileGroup == null) {
             sLogger.d("ClientFileGroup is null.");
             return null;
@@ -205,9 +205,9 @@ public class ModelManager {
     /** Returns topics-classifier-model ClientFileGroup */
     @VisibleForTesting
     @Nullable
-    static ClientFileGroup getClientFileGroup(@NonNull Context context) {
+    static ClientFileGroup getClientFileGroup() {
         MobileDataDownload mobileDataDownload =
-                MobileDataDownloadFactory.getMdd(context, FlagsFactory.getFlags());
+                MobileDataDownloadFactory.getMdd(FlagsFactory.getFlags());
         GetFileGroupRequest getFileGroupRequest =
                 GetFileGroupRequest.newBuilder().setGroupName(FILE_GROUP_NAME).build();
         ClientFileGroup fileGroup = null;
@@ -738,7 +738,7 @@ public class ModelManager {
      * @return downloaded model build id.
      */
     private long getDownloadedModelBuildId() {
-        ClientFileGroup clientFileGroup = getClientFileGroup(mContext);
+        ClientFileGroup clientFileGroup = getClientFileGroup();
         if (clientFileGroup == null) {
             return 0;
         }

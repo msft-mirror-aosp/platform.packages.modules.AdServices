@@ -132,7 +132,7 @@ public final class Preprocessor {
     public static String preprocessAppDescription(@NonNull String description) {
         requireNonNull(description);
 
-        description = description.toLowerCase(Locale.ROOT);
+        description = description.toLowerCase(Locale.ENGLISH);
 
         description = URL_REGEX.matcher(description).replaceAll(EMPTY_STRING);
         description = MENTIONS_REGEX.matcher(description).replaceAll(EMPTY_STRING);

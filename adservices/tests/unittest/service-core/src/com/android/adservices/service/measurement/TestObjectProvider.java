@@ -16,8 +16,6 @@
 
 package com.android.adservices.service.measurement;
 
-import static com.android.adservices.service.Flags.MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS;
-
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
@@ -33,8 +31,8 @@ import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
 import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.attribution.AttributionJobHandlerWrapper;
 import com.android.adservices.service.measurement.inputverification.ClickVerifier;
 import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
@@ -90,6 +88,7 @@ class TestObjectProvider {
         return spy(
                 new MeasurementImpl(
                         null,
+                        FakeFlagsFactory.getFlagsForTest(),
                         datastoreManager,
                         clickVerifier,
                         measurementDataDeleter,
@@ -104,7 +103,7 @@ class TestObjectProvider {
             DebugReportApi debugReportApi,
             Flags flags) {
         SourceNoiseHandler sourceNoiseHandler =
-                spy(new SourceNoiseHandler(FlagsFactory.getFlagsForTest()));
+                spy(new SourceNoiseHandler(FakeFlagsFactory.getFlagsForTest()));
         if (type == Type.DENOISED) {
             // Disable Impression Noise
             doReturn(null)
@@ -119,9 +118,10 @@ class TestObjectProvider {
                         return Collections.singletonList(
                                 new Source.FakeReport(
                                         new UnsignedLong(0L),
-                                        source.getExpiryTime()
-                                                + MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS,
-                                        source.getAppDestinations()));
+                                        source.getExpiryTime(),
+                                        source.getEventTime(),
+                                        source.getAppDestinations(),
+                                        null));
                     };
             doAnswer(answerSourceEventReports)
                     .when(sourceNoiseHandler)

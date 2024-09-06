@@ -22,8 +22,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROU
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_DISABLE_DIRECT_APP_CALLS;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
-import static com.android.adservices.tests.cts.topics.appupdate.CtsAdServicesTopicsAppUpdateTestCase.TEST_EPOCH_JOB_PERIOD_MS;
-import static com.android.adservices.tests.cts.topics.appupdate.CtsAdServicesTopicsAppUpdateTestCase.TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
+import static com.android.compatibility.common.util.ShellUtils.runShellCommand;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -34,12 +33,17 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.util.Log;
 
 import androidx.test.filters.FlakyTest;
 
+import com.android.adservices.common.AdServicesSupportHelper;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.RequiresSdkLevelAtLeastT;
-import com.android.compatibility.common.util.ShellUtils;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
+import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
+import com.android.adservices.shared.testing.annotations.SetLongFlag;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -90,7 +94,22 @@ import java.util.stream.Collectors;
  * <p>Expected running time: ~48s.
  */
 @RequiresSdkLevelAtLeastT
+@SetFlagDisabled(KEY_ENFORCE_FOREGROUND_STATUS_TOPICS)
+@SetFlagEnabled(KEY_TOPICS_DISABLE_DIRECT_APP_CALLS)
+@SetIntegerFlag(
+        name = KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC,
+        value = AppUpdateTest.TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC)
+@SetLongFlag(name = KEY_TOPICS_EPOCH_JOB_PERIOD_MS, value = AppUpdateTest.TEST_EPOCH_JOB_PERIOD_MS)
 public final class AppUpdateTest extends CtsAdServicesTopicsAppUpdateTestCase {
+    // Override the Epoch Job Period to this value to speed up the epoch computation.
+    static final long TEST_EPOCH_JOB_PERIOD_MS = 5000;
+
+    // Use 0 percent for random topic in the test so that we can verify the returned topic.
+    static final int TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC = 0;
+
+    // As adb commands and broadcast processing require time to execute, add this waiting time to
+    // allow them to have enough time to be executed. This helps to reduce the test flaky.
+    private static final long EXECUTION_WAITING_TIME = 2000;
 
     private static final String TEST_APK_NAME = "CtsSampleTopicsApp1.apk";
     private static final String TEST_APK_PATH = "/data/local/tmp/cts/install/" + TEST_APK_NAME;
@@ -113,7 +132,7 @@ public final class AppUpdateTest extends CtsAdServicesTopicsAppUpdateTestCase {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
     private final String mAdServicesPackageName =
-            AdservicesTestHelper.getAdServicesPackageName(sContext, mTag);
+            AdServicesSupportHelper.getInstance().getAdServicesPackageName();
 
     // Expected topic responses used for assertion. This is the expected order of broadcasts that
     // the test sample app will send back to the main test app. So the order is important.
@@ -128,9 +147,13 @@ public final class AppUpdateTest extends CtsAdServicesTopicsAppUpdateTestCase {
 
     private int mExpectedTopicResponseBroadCastIndex;
     private BroadcastReceiver mTopicsResponseReceiver;
+    private int mUserId;
 
     @Before
     public void setup() throws Exception {
+        mUserId = mContext.getUser().getIdentifier();
+        Log.v(mTag, "Running as user " + mUserId);
+
         // Kill AdServices process so that background jobs don't get skipped due to starting
         // with same params.
         AdservicesTestHelper.killAdservicesProcess(mAdServicesPackageName);
@@ -138,12 +161,6 @@ public final class AppUpdateTest extends CtsAdServicesTopicsAppUpdateTestCase {
         // not be used for epoch retrieval.
         Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
 
-        flags.setFlag(KEY_TOPICS_EPOCH_JOB_PERIOD_MS, TEST_EPOCH_JOB_PERIOD_MS);
-        // We need to turn off random topic so that we can verify the returned topic.
-        flags.setFlag(
-                KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC, TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
-        flags.setFlag(KEY_TOPICS_DISABLE_DIRECT_APP_CALLS, true);
-        flags.setFlag(KEY_ENFORCE_FOREGROUND_STATUS_TOPICS, false);
         registerTopicResponseReceiver();
     }
 
@@ -268,28 +285,27 @@ public final class AppUpdateTest extends CtsAdServicesTopicsAppUpdateTestCase {
 
     // Install test sample app 1 and verify the installation.
     private void installTestSampleApp() {
-        String installMessage = ShellUtils.runShellCommand("pm install -r " + TEST_APK_PATH);
+        String installMessage =
+                runShellCommand("pm install --user %d -r %s", mUserId, TEST_APK_PATH);
         assertThat(installMessage).contains("Success");
     }
 
     // Note aosp_x86 requires --user 0 to uninstall though arm doesn't.
     private void uninstallTestSampleApp() {
-        ShellUtils.runShellCommand("pm uninstall --user 0 " + TEST_PKG_NAME);
+        runShellCommand("pm uninstall --user %d %s", mUserId, TEST_PKG_NAME);
     }
 
     /** Forces JobScheduler to run the Epoch Computation job */
     private void forceEpochComputationJob() {
-        ShellUtils.runShellCommand(
-                "cmd jobscheduler run -f" + " " + mAdServicesPackageName + " " + EPOCH_JOB_ID);
+        runShellCommand(
+                "cmd jobscheduler run --user %d -f %s %s",
+                mUserId, mAdServicesPackageName, EPOCH_JOB_ID);
     }
 
     // Forces JobScheduler to run the Maintenance job.
     private void forceMaintenanceJob() {
-        ShellUtils.runShellCommand(
-                "cmd jobscheduler run -f"
-                        + " "
-                        + mAdServicesPackageName
-                        + " "
-                        + MAINTENANCE_JOB_ID);
+        runShellCommand(
+                "cmd jobscheduler run --user %d -f %s %s",
+                mUserId, mAdServicesPackageName, MAINTENANCE_JOB_ID);
     }
 }

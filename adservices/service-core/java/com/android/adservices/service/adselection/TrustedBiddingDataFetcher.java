@@ -17,7 +17,7 @@
 package com.android.adservices.service.adselection;
 
 import static com.android.adservices.data.customaudience.DBTrustedBiddingData.QUERY_PARAM_KEYS;
-import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_BIDDING_KEY;
+import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_KEY;
 
 import android.adservices.common.AdSelectionSignals;
 import android.annotation.NonNull;
@@ -189,7 +189,7 @@ public class TrustedBiddingDataFetcher {
     private ListenableFuture<AdServicesHttpClientResponse> fetchTrustedBiddingData(Uri uri) {
         if (mDataVersionHeaderEnabled) {
             return mAdServicesHttpsClient.fetchPayload(
-                    uri, ImmutableSet.of(DATA_VERSION_HEADER_BIDDING_KEY), mDevContext);
+                    uri, ImmutableSet.of(DATA_VERSION_HEADER_KEY), mDevContext);
         } else {
             return mAdServicesHttpsClient.fetchPayload(uri, mDevContext);
         }

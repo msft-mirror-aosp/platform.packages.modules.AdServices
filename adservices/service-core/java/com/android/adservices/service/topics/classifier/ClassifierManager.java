@@ -20,7 +20,6 @@ import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 
 import android.annotation.NonNull;
-import android.content.Context;
 import android.os.Build;
 
 import androidx.annotation.RequiresApi;
@@ -48,7 +47,6 @@ import java.util.stream.Stream;
  * Manager class to control the classifier behaviour between available types of classifier based on
  * classifier flags.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class ClassifierManager implements Classifier {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
@@ -67,7 +65,7 @@ public class ClassifierManager implements Classifier {
 
     /** Returns the singleton instance of the {@link ClassifierManager} given a context. */
     @NonNull
-    public static ClassifierManager getInstance(@NonNull Context context) {
+    public static ClassifierManager getInstance() {
         synchronized (ClassifierManager.class) {
             if (sSingleton == null) {
                 // Note: we need to have a singleton ModelManager shared by both Classifiers.
@@ -77,15 +75,15 @@ public class ClassifierManager implements Classifier {
                                         () ->
                                                 new OnDeviceClassifier(
                                                         new Random(),
-                                                        ModelManager.getInstance(context),
-                                                        CacheManager.getInstance(context),
-                                                        ClassifierInputManager.getInstance(context),
+                                                        ModelManager.getInstance(),
+                                                        CacheManager.getInstance(),
+                                                        ClassifierInputManager.getInstance(),
                                                         AdServicesLoggerImpl.getInstance())),
                                 Suppliers.memoize(
                                         () ->
                                                 new PrecomputedClassifier(
-                                                        ModelManager.getInstance(context),
-                                                        CacheManager.getInstance(context),
+                                                        ModelManager.getInstance(),
+                                                        CacheManager.getInstance(),
                                                         AdServicesLoggerImpl.getInstance())));
             }
         }

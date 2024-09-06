@@ -19,8 +19,8 @@
     android:id="@+id/topics_fragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingStart="24dp"
-    android:paddingEnd="24dp"
+    android:paddingStart="@dimen/adservices_content_horizontal_padding"
+    android:paddingEnd="@dimen/adservices_content_horizontal_padding"
     android:orientation="vertical">
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
@@ -31,27 +31,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
-            <LinearLayout
-                android:id="@+id/no_blocked_topics_message"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="48dp"
-                android:gravity="center"
-                android:visibility="gone"
-                android:orientation="vertical">
-                <ImageView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:src="@drawable/ic_placeholder_icon_for_empty_topics_list"
-                    android:contentDescription="@string/ic_placeholder_icon_for_empty_topics_list_description" />
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="24dp"
-                    android:gravity="center"
-                    android:text="@string/settingsUI_topics_view_no_blocked_topics_text"
-                    android:textAppearance="@style/TextAppearance.Body2.Bold" />
-            </LinearLayout>
 
             <TextView
                 android:id="@+id/no_blocked_topics_ga_message"

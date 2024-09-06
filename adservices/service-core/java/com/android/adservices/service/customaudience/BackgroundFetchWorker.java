@@ -116,7 +116,7 @@ public class BackgroundFetchWorker {
                                             customAudienceDao,
                                             appInstallDao,
                                             context.getPackageManager(),
-                                            EnrollmentDao.getInstance(context),
+                                            EnrollmentDao.getInstance(),
                                             flags,
                                             customAudienceLoggerFactory),
                                     Clock.systemUTC(),
@@ -244,7 +244,7 @@ public class BackgroundFetchWorker {
                                             jobStartTime);
                                     mBackgroundFetchRunner.deleteDisallowedOwnerCustomAudiences();
                                     mBackgroundFetchRunner.deleteDisallowedBuyerCustomAudiences();
-                                    if (mFlags.getFledgeAdSelectionFilteringEnabled()) {
+                                    if (mFlags.getFledgeAppInstallFilteringEnabled()) {
                                         mBackgroundFetchRunner
                                                 .deleteDisallowedPackageAppInstallEntries();
                                     }

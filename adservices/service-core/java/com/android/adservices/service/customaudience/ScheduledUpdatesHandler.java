@@ -110,7 +110,8 @@ public class ScheduledUpdatesHandler {
     @NonNull private final int mFledgeCustomAudienceMaxAdsSizeB;
     @NonNull private final int mFledgeCustomAudienceMaxNumAds;
     @NonNull private final int mFledgeCustomAudienceMaxCustomAudienceSizeB;
-    private final boolean mFledgeAdSelectionFilteringEnabled;
+    private final boolean mFledgeFrequencyCapFilteringEnabled;
+    private final boolean mFledgeAppInstallFilteringEnabled;
     private final boolean mFledgeAuctionServerAdRenderIdEnabled;
     private final boolean mAuctionServerRequestFlagsEnabled;
     private final long mFledgeAuctionServerAdRenderIdMaxLength;
@@ -144,7 +145,8 @@ public class ScheduledUpdatesHandler {
         mMaxTrustedBiddingDataSizeB = mFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB();
         mFledgeCustomAudienceMaxAdsSizeB = mFlags.getFledgeCustomAudienceMaxAdsSizeB();
         mFledgeCustomAudienceMaxNumAds = mFlags.getFledgeCustomAudienceMaxNumAds();
-        mFledgeAdSelectionFilteringEnabled = mFlags.getFledgeAdSelectionFilteringEnabled();
+        mFledgeFrequencyCapFilteringEnabled = mFlags.getFledgeFrequencyCapFilteringEnabled();
+        mFledgeAppInstallFilteringEnabled = mFlags.getFledgeAppInstallFilteringEnabled();
         mFledgeAuctionServerAdRenderIdEnabled = mFlags.getFledgeAuctionServerAdRenderIdEnabled();
         mAuctionServerRequestFlagsEnabled = mFlags.getFledgeAuctionServerRequestFlagsEnabled();
         mFledgeAuctionServerAdRenderIdMaxLength =
@@ -196,7 +198,8 @@ public class ScheduledUpdatesHandler {
                         .getFrequencyCapAdDataValidator(),
                 AdRenderIdValidator.createInstance(FlagsFactory.getFlags()),
                 AdDataConversionStrategyFactory.getAdDataConversionStrategy(
-                        FlagsFactory.getFlags().getFledgeAdSelectionFilteringEnabled(),
+                        FlagsFactory.getFlags().getFledgeFrequencyCapFilteringEnabled(),
+                        FlagsFactory.getFlags().getFledgeAppInstallFilteringEnabled(),
                         FlagsFactory.getFlags().getFledgeAuctionServerAdRenderIdEnabled()),
                 CustomAudienceImpl.getInstance(context));
     }
@@ -248,7 +251,8 @@ public class ScheduledUpdatesHandler {
 
             CustomAudienceBlob blob =
                     new CustomAudienceBlob(
-                            mFledgeAdSelectionFilteringEnabled,
+                            mFledgeFrequencyCapFilteringEnabled,
+                            mFledgeAppInstallFilteringEnabled,
                             mFledgeAuctionServerAdRenderIdEnabled,
                             mFledgeAuctionServerAdRenderIdMaxLength,
                             mAuctionServerRequestFlagsEnabled);
@@ -368,7 +372,8 @@ public class ScheduledUpdatesHandler {
         for (JSONObject customAudience : joinCustomAudienceList) {
             CustomAudienceBlob fusedBlob =
                     new CustomAudienceBlob(
-                            mFledgeAdSelectionFilteringEnabled,
+                            mFledgeFrequencyCapFilteringEnabled,
+                            mFledgeAppInstallFilteringEnabled,
                             mFledgeAuctionServerAdRenderIdEnabled,
                             mFledgeAuctionServerAdRenderIdMaxLength,
                             mAuctionServerRequestFlagsEnabled);

@@ -20,15 +20,18 @@ import static android.adservices.adselection.AdSelectionFromOutcomesConfigFixtur
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
 
-import static com.android.adservices.data.adselection.AdSelectionDatabase.DATABASE_NAME;
 import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
+import static com.android.adservices.data.adselection.AdSelectionDatabase.DATABASE_NAME;
 import static com.android.adservices.service.adselection.AdOutcomeSelectorImpl.OUTCOME_SELECTION_JS_RETURNED_UNEXPECTED_RESULT;
 import static com.android.adservices.service.adselection.OutcomeSelectionRunner.SELECTED_OUTCOME_MUST_BE_ONE_OF_THE_INPUTS;
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_OUTCOME_SELECTION_WATERFALL_MEDIATION_TRUNCATION;
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_SELECTION_FROM_OUTCOMES_USE_CASE;
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_SELECTION_PREBUILT_SCHEMA;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.DB_AD_SELECTION_FILE_SIZE;
+import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_SUCCESS;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_UNSET;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
@@ -39,6 +42,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.spy;
 
 import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionFromOutcomesConfig;
@@ -62,11 +66,8 @@ import android.os.SystemClock;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.MockWebServerRuleFactory;
-import com.android.adservices.common.SdkLevelSupportRule;
-import com.android.adservices.common.SupportedByConditionRule;
 import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.DbTestUtil;
@@ -75,6 +76,7 @@ import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.AppInstallDao;
+import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.FrequencyCapDao;
@@ -91,6 +93,7 @@ import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGeneratorFactory;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
@@ -102,9 +105,13 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.kanon.KAnonSignJoinFactory;
+import com.android.adservices.service.signals.EgressConfigurationGenerator;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
+import com.android.adservices.service.stats.SelectAdsFromOutcomesApiCalledStats;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.SupportedByConditionRule;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.mockwebserver.Dispatcher;
@@ -116,6 +123,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoSession;
 import org.mockito.Spy;
@@ -177,6 +185,9 @@ public class AdSelectionFromOutcomesE2ETest {
     private static final long AD_SELECTION_ID_2 = 123456L;
     private static final long AD_SELECTION_ID_3 = 1234567L;
     private static final long AD_SELECTION_ID_4 = 12345678L;
+    private static final boolean CONSOLE_MESSAGE_IN_LOGS_ENABLED = true;
+
+    private static final int SUCCESS_DOWNLOAD_RESULT_CODE = 200;
 
     private final AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
@@ -219,7 +230,7 @@ public class AdSelectionFromOutcomesE2ETest {
     private EncodedPayloadDao mEncodedPayloadDao;
     private AppInstallDao mAppInstallDao;
     private FrequencyCapDao mFrequencyCapDao;
-    @Spy private AdSelectionEntryDao mAdSelectionEntryDaoSpy;
+    private AdSelectionEntryDao mAdSelectionEntryDaoSpy;
     private EnrollmentDao mEnrollmentDao;
     private EncryptionKeyDao mEncryptionKeyDao;
     private AdServicesHttpsClient mAdServicesHttpsClient;
@@ -232,14 +243,13 @@ public class AdSelectionFromOutcomesE2ETest {
     @Mock private AdSelectionDebugReportDao mAdSelectionDebugReportDao;
     @Mock private AdIdFetcher mAdIdFetcher;
     private RetryStrategyFactory mRetryStrategyFactory;
+    private ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
+    private ConsentedDebugConfigurationGeneratorFactory
+            mConsentedDebugConfigurationGeneratorFactory;
+    private EgressConfigurationGenerator mEgressConfigurationGenerator;
 
     @Before
     public void setUp() throws Exception {
-        mAdSelectionEntryDaoSpy =
-                Room.inMemoryDatabaseBuilder(mContextSpy, AdSelectionDatabase.class)
-                        .build()
-                        .adSelectionEntryDao();
-
         // Test applications don't have the required permissions to read config P/H flags, and
         // injecting mocked flags everywhere is annoying and non-trivial for static methods
         mStaticMockSession =
@@ -248,6 +258,13 @@ public class AdSelectionFromOutcomesE2ETest {
                         .initMocks(this)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
+        doReturn(mFlags).when(FlagsFactory::getFlags);
+
+        mAdSelectionEntryDaoSpy =
+                spy(
+                        Room.inMemoryDatabaseBuilder(mContextSpy, AdSelectionDatabase.class)
+                                .build()
+                                .adSelectionEntryDao());
 
         // Initialize dependencies for the AdSelectionService
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
@@ -255,7 +272,7 @@ public class AdSelectionFromOutcomesE2ETest {
         mScheduledExecutor = AdServicesExecutors.getScheduler();
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(mContextSpy, CustomAudienceDatabase.class)
-                        .addTypeConverter(new DBCustomAudience.Converters(true, true))
+                        .addTypeConverter(new DBCustomAudience.Converters(true, true, true))
                         .build()
                         .customAudienceDao();
         mEncodedPayloadDao =
@@ -268,8 +285,8 @@ public class AdSelectionFromOutcomesE2ETest {
         mFrequencyCapDao = sharedDb.frequencyCapDao();
         AdSelectionServerDatabase serverDb =
                 Room.inMemoryDatabaseBuilder(mContextSpy, AdSelectionServerDatabase.class).build();
-        mEnrollmentDao = EnrollmentDao.getInstance(mContextSpy);
-        mEncryptionKeyDao = EncryptionKeyDao.getInstance(mContextSpy);
+        mEnrollmentDao = EnrollmentDao.getInstance();
+        mEncryptionKeyDao = EncryptionKeyDao.getInstance();
         mMultiCloudSupportStrategy =
                 MultiCloudTestStrategyFactory.getDisabledTestStrategy(mObliviousHttpEncryptor);
         mAdFilteringFeatureFactory =
@@ -279,6 +296,19 @@ public class AdSelectionFromOutcomesE2ETest {
                         AdServicesExecutors.getBlockingExecutor(),
                         CacheProviderFactory.createNoOpCache());
         mRetryStrategyFactory = RetryStrategyFactory.createInstanceForTesting();
+        mConsentedDebugConfigurationDao =
+                Room.inMemoryDatabaseBuilder(mContextSpy, AdSelectionDatabase.class)
+                        .build()
+                        .consentedDebugConfigurationDao();
+        mConsentedDebugConfigurationGeneratorFactory =
+                new ConsentedDebugConfigurationGeneratorFactory(
+                        false, mConsentedDebugConfigurationDao);
+        mEgressConfigurationGenerator =
+                EgressConfigurationGenerator.createInstance(
+                        Flags.DEFAULT_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS,
+                        mAdIdFetcher,
+                        Flags.DEFAULT_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS,
+                        mLightweightExecutorService);
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
@@ -312,7 +342,10 @@ public class AdSelectionFromOutcomesE2ETest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator,
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
 
         // Create a dispatcher that helps map a request -> response in mockWebServer
         mDispatcher =
@@ -358,9 +391,17 @@ public class AdSelectionFromOutcomesE2ETest {
 
     @Test
     public void testSelectAdsFromOutcomesPickHighestSuccess() throws Exception {
-        doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
         final String selectionLogicPath = SELECTION_PICK_HIGHEST_LOGIC_JS_PATH;
+
+        CountDownLatch loggingLatch = new CountDownLatch(1);
+        ExtendedMockito.doAnswer(
+                        unused -> {
+                            loggingLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logSelectAdsFromOutcomesApiCalledStats(any());
 
         Map<Long, Double> adSelectionIdToBidMap =
                 Map.of(
@@ -383,12 +424,24 @@ public class AdSelectionFromOutcomesE2ETest {
         assertEquals(resultsCallback.mAdSelectionResponse.getAdSelectionId(), AD_SELECTION_ID_3);
         mMockWebServerRule.verifyMockServerRequests(
                 server, 1, Collections.singletonList(selectionLogicPath), String::equals);
+
+        loggingLatch.await();
+        ArgumentCaptor<SelectAdsFromOutcomesApiCalledStats> argumentCaptor =
+                ArgumentCaptor.forClass(SelectAdsFromOutcomesApiCalledStats.class);
+        verify(mAdServicesLoggerMock)
+                .logSelectAdsFromOutcomesApiCalledStats(argumentCaptor.capture());
+        SelectAdsFromOutcomesApiCalledStats stats = argumentCaptor.getValue();
+        assertThat(stats.getCountIds()).isEqualTo(3);
+        assertThat(stats.getCountNonExistingIds()).isEqualTo(0);
+        assertThat(stats.getUsedPrebuilt()).isEqualTo(false);
+        assertThat(stats.getDownloadLatencyMillis()).isNotEqualTo(FIELD_UNSET);
+        assertThat(stats.getDownloadResultCode()).isEqualTo(SUCCESS_DOWNLOAD_RESULT_CODE);
+        assertThat(stats.getExecutionLatencyMillis()).isNotEqualTo(FIELD_UNSET);
+        assertThat(stats.getExecutionResultCode()).isEqualTo(JS_RUN_STATUS_SUCCESS);
     }
 
     @Test
     public void testSelectAdsFromOutcomesPickHighestSuccessDifferentTables() throws Exception {
-        doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
-
         Flags auctionServerEnabledFlags =
                 new TestFlags() {
                     @Override
@@ -399,6 +452,15 @@ public class AdSelectionFromOutcomesE2ETest {
 
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
         final String selectionLogicPath = SELECTION_PICK_HIGHEST_LOGIC_JS_PATH;
+
+        CountDownLatch loggingLatch = new CountDownLatch(1);
+        ExtendedMockito.doAnswer(
+                        unused -> {
+                            loggingLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logSelectAdsFromOutcomesApiCalledStats(any());
 
         // On-device ids
         Map<Long, Double> onDeviceAdSelectionIdToBid =
@@ -445,7 +507,10 @@ public class AdSelectionFromOutcomesE2ETest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         false,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator,
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
 
         AdSelectionFromOutcomesE2ETest.AdSelectionFromOutcomesTestCallback resultsCallback =
                 invokeSelectAdsFromOutcomes(adSelectionService, config, CALLER_PACKAGE_NAME);
@@ -455,14 +520,35 @@ public class AdSelectionFromOutcomesE2ETest {
         assertEquals(AD_SELECTION_ID_3, resultsCallback.mAdSelectionResponse.getAdSelectionId());
         mMockWebServerRule.verifyMockServerRequests(
                 server, 1, Collections.singletonList(selectionLogicPath), String::equals);
+
+        loggingLatch.await();
+        ArgumentCaptor<SelectAdsFromOutcomesApiCalledStats> argumentCaptor =
+                ArgumentCaptor.forClass(SelectAdsFromOutcomesApiCalledStats.class);
+        verify(mAdServicesLoggerMock)
+                .logSelectAdsFromOutcomesApiCalledStats(argumentCaptor.capture());
+        SelectAdsFromOutcomesApiCalledStats stats = argumentCaptor.getValue();
+        assertThat(stats.getCountIds()).isEqualTo(4);
+        assertThat(stats.getCountNonExistingIds()).isEqualTo(0);
+        assertThat(stats.getUsedPrebuilt()).isEqualTo(false);
+        assertThat(stats.getDownloadLatencyMillis()).isNotEqualTo(FIELD_UNSET);
+        assertThat(stats.getDownloadResultCode()).isEqualTo(SUCCESS_DOWNLOAD_RESULT_CODE);
+        assertThat(stats.getExecutionLatencyMillis()).isNotEqualTo(FIELD_UNSET);
+        assertThat(stats.getExecutionResultCode()).isEqualTo(JS_RUN_STATUS_SUCCESS);
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testSelectAdsFromOutcomesPickHighestSuccessUnifiedTables() throws Exception {
-        doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
         final String selectionLogicPath = SELECTION_PICK_HIGHEST_LOGIC_JS_PATH;
+
+        CountDownLatch loggingLatch = new CountDownLatch(1);
+        ExtendedMockito.doAnswer(
+                        unused -> {
+                            loggingLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logSelectAdsFromOutcomesApiCalledStats(any());
 
         Map<Long, Double> adSelectionIdToBidMap =
                 Map.of(
@@ -504,7 +590,10 @@ public class AdSelectionFromOutcomesE2ETest {
                         mAdIdFetcher,
                         mUnusedKAnonSignJoinFactory,
                         true,
-                        mRetryStrategyFactory);
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator,
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
 
         AdSelectionFromOutcomesE2ETest.AdSelectionFromOutcomesTestCallback resultsCallback =
                 invokeSelectAdsFromOutcomes(mAdSelectionService, config, CALLER_PACKAGE_NAME);
@@ -517,14 +606,36 @@ public class AdSelectionFromOutcomesE2ETest {
                 .getAdSelectionIdsWithCallerPackageNameFromUnifiedTable(any(), any());
         mMockWebServerRule.verifyMockServerRequests(
                 server, 1, Collections.singletonList(selectionLogicPath), String::equals);
+
+        loggingLatch.await();
+        ArgumentCaptor<SelectAdsFromOutcomesApiCalledStats> argumentCaptor =
+                ArgumentCaptor.forClass(SelectAdsFromOutcomesApiCalledStats.class);
+        verify(mAdServicesLoggerMock)
+                .logSelectAdsFromOutcomesApiCalledStats(argumentCaptor.capture());
+        SelectAdsFromOutcomesApiCalledStats stats = argumentCaptor.getValue();
+        assertThat(stats.getCountIds()).isEqualTo(3);
+        assertThat(stats.getCountNonExistingIds()).isEqualTo(0);
+        assertThat(stats.getUsedPrebuilt()).isEqualTo(false);
+        assertThat(stats.getDownloadLatencyMillis()).isNotEqualTo(FIELD_UNSET);
+        assertThat(stats.getDownloadResultCode()).isEqualTo(SUCCESS_DOWNLOAD_RESULT_CODE);
+        assertThat(stats.getExecutionLatencyMillis()).isNotEqualTo(FIELD_UNSET);
+        assertThat(stats.getExecutionResultCode()).isEqualTo(JS_RUN_STATUS_SUCCESS);
     }
 
     @Test
     public void testSelectAdsFromOutcomesWaterfallMediationAdBidHigherThanBidFloorSuccess()
             throws Exception {
-        doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
         final String selectionLogicPath = SELECTION_WATERFALL_LOGIC_JS_PATH;
+
+        CountDownLatch loggingLatch = new CountDownLatch(1);
+        ExtendedMockito.doAnswer(
+                        unused -> {
+                            loggingLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logSelectAdsFromOutcomesApiCalledStats(any());
 
         Map<Long, Double> adSelectionIdToBidMap = Map.of(AD_SELECTION_ID_1, 10.0);
         persistAdSelectionEntryDaoResults(adSelectionIdToBidMap);
@@ -544,12 +655,34 @@ public class AdSelectionFromOutcomesE2ETest {
         assertEquals(resultsCallback.mAdSelectionResponse.getAdSelectionId(), AD_SELECTION_ID_1);
         mMockWebServerRule.verifyMockServerRequests(
                 server, 1, Collections.singletonList(selectionLogicPath), String::equals);
+
+        loggingLatch.await();
+        ArgumentCaptor<SelectAdsFromOutcomesApiCalledStats> argumentCaptor =
+                ArgumentCaptor.forClass(SelectAdsFromOutcomesApiCalledStats.class);
+        verify(mAdServicesLoggerMock)
+                .logSelectAdsFromOutcomesApiCalledStats(argumentCaptor.capture());
+        SelectAdsFromOutcomesApiCalledStats stats = argumentCaptor.getValue();
+        assertThat(stats.getCountIds()).isEqualTo(1);
+        assertThat(stats.getCountNonExistingIds()).isEqualTo(0);
+        assertThat(stats.getUsedPrebuilt()).isEqualTo(false);
+        assertThat(stats.getDownloadLatencyMillis()).isNotEqualTo(FIELD_UNSET);
+        assertThat(stats.getDownloadResultCode()).isEqualTo(SUCCESS_DOWNLOAD_RESULT_CODE);
+        assertThat(stats.getExecutionLatencyMillis()).isNotEqualTo(FIELD_UNSET);
+        assertThat(stats.getExecutionResultCode()).isEqualTo(JS_RUN_STATUS_SUCCESS);
     }
 
     @Test
     public void testSelectAdsFromOutcomesWaterfallMediationPrebuiltUriSuccess() throws Exception {
-        doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
+
+        CountDownLatch loggingLatch = new CountDownLatch(1);
+        ExtendedMockito.doAnswer(
+                        unused -> {
+                            loggingLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logSelectAdsFromOutcomesApiCalledStats(any());
 
         Map<Long, Double> adSelectionIdToBidMap = Map.of(AD_SELECTION_ID_1, 10.0);
         persistAdSelectionEntryDaoResults(adSelectionIdToBidMap);
@@ -581,14 +714,36 @@ public class AdSelectionFromOutcomesE2ETest {
         assertEquals(resultsCallback.mAdSelectionResponse.getAdSelectionId(), AD_SELECTION_ID_1);
         mMockWebServerRule.verifyMockServerRequests(
                 server, 0, Collections.emptyList(), String::equals);
+
+        loggingLatch.await();
+        ArgumentCaptor<SelectAdsFromOutcomesApiCalledStats> argumentCaptor =
+                ArgumentCaptor.forClass(SelectAdsFromOutcomesApiCalledStats.class);
+        verify(mAdServicesLoggerMock)
+                .logSelectAdsFromOutcomesApiCalledStats(argumentCaptor.capture());
+        SelectAdsFromOutcomesApiCalledStats stats = argumentCaptor.getValue();
+        assertThat(stats.getCountIds()).isEqualTo(1);
+        assertThat(stats.getCountNonExistingIds()).isEqualTo(0);
+        assertThat(stats.getUsedPrebuilt()).isEqualTo(true);
+        assertThat(stats.getDownloadLatencyMillis()).isEqualTo(FIELD_UNSET);
+        assertThat(stats.getDownloadResultCode()).isEqualTo(FIELD_UNSET);
+        assertThat(stats.getExecutionLatencyMillis()).isNotEqualTo(FIELD_UNSET);
+        assertThat(stats.getExecutionResultCode()).isEqualTo(JS_RUN_STATUS_SUCCESS);
     }
 
     @Test
     public void testSelectAdsFromOutcomesWaterfallMediationAdBidLowerThanBidFloorSuccess()
             throws Exception {
-        doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
         final String selectionLogicPath = SELECTION_WATERFALL_LOGIC_JS_PATH;
+
+        CountDownLatch loggingLatch = new CountDownLatch(1);
+        ExtendedMockito.doAnswer(
+                        unused -> {
+                            loggingLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logSelectAdsFromOutcomesApiCalledStats(any());
 
         Map<Long, Double> adSelectionIdToBidMap = Map.of(AD_SELECTION_ID_1, 10.0);
         persistAdSelectionEntryDaoResults(adSelectionIdToBidMap);
@@ -607,13 +762,35 @@ public class AdSelectionFromOutcomesE2ETest {
         assertThat(resultsCallback.mAdSelectionResponse).isNull();
         mMockWebServerRule.verifyMockServerRequests(
                 server, 1, Collections.singletonList(selectionLogicPath), String::equals);
+
+        loggingLatch.await();
+        ArgumentCaptor<SelectAdsFromOutcomesApiCalledStats> argumentCaptor =
+                ArgumentCaptor.forClass(SelectAdsFromOutcomesApiCalledStats.class);
+        verify(mAdServicesLoggerMock)
+                .logSelectAdsFromOutcomesApiCalledStats(argumentCaptor.capture());
+        SelectAdsFromOutcomesApiCalledStats stats = argumentCaptor.getValue();
+        assertThat(stats.getCountIds()).isEqualTo(1);
+        assertThat(stats.getCountNonExistingIds()).isEqualTo(0);
+        assertThat(stats.getUsedPrebuilt()).isEqualTo(false);
+        assertThat(stats.getDownloadLatencyMillis()).isNotEqualTo(FIELD_UNSET);
+        assertThat(stats.getDownloadResultCode()).isEqualTo(SUCCESS_DOWNLOAD_RESULT_CODE);
+        assertThat(stats.getExecutionLatencyMillis()).isNotEqualTo(FIELD_UNSET);
+        assertThat(stats.getExecutionResultCode()).isEqualTo(JS_RUN_STATUS_SUCCESS);
     }
 
     @Test
     public void testSelectAdsFromOutcomesReturnsNullSuccess() throws Exception {
-        doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
         final String selectionLogicPath = SELECTION_PICK_NONE_LOGIC_JS_PATH;
+
+        CountDownLatch loggingLatch = new CountDownLatch(1);
+        ExtendedMockito.doAnswer(
+                        unused -> {
+                            loggingLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logSelectAdsFromOutcomesApiCalledStats(any());
 
         Map<Long, Double> adSelectionIdToBidMap =
                 Map.of(
@@ -635,11 +812,24 @@ public class AdSelectionFromOutcomesE2ETest {
         assertThat(resultsCallback.mAdSelectionResponse).isNull();
         mMockWebServerRule.verifyMockServerRequests(
                 server, 1, Collections.singletonList(selectionLogicPath), String::equals);
+
+        loggingLatch.await();
+        ArgumentCaptor<SelectAdsFromOutcomesApiCalledStats> argumentCaptor =
+                ArgumentCaptor.forClass(SelectAdsFromOutcomesApiCalledStats.class);
+        verify(mAdServicesLoggerMock)
+                .logSelectAdsFromOutcomesApiCalledStats(argumentCaptor.capture());
+        SelectAdsFromOutcomesApiCalledStats stats = argumentCaptor.getValue();
+        assertThat(stats.getCountIds()).isEqualTo(3);
+        assertThat(stats.getCountNonExistingIds()).isEqualTo(0);
+        assertThat(stats.getUsedPrebuilt()).isEqualTo(false);
+        assertThat(stats.getDownloadLatencyMillis()).isNotEqualTo(FIELD_UNSET);
+        assertThat(stats.getDownloadResultCode()).isEqualTo(SUCCESS_DOWNLOAD_RESULT_CODE);
+        assertThat(stats.getExecutionLatencyMillis()).isNotEqualTo(FIELD_UNSET);
+        assertThat(stats.getExecutionResultCode()).isEqualTo(JS_RUN_STATUS_SUCCESS);
     }
 
     @Test
     public void testSelectAdsFromOutcomesInvalidAdSelectionConfigFromOutcomes() throws Exception {
-        doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
         final String selectionLogicPath = "/unreachableLogicJS/";
 
@@ -674,7 +864,6 @@ public class AdSelectionFromOutcomesE2ETest {
 
     @Test
     public void testSelectAdsFromOutcomesJsReturnsFaultyAdSelectionIdFailure() throws Exception {
-        doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
         final String selectionLogicPath = SELECTION_FAULTY_LOGIC_JS_PATH;
 
@@ -705,10 +894,17 @@ public class AdSelectionFromOutcomesE2ETest {
     }
 
     @Test
-    @FlakyTest(bugId = 315521295)
     public void testSelectAdsFromOutcomesWaterfallMalformedPrebuiltUriFailed() throws Exception {
-        doReturn(new AdSelectionFromOutcomesE2ETest.TestFlags()).when(FlagsFactory::getFlags);
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
+
+        CountDownLatch loggingLatch = new CountDownLatch(1);
+        ExtendedMockito.doAnswer(
+                        unused -> {
+                            loggingLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logSelectAdsFromOutcomesApiCalledStats(any());
 
         Map<Long, Double> adSelectionIdToBidMap = Map.of(AD_SELECTION_ID_1, 10.0);
         persistAdSelectionEntryDaoResults(adSelectionIdToBidMap);
@@ -733,6 +929,20 @@ public class AdSelectionFromOutcomesE2ETest {
                 .contains(OUTCOME_SELECTION_JS_RETURNED_UNEXPECTED_RESULT);
         mMockWebServerRule.verifyMockServerRequests(
                 server, 0, Collections.emptyList(), String::equals);
+
+        loggingLatch.await();
+        ArgumentCaptor<SelectAdsFromOutcomesApiCalledStats> argumentCaptor =
+                ArgumentCaptor.forClass(SelectAdsFromOutcomesApiCalledStats.class);
+        verify(mAdServicesLoggerMock)
+                .logSelectAdsFromOutcomesApiCalledStats(argumentCaptor.capture());
+        SelectAdsFromOutcomesApiCalledStats stats = argumentCaptor.getValue();
+        assertThat(stats.getCountIds()).isEqualTo(1);
+        assertThat(stats.getCountNonExistingIds()).isEqualTo(0);
+        assertThat(stats.getUsedPrebuilt()).isEqualTo(true);
+        assertThat(stats.getDownloadLatencyMillis()).isEqualTo(FIELD_UNSET);
+        assertThat(stats.getDownloadResultCode()).isEqualTo(FIELD_UNSET);
+        assertThat(stats.getExecutionLatencyMillis()).isEqualTo(FIELD_UNSET);
+        assertThat(stats.getExecutionResultCode()).isEqualTo(JS_RUN_STATUS_UNSET);
     }
 
     private AdSelectionFromOutcomesE2ETest.AdSelectionFromOutcomesTestCallback
@@ -907,13 +1117,14 @@ public class AdSelectionFromOutcomesE2ETest {
             return -1;
         }
 
-        @Override
-        public boolean getFledgeAdSelectionFilteringEnabled() {
-            return false;
-        }
 
         @Override
         public boolean getFledgeAdSelectionPrebuiltUriEnabled() {
+            return true;
+        }
+
+        @Override
+        public boolean getFledgeSelectAdsFromOutcomesApiMetricsEnabled() {
             return true;
         }
     }

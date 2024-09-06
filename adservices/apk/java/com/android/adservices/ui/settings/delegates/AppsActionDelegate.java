@@ -44,7 +44,6 @@ import java.io.IOException;
 /**
  * Delegate class that helps AdServices Settings fragments to respond to all view model/user events.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class AppsActionDelegate {
     private final AppsActivity mAppsActivity;
@@ -138,22 +137,11 @@ public class AppsActionDelegate {
      * handle user actions.
      */
     public void initAppsFragment(AdServicesSettingsAppsFragment fragment) {
-        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
-            mAppsActivity.setTitle(R.string.settingsUI_apps_ga_title);
+        mAppsActivity.setTitle(R.string.settingsUI_apps_ga_title);
 
-            configureAppsConsentSwitch(fragment);
-            setGaUxLayoutVisibilities(View.VISIBLE);
-            setBetaLayoutVisibilities(View.GONE);
+        configureAppsConsentSwitch(fragment);
 
-            setGaUxAppsViewText();
-        } else {
-            mAppsActivity.setTitle(R.string.settingsUI_apps_view_title);
-
-            setGaUxLayoutVisibilities(View.GONE);
-            setBetaLayoutVisibilities(View.VISIBLE);
-
-            setBetaAppsViewText();
-        }
+        setGaUxAppsViewText();
         configureBlockedAppsFragmentButton(fragment);
         configureResetAppsButton(fragment);
     }
@@ -167,26 +155,8 @@ public class AppsActionDelegate {
                 .setMovementMethod(LinkMovementMethod.getInstance());
     }
 
-    private void setBetaAppsViewText() {
-        ((TextView) mAppsActivity.findViewById(R.id.reset_apps_button_child))
-                .setText(R.string.settingsUI_reset_apps_title);
-        ((TextView) mAppsActivity.findViewById(R.id.no_apps_state))
-                .setText(R.string.settingsUI_apps_view_no_apps_text);
-    }
-
-    private void setBetaLayoutVisibilities(int visibility) {
-        mAppsActivity.findViewById(R.id.apps_introduction).setVisibility(visibility);
-        mAppsActivity.findViewById(R.id.apps_view_footer).setVisibility(visibility);
-    }
-
-    private void setGaUxLayoutVisibilities(int visibility) {
-        mAppsActivity.findViewById(R.id.apps_ga_introduction).setVisibility(visibility);
-        mAppsActivity.findViewById(R.id.apps_view_ga_footer).setVisibility(visibility);
-    }
-
     private void configureAppsConsentSwitch(AdServicesSettingsAppsFragment fragment) {
         MainSwitchBar appsSwitchBar = mAppsActivity.findViewById(R.id.apps_switch_bar);
-        appsSwitchBar.setVisibility(View.VISIBLE);
 
         mAppsViewModel.getAppsConsent().observe(fragment, appsSwitchBar::setChecked);
         appsSwitchBar.setOnClickListener(

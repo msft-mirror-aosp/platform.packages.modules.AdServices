@@ -29,12 +29,14 @@ import androidx.test.filters.SmallTest;
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
@@ -50,9 +52,10 @@ public class AppSearchConsentDaoTest {
     private static final String API_TYPE2 = "CONSENT-FLEDGE";
     private static final String CONSENT = "true";
     private final Context mContext = ApplicationProvider.getApplicationContext();
-    private final String mAdServicesPackageName =
-            AppSearchConsentWorker.getAdServicesPackageName(mContext);
+    private String mAdServicesPackageName;
+    private final ListenableFuture mSearchSessionFuture = Futures.immediateFuture(null);
     private MockitoSession mStaticMockSession;
+    @Mock private Executor mMockExecutor;
 
     @Rule
     public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
@@ -60,6 +63,9 @@ public class AppSearchConsentDaoTest {
 
     @Before
     public void setup() {
+        // TODO(b/347043278): must be set inside @Before so it's not called when device is not
+        // supported
+        mAdServicesPackageName = AppSearchConsentWorker.getAdServicesPackageName(mContext);
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .mockStatic(AppSearchDao.class)
@@ -116,21 +122,16 @@ public class AppSearchConsentDaoTest {
 
     @Test
     public void testReadConsentData_null() {
-        ListenableFuture mockSearchSession = Mockito.mock(ListenableFuture.class);
-        Executor mockExecutor = Mockito.mock(Executor.class);
         ExtendedMockito.doReturn(null)
                 .when(() -> AppSearchDao.readConsentData(any(), any(), any(), any(), any(), any()));
         boolean result =
                 AppSearchConsentDao.readConsentData(
-                        mockSearchSession, mockExecutor, ID, API_TYPE, mAdServicesPackageName);
+                        mSearchSessionFuture, mMockExecutor, ID, API_TYPE, mAdServicesPackageName);
         assertThat(result).isFalse();
     }
 
     @Test
     public void testReadConsentData() {
-        ListenableFuture mockSearchSession = Mockito.mock(ListenableFuture.class);
-        Executor mockExecutor = Mockito.mock(Executor.class);
-
         String query = "userId:" + ID + " " + "apiType:" + API_TYPE;
         AppSearchConsentDao dao = Mockito.mock(AppSearchConsentDao.class);
         Mockito.when(dao.isConsented()).thenReturn(false);
@@ -141,7 +142,7 @@ public class AppSearchConsentDaoTest {
                                         any(), any(), any(), any(), eq(query), any()));
         boolean result =
                 AppSearchConsentDao.readConsentData(
-                        mockSearchSession, mockExecutor, ID, API_TYPE, mAdServicesPackageName);
+                        mSearchSessionFuture, mMockExecutor, ID, API_TYPE, mAdServicesPackageName);
         assertThat(result).isFalse();
 
         // Confirm that the right value is returned even when it is true.
@@ -154,7 +155,7 @@ public class AppSearchConsentDaoTest {
                                         any(), any(), any(), any(), eq(query2), any()));
         boolean result2 =
                 AppSearchConsentDao.readConsentData(
-                        mockSearchSession, mockExecutor, ID, API_TYPE, mAdServicesPackageName);
+                        mSearchSessionFuture, mMockExecutor, ID, API_TYPE, mAdServicesPackageName);
         assertThat(result2).isTrue();
     }
 }

@@ -22,6 +22,7 @@
     <option name="config-descriptor:metadata" key="parameter" value="not_instant_app" />
     <option name="config-descriptor:metadata" key="parameter" value="not_multi_abi" />
     <option name="config-descriptor:metadata" key="parameter" value="secondary_user" />
+    <option name="config-descriptor:metadata" key="parameter" value="secondary_user_on_secondary_display" />
     <option name="test-suite-tag" value="cts" />
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true" />
@@ -80,12 +81,6 @@
 
         <!-- Disable CPC billing feature at teardown -->
         <option name="teardown-command" value="device_config put adservices fledge_cpc_billing_enabled false" />
-
-        <!-- Enabled API access without ad_services_config -->
-        <option name="run-command"
-                value="device_config put adservices app_config_returns_enabled_by_detault true" />
-        <option name="teardown-command"
-                value="device_config put adservices app_config_returns_enabled_by_detault false" />
     </target_preparer>
 
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">

@@ -20,6 +20,10 @@ android_test {
     srcs: [
         "src/**/*.java",
     ],
+    static_libs: [
+        "adservices-shared-spe",
+        "truth",
+    ],
     defaults: ["AdServices-ServiceCoreUnitTest-Defaults"],
 }
 
@@ -27,6 +31,10 @@ android_test {
     name: "AdExtServicesServiceCoreCommonUnitTests",
     srcs: [
         "src/**/*.java",
+    ],
+    static_libs: [
+        "adservices-shared-spe",
+        "truth",
     ],
     defaults: ["AdExtServices-ServiceCoreUnitTest-Defaults"],
     test_config: "AndroidTest.ExtServices.xml",

@@ -36,6 +36,7 @@ import java.security.Signature;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -185,5 +186,15 @@ public class SignedContextualAdsFixture {
         Signature ecdsaSign = Signature.getInstance("SHA256withECDSA");
         ecdsaSign.initSign(privateKey);
         return ecdsaSign;
+    }
+
+    /**
+     * Returns the number of ads inside a {@link android.adservices.adselection.SignedContextualAds}
+     * bundle
+     */
+    public static int countAdsIn(Map<?, SignedContextualAds> signedContextualAdsMap) {
+        return signedContextualAdsMap.values().stream()
+                .mapToInt(contextualAds -> contextualAds.getAdsWithBid().size())
+                .sum();
     }
 }

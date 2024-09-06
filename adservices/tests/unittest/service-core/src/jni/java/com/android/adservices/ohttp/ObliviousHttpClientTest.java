@@ -18,20 +18,33 @@ package com.android.adservices.ohttp;
 
 import static com.android.adservices.ohttp.ObliviousHttpTestFixtures.getTestVectors;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.ohttp.algorithms.UnsupportedHpkeAlgorithmException;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
+import com.android.modules.utils.testing.ExtendedMockitoRule;
 
 import com.google.common.io.BaseEncoding;
 import com.google.common.truth.Truth;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.spec.InvalidKeySpecException;
 import java.util.List;
 
-public class ObliviousHttpClientTest {
+@ExtendedMockitoRule.SpyStatic(FlagsFactory.class)
+public class ObliviousHttpClientTest extends AdServicesExtendedMockitoTestCase {
+    @Mock private Flags mMockFlags;
+
+    @Before
+    public void setExpectations() {
+        mocker.mockGetFlags(mMockFlags);
+    }
 
     @Test
     public void create_unsupportedAlgorithms_throwsError() throws InvalidKeySpecException {
@@ -87,7 +100,9 @@ public class ObliviousHttpClientTest {
     @Test
     public void createObliviousHttpRequest_testAllTestVectors()
             throws InvalidKeySpecException, UnsupportedHpkeAlgorithmException, IOException {
-        List<ObliviousHttpTestFixtures.OhttpTestVector> testVectors = getTestVectors();
+        boolean hasMediaTypeChanged = false;
+        List<ObliviousHttpTestFixtures.OhttpTestVector> testVectors =
+                getTestVectors(hasMediaTypeChanged);
         for (ObliviousHttpTestFixtures.OhttpTestVector testVector : testVectors) {
             ObliviousHttpClient client = ObliviousHttpClient.create(testVector.keyConfig);
             String plainText = testVector.plainText;
@@ -95,23 +110,59 @@ public class ObliviousHttpClientTest {
             byte[] seedBytes = testVector.seed.getBytes(StandardCharsets.US_ASCII);
 
             ObliviousHttpRequest request =
-                    client.createObliviousHttpRequest(plainTextBytes, seedBytes);
+                    client.createObliviousHttpRequest(
+                            plainTextBytes, seedBytes, hasMediaTypeChanged);
 
             Assert.assertEquals(
+                    testVector.expectedEnc,
                     BaseEncoding.base16()
                             .lowerCase()
-                            .encode(request.requestContext().encapsulatedSharedSecret().getBytes()),
-                    testVector.expectedEnc);
+                            .encode(
+                                    request.requestContext()
+                                            .encapsulatedSharedSecret()
+                                            .getBytes()));
             Assert.assertEquals(
-                    BaseEncoding.base16().lowerCase().encode(request.serialize()),
-                    testVector.requestCipherText);
+                    testVector.requestCipherText,
+                    BaseEncoding.base16().lowerCase().encode(request.serialize()));
+        }
+    }
+
+    @Test
+    public void createObliviousHttpRequest_testAllTestVectors_withServerAuctionMediaTypeChange()
+            throws InvalidKeySpecException, UnsupportedHpkeAlgorithmException, IOException {
+        boolean hasMediaTypeChanged = true;
+        List<ObliviousHttpTestFixtures.OhttpTestVector> testVectors =
+                getTestVectors(hasMediaTypeChanged);
+        for (ObliviousHttpTestFixtures.OhttpTestVector testVector : testVectors) {
+            ObliviousHttpClient client = ObliviousHttpClient.create(testVector.keyConfig);
+            String plainText = testVector.plainText;
+            byte[] plainTextBytes = plainText.getBytes(StandardCharsets.US_ASCII);
+            byte[] seedBytes = testVector.seed.getBytes(StandardCharsets.US_ASCII);
+
+            ObliviousHttpRequest request =
+                    client.createObliviousHttpRequest(
+                            plainTextBytes, seedBytes, hasMediaTypeChanged);
+
+            Assert.assertEquals(
+                    testVector.expectedEnc,
+                    BaseEncoding.base16()
+                            .lowerCase()
+                            .encode(
+                                    request.requestContext()
+                                            .encapsulatedSharedSecret()
+                                            .getBytes()));
+            Assert.assertEquals(
+                    testVector.requestCipherText,
+                    BaseEncoding.base16().lowerCase().encode(request.serialize()));
         }
     }
 
     @Test
     public void decryptObliviousHttpResponse_testAllTestVectors()
             throws InvalidKeySpecException, UnsupportedHpkeAlgorithmException, IOException {
-        List<ObliviousHttpTestFixtures.OhttpTestVector> testVectors = getTestVectors();
+        boolean hasMediaTypeChanged = false;
+        List<ObliviousHttpTestFixtures.OhttpTestVector> testVectors =
+                getTestVectors(hasMediaTypeChanged);
         for (ObliviousHttpTestFixtures.OhttpTestVector testVector : testVectors) {
             ObliviousHttpClient client = ObliviousHttpClient.create(testVector.keyConfig);
             String plainText = testVector.plainText;
@@ -119,19 +170,49 @@ public class ObliviousHttpClientTest {
             byte[] seedBytes = testVector.seed.getBytes(StandardCharsets.US_ASCII);
 
             ObliviousHttpRequest request =
-                    client.createObliviousHttpRequest(plainTextBytes, seedBytes);
+                    client.createObliviousHttpRequest(
+                            plainTextBytes, seedBytes, hasMediaTypeChanged);
             byte[] decryptedResponse =
                     client.decryptObliviousHttpResponse(
                             BaseEncoding.base16().lowerCase().decode(testVector.responseCipherText),
                             request.requestContext());
 
             Assert.assertEquals(
-                    new String(decryptedResponse, "UTF-8"), testVector.responsePlainText);
+                    testVector.responsePlainText,
+                    new String(decryptedResponse, StandardCharsets.UTF_8));
+        }
+    }
+
+    @Test
+    public void decryptObliviousHttpResponse_testAllTestVectors_withServerAuctionMediaTypeChange()
+            throws InvalidKeySpecException, UnsupportedHpkeAlgorithmException, IOException {
+        boolean hasMediaTypeChanged = true;
+        List<ObliviousHttpTestFixtures.OhttpTestVector> testVectors =
+                getTestVectors(hasMediaTypeChanged);
+        for (ObliviousHttpTestFixtures.OhttpTestVector testVector : testVectors) {
+            ObliviousHttpClient client = ObliviousHttpClient.create(testVector.keyConfig);
+            String plainText = testVector.plainText;
+            byte[] plainTextBytes = plainText.getBytes(StandardCharsets.US_ASCII);
+            byte[] seedBytes = testVector.seed.getBytes(StandardCharsets.US_ASCII);
+
+            ObliviousHttpRequest request =
+                    client.createObliviousHttpRequest(
+                            plainTextBytes, seedBytes, hasMediaTypeChanged);
+
+            byte[] decryptedResponse =
+                    client.decryptObliviousHttpResponse(
+                            BaseEncoding.base16().lowerCase().decode(testVector.responseCipherText),
+                            request.requestContext());
+
+            Assert.assertEquals(
+                    testVector.responsePlainText,
+                    new String(decryptedResponse, StandardCharsets.UTF_8));
         }
     }
 
     @Test
     public void decryptObliviousHttpResponse_withAuctionResult() throws Exception {
+        boolean hasMediaTypeChanged = false;
         String keyConfigString =
                 "0400206d21cfe09fbea5122f9ebc2eb2a69fcc4f06408cd54aac934f"
                         + "012e76fcdcef62000400010002";
@@ -144,7 +225,8 @@ public class ObliviousHttpClientTest {
         byte[] plainTextBytes = plainText.getBytes(StandardCharsets.US_ASCII);
         String seed = "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww";
         byte[] seedBytes = seed.getBytes(StandardCharsets.US_ASCII);
-        ObliviousHttpRequest request = client.createObliviousHttpRequest(plainTextBytes, seedBytes);
+        ObliviousHttpRequest request =
+                client.createObliviousHttpRequest(plainTextBytes, seedBytes, hasMediaTypeChanged);
 
         String cipherText =
                 "6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c"
@@ -167,6 +249,52 @@ public class ObliviousHttpClientTest {
                         + "\"bid\":3,\"isChaff\":false,\"biddingGroups\":"
                         + "{\"https://bid1.com\":{\"index\":[0]}}}";
 
-        Assert.assertEquals(new String(decryptedResponse, "UTF-8"), expectedJsonString);
+        Assert.assertEquals(
+                expectedJsonString, new String(decryptedResponse, StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void decryptObliviousHttpResponse_withAuctionResult_withServerAuctionMediaTypeChange()
+            throws Exception {
+        boolean hasMediaTypeChanged = true;
+        String keyConfigString =
+                "0400206d21cfe09fbea5122f9ebc2eb2a69fcc4f06408cd54aac934f"
+                        + "012e76fcdcef62000400010002";
+        ObliviousHttpKeyConfig keyConfig =
+                ObliviousHttpKeyConfig.fromSerializedKeyConfig(
+                        BaseEncoding.base16().lowerCase().decode(keyConfigString));
+        ObliviousHttpClient client = ObliviousHttpClient.create(keyConfig);
+
+        String plainText = "doesnt matter";
+        byte[] plainTextBytes = plainText.getBytes(StandardCharsets.US_ASCII);
+        String seed = "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww";
+        byte[] seedBytes = seed.getBytes(StandardCharsets.US_ASCII);
+        ObliviousHttpRequest request =
+                client.createObliviousHttpRequest(plainTextBytes, seedBytes, hasMediaTypeChanged);
+
+        String cipherText =
+                "6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c"
+                    + "ae7e11bfc23d3b8a0372497dfbdf06be1cbcb9b14a0eba7ebbb04af4d00b656ec95d638d4bb5"
+                    + "ee69c3995e59190c662ab08e4277b7d8f8447c0188457b67f9ad2d84299d602b3464698606d9"
+                    + "7ea380b27d439ba9495c07450f942e8bf45d6389d4ca588a1504fcc10e150ed6b0e84e516fa8"
+                    + "0616982316d0415fbe0d6cba72d47d8a31a2a941696ca7cb63c1ea2e8dedd7a5dc760a7fe408"
+                    + "cddbc90dbd13d9acccb1e8f8955ec26d2262f9712519137a0b0eaad200747b46943eb1372053"
+                    + "f0c6fb8d7b6bdf27127b8d4d31a2f5becbb734591a3aef431675b6924ee206b42800d6ee169f"
+                    + "4e5cfdcbd6";
+
+        byte[] decryptedResponse =
+                client.decryptObliviousHttpResponse(
+                        BaseEncoding.base16().lowerCase().decode(cipherText),
+                        request.requestContext());
+
+        String expectedJsonString =
+                "{\"adRenderUrl\":\"test-376003777.com\","
+                        + "\"adComponentRenderUrls\":[],\"interestGroupName\":\"shoe\","
+                        + "\"interestGroupOwner\":\"https://bid1.com\",\"score\":233,"
+                        + "\"bid\":3,\"isChaff\":false,\"biddingGroups\":"
+                        + "{\"https://bid1.com\":{\"index\":[0]}}}";
+
+        Assert.assertEquals(
+                expectedJsonString, new String(decryptedResponse, StandardCharsets.UTF_8));
     }
 }

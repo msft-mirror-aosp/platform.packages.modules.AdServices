@@ -36,7 +36,6 @@ import java.util.concurrent.Executor;
 import java.util.stream.Stream;
 
 /** This class represents the data access object for the UX states written to AppSearch. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 @Document
 class AppSearchUxStatesDao extends AppSearchDao {
@@ -67,6 +66,10 @@ class AppSearchUxStatesDao extends AppSearchDao {
     @Document.StringProperty private String mUx;
     @Document.StringProperty private String mEnrollmentChannel;
 
+    @Document.BooleanProperty private boolean mIsMeasurementDataReset;
+
+    @Document.BooleanProperty private boolean mIsPaDataReset;
+
     AppSearchUxStatesDao(
             @NonNull String id,
             @NonNull String userId,
@@ -77,7 +80,9 @@ class AppSearchUxStatesDao extends AppSearchDao {
             boolean isAdIdEnabled,
             boolean wasU18NotificationDisplayed,
             @NonNull String ux,
-            @NonNull String enrollmentChannel) {
+            @NonNull String enrollmentChannel,
+            boolean isMeasurementDataReset,
+            boolean isPaDataReset) {
         this.mId = id;
         this.mUserId = userId;
         this.mNamespace = namespace;
@@ -88,6 +93,8 @@ class AppSearchUxStatesDao extends AppSearchDao {
         this.mWasU18NotificationDisplayed = wasU18NotificationDisplayed;
         this.mUx = ux;
         this.mEnrollmentChannel = enrollmentChannel;
+        this.mIsMeasurementDataReset = isMeasurementDataReset;
+        this.mIsPaDataReset = isPaDataReset;
     }
 
     AppSearchUxStatesDao(@NonNull String id, @NonNull String userId, @NonNull String namespace) {
@@ -235,6 +242,25 @@ class AppSearchUxStatesDao extends AppSearchDao {
         mEnrollmentChannel = enrollmentChannel;
     }
 
+    @NonNull
+    public boolean isMeasurementDataReset() {
+        return mIsMeasurementDataReset;
+    }
+
+    @NonNull
+    public void setMeasurementDataReset(boolean isMeasurementDataReset) {
+        mIsMeasurementDataReset = isMeasurementDataReset;
+    }
+
+    public boolean isPaDataReset() {
+        return mIsPaDataReset;
+    }
+
+    @NonNull
+    public void setPaDataReset(boolean isPaDataReset) {
+        mIsPaDataReset = isPaDataReset;
+    }
+
     public String toString() {
         return "id="
                 + mId
@@ -255,7 +281,11 @@ class AppSearchUxStatesDao extends AppSearchDao {
                 + "; ux="
                 + mUx
                 + "; enrollmentChannel="
-                + mEnrollmentChannel;
+                + mEnrollmentChannel
+                + "; isMeasurementDataReset="
+                + mIsMeasurementDataReset
+                + "; isPaDataReset="
+                + mIsPaDataReset;
     }
 
     @Override
@@ -270,7 +300,9 @@ class AppSearchUxStatesDao extends AppSearchDao {
                 mIsAdIdEnabled,
                 mWasU18NotificationDisplayed,
                 mUx,
-                mEnrollmentChannel);
+                mEnrollmentChannel,
+                mIsMeasurementDataReset,
+                mIsPaDataReset);
     }
 
     @Override
@@ -287,7 +319,9 @@ class AppSearchUxStatesDao extends AppSearchDao {
                 && this.mIsAdIdEnabled == obj.mIsAdIdEnabled
                 && this.mWasU18NotificationDisplayed == obj.mWasU18NotificationDisplayed
                 && (Objects.equals(this.mUx, obj.mUx))
-                && (Objects.equals(this.mEnrollmentChannel, obj.mEnrollmentChannel));
+                && (Objects.equals(this.mEnrollmentChannel, obj.mEnrollmentChannel))
+                && this.mIsMeasurementDataReset == obj.mIsMeasurementDataReset
+                && this.mIsPaDataReset == obj.mIsPaDataReset;
     }
 
     /** Read the isAdIdEnabled bit from AppSearch. */
@@ -388,5 +422,31 @@ class AppSearchUxStatesDao extends AppSearchDao {
                 .filter(channel -> channel.toString().equals(dao.getEnrollmentChannel()))
                 .findFirst()
                 .orElse(null);
+    }
+
+    /** Read the isMeasurementDataReset bit from AppSearch. */
+    public static boolean readIsMeasurementDataReset(
+            @NonNull ListenableFuture<GlobalSearchSession> searchSession,
+            @NonNull Executor executor,
+            @NonNull String userId,
+            @NonNull String adServicesPackageName) {
+        AppSearchUxStatesDao dao = readData(searchSession, executor, userId, adServicesPackageName);
+        if (dao == null) {
+            return false;
+        }
+        return dao.isMeasurementDataReset();
+    }
+
+    /** Read the isPaDataReset bit from AppSearch. */
+    public static boolean readIsPaDataReset(
+            @NonNull ListenableFuture<GlobalSearchSession> searchSession,
+            @NonNull Executor executor,
+            @NonNull String userId,
+            @NonNull String adServicesPackageName) {
+        AppSearchUxStatesDao dao = readData(searchSession, executor, userId, adServicesPackageName);
+        if (dao == null) {
+            return false;
+        }
+        return dao.isPaDataReset();
     }
 }

@@ -25,18 +25,16 @@ import android.adservices.cobalt.EncryptedCobaltEnvelopeParams;
 import android.adservices.cobalt.IAdServicesCobaltUploadService;
 import android.content.Intent;
 import android.os.IBinder;
-
-import androidx.test.runner.AndroidJUnit4;
+import android.os.Parcel;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-@RunWith(AndroidJUnit4.class)
 public final class AdServicesCobaltUploadTest {
     private static final int KEY_INDEX = 5;
     private static final byte[] BYTES = {0x0a, 0x0b, 0x0c};
 
-    static final class AdServicesCobaltUploadServiceProxy extends AdServicesCobaltUploadService {
+    public static final class AdServicesCobaltUploadServiceProxy
+            extends AdServicesCobaltUploadService {
         private EncryptedCobaltEnvelopeParams mParams;
 
         AdServicesCobaltUploadServiceProxy() {
@@ -46,7 +44,6 @@ public final class AdServicesCobaltUploadTest {
         @Override
         public void onUploadEncryptedCobaltEnvelope(EncryptedCobaltEnvelopeParams params) {
             mParams = params;
-            return;
         }
 
         public EncryptedCobaltEnvelopeParams getEncryptedCobaltEnvelopeParams() {
@@ -55,7 +52,34 @@ public final class AdServicesCobaltUploadTest {
     }
 
     @Test
-    public void adServicesCobaltUploadService_devEnvironment() throws Exception {
+    public void testEncryptedCobaltEnvelopeParams() {
+        EncryptedCobaltEnvelopeParams params =
+                new EncryptedCobaltEnvelopeParams(ENVIRONMENT_DEV, KEY_INDEX, BYTES);
+
+        assertThat(params.getEnvironment()).isEqualTo(ENVIRONMENT_DEV);
+        assertThat(params.getKeyIndex()).isEqualTo(KEY_INDEX);
+        assertThat(params.getCipherText()).isEqualTo(BYTES);
+        // No file descriptor marshalling.
+        assertThat(params.describeContents()).isEqualTo(0);
+
+        Parcel parcel = Parcel.obtain();
+
+        try {
+            params.writeToParcel(parcel, 0);
+            parcel.setDataPosition(0);
+
+            EncryptedCobaltEnvelopeParams createdParams =
+                    EncryptedCobaltEnvelopeParams.CREATOR.createFromParcel(parcel);
+            assertThat(createdParams).isNotSameInstanceAs(params);
+
+            assertThat(createdParams).isNotEqualTo(params);
+        } finally {
+            parcel.recycle();
+        }
+    }
+
+    @Test
+    public void testAdServicesCobaltUploadService_devEnvironment() throws Exception {
         AdServicesCobaltUploadServiceProxy proxy = new AdServicesCobaltUploadServiceProxy();
         Intent intent = new Intent();
         intent.setAction(AdServicesCobaltUploadService.SERVICE_INTERFACE);
@@ -72,10 +96,13 @@ public final class AdServicesCobaltUploadTest {
         assertThat(params.getEnvironment()).isEqualTo(ENVIRONMENT_DEV);
         assertThat(params.getKeyIndex()).isEqualTo(KEY_INDEX);
         assertThat(params.getCipherText()).isEqualTo(BYTES);
+
+        // For test coverage
+        proxy.onUploadEncryptedCobaltEnvelope(params);
     }
 
     @Test
-    public void adServicesCobaltUploadService_prodEnvironment() throws Exception {
+    public void testAdServicesCobaltUploadService_prodEnvironment() throws Exception {
         AdServicesCobaltUploadServiceProxy proxy = new AdServicesCobaltUploadServiceProxy();
         Intent intent = new Intent();
         intent.setAction(AdServicesCobaltUploadService.SERVICE_INTERFACE);
@@ -92,5 +119,8 @@ public final class AdServicesCobaltUploadTest {
         assertThat(params.getEnvironment()).isEqualTo(ENVIRONMENT_PROD);
         assertThat(params.getKeyIndex()).isEqualTo(KEY_INDEX);
         assertThat(params.getCipherText()).isEqualTo(BYTES);
+
+        // For test coverage
+        proxy.onUploadEncryptedCobaltEnvelope(params);
     }
 }

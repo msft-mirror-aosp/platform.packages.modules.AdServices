@@ -16,26 +16,26 @@
 
 package com.android.adservices.service.measurement.access;
 
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_UNSET;
 
 public final class AccessInfo {
     private final boolean mIsAllowedAccess;
-    private final int mDeniedAccessReason;
+    private final int mResponseCode;
 
     public AccessInfo(boolean isAllowedAccess) {
-        this(isAllowedAccess, FAILURE_REASON_UNSET);
+        this(isAllowedAccess, STATUS_UNSET);
     }
 
-    public AccessInfo(boolean isAllowedAccess, int deniedAccessReason) {
+    public AccessInfo(boolean isAllowedAccess, int responseCode) {
         mIsAllowedAccess = isAllowedAccess;
-        mDeniedAccessReason = deniedAccessReason;
+        mResponseCode = responseCode;
     }
 
     public boolean isAllowedAccess() {
         return mIsAllowedAccess;
     }
 
-    public int getDeniedAccessReason() {
-        return mDeniedAccessReason;
+    public int getResponseCode() {
+        return mResponseCode;
     }
 }

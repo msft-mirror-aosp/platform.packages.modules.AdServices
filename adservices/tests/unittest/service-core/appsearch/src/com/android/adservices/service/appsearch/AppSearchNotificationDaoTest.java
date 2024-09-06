@@ -29,12 +29,14 @@ import androidx.test.filters.SmallTest;
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
@@ -47,9 +49,10 @@ public class AppSearchNotificationDaoTest {
     private static final String ID2 = "2";
     private static final String NAMESPACE = "notifications";
     private final Context mContext = ApplicationProvider.getApplicationContext();
-    private final String mAdServicesPackageName =
-            AppSearchConsentWorker.getAdServicesPackageName(mContext);
+    private String mAdServicesPackageName;
+    private final ListenableFuture mSearchSessionFuture = Futures.immediateFuture(null);
     private MockitoSession mStaticMockSession;
+    @Mock private Executor mMockExecutor;
 
     @Rule
     public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
@@ -57,6 +60,9 @@ public class AppSearchNotificationDaoTest {
 
     @Before
     public void setup() {
+        // TODO(b/347043278): must be set inside @Before so it's not called when device is not
+        // supported
+        mAdServicesPackageName = AppSearchConsentWorker.getAdServicesPackageName(mContext);
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .mockStatic(AppSearchDao.class)
@@ -114,21 +120,16 @@ public class AppSearchNotificationDaoTest {
 
     @Test
     public void testWasNotificationDisplayed_null() {
-        ListenableFuture mockSearchSession = Mockito.mock(ListenableFuture.class);
-        Executor mockExecutor = Mockito.mock(Executor.class);
         ExtendedMockito.doReturn(null)
                 .when(() -> AppSearchDao.readConsentData(any(), any(), any(), any(), any(), any()));
         boolean result =
                 AppSearchNotificationDao.wasNotificationDisplayed(
-                        mockSearchSession, mockExecutor, ID, mAdServicesPackageName);
+                        mSearchSessionFuture, mMockExecutor, ID, mAdServicesPackageName);
         assertThat(result).isFalse();
     }
 
     @Test
     public void testWasNotificationDisplayed() {
-        ListenableFuture mockSearchSession = Mockito.mock(ListenableFuture.class);
-        Executor mockExecutor = Mockito.mock(Executor.class);
-
         String query = "userId:" + ID;
         AppSearchNotificationDao dao = Mockito.mock(AppSearchNotificationDao.class);
         Mockito.when(dao.getWasNotificationDisplayed()).thenReturn(false);
@@ -139,7 +140,7 @@ public class AppSearchNotificationDaoTest {
                                         any(), any(), any(), any(), eq(query), any()));
         boolean result =
                 AppSearchNotificationDao.wasNotificationDisplayed(
-                        mockSearchSession, mockExecutor, ID, mAdServicesPackageName);
+                        mSearchSessionFuture, mMockExecutor, ID, mAdServicesPackageName);
         assertThat(result).isFalse();
 
         // Confirm that the right value is returned even when it is true.
@@ -153,27 +154,22 @@ public class AppSearchNotificationDaoTest {
                                         any(), any(), any(), any(), eq(query2), any()));
         boolean result2 =
                 AppSearchNotificationDao.wasNotificationDisplayed(
-                        mockSearchSession, mockExecutor, ID2, mAdServicesPackageName);
+                        mSearchSessionFuture, mMockExecutor, ID2, mAdServicesPackageName);
         assertThat(result2).isTrue();
     }
 
     @Test
     public void testGaUxWasNotificationDisplayed_null() {
-        ListenableFuture mockSearchSession = Mockito.mock(ListenableFuture.class);
-        Executor mockExecutor = Mockito.mock(Executor.class);
         ExtendedMockito.doReturn(null)
                 .when(() -> AppSearchDao.readConsentData(any(), any(), any(), any(), any(), any()));
         boolean result =
                 AppSearchNotificationDao.wasGaUxNotificationDisplayed(
-                        mockSearchSession, mockExecutor, ID, mAdServicesPackageName);
+                        mSearchSessionFuture, mMockExecutor, ID, mAdServicesPackageName);
         assertThat(result).isFalse();
     }
 
     @Test
     public void testWasGaUxNotificationDisplayed() {
-        ListenableFuture mockSearchSession = Mockito.mock(ListenableFuture.class);
-        Executor mockExecutor = Mockito.mock(Executor.class);
-
         String query = "userId:" + ID;
         AppSearchNotificationDao dao = Mockito.mock(AppSearchNotificationDao.class);
         Mockito.when(dao.getWasGaUxNotificationDisplayed()).thenReturn(false);
@@ -184,7 +180,7 @@ public class AppSearchNotificationDaoTest {
                                         any(), any(), any(), any(), eq(query), any()));
         boolean result =
                 AppSearchNotificationDao.wasGaUxNotificationDisplayed(
-                        mockSearchSession, mockExecutor, ID, mAdServicesPackageName);
+                        mSearchSessionFuture, mMockExecutor, ID, mAdServicesPackageName);
         assertThat(result).isFalse();
 
         // Confirm that the right value is returned even when it is true.
@@ -198,7 +194,7 @@ public class AppSearchNotificationDaoTest {
                                         any(), any(), any(), any(), eq(query2), any()));
         boolean result2 =
                 AppSearchNotificationDao.wasGaUxNotificationDisplayed(
-                        mockSearchSession, mockExecutor, ID2, mAdServicesPackageName);
+                        mSearchSessionFuture, mMockExecutor, ID2, mAdServicesPackageName);
         assertThat(result2).isTrue();
     }
 }

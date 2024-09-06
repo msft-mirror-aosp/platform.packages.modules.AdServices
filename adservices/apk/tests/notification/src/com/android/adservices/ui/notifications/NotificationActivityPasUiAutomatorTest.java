@@ -15,8 +15,8 @@
  */
 package com.android.adservices.ui.notifications;
 
-import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
-import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_DEBUG_UX;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_AD_SERVICES_SYSTEM_API;
 import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
@@ -36,6 +36,7 @@ import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.ui.util.AdServicesUiTestCase;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.adservices.ui.util.NotificationActivityTestUtil;
@@ -48,6 +49,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+@RequiresSdkLevelAtLeastT(reason = "PAS UX is currently only available on T+ devices")
 @RunWith(AndroidJUnit4.class)
 public final class NotificationActivityPasUiAutomatorTest extends AdServicesUiTestCase {
 
@@ -58,11 +60,11 @@ public final class NotificationActivityPasUiAutomatorTest extends AdServicesUiTe
     public final AdServicesFlagsSetterRule flags =
             AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
                     .setCompatModeFlags()
+                    .setDebugFlag(KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE, true)
+                    .setDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE, true)
                     .setFlag(KEY_ENABLE_AD_SERVICES_SYSTEM_API, true)
                     .setFlag(KEY_GA_UX_FEATURE_ENABLED, true)
                     .setFlag(KEY_U18_UX_ENABLED, true)
-                    .setFlag(KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE, true)
-                    .setFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE, true)
                     .setFlag(KEY_DEBUG_UX, "GA_UX")
                     .setFlag(KEY_PAS_UX_ENABLED, true)
                     .setFlag(KEY_IS_EEA_DEVICE_FEATURE_ENABLED, true)
@@ -76,6 +78,7 @@ public final class NotificationActivityPasUiAutomatorTest extends AdServicesUiTe
      */
     @BeforeClass
     public static void classSetup() throws Exception {
+
         NotificationActivityTestUtil.setupBeforeTests();
     }
 
@@ -100,7 +103,7 @@ public final class NotificationActivityPasUiAutomatorTest extends AdServicesUiTe
         mDevice.waitForIdle();
 
         // start renotify notice
-        NotificationActivityTestUtil.startActivity(/* isEuActivity= */ false, mDevice);
+        NotificationActivityTestUtil.startRenotifyPasActivity(/* isEuActivity= */ false, mDevice);
 
         UiObject2 pasNotificationHeader =
                 ApkTestUtil.getElement(mDevice, R.string.notificationUI_pas_renotify_header_title);

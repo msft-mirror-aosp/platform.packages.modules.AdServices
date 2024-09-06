@@ -20,13 +20,17 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assume.assumeTrue;
 
+import android.app.sdksandbox.hosttestutils.AwaitUtils;
 import android.app.sdksandbox.hosttestutils.DeviceSupportHostUtils;
 import android.app.sdksandbox.hosttestutils.SecondaryUserUtils;
 
 import com.android.modules.utils.build.testing.DeviceSdkLevel;
 import com.android.tradefed.device.DeviceNotAvailableException;
+import com.android.tradefed.invoker.TestInformation;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
+import com.android.tradefed.testtype.junit4.AfterClassWithInfo;
 import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
+import com.android.tradefed.testtype.junit4.BeforeClassWithInfo;
 
 import org.junit.After;
 import org.junit.Before;
@@ -68,8 +72,19 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
     private final SecondaryUserUtils mUserUtils = new SecondaryUserUtils(this);
     private final DeviceSupportHostUtils mDeviceSupportUtils = new DeviceSupportHostUtils(this);
 
-    private boolean mWasRoot;
     private DeviceSdkLevel mDeviceSdkLevel;
+
+    /** Root device for all tests. */
+    @BeforeClassWithInfo
+    public static void beforeClassWithDevice(TestInformation testInfo) throws Exception {
+        assertThat(testInfo.getDevice().enableAdbRoot()).isTrue();
+    }
+
+    /** UnRoot device after all tests. */
+    @AfterClassWithInfo
+    public static void afterClassWithDevice(TestInformation testInfo) throws Exception {
+        testInfo.getDevice().disableAdbRoot();
+    }
 
     @Before
     public void setUp() throws Exception {
@@ -78,20 +93,17 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
         assertThat(getBuild()).isNotNull();
         assertThat(getDevice()).isNotNull();
 
-        mWasRoot = getDevice().isAdbRoot();
-        getDevice().enableAdbRoot();
-
         mDeviceSdkLevel = new DeviceSdkLevel(getDevice());
+
+        if (!getDevice().isPackageInstalled(APP_PACKAGE)) {
+            installPackage(APP_APK);
+        }
     }
 
     @After
     public void tearDown() throws Exception {
         mUserUtils.removeSecondaryUserIfNecessary();
         cleanUpAppAndSandboxProcesses();
-
-        if (!mWasRoot) {
-            getDevice().disableAdbRoot();
-        }
     }
 
     @Test
@@ -136,6 +148,21 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
         assertThat(processDump).contains(SANDBOX_1_PROCESS_NAME);
     }
 
+    @Test
+    public void testSdkSandboxIsKilledOnAppUninstall() throws Exception {
+        startActivity(APP_PACKAGE, APP_ACTIVITY);
+        String processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
+        assertThat(processDump).contains(APP_PACKAGE + '\n');
+        assertThat(processDump).contains(SANDBOX_1_PROCESS_NAME);
+
+        uninstallPackage(APP_PACKAGE);
+        waitForProcessDeath(SANDBOX_1_PROCESS_NAME);
+        // Should no longer see app/sdk sandbox running
+        processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
+        assertThat(processDump).doesNotContain(APP_PACKAGE + '\n');
+        assertThat(processDump).doesNotContain(SANDBOX_1_PROCESS_NAME);
+    }
+
     @Ignore("b/275299487")
     @Test
     public void testSandboxIsCreatedPerUser() throws Exception {
@@ -171,7 +198,7 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
-    public void testAppAndSdkSandboxAreKilledOnLoadedSdkUpdate() throws Exception {
+    public void testSdkSandboxIsKilledOnLoadedSdkUpdate() throws Exception {
         startActivity(APP_PACKAGE, APP_ACTIVITY);
 
         // Should see app/sdk sandbox running
@@ -181,16 +208,13 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
 
         // Update package loaded by app
         installPackage(CODE_APK, "-d");
-        waitForProcessDeath(SANDBOX_1_PROCESS_NAME);
 
-        // Should no longer see app/sdk sandbox running
-        processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
-        assertThat(processDump).doesNotContain(APP_PACKAGE + '\n');
-        assertThat(processDump).doesNotContain(SANDBOX_1_PROCESS_NAME);
+        // SDK sandbox should be killed
+        waitForProcessDeath(SANDBOX_1_PROCESS_NAME);
     }
 
     @Test
-    public void testAppAndSdkSandboxAreKilledForNonLoadedSdkUpdate() throws Exception {
+    public void testSdkSandboxIsKilledForNonLoadedSdkUpdate() throws Exception {
         // Have the app load the first SDK.
         startActivity(APP_2_PACKAGE, APP_2_ACTIVITY);
 
@@ -201,12 +225,9 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
 
         // Update package consumed by the app, but not loaded into the sandbox.
         installPackage(CODE_APK_2, "-d");
-        waitForProcessDeath(SANDBOX_2_PROCESS_NAME);
 
-        // Should no longer see app/sdk sandbox running
-        processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
-        assertThat(processDump).doesNotContain(APP_2_PROCESS_NAME + '\n');
-        assertThat(processDump).doesNotContain(SANDBOX_2_PROCESS_NAME);
+        // SDK sandbox should be killed
+        waitForProcessDeath(SANDBOX_2_PROCESS_NAME);
     }
 
     @Test
@@ -226,19 +247,10 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
 
         // APP_SHARED_2_PACKAGE dies after running device-side tests.
         waitForProcessDeath(SANDBOX_SHARED_2_PROCESS_NAME);
-        if (mDeviceSdkLevel.isDeviceAtLeastU()) {
-            // For U+, the other sandbox should still be alive.
-            String processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
-            assertThat(processDump).contains(SANDBOX_SHARED_1_PROCESS_NAME);
-        } else {
-            // For T, the sandbox for APP_SHARED_PACKAGE should also die since we kill by uid.
-            waitForProcessDeath(SANDBOX_SHARED_1_PROCESS_NAME);
 
-            // Neither of the sandboxes should be respawned later
-            Thread.sleep(5000);
-            waitForProcessDeath(SANDBOX_SHARED_1_PROCESS_NAME);
-            waitForProcessDeath(SANDBOX_SHARED_2_PROCESS_NAME);
-        }
+        // For U+, the other sandbox should still be alive.
+        String processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
+        assertThat(processDump).contains(SANDBOX_SHARED_1_PROCESS_NAME);
     }
 
     @Test
@@ -274,17 +286,11 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
             getDevice()
                     .executeShellCommand("device_config put adservices disable_sdk_sandbox true");
             waitForProcessDeath(SANDBOX_2_PROCESS_NAME);
-            if (mDeviceSdkLevel.isDeviceAtLeastU()) {
-                waitForProcessDeath(APP_2_PROCESS_NAME);
-            }
+            waitForProcessDeath(APP_2_PROCESS_NAME);
 
             processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
             // In U+ the app should be killed when the sandbox is killed.
-            if (mDeviceSdkLevel.isDeviceAtLeastU()) {
-                assertThat(processDump).doesNotContain(APP_2_PROCESS_NAME + '\n');
-            } else {
-                assertThat(processDump).contains(APP_2_PROCESS_NAME + '\n');
-            }
+            assertThat(processDump).doesNotContain(APP_2_PROCESS_NAME + '\n');
             assertThat(processDump).doesNotContain(SANDBOX_2_PROCESS_NAME);
         } finally {
             getDevice().executeShellCommand("cmd sdk_sandbox set-state --enabled");
@@ -293,8 +299,6 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
 
     @Test
     public void testSpecificAppProcessIsKilledOnSandboxDeath() throws Exception {
-        assumeTrue(mDeviceSdkLevel.isDeviceAtLeastU());
-
         try {
             getDevice()
                     .executeShellCommand("device_config put adservices disable_sdk_sandbox false");
@@ -402,34 +406,8 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
 
         processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
         assertThat(processDump).contains(APP_PACKAGE + '\n');
-        if (mDeviceSdkLevel.isDeviceAtLeastU()) {
-            // The sandbox should not restart in U+.
-            assertThat(processDump).doesNotContain(SANDBOX_1_PROCESS_NAME);
-        } else {
-            // The sandbox gets restarted, so it should still be running
-            assertThat(processDump).contains(SANDBOX_1_PROCESS_NAME);
-
-            String finalSandboxPid = getDevice().getProcessPid(SANDBOX_1_PROCESS_NAME);
-            assertThat(initialSandboxPid).isNotEqualTo(finalSandboxPid);
-
-            int initialSandboxOomScoreAdj = getOomScoreAdj(SANDBOX_1_PROCESS_NAME);
-
-            // Navigate to home screen to send both apps to the background.
-            getDevice().executeShellCommand("input keyevent KEYCODE_HOME");
-
-            // Wait for app to be backgrounded and unbinding of sandbox to complete.
-            Thread.sleep(2000);
-
-            // Should see app/sdk sandbox running
-            processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
-            assertThat(processDump).contains(APP_PACKAGE + '\n');
-            assertThat(processDump).contains(SANDBOX_1_PROCESS_NAME);
-
-            // Verify that unbinding in the background still works for a restarted sandbox.
-            int finalSandboxOomScoreAdj = getOomScoreAdj(SANDBOX_1_PROCESS_NAME);
-            // The higher the oom adj score, the lower the priority of the process.
-            assertThat(finalSandboxOomScoreAdj).isGreaterThan(initialSandboxOomScoreAdj);
-        }
+        // The sandbox should not restart in U+.
+        assertThat(processDump).doesNotContain(SANDBOX_1_PROCESS_NAME);
     }
 
     @Ignore("b/310160187")
@@ -518,16 +496,11 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
     }
 
     private void waitForProcessDeath(String processName) throws Exception {
-        int timeElapsed = 0;
-        while (timeElapsed <= 30000) {
-            final String processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
-            if (processDump.contains(processName)) {
-                Thread.sleep(1000);
-                timeElapsed += 1000;
-                continue;
-            }
-            return;
-        }
-        throw new AssertionError("Process " + processName + " has not died.");
+        AwaitUtils.waitFor(
+                () -> {
+                    String processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
+                    return !processDump.contains(processName);
+                },
+                "Process " + processName + " has not died.");
     }
 }

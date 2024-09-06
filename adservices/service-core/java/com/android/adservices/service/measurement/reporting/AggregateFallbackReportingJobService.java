@@ -69,7 +69,7 @@ public final class AggregateFallbackReportingJobService extends JobService {
             return skipAndCancelBackgroundJob(params, /* skipReason=*/ 0, /* doRecord=*/ false);
         }
 
-        AdServicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStartJob(MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID);
 
         if (FlagsFactory.getFlags().getMeasurementJobAggregateFallbackReportingKillSwitch()) {
@@ -87,8 +87,7 @@ public final class AggregateFallbackReportingJobService extends JobService {
                         () -> {
                             processPendingReports();
 
-                            AdServicesJobServiceLogger.getInstance(
-                                            AggregateFallbackReportingJobService.this)
+                            AdServicesJobServiceLogger.getInstance()
                                     .recordJobFinished(
                                             MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID,
                                             /* isSuccessful= */ true,
@@ -140,7 +139,7 @@ public final class AggregateFallbackReportingJobService extends JobService {
         if (mExecutorFuture != null) {
             shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
         }
-        AdServicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStopJob(
                         params, MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID, shouldRetry);
         return shouldRetry;
@@ -209,7 +208,7 @@ public final class AggregateFallbackReportingJobService extends JobService {
         }
 
         if (doRecord) {
-            AdServicesJobServiceLogger.getInstance(this)
+            AdServicesJobServiceLogger.getInstance()
                     .recordJobSkipped(MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID, skipReason);
         }
 

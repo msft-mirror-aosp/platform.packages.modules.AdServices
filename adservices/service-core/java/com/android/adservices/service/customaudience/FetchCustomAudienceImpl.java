@@ -82,7 +82,6 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
 /** Implementation of Fetch Custom Audience. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class FetchCustomAudienceImpl {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -128,7 +127,6 @@ public class FetchCustomAudienceImpl {
     @NonNull private final int mFledgeCustomAudienceMaxCustomHeaderSizeB;
     @NonNull private final int mFledgeCustomAudienceMaxCustomAudienceSizeB;
     @NonNull private final long mFledgeCustomAuienceMaxTotal;
-    private final boolean mFledgeAdSelectionFilteringEnabled;
     private final boolean mFledgeAuctionServerAdRenderIdEnabled;
     private final boolean mAuctionServerRequestFlagsEnabled;
     private final long mFledgeAuctionServerAdRenderIdMaxLength;
@@ -190,7 +188,8 @@ public class FetchCustomAudienceImpl {
         mMaxTrustedBiddingDataSizeB = flags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB();
         mFledgeCustomAudienceMaxAdsSizeB = flags.getFledgeCustomAudienceMaxAdsSizeB();
         mFledgeCustomAudienceMaxNumAds = flags.getFledgeCustomAudienceMaxNumAds();
-        mFledgeAdSelectionFilteringEnabled = flags.getFledgeAdSelectionFilteringEnabled();
+        boolean frequencyCapFilteringEnabled = flags.getFledgeFrequencyCapFilteringEnabled();
+        boolean appInstallFilteringEnabled = flags.getFledgeAppInstallFilteringEnabled();
         mFledgeAuctionServerAdRenderIdEnabled = flags.getFledgeAuctionServerAdRenderIdEnabled();
         mAuctionServerRequestFlagsEnabled = flags.getFledgeAuctionServerRequestFlagsEnabled();
         mFledgeAuctionServerAdRenderIdMaxLength = flags.getFledgeAuctionServerAdRenderIdMaxLength();
@@ -204,19 +203,22 @@ public class FetchCustomAudienceImpl {
         // Instantiate request, response and result CustomAudienceBlobs
         mRequestCustomAudience =
                 new CustomAudienceBlob(
-                        mFledgeAdSelectionFilteringEnabled,
+                        frequencyCapFilteringEnabled,
+                        appInstallFilteringEnabled,
                         mFledgeAuctionServerAdRenderIdEnabled,
                         mFledgeAuctionServerAdRenderIdMaxLength,
                         mAuctionServerRequestFlagsEnabled);
         mResponseCustomAudience =
                 new CustomAudienceBlob(
-                        mFledgeAdSelectionFilteringEnabled,
+                        frequencyCapFilteringEnabled,
+                        appInstallFilteringEnabled,
                         mFledgeAuctionServerAdRenderIdEnabled,
                         mFledgeAuctionServerAdRenderIdMaxLength,
                         mAuctionServerRequestFlagsEnabled);
         mFusedCustomAudience =
                 new CustomAudienceBlob(
-                        mFledgeAdSelectionFilteringEnabled,
+                        frequencyCapFilteringEnabled,
+                        appInstallFilteringEnabled,
                         mFledgeAuctionServerAdRenderIdEnabled,
                         mFledgeAuctionServerAdRenderIdMaxLength,
                         mAuctionServerRequestFlagsEnabled);
@@ -587,9 +589,8 @@ public class FetchCustomAudienceImpl {
             mAdServicesLogger.logFledgeApiCallStats(
                     API_NAME,
                     mCallerAppPackageName,
-                    AdServicesStatusUtils.STATUS_INTERNAL_ERROR,
+                    AdServicesStatusUtils.STATUS_CALLBACK_SHUTDOWN,
                     0);
-            throw new RuntimeException(e);
         }
     }
 
@@ -604,9 +605,8 @@ public class FetchCustomAudienceImpl {
             mAdServicesLogger.logFledgeApiCallStats(
                     API_NAME,
                     mCallerAppPackageName,
-                    AdServicesStatusUtils.STATUS_INTERNAL_ERROR,
+                    AdServicesStatusUtils.STATUS_CALLBACK_SHUTDOWN,
                     0);
-            throw new RuntimeException(e);
         }
     }
 

@@ -30,12 +30,14 @@ import androidx.appsearch.app.AppSearchSession;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.shared.testing.EqualsTester;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 
 import java.util.concurrent.Executor;
@@ -48,9 +50,16 @@ public final class AppSearchMeasurementRollbackDaoTest extends AdServicesExtende
     private static final long APEX_VERSION = 100L;
 
     private final Executor mExecutor = AdServicesExecutors.getBackgroundExecutor();
-    private final String mAdServicePackageName =
-            AppSearchConsentWorker.getAdServicesPackageName(mContext);
-    @Mock private ListenableFuture<AppSearchSession> mAppSearchSession;
+    private String mAdServicePackageName;
+    private final ListenableFuture<AppSearchSession> mAppSearchSession =
+            Futures.immediateFuture(null);
+
+    @Before
+    public void setup() {
+        // TODO(b/347043278): must be set inside @Before so it's not called when device is not
+        // supported
+        mAdServicePackageName = AppSearchConsentWorker.getAdServicesPackageName(mContext);
+    }
 
     @Test
     public void testGetProperties() {
@@ -64,6 +73,7 @@ public final class AppSearchMeasurementRollbackDaoTest extends AdServicesExtende
 
     @Test
     public void testEqualsAndHashcode() {
+        EqualsTester et = new EqualsTester(expect);
         String id = ID;
         String namespace = NAMESPACE;
         String userId = USER_ID;
@@ -82,15 +92,15 @@ public final class AppSearchMeasurementRollbackDaoTest extends AdServicesExtende
         AppSearchMeasurementRollbackDao different4 =
                 new AppSearchMeasurementRollbackDao(id, namespace, userId, apexVersion + 42);
 
-        expectObjectsAreEqual(equals1, equals1);
-        expectObjectsAreEqual(equals1, equals2);
+        et.expectObjectsAreEqual(equals1, equals1);
+        et.expectObjectsAreEqual(equals1, equals2);
 
-        expectObjectsAreNotEqual(equals1, null);
-        expectObjectsAreNotEqual(equals1, "DAO, Y U NO STRING?");
-        expectObjectsAreNotEqual(equals1, different1);
-        expectObjectsAreNotEqual(equals1, different2);
-        expectObjectsAreNotEqual(equals1, different3);
-        expectObjectsAreNotEqual(equals1, different4);
+        et.expectObjectsAreNotEqual(equals1, null);
+        et.expectObjectsAreNotEqual(equals1, "DAO, Y U NO STRING?");
+        et.expectObjectsAreNotEqual(equals1, different1);
+        et.expectObjectsAreNotEqual(equals1, different2);
+        et.expectObjectsAreNotEqual(equals1, different3);
+        et.expectObjectsAreNotEqual(equals1, different4);
     }
 
     @Test

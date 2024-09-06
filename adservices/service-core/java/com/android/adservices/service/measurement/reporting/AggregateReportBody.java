@@ -22,7 +22,6 @@ import android.net.Uri;
 import androidx.annotation.Nullable;
 
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoConverter;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -50,6 +49,7 @@ public class AggregateReportBody {
     private String mDebugMode;
 
     private Uri mAggregationCoordinatorOrigin;
+    @Nullable private String mTriggerContextId;
 
     private static final String API_NAME = "attribution-reporting";
 
@@ -60,6 +60,7 @@ public class AggregateReportBody {
         String SOURCE_DEBUG_KEY = "source_debug_key";
         String TRIGGER_DEBUG_KEY = "trigger_debug_key";
         String AGGREGATION_COORDINATOR_ORIGIN = "aggregation_coordinator_origin";
+        String TRIGGER_CONTEXT_ID = "trigger_context_id";
     }
 
     private interface AggregationServicePayloadKeys {
@@ -94,6 +95,7 @@ public class AggregateReportBody {
         mTriggerDebugKey = other.mTriggerDebugKey;
         mDebugMode = other.mDebugMode;
         mAggregationCoordinatorOrigin = other.mAggregationCoordinatorOrigin;
+        mTriggerContextId = other.mTriggerContextId;
     }
 
     /** Generate the JSON serialization of the aggregate report. */
@@ -112,10 +114,13 @@ public class AggregateReportBody {
         if (mTriggerDebugKey != null) {
             aggregateBodyJson.put(PayloadBodyKeys.TRIGGER_DEBUG_KEY, mTriggerDebugKey.toString());
         }
-        if (FlagsFactory.getFlags().getMeasurementAggregationCoordinatorOriginEnabled()) {
+        if (flags.getMeasurementAggregationCoordinatorOriginEnabled()) {
             aggregateBodyJson.put(
                     PayloadBodyKeys.AGGREGATION_COORDINATOR_ORIGIN,
                     mAggregationCoordinatorOrigin.toString());
+        }
+        if (flags.getMeasurementEnableTriggerContextId() && mTriggerContextId != null) {
+            aggregateBodyJson.put(PayloadBodyKeys.TRIGGER_CONTEXT_ID, mTriggerContextId);
         }
 
         return aggregateBodyJson;
@@ -262,6 +267,12 @@ public class AggregateReportBody {
         /** Origin of aggregation coordinator used for this report. */
         public Builder setAggregationCoordinatorOrigin(Uri aggregationCoordinatorOrigin) {
             mBuilding.mAggregationCoordinatorOrigin = aggregationCoordinatorOrigin;
+            return this;
+        }
+
+        /** Trigger context id */
+        public Builder setTriggerContextId(@Nullable String triggerContextId) {
+            mBuilding.mTriggerContextId = triggerContextId;
             return this;
         }
 

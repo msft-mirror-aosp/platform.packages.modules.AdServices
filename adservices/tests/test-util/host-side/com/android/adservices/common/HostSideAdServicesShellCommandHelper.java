@@ -16,15 +16,19 @@
 
 package com.android.adservices.common;
 
+import com.android.adservices.shared.testing.ConsoleLogger;
+import com.android.adservices.shared.testing.TestDeviceHelper;
+import com.android.adservices.shared.testing.shell.CommandResult;
+
 public final class HostSideAdServicesShellCommandHelper
         extends AbstractAdServicesShellCommandHelper {
     public HostSideAdServicesShellCommandHelper() {
-        super(ConsoleLogger.getInstance());
+        super(AdServicesHostSideSupportHelper.getInstance(), ConsoleLogger.getInstance());
     }
 
     @Override
     protected String runShellCommand(String cmd) {
-        return TestDeviceHelper.runShellCommand("%s", cmd);
+        return TestDeviceHelper.runShellCommand("%s", cmd).strip();
     }
 
     @Override

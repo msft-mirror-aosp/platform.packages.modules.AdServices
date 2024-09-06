@@ -18,6 +18,7 @@ package {
 
 android_test {
     name: "CtsSandboxedFledgeManagerTests",
+    team: "trendy_team_android_rubidium",
     srcs: [
         "src/**/*.java",
     ],
@@ -47,4 +48,9 @@ android_test {
         "general-tests",
         "mcts-adservices",
     ],
+    lint: {
+        extra_check_modules: ["AdServicesTestLintChecker"],
+        baseline_filename: "lint-baseline.xml",
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
 }

@@ -24,10 +24,11 @@ import static com.android.adservices.cobalt.CobaltLoggerConstantUtils.RANGE_UPPE
 import static com.android.adservices.cobalt.CobaltLoggerConstantUtils.UNKNOWN_EVENT_CODE;
 
 import android.annotation.Nullable;
-import android.content.Context;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.cobalt.CobaltLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -40,42 +41,41 @@ import java.util.Objects;
  * name occurrences to Cobalt.
  */
 public final class AppNameApiErrorLogger {
-    private static final Object SINGLETON_LOCK = new Object();
 
-    @Nullable private static AppNameApiErrorLogger sInstance;
+    private static final AppNameApiErrorLogger sInstance = new AppNameApiErrorLogger();
 
-    private final CobaltLogger mCobaltLogger;
+    @Nullable private final CobaltLogger mCobaltLogger;
 
-    /**
-     * Returns an instance of the {@code AppNameApiErrorLogger}. Returns {@code null} when Cobalt
-     * logging is disabled or Cobalt logger initialization failed.
-     */
-    @Nullable
-    public static AppNameApiErrorLogger getInstance(Context context, Flags flags) {
-        synchronized (SINGLETON_LOCK) {
-            if (flags.getCobaltLoggingEnabled() && flags.getAppNameApiErrorCobaltLoggingEnabled()) {
-                if (sInstance == null) {
-                    try {
-                        sInstance =
-                                new AppNameApiErrorLogger(
-                                        CobaltFactory.getCobaltLogger(context, flags));
-                    } catch (CobaltInitializationException e) {
-                        LogUtil.e(e, "Cobalt logger initialization failed.");
-                        // TODO(b/323253975): Add CEL.
-                        return null;
-                    }
-                }
-            } else {
-                LogUtil.d("Cobalt logger is disabled.");
-                return null;
-            }
-            return sInstance;
-        }
+    /** Returns the singleton of the {@code AppNameApiErrorLogger}. */
+    public static AppNameApiErrorLogger getInstance() {
+        return sInstance;
     }
 
     @VisibleForTesting
     AppNameApiErrorLogger(CobaltLogger cobaltLogger) {
         this.mCobaltLogger = cobaltLogger;
+    }
+
+    @VisibleForTesting
+    AppNameApiErrorLogger() {
+        this(getDefaultCobaltLogger());
+    }
+
+    @Nullable
+    private static CobaltLogger getDefaultCobaltLogger() {
+        CobaltLogger logger = null;
+        try {
+            Flags flags = FlagsFactory.getFlags();
+            if (flags.getAppNameApiErrorCobaltLoggingEnabled()) {
+                logger = CobaltFactory.getCobaltLogger(ApplicationContextSingleton.get(), flags);
+            } else {
+                LogUtil.d("Cobalt logger is disabled.");
+            }
+        } catch (CobaltInitializationException | RuntimeException e) {
+            LogUtil.e(e, "Cobalt logger initialization failed.");
+            // TODO(b/323253975): Add CEL.
+        }
+        return logger;
     }
 
     /**
@@ -88,6 +88,11 @@ public final class AppNameApiErrorLogger {
      */
     @SuppressWarnings("FutureReturnValueIgnored") // TODO(b/323263328): Remove @SuppressWarnings.
     public void logErrorOccurrence(String appPackageName, int apiCode, int errorCode) {
+        if (!isEnabled()) {
+            LogUtil.w("Skip logging because Cobalt logger is null");
+            return;
+        }
+
         if (errorCode == 0) {
             LogUtil.d(
                     "Skip logging success event for app package name: %s, api code %d.",
@@ -102,6 +107,11 @@ public final class AppNameApiErrorLogger {
 
         mCobaltLogger.logString(
                 METRIC_ID, appPackageName, ImmutableList.of(apiCodeEvent, errorCodeEvent));
+    }
+
+    @VisibleForTesting
+    boolean isEnabled() {
+        return mCobaltLogger != null;
     }
 
     /**

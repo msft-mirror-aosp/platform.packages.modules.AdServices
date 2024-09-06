@@ -16,7 +16,6 @@
 
 package com.android.cobalt.data;
 
-import static com.android.cobalt.collect.ImmutableHelpers.toImmutableList;
 import static com.android.cobalt.collect.ImmutableHelpers.toImmutableListMultimap;
 
 import static java.util.stream.Collectors.toMap;
@@ -475,10 +474,10 @@ public final class DataService {
             ObservationGenerator generator = generatorSupplier.apply(dayIndex);
             ImmutableList<UnencryptedObservationBatch> batches =
                     generator.generateObservations(dayIndex, eventData);
-            int numObservations =
-                    batches.stream()
-                            .mapToInt(UnencryptedObservationBatch::getUnencryptedObservationsCount)
-                            .sum();
+            int numObservations = 0;
+            for (UnencryptedObservationBatch batch : batches) {
+                numObservations += batch.getUnencryptedObservationsCount();
+            }
             logInfo(
                     "Generated %s observations in %s observation batches for day index %s for"
                             + " report %s",
@@ -521,9 +520,13 @@ public final class DataService {
     }
 
     private ImmutableList<ReportKey> irrelevantReports(ImmutableList<ReportKey> registryReports) {
-        return mDaoBuildingBlocks.queryReportKeys().stream()
-                .filter(r -> !registryReports.contains(r))
-                .collect(toImmutableList());
+        ImmutableList.Builder<ReportKey> irrelevantReportsBuilder = ImmutableList.builder();
+        for (ReportKey reportKey : mDaoBuildingBlocks.queryReportKeys()) {
+            if (!registryReports.contains(reportKey)) {
+                irrelevantReportsBuilder.add(reportKey);
+            }
+        }
+        return irrelevantReportsBuilder.build();
     }
 
     private static void logInfo(String format, Object... params) {

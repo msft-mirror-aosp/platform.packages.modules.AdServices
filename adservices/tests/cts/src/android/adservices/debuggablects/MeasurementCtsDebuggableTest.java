@@ -179,22 +179,15 @@ public class MeasurementCtsDebuggableTest {
         return value.replaceAll("test", "com");
     }
 
-    private MockWebServerRule createForHttps(int port) {
-        MockWebServerRule mockWebServerRule =
-                MockWebServerRule.forHttps(
-                        sContext, "adservices_untrusted_test_server.p12", "adservices_test");
-        try {
-            mockWebServerRule.reserveServerListeningPort(port);
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
-        return mockWebServerRule;
+    private MockWebServerRule createForHttps() {
+        return MockWebServerRule.forHttps(
+                sContext, "adservices_untrusted_test_server.p12", "adservices_test");
     }
 
     private MockWebServer startServer(int port, MockResponse... mockResponses) {
         try {
-            final MockWebServerRule serverRule = createForHttps(port);
-            return serverRule.startMockWebServer(List.of(mockResponses));
+            final MockWebServerRule serverRule = createForHttps();
+            return serverRule.startMockWebServer(List.of(mockResponses), port);
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
@@ -663,10 +656,6 @@ public class MeasurementCtsDebuggableTest {
 
         getUiDevice().executeShellCommand(
                 "device_config put adservices "
-                + "measurement_min_event_report_delay_millis 0");
-
-        getUiDevice().executeShellCommand(
-                "device_config put adservices "
                 + "measurement_enable_configurable_aggregate_report_delay true");
 
         getUiDevice().executeShellCommand(
@@ -727,10 +716,6 @@ public class MeasurementCtsDebuggableTest {
         getUiDevice().executeShellCommand(
                 "device_config put adservices "
                 + "measurement_event_reports_vtc_early_reporting_windows null");
-
-        getUiDevice().executeShellCommand(
-                "device_config put adservices "
-                + "measurement_min_event_report_delay_millis null");
 
         getUiDevice().executeShellCommand(
                 "device_config put adservices "

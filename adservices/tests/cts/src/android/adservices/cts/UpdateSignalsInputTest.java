@@ -25,9 +25,8 @@ import android.adservices.signals.UpdateSignalsInput;
 import android.net.Uri;
 import android.os.Parcel;
 
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -37,7 +36,6 @@ import org.junit.Test;
  * <p>If this class is un-ignored {@link android.adservices.signals.UpdateSignalsInputTest} should
  * be deleted.
  */
-@Ignore
 public class UpdateSignalsInputTest {
 
     private static final Uri URI = Uri.parse("https://example.com/somecoolsignals");

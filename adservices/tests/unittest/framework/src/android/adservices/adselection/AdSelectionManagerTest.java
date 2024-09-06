@@ -26,7 +26,6 @@ import static android.adservices.common.CommonFixture.doSleep;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertNotNull;
 
 import android.adservices.adid.AdId;
 import android.adservices.adid.AdIdCompatibleManager;
@@ -41,18 +40,16 @@ import android.os.Build;
 import android.os.IBinder;
 import android.os.RemoteException;
 
-import androidx.test.core.app.ApplicationProvider;
-
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
+import com.android.adservices.shared.testing.annotations.RequiresSdkRange;
 
 import com.google.common.base.Strings;
 
-import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.security.SecureRandom;
@@ -61,9 +58,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /** Unit tests for {@link AdSelectionManager} */
-public class AdSelectionManagerTest {
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
-
+@RequiresSdkLevelAtLeastS
+public final class AdSelectionManagerTest extends AdServicesUnitTestCase {
     // AdId constants
     private static final String AD_ID = "35a4ac90-e4dc-4fe7-bbc6-95e804aa7dbc";
 
@@ -84,9 +80,6 @@ public class AdSelectionManagerTest {
     private static final int EXCESSIVE_PAYLOAD_SIZE_BYTES =
             TYPICAL_PAYLOAD_SIZE_BYTES * 2 * 1024; // 2Mb
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Before
     public void setup() throws Exception {
         mEventData = new JSONObject().put("key", "value").toString();
@@ -97,30 +90,26 @@ public class AdSelectionManagerTest {
     }
 
     @Test
+    @RequiresSdkLevelAtLeastT
     public void testAdSelectionManagerCtor_TPlus() {
-        Assume.assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU);
-        assertThat(AdSelectionManager.get(CONTEXT)).isNotNull();
-        assertThat(CONTEXT.getSystemService(AdSelectionManager.class)).isNotNull();
+        expect.that(AdSelectionManager.get(mContext)).isNotNull();
+        expect.that(mContext.getSystemService(AdSelectionManager.class)).isNotNull();
     }
 
     @Test
+    @RequiresSdkRange(atMost = Build.VERSION_CODES.S_V2)
     public void testAdSelectionManagerCtor_SMinus() {
-        Assume.assumeTrue(Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU);
-        assertThat(AdSelectionManager.get(CONTEXT)).isNotNull();
-        assertThat(CONTEXT.getSystemService(AdSelectionManager.class)).isNull();
+        expect.that(AdSelectionManager.get(mContext)).isNotNull();
+        expect.that(mContext.getSystemService(AdSelectionManager.class)).isNull();
     }
 
     @Test
-    public void testAdSelectionManager_reportEvent_adIdEnabled()
-            throws JSONException, RemoteException {
-        // TODO(b/296852054): Remove assumption once AdServicesOutcomeReceiver is used by FLEDGE.
-        Assume.assumeTrue(Build.VERSION.SDK_INT > Build.VERSION_CODES.R);
-
+    public void testAdSelectionManager_reportEvent_adIdEnabled() {
         // Initialize manager with mocks
-        MockAdIdManager mockAdIdManager = new MockAdIdManager(CONTEXT);
+        MockAdIdManager mockAdIdManager = new MockAdIdManager(mContext);
         MockServiceToReportEvent mockServiceToReportEvent = new MockServiceToReportEvent();
         AdSelectionManager mAdSelectionManager =
-                AdSelectionManager.get(CONTEXT, mockAdIdManager, mockServiceToReportEvent);
+                AdSelectionManager.get(mContext, mockAdIdManager, mockServiceToReportEvent);
 
         // Set expected outcome of AdIdManager#getAdId
         mockAdIdManager.setResult(new AdId(AD_ID, true));
@@ -130,27 +119,23 @@ public class AdSelectionManagerTest {
 
         // Assert values passed to the service are as expected
         ReportInteractionInput input = mockServiceToReportEvent.mInput;
-        assertThat(input.getAdSelectionId()).isEqualTo(AD_SELECTION_ID);
-        assertThat(input.getCallerPackageName()).isEqualTo(CALLER_PACKAGE_NAME);
-        assertThat(input.getInteractionKey()).isEqualTo(EVENT_KEY);
-        assertThat(input.getInteractionData()).isEqualTo(mEventData);
-        assertThat(input.getReportingDestinations()).isEqualTo(REPORTING_DESTINATIONS);
-        assertThat(input.getInputEvent()).isNull();
-        assertThat(input.getAdId()).isEqualTo(AD_ID);
-        assertThat(input.getCallerSdkName()).isEqualTo("");
+        expect.that(input.getAdSelectionId()).isEqualTo(AD_SELECTION_ID);
+        expect.that(input.getCallerPackageName()).isEqualTo(CALLER_PACKAGE_NAME);
+        expect.that(input.getInteractionKey()).isEqualTo(EVENT_KEY);
+        expect.that(input.getInteractionData()).isEqualTo(mEventData);
+        expect.that(input.getReportingDestinations()).isEqualTo(REPORTING_DESTINATIONS);
+        expect.that(input.getInputEvent()).isNull();
+        expect.that(input.getAdId()).isEqualTo(AD_ID);
+        expect.that(input.getCallerSdkName()).isEmpty();
     }
 
     @Test
-    public void testAdSelectionManager_reportEvent_adIdZeroOut()
-            throws JSONException, RemoteException {
-        // TODO(b/296852054): Remove assumption once AdServicesOutcomeReceiver is used by FLEDGE.
-        Assume.assumeTrue(Build.VERSION.SDK_INT > Build.VERSION_CODES.R);
-
+    public void testAdSelectionManager_reportEvent_adIdZeroOut() {
         // Initialize manager with mocks
-        MockAdIdManager mockAdIdManager = new MockAdIdManager(CONTEXT);
+        MockAdIdManager mockAdIdManager = new MockAdIdManager(mContext);
         MockServiceToReportEvent mockServiceToReportEvent = new MockServiceToReportEvent();
         AdSelectionManager mAdSelectionManager =
-                AdSelectionManager.get(CONTEXT, mockAdIdManager, mockServiceToReportEvent);
+                AdSelectionManager.get(mContext, mockAdIdManager, mockServiceToReportEvent);
 
         // Set expected outcome of AdIdManager#getAdId
         mockAdIdManager.setResult(new AdId(AdId.ZERO_OUT, true));
@@ -160,27 +145,23 @@ public class AdSelectionManagerTest {
 
         // Assert values passed to the service are as expected
         ReportInteractionInput input = mockServiceToReportEvent.mInput;
-        assertThat(input.getAdSelectionId()).isEqualTo(AD_SELECTION_ID);
-        assertThat(input.getCallerPackageName()).isEqualTo(CALLER_PACKAGE_NAME);
-        assertThat(input.getInteractionKey()).isEqualTo(EVENT_KEY);
-        assertThat(input.getInteractionData()).isEqualTo(mEventData);
-        assertThat(input.getReportingDestinations()).isEqualTo(REPORTING_DESTINATIONS);
-        assertThat(input.getInputEvent()).isNull();
-        assertThat(input.getAdId()).isNull();
-        assertThat(input.getCallerSdkName()).isEqualTo("");
+        expect.that(input.getAdSelectionId()).isEqualTo(AD_SELECTION_ID);
+        expect.that(input.getCallerPackageName()).isEqualTo(CALLER_PACKAGE_NAME);
+        expect.that(input.getInteractionKey()).isEqualTo(EVENT_KEY);
+        expect.that(input.getInteractionData()).isEqualTo(mEventData);
+        expect.that(input.getReportingDestinations()).isEqualTo(REPORTING_DESTINATIONS);
+        expect.that(input.getInputEvent()).isNull();
+        expect.that(input.getAdId()).isNull();
+        expect.that(input.getCallerSdkName()).isEmpty();
     }
 
     @Test
-    public void testAdSelectionManager_reportEvent_adIdDisabled()
-            throws JSONException, RemoteException {
-        // TODO(b/296852054): Remove assumption once AdServicesOutcomeReceiver is used by FLEDGE.
-        Assume.assumeTrue(Build.VERSION.SDK_INT > Build.VERSION_CODES.R);
-
+    public void testAdSelectionManager_reportEvent_adIdDisabled() {
         // Initialize manager with mocks
-        MockAdIdManager mockAdIdManager = new MockAdIdManager(CONTEXT);
+        MockAdIdManager mockAdIdManager = new MockAdIdManager(mContext);
         MockServiceToReportEvent mockServiceToReportEvent = new MockServiceToReportEvent();
         AdSelectionManager mAdSelectionManager =
-                AdSelectionManager.get(CONTEXT, mockAdIdManager, mockServiceToReportEvent);
+                AdSelectionManager.get(mContext, mockAdIdManager, mockServiceToReportEvent);
 
         // Set expected outcome of AdIdManager#getAdId
         mockAdIdManager.setError(new SecurityException());
@@ -190,23 +171,20 @@ public class AdSelectionManagerTest {
 
         // Assert values passed to the service are as expected
         ReportInteractionInput input = mockServiceToReportEvent.mInput;
-        assertThat(input.getAdSelectionId()).isEqualTo(AD_SELECTION_ID);
-        assertThat(input.getCallerPackageName()).isEqualTo(CALLER_PACKAGE_NAME);
-        assertThat(input.getInteractionKey()).isEqualTo(EVENT_KEY);
-        assertThat(input.getInteractionData()).isEqualTo(mEventData);
-        assertThat(input.getReportingDestinations()).isEqualTo(REPORTING_DESTINATIONS);
-        assertThat(input.getInputEvent()).isNull();
-        assertThat(input.getAdId()).isNull();
-        assertThat(input.getCallerSdkName()).isEqualTo("");
+        expect.that(input.getAdSelectionId()).isEqualTo(AD_SELECTION_ID);
+        expect.that(input.getCallerPackageName()).isEqualTo(CALLER_PACKAGE_NAME);
+        expect.that(input.getInteractionKey()).isEqualTo(EVENT_KEY);
+        expect.that(input.getInteractionData()).isEqualTo(mEventData);
+        expect.that(input.getReportingDestinations()).isEqualTo(REPORTING_DESTINATIONS);
+        expect.that(input.getInputEvent()).isNull();
+        expect.that(input.getAdId()).isNull();
+        expect.that(input.getCallerSdkName()).isEmpty();
     }
 
     @Test
     public void testAdSelectionManagerGetAdSelectionDataWhenResultIsByteArray() throws Exception {
-        // TODO(b/296852054): Remove assumption once AdServicesOutcomeReceiver is used by FLEDGE.
-        Assume.assumeTrue(Build.VERSION.SDK_INT > Build.VERSION_CODES.R);
-
         // Initialize manager with mocks
-        MockAdIdManager mockAdIdManager = new MockAdIdManager(CONTEXT);
+        MockAdIdManager mockAdIdManager = new MockAdIdManager(mContext);
         MockServiceGetAdSelectionData mockServiceGetAdSelectionData =
                 new MockServiceGetAdSelectionData();
 
@@ -216,7 +194,7 @@ public class AdSelectionManagerTest {
                 getAdSelectionDataResponseWithByteArray(expectedAdSelectionId, expectedByteArray));
 
         AdSelectionManager adSelectionManager =
-                AdSelectionManager.get(CONTEXT, mockAdIdManager, mockServiceGetAdSelectionData);
+                AdSelectionManager.get(mContext, mockAdIdManager, mockServiceGetAdSelectionData);
 
         GetAdSelectionDataRequest request =
                 new GetAdSelectionDataRequest.Builder()
@@ -231,18 +209,16 @@ public class AdSelectionManagerTest {
         // Need time to sleep to allow time for outcome receiver to get setup
         doSleep(SLEEP_TIME_MS);
 
-        assertNotNull(outcomeReceiver.getResult());
-        assertThat(outcomeReceiver.getResult().getAdSelectionId()).isEqualTo(expectedAdSelectionId);
+        assertThat(outcomeReceiver.getResult()).isNotNull();
+        expect.that(outcomeReceiver.getResult().getAdSelectionId())
+                .isEqualTo(expectedAdSelectionId);
         assertArrayEquals(expectedByteArray, outcomeReceiver.getResult().getAdSelectionData());
     }
 
     @Test
     public void testAdSelectionManagerGetAdSelectionDataCoordinatorWasPassed() throws Exception {
-        // TODO(b/296852054): Remove assumption once AdServicesOutcomeReceiver is used by FLEDGE.
-        Assume.assumeTrue(Build.VERSION.SDK_INT > Build.VERSION_CODES.R);
-
         // Initialize manager with mocks
-        MockAdIdManager mockAdIdManager = new MockAdIdManager(CONTEXT);
+        MockAdIdManager mockAdIdManager = new MockAdIdManager(mContext);
         MockServiceGetAdSelectionData mockServiceGetAdSelectionData =
                 new MockServiceGetAdSelectionData();
 
@@ -252,7 +228,7 @@ public class AdSelectionManagerTest {
                 getAdSelectionDataResponseWithByteArray(expectedAdSelectionId, expectedByteArray));
 
         AdSelectionManager adSelectionManager =
-                AdSelectionManager.get(CONTEXT, mockAdIdManager, mockServiceGetAdSelectionData);
+                AdSelectionManager.get(mContext, mockAdIdManager, mockServiceGetAdSelectionData);
 
         GetAdSelectionDataRequest request =
                 new GetAdSelectionDataRequest.Builder()
@@ -268,18 +244,15 @@ public class AdSelectionManagerTest {
         // Need time to sleep to allow time for outcome receiver to get setup
         doSleep(SLEEP_TIME_MS);
 
-        assertNotNull(outcomeReceiver.getResult());
-        assertThat(mockServiceGetAdSelectionData.wasCoordinatorSet()).isTrue();
+        expect.that(outcomeReceiver.getResult()).isNotNull();
+        expect.that(mockServiceGetAdSelectionData.wasCoordinatorSet()).isTrue();
     }
 
     @Test
     public void testAdSelectionManagerGetAdSelectionDataWhenResultIsAssetFileDescriptor()
             throws Exception {
-        // TODO(b/296852054): Remove assumption once AdServicesOutcomeReceiver is used by FLEDGE.
-        Assume.assumeTrue(Build.VERSION.SDK_INT > Build.VERSION_CODES.R);
-
         // Initialize manager with mocks
-        MockAdIdManager mockAdIdManager = new MockAdIdManager(CONTEXT);
+        MockAdIdManager mockAdIdManager = new MockAdIdManager(mContext);
         MockServiceGetAdSelectionData mockServiceGetAdSelectionData =
                 new MockServiceGetAdSelectionData();
 
@@ -290,7 +263,7 @@ public class AdSelectionManagerTest {
                         expectedAdSelectionId, expectedByteArray, BLOCKING_EXECUTOR));
 
         AdSelectionManager adSelectionManager =
-                AdSelectionManager.get(CONTEXT, mockAdIdManager, mockServiceGetAdSelectionData);
+                AdSelectionManager.get(mContext, mockAdIdManager, mockServiceGetAdSelectionData);
 
         GetAdSelectionDataRequest request =
                 new GetAdSelectionDataRequest.Builder()
@@ -305,7 +278,7 @@ public class AdSelectionManagerTest {
         // Need time to sleep to allow time for outcome receiver to get setup
         doSleep(SLEEP_TIME_MS);
 
-        assertNotNull(outcomeReceiver.getResult());
+        assertThat(outcomeReceiver.getResult()).isNotNull();
         assertThat(outcomeReceiver.getResult().getAdSelectionId()).isEqualTo(expectedAdSelectionId);
         assertArrayEquals(expectedByteArray, outcomeReceiver.getResult().getAdSelectionData());
     }
@@ -314,11 +287,8 @@ public class AdSelectionManagerTest {
     public void
             testAdSelectionManagerGetAdSelectionDataWhenResultIsAssetFileDescriptorWithExcessiveSize()
                     throws Exception {
-        // TODO(b/296852054): Remove assumption once AdServicesOutcomeReceiver is used by FLEDGE.
-        Assume.assumeTrue(Build.VERSION.SDK_INT > Build.VERSION_CODES.R);
-
         // Initialize manager with mocks
-        MockAdIdManager mockAdIdManager = new MockAdIdManager(CONTEXT);
+        MockAdIdManager mockAdIdManager = new MockAdIdManager(mContext);
         MockServiceGetAdSelectionData mockServiceGetAdSelectionData =
                 new MockServiceGetAdSelectionData();
 
@@ -328,7 +298,7 @@ public class AdSelectionManagerTest {
                 getAdSelectionDataResponseWithAssetFileDescriptor(
                         expectedAdSelectionId, expectedByteArray, BLOCKING_EXECUTOR));
         AdSelectionManager adSelectionManager =
-                AdSelectionManager.get(CONTEXT, mockAdIdManager, mockServiceGetAdSelectionData);
+                AdSelectionManager.get(mContext, mockAdIdManager, mockServiceGetAdSelectionData);
 
         GetAdSelectionDataRequest request =
                 new GetAdSelectionDataRequest.Builder()
@@ -340,11 +310,11 @@ public class AdSelectionManagerTest {
         adSelectionManager.getAdSelectionData(request, CALLBACK_EXECUTOR, outcomeReceiver);
         // Need time to sleep to allow time for outcome receiver to get setup
         doSleep(SLEEP_TIME_MS);
-        assertNotNull(outcomeReceiver.getResult());
+        assertThat(outcomeReceiver.getResult()).isNotNull();
         assertThat(outcomeReceiver.getResult().getAdSelectionId()).isEqualTo(expectedAdSelectionId);
 
         byte[] result = outcomeReceiver.getResult().getAdSelectionData();
-        assertThat(result.length).isEqualTo(expectedByteArray.length);
+        assertThat(result).hasLength(expectedByteArray.length);
         assertArrayEquals(expectedByteArray, result);
     }
 

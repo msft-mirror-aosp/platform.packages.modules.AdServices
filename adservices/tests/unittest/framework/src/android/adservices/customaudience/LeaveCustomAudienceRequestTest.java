@@ -20,19 +20,13 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.common.CommonFixture;
 
-import androidx.test.filters.SmallTest;
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
-import com.android.adservices.common.SdkLevelSupportRule;
-
-import org.junit.Rule;
 import org.junit.Test;
 
-@SmallTest
-public class LeaveCustomAudienceRequestTest {
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
+@RequiresSdkLevelAtLeastS
+public final class LeaveCustomAudienceRequestTest extends AdServicesUnitTestCase {
     @Test
     public void testLeaveCustomAudienceRequestWithSameValuesAreEqual() {
         LeaveCustomAudienceRequest obj1 =

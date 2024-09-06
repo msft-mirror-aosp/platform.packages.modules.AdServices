@@ -16,42 +16,30 @@
 
 package com.android.adservices.service.common;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockIsAtLeastS;
-
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
 
-import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.XmlResourceParser;
 
-import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.SmallTest;
-
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.servicecoretest.R;
 import com.android.modules.utils.build.SdkLevel;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.NoSuchElementException;
 
-@SmallTest
-public final class AndroidManifestConfigParserTest {
+@SpyStatic(SdkLevel.class)
+public final class AndroidManifestConfigParserTest extends AdServicesExtendedMockitoTestCase {
     private static final String TEST_APP_PACKAGE_NAME = "com.android.adservices.servicecoretest";
     private static final String RESOURCE_NAME = "ad_services_config";
     private static final String RESOURCE_TYPE = "xml";
     private static final String MISSING_RESOURCE_ERROR_MSG =
             "Missing resource attribute in AdServices config property!";
-
-    private final Context mContext = ApplicationProvider.getApplicationContext();
-
-    @Rule
-    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder(this).spyStatic(SdkLevel.class).build();
 
     @Test
     public void testGetAdServicesConfigResourceId_valid() throws Exception {
@@ -189,10 +177,10 @@ public final class AndroidManifestConfigParserTest {
     }
 
     private void mockSdkLevelS() {
-        mockIsAtLeastS(true);
+        mocker.mockIsAtLeastS(true);
     }
 
     private void mockSdkLevelR() {
-        mockIsAtLeastS(false);
+        mocker.mockSdkLevelR();
     }
 }

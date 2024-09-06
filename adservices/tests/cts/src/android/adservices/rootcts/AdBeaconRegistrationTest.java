@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.utils.FledgeScenarioTest;
 import android.adservices.utils.ScenarioDispatcher;
+import android.adservices.utils.ScenarioDispatcherFactory;
 
 import com.android.compatibility.common.util.ShellUtils;
 
@@ -79,11 +80,16 @@ public class AdBeaconRegistrationTest extends FledgeScenarioTest {
 
     private void runAdSelectionAndReporting(String scenarioJson, boolean shouldRunBackgroundJob)
             throws Exception {
-        mScenarioDispatcher = ScenarioDispatcher.fromScenario(scenarioJson, getCacheBusterPrefix());
-        setupDefaultMockWebServer(mScenarioDispatcher);
+        mScenarioDispatcher =
+                setupDispatcher(
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                scenarioJson));
         joinCustomAudience(SHOES_CA);
-        AdSelectionOutcome outcome = doSelectAds(makeAdSelectionConfig());
-        doReportImpression(outcome.getAdSelectionId(), makeAdSelectionConfig());
+        AdSelectionOutcome outcome =
+                doSelectAds(makeAdSelectionConfig(mScenarioDispatcher.getBaseAddressWithPrefix()));
+        doReportImpression(
+                outcome.getAdSelectionId(),
+                makeAdSelectionConfig(mScenarioDispatcher.getBaseAddressWithPrefix()));
         try {
             doReportEvent(outcome.getAdSelectionId(), "view");
         } catch (Exception e) {

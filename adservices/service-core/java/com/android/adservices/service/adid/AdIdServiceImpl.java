@@ -15,17 +15,16 @@
  */
 package com.android.adservices.service.adid;
 
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_CALLING_PACKAGE_DOES_NOT_BELONG_TO_CALLING_ID;
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_CALLING_PACKAGE_NOT_FOUND;
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST;
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_UNSET;
+import static android.adservices.common.AdServicesStatusUtils.StatusCode;
+import static android.adservices.common.AdServicesStatusUtils.isSuccess;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__ADID;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_ADID;
@@ -37,7 +36,6 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import android.adservices.adid.GetAdIdParam;
 import android.adservices.adid.IAdIdService;
 import android.adservices.adid.IGetAdIdCallback;
-import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CallerMetadata;
 import android.annotation.NonNull;
 import android.content.Context;
@@ -120,12 +118,12 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
 
         sBackgroundExecutor.execute(
                 () -> {
-                    ApiCallStats.Result result = null;
+                    int resultCode = STATUS_UNSET;
                     try {
-                        result =
+                        resultCode =
                                 canCallerInvokeAdIdService(
                                         hasAdIdPermission, adIdParam, callingUid, callback);
-                        if (!result.isSuccess()) {
+                        if (!isSuccess(resultCode)) {
                             return;
                         }
 
@@ -136,9 +134,7 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
                                 e,
                                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR,
                                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID);
-                        result =
-                                ApiCallStats.failureResult(
-                                        STATUS_INTERNAL_ERROR, FAILURE_REASON_UNSET);
+                        resultCode = STATUS_INTERNAL_ERROR;
                     } finally {
                         long binderCallStartTimeMillis = callerMetadata.getBinderElapsedTimestamp();
                         long serviceLatency = mClock.elapsedRealtime() - startServiceTime;
@@ -154,7 +150,7 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
                                         .setAppPackageName(packageName)
                                         .setSdkPackageName(sdkPackageName)
                                         .setLatencyMillisecond(apiLatency)
-                                        .setResult(result)
+                                        .setResultCode(resultCode)
                                         .build());
                     }
                 });
@@ -214,7 +210,7 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
      * @param callback {@link IGetAdIdCallback} to invoke when caller is not allowed.
      * @return ApiCallStats.Result containing API response status code and failure reason.
      */
-    private ApiCallStats.Result canCallerInvokeAdIdService(
+    private @StatusCode int canCallerInvokeAdIdService(
             boolean sufficientPermission,
             GetAdIdParam adIdParam,
             int callingUid,
@@ -225,7 +221,7 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
         } catch (WrongCallingApplicationStateException backgroundCaller) {
             invokeCallbackWithStatus(
                     callback, STATUS_BACKGROUND_CALLER, backgroundCaller.getMessage());
-            return ApiCallStats.failureResult(STATUS_BACKGROUND_CALLER, FAILURE_REASON_UNSET);
+            return STATUS_BACKGROUND_CALLER;
         }
 
         if (!sufficientPermission) {
@@ -233,8 +229,7 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
                     callback,
                     STATUS_PERMISSION_NOT_REQUESTED,
                     "Unauthorized caller. Permission not requested.");
-            return ApiCallStats.failureResult(
-                    STATUS_PERMISSION_NOT_REQUESTED, FAILURE_REASON_UNSET);
+            return STATUS_PERMISSION_NOT_REQUESTED;
         }
         // This needs to access PhFlag which requires READ_DEVICE_CONFIG which
         // is not granted for binder thread. So we have to check it with one
@@ -245,26 +240,22 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
         if (appCanNotUseAdId) {
             invokeCallbackWithStatus(
                     callback,
-                    STATUS_CALLER_NOT_ALLOWED,
+                    STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST,
                     "Unauthorized caller. Caller is not allowed.");
-            return ApiCallStats.failureResult(
-                    STATUS_CALLER_NOT_ALLOWED, FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST);
+            return STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST;
         }
 
         // Check whether calling package belongs to the callingUid
-        ApiCallStats.Result result =
+        int resultCode =
                 enforceCallingPackageBelongsToUid(adIdParam.getAppPackageName(), callingUid);
-        if (result.getResultCode() != STATUS_SUCCESS) {
-            invokeCallbackWithStatus(callback, result.getResultCode(), "Caller is not authorized.");
-            return result;
+        if (!isSuccess(resultCode)) {
+            invokeCallbackWithStatus(callback, resultCode, "Caller is not authorized.");
         }
-        return ApiCallStats.successResult();
+        return resultCode;
     }
 
     private void invokeCallbackWithStatus(
-            IGetAdIdCallback callback,
-            @AdServicesStatusUtils.StatusCode int statusCode,
-            String message) {
+            IGetAdIdCallback callback, @StatusCode int statusCode, String message) {
         LogUtil.e(message);
         try {
             callback.onError(statusCode);
@@ -278,7 +269,7 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
     }
 
     // Enforce that the callingPackage has the callingUid.
-    private ApiCallStats.Result enforceCallingPackageBelongsToUid(
+    private @StatusCode int enforceCallingPackageBelongsToUid(
             String callingPackage, int callingUid) {
         int appCallingUid = SdkRuntimeUtil.getCallingAppUid(callingUid);
         int packageUid;
@@ -290,16 +281,13 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID);
-            return ApiCallStats.failureResult(
-                    STATUS_UNAUTHORIZED, FAILURE_REASON_CALLING_PACKAGE_NOT_FOUND);
+            return STATUS_UNAUTHORIZED;
         }
         if (packageUid != appCallingUid) {
             LogUtil.e(callingPackage + " does not belong to uid " + callingUid);
 
-            return ApiCallStats.failureResult(
-                    STATUS_UNAUTHORIZED,
-                    FAILURE_REASON_CALLING_PACKAGE_DOES_NOT_BELONG_TO_CALLING_ID);
+            return STATUS_UNAUTHORIZED;
         }
-        return ApiCallStats.successResult();
+        return STATUS_SUCCESS;
     }
 }

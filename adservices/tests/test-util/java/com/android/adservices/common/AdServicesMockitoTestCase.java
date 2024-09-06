@@ -30,11 +30,14 @@ import org.mockito.quality.Strictness;
  */
 public abstract class AdServicesMockitoTestCase extends AdServicesUnitTestCase {
 
-    @Mock public Context mMockContext;
+    @Mock protected Context mMockContext;
 
     /** Spy the {@link AdServicesUnitTestCase#sContext} */
     @Spy protected final Context mSpyContext = sContext;
 
     @Rule(order = 10)
     public final MockitoRule mockito = MockitoJUnit.rule().strictness(Strictness.LENIENT);
+
+    // TODO(b/314969513): add Mocker that implements mocker interfaces needed by subclasses so we
+    // can deprecate MockitoExpectations - see example on AdServicesExtendedMockitoTestCase
 }
