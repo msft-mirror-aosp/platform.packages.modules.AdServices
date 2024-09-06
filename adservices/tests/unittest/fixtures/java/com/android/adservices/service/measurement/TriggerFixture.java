@@ -21,17 +21,12 @@ import android.util.Pair;
 
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.service.FakeFlagsFactory;
-import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
-import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONArray;
 
-import java.math.BigInteger;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 public final class TriggerFixture {
@@ -60,7 +55,7 @@ public final class TriggerFixture {
                 .setTriggerTime(ValidTriggerParams.TRIGGER_TIME)
                 .setEventTriggers(ValidTriggerParams.EVENT_TRIGGERS)
                 .setAggregateTriggerData(ValidTriggerParams.AGGREGATE_TRIGGER_DATA)
-                .setAggregateValues(ValidTriggerParams.AGGREGATE_VALUES)
+                .setAggregateValuesString(ValidTriggerParams.AGGREGATE_VALUES_STRING)
                 .setFilters(ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING)
                 .setNotFilters(ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING)
                 .setAttributionConfig(ValidTriggerParams.ATTRIBUTION_CONFIGS_STRING)
@@ -73,6 +68,7 @@ public final class TriggerFixture {
                 .setAttributionScopesString(ValidTriggerParams.ATTRIBUTION_SCOPES)
                 .setAggregatableFilteringIdMaxBytes(
                         ValidTriggerParams.AGGREGATABLE_FILTERING_ID_MAX_BYTES)
+                .setAggregateDebugReportingString(ValidTriggerParams.AGGREGATE_DEBUG_REPORT)
                 .build();
     }
 
@@ -119,7 +115,7 @@ public final class TriggerFixture {
                     + "}"
                 + "]";
 
-        public static final String AGGREGATE_VALUES =
+        public static final String AGGREGATE_VALUES_STRING =
                 "{" + "\"campaignCounts\":32768," + "\"geoValue\":1664" + "}";
 
         public static final UnsignedLong DEBUG_KEY = new UnsignedLong(27836L);
@@ -179,27 +175,27 @@ public final class TriggerFixture {
         public static final String TRIGGER_CONTEXT_ID = "test-trigger-context-id";
         public static final String ATTRIBUTION_SCOPES = "[\"1\"]";
         public static final int AGGREGATABLE_FILTERING_ID_MAX_BYTES = 1;
-
-        public static final AggregatableAttributionTrigger buildAggregatableAttributionTrigger() {
-            final FilterMap filter =
-                    new FilterMap.Builder()
-                            .setAttributionFilterMap(
-                                    Map.of(
-                                            "product",
-                                            List.of("1234", "4321"),
-                                            "conversion_subdomain",
-                                            List.of("electronics.megastore")))
-                            .build();
-            return new AggregatableAttributionTrigger.Builder()
-                    .setValues(Map.of("x", 1))
-                    .setTriggerData(
-                            List.of(
-                                    new AggregateTriggerData.Builder()
-                                            .setKey(BigInteger.ONE)
-                                            .setSourceKeys(Set.of("sourceKey"))
-                                            .setFilterSet(List.of(filter))
-                                            .build()))
-                    .build();
-        }
+        public static final String AGGREGATE_DEBUG_REPORT =
+                "{\"key_piece\":\"0x222\","
+                        + "\"data\":["
+                        + "{"
+                        + "\"types\": [\"trigger-aggregate-insufficient-budget\", "
+                        + "\"trigger-aggregate-deduplicated\"],"
+                        + "\"key_piece\": \"0x333\","
+                        + "\"value\": 333"
+                        + "},"
+                        + "{"
+                        + "\"types\": [\"trigger-aggregate-report-window-passed\", "
+                        + "\"trigger-event-low-priority\"],"
+                        + "\"key_piece\": \"0x444\","
+                        + "\"value\": 444"
+                        + "},"
+                        + "{"
+                        + "\"types\": [\"default\"],"
+                        + "\"key_piece\": \"0x555\","
+                        + "\"value\": 555"
+                        + "}"
+                        + "],"
+                        + "\"aggregation_coordinator_origin\":\"https://aws.example\"}";
     }
 }

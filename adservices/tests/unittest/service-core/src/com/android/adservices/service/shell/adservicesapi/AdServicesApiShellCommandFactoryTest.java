@@ -16,16 +16,16 @@
 
 package com.android.adservices.service.shell.adservicesapi;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.service.shell.ShellCommand;
 import com.android.adservices.service.shell.ShellCommandFactory;
 
-import com.google.common.truth.Truth;
-
 import org.junit.Before;
 import org.junit.Test;
 
-public class AdServicesApiShellCommandFactoryTest extends AdServicesMockitoTestCase {
+public final class AdServicesApiShellCommandFactoryTest extends AdServicesMockitoTestCase {
 
     private ShellCommandFactory mFactory;
 
@@ -38,6 +38,6 @@ public class AdServicesApiShellCommandFactoryTest extends AdServicesMockitoTestC
     public void test_enableAdServicesCmd() {
         ShellCommand shellCommand =
                 mFactory.getShellCommand(EnableAdServicesCommand.CMD_ENABLE_ADSERVICES);
-        Truth.assertThat(shellCommand).isInstanceOf(EnableAdServicesCommand.class);
+        assertThat(shellCommand).isInstanceOf(EnableAdServicesCommand.class);
     }
 }

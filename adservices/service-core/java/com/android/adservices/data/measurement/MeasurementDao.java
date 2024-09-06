@@ -33,6 +33,7 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.measurement.MeasurementTables.SourceAttributionScopeContract;
 import com.android.adservices.data.measurement.MeasurementTables.SourceContract;
 import com.android.adservices.data.measurement.MeasurementTables.SourceDestination;
+import com.android.adservices.data.measurement.MeasurementTables.TriggerContract;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.WebAddresses;
@@ -43,6 +44,7 @@ import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.measurement.KeyValueData.DataType;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.aggregation.AggregateDebugReportRecord;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.registration.AsyncRegistration;
@@ -125,7 +127,8 @@ class MeasurementDao implements IMeasurementDao {
                 MeasurementTables.TriggerContract.AGGREGATE_TRIGGER_DATA,
                 trigger.getAggregateTriggerData());
         values.put(
-                MeasurementTables.TriggerContract.AGGREGATE_VALUES, trigger.getAggregateValues());
+                MeasurementTables.TriggerContract.AGGREGATE_VALUES,
+                trigger.getAggregateValuesString());
         values.put(
                 MeasurementTables.TriggerContract.AGGREGATABLE_DEDUPLICATION_KEYS,
                 trigger.getAggregateDeduplicationKeys());
@@ -166,6 +169,9 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.TriggerContract.AGGREGATABLE_FILTERING_ID_MAX_BYTES,
                 trigger.getAggregatableFilteringIdMaxBytes());
+        values.put(
+                TriggerContract.AGGREGATE_DEBUG_REPORTING,
+                trigger.getAggregateDebugReportingString());
 
         long rowId =
                 mSQLTransaction
@@ -807,6 +813,16 @@ class MeasurementDao implements IMeasurementDao {
         if (flags.getMeasurementEnableEventLevelEpsilonInSource()
                 && source.getEventLevelEpsilon() != null) {
             values.put(SourceContract.EVENT_LEVEL_EPSILON, source.getEventLevelEpsilon());
+        }
+
+        if (flags.getMeasurementEnableAggregateDebugReporting()) {
+            LoggerFactory.getMeasurementLogger().d("insertSource: attached ADR data to Source");
+            values.put(
+                    SourceContract.AGGREGATE_DEBUG_REPORTING,
+                    source.getAggregateDebugReportingString());
+            values.put(
+                    SourceContract.AGGREGATE_DEBUG_REPORT_CONTRIBUTIONS,
+                    source.getAggregateDebugReportContributions());
         }
 
         long rowId =
@@ -1736,7 +1752,8 @@ class MeasurementDao implements IMeasurementDao {
                                 + flattenAsSqlQueryList(excludedDestinations),
                         SourceContract.ID,
                         SourceContract.TABLE,
-                        getPublisherWhereStatement(publisher, publisherType),
+                        getPublisherWhereStatement(
+                                publisher, publisherType, SourceContract.PUBLISHER),
                         SourceContract.ENROLLMENT_ID,
                         SourceContract.EVENT_TIME,
                         SourceContract.EXPIRY_TIME,
@@ -1781,7 +1798,8 @@ class MeasurementDao implements IMeasurementDao {
                                 + flattenAsSqlQueryList(excludedDestinations),
                         SourceContract.ID, // 1
                         SourceContract.TABLE, // 2
-                        getPublisherWhereStatement(publisher, publisherType), // 3
+                        getPublisherWhereStatement(
+                                publisher, publisherType, SourceContract.PUBLISHER), // 3
                         SourceContract.ENROLLMENT_ID, // 4
                         SourceContract.EXPIRY_TIME, // 5
                         SourceContract.STATUS, // 6
@@ -1826,7 +1844,8 @@ class MeasurementDao implements IMeasurementDao {
                                 + flattenAsSqlQueryList(excludedDestinations),
                         SourceContract.ID,
                         SourceContract.TABLE,
-                        getPublisherWhereStatement(publisher, publisherType),
+                        getPublisherWhereStatement(
+                                publisher, publisherType, SourceContract.PUBLISHER),
                         SourceContract.EVENT_TIME,
                         SourceContract.EXPIRY_TIME,
                         SourceDestination.DESTINATION,
@@ -1864,7 +1883,8 @@ class MeasurementDao implements IMeasurementDao {
                                 + "%4$s != ? AND "
                                 + "%5$s > ?",
                         SourceContract.TABLE,
-                        getPublisherWhereStatement(publisher, publisherType),
+                        getPublisherWhereStatement(
+                                publisher, publisherType, SourceContract.PUBLISHER),
                         SourceContract.ENROLLMENT_ID,
                         SourceContract.REGISTRATION_ORIGIN,
                         SourceContract.EVENT_TIME);
@@ -1930,7 +1950,8 @@ class MeasurementDao implements IMeasurementDao {
                                 + " distinct_registration_origin FROM joined) SELECT"
                                 + " MAX(distinct_registration_origin) FROM"
                                 + " distinct_registration_origins",
-                        getPublisherWhereStatement(publisher, publisherType),
+                        getPublisherWhereStatement(
+                                publisher, publisherType, SourceContract.PUBLISHER),
                         flattenAsSqlQueryList(destinations));
 
         return (int)
@@ -2781,6 +2802,7 @@ class MeasurementDao implements IMeasurementDao {
                 aggregateReport.getTriggerContextId());
         values.put(
                 MeasurementTables.AggregateReport.TRIGGER_TIME, aggregateReport.getTriggerTime());
+        values.put(MeasurementTables.AggregateReport.API, aggregateReport.getApi());
         long rowId =
                 mSQLTransaction
                         .getDatabase()
@@ -3105,18 +3127,18 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     private static String getPublisherWhereStatement(
-            Uri publisher, @EventSurfaceType int publisherType) {
+            Uri publisher, @EventSurfaceType int publisherType, String publisherColumnName) {
         if (publisherType == EventSurfaceType.APP) {
             return String.format(
                     Locale.ENGLISH,
                     "%s = %s",
-                    SourceContract.PUBLISHER,
+                    publisherColumnName,
                     DatabaseUtils.sqlEscapeString(publisher.toString()));
         } else {
             return String.format(
                     Locale.ENGLISH,
                     "(%1$s = %2$s OR %1$s LIKE %3$s)",
-                    SourceContract.PUBLISHER,
+                    publisherColumnName,
                     DatabaseUtils.sqlEscapeString(publisher.toString()),
                     DatabaseUtils.sqlEscapeString(
                             publisher.getScheme() + "://%." + publisher.getEncodedAuthority()));
@@ -3519,7 +3541,8 @@ class MeasurementDao implements IMeasurementDao {
                                 + ")",
                         MeasurementTables.SourceContract.ID, // 1
                         MeasurementTables.SourceContract.TABLE, // 2
-                        getPublisherWhereStatement(publisher, publisherType), // 3
+                        getPublisherWhereStatement(
+                                publisher, publisherType, SourceContract.PUBLISHER), // 3
                         MeasurementTables.SourceContract.ENROLLMENT_ID, // 4
                         DatabaseUtils.sqlEscapeString(enrollmentId), // 5
                         MeasurementTables.SourceContract.EXPIRY_TIME, // 6
@@ -3720,6 +3743,48 @@ class MeasurementDao implements IMeasurementDao {
         }
     }
 
+    @Override
+    public void insertAggregateDebugReportRecord(
+            AggregateDebugReportRecord aggregateDebugReportRecord) throws DatastoreException {
+        ContentValues values = new ContentValues();
+        values.put(
+                MeasurementTables.AggregatableDebugReportBudgetTrackerContract
+                        .REPORT_GENERATION_TIME,
+                aggregateDebugReportRecord.getReportGenerationTime());
+        values.put(
+                MeasurementTables.AggregatableDebugReportBudgetTrackerContract.TOP_LEVEL_REGISTRANT,
+                aggregateDebugReportRecord.getTopLevelRegistrant().toString());
+        values.put(
+                MeasurementTables.AggregatableDebugReportBudgetTrackerContract.REGISTRANT_APP,
+                aggregateDebugReportRecord.getRegistrantApp().toString());
+        values.put(
+                MeasurementTables.AggregatableDebugReportBudgetTrackerContract.REGISTRATION_ORIGIN,
+                aggregateDebugReportRecord.getRegistrationOrigin().toString());
+        values.put(
+                MeasurementTables.AggregatableDebugReportBudgetTrackerContract.SOURCE_ID,
+                aggregateDebugReportRecord.getSourceId());
+        values.put(
+                MeasurementTables.AggregatableDebugReportBudgetTrackerContract.TRIGGER_ID,
+                aggregateDebugReportRecord.getTriggerId());
+        values.put(
+                MeasurementTables.AggregatableDebugReportBudgetTrackerContract.CONTRIBUTIONS,
+                aggregateDebugReportRecord.getContributions());
+        long rowId =
+                mSQLTransaction
+                        .getDatabase()
+                        .insert(
+                                MeasurementTables.AggregatableDebugReportBudgetTrackerContract
+                                        .TABLE,
+                                /* nullColumnHack= */ null,
+                                values);
+        LoggerFactory.getMeasurementLogger()
+                .d("MeasurementDao: insertAggregateDebugReportRecord: rowId=" + rowId);
+
+        if (rowId == -1) {
+            throw new DatastoreException("Aggregate Debug Report Record payload insertion failed.");
+        }
+    }
+
     private int getNumReportsPerDestination(
             String tableName,
             String columnName,
@@ -3798,6 +3863,58 @@ class MeasurementDao implements IMeasurementDao {
         }
 
         return (int) DatabaseUtils.longForQuery(mSQLTransaction.getDatabase(), query, null);
+    }
+
+    @Override
+    public int sumAggregateDebugReportBudgetXPublisherXWindow(
+            Uri publisher, @EventSurfaceType int publisherType, long windowStartTime)
+            throws DatastoreException {
+        String query =
+                String.format(
+                        Locale.ENGLISH,
+                        "SELECT SUM(%2$s) FROM %1$s WHERE %3$s AND %4$s >= ?",
+                        MeasurementTables.AggregatableDebugReportBudgetTrackerContract.TABLE,
+                        MeasurementTables.AggregatableDebugReportBudgetTrackerContract
+                                .CONTRIBUTIONS,
+                        getPublisherWhereStatement(
+                                publisher,
+                                publisherType,
+                                MeasurementTables.AggregatableDebugReportBudgetTrackerContract
+                                        .TOP_LEVEL_REGISTRANT),
+                        MeasurementTables.AggregatableDebugReportBudgetTrackerContract
+                                .REPORT_GENERATION_TIME);
+        return (int)
+                DatabaseUtils.longForQuery(
+                        mSQLTransaction.getDatabase(),
+                        query,
+                        new String[] {String.valueOf(windowStartTime)});
+    }
+
+    @Override
+    public int sumAggregateDebugReportBudgetXOriginXPublisherXWindow(
+            Uri publisher, @EventSurfaceType int publisherType, Uri origin, long windowStartTime)
+            throws DatastoreException {
+        String query =
+                String.format(
+                        Locale.ENGLISH,
+                        "SELECT SUM(%2$s) FROM %1$s WHERE %3$s AND %4$s = ? AND %5$s > ?",
+                        MeasurementTables.AggregatableDebugReportBudgetTrackerContract.TABLE,
+                        MeasurementTables.AggregatableDebugReportBudgetTrackerContract
+                                .CONTRIBUTIONS,
+                        getPublisherWhereStatement(
+                                publisher,
+                                publisherType,
+                                MeasurementTables.AggregatableDebugReportBudgetTrackerContract
+                                        .TOP_LEVEL_REGISTRANT),
+                        MeasurementTables.AggregatableDebugReportBudgetTrackerContract
+                                .REGISTRATION_ORIGIN,
+                        MeasurementTables.AggregatableDebugReportBudgetTrackerContract
+                                .REPORT_GENERATION_TIME);
+        return (int)
+                DatabaseUtils.longForQuery(
+                        mSQLTransaction.getDatabase(),
+                        query,
+                        new String[] {origin.toString(), String.valueOf(windowStartTime)});
     }
 
     private <T> List<T> fetchRecordsMatchingWithParameters(

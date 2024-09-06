@@ -61,7 +61,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Optional;
 
-public class GetAdSelectionDataCommandTest extends ShellCommandTestCase<GetAdSelectionDataCommand> {
+public final class GetAdSelectionDataCommandTest
+        extends ShellCommandTestCase<GetAdSelectionDataCommand> {
 
     @ShellCommandStats.Command
     private static final int EXPECTED_COMMAND = COMMAND_AD_SELECTION_GET_AD_SELECTION_DATA;
@@ -173,17 +174,17 @@ public class GetAdSelectionDataCommandTest extends ShellCommandTestCase<GetAdSel
                         Base64.decode(
                                 new JSONObject(result.mOut).getString(OUTPUT_PROTO_FIELD_NAME),
                                 Base64.DEFAULT));
-        assertThat(request.getProtectedAppSignalsBuyerInput().getProtectedAppSignals())
+        expect.that(request.getProtectedAppSignalsBuyerInput().getProtectedAppSignals())
                 .isEqualTo(buyerInput.getProtectedAppSignals());
         assertThat(request.getBuyerInput().getCustomAudiencesCount()).isEqualTo(1);
-        assertThat(request.getBuyerInput().getCustomAudiences(0)).isEqualTo(customAudience);
-        assertThat(request.getConsentedDebugConfig().getIsConsented()).isFalse();
-        assertThat(request.getEnableDebugReporting()).isTrue();
-        assertThat(request.getEnableUnlimitedEgress()).isTrue();
-        assertThat(request.getSeller()).isEqualTo(SELLER_HINT);
-        assertThat(request.getTopLevelSeller()).isEqualTo(TOP_LEVEL_SELLER_HINT);
-        assertThat(request.getPublisherName()).isEqualTo(APP_PACKAGE_NAME_HINT);
-        assertThat(request.getBuyerKvExperimentGroupId()).isEqualTo(BUYER_KV_EXPERIMENT_ID_HINT);
+        expect.that(request.getBuyerInput().getCustomAudiences(0)).isEqualTo(customAudience);
+        expect.that(request.getConsentedDebugConfig().getIsConsented()).isFalse();
+        expect.that(request.getEnableDebugReporting()).isTrue();
+        expect.that(request.getEnableUnlimitedEgress()).isTrue();
+        expect.that(request.getSeller()).isEqualTo(SELLER_HINT);
+        expect.that(request.getTopLevelSeller()).isEqualTo(TOP_LEVEL_SELLER_HINT);
+        expect.that(request.getPublisherName()).isEqualTo(APP_PACKAGE_NAME_HINT);
+        expect.that(request.getBuyerKvExperimentGroupId()).isEqualTo(BUYER_KV_EXPERIMENT_ID_HINT);
     }
 
     @Test
@@ -240,14 +241,14 @@ public class GetAdSelectionDataCommandTest extends ShellCommandTestCase<GetAdSel
                         Base64.decode(
                                 new JSONObject(result.mOut).getString(OUTPUT_PROTO_FIELD_NAME),
                                 Base64.DEFAULT));
-        assertThat(request.getProtectedAppSignalsBuyerInput().getProtectedAppSignals())
+        expect.that(request.getProtectedAppSignalsBuyerInput().getProtectedAppSignals())
                 .isEqualTo(buyerInput.getProtectedAppSignals());
         assertThat(request.getBuyerInput().getCustomAudiencesCount()).isEqualTo(1);
-        assertThat(request.getBuyerInput().getCustomAudiences(0)).isEqualTo(customAudience);
-        assertThat(request.getConsentedDebugConfig().getIsConsented()).isTrue();
-        assertThat(request.getConsentedDebugConfig().getToken()).isEqualTo(consentedToken);
-        assertThat(request.getEnableDebugReporting()).isTrue();
-        assertThat(request.getEnableUnlimitedEgress()).isTrue();
+        expect.that(request.getBuyerInput().getCustomAudiences(0)).isEqualTo(customAudience);
+        expect.that(request.getConsentedDebugConfig().getIsConsented()).isTrue();
+        expect.that(request.getConsentedDebugConfig().getToken()).isEqualTo(consentedToken);
+        expect.that(request.getEnableDebugReporting()).isTrue();
+        expect.that(request.getEnableUnlimitedEgress()).isTrue();
     }
 
     private Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData>
