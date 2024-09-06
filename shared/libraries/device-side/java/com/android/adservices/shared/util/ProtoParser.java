@@ -14,13 +14,11 @@
  * limitations under the License.
  */
 
-package com.android.adservices.shared.proto;
+package com.android.adservices.shared.util;
 
 import android.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Base64;
-
-import com.android.adservices.shared.util.LogUtil;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.MessageLite;
