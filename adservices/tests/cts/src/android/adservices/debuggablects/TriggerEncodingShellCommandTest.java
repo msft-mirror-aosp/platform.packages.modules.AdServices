@@ -33,6 +33,7 @@ import static com.google.common.truth.Truth.assertThat;
 import android.adservices.clients.signals.ProtectedSignalsClient;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.signals.UpdateSignalsRequest;
+import android.adservices.utils.CtsWebViewSupportUtil;
 import android.adservices.utils.MockWebServerRule;
 import android.adservices.utils.ScenarioDispatcher;
 import android.adservices.utils.ScenarioDispatcherFactory;
@@ -42,6 +43,7 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.common.AdServicesShellCommandHelper;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.shared.testing.BroadcastReceiverSyncCallback;
+import com.android.adservices.shared.testing.SupportedByConditionRule;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
@@ -81,6 +83,10 @@ public class TriggerEncodingShellCommandTest extends ForegroundDebuggableCtsTest
     public MockWebServerRule mMockWebServerRule =
             MockWebServerRule.forHttps(
                     sContext, "adservices_untrusted_test_server.p12", "adservices_test");
+
+    @Rule(order = 7)
+    public SupportedByConditionRule mWebViewSupportedRule =
+            CtsWebViewSupportUtil.createJSSandboxAvailableRule(sContext);
 
     @Before
     public void setUp() throws Exception {
