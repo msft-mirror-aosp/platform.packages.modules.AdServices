@@ -564,7 +564,7 @@ public class SqliteObjectMapper {
             Function<DataType, BuilderType> setter) {
         int index = cursor.getColumnIndex(column);
         if (index > -1 && !cursor.isNull(index)) {
-            setter.apply(getColVal.apply(index));
+            BuilderType unused = setter.apply(getColVal.apply(index));
         }
     }
 
