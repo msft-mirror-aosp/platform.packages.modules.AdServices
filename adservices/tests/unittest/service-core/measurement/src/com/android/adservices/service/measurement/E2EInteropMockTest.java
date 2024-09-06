@@ -164,8 +164,19 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                             FlagsConstants
                                     .KEY_MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE),
                     entry(
-                            "max_event_info_gain",
+                            "max_event_level_channel_capacity_event",
                             FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT),
+                    entry(
+                            "max_event_level_channel_capacity_navigation",
+                            FlagsConstants
+                                    .KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION),
+                    entry(
+                            "max_event_level_channel_capacity_scopes_event",
+                            FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT),
+                    entry(
+                            "max_event_level_channel_capacity_scopes_navigation",
+                            FlagsConstants
+                                    .KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION),
                     entry(
                             "rate_limit_max_reporting_origins_per_source_reporting_site",
                             FlagsConstants
@@ -242,6 +253,12 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                     entry(FlagsConstants.KEY_MEASUREMENT_ENABLE_LOOKBACK_WINDOW_FILTER, "true"),
                     entry(FlagsConstants.KEY_MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED, "true"),
                     entry(FlagsConstants.KEY_MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT, "true"),
+                    entry(
+                            FlagsConstants.KEY_MEASUREMENT_ENABLE_EVENT_LEVEL_EPSILON_IN_SOURCE,
+                            "true"),
+                    entry(FlagsConstants
+                            .KEY_MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT,
+                            "true"),
                     entry(FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATE_VALUE_FILTERS, "true"));
 
     @Parameterized.Parameters(name = "{3}")
