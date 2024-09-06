@@ -3778,9 +3778,11 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
     @Test
     public void testSourceRequestWithAggregateSource_tooManyKeys() throws Exception {
         StringBuilder tooManyKeys = new StringBuilder("{");
-        for (int i = 0;
-                i < mMockFlags.getMeasurementMaxAggregateKeysPerSourceRegistration() + 1;
-                i++) {
+        int maxAggregateKeysPerSourceRegistration =
+                Flags.MEASUREMENT_MAX_AGGREGATE_KEYS_PER_SOURCE_REGISTRATION;
+        when(mMockFlags.getMeasurementMaxAggregateKeysPerSourceRegistration())
+                .thenReturn(maxAggregateKeysPerSourceRegistration);
+        for (int i = 0; i < maxAggregateKeysPerSourceRegistration + 1; i++) {
             tooManyKeys.append(String.format("\"campaign-%1$s\": \"0x15%1$s\"", i));
         }
         tooManyKeys.append("}");

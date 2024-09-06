@@ -98,6 +98,7 @@ import java.util.stream.Collectors;
 
 class AttributionJobHandler {
 
+    private static final String API = "attribution-reporting";
     private static final String API_VERSION = "0.1";
     private static final String AGGREGATE_REPORT_DELAY_DELIMITER = ",";
     private final DatastoreManager mDatastoreManager;
@@ -566,7 +567,8 @@ class AttributionJobHandler {
                             .setTriggerId(trigger.getId())
                             .setRegistrationOrigin(trigger.getRegistrationOrigin())
                             .setTriggerContextId(trigger.getTriggerContextId())
-                            .setTriggerTime(trigger.getTriggerTime());
+                            .setTriggerTime(trigger.getTriggerTime())
+                            .setApi(API);
             if (trigger.getAggregationCoordinatorOrigin() != null) {
                 aggregateReportBuilder.setAggregationCoordinatorOrigin(
                         trigger.getAggregationCoordinatorOrigin());
@@ -723,7 +725,7 @@ class AttributionJobHandler {
         AggregateReport.Builder nullReportBuilder =
                 new AggregateReport.Builder()
                         .getNullAggregateReportBuilder(
-                                trigger, sourceTime, getAggregateReportDelay(), API_VERSION);
+                                trigger, sourceTime, getAggregateReportDelay(), API_VERSION, API);
 
         if (mFlags.getMeasurementEnableAggregatableReportPayloadPadding()) {
             AggregateHistogramContribution paddingContribution =

@@ -30,6 +30,7 @@ import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.measurement.KeyValueData.DataType;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.aggregation.AggregateDebugReportRecord;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.registration.AsyncRegistration;
@@ -779,6 +780,16 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
+     * Insert an entry of {@link AggregateDebugReportRecord} into the {@link
+     * MeasurementTables.AggregatableDebugReportBudgetTrackerContract#TABLE} which tracks budget
+     * limits for aggregate debug reports.
+     *
+     * @param aggregateDebugReportRecord
+     */
+    void insertAggregateDebugReportRecord(AggregateDebugReportRecord aggregateDebugReportRecord)
+            throws DatastoreException;
+
+    /**
      * Returns the number of unique navigation sources by reporting origin and registration id.
      *
      * @param reportingOrigin the reporting origin to match.
@@ -844,4 +855,26 @@ public interface IMeasurementDao {
      * @throws DatastoreException when SQLite issue occurs
      */
     Long getLatestReportTimeInBatchWindow(long batchWindow) throws DatastoreException;
+
+    /**
+     * Get total aggregate debug report budget per publisher x after window start time stamp.
+     *
+     * @param publisher publisher to match
+     * @throws DatastoreException when SQLite issue occurs
+     */
+    int sumAggregateDebugReportBudgetXPublisherXWindow(
+            Uri publisher, @EventSurfaceType int publisherType, long windowStartTime)
+            throws DatastoreException;
+
+    /**
+     * Get total aggregate debug report budget per reporting publisher x origin x after window start
+     * time stamp.
+     *
+     * @param publisher publisher to match
+     * @param origin origin to match
+     * @throws DatastoreException when SQLite issue occurs
+     */
+    int sumAggregateDebugReportBudgetXOriginXPublisherXWindow(
+            Uri publisher, @EventSurfaceType int publisherType, Uri origin, long windowStartTime)
+            throws DatastoreException;
 }
