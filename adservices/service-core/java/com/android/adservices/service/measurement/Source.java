@@ -1400,6 +1400,11 @@ public class Source {
         return mAttributionScopes;
     }
 
+    /** Sets the attribution scopes. */
+    public void setAttributionScopes(@Nullable List<String> attributionScopes) {
+        mAttributionScopes = attributionScopes;
+    }
+
     /** Returns the attribution scope limit for the source. It should be positive. */
     @Nullable
     public Long getAttributionScopeLimit() {
