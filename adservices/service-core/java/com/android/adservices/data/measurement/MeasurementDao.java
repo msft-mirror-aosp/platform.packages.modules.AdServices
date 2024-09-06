@@ -896,11 +896,8 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     private List<Source> populateAttributionScopes(List<Source> sources) throws DatastoreException {
-        Map<String, Source.Builder> sourceIdToSource =
-                sources.stream()
-                        .collect(
-                                Collectors.toMap(
-                                        Source::getId, source -> Source.Builder.from(source)));
+        Map<String, Source> sourceIdToSource =
+                sources.stream().collect(Collectors.toMap(Source::getId, Function.identity()));
         String attributionScopesWhereStatement =
                 SourceAttributionScopeContract.SOURCE_ID
                         + " IN ("
@@ -942,7 +939,6 @@ class MeasurementDao implements IMeasurementDao {
                     });
         }
         return sourceIdToSource.values().stream()
-                .map(Source.Builder::build)
                 .collect(Collectors.toCollection(ArrayList::new));
     }
 
