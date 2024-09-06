@@ -51,7 +51,8 @@ public final class ScheduleCustomAudienceUpdateInputTest extends AdServicesUnitT
         expect.withMessage("Update Uri").that(request.getUpdateUri()).isEqualTo(VALID_UPDATE_URI_1);
         expect.withMessage("Min Delay Time").that(request.getMinDelay()).isEqualTo(VALID_DELAY);
         expect.withMessage("Caller package name")
-                .that(request.getCallerPackageName().equals((CustomAudienceFixture.VALID_OWNER)));
+                .that(request.getCallerPackageName())
+                .isEqualTo(CustomAudienceFixture.VALID_OWNER);
         expect.withMessage("Partial Custom Audience List")
                 .that(request.getPartialCustomAudienceList())
                 .containsExactly(VALID_PARTIAL_CA);
@@ -77,7 +78,8 @@ public final class ScheduleCustomAudienceUpdateInputTest extends AdServicesUnitT
         expect.withMessage("Update Uri").that(request.getUpdateUri()).isEqualTo(uri2);
         expect.withMessage("Min Delay time").that(request.getMinDelay()).isEqualTo(delay2);
         expect.withMessage("Caller Package name")
-                .that(request.getCallerPackageName().equals((CustomAudienceFixture.VALID_OWNER)));
+                .that(request.getCallerPackageName())
+                .isEqualTo(CustomAudienceFixture.VALID_OWNER);
         expect.withMessage("Partial Custom Audience List")
                 .that(request.getPartialCustomAudienceList())
                 .isEmpty();
