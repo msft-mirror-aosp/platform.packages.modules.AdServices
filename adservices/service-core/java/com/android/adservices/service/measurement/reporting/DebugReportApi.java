@@ -41,6 +41,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -52,47 +53,66 @@ import java.util.concurrent.TimeUnit;
 public class DebugReportApi {
 
     /** Define different verbose debug report types. */
-    public interface Type {
-        String SOURCE_DESTINATION_LIMIT = "source-destination-limit";
-        String SOURCE_DESTINATION_RATE_LIMIT = "source-destination-rate-limit";
-        String SOURCE_DESTINATION_PER_DAY_RATE_LIMIT = "source-destination-per-day-rate-limit";
-        String SOURCE_NOISED = "source-noised";
-        String SOURCE_STORAGE_LIMIT = "source-storage-limit";
-        String SOURCE_SUCCESS = "source-success";
-        String SOURCE_UNKNOWN_ERROR = "source-unknown-error";
-        String SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR =
-                "source-flexible-event-report-value-error";
-        String SOURCE_MAX_EVENT_STATES_LIMIT = "source-max-event-states-limit";
-        String SOURCE_ATTRIBUTION_SCOPE_INFO_GAIN_LIMIT =
-                "source-attribution-scope-info-gain-limit";
+    public enum Type {
+        DEFAULT("default"),
+        SOURCE_DESTINATION_LIMIT("source-destination-limit"),
+        SOURCE_DESTINATION_RATE_LIMIT("source-destination-rate-limit"),
+        SOURCE_DESTINATION_PER_DAY_RATE_LIMIT("source-destination-per-day-rate-limit"),
+        SOURCE_NOISED("source-noised"),
+        SOURCE_STORAGE_LIMIT("source-storage-limit"),
+        SOURCE_SUCCESS("source-success"),
+        SOURCE_UNKNOWN_ERROR("source-unknown-error"),
+        SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR("source-flexible-event-report-value-error"),
+        SOURCE_MAX_EVENT_STATES_LIMIT("source-max-event-states-limit"),
+        SOURCE_SCOPES_CHANNEL_CAPACITY_LIMIT("source-scopes-channel-capacity-limit"),
+        SOURCE_ATTRIBUTION_SCOPE_INFO_GAIN_LIMIT("source-attribution-scope-info-gain-limit"),
 
-        String TRIGGER_AGGREGATE_DEDUPLICATED = "trigger-aggregate-deduplicated";
-        String TRIGGER_AGGREGATE_INSUFFICIENT_BUDGET = "trigger-aggregate-insufficient-budget";
-        String TRIGGER_AGGREGATE_NO_CONTRIBUTIONS = "trigger-aggregate-no-contributions";
-        String TRIGGER_AGGREGATE_REPORT_WINDOW_PASSED = "trigger-aggregate-report-window-passed";
-        String TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT =
-                "trigger-attributions-per-source-destination-limit";
-        String TRIGGER_EVENT_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT =
-                "trigger-event-attributions-per-source-destination-limit";
-        String TRIGGER_AGGREGATE_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT =
-                "trigger-aggregate-attributions-per-source-destination-limit";
-        String TRIGGER_EVENT_DEDUPLICATED = "trigger-event-deduplicated";
-        String TRIGGER_EVENT_EXCESSIVE_REPORTS = "trigger-event-excessive-reports";
-        String TRIGGER_EVENT_LOW_PRIORITY = "trigger-event-low-priority";
-        String TRIGGER_EVENT_NO_MATCHING_CONFIGURATIONS =
-                "trigger-event-no-matching-configurations";
-        String TRIGGER_EVENT_NOISE = "trigger-event-noise";
-        String TRIGGER_EVENT_REPORT_WINDOW_PASSED = "trigger-event-report-window-passed";
-        String TRIGGER_NO_MATCHING_FILTER_DATA = "trigger-no-matching-filter-data";
-        String TRIGGER_NO_MATCHING_SOURCE = "trigger-no-matching-source";
-        String TRIGGER_REPORTING_ORIGIN_LIMIT = "trigger-reporting-origin-limit";
-        String TRIGGER_EVENT_STORAGE_LIMIT = "trigger-event-storage-limit";
-        String TRIGGER_UNKNOWN_ERROR = "trigger-unknown-error";
-        String TRIGGER_AGGREGATE_STORAGE_LIMIT = "trigger-aggregate-storage-limit";
-        String TRIGGER_AGGREGATE_EXCESSIVE_REPORTS = "trigger-aggregate-excessive-reports";
-        String TRIGGER_EVENT_REPORT_WINDOW_NOT_STARTED = "trigger-event-report-window-not-started";
-        String TRIGGER_EVENT_NO_MATCHING_TRIGGER_DATA = "trigger-event-no-matching-trigger-data";
-        String HEADER_PARSING_ERROR = "header-parsing-error";
+        TRIGGER_AGGREGATE_DEDUPLICATED("trigger-aggregate-deduplicated"),
+        TRIGGER_AGGREGATE_INSUFFICIENT_BUDGET("trigger-aggregate-insufficient-budget"),
+        TRIGGER_AGGREGATE_NO_CONTRIBUTIONS("trigger-aggregate-no-contributions"),
+        TRIGGER_AGGREGATE_REPORT_WINDOW_PASSED("trigger-aggregate-report-window-passed"),
+        TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT(
+                "trigger-attributions-per-source-destination-limit"),
+        TRIGGER_EVENT_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT(
+                "trigger-event-attributions-per-source-destination-limit"),
+        TRIGGER_AGGREGATE_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT(
+                "trigger-aggregate-attributions-per-source-destination-limit"),
+        TRIGGER_EVENT_DEDUPLICATED("trigger-event-deduplicated"),
+        TRIGGER_EVENT_EXCESSIVE_REPORTS("trigger-event-excessive-reports"),
+        TRIGGER_EVENT_LOW_PRIORITY("trigger-event-low-priority"),
+        TRIGGER_EVENT_NO_MATCHING_CONFIGURATIONS("trigger-event-no-matching-configurations"),
+        TRIGGER_EVENT_NOISE("trigger-event-noise"),
+        TRIGGER_EVENT_REPORT_WINDOW_PASSED("trigger-event-report-window-passed"),
+        TRIGGER_NO_MATCHING_FILTER_DATA("trigger-no-matching-filter-data"),
+        TRIGGER_NO_MATCHING_SOURCE("trigger-no-matching-source"),
+        TRIGGER_REPORTING_ORIGIN_LIMIT("trigger-reporting-origin-limit"),
+        TRIGGER_EVENT_STORAGE_LIMIT("trigger-event-storage-limit"),
+        TRIGGER_UNKNOWN_ERROR("trigger-unknown-error"),
+        TRIGGER_AGGREGATE_STORAGE_LIMIT("trigger-aggregate-storage-limit"),
+        TRIGGER_AGGREGATE_EXCESSIVE_REPORTS("trigger-aggregate-excessive-reports"),
+        TRIGGER_EVENT_REPORT_WINDOW_NOT_STARTED("trigger-event-report-window-not-started"),
+        TRIGGER_EVENT_NO_MATCHING_TRIGGER_DATA("trigger-event-no-matching-trigger-data"),
+        HEADER_PARSING_ERROR("header-parsing-error");
+
+        private final String mValue;
+
+        Type(String value) {
+            mValue = value;
+        }
+
+        public String getValue() {
+            return mValue;
+        }
+
+        /** get enum type from string value */
+        public static Optional<Type> findByValue(String value) {
+            for (Type type : values()) {
+                if (type.getValue().equalsIgnoreCase(value)) {
+                    return Optional.of(type);
+                }
+            }
+            return Optional.empty();
+        }
     }
 
     /** Defines different verbose debug report body parameters. */
@@ -168,18 +188,19 @@ public class DebugReportApi {
             Source source,
             IMeasurementDao dao,
             @Nullable Map<String, String> additionalBodyParams) {
-        if (isSourceDebugFlagDisabled(Type.SOURCE_SUCCESS)) {
+        if (isSourceDebugFlagDisabled(Type.SOURCE_SUCCESS.getValue())) {
             return;
         }
-        if (isAdTechNotOptIn(source.isDebugReporting(), Type.SOURCE_SUCCESS)) {
+        if (isAdTechNotOptIn(source.isDebugReporting(), Type.SOURCE_SUCCESS.getValue())) {
             return;
         }
         if (!isSourcePermissionGranted(source)) {
-            LoggerFactory.getMeasurementLogger().d("Skipping debug report %s", Type.SOURCE_SUCCESS);
+            LoggerFactory.getMeasurementLogger()
+                    .d("Skipping debug report %s", Type.SOURCE_SUCCESS.getValue());
             return;
         }
         scheduleReport(
-                Type.SOURCE_SUCCESS,
+                Type.SOURCE_SUCCESS.getValue(),
                 generateSourceDebugReportBody(source, additionalBodyParams),
                 source.getEnrollmentId(),
                 source.getRegistrationOrigin(),
@@ -191,21 +212,21 @@ public class DebugReportApi {
     public void scheduleSourceDestinationLimitDebugReport(
             Source source, String limit, IMeasurementDao dao) {
         scheduleSourceDestinationLimitDebugReport(
-                source, limit, Type.SOURCE_DESTINATION_LIMIT, dao);
+                source, limit, Type.SOURCE_DESTINATION_LIMIT.getValue(), dao);
     }
 
     /** Schedules the Source Destination rate-limit Debug Report */
     public void scheduleSourceDestinationPerMinuteRateLimitDebugReport(
             Source source, String limit, IMeasurementDao dao) {
         scheduleSourceDestinationLimitDebugReport(
-                source, limit, Type.SOURCE_DESTINATION_RATE_LIMIT, dao);
+                source, limit, Type.SOURCE_DESTINATION_RATE_LIMIT.getValue(), dao);
     }
 
     /** Schedules the Source Destination per day rate-limit Debug Report */
     public void scheduleSourceDestinationPerDayRateLimitDebugReport(
             Source source, String limit, IMeasurementDao dao) {
         scheduleSourceDestinationLimitDebugReport(
-                source, limit, Type.SOURCE_DESTINATION_PER_DAY_RATE_LIMIT, dao);
+                source, limit, Type.SOURCE_DESTINATION_PER_DAY_RATE_LIMIT.getValue(), dao);
     }
 
     /** Schedules the Source Noised Debug Report */
@@ -213,18 +234,19 @@ public class DebugReportApi {
             Source source,
             IMeasurementDao dao,
             @Nullable Map<String, String> additionalDebugReportParams) {
-        if (isSourceDebugFlagDisabled(Type.SOURCE_NOISED)) {
+        if (isSourceDebugFlagDisabled(Type.SOURCE_NOISED.getValue())) {
             return;
         }
-        if (isAdTechNotOptIn(source.isDebugReporting(), Type.SOURCE_NOISED)) {
+        if (isAdTechNotOptIn(source.isDebugReporting(), Type.SOURCE_NOISED.getValue())) {
             return;
         }
         if (!isSourcePermissionGranted(source)) {
-            LoggerFactory.getMeasurementLogger().d("Skipping debug report %s", Type.SOURCE_NOISED);
+            LoggerFactory.getMeasurementLogger()
+                    .d("Skipping debug report %s", Type.SOURCE_NOISED.getValue());
             return;
         }
         scheduleReport(
-                Type.SOURCE_NOISED,
+                Type.SOURCE_NOISED.getValue(),
                 generateSourceDebugReportBody(source, additionalDebugReportParams),
                 source.getEnrollmentId(),
                 source.getRegistrationOrigin(),
@@ -235,19 +257,19 @@ public class DebugReportApi {
     /** Schedules Source Storage Limit Debug Report */
     public void scheduleSourceStorageLimitDebugReport(
             Source source, String limit, IMeasurementDao dao) {
-        if (isSourceDebugFlagDisabled(Type.SOURCE_STORAGE_LIMIT)) {
+        if (isSourceDebugFlagDisabled(Type.SOURCE_STORAGE_LIMIT.getValue())) {
             return;
         }
-        if (isAdTechNotOptIn(source.isDebugReporting(), Type.SOURCE_STORAGE_LIMIT)) {
+        if (isAdTechNotOptIn(source.isDebugReporting(), Type.SOURCE_STORAGE_LIMIT.getValue())) {
             return;
         }
         if (!isSourcePermissionGranted(source)) {
             LoggerFactory.getMeasurementLogger()
-                    .d("Skipping debug report %s", Type.SOURCE_STORAGE_LIMIT);
+                    .d("Skipping debug report %s", Type.SOURCE_STORAGE_LIMIT.getValue());
             return;
         }
         scheduleReport(
-                Type.SOURCE_STORAGE_LIMIT,
+                Type.SOURCE_STORAGE_LIMIT.getValue(),
                 generateSourceDebugReportBody(source, Map.of(Body.LIMIT, String.valueOf(limit))),
                 source.getEnrollmentId(),
                 source.getRegistrationOrigin(),
@@ -258,20 +280,23 @@ public class DebugReportApi {
     /** Schedules Source Flexible Event API Debug Report */
     public void scheduleSourceFlexibleEventReportApiDebugReport(
             Source source, IMeasurementDao dao) {
-        if (isSourceDebugFlagDisabled(Type.SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR)) {
+        if (isSourceDebugFlagDisabled(Type.SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR.getValue())) {
             return;
         }
         if (isAdTechNotOptIn(
-                source.isDebugReporting(), Type.SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR)) {
+                source.isDebugReporting(),
+                Type.SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR.getValue())) {
             return;
         }
         if (!isSourcePermissionGranted(source)) {
             LoggerFactory.getMeasurementLogger()
-                    .d("Skipping debug report %s", Type.SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR);
+                    .d(
+                            "Skipping debug report %s",
+                            Type.SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR.getValue());
             return;
         }
         scheduleReport(
-                Type.SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR,
+                Type.SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR.getValue(),
                 generateSourceDebugReportBody(source, null),
                 source.getEnrollmentId(),
                 source.getRegistrationOrigin(),
@@ -283,15 +308,20 @@ public class DebugReportApi {
     public void scheduleAttributionScopeDebugReport(
             Source source, Source.AttributionScopeValidationResult result, IMeasurementDao dao) {
         String type = null;
+        Map<String, String> additionalBodyParams = new HashMap<>();
         switch (result) {
             case VALID -> {
                 // No-op.
             }
             case INVALID_MAX_EVENT_STATES_LIMIT -> {
-                type = Type.SOURCE_MAX_EVENT_STATES_LIMIT;
+                type = Type.SOURCE_MAX_EVENT_STATES_LIMIT.getValue();
+                additionalBodyParams.put(Body.LIMIT, String.valueOf(source.getMaxEventStates()));
             }
             case INVALID_INFORMATION_GAIN_LIMIT -> {
-                type = Type.SOURCE_ATTRIBUTION_SCOPE_INFO_GAIN_LIMIT;
+                type = Type.SOURCE_SCOPES_CHANNEL_CAPACITY_LIMIT.getValue();
+                additionalBodyParams.put(
+                        Body.LIMIT,
+                        String.valueOf(source.getAttributionScopeInfoGainThreshold(mFlags)));
             }
         }
         if (type == null) {
@@ -309,7 +339,7 @@ public class DebugReportApi {
         }
         scheduleReport(
                 type,
-                generateSourceDebugReportBody(source, null),
+                generateSourceDebugReportBody(source, additionalBodyParams),
                 source.getEnrollmentId(),
                 source.getRegistrationOrigin(),
                 source.getRegistrant(),
@@ -318,19 +348,19 @@ public class DebugReportApi {
 
     /** Schedules the Source Unknown Error Debug Report */
     public void scheduleSourceUnknownErrorDebugReport(Source source, IMeasurementDao dao) {
-        if (isSourceDebugFlagDisabled(Type.SOURCE_UNKNOWN_ERROR)) {
+        if (isSourceDebugFlagDisabled(Type.SOURCE_UNKNOWN_ERROR.getValue())) {
             return;
         }
-        if (isAdTechNotOptIn(source.isDebugReporting(), Type.SOURCE_UNKNOWN_ERROR)) {
+        if (isAdTechNotOptIn(source.isDebugReporting(), Type.SOURCE_UNKNOWN_ERROR.getValue())) {
             return;
         }
         if (!isSourcePermissionGranted(source)) {
             LoggerFactory.getMeasurementLogger()
-                    .d("Skipping debug report %s", Type.SOURCE_UNKNOWN_ERROR);
+                    .d("Skipping debug report %s", Type.SOURCE_UNKNOWN_ERROR.getValue());
             return;
         }
         scheduleReport(
-                Type.SOURCE_UNKNOWN_ERROR,
+                Type.SOURCE_UNKNOWN_ERROR.getValue(),
                 generateSourceDebugReportBody(source, null),
                 source.getEnrollmentId(),
                 source.getRegistrationOrigin(),
@@ -430,10 +460,10 @@ public class DebugReportApi {
     /** Schedules the Source Destination limit type Debug Report */
     private void scheduleSourceDestinationLimitDebugReport(
             Source source, String limit, String type, IMeasurementDao dao) {
-        if (isSourceDebugFlagDisabled(Type.SOURCE_DESTINATION_LIMIT)) {
+        if (isSourceDebugFlagDisabled(Type.SOURCE_DESTINATION_LIMIT.getValue())) {
             return;
         }
-        if (isAdTechNotOptIn(source.isDebugReporting(), Type.SOURCE_DESTINATION_LIMIT)) {
+        if (isAdTechNotOptIn(source.isDebugReporting(), Type.SOURCE_DESTINATION_LIMIT.getValue())) {
             return;
         }
         try {
@@ -473,7 +503,7 @@ public class DebugReportApi {
             body.put(Body.HEADER, headerName);
             body.put(Body.VALUE, originalHeader == null ? "null" : originalHeader);
             scheduleReport(
-                    Type.HEADER_PARSING_ERROR,
+                    Type.HEADER_PARSING_ERROR.getValue(),
                     body,
                     enrollmentId,
                     registrationOrigin,
@@ -481,7 +511,7 @@ public class DebugReportApi {
                     dao);
         } catch (JSONException e) {
             LoggerFactory.getMeasurementLogger()
-                    .e(e, "Json error in debug report %s", Type.HEADER_PARSING_ERROR);
+                    .e(e, "Json error in debug report %s", Type.HEADER_PARSING_ERROR.getValue());
         }
     }
 

@@ -85,22 +85,6 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
 import private_join_and_compute.anonymous_counting_tokens.AndroidRequestMetadata;
 import private_join_and_compute.anonymous_counting_tokens.AttestationScheme;
 import private_join_and_compute.anonymous_counting_tokens.ClientParameters;
@@ -120,6 +104,22 @@ import private_join_and_compute.anonymous_counting_tokens.ServerPublicParameters
 import private_join_and_compute.anonymous_counting_tokens.Token;
 import private_join_and_compute.anonymous_counting_tokens.TokensResponse;
 import private_join_and_compute.anonymous_counting_tokens.TokensSet;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class KAnonCallerImpl implements KAnonCaller {
 
@@ -155,6 +155,7 @@ public class KAnonCallerImpl implements KAnonCaller {
     private final String TOKEN_V0_JSON_KEY = "token_v0";
     private final String ACT_JSON_KEY = "act";
     private final String HTTPS = "https";
+    private final String SERVER_PARAMS_VERSION_JSON_KEY = "server_params_version";
     private final String SET_TYPE;
     private final KAnonAction RECOVER_TOKENS_ACT = KAnonAction.RECOVER_TOKENS_ACT;
 
@@ -1089,7 +1090,10 @@ public class KAnonCallerImpl implements KAnonCaller {
         String nonBytes = BaseEncoding.base64().encode(currentToken.getNonceBytes().toByteArray());
         token.put(NONCE_BYTES_JSON_KEY, nonBytes);
         token.put(TOKEN_V0_JSON_KEY, tokenV0);
-        JSONObject objectForBhttp = new JSONObject().put(ACT_JSON_KEY, token);
+        JSONObject objectForBhttp =
+                new JSONObject()
+                        .put(ACT_JSON_KEY, token)
+                        .put(SERVER_PARAMS_VERSION_JSON_KEY, mServerParamVersion);
         String body = objectForBhttp.toString();
 
         // Create a binary http message object for this request.

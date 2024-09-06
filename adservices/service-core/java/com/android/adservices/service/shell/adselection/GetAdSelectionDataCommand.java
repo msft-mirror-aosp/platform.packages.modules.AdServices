@@ -17,8 +17,9 @@
 package com.android.adservices.service.shell.adselection;
 
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.TAG;
-import static com.android.adservices.service.shell.adselection.GetAdSelectionDataArgs.BUYER;
-import static com.android.adservices.service.shell.adselection.GetAdSelectionDataArgs.FIRST_ARG_FOR_PARSING;
+import static com.android.adservices.service.shell.adselection.AdSelectionShellCommandConstants.BUYER;
+import static com.android.adservices.service.shell.adselection.AdSelectionShellCommandConstants.FIRST_ARG_FOR_PARSING;
+import static com.android.adservices.service.shell.adselection.AdSelectionShellCommandConstants.OUTPUT_PROTO_FIELD_NAME;
 import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_AD_SELECTION_GET_AD_SELECTION_DATA;
 import static com.android.adservices.service.stats.ShellCommandStats.RESULT_SUCCESS;
 import static com.android.adservices.service.stats.ShellCommandStats.RESULT_TIMEOUT_ERROR;
@@ -95,15 +96,13 @@ public class GetAdSelectionDataCommand extends AbstractShellCommand {
                     + " "
                     + CMD
                     + " "
-                    + GetAdSelectionDataArgs.BUYER
+                    + AdSelectionShellCommandConstants.BUYER
                     + " <buyer>"
                     + "\n    Get ad selection data for a given buyer. This generates the "
                     + "base64 encoded GetBidsRequest protocol buffer message designed for usage "
                     + "together with `secure_invoke`.";
 
     private static final int DB_TIMEOUT_SEC = 3;
-
-    @VisibleForTesting public static final String OUTPUT_PROTO_FIELD_NAME = "output_proto";
 
     private final BuyerInputGenerator mBuyerInputGenerator;
     private final AuctionServerDataCompressor mAuctionServerDataCompressor;
@@ -156,7 +155,7 @@ public class GetAdSelectionDataCommand extends AbstractShellCommand {
 
         GetBidsRequest.GetBidsRawRequest request =
                 getBidsRawRequestForBuyer(buyerInput, consentedDebugConfiguration);
-        Log.v(TAG, "Loaded GetBidsRawRequest: " + request.toString());
+        Log.v(TAG, "Loaded GetBidsRawRequest: " + request);
         try {
             out.printf(
                     new JSONObject()

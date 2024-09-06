@@ -21,6 +21,7 @@ import static android.view.MotionEvent.obtain;
 import static com.android.adservices.service.Flags.MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
+import static com.android.adservices.service.Flags.MEASUREMENT_MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE;
 import static com.android.adservices.service.Flags.MEASUREMENT_MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_INVALID;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
@@ -70,6 +71,7 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.TriggerSpec;
 import com.android.adservices.service.measurement.TriggerSpecs;
+import com.android.adservices.service.measurement.aggregation.AggregateDebugReporting;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -90,10 +92,12 @@ import org.mockito.Mock;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -312,7 +316,8 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES,
                 mLogger,
                 asyncRegistration,
-                asyncFetchStatus);
+                asyncFetchStatus,
+                ENROLLMENT_ID);
         verify(mLogger)
                 .logMeasurementRegistrationsResponseSize(
                         eq(
@@ -331,9 +336,11 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 false,
                                                 false,
                                                 0,
+                                                false,
                                                 false)
                                         .setAdTechDomain(null)
-                                        .build()));
+                                        .build()),
+                        eq(ENROLLMENT_ID));
         verify(mUrlConnection).setRequestMethod("POST");
         verify(mUrlConnection).setRequestProperty("Attribution-Reporting-Source-Info", "event");
     }
@@ -3775,9 +3782,11 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
     @Test
     public void testSourceRequestWithAggregateSource_tooManyKeys() throws Exception {
         StringBuilder tooManyKeys = new StringBuilder("{");
-        for (int i = 0;
-                i < mMockFlags.getMeasurementMaxAggregateKeysPerSourceRegistration() + 1;
-                i++) {
+        int maxAggregateKeysPerSourceRegistration =
+                Flags.MEASUREMENT_MAX_AGGREGATE_KEYS_PER_SOURCE_REGISTRATION;
+        when(mMockFlags.getMeasurementMaxAggregateKeysPerSourceRegistration())
+                .thenReturn(maxAggregateKeysPerSourceRegistration);
+        for (int i = 0; i < maxAggregateKeysPerSourceRegistration + 1; i++) {
             tooManyKeys.append(String.format("\"campaign-%1$s\": \"0x15%1$s\"", i));
         }
         tooManyKeys.append("}");
@@ -5443,7 +5452,8 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 mFetcher.fetchSource(asyncRegistration, asyncFetchStatus, asyncRedirects);
 
         assertTrue(fetch.isPresent());
-        FetcherUtil.emitHeaderMetrics(5L, mLogger, asyncRegistration, asyncFetchStatus);
+        FetcherUtil.emitHeaderMetrics(
+                5L, mLogger, asyncRegistration, asyncFetchStatus, ENROLLMENT_ID);
         verify(mLogger)
                 .logMeasurementRegistrationsResponseSize(
                         eq(
@@ -5462,9 +5472,11 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 false,
                                                 false,
                                                 0,
+                                                false,
                                                 false)
                                         .setAdTechDomain(WebUtil.validUrl("https://foo.test"))
-                                        .build()));
+                                        .build()),
+                        eq(ENROLLMENT_ID));
     }
 
     @Test
@@ -10218,10 +10230,11 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + DEFAULT_DESTINATION
                                                 + "\","
                                                 + "\"source_event_id\":\"35\","
-                                                + "\"attribution_scopes\":[\"1\", \"2\", \"3\"],"
-                                                + "\"attribution_scope_limit\":4,"
+                                                + "\"attribution_scopes\":{"
+                                                + "\"values\":[\"1\", \"2\", \"3\"],"
+                                                + "\"limit\":4,"
                                                 + "\"max_event_states\":3"
-                                                + "}")));
+                                                + "}}")));
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -10255,10 +10268,11 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + DEFAULT_DESTINATION
                                                 + "\","
                                                 + "\"source_event_id\":\"35\","
-                                                + "\"attribution_scopes\":[\"1\", \"2\", \"3\"],"
-                                                + "\"attribution_scope_limit\":4,"
+                                                + "\"attribution_scopes\":{"
+                                                + "\"values\":[\"1\", \"2\", \"3\"],"
+                                                + "\"limit\":4,"
                                                 + "\"max_event_states\":3"
-                                                + "}")));
+                                                + "}}")));
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -10293,8 +10307,9 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + DEFAULT_DESTINATION
                                                 + "\","
                                                 + "\"source_event_id\":\"35\","
-                                                + "\"attribution_scopes\":[\"1\", \"2\", \"3\"]"
-                                                + "}")));
+                                                + "\"attribution_scopes\":{"
+                                                + "\"values\":[\"1\", \"2\", \"3\"]"
+                                                + "}}")));
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -10328,9 +10343,10 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + DEFAULT_DESTINATION
                                                 + "\","
                                                 + "\"source_event_id\":\"35\","
-                                                + "\"attribution_scopes\":[1, 2, 3],"
-                                                + "\"attribution_scope_limit\":4"
-                                                + "}")));
+                                                + "\"attribution_scopes\":{"
+                                                + "\"values\":[1, 2, 3],"
+                                                + "\"limit\":4"
+                                                + "}}")));
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -10364,9 +10380,10 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + DEFAULT_DESTINATION
                                                 + "\","
                                                 + "\"source_event_id\":\"35\","
-                                                + "\"attribution_scopes\":[\"\", \"1\"],"
-                                                + "\"attribution_scope_limit\":4"
-                                                + "}")));
+                                                + "\"attribution_scopes\":{"
+                                                + "\"values\":[\"\", \"1\"],"
+                                                + "\"limit\":4"
+                                                + "}}")));
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -10401,8 +10418,9 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + DEFAULT_DESTINATION
                                                 + "\","
                                                 + "\"source_event_id\":\"35\","
+                                                + "\"attribution_scopes\":{"
                                                 + "\"max_event_states\":3"
-                                                + "}")));
+                                                + "}}")));
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -10436,10 +10454,11 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + DEFAULT_DESTINATION
                                                 + "\",\""
                                                 + "source_event_id\":\"35\","
-                                                + "\"attribution_scopes\":[\"1\", \"2\", "
+                                                + "\"attribution_scopes\":{"
+                                                + "\"values\":[\"1\", \"2\", "
                                                 + "\"long_attribution_scope\"],"
-                                                + "\"attribution_scope_limit\":4,"
-                                                + "\"max_event_states\":3}")));
+                                                + "\"limit\":4,"
+                                                + "\"max_event_states\":3}}")));
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -10473,8 +10492,9 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + DEFAULT_DESTINATION
                                                 + "\",\""
                                                 + "source_event_id\":\"35\","
-                                                + "\"attribution_scopes\":[],"
-                                                + "\"attribution_scope_limit\":4}")));
+                                                + "\"attribution_scopes\":{"
+                                                + "\"values\":[],"
+                                                + "\"limit\":4}}")));
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -10730,10 +10750,11 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + DEFAULT_DESTINATION
                                                 + "\","
                                                 + "\"source_event_id\":\"35\","
-                                                + "\"attribution_scopes\":[\"1\", \"2\", \"3\"],"
-                                                + "\"attribution_scope_limit\":4,"
+                                                + "\"attribution_scopes\":{"
+                                                + "\"values\":[\"1\", \"2\", \"3\"],"
+                                                + "\"limit\":4,"
                                                 + "\"max_event_states\":-1"
-                                                + "}")));
+                                                + "}}")));
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -10768,10 +10789,11 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + DEFAULT_DESTINATION
                                                 + "\","
                                                 + "\"source_event_id\":\"35\","
-                                                + "\"attribution_scopes\":[\"1\", \"2\", \"3\"],"
-                                                + "\"attribution_scope_limit\":4,"
+                                                + "\"attribution_scopes\":{"
+                                                + "\"values\":[\"1\", \"2\", \"3\"],"
+                                                + "\"limit\":4,"
                                                 + "\"max_event_states\":100"
-                                                + "}")));
+                                                + "}}")));
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -10805,10 +10827,11 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + DEFAULT_DESTINATION
                                                 + "\","
                                                 + "\"source_event_id\":\"35\","
-                                                + "\"attribution_scopes\":[\"1\", \"2\", \"3\"],"
-                                                + "\"attribution_scope_limit\":4,"
+                                                + "\"attribution_scopes\":{"
+                                                + "\"values\":[\"1\", \"2\", \"3\"],"
+                                                + "\"limit\":4,"
                                                 + "\"max_event_states\":\"abc\""
-                                                + "}")));
+                                                + "}}")));
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -10842,10 +10865,11 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + DEFAULT_DESTINATION
                                                 + "\","
                                                 + "\"source_event_id\":\"35\","
-                                                + "\"attribution_scopes\":[\"1\", \"2\", \"3\"],"
-                                                + "\"attribution_scope_limit\":4,"
+                                                + "\"attribution_scopes\":{"
+                                                + "\"values\":[\"1\", \"2\", \"3\"],"
+                                                + "\"limit\":4,"
                                                 + "\"max_event_states\":\"123\""
-                                                + "}")));
+                                                + "}}")));
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -10879,10 +10903,11 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + DEFAULT_DESTINATION
                                                 + "\","
                                                 + "\"source_event_id\":\"35\","
-                                                + "\"attribution_scopes\":[\"1\", \"2\", \"3\"],"
-                                                + "\"attribution_scope_limit\":2,"
+                                                + "\"attribution_scopes\":{"
+                                                + "\"values\":[\"1\", \"2\", \"3\"],"
+                                                + "\"limit\":2,"
                                                 + "\"max_event_states\":3"
-                                                + "}")));
+                                                + "}}")));
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -10916,10 +10941,11 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + DEFAULT_DESTINATION
                                                 + "\","
                                                 + "\"source_event_id\":\"35\","
-                                                + "\"attribution_scopes\":[\"1\", \"2\", \"3\"],"
-                                                + "\"attribution_scope_limit\":\"abc\","
+                                                + "\"attribution_scopes\":{"
+                                                + "\"values\":[\"1\", \"2\", \"3\"],"
+                                                + "\"limit\":\"abc\","
                                                 + "\"max_event_states\":3"
-                                                + "}")));
+                                                + "}}")));
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -10953,10 +10979,11 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + DEFAULT_DESTINATION
                                                 + "\","
                                                 + "\"source_event_id\":\"35\","
-                                                + "\"attribution_scopes\":[\"1\", \"2\", \"3\"],"
-                                                + "\"attribution_scope_limit\":\"123\","
+                                                + "\"attribution_scopes\":{"
+                                                + "\"values\":[\"1\", \"2\", \"3\"],"
+                                                + "\"limit\":\"123\","
                                                 + "\"max_event_states\":3"
-                                                + "}")));
+                                                + "}}")));
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -10990,10 +11017,11 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + DEFAULT_DESTINATION
                                                 + "\","
                                                 + "\"source_event_id\":\"35\","
-                                                + "\"attribution_scopes\":[\"1\", \"2\", \"3\"],"
-                                                + "\"attribution_scope_limit\":10,"
+                                                + "\"attribution_scopes\":{"
+                                                + "\"values\":[\"1\", \"2\", \"3\"],"
+                                                + "\"limit\":10,"
                                                 + "\"max_event_states\":3"
-                                                + "}")));
+                                                + "}}")));
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -11240,6 +11268,176 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         assertEquals(
                 AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
         assertFalse(fetch.isPresent());
+    }
+
+    @Test
+    public void fetchSource_aggregateDebugReportingDisabled_ignoreValidAggregateDebugReporting()
+            throws Exception {
+        when(mMockFlags.getMeasurementEnableAggregateDebugReporting()).thenReturn(false);
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource())
+                .thenReturn(MEASUREMENT_MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE);
+        when(mMockFlags.getMeasurementAggregationCoordinatorOriginList())
+                .thenReturn("https://cloud.coordination.test");
+        String validHeader =
+                "{"
+                        + "\"destination\":\""
+                        + DEFAULT_DESTINATION
+                        + "\","
+                        + "\"aggregatable_debug_reporting\":{"
+                        + "\"budget\":1024,"
+                        + "\"key_piece\":\"0x1\","
+                        + "\"debug_data\":["
+                        + "{\"types\":["
+                        + "\"source-storage-limit\","
+                        + "\"source-unknown-error\"],"
+                        + "\"key_piece\":\"0x123\","
+                        + "\"value\": 123},"
+                        + "{\"types\":["
+                        + "\"source-flexible-event-report-value-error\"],"
+                        + "\"key_piece\":\"0x789\","
+                        + "\"value\":789}],"
+                        + "\"aggregation_coordinator_origin\":"
+                        + " \"https://cloud.coordination.test\"}}";
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(Map.of("Attribution-Reporting-Register-Source", List.of(validHeader)));
+
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+
+        // Assertion
+        assertThat(AsyncFetchStatus.ResponseStatus.SUCCESS)
+                .isEqualTo(asyncFetchStatus.getResponseStatus());
+        assertThat(fetch.isPresent()).isTrue();
+        assertThat(fetch.get().getAggregateDebugReportingString()).isNull();
+    }
+
+    @Test
+    public void fetchSource_aggregateDebugReportingEnabled_invalidAggregateDebugReporting()
+            throws Exception {
+        when(mMockFlags.getMeasurementEnableAggregateDebugReporting()).thenReturn(true);
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource())
+                .thenReturn(MEASUREMENT_MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE);
+        when(mMockFlags.getMeasurementAggregationCoordinatorOriginList())
+                .thenReturn("https://cloud.coordination.test");
+        String validHeader =
+                "{"
+                        + "\"destination\":\""
+                        + DEFAULT_DESTINATION
+                        + "\","
+                        + "\"aggregatable_debug_reporting\":{"
+                        + "\"budget\":1024,"
+                        + "\"key_piece\":\"0x1\","
+                        + "\"debug_data\":["
+                        + "{\"types\":["
+                        + "\"source-storage-limit\","
+                        + "\"source-unknown-error\"],"
+                        + "\"key_piece\":\"0x123\","
+                        + "\"value\": 123},"
+                        + "{\"types\":["
+                        + "\"source-unknown-error\"]," // duplicate report types not allowed
+                        + "\"key_piece\":\"0x789\","
+                        + "\"value\":789}],"
+                        + "\"aggregation_coordinator_origin\":"
+                        + " \"https://cloud.coordination.test\"}}";
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(Map.of("Attribution-Reporting-Register-Source", List.of(validHeader)));
+
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+
+        // Assertion
+        assertThat(AsyncFetchStatus.ResponseStatus.SUCCESS)
+                .isEqualTo(asyncFetchStatus.getResponseStatus());
+        assertThat(fetch.isPresent()).isFalse();
+        assertThat(asyncFetchStatus.getEntityStatus())
+                .isEqualTo(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
+    }
+
+    @Test
+    public void fetchSource_aggregateDebugReportingEnabled_validAggregateDebugReporting()
+            throws Exception {
+        when(mMockFlags.getMeasurementEnableAggregateDebugReporting()).thenReturn(true);
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource())
+                .thenReturn(MEASUREMENT_MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE);
+        when(mMockFlags.getMeasurementAggregationCoordinatorOriginList())
+                .thenReturn("https://cloud.coordination.test");
+        String validHeader =
+                "{"
+                        + "\"destination\":\""
+                        + DEFAULT_DESTINATION
+                        + "\","
+                        + "\"aggregatable_debug_reporting\":{"
+                        + "\"budget\":1024,"
+                        + "\"key_piece\":\"0x1\","
+                        + "\"debug_data\":["
+                        + "{\"types\":["
+                        + "\"source-storage-limit\","
+                        + "\"source-unknown-error\"],"
+                        + "\"key_piece\":\"0x123\","
+                        + "\"value\": 123},"
+                        + "{\"types\":["
+                        + "\"source-flexible-event-report-value-error\"],"
+                        + "\"key_piece\":\"0x789\","
+                        + "\"value\":789}],"
+                        + "\"aggregation_coordinator_origin\":"
+                        + " \"https://cloud.coordination.test\"}}";
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(Map.of("Attribution-Reporting-Register-Source", List.of(validHeader)));
+
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+
+        // Assertion
+        assertThat(AsyncFetchStatus.ResponseStatus.SUCCESS)
+                .isEqualTo(asyncFetchStatus.getResponseStatus());
+        assertThat(fetch.isPresent()).isTrue();
+        AggregateDebugReporting aggregateDebugReporting =
+                new AggregateDebugReporting.Builder(
+                                new JSONObject(fetch.get().getAggregateDebugReportingString()))
+                        .build();
+        assertThat(aggregateDebugReporting.getKeyPiece()).isEqualTo(new BigInteger("1", 16));
+        assertThat(aggregateDebugReporting.getBudget()).isEqualTo(1024);
+        assertThat(aggregateDebugReporting.getAggregationCoordinatorOrigin())
+                .isEqualTo(Uri.parse("https://cloud.coordination.test"));
+        assertThat(aggregateDebugReporting.getAggregateDebugReportDataList().get(0).getKeyPiece())
+                .isEqualTo(new BigInteger("123", 16));
+        assertThat(aggregateDebugReporting.getAggregateDebugReportDataList().get(0).getValue())
+                .isEqualTo(123);
+        assertThat(aggregateDebugReporting.getAggregateDebugReportDataList().get(0).getReportType())
+                .isEqualTo(
+                        new HashSet<>(
+                                Arrays.asList("source-storage-limit", "source-unknown-error")));
+        assertThat(aggregateDebugReporting.getAggregateDebugReportDataList().get(1).getKeyPiece())
+                .isEqualTo(new BigInteger("789", 16));
+        assertThat(aggregateDebugReporting.getAggregateDebugReportDataList().get(1).getValue())
+                .isEqualTo(789);
+        assertThat(aggregateDebugReporting.getAggregateDebugReportDataList().get(1).getReportType())
+                .isEqualTo(
+                        new HashSet<>(Arrays.asList("source-flexible-event-report-value-error")));
     }
 
     private RegistrationRequest buildRequest(String registrationUri) {

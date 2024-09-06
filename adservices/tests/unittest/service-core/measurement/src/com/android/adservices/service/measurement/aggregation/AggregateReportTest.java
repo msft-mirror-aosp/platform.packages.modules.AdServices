@@ -17,10 +17,10 @@
 package com.android.adservices.service.measurement.aggregation;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertFalse;
 
 import android.net.Uri;
 
@@ -56,6 +56,9 @@ public final class AggregateReportTest {
                     + "\"value\": 1664"
                     + "}]"
                     + "}";
+    private static final long TRIGGER_TIME = 1000L;
+
+    private static final String API = "attribution-reporting";
 
     private AggregateReport createAttributionReport() {
         return new AggregateReport.Builder()
@@ -76,6 +79,8 @@ public final class AggregateReportTest {
                 .setTriggerId(TRIGGER_ID)
                 .setRegistrationOrigin(
                         AggregateReportFixture.ValidAggregateReportParams.REGISTRATION_ORIGIN)
+                .setTriggerTime(TRIGGER_TIME)
+                .setApi(API)
                 .build();
     }
 
@@ -145,7 +150,9 @@ public final class AggregateReportTest {
         assertEquals(
                 AggregateReportFixture.ValidAggregateReportParams.REGISTRATION_ORIGIN,
                 attributionReport.getRegistrationOrigin());
+        assertEquals(TRIGGER_TIME, attributionReport.getTriggerTime());
         assertFalse(attributionReport.isFakeReport());
+        assertEquals(API, attributionReport.getApi());
     }
 
     @Test
@@ -225,6 +232,7 @@ public final class AggregateReportTest {
         assertNull(attributionReport.getTriggerId());
         assertNull(attributionReport.getRegistrationOrigin());
         assertFalse(attributionReport.isFakeReport());
+        assertNull(attributionReport.getApi());
     }
 
     @Test

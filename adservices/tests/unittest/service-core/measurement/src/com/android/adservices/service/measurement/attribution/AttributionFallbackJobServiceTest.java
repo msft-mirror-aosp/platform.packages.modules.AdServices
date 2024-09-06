@@ -59,7 +59,6 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
@@ -80,38 +79,23 @@ import java.util.concurrent.TimeUnit;
 @SpyStatic(ImmediateAggregateReportingJobService.class)
 @SpyStatic(ReportingJobService.class)
 @MockStatic(ServiceCompatUtils.class)
-public final class AttributionFallbackJobServiceTest extends MeasurementJobServiceTestCase {
+public final class AttributionFallbackJobServiceTest
+        extends MeasurementJobServiceTestCase<AttributionFallbackJobService> {
     private static final long WAIT_IN_MILLIS = 200L;
     private static final long JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(24);
 
     private static final int MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID =
             MEASUREMENT_ATTRIBUTION_FALLBACK_JOB.getJobId();
-    private AttributionFallbackJobService mSpyService;
 
-    @Before
-    public void setUp() {
-        mSpyService = spy(new AttributionFallbackJobService());
+    @Override
+    protected AttributionFallbackJobService getSpiedService() {
+        return new AttributionFallbackJobService();
     }
 
-    // NOTE: has killSwitch in the name to conserve test execution history
-    @Test
-    public void onStartJob_killSwitchOn_withoutLogging() throws Exception {
-        runWithMocks(
-                () -> {
-                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
-
-                    onStartJob_featureDisabled();
-
-                    verifyLoggingNotHappened(mSpyLogger);
-                });
-    }
-
-    // NOTE: has killSwitch in the name to conserve test execution history
     @Test
     public void onStartJob_killSwitchOn_withLogging() throws Exception {
         runWithMocks(
                 () -> {
-                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
                     JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
 
                     onStartJob_featureDisabled();
@@ -120,25 +104,10 @@ public final class AttributionFallbackJobServiceTest extends MeasurementJobServi
                 });
     }
 
-    // NOTE: has killSwitch in the name to conserve test execution history
-    @Test
-    public void onStartJob_killSwitchOff_withoutLogging() throws Exception {
-        runWithMocks(
-                () -> {
-                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
-
-                    onStartJob_featureEnabled();
-
-                    verifyLoggingNotHappened(mSpyLogger);
-                });
-    }
-
-    // NOTE: has killSwitch in the name to conserve test execution history
     @Test
     public void onStartJob_killSwitchOff_withLogging() throws Exception {
         runWithMocks(
                 () -> {
-                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
                     JobServiceLoggingCallback onStartJobCallback =
                             syncPersistJobExecutionData(mSpyLogger);
                     JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
@@ -187,24 +156,10 @@ public final class AttributionFallbackJobServiceTest extends MeasurementJobServi
     }
 
     @Test
-    public void onStartJob_shouldDisableJobTrue_withoutLogging() throws Exception {
-        runWithMocks(
-                () -> {
-                    mocker.mockGetFlags(mMockFlags);
-                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
-
-                    onStartJob_shouldDisableJobTrue();
-
-                    verifyLoggingNotHappened(mSpyLogger);
-                });
-    }
-
-    @Test
     public void onStartJob_shouldDisableJobTrue_withLoggingEnabled() throws Exception {
         runWithMocks(
                 () -> {
                     mocker.mockGetFlags(mMockFlags);
-                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
 
                     onStartJob_shouldDisableJobTrue();
 
@@ -548,29 +503,8 @@ public final class AttributionFallbackJobServiceTest extends MeasurementJobServi
         execute.run();
     }
 
-    private void enableFeature() {
-        toggleFeature(true);
-    }
-
-    private void disableFeature() {
-        toggleFeature(false);
-    }
-
-    private void toggleFeature(boolean value) {
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        ExtendedMockito.doReturn(value)
-                .when(mMockFlags)
-                .getMeasurementAttributionFallbackJobEnabled();
-    }
-
-    private CountDownLatch createCountDownLatch() {
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
-        doAnswer(i -> countDown(countDownLatch)).when(mSpyService).jobFinished(any(), anyBoolean());
-        return countDownLatch;
-    }
-
-    private Object countDown(CountDownLatch countDownLatch) {
-        countDownLatch.countDown();
-        return null;
+    @Override
+    protected void toggleFeature(boolean value) {
+        when(mMockFlags.getMeasurementAttributionFallbackJobEnabled()).thenReturn(value);
     }
 }

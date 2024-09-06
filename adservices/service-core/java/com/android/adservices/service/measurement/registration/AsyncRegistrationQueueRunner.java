@@ -281,7 +281,8 @@ public class AsyncRegistrationQueueRunner {
                 mFlags.getMaxResponseBasedRegistrationPayloadSizeBytes(),
                 mLogger,
                 asyncRegistration,
-                asyncFetchStatus);
+                asyncFetchStatus,
+                resultSource.map(Source::getEnrollmentId).orElse(null));
     }
 
     /** Visible only for testing. */
@@ -414,7 +415,11 @@ public class AsyncRegistrationQueueRunner {
                         ? mFlags.getMaxTriggerRegistrationHeaderSizeBytes()
                         : mFlags.getMaxResponseBasedRegistrationPayloadSizeBytes();
         FetcherUtil.emitHeaderMetrics(
-                headerSizeLimitBytes, mLogger, asyncRegistration, asyncFetchStatus);
+                headerSizeLimitBytes,
+                mLogger,
+                asyncRegistration,
+                asyncFetchStatus,
+                resultTrigger.map(Trigger::getEnrollmentId).orElse(null));
     }
 
     /** Visible only for testing. */
@@ -425,7 +430,7 @@ public class AsyncRegistrationQueueRunner {
                 dao.insertTrigger(trigger);
             } catch (DatastoreException e) {
                 mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
-                        trigger, dao, DebugReportApi.Type.TRIGGER_UNKNOWN_ERROR);
+                        trigger, dao, DebugReportApi.Type.TRIGGER_UNKNOWN_ERROR.getValue());
                 LoggerFactory.getMeasurementLogger()
                         .e(e, "Insert trigger to DB error, generate trigger-unknown-error report");
                 throw new DatastoreException(

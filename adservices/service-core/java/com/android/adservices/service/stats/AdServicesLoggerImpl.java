@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.stats;
 
+import android.annotation.Nullable;
 
 import com.android.adservices.cobalt.AppNameApiErrorLogger;
 import com.android.adservices.cobalt.MeasurementCobaltLogger;
@@ -33,6 +34,7 @@ import com.android.adservices.service.stats.pas.EncodingJobRunStats;
 import com.android.adservices.service.stats.pas.EncodingJsExecutionStats;
 import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedStats;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
@@ -70,9 +72,10 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     }
 
     @Override
-    public void logMeasurementReports(MeasurementReportsStats measurementReportsStats) {
-        mStatsdAdServicesLogger.logMeasurementReports(measurementReportsStats);
-        cobaltLogMsmtReportingStats(measurementReportsStats);
+    public void logMeasurementReports(
+            MeasurementReportsStats measurementReportsStats, @Nullable String enrollmentId) {
+        mStatsdAdServicesLogger.logMeasurementReports(measurementReportsStats, enrollmentId);
+        cobaltLogMsmtReportingStats(measurementReportsStats, enrollmentId);
     }
 
     @Override
@@ -113,11 +116,11 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
 
     @Override
     public void logMeasurementRegistrationsResponseSize(
-            MeasurementRegistrationResponseStats stats) {
-        mStatsdAdServicesLogger.logMeasurementRegistrationsResponseSize(stats);
+            MeasurementRegistrationResponseStats stats, @Nullable String enrollmentId) {
+        mStatsdAdServicesLogger.logMeasurementRegistrationsResponseSize(stats, enrollmentId);
 
         // Log to Cobalt system in parallel with existing logging.
-        cobaltLogMsmtRegistration(stats);
+        cobaltLogMsmtRegistration(stats, enrollmentId);
     }
 
     @Override
@@ -179,9 +182,11 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
 
     @Override
     public void logMeasurementAttributionStats(
-            MeasurementAttributionStats measurementAttributionStats) {
-        mStatsdAdServicesLogger.logMeasurementAttributionStats(measurementAttributionStats);
-        cobaltLogMsmtAttribution(measurementAttributionStats);
+            MeasurementAttributionStats measurementAttributionStats,
+            @Nullable String enrollmentId) {
+        mStatsdAdServicesLogger.logMeasurementAttributionStats(
+                measurementAttributionStats, enrollmentId);
+        cobaltLogMsmtAttribution(measurementAttributionStats, enrollmentId);
     }
 
     @Override
@@ -393,11 +398,6 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     }
 
     @Override
-    public void logUpdateSignalsApiCalledStats(UpdateSignalsApiCalledStats stats) {
-        mStatsdAdServicesLogger.logUpdateSignalsApiCalledStats(stats);
-    }
-
-    @Override
     public void logEncodingJsExecutionStats(EncodingJsExecutionStats stats) {
         mStatsdAdServicesLogger.logEncodingJsExecutionStats(stats);
     }
@@ -405,6 +405,11 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     @Override
     public void logEncodingJobRunStats(EncodingJobRunStats stats) {
         mStatsdAdServicesLogger.logEncodingJobRunStats(stats);
+    }
+
+    @Override
+    public void logUpdateSignalsProcessReportedStats(UpdateSignalsProcessReportedStats stats) {
+        mStatsdAdServicesLogger.logUpdateSignalsProcessReportedStats(stats);
     }
 
     @Override
@@ -420,6 +425,11 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     @Override
     public void logReportImpressionApiCalledStats(ReportImpressionApiCalledStats stats) {
         mStatsdAdServicesLogger.logReportImpressionApiCalledStats(stats);
+    }
+
+    @Override
+    public void logUpdateSignalsApiCalledStats(UpdateSignalsApiCalledStats stats) {
+        mStatsdAdServicesLogger.logUpdateSignalsApiCalledStats(stats);
     }
 
     /** Logs api call error status using {@code CobaltLogger}. */
@@ -440,7 +450,8 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     }
 
     /** Logs measurement registration status using {@code CobaltLogger}. */
-    private void cobaltLogMsmtRegistration(MeasurementRegistrationResponseStats stats) {
+    private void cobaltLogMsmtRegistration(
+            MeasurementRegistrationResponseStats stats, @Nullable String enrollmentId) {
         sBackgroundExecutor.execute(
                 () -> {
                     MeasurementCobaltLogger measurementCobaltLogger =
@@ -452,12 +463,14 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
                             /* sourceType= */ stats.getInteractionType(),
                             /* statusCode= */ stats.getRegistrationStatus(),
                             /* errorCode= */ stats.getFailureType(),
-                            /* isEeaDevice= */ FlagsFactory.getFlags().isEeaDevice());
+                            /* isEeaDevice= */ FlagsFactory.getFlags().isEeaDevice(),
+                            enrollmentId);
                 });
     }
 
     /** Logs measurement attribution status using {@code CobaltLogger}. */
-    private void cobaltLogMsmtAttribution(MeasurementAttributionStats stats) {
+    private void cobaltLogMsmtAttribution(
+            MeasurementAttributionStats stats, @Nullable String enrollmentId) {
         sBackgroundExecutor.execute(
                 () -> {
                     MeasurementCobaltLogger measurementCobaltLogger =
@@ -467,12 +480,14 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
                             /* attrSurfaceType= */ stats.getSurfaceType(),
                             /* sourceType= */ stats.getSourceType(),
                             /* statusCode= */ stats.getResult(),
-                            /* errorCode= */ stats.getFailureType());
+                            /* errorCode= */ stats.getFailureType(),
+                            enrollmentId);
                 });
     }
 
     /** Logs measurement reporting status using {@code CobaltLogger}. */
-    private void cobaltLogMsmtReportingStats(MeasurementReportsStats stats) {
+    private void cobaltLogMsmtReportingStats(
+            MeasurementReportsStats stats, @Nullable String enrollmentId) {
         sBackgroundExecutor.execute(
                 () -> {
                     MeasurementCobaltLogger measurementCobaltLogger =
@@ -482,7 +497,8 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
                             /* reportType= */ stats.getType(),
                             /* reportUploadMethod= */ stats.getUploadMethod(),
                             /* statusCode= */ stats.getResultCode(),
-                            /* errorCode= */ stats.getFailureType());
+                            /* errorCode= */ stats.getFailureType(),
+                            enrollmentId);
                 });
     }
 }

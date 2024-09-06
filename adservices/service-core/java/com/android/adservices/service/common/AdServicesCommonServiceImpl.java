@@ -50,6 +50,7 @@ import static com.android.adservices.service.ui.constants.DebugMessages.SET_AD_S
 import static com.android.adservices.service.ui.constants.DebugMessages.UNAUTHORIZED_CALLER_MESSAGE;
 
 import android.adservices.adid.AdId;
+import android.adservices.common.AdServicesCommonResponse;
 import android.adservices.common.AdServicesCommonStates;
 import android.adservices.common.AdServicesCommonStatesResponse;
 import android.adservices.common.AdServicesModuleState;
@@ -509,21 +510,74 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
 
     /** Sets AdServices feature states. */
     @Override
-    @RequiresPermission(anyOf = {ACCESS_ADSERVICES_STATE, ACCESS_ADSERVICES_STATE_COMPAT})
+    @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
     public void setAdServicesModuleOverrides(
             List<AdServicesModuleState> adServicesModuleStateList,
             NotificationTypeParams notificationType,
             ISetAdServicesModuleOverridesCallback callback) {
-        // TODO: Add implementation
+
+        boolean authorizedCaller = PermissionHelper.hasModifyAdServicesStatePermission(mContext);
+        sBackgroundExecutor.execute(
+                () -> {
+                    try {
+                        if (!authorizedCaller) {
+                            callback.onFailure(STATUS_UNAUTHORIZED);
+                            LogUtil.d(UNAUTHORIZED_CALLER_MESSAGE);
+                            return;
+                        }
+                        ConsentManager consentManager = ConsentManager.getInstance();
+                        consentManager.setModuleStates(adServicesModuleStateList);
+                        callback.onResult(
+                                new AdServicesCommonResponse.Builder()
+                                        .setStatusCode(STATUS_SUCCESS)
+                                        .build());
+
+                        // TODO(361411984): Add the notification trigger logic
+
+                    } catch (Exception e) {
+                        LogUtil.e(
+                                "setAdServicesModuleOverrides() failed to complete: "
+                                        + e.getMessage());
+                        try {
+                            callback.onFailure(STATUS_INTERNAL_ERROR);
+                        } catch (RemoteException ex) {
+                            LogUtil.e("Unable to send result to the callback " + ex.getMessage());
+                        }
+                    }
+                });
     }
 
     /** Sets AdServices feature user choices. */
     @Override
-    @RequiresPermission(anyOf = {ACCESS_ADSERVICES_STATE, ACCESS_ADSERVICES_STATE_COMPAT})
+    @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
     public void setAdServicesModuleUserChoices(
             List<AdServicesModuleUserChoice> adServicesFeatureUserChoiceList,
             ISetAdServicesModuleUserChoicesCallback callback) {
-        // TODO: Add implementation
+
+        boolean authorizedCaller = PermissionHelper.hasModifyAdServicesStatePermission(mContext);
+
+        sBackgroundExecutor.execute(
+                () -> {
+                    try {
+                        if (!authorizedCaller) {
+                            callback.onFailure(STATUS_UNAUTHORIZED);
+                            LogUtil.d(UNAUTHORIZED_CALLER_MESSAGE);
+                            return;
+                        }
+                        ConsentManager consentManager = ConsentManager.getInstance();
+                        consentManager.setUserChoices(adServicesFeatureUserChoiceList);
+                        LogUtil.i("setAdServicesModuleUserChoices");
+                        callback.onResult(
+                                new AdServicesCommonResponse.Builder()
+                                        .setStatusCode(STATUS_SUCCESS)
+                                        .build());
+
+                    } catch (Exception e) {
+                        LogUtil.e(
+                                "setAdServicesModuleUserChoices() failed to complete: "
+                                        + e.getMessage());
+                    }
+                });
     }
 
     private int getLatency(CallerMetadata metadata, long serviceStartTime) {

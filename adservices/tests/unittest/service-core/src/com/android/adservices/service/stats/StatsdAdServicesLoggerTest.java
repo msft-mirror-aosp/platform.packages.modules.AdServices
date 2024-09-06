@@ -69,6 +69,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.SERVER_AUC
 import static com.android.adservices.service.stats.AdServicesStatsLog.TOPICS_ENCRYPTION_EPOCH_COMPUTATION_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.TOPICS_ENCRYPTION_GET_TOPICS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.UPDATE_SIGNALS_API_CALLED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.UPDATE_SIGNALS_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.BACKGROUND_KEY_FETCH_STATUS_NO_OP;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_SUCCESS;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JSON_PROCESSING_STATUS_TOO_BIG;
@@ -119,6 +120,7 @@ import com.android.adservices.service.stats.pas.EncodingJobRunStats;
 import com.android.adservices.service.stats.pas.EncodingJsExecutionStats;
 import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedStats;
 import com.android.dx.mockito.inline.extended.MockedVoidMethod;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -541,12 +543,11 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
         mLogger = new StatsdAdServicesLogger(mMockFlags);
 
         int apiName = AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
-        String appPackageName = null;
         int resultCode = STATUS_SUCCESS;
         int latencyMs = 10;
 
         // Log api call with app package name.
-        mLogger.logFledgeApiCallStats(apiName, appPackageName, resultCode, latencyMs);
+        mLogger.logFledgeApiCallStats(apiName, null, resultCode, latencyMs);
 
         // Verify app package name is logged.
         verify(
@@ -581,12 +582,11 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
         mLogger = new StatsdAdServicesLogger(mMockFlags);
 
         int apiName = AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
-        String appPackageName = TEST_PACKAGE_NAME;
         int resultCode = STATUS_SUCCESS;
         int latencyMs = 10;
 
         // Log api call with app package name.
-        mLogger.logFledgeApiCallStats(apiName, appPackageName, resultCode, latencyMs);
+        mLogger.logFledgeApiCallStats(apiName, TEST_PACKAGE_NAME, resultCode, latencyMs);
 
         // Verify app package name is not logged.
         verify(
@@ -656,6 +656,7 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
 
     @Test
     public void logMeasurementAttribution_success() {
+        String enrollmentId = "enrollmentId";
         when(mMockFlags.getMeasurementEnableAppPackageNameLogging()).thenReturn(true);
         when(mMockFlags.getMeasurementAppPackageNameLoggingAllowlist())
                 .thenReturn(SOURCE_REGISTRANT);
@@ -697,7 +698,7 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                                         anyInt()));
 
         // Invoke logging call
-        mLogger.logMeasurementAttributionStats(stats);
+        mLogger.logMeasurementAttributionStats(stats, enrollmentId);
 
         // Verify only compat logging took place
         MockedVoidMethod writeInvocation =
@@ -1375,10 +1376,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                 DestinationRegisteredBeaconsReportedStats
                         .InteractionKeySizeRangeType
                         .EQUAL_TO_MAXIMUM_KEY_SIZE);
-        int[] keySizeRangeTypeArray = new int[] {
-                /* LARGER_THAN_MAXIMUM_KEY_SIZE */ 4,
-                /* SMALLER_THAN_MAXIMUM_KEY_SIZE */ 2,
-                /* EQUAL_TO_MAXIMUM_KEY_SIZE */ 3};
 
         DestinationRegisteredBeaconsReportedStats stats =
                 DestinationRegisteredBeaconsReportedStats.builder()
@@ -2371,6 +2368,51 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                                 eq(2));
 
         verify(writeInvocation);
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testLogUpdateSignalsProcessReportedStats_success() {
+        UpdateSignalsProcessReportedStats stats =
+                UpdateSignalsProcessReportedStats.builder()
+                        .setUpdateSignalsProcessLatencyMillis(200)
+                        .setAdservicesApiStatusCode(STATUS_SUCCESS)
+                        .setSignalsWrittenCount(10)
+                        .setKeysStoredCount(6)
+                        .setValuesStoredCount(10)
+                        .setEvictionRulesCount(8)
+                        .setPerBuyerSignalSize(SIZE_MEDIUM)
+                        .setMeanRawProtectedSignalsSizeBytes(123.4F)
+                        .setMaxRawProtectedSignalsSizeBytes(345.67F)
+                        .setMinRawProtectedSignalsSizeBytes(0.0001F)
+                        .build();
+        doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(), anyInt(), anyInt(), anyInt(), anyInt(), anyInt(),
+                                        anyInt()));
+
+        // Invoke logging call.
+        mLogger.logUpdateSignalsProcessReportedStats(stats);
+
+        // Verify only compat logging took place.
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(UPDATE_SIGNALS_PROCESS_REPORTED),
+                                eq(200),
+                                eq(STATUS_SUCCESS),
+                                eq(10),
+                                eq(6),
+                                eq(10),
+                                eq(8),
+                                eq(SIZE_MEDIUM),
+                                eq(123.4F),
+                                eq(345.67F),
+                                eq(0.0001F));
+        verify(writeInvocation);
+
         verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
     }
 

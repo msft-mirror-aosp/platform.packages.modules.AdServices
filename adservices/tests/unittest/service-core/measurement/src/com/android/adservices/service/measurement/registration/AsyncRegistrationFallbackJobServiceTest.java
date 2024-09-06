@@ -30,7 +30,6 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -66,7 +65,6 @@ import org.mockito.internal.stubbing.answers.AnswersWithDelay;
 import org.mockito.internal.stubbing.answers.CallsRealMethods;
 
 import java.util.Optional;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 @SpyStatic(AsyncRegistrationFallbackJobService.class)
@@ -77,18 +75,20 @@ import java.util.concurrent.TimeUnit;
 @SpyStatic(AdServicesJobServiceLogger.class)
 @SpyStatic(ApplicationContextSingleton.class)
 @MockStatic(ServiceCompatUtils.class)
-public class AsyncRegistrationFallbackJobServiceTest extends MeasurementJobServiceTestCase {
+public class AsyncRegistrationFallbackJobServiceTest
+        extends MeasurementJobServiceTestCase<AsyncRegistrationFallbackJobService> {
     private static final int MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID =
             MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB.getJobId();
     private static final long WAIT_IN_MILLIS = 1_000L;
     private static final long JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(1);
 
-    private AsyncRegistrationFallbackJobService mSpyService;
+    @Override
+    protected AsyncRegistrationFallbackJobService getSpiedService() {
+        return new AsyncRegistrationFallbackJobService();
+    }
 
     @Before
     public void setUp() {
-        mSpyService = spy(new AsyncRegistrationFallbackJobService());
-
         when(mMockFlags.getMeasurementAsyncRegistrationFallbackJobRequiredBatteryNotLow())
                 .thenReturn(true);
         when(mMockFlags.getAsyncRegistrationJobQueueIntervalMs()).thenReturn(JOB_PERIOD_MS);
@@ -101,22 +101,9 @@ public class AsyncRegistrationFallbackJobServiceTest extends MeasurementJobServi
     }
 
     @Test
-    public void onStartJob_killSwitchOn_withoutLogging() throws Exception {
-        runWithMocks(
-                () -> {
-                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
-
-                    onStartJob_killSwitchOn();
-
-                    verifyLoggingNotHappened(mSpyLogger);
-                });
-    }
-
-    @Test
     public void onStartJob_killSwitchOn_withLogging() throws Exception {
         runWithMocks(
                 () -> {
-                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
                     JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
 
                     onStartJob_killSwitchOn();
@@ -126,22 +113,9 @@ public class AsyncRegistrationFallbackJobServiceTest extends MeasurementJobServi
     }
 
     @Test
-    public void onStartJob_killSwitchOff_withoutLogging() throws Exception {
-        runWithMocks(
-                () -> {
-                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
-
-                    onStartJob_killSwitchOff();
-
-                    verifyLoggingNotHappened(mSpyLogger);
-                });
-    }
-
-    @Test
     public void onStartJob_killSwitchOff_withLogging() throws Exception {
         runWithMocks(
                 () -> {
-                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
                     JobServiceLoggingCallback onStartJobCallback =
                             syncPersistJobExecutionData(mSpyLogger);
                     JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
@@ -188,24 +162,10 @@ public class AsyncRegistrationFallbackJobServiceTest extends MeasurementJobServi
     }
 
     @Test
-    public void onStartJob_shouldDisableJobTrue_withoutLogging() throws Exception {
-        runWithMocks(
-                () -> {
-                    mocker.mockGetFlags(mMockFlags);
-                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
-
-                    onStartJob_shouldDisableJobTrue();
-
-                    verifyLoggingNotHappened(mSpyLogger);
-                });
-    }
-
-    @Test
     public void onStartJob_shouldDisableJobTrue_withLoggingEnabled() throws Exception {
         runWithMocks(
                 () -> {
                     mocker.mockGetFlags(mMockFlags);
-                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
 
                     onStartJob_shouldDisableJobTrue();
 
@@ -507,27 +467,8 @@ public class AsyncRegistrationFallbackJobServiceTest extends MeasurementJobServi
         execute.run();
     }
 
-    private void enableKillSwitch() {
-        toggleKillSwitch(true);
-    }
-
-    private void disableKillSwitch() {
-        toggleKillSwitch(false);
-    }
-
-    private void toggleKillSwitch(boolean value) {
-        doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        doReturn(value).when(mMockFlags).getAsyncRegistrationFallbackJobKillSwitch();
-    }
-
-    private CountDownLatch createCountDownLatch() {
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
-        doAnswer(i -> countDown(countDownLatch)).when(mSpyService).jobFinished(any(), anyBoolean());
-        return countDownLatch;
-    }
-
-    private Object countDown(CountDownLatch countDownLatch) {
-        countDownLatch.countDown();
-        return null;
+    @Override
+    protected void toggleFeature(boolean value) {
+        when(mMockFlags.getAsyncRegistrationFallbackJobKillSwitch()).thenReturn(!value);
     }
 }

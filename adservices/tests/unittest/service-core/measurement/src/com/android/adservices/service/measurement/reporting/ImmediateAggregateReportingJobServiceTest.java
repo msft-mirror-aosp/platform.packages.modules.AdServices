@@ -29,7 +29,6 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -70,16 +69,19 @@ import java.util.Optional;
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(AdServicesJobServiceLogger.class)
 @MockStatic(ServiceCompatUtils.class)
-public final class ImmediateAggregateReportingJobServiceTest extends MeasurementJobServiceTestCase {
+public final class ImmediateAggregateReportingJobServiceTest
+        extends MeasurementJobServiceTestCase<ImmediateAggregateReportingJobService> {
     private static final int MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_ID =
             MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB.getJobId();
     private static final long WAIT_IN_MILLIS = 200L;
 
-    private ImmediateAggregateReportingJobService mSpyService;
+    @Override
+    protected ImmediateAggregateReportingJobService getSpiedService() {
+        return new ImmediateAggregateReportingJobService();
+    }
 
     @Before
     public void setUp() {
-        mSpyService = spy(new ImmediateAggregateReportingJobService());
         when(mMockFlags.getMeasurementImmediateAggregateReportingJobPersisted()).thenReturn(true);
         when(mMockFlags.getMeasurementImmediateAggregateReportingJobRequiredNetworkType())
                 .thenReturn(JobInfo.NETWORK_TYPE_ANY);
@@ -88,22 +90,9 @@ public final class ImmediateAggregateReportingJobServiceTest extends Measurement
     }
 
     @Test
-    public void onStartJob_killSwitchOn_withoutLogging() throws Exception {
-        runWithMocks(
-                () -> {
-                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
-
-                    onStartJob_killSwitchOn();
-
-                    verifyLoggingNotHappened(mSpyLogger);
-                });
-    }
-
-    @Test
     public void onStartJob_killSwitchOn_withLogging() throws Exception {
         runWithMocks(
                 () -> {
-                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
                     JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
 
                     onStartJob_killSwitchOn();
@@ -113,22 +102,9 @@ public final class ImmediateAggregateReportingJobServiceTest extends Measurement
     }
 
     @Test
-    public void onStartJob_killSwitchOff_withoutLogging() throws Exception {
-        runWithMocks(
-                () -> {
-                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
-
-                    onStartJob_killSwitchOff();
-
-                    verifyLoggingNotHappened(mSpyLogger);
-                });
-    }
-
-    @Test
     public void onStartJob_killSwitchOff_withLogging() throws Exception {
         runWithMocks(
                 () -> {
-                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
                     JobServiceLoggingCallback onStartJobCallback =
                             syncPersistJobExecutionData(mSpyLogger);
                     JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
@@ -170,25 +146,10 @@ public final class ImmediateAggregateReportingJobServiceTest extends Measurement
     }
 
     @Test
-    public void onStartJob_shouldDisableJobTrue_withoutLogging() throws Exception {
-        runWithMocks(
-                () -> {
-                    mocker.mockGetFlags(mMockFlags);
-                    ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
-
-                    onStartJob_shouldDisableJobTrue();
-
-                    verifyLoggingNotHappened(mSpyLogger);
-                });
-    }
-
-    @Test
     public void onStartJob_shouldDisableJobTrue_withLoggingEnabled() throws Exception {
         runWithMocks(
                 () -> {
-                    ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-                    mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
+                    mocker.mockGetFlags(mMockFlags);
 
                     onStartJob_shouldDisableJobTrue();
 
@@ -487,18 +448,9 @@ public final class ImmediateAggregateReportingJobServiceTest extends Measurement
         execute.run();
     }
 
-    private void enableKillSwitch() {
-        toggleKillSwitch(true);
-    }
-
-    private void disableKillSwitch() {
-        toggleKillSwitch(false);
-    }
-
-    private void toggleKillSwitch(boolean value) {
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        ExtendedMockito.doReturn(value)
-                .when(mMockFlags)
-                .getMeasurementJobImmediateAggregateReportingKillSwitch();
+    @Override
+    protected void toggleFeature(boolean value) {
+        when(mMockFlags.getMeasurementJobImmediateAggregateReportingKillSwitch())
+                .thenReturn(!value);
     }
 }

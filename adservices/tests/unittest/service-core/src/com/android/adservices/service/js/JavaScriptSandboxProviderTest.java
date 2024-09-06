@@ -28,24 +28,19 @@ import static org.junit.Assert.assertThrows;
 import android.content.Context;
 
 import androidx.javascriptengine.JavaScriptSandbox;
-import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.SmallTest;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.profiling.JSScriptEngineLogConstants;
 import com.android.adservices.service.profiling.Profiler;
 import com.android.adservices.service.profiling.StopWatch;
 import com.android.adservices.shared.testing.FutureSyncCallback;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
-import com.android.dx.mockito.inline.extended.StaticMockitoSession;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.function.ThrowingRunnable;
 import org.mockito.Mock;
@@ -55,11 +50,11 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-@SmallTest
-public class JavaScriptSandboxProviderTest {
-    private final Context mApplicationContext = ApplicationProvider.getApplicationContext();
+@RequiresSdkLevelAtLeastS()
+@MockStatic(JavaScriptSandbox.class)
+public final class JavaScriptSandboxProviderTest extends AdServicesExtendedMockitoTestCase {
+    private final Context mApplicationContext = mContext.getApplicationContext();
     private final LoggerFactory.Logger mLogger = LoggerFactory.getFledgeLogger();
-    private StaticMockitoSession mStaticMockSession;
     @Mock private StopWatch mSandboxInitWatch;
     @Mock private JavaScriptSandbox mSandbox;
     @Mock private JavaScriptSandbox mSandbox2;
@@ -67,23 +62,6 @@ public class JavaScriptSandboxProviderTest {
     @Mock private Profiler mProfilerMock;
 
     private JSScriptEngine.JavaScriptSandboxProvider mJsSandboxProvider;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
-    @Before
-    public void setUp() {
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .mockStatic(JavaScriptSandbox.class)
-                        .initMocks(this)
-                        .startMocking();
-    }
-
-    @After
-    public void shutDown() {
-        mStaticMockSession.finishMocking();
-    }
 
     @Test
     public void testJsSandboxProviderCreateFailsIfSandboxNotSupported() {

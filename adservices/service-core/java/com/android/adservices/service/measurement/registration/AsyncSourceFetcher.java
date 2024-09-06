@@ -501,6 +501,7 @@ public class AsyncSourceFetcher {
         }
 
         if (mFlags.getMeasurementEnableAttributionScope()
+                && !json.isNull(SourceHeaderContract.ATTRIBUTION_SCOPES)
                 && !populateAttributionScopeFields(json, builder)) {
             return false;
         }
@@ -583,53 +584,54 @@ public class AsyncSourceFetcher {
                 builder.setEventLevelEpsilon((double) mFlags.getMeasurementPrivacyEpsilon());
             }
         }
+        if (mFlags.getMeasurementEnableAggregateDebugReporting()
+                && !json.isNull(SourceHeaderContract.AGGREGATABLE_DEBUG_REPORTING)) {
+            Optional<String> validAggregateDebugReporting =
+                    FetcherUtil.getValidAggregateDebugReportingString(
+                            json.getJSONObject(SourceHeaderContract.AGGREGATABLE_DEBUG_REPORTING),
+                            mFlags);
+            if (!validAggregateDebugReporting.isPresent()) {
+                LoggerFactory.getMeasurementLogger()
+                        .d("parseSource: aggregatable debug reporting is invalid.");
+                return false;
+            }
+            builder.setAggregateDebugReportingString(validAggregateDebugReporting.get());
+        }
         return true;
     }
 
     // Populates attribution scope fields if they are available.
     // Returns false if the json fields are invalid.
     // Note returning true doesn't indicate whether the fields are populated or not.
-    private boolean populateAttributionScopeFields(JSONObject json, Source.Builder builder)
+    private boolean populateAttributionScopeFields(JSONObject parentJson, Source.Builder builder)
             throws JSONException {
-        // Parses attribution scopes.
-        List<String> attributionScopes = new ArrayList<>();
-        if (!json.isNull(SourceHeaderContract.ATTRIBUTION_SCOPES)) {
-            Optional<List<String>> maybeAttributionScopes =
-                    FetcherUtil.extractStringArray(
-                            json,
-                            SourceHeaderContract.ATTRIBUTION_SCOPES,
-                            mFlags.getMeasurementMaxAttributionScopesPerSource(),
-                            mFlags.getMeasurementMaxAttributionScopeLength());
-            if (maybeAttributionScopes.isEmpty()) {
-                return false;
-            }
-            attributionScopes = maybeAttributionScopes.get();
+        JSONObject json = parentJson.getJSONObject(SourceHeaderContract.ATTRIBUTION_SCOPES);
+        if (json.isNull(SourceHeaderContract.ATTRIBUTION_SCOPE_LIMIT)
+                || json.isNull(SourceHeaderContract.ATTRIBUTION_SCOPES_VALUES)) {
+            LoggerFactory.getMeasurementLogger()
+                    .e("Attribution scope limit and values should be set for attribution scopes");
+            return false;
         }
 
-        // Parses attribution scope limit, can be optional.
-        if (json.isNull(SourceHeaderContract.ATTRIBUTION_SCOPE_LIMIT)) {
-            if (!attributionScopes.isEmpty()) {
-                LoggerFactory.getMeasurementLogger()
-                        .e(
-                                "Attribution scope limit should be set if attribution scopes are "
-                                        + "not empty.");
-                return false;
-            }
-            if (!json.isNull(SourceHeaderContract.MAX_EVENT_STATES)) {
-                LoggerFactory.getMeasurementLogger()
-                        .e(
-                                "Attribution scope limit should be set if max event states is "
-                                        + "set.");
-                return false;
-            }
-            return true;
-        }
+        // Parses attribution scope limit.
         Optional<Long> maybeAttributionScopeLimit =
                 FetcherUtil.extractLong(json, SourceHeaderContract.ATTRIBUTION_SCOPE_LIMIT);
         if (maybeAttributionScopeLimit.isEmpty()) {
             return false;
         }
         long attributionScopeLimit = maybeAttributionScopeLimit.get();
+
+        // Parses attribution scopes values.
+        Optional<List<String>> maybeAttributionScopes =
+                FetcherUtil.extractStringArray(
+                        json,
+                        SourceHeaderContract.ATTRIBUTION_SCOPES_VALUES,
+                        mFlags.getMeasurementMaxAttributionScopesPerSource(),
+                        mFlags.getMeasurementMaxAttributionScopeLength());
+        if (maybeAttributionScopes.isEmpty()) {
+            return false;
+        }
+        List<String> attributionScopes = maybeAttributionScopes.get();
 
         // Parses max event states, can be optional, fallback to default max event states.
         long maxEventStates = Source.DEFAULT_MAX_EVENT_STATES;
@@ -1227,11 +1229,13 @@ public class AsyncSourceFetcher {
         String TRIGGER_DATA_MATCHING = "trigger_data_matching";
         String TRIGGER_DATA = "trigger_data";
         String ATTRIBUTION_SCOPES = "attribution_scopes";
-        String ATTRIBUTION_SCOPE_LIMIT = "attribution_scope_limit";
+        String ATTRIBUTION_SCOPE_LIMIT = "limit";
+        String ATTRIBUTION_SCOPES_VALUES = "values";
         String MAX_EVENT_STATES = "max_event_states";
         String DESTINATION_LIMIT_PRIORITY = "destination_limit_priority";
         String DESTINATION_LIMIT_ALGORITHM = "destination_limit_algorithm";
         String EVENT_LEVEL_EPSILON = "event_level_epsilon";
+        String AGGREGATABLE_DEBUG_REPORTING = "aggregatable_debug_reporting";
     }
 
     private interface SourceRequestContract {
