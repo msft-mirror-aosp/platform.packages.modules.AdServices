@@ -35,6 +35,8 @@ import com.android.adservices.service.measurement.aggregation.AggregateEncryptio
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 
+import com.google.android.libraries.mobiledatadownload.internal.AndroidTimeSource;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Assert;
@@ -110,7 +112,8 @@ public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbInteg
                                 mockKeyManager,
                                 FakeFlagsFactory.getFlagsForTest(),
                                 mLogger,
-                                sContext));
+                                sContext,
+                                new AndroidTimeSource()));
         try {
             Mockito.doReturn(returnCode)
                     .when(spyReportingService)

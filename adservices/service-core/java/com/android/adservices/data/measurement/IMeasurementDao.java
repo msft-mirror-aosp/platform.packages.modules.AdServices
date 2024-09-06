@@ -495,6 +495,12 @@ public interface IMeasurementDao {
     /** Remove aggregate encryption keys from the datastore older than {@code expiry}. */
     void deleteExpiredAggregateEncryptionKeys(long expiry) throws DatastoreException;
 
+    /** Delete Event Report from datastore. */
+    void deleteEventReport(EventReport eventReport) throws DatastoreException;
+
+    /** Delete Aggregate Report from datastore. */
+    void deleteAggregateReport(AggregateReport aggregateReport) throws DatastoreException;
+
     /** Save unencrypted aggregate payload to the datastore. */
     void insertAggregateReport(AggregateReport payload) throws DatastoreException;
 
@@ -694,6 +700,34 @@ public interface IMeasurementDao {
             @NonNull List<Uri> domains,
             @DeletionRequest.MatchBehavior int matchBehavior)
             throws DatastoreException;
+
+    /**
+     * Returns a pair of lists of sources matching registrant, publishers and also in the provided
+     * time frame. If 24 hours plus the most recent trigger time of all reports attributed to the
+     * source is less than the current time then the source is in the first pair. If greater than or
+     * equal to the current time then the source is in the second pair. It matches registrant.
+     *
+     * @param registrant registrant to match except matching) data
+     * @param eventTime time of uninstall event
+     * @return pair of lists of source IDs
+     * @throws DatastoreException database transaction level issues
+     */
+    Pair<List<String>, List<String>> fetchMatchingSourcesUninstall(
+            @NonNull Uri registrant, long eventTime) throws DatastoreException;
+
+    /**
+     * Returns a pair of lists of triggers matching registrant, publishers and also in the provided
+     * time frame. If 24 hours plus the most recent trigger time of all reports attributed to the
+     * trigger is less than the current time then the trigger is in the first pair. If greater than
+     * or equal to the current time then the trigger is in the second pair. It matches registrant.
+     *
+     * @param registrant registrant to match except matching) data
+     * @param eventTime time of uninstall event
+     * @return pair of lists of trigger IDs
+     * @throws DatastoreException database transaction level issues
+     */
+    Pair<List<String>, List<String>> fetchMatchingTriggersUninstall(
+            @NonNull Uri registrant, long eventTime) throws DatastoreException;
 
     /**
      * Returns list of async registrations matching registrant and top origins in the provided time

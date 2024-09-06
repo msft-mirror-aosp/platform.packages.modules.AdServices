@@ -636,7 +636,7 @@ public final class MeasurementImplTest {
                                 MeasurementRollbackCompatManager.getInstance(
                                         any(), eq(AdServicesManager.MEASUREMENT_DELETION)));
 
-        doReturn(true).when(mMeasurementDataDeleter).deleteAppUninstalledData(any());
+        doReturn(true).when(mMeasurementDataDeleter).deleteAppUninstalledData(any(), anyLong());
 
         doDeletePackageRecords();
         return mockRollbackManager;
@@ -644,7 +644,7 @@ public final class MeasurementImplTest {
 
     private void doDeletePackageRecords() {
         MeasurementImpl measurement = createMeasurementImpl();
-        measurement.deletePackageRecords(DEFAULT_URI);
+        measurement.deletePackageRecords(DEFAULT_URI, 0);
     }
 
     @Test
@@ -775,7 +775,7 @@ public final class MeasurementImplTest {
                                 MeasurementRollbackCompatManager.getInstance(
                                         any(), eq(AdServicesManager.MEASUREMENT_DELETION)));
 
-        doReturn(true).when(mMeasurementDataDeleter).deleteAppUninstalledData(any());
+        doReturn(true).when(mMeasurementDataDeleter).deleteAppUninstalledData(any(), anyLong());
 
         MeasurementImpl measurement = createMeasurementImpl();
         measurement.deleteAllUninstalledMeasurementData();
@@ -796,7 +796,7 @@ public final class MeasurementImplTest {
         doReturn(Optional.of(List.of(Uri.parse("android-app://foo"))))
                 .when(mDatastoreManager)
                 .runInTransactionWithResult(any());
-        doReturn(false).when(mMeasurementDataDeleter).deleteAppUninstalledData(any());
+        doReturn(false).when(mMeasurementDataDeleter).deleteAppUninstalledData(any(), anyLong());
 
         MeasurementImpl measurement = createMeasurementImpl();
         measurement.deleteAllUninstalledMeasurementData();

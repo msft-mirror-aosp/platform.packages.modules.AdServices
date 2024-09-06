@@ -79,6 +79,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -2353,6 +2354,51 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
+    public Pair<List<String>, List<String>> fetchMatchingSourcesUninstall(
+            @NonNull Uri registrant, long eventTime) throws DatastoreException {
+        Objects.requireNonNull(registrant);
+
+        return fetchMatchingSourcesTriggersUninstall(registrant, eventTime, /* isSource= */ true);
+    }
+
+    @Override
+    public Pair<List<String>, List<String>> fetchMatchingTriggersUninstall(
+            @NonNull Uri registrant, long eventTime) throws DatastoreException {
+        Objects.requireNonNull(registrant);
+
+        return fetchMatchingSourcesTriggersUninstall(registrant, eventTime, /* isSource= */ false);
+    }
+
+    private Pair<List<String>, List<String>> fetchMatchingSourcesTriggersUninstall(
+            @NonNull Uri registrant, long eventTime, boolean isSource) throws DatastoreException {
+
+        Function<String, String> registrantMatcher = getRegistrantMatcher(registrant);
+
+        final SQLiteDatabase db = mSQLTransaction.getDatabase();
+        ImmutableList.Builder<String> idsDelete = new ImmutableList.Builder<>();
+        ImmutableList.Builder<String> idsIgnore = new ImmutableList.Builder<>();
+
+        String deleteQuery =
+                getUninstallQuery(isSource, /* isDelete= */ true, registrantMatcher, eventTime);
+        String ignoreQuery =
+                getUninstallQuery(isSource, /* isDelete= */ false, registrantMatcher, eventTime);
+
+        try (Cursor cursor = db.rawQuery(deleteQuery, null)) {
+            while (cursor.moveToNext()) {
+                idsDelete.add(cursor.getString(0));
+            }
+        }
+
+        try (Cursor cursor = db.rawQuery(ignoreQuery, null)) {
+            while (cursor.moveToNext()) {
+                idsIgnore.add(cursor.getString(0));
+            }
+        }
+
+        return new Pair<>(idsDelete.build(), idsIgnore.build());
+    }
+
+    @Override
     public List<String> fetchMatchingAsyncRegistrations(
             @NonNull Uri registrant,
             @NonNull Instant start,
@@ -2713,6 +2759,26 @@ class MeasurementDao implements IMeasurementDao {
                 MeasurementTables.AggregateEncryptionKey.TABLE,
                 MeasurementTables.AggregateEncryptionKey.EXPIRY + " < ?",
                 new String[] {String.valueOf(expiry)});
+    }
+
+    @Override
+    public void deleteEventReport(EventReport eventReport) throws DatastoreException {
+        mSQLTransaction
+                .getDatabase()
+                .delete(
+                        MeasurementTables.EventReportContract.TABLE,
+                        MeasurementTables.EventReportContract.ID + " = ?",
+                        new String[] {eventReport.getId()});
+    }
+
+    @Override
+    public void deleteAggregateReport(AggregateReport aggregateReport) throws DatastoreException {
+        mSQLTransaction
+                .getDatabase()
+                .delete(
+                        MeasurementTables.AggregateReport.TABLE,
+                        MeasurementTables.AggregateReport.ID + " = ?",
+                        new String[] {aggregateReport.getId()});
     }
 
     @Override
@@ -3205,6 +3271,88 @@ class MeasurementDao implements IMeasurementDao {
                         + " WHERE "
                         + reinstallWhereClause;
         return reinstallQuery;
+    }
+
+    /** Returns the query for event/aggregate table with alias query used in getUninstallQuery. */
+    private static String getEventAggUninstallQuery(
+            String reportTableSourceOrTriggerIdColumn,
+            String reportTable) {
+        String query =
+                String.format(
+                        Locale.ENGLISH,
+                        "SELECT %2$s AS id, %1$s.trigger_time AS trigger_time " + "FROM %1$s",
+                        reportTable, // 1
+                        reportTableSourceOrTriggerIdColumn // 2
+                        );
+
+        return query;
+    }
+
+    /**
+     * Returns the query for Uninstall Report Handling. Boolean isSource is true if source and false
+     * if trigger. Boolean isDelete is true if delete and false if ignore. Will return a query for
+     * sources to delete, sources to ignore, triggers to delete, or triggers to ignore.
+     */
+    private static String getUninstallQuery(
+            boolean isSource,
+            boolean isDelete,
+            Function<String, String> registrantMatcher,
+            long eventTime) {
+        String table =
+                isSource
+                        ? MeasurementTables.SourceContract.TABLE
+                        : MeasurementTables.TriggerContract.TABLE;
+        String id = isSource ? SourceContract.ID : MeasurementTables.TriggerContract.ID;
+        String registrant =
+                isSource ? SourceContract.REGISTRANT : MeasurementTables.TriggerContract.REGISTRANT;
+        String eventReportSourceTriggerId =
+                isSource
+                        ? MeasurementTables.EventReportContract.SOURCE_ID
+                        : MeasurementTables.EventReportContract.TRIGGER_ID;
+        String aggReportSourceTriggerId =
+                isSource
+                        ? MeasurementTables.AggregateReport.SOURCE_ID
+                        : MeasurementTables.AggregateReport.TRIGGER_ID;
+        String comparisonSymbol = isDelete ? " < " : " >= ";
+
+        String eventReportQuery =
+                getEventAggUninstallQuery(
+                        eventReportSourceTriggerId,
+                        MeasurementTables.EventReportContract.TABLE);
+        String aggReportQuery =
+                getEventAggUninstallQuery(
+                        aggReportSourceTriggerId,
+                        MeasurementTables.AggregateReport.TABLE);
+
+        String whereStatement =
+                String.format(
+                        Locale.ENGLISH,
+                        " WHERE max_trigger_time" + " + %1$d %2$s %3$d",
+                        TimeUnit.SECONDS.toMillis(
+                                FlagsFactory.getFlags()
+                                        .getMeasurementMinReportLifespanForUninstallSeconds()), // 1
+                        comparisonSymbol, // 2
+                        eventTime // 3
+                        );
+
+        String query =
+                String.format(
+                        Locale.ENGLISH,
+                        "WITH event_agg_table AS ("
+                                + eventReportQuery
+                                + " UNION "
+                                + aggReportQuery
+                                + ") SELECT id FROM ( SELECT id, MAX(event_agg_table.trigger_time)"
+                                + " AS max_trigger_time FROM event_agg_table LEFT JOIN %1$s ON id ="
+                                + " %2$s WHERE "
+                                + registrantMatcher.apply(registrant)
+                                + " GROUP BY id)"
+                                + whereStatement,
+                        table, // 1
+                        table + "." + id // 2
+                        );
+
+        return query;
     }
 
     /**

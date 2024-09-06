@@ -44,9 +44,12 @@ import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.util.Applications;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.MeasurementReportsStats;
 import com.android.internal.annotations.VisibleForTesting;
+
+import com.google.android.libraries.mobiledatadownload.internal.AndroidTimeSource;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -96,6 +99,7 @@ public class AggregateReportingJobHandler {
     private final AdServicesLogger mLogger;
 
     private final Context mContext;
+    private final AndroidTimeSource mTimeSource;
 
     AggregateReportingJobHandler(
             DatastoreManager datastoreManager,
@@ -104,7 +108,8 @@ public class AggregateReportingJobHandler {
             AdServicesLogger logger,
             ReportingStatus.ReportType reportType,
             ReportingStatus.UploadMethod uploadMethod,
-            Context context) {
+            Context context,
+            AndroidTimeSource timeSource) {
         mDatastoreManager = datastoreManager;
         mAggregateEncryptionKeyManager = aggregateEncryptionKeyManager;
         mFlags = flags;
@@ -112,6 +117,7 @@ public class AggregateReportingJobHandler {
         mReportType = reportType;
         mUploadMethod = uploadMethod;
         mContext = context;
+        mTimeSource = timeSource;
     }
 
     @VisibleForTesting
@@ -120,7 +126,8 @@ public class AggregateReportingJobHandler {
             AggregateEncryptionKeyManager aggregateEncryptionKeyManager,
             Flags flags,
             AdServicesLogger logger,
-            Context context) {
+            Context context,
+            AndroidTimeSource timeSource) {
         this(
                 datastoreManager,
                 aggregateEncryptionKeyManager,
@@ -128,7 +135,8 @@ public class AggregateReportingJobHandler {
                 logger,
                 ReportingStatus.ReportType.UNKNOWN,
                 ReportingStatus.UploadMethod.UNKNOWN,
-                context);
+                context,
+                timeSource);
     }
 
     /**
@@ -264,7 +272,7 @@ public class AggregateReportingJobHandler {
         AggregateReport aggregateReport = aggregateReportOpt.get();
         enrollmentId = aggregateReport.getEnrollmentId();
         reportingStatus.setReportingDelay(
-                System.currentTimeMillis() - aggregateReport.getScheduledReportTime());
+                mTimeSource.currentTimeMillis() - aggregateReport.getScheduledReportTime());
         reportingStatus.setSourceRegistrant(getAppPackageName(aggregateReport));
         if (mIsDebugInstance
                 && aggregateReport.getDebugReportStatus()
@@ -283,6 +291,20 @@ public class AggregateReportingJobHandler {
                     reportingStatus,
                     UploadStatus.FAILURE,
                     FailureStatus.REPORT_NOT_PENDING,
+                    enrollmentId);
+            return;
+        }
+
+        // Aggregate Report on device for more than minimum lifespan
+        if (mFlags.getMeasurementEnableMinReportLifespanForUninstall()
+                && aggregateReportCreatedBeforeLifespan(aggregateReport.getTriggerTime())
+                && (!anyPublisherAppInstalled(aggregateReport)
+                        || !anyTriggerDestinationAppInstalled(aggregateReport))) {
+            mDatastoreManager.runInTransaction(dao -> dao.deleteAggregateReport(aggregateReport));
+            setAndLogReportingStatus(
+                    reportingStatus,
+                    UploadStatus.FAILURE,
+                    FailureStatus.APP_UNINSTALLED_OR_OUTSIDE_WINDOW,
                     enrollmentId);
             return;
         }
@@ -424,6 +446,22 @@ public class AggregateReportingJobHandler {
                 appDestinations.get(0),
                 aggregateReport.getRegistrationOrigin(),
                 aggregateReport.getScheduledReportTime());
+    }
+
+    private boolean aggregateReportCreatedBeforeLifespan(long triggerTime) {
+        return triggerTime
+                        + TimeUnit.SECONDS.toMillis(
+                                mFlags.getMeasurementMinReportLifespanForUninstallSeconds())
+                < mTimeSource.currentTimeMillis();
+    }
+
+    private boolean anyTriggerDestinationAppInstalled(AggregateReport aggregateReport) {
+        return Applications.anyAppsInstalled(
+                mContext, List.of(aggregateReport.getAttributionDestination()));
+    }
+
+    private boolean anyPublisherAppInstalled(AggregateReport aggregateReport) {
+        return Applications.anyAppsInstalled(mContext, List.of(aggregateReport.getPublisher()));
     }
 
     /** Creates the JSON payload for the POST request from the AggregateReport. */

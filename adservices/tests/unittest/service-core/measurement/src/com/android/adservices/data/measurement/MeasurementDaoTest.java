@@ -100,6 +100,7 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultiset;
+import com.google.common.truth.Truth;
 
 import org.json.JSONException;
 import org.junit.After;
@@ -7389,6 +7390,489 @@ public class MeasurementDaoTest {
     }
 
     @Test
+    public void fetchMatchingSourcesUninstall_outsideReportLifetime_deleteSources()
+            throws JSONException {
+        // Setup
+        mFlags = mock(Flags.class);
+        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(true).when(mFlags).getMeasurementEnableMinReportLifespanForUninstall();
+        doReturn(TimeUnit.DAYS.toSeconds(1))
+                .when(mFlags)
+                .getMeasurementMinReportLifespanForUninstallSeconds();
+
+        long currentTime = System.currentTimeMillis();
+        long baseEventTime = currentTime - DAYS.toMillis(3);
+        long expiryTime = baseEventTime + DAYS.toMillis(30);
+
+        List<Source> sources =
+                Arrays.asList(
+                        SourceFixture.getMinimalValidSourceBuilder()
+                                .setEventId(new UnsignedLong(1L))
+                                .setId("source1")
+                                .setEventTime(baseEventTime)
+                                .setExpiryTime(expiryTime)
+                                .build());
+
+        // All trigger times more than 24 hours ago.
+        List<Trigger> triggers =
+                Arrays.asList(
+                        TriggerFixture.getValidTriggerBuilder()
+                                .setEventTriggers(TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS)
+                                .setId("trigger1")
+                                .setTriggerTime(
+                                        currentTime - DAYS.toMillis(1) - TimeUnit.HOURS.toMillis(1))
+                                .build(),
+                        TriggerFixture.getValidTriggerBuilder()
+                                .setEventTriggers(TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS)
+                                .setId("trigger2")
+                                .setTriggerTime(currentTime - DAYS.toMillis(2))
+                                .build(),
+                        TriggerFixture.getValidTriggerBuilder()
+                                .setEventTriggers(TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS)
+                                .setId("trigger3")
+                                .setTriggerTime(currentTime - DAYS.toMillis(3))
+                                .build());
+
+        EventReport report0 =
+                createEventReportForSourceAndTriggerForUninstall(
+                        "report0", sources.get(0), triggers.get(0));
+        EventReport report1 =
+                createEventReportForSourceAndTriggerForUninstall(
+                        "report1", sources.get(0), triggers.get(1));
+
+        AggregateReport aggregateReport0 =
+                createAggregateReportForSourceAndTrigger(
+                        "areport0", sources.get(0), triggers.get(2));
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).getWritableDatabase();
+        sources.forEach(source -> insertSource(source, source.getId()));
+        triggers.forEach(trigger -> AbstractDbIntegrationTest.insertToDb(trigger, db));
+
+        mDatastoreManager.runInTransaction(
+                (dao) -> {
+                    dao.insertEventReport(report0);
+                    dao.insertEventReport(report1);
+                    dao.insertAggregateReport(aggregateReport0);
+                });
+
+        // Execution
+        mDatastoreManager.runInTransaction(
+                dao -> {
+                    Pair<List<String>, List<String>> actualSources =
+                            dao.fetchMatchingSourcesUninstall(
+                                    SourceFixture.ValidSourceParams.REGISTRANT, currentTime);
+                    // Source is deleted
+                    Truth.assertThat(actualSources.first.size()).isEqualTo(1);
+                    Truth.assertThat(actualSources.second.size()).isEqualTo(0);
+                });
+    }
+
+    @Test
+    public void fetchMatchingSourcesUninstall_withinReportLifetime_ignoreSources()
+            throws JSONException {
+        // Setup
+        mFlags = mock(Flags.class);
+        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(true).when(mFlags).getMeasurementEnableMinReportLifespanForUninstall();
+        doReturn(TimeUnit.DAYS.toSeconds(1))
+                .when(mFlags)
+                .getMeasurementMinReportLifespanForUninstallSeconds();
+
+        long currentTime = System.currentTimeMillis();
+        long baseEventTime = currentTime - DAYS.toMillis(3);
+        long expiryTime = baseEventTime + DAYS.toMillis(30);
+
+        List<Source> sources =
+                Arrays.asList(
+                        SourceFixture.getMinimalValidSourceBuilder()
+                                .setEventId(new UnsignedLong(1L))
+                                .setId("source1")
+                                .setEventTime(baseEventTime)
+                                .setExpiryTime(expiryTime)
+                                .build());
+
+        // All trigger times more than 24 hours ago except trigger1.
+        List<Trigger> triggers =
+                Arrays.asList(
+                        TriggerFixture.getValidTriggerBuilder()
+                                .setEventTriggers(TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS)
+                                .setId("trigger1")
+                                .setTriggerTime(currentTime)
+                                .build(),
+                        TriggerFixture.getValidTriggerBuilder()
+                                .setEventTriggers(TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS)
+                                .setId("trigger2")
+                                .setTriggerTime(currentTime - DAYS.toMillis(3))
+                                .build(),
+                        TriggerFixture.getValidTriggerBuilder()
+                                .setEventTriggers(TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS)
+                                .setId("trigger3")
+                                .setTriggerTime(currentTime - DAYS.toMillis(3))
+                                .build());
+
+        EventReport report0 =
+                createEventReportForSourceAndTriggerForUninstall(
+                        "report0", sources.get(0), triggers.get(0));
+        EventReport report1 =
+                createEventReportForSourceAndTriggerForUninstall(
+                        "report1", sources.get(0), triggers.get(1));
+
+        AggregateReport aggregateReport0 =
+                createAggregateReportForSourceAndTrigger(
+                        "areport0", sources.get(0), triggers.get(2));
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).getWritableDatabase();
+        sources.forEach(source -> insertSource(source, source.getId()));
+        triggers.forEach(trigger -> AbstractDbIntegrationTest.insertToDb(trigger, db));
+
+        mDatastoreManager.runInTransaction(
+                (dao) -> {
+                    dao.insertEventReport(report0);
+                    dao.insertEventReport(report1);
+                    dao.insertAggregateReport(aggregateReport0);
+                });
+
+        // Execution
+        mDatastoreManager.runInTransaction(
+                dao -> {
+                    Pair<List<String>, List<String>> actualSources =
+                            dao.fetchMatchingSourcesUninstall(
+                                    SourceFixture.ValidSourceParams.REGISTRANT, currentTime);
+                    // Source is ignored
+                    Truth.assertThat(actualSources.first.size()).isEqualTo(0);
+                    Truth.assertThat(actualSources.second.size()).isEqualTo(1);
+                });
+    }
+
+    @Test
+    public void fetchMatchingSourcesUninstall_deleteAndIgnoreSources() throws JSONException {
+        // Setup
+        mFlags = mock(Flags.class);
+        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(true).when(mFlags).getMeasurementEnableMinReportLifespanForUninstall();
+        doReturn(TimeUnit.DAYS.toSeconds(1))
+                .when(mFlags)
+                .getMeasurementMinReportLifespanForUninstallSeconds();
+
+        long currentTime = System.currentTimeMillis();
+        long baseEventTime = currentTime - DAYS.toMillis(3);
+        long expiryTime = baseEventTime + DAYS.toMillis(30);
+
+        List<Source> sources =
+                Arrays.asList(
+                        SourceFixture.getMinimalValidSourceBuilder()
+                                .setEventId(new UnsignedLong(1L))
+                                .setId("source1")
+                                .setEventTime(baseEventTime)
+                                .setExpiryTime(expiryTime)
+                                .build(),
+                        SourceFixture.getMinimalValidSourceBuilder()
+                                .setEventId(new UnsignedLong(1L))
+                                .setId("source2")
+                                .setEventTime(baseEventTime)
+                                .setExpiryTime(expiryTime)
+                                .build(),
+                        SourceFixture.getMinimalValidSourceBuilder()
+                                .setEventId(new UnsignedLong(1L))
+                                .setId("source3")
+                                .setEventTime(baseEventTime)
+                                .setExpiryTime(expiryTime)
+                                .build());
+
+        // All trigger times more than 24 hours ago except trigger1.
+        List<Trigger> triggers =
+                Arrays.asList(
+                        TriggerFixture.getValidTriggerBuilder()
+                                .setEventTriggers(TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS)
+                                .setId("trigger1")
+                                .setTriggerTime(currentTime)
+                                .build(),
+                        TriggerFixture.getValidTriggerBuilder()
+                                .setEventTriggers(TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS)
+                                .setId("trigger2")
+                                .setTriggerTime(currentTime - DAYS.toMillis(3))
+                                .build(),
+                        TriggerFixture.getValidTriggerBuilder()
+                                .setEventTriggers(TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS)
+                                .setId("trigger3")
+                                .setTriggerTime(currentTime - DAYS.toMillis(2))
+                                .build());
+
+        EventReport report0 =
+                createEventReportForSourceAndTriggerForUninstall(
+                        "report0", sources.get(0), triggers.get(0));
+        EventReport report1 =
+                createEventReportForSourceAndTriggerForUninstall(
+                        "report1", sources.get(1), triggers.get(1));
+
+        AggregateReport aggregateReport0 =
+                createAggregateReportForSourceAndTrigger(
+                        "areport0", sources.get(2), triggers.get(2));
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).getWritableDatabase();
+        sources.forEach(source -> insertSource(source, source.getId()));
+        triggers.forEach(trigger -> AbstractDbIntegrationTest.insertToDb(trigger, db));
+
+        mDatastoreManager.runInTransaction(
+                (dao) -> {
+                    dao.insertEventReport(report0);
+                    dao.insertEventReport(report1);
+                    dao.insertAggregateReport(aggregateReport0);
+                });
+
+        // Execution
+        mDatastoreManager.runInTransaction(
+                dao -> {
+                    Pair<List<String>, List<String>> actualSources =
+                            dao.fetchMatchingSourcesUninstall(
+                                    SourceFixture.ValidSourceParams.REGISTRANT, currentTime);
+                    // Source is ignored
+                    Truth.assertThat(actualSources.first.size()).isEqualTo(2);
+                    Truth.assertThat(actualSources.second.size()).isEqualTo(1);
+                });
+    }
+
+    @Test
+    public void fetchMatchingTriggersUninstall_outsideReportLifetime_deleteTriggers()
+            throws JSONException {
+        // Setup
+        mFlags = mock(Flags.class);
+        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(true).when(mFlags).getMeasurementEnableMinReportLifespanForUninstall();
+        doReturn(TimeUnit.DAYS.toSeconds(1))
+                .when(mFlags)
+                .getMeasurementMinReportLifespanForUninstallSeconds();
+
+        long currentTime = System.currentTimeMillis();
+        long baseEventTime = currentTime - DAYS.toMillis(3);
+        long expiryTime = baseEventTime + DAYS.toMillis(30);
+
+        List<Source> sources =
+                Arrays.asList(
+                        SourceFixture.getMinimalValidSourceBuilder()
+                                .setEventId(new UnsignedLong(1L))
+                                .setId("source1")
+                                .setEventTime(baseEventTime)
+                                .setExpiryTime(expiryTime)
+                                .build());
+
+        List<Trigger> triggers =
+                Arrays.asList(
+                        TriggerFixture.getValidTriggerBuilder()
+                                .setEventTriggers(TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS)
+                                .setId("trigger1")
+                                .setTriggerTime(
+                                        currentTime - DAYS.toMillis(1) - TimeUnit.HOURS.toMillis(1))
+                                .build(),
+                        TriggerFixture.getValidTriggerBuilder()
+                                .setEventTriggers(TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS)
+                                .setId("trigger2")
+                                .setTriggerTime(currentTime - DAYS.toMillis(2))
+                                .build(),
+                        TriggerFixture.getValidTriggerBuilder()
+                                .setEventTriggers(TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS)
+                                .setId("trigger3")
+                                .setTriggerTime(currentTime - DAYS.toMillis(3))
+                                .build());
+
+        EventReport report0 =
+                createEventReportForSourceAndTriggerForUninstall(
+                        "report0", sources.get(0), triggers.get(0));
+        EventReport report1 =
+                createEventReportForSourceAndTriggerForUninstall(
+                        "report1", sources.get(0), triggers.get(1));
+
+        AggregateReport aggregateReport0 =
+                createAggregateReportForSourceAndTrigger(
+                        "areport0", sources.get(0), triggers.get(2));
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).getWritableDatabase();
+        sources.forEach(source -> insertSource(source, source.getId()));
+        triggers.forEach(trigger -> AbstractDbIntegrationTest.insertToDb(trigger, db));
+
+        mDatastoreManager.runInTransaction(
+                (dao) -> {
+                    dao.insertEventReport(report0);
+                    dao.insertEventReport(report1);
+                    dao.insertAggregateReport(aggregateReport0);
+                });
+
+        // Execution
+        mDatastoreManager.runInTransaction(
+                dao -> {
+                    Pair<List<String>, List<String>> actualTriggers =
+                            dao.fetchMatchingTriggersUninstall(
+                                    TriggerFixture.ValidTriggerParams.REGISTRANT, currentTime);
+                    // Triggers are deleted
+                    Truth.assertThat(actualTriggers.first.size()).isEqualTo(3);
+                    Truth.assertThat(actualTriggers.second.size()).isEqualTo(0);
+                });
+    }
+
+    @Test
+    public void fetchMatchingTriggersUninstall_withinReportLifetime_ignoreTriggers()
+            throws JSONException {
+        // Setup
+        mFlags = mock(Flags.class);
+        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(true).when(mFlags).getMeasurementEnableMinReportLifespanForUninstall();
+        doReturn(TimeUnit.DAYS.toSeconds(1))
+                .when(mFlags)
+                .getMeasurementMinReportLifespanForUninstallSeconds();
+
+        long currentTime = System.currentTimeMillis();
+        long baseEventTime = currentTime - DAYS.toMillis(3);
+        long expiryTime = baseEventTime + DAYS.toMillis(30);
+
+        List<Source> sources =
+                Arrays.asList(
+                        SourceFixture.getMinimalValidSourceBuilder()
+                                .setEventId(new UnsignedLong(1L))
+                                .setId("source1")
+                                .setEventTime(baseEventTime)
+                                .setExpiryTime(expiryTime)
+                                .build());
+
+        List<Trigger> triggers =
+                Arrays.asList(
+                        TriggerFixture.getValidTriggerBuilder()
+                                .setEventTriggers(TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS)
+                                .setId("trigger1")
+                                .setTriggerTime(currentTime - TimeUnit.HOURS.toMillis(23))
+                                .build(),
+                        TriggerFixture.getValidTriggerBuilder()
+                                .setEventTriggers(TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS)
+                                .setId("trigger2")
+                                .setTriggerTime(currentTime - TimeUnit.HOURS.toMillis(1))
+                                .build(),
+                        TriggerFixture.getValidTriggerBuilder()
+                                .setEventTriggers(TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS)
+                                .setId("trigger3")
+                                .setTriggerTime(currentTime - TimeUnit.HOURS.toMillis(12))
+                                .build());
+
+        EventReport report0 =
+                createEventReportForSourceAndTriggerForUninstall(
+                        "report0", sources.get(0), triggers.get(0));
+        EventReport report1 =
+                createEventReportForSourceAndTriggerForUninstall(
+                        "report1", sources.get(0), triggers.get(1));
+
+        AggregateReport aggregateReport0 =
+                createAggregateReportForSourceAndTrigger(
+                        "areport0", sources.get(0), triggers.get(2));
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).getWritableDatabase();
+        sources.forEach(source -> insertSource(source, source.getId()));
+        triggers.forEach(trigger -> AbstractDbIntegrationTest.insertToDb(trigger, db));
+
+        mDatastoreManager.runInTransaction(
+                (dao) -> {
+                    dao.insertEventReport(report0);
+                    dao.insertEventReport(report1);
+                    dao.insertAggregateReport(aggregateReport0);
+                });
+
+        // Execution
+        mDatastoreManager.runInTransaction(
+                dao -> {
+                    Pair<List<String>, List<String>> actualTriggers =
+                            dao.fetchMatchingTriggersUninstall(
+                                    TriggerFixture.ValidTriggerParams.REGISTRANT, currentTime);
+                    // Triggers are ignored
+                    Truth.assertThat(actualTriggers.first.size()).isEqualTo(0);
+                    Truth.assertThat(actualTriggers.second.size()).isEqualTo(3);
+                });
+    }
+
+    @Test
+    public void fetchMatchingTriggersUninstall_deleteAndIgnoreTriggers() throws JSONException {
+        // Setup
+        mFlags = mock(Flags.class);
+        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(true).when(mFlags).getMeasurementEnableMinReportLifespanForUninstall();
+        doReturn(TimeUnit.DAYS.toSeconds(1))
+                .when(mFlags)
+                .getMeasurementMinReportLifespanForUninstallSeconds();
+
+        long currentTime = System.currentTimeMillis();
+        long baseEventTime = currentTime - DAYS.toMillis(3);
+        long expiryTime = baseEventTime + DAYS.toMillis(30);
+
+        List<Source> sources =
+                Arrays.asList(
+                        SourceFixture.getMinimalValidSourceBuilder()
+                                .setEventId(new UnsignedLong(1L))
+                                .setId("source1")
+                                .setEventTime(baseEventTime)
+                                .setExpiryTime(expiryTime)
+                                .build(),
+                        SourceFixture.getMinimalValidSourceBuilder()
+                                .setEventId(new UnsignedLong(1L))
+                                .setId("source2")
+                                .setEventTime(baseEventTime)
+                                .setExpiryTime(expiryTime)
+                                .build(),
+                        SourceFixture.getMinimalValidSourceBuilder()
+                                .setEventId(new UnsignedLong(1L))
+                                .setId("source3")
+                                .setEventTime(baseEventTime)
+                                .setExpiryTime(expiryTime)
+                                .build());
+
+        List<Trigger> triggers =
+                Arrays.asList(
+                        TriggerFixture.getValidTriggerBuilder()
+                                .setEventTriggers(TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS)
+                                .setId("trigger1")
+                                .setTriggerTime(currentTime)
+                                .build(),
+                        TriggerFixture.getValidTriggerBuilder()
+                                .setEventTriggers(TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS)
+                                .setId("trigger2")
+                                .setTriggerTime(currentTime - DAYS.toMillis(2))
+                                .build(),
+                        TriggerFixture.getValidTriggerBuilder()
+                                .setEventTriggers(TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS)
+                                .setId("trigger3")
+                                .setTriggerTime(currentTime - DAYS.toMillis(3))
+                                .build());
+
+        EventReport report0 =
+                createEventReportForSourceAndTriggerForUninstall(
+                        "report0", sources.get(0), triggers.get(0));
+        EventReport report1 =
+                createEventReportForSourceAndTriggerForUninstall(
+                        "report1", sources.get(1), triggers.get(1));
+
+        AggregateReport aggregateReport0 =
+                createAggregateReportForSourceAndTrigger(
+                        "areport0", sources.get(2), triggers.get(2));
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).getWritableDatabase();
+        sources.forEach(source -> insertSource(source, source.getId()));
+        triggers.forEach(trigger -> AbstractDbIntegrationTest.insertToDb(trigger, db));
+
+        mDatastoreManager.runInTransaction(
+                (dao) -> {
+                    dao.insertEventReport(report0);
+                    dao.insertEventReport(report1);
+                    dao.insertAggregateReport(aggregateReport0);
+                });
+
+        // Execution
+        mDatastoreManager.runInTransaction(
+                dao -> {
+                    Pair<List<String>, List<String>> actualTriggers =
+                            dao.fetchMatchingTriggersUninstall(
+                                    TriggerFixture.ValidTriggerParams.REGISTRANT, currentTime);
+                    // Triggers are deleted
+                    Truth.assertThat(actualTriggers.first.size()).isEqualTo(2);
+                    Truth.assertThat(actualTriggers.second.size()).isEqualTo(1);
+                });
+    }
+
+    @Test
     public void deletePendingFakeEventReportsForSources_success() {
         // Setup
         long baseTime = SOURCE_EVENT_TIME;
@@ -12550,6 +13034,7 @@ public class MeasurementDaoTest {
                 .setId(reportId)
                 .setSourceId(source.getId())
                 .setTriggerId(trigger.getId())
+                .setTriggerTime(trigger.getTriggerTime())
                 .build();
     }
 
@@ -12569,6 +13054,28 @@ public class MeasurementDaoTest {
                         source.getAttributionDestinations(trigger.getDestinationType()))
                 .setId(reportId)
                 .setSourceEventId(source.getEventId())
+                .setSourceId(source.getId())
+                .setTriggerId(trigger.getId())
+                .build();
+    }
+
+    private EventReport createEventReportForSourceAndTriggerForUninstall(
+            String reportId, Source source, Trigger trigger) throws JSONException {
+        EventTrigger eventTrigger =
+                trigger.parseEventTriggers(FakeFlagsFactory.getFlagsForTest()).get(0);
+        return new EventReport.Builder()
+                .setTriggerTime(trigger.getTriggerTime())
+                .setSourceEventId(source.getEventId())
+                .setEnrollmentId(source.getEnrollmentId())
+                .setStatus(EventReport.Status.PENDING)
+                .setSourceType(source.getSourceType())
+                .setDebugReportStatus(EventReport.DebugReportStatus.NONE)
+                .setRegistrationOrigin(trigger.getRegistrationOrigin())
+                .setTriggerPriority(eventTrigger.getTriggerPriority())
+                .setTriggerData(eventTrigger.getTriggerData())
+                .setId(reportId)
+                .setAttributionDestinations(
+                        source.getAttributionDestinations(trigger.getDestinationType()))
                 .setSourceId(source.getId())
                 .setTriggerId(trigger.getId())
                 .build();

@@ -54,6 +54,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_PER_D
 import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW;
 import static com.android.adservices.service.Flags.MEASUREMENT_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_REINSTALL_REATTRIBUTION_WINDOW_SECONDS;
+import static com.android.adservices.service.Flags.MEASUREMENT_MIN_REPORT_LIFESPAN_FOR_UNINSTALL_SECONDS;
 import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_PERSISTED;
 import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
 import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
@@ -534,6 +535,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetMeasurementEnableMinReportLifespanForUninstall() {
+        testFeatureFlag(
+                "MEASUREMENT_ENABLE_MIN_REPORT_LIFESPAN_FOR_UNINSTALL",
+                Flags::getMeasurementEnableMinReportLifespanForUninstall);
+    }
+
+    @Test
     public void testGetMeasurementEnableDestinationLimitPriority() {
         testFeatureFlag(
                 "MEASUREMENT_ENABLE_DESTINATION_LIMIT_PRIORITY",
@@ -867,6 +875,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getMeasurementMaxReinstallReattributionWindowSeconds",
                 MEASUREMENT_MAX_REINSTALL_REATTRIBUTION_WINDOW_SECONDS,
                 Flags::getMeasurementMaxReinstallReattributionWindowSeconds);
+    }
+
+    @Test
+    public void testGetMeasurementMinReportLifespanForUninstallSeconds() {
+        testFlag(
+                "getMeasurementMinReportLifespanForUninstallSeconds",
+                MEASUREMENT_MIN_REPORT_LIFESPAN_FOR_UNINSTALL_SECONDS,
+                Flags::getMeasurementMinReportLifespanForUninstallSeconds);
     }
 
     @Test

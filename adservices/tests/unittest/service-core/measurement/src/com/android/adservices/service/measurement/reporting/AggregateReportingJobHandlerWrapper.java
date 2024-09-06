@@ -34,6 +34,8 @@ import com.android.adservices.service.measurement.aggregation.AggregateEncryptio
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.stats.AdServicesLogger;
 
+import com.google.android.libraries.mobiledatadownload.internal.AndroidTimeSource;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mockito.ArgumentCaptor;
@@ -42,6 +44,7 @@ import org.mockito.Mockito;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A wrapper class to expose a constructor for AggregateReportingJobHandler in testing.
@@ -69,6 +72,9 @@ public class AggregateReportingJobHandlerWrapper {
                             return keys;
                         });
 
+        // Mock TimeSource
+        AndroidTimeSource mTimeSource = Mockito.spy(new AndroidTimeSource());
+
         // Set up aggregate reporting job handler spy
         AggregateReportingJobHandler aggregateReportingJobHandler =
                 Mockito.spy(
@@ -77,11 +83,16 @@ public class AggregateReportingJobHandlerWrapper {
                                         mockEncryptionManager,
                                         flags,
                                         mockLogger,
-                                        ApplicationProvider.getApplicationContext())
+                                        ApplicationProvider.getApplicationContext(),
+                                        mTimeSource)
                                 .setIsDebugInstance(isDebugInstance));
         Mockito.doReturn(200)
                 .when(aggregateReportingJobHandler)
                 .makeHttpPostRequest(any(), any(), any(), anyString());
+
+        Mockito.doReturn(windowEndTime + TimeUnit.HOURS.toMillis(2))
+                .when(mTimeSource)
+                .currentTimeMillis();
 
         // Perform aggregate reports and capture arguments
         aggregateReportingJobHandler.performScheduledPendingReportsInWindow(

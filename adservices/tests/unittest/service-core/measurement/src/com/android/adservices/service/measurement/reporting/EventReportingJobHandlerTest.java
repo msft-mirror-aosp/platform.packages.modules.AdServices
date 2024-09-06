@@ -29,11 +29,14 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.util.Pair;
 
@@ -61,6 +64,9 @@ import com.android.adservices.service.stats.MeasurementReportsStats;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
+import com.google.android.libraries.mobiledatadownload.internal.AndroidTimeSource;
+import com.google.common.truth.Truth;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
@@ -76,6 +82,7 @@ import org.mockito.quality.Strictness;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -99,7 +106,7 @@ public class EventReportingJobHandlerTest {
     private static final String SOURCE_ID = "source-id";
     private static final String TRIGGER_ID = "trigger-id";
     private static final String EVENT_REPORT_ID = "eventReportId";
-    protected static final Context sContext = ApplicationProvider.getApplicationContext();
+    protected static Context sContext;
     DatastoreManager mDatastoreManager;
 
     @Mock IMeasurementDao mMeasurementDao;
@@ -111,6 +118,8 @@ public class EventReportingJobHandlerTest {
     @Mock Flags mFlags;
     @Mock AdServicesLogger mLogger;
     @Mock AdServicesErrorLogger mErrorLogger;
+    @Mock private PackageManager mPackageManager;
+    AndroidTimeSource mTimeSource;
 
     EventReportingJobHandler mEventReportingJobHandler;
     EventReportingJobHandler mSpyEventReportingJobHandler;
@@ -148,6 +157,7 @@ public class EventReportingJobHandlerTest {
     @Before
     public void setUp() throws DatastoreException {
         mMockFlags = mock(Flags.class);
+        sContext = spy(ApplicationProvider.getApplicationContext());
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         when(mMockFlags.getMeasurementEnableAppPackageNameLogging()).thenReturn(true);
         mDatastoreManager = new FakeDatasoreManager();
@@ -157,6 +167,9 @@ public class EventReportingJobHandlerTest {
         doReturn(false).when(mFlags).getMeasurementEnableReportingJobsThrowUnaccountedException();
         ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
         ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
+
+        mTimeSource = new AndroidTimeSource();
+
         mEventReportingJobHandler =
                 new EventReportingJobHandler(
                         mDatastoreManager,
@@ -164,7 +177,8 @@ public class EventReportingJobHandlerTest {
                         mLogger,
                         ReportingStatus.ReportType.EVENT,
                         ReportingStatus.UploadMethod.UNKNOWN,
-                        sContext);
+                        sContext,
+                        mTimeSource);
         mSpyEventReportingJobHandler = Mockito.spy(mEventReportingJobHandler);
         mSpyDebugEventReportingJobHandler =
                 Mockito.spy(
@@ -174,7 +188,8 @@ public class EventReportingJobHandlerTest {
                                         mLogger,
                                         ReportingStatus.ReportType.EVENT,
                                         ReportingStatus.UploadMethod.UNKNOWN,
-                                        sContext)
+                                        sContext,
+                                        mTimeSource)
                                 .setIsDebugInstance(true));
     }
 
@@ -449,6 +464,167 @@ public class EventReportingJobHandlerTest {
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
         verify(mMeasurementDao, never()).insertOrUpdateAppReportHistory(any(), any(), anyLong());
+    }
+
+    @Test
+    public void testSendReportFailed_uninstallEnabled_deleteReport()
+            throws DatastoreException, IOException, JSONException {
+        when(mFlags.getMeasurementEnableMinReportLifespanForUninstall()).thenReturn(true);
+        when(mFlags.getMeasurementMinReportLifespanForUninstallSeconds())
+                .thenReturn(TimeUnit.DAYS.toSeconds(1));
+
+        long currentTime = System.currentTimeMillis();
+
+        EventReport eventReport =
+                new EventReport.Builder()
+                        .setId("eventReportId")
+                        .setSourceEventId(new UnsignedLong(1234L))
+                        .setAttributionDestinations(ATTRIBUTION_DESTINATIONS)
+                        .setStatus(EventReport.Status.PENDING)
+                        .setSourceDebugKey(SOURCE_DEBUG_KEY)
+                        .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
+                        .setRegistrationOrigin(REPORTING_ORIGIN)
+                        .setTriggerTime(currentTime - TimeUnit.HOURS.toMillis(25))
+                        .build();
+
+        when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
+
+        doNothing()
+                .when(mMeasurementDao)
+                .markAggregateReportStatus(eventReport.getId(), AggregateReport.Status.DELIVERED);
+
+        ReportingStatus status = new ReportingStatus();
+
+        mSpyEventReportingJobHandler.performReport(eventReport.getId(), status);
+        Truth.assertThat(status.getUploadStatus()).isEqualTo(ReportingStatus.UploadStatus.FAILURE);
+        Truth.assertThat(status.getFailureStatus())
+                .isEqualTo(ReportingStatus.FailureStatus.APP_UNINSTALLED_OR_OUTSIDE_WINDOW);
+        verify(mMeasurementDao, times(1)).deleteEventReport(eventReport);
+    }
+
+    @Test
+    public void testSendReportSuccess_uninstallEnabled_sendReport()
+            throws DatastoreException, IOException, JSONException {
+        when(mFlags.getMeasurementEnableMinReportLifespanForUninstall()).thenReturn(true);
+        when(mFlags.getMeasurementMinReportLifespanForUninstallSeconds())
+                .thenReturn(TimeUnit.DAYS.toSeconds(1));
+
+        long currentTime = System.currentTimeMillis();
+
+        EventReport eventReport =
+                new EventReport.Builder()
+                        .setId("eventReportId")
+                        .setSourceEventId(new UnsignedLong(1234L))
+                        .setAttributionDestinations(ATTRIBUTION_DESTINATIONS)
+                        .setStatus(EventReport.Status.PENDING)
+                        .setSourceDebugKey(SOURCE_DEBUG_KEY)
+                        .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
+                        .setRegistrationOrigin(REPORTING_ORIGIN)
+                        .setTriggerTime(currentTime - TimeUnit.HOURS.toMillis(23))
+                        .build();
+
+        JSONObject eventReportPayload =
+                new EventReportPayload.Builder()
+                        .setReportId(eventReport.getId())
+                        .setSourceEventId(eventReport.getSourceEventId())
+                        .setAttributionDestination(eventReport.getAttributionDestinations())
+                        .build()
+                        .toJson();
+
+        when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
+
+        doReturn(HttpURLConnection.HTTP_OK)
+                .when(mSpyEventReportingJobHandler)
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(null));
+        doReturn(eventReportPayload)
+                .when(mSpyEventReportingJobHandler)
+                .createReportJsonPayload(Mockito.any());
+
+        doNothing()
+                .when(mMeasurementDao)
+                .markAggregateReportStatus(eventReport.getId(), AggregateReport.Status.DELIVERED);
+        ReportingStatus status = new ReportingStatus();
+
+        mSpyEventReportingJobHandler.performReport(eventReport.getId(), status);
+
+        Truth.assertThat(status.getUploadStatus()).isEqualTo(ReportingStatus.UploadStatus.SUCCESS);
+        verify(mMeasurementDao, times(0)).deleteEventReport(eventReport);
+    }
+
+    @Test
+    public void testSendReportSuccess_uninstallEnabled_hasApps_sendReport()
+            throws DatastoreException,
+                    IOException,
+                    JSONException,
+                    PackageManager.NameNotFoundException {
+        when(mFlags.getMeasurementEnableMinReportLifespanForUninstall()).thenReturn(true);
+        when(mFlags.getMeasurementMinReportLifespanForUninstallSeconds())
+                .thenReturn(TimeUnit.DAYS.toSeconds(1));
+
+        long currentTime = System.currentTimeMillis();
+        Uri publisher = Uri.parse("https://publisher.test");
+
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId(SOURCE_ID)
+                        .setCoarseEventReportDestinations(true)
+                        .setPublisher(publisher)
+                        .setRegistrationOrigin(REPORTING_ORIGIN)
+                        .build();
+
+        EventReport eventReport =
+                new EventReport.Builder()
+                        .setId("eventReportId")
+                        .setSourceEventId(new UnsignedLong(1234L))
+                        .setAttributionDestinations(ATTRIBUTION_DESTINATIONS)
+                        .setStatus(EventReport.Status.PENDING)
+                        .setSourceDebugKey(SOURCE_DEBUG_KEY)
+                        .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
+                        .setRegistrationOrigin(REPORTING_ORIGIN)
+                        .setSourceId(SOURCE_ID)
+                        .setTriggerTime(currentTime - TimeUnit.HOURS.toMillis(25))
+                        .build();
+
+        JSONObject eventReportPayload =
+                new EventReportPayload.Builder()
+                        .setReportId(eventReport.getId())
+                        .setSourceEventId(eventReport.getSourceEventId())
+                        .setAttributionDestination(eventReport.getAttributionDestinations())
+                        .build()
+                        .toJson();
+
+        when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
+
+        ApplicationInfo applicationInfo1 = new ApplicationInfo();
+        applicationInfo1.packageName = ATTRIBUTION_DESTINATIONS.get(0).getHost();
+        ApplicationInfo applicationInfo2 = new ApplicationInfo();
+        applicationInfo2.packageName = publisher.getHost();
+
+        when(sContext.getPackageManager()).thenReturn(mPackageManager);
+
+        when(mMeasurementDao.getSource(SOURCE_ID)).thenReturn(source);
+
+        when(mPackageManager.getApplicationInfo(ATTRIBUTION_DESTINATIONS.get(0).getHost(), 0))
+                .thenReturn(applicationInfo1);
+        when(mPackageManager.getApplicationInfo(publisher.getHost(), 0))
+                .thenReturn(applicationInfo2);
+
+        doReturn(HttpURLConnection.HTTP_OK)
+                .when(mSpyEventReportingJobHandler)
+                .makeHttpPostRequest(eq(REPORTING_ORIGIN), any(), eq(null));
+        doReturn(eventReportPayload)
+                .when(mSpyEventReportingJobHandler)
+                .createReportJsonPayload(Mockito.any());
+
+        doNothing()
+                .when(mMeasurementDao)
+                .markAggregateReportStatus(eventReport.getId(), AggregateReport.Status.DELIVERED);
+        ReportingStatus status = new ReportingStatus();
+
+        mSpyEventReportingJobHandler.performReport(eventReport.getId(), status);
+
+        Truth.assertThat(status.getUploadStatus()).isEqualTo(ReportingStatus.UploadStatus.SUCCESS);
+        verify(mMeasurementDao, times(0)).deleteEventReport(eventReport);
     }
 
     @Test

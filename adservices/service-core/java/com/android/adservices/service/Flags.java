@@ -4910,6 +4910,21 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_ENABLE_REINSTALL_REATTRIBUTION;
     }
 
+    @ConfigFlag
+    long MEASUREMENT_MIN_REPORT_LIFESPAN_FOR_UNINSTALL_SECONDS = TimeUnit.DAYS.toSeconds(1);
+
+    /** Minimum time a report can stay on the device after app uninstall. */
+    default long getMeasurementMinReportLifespanForUninstallSeconds() {
+        return MEASUREMENT_MIN_REPORT_LIFESPAN_FOR_UNINSTALL_SECONDS;
+    }
+
+    @FeatureFlag boolean MEASUREMENT_ENABLE_MIN_REPORT_LIFESPAN_FOR_UNINSTALL = false;
+
+    /** Returns whether to enable uninstall report feature. */
+    default boolean getMeasurementEnableMinReportLifespanForUninstall() {
+        return MEASUREMENT_ENABLE_MIN_REPORT_LIFESPAN_FOR_UNINSTALL;
+    }
+
     /** Flag to enable context id for triggers */
     boolean MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID = false;
 
