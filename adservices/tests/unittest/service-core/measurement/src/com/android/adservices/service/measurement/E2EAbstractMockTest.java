@@ -75,6 +75,7 @@ import com.android.adservices.service.measurement.registration.AsyncRegistration
 import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueRunner;
 import com.android.adservices.service.measurement.registration.AsyncSourceFetcher;
 import com.android.adservices.service.measurement.registration.AsyncTriggerFetcher;
+import com.android.adservices.service.measurement.reporting.AggregateDebugReportApi;
 import com.android.adservices.service.measurement.reporting.AggregateReportingJobHandlerWrapper;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.DebugReportingJobHandlerWrapper;
@@ -82,6 +83,8 @@ import com.android.adservices.service.measurement.reporting.EventReportWindowCal
 import com.android.adservices.service.measurement.reporting.EventReportingJobHandlerWrapper;
 import com.android.adservices.service.stats.NoOpLoggerImpl;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
+
+import com.google.android.libraries.mobiledatadownload.internal.AndroidTimeSource;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -208,7 +211,8 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
                         ApplicationProvider.getApplicationContext(),
                         mFlags,
                         new EventReportWindowCalcDelegate(mFlags),
-                        new SourceNoiseHandler(mFlags));
+                        new SourceNoiseHandler(mFlags),
+                        new AggregateDebugReportApi(mFlags, new AndroidTimeSource()));
 
         mImpressionNoiseUtil = spy(new ImpressionNoiseUtil());
 

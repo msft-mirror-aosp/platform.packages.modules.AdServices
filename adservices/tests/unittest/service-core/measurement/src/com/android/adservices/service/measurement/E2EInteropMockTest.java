@@ -269,9 +269,7 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                                     return phFlagsMap;
                                 })
                         .get());
-        mAttributionHelper =
-                TestObjectProvider.getAttributionJobHandler(
-                        mDatastoreManager, mFlags, mErrorLogger);
+        mAttributionHelper = TestObjectProvider.getAttributionJobHandler(mDatastoreManager, mFlags);
         mMeasurementImpl =
                 TestObjectProvider.getMeasurementImpl(
                         mDatastoreManager,

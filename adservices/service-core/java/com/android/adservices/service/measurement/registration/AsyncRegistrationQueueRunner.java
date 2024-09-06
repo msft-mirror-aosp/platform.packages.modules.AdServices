@@ -322,25 +322,25 @@ public class AsyncRegistrationQueueRunner {
                     && Applications.anyAppsInstalled(mContext, source.getAppDestinations())) {
                 source.setStatus(Source.Status.MARKED_TO_DELETE);
             }
+            DebugReportApi.Type adrType = DebugReportApi.Type.SOURCE_SUCCESS;
             Map<String, String> additionalDebugReportParams = null;
             if (mFlags.getMeasurementEnableSourceDestinationLimitPriority()
                     && InsertSourcePermission.ALLOWED_FIFO_SUCCESS.equals(sourceAllowedToInsert)) {
                 int limit = mFlags.getMeasurementMaxDistinctDestinationsInActiveSource();
+                adrType = DebugReportApi.Type.SOURCE_DESTINATION_LIMIT_REPLACED;
                 additionalDebugReportParams =
                         Map.of(DebugReportApi.Body.SOURCE_DESTINATION_LIMIT, String.valueOf(limit));
             }
             insertSourceFromTransaction(source, fakeReports, dao, additionalDebugReportParams);
             scheduleSourceSuccessOrNoisedDebugReport(
-                    mDebugReportApi, source, dao, additionalDebugReportParams);
+                    source, dao, additionalDebugReportParams, adrType);
         }
     }
 
     @VisibleForTesting
-    static boolean areValidSourcePrivacyParameters(
-            Source source,
-            DebugReportApi debugReportApi,
-            IMeasurementDao dao,
-            Flags flags) throws DatastoreException {
+    boolean areValidSourcePrivacyParameters(
+            Source source, DebugReportApi debugReportApi, IMeasurementDao dao, Flags flags)
+            throws DatastoreException {
         try {
             if (!source.validateAndSetNumReportStates(flags)
                     || !source.hasValidInformationGain(flags)) {
@@ -430,7 +430,7 @@ public class AsyncRegistrationQueueRunner {
                 dao.insertTrigger(trigger);
             } catch (DatastoreException e) {
                 mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
-                        trigger, dao, DebugReportApi.Type.TRIGGER_UNKNOWN_ERROR.getValue());
+                        trigger, dao, DebugReportApi.Type.TRIGGER_UNKNOWN_ERROR);
                 LoggerFactory.getMeasurementLogger()
                         .e(e, "Insert trigger to DB error, generate trigger-unknown-error report");
                 throw new DatastoreException(
@@ -603,7 +603,10 @@ public class AsyncRegistrationQueueRunner {
             // Source won't be inserted, yet we produce a success to debug report to avoid side
             // channel leakage of cross site data
             scheduleSourceSuccessOrNoisedDebugReport(
-                    mDebugReportApi, source, dao, additionalDebugReportParams);
+                    source,
+                    dao,
+                    additionalDebugReportParams,
+                    DebugReportApi.Type.SOURCE_DESTINATION_GLOBAL_RATE_LIMIT);
             return InsertSourcePermission.NOT_ALLOWED;
         }
 
@@ -618,7 +621,10 @@ public class AsyncRegistrationQueueRunner {
         if (numOfOriginExcludingRegistrationOrigin
                 >= mFlags.getMeasurementMaxReportingOriginsPerSourceReportingSitePerWindow()) {
             scheduleSourceSuccessOrNoisedDebugReport(
-                    mDebugReportApi, source, dao, additionalDebugReportParams);
+                    source,
+                    dao,
+                    additionalDebugReportParams,
+                    DebugReportApi.Type.SOURCE_REPORTING_ORIGIN_PER_SITE_LIMIT);
             LoggerFactory.getMeasurementLogger()
                     .d(
                             "insertSources: Max limit of 1 reporting origin for publisher - %s and"
@@ -774,7 +780,7 @@ public class AsyncRegistrationQueueRunner {
         return false;
     }
 
-    private static boolean isDestinationOutOfBounds(
+    private boolean isDestinationOutOfBounds(
             DebugReportApi debugReportApi,
             Source source,
             Uri publisher,
@@ -838,7 +844,8 @@ public class AsyncRegistrationQueueRunner {
                         requestTime);
         if (distinctReportingOriginCount
                 >= flags.getMeasurementMaxDistinctRepOrigPerPublXDestInSource()) {
-            scheduleSourceSuccessOrNoisedDebugReport(debugReportApi, source, dao, null);
+            scheduleSourceSuccessOrNoisedDebugReport(
+                    source, dao, null, DebugReportApi.Type.SOURCE_SUCCESS);
             LoggerFactory.getMeasurementLogger()
                     .d(
                             "AsyncRegistrationQueueRunner: "
@@ -905,7 +912,7 @@ public class AsyncRegistrationQueueRunner {
             if (destinationCount + webDestinations.size() > limit) {
                 LoggerFactory.getMeasurementLogger()
                         .d(
-                                "AsyncRegistrationQueueRunner: App destination global rate limit "
+                                "AsyncRegistrationQueueRunner: Web destination global rate limit "
                                         + "exceeded");
                 return true;
             }
@@ -1152,16 +1159,16 @@ public class AsyncRegistrationQueueRunner {
         return request.getRegistrant();
     }
 
-    private static void scheduleSourceSuccessOrNoisedDebugReport(
-            DebugReportApi debugReportApi,
+    private void scheduleSourceSuccessOrNoisedDebugReport(
             Source source,
             IMeasurementDao dao,
-            Map<String, String> additionalDebugReportParams) {
+            Map<String, String> additionalDebugReportParams,
+            DebugReportApi.Type adrReportType) {
         if (source.getAttributionMode() == Source.AttributionMode.TRUTHFULLY) {
-            debugReportApi.scheduleSourceSuccessDebugReport(
-                    source, dao, additionalDebugReportParams);
+            mDebugReportApi.scheduleSourceSuccessDebugReport(
+                    source, dao, additionalDebugReportParams, adrReportType);
         } else {
-            debugReportApi.scheduleSourceNoisedDebugReport(
+            mDebugReportApi.scheduleSourceNoisedDebugReport(
                     source, dao, additionalDebugReportParams);
         }
     }
