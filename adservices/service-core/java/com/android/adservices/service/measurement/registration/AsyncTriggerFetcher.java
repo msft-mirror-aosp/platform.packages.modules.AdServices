@@ -644,7 +644,7 @@ public class AsyncTriggerFetcher {
                             TriggerHeaderContract.ATTRIBUTION_SCOPES,
                             Integer.MAX_VALUE,
                             Integer.MAX_VALUE);
-            if (attributionScopes.isEmpty() || attributionScopes.get().isEmpty()) {
+            if (attributionScopes.isEmpty()) {
                 LoggerFactory.getMeasurementLogger()
                         .e(
                                 String.format(
