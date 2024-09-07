@@ -171,13 +171,12 @@ public final class TriggerFixture {
                         Trigger.SourceRegistrationTimeConfig.INCLUDE;
 
         public static final String PLATFORM_AD_ID = "test-platform-ad-id";
-        public static final String DEBUG_AD_ID = "test-debug-ad-id";
         public static final String TRIGGER_CONTEXT_ID = "test-trigger-context-id";
         public static final String ATTRIBUTION_SCOPES = "[\"1\"]";
         public static final int AGGREGATABLE_FILTERING_ID_MAX_BYTES = 1;
         public static final String AGGREGATE_DEBUG_REPORT =
                 "{\"key_piece\":\"0x222\","
-                        + "\"data\":["
+                        + "\"debug_data\":["
                         + "{"
                         + "\"types\": [\"trigger-aggregate-insufficient-budget\", "
                         + "\"trigger-aggregate-deduplicated\"],"

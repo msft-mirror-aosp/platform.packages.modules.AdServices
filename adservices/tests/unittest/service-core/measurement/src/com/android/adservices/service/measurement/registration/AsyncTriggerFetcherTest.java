@@ -7317,7 +7317,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     }
 
     @Test
-    public void fetchTrigger_zeroAttributionScope_fail() throws Exception {
+    public void fetchTrigger_zeroAttributionScopes_pass() throws Exception {
         when(mMockFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
@@ -7337,9 +7337,8 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         // Execution
         assertThat(asyncFetchStatus.getResponseStatus())
                 .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
-        assertThat(fetch.isPresent()).isFalse();
-        assertThat(asyncFetchStatus.getEntityStatus())
-                .isEqualTo(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
+        assertThat(fetch.isPresent()).isTrue();
+        assertThat(fetch.get().getAttributionScopes()).isEmpty();
         verify(mUrlConnection).setRequestMethod("POST");
     }
 

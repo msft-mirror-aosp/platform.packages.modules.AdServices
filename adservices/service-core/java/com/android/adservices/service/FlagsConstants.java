@@ -826,6 +826,9 @@ public final class FlagsConstants {
             KEY_FLEDGE_GET_AD_SELECTION_DATA_MAX_NUM_ENTIRE_PAYLOAD_COMPRESSIONS =
                     "fledge_get_ad_selection_data_max_num_entire_payload_compressions";
 
+    public static final String KEY_FLEDGE_GET_AD_SELECTION_DATA_DESERIALIZE_ONLY_AD_RENDER_IDS =
+            "fledge_get_ad_selection_data_deserialize_only_ad_render_ids";
+
     // Fledge invoking app status keys
     public static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION =
             "fledge_ad_selection_enforce_foreground_status_run_ad_selection";
@@ -1363,6 +1366,12 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_MAX_REINSTALL_REATTRIBUTION_WINDOW =
             "measurement_max_reinstall_reattribution_window";
 
+    public static final String KEY_MEASUREMENT_ENABLE_MIN_REPORT_LIFESPAN_FOR_UNINSTALL =
+            "Measurement__enable_min_report_lifespan_for_uninstall";
+
+    public static final String KEY_MEASUREMENT_MIN_REPORT_LIFESPAN_FOR_UNINSTALL_SECONDS =
+            "Measurement__min_report_lifespan_for_uninstall_seconds";
+
     public static final String KEY_MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK =
             "measurement_enable_navigation_reporting_origin_check";
 
@@ -1393,6 +1402,15 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_ENABLE_AGGREGATE_DEBUG_REPORTING =
             "Measurement__enable_aggregate_debug_reporting";
+
+    public static final String KEY_MEASUREMENT_ADR_BUDGET_PER_ORIGIN_PUBLISHER_WINDOW =
+            "Measurement__adr_budget_per_origin_publisher_window";
+
+    public static final String KEY_MEASUREMENT_ADR_BUDGET_PER_PUBLISHER_WINDOW =
+            "Measurement__adr_budget_per_publisher_window";
+
+    public static final String KEY_MEASUREMENT_ADR_BUDGET_WINDOW_LENGTH_MS =
+            "Measurement__adr_budget_window_length_ms";
 
     // Database Schema Version Flags
     public static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_8 =

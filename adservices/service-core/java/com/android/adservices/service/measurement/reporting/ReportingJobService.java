@@ -43,6 +43,7 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.android.libraries.mobiledatadownload.internal.AndroidTimeSource;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.util.Optional;
@@ -327,7 +328,8 @@ public final class ReportingJobService extends JobService {
                                             AdServicesLoggerImpl.getInstance(),
                                             ReportingStatus.ReportType.AGGREGATE,
                                             ReportingStatus.UploadMethod.REGULAR,
-                                            getApplicationContext())
+                                            getApplicationContext(),
+                                            new AndroidTimeSource())
                                     .performScheduledPendingReportsInWindow(
                                             System.currentTimeMillis()
                                                     - maxAggregateReportUploadRetryWindowMs,
@@ -351,7 +353,8 @@ public final class ReportingJobService extends JobService {
                                             AdServicesLoggerImpl.getInstance(),
                                             ReportingStatus.ReportType.EVENT,
                                             ReportingStatus.UploadMethod.REGULAR,
-                                            getApplicationContext())
+                                            getApplicationContext(),
+                                            new AndroidTimeSource())
                                     .performScheduledPendingReportsInWindow(
                                             System.currentTimeMillis()
                                                     - maxEventReportUploadRetryWindowMs,
