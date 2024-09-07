@@ -30,7 +30,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.Objects;
 
 /**
- * Represents the notification type of AdServices.
+ * Represents the notification type for notifications sent by AdServices to notify users of updates
+ * to PPAPI-related technology on their device. Can be none, ongoing, or regular.
  *
  * @hide
  */

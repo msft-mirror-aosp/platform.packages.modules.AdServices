@@ -27,6 +27,12 @@
         <option name="package" value="com.android.adservices.shared.tests"/>
     </test>
 
+    <!-- For this test suite to run as MTS. -->
+    <object type="module_controller"
+            class="com.android.tradefed.testtype.suite.module.MainlineTestModuleController">
+        <option name="mainline-module-package-name" value="com.google.android.adservices"/>
+    </object>
+
     <!-- For this test suite to get picked up in mainline presubmit -->
     <option name="config-descriptor:metadata" key="mainline-param"
             value="com.google.android.adservices.apex"/>

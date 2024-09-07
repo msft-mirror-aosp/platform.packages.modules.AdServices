@@ -16,10 +16,13 @@
 
 package com.android.adservices.service.common;
 
-import org.junit.Assert;
+import static com.google.common.truth.Truth.assertThat;
+
+import com.android.adservices.common.AdServicesUnitTestCase;
+
 import org.junit.Test;
 
-public class AdTechIdentifierValidatorTest {
+public final class AdTechIdentifierValidatorTest extends AdServicesUnitTestCase {
     private static final String CLASS_NAME = "class";
     private static final String FIELD_NAME = "field";
 
@@ -28,8 +31,7 @@ public class AdTechIdentifierValidatorTest {
 
     @Test
     public void testValidIdentifier() {
-        Assert.assertTrue(
-                mAdTechIdentifierValidator.getValidationViolations("domain.com").isEmpty());
+        assertThat(mAdTechIdentifierValidator.getValidationViolations("domain.com")).isEmpty();
     }
 
     @Test

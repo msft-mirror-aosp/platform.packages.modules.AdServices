@@ -46,6 +46,7 @@ import com.android.adservices.service.common.feature.PrivacySandboxFeatureType;
 import com.android.adservices.service.ui.data.UxStatesDao;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -72,17 +73,23 @@ public final class AppConsentStorageManagerTest extends AdServicesExtendedMockit
     private AppConsentStorageManager mAppConsentStorageManager;
     @Mock private UxStatesDao mUxStatesDaoMock;
 
+    @Mock private AdServicesErrorLogger mMockAdServicesErrorLogger;
+
     @Before
     public void setup() {
         mConsentDatastore =
                 new AtomicFileDatastore(
                         mSpyContext,
                         ConsentConstants.STORAGE_XML_IDENTIFIER,
-                        ConsentConstants.STORAGE_VERSION);
+                        ConsentConstants.STORAGE_VERSION,
+                        mMockAdServicesErrorLogger);
 
         mAppDaoDatastore =
                 new AtomicFileDatastore(
-                        mSpyContext, AppConsentDao.DATASTORE_NAME, AppConsentDao.DATASTORE_VERSION);
+                        mSpyContext,
+                        AppConsentDao.DATASTORE_NAME,
+                        AppConsentDao.DATASTORE_VERSION,
+                        mMockAdServicesErrorLogger);
 
         mAppConsentDaoSpy =
                 spy(new AppConsentDao(mAppDaoDatastore, mSpyContext.getPackageManager()));

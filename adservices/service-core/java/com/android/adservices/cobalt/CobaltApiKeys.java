@@ -17,8 +17,6 @@ package com.android.adservices.cobalt;
 
 import static com.android.adservices.cobalt.CobaltConstants.DEFAULT_API_KEY;
 
-import androidx.annotation.NonNull;
-
 import com.google.common.io.BaseEncoding;
 import com.google.protobuf.ByteString;
 
@@ -27,7 +25,7 @@ import java.util.Objects;
 /** Static data and functions related to Cobalt API keys. */
 public final class CobaltApiKeys {
     /** Copy an API key from a base-16 encoded hex string. */
-    static ByteString copyFromHexApiKey(@NonNull String apiKey) {
+    static ByteString copyFromHexApiKey(String apiKey) {
         Objects.requireNonNull(apiKey);
         return apiKey.equals(DEFAULT_API_KEY)
                 ? ByteString.copyFromUtf8(apiKey)

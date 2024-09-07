@@ -19,15 +19,18 @@ package com.android.adservices.service.common;
 import static com.android.adservices.service.common.JsonUtils.VALUE_NOT_A_STRING;
 import static com.android.adservices.service.common.JsonUtils.getStringFromJson;
 
-import static org.junit.Assert.assertEquals;
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertThrows;
+
+import com.android.adservices.common.AdServicesUnitTestCase;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
 
-public class JsonUtilsTest {
+public final class JsonUtilsTest extends AdServicesUnitTestCase {
     private static final String KEY = "key";
     private static final String VALID_VALUE = "valid_value";
     private static final String CUSTOM_ERROR = "This is a custom error message";
@@ -36,15 +39,15 @@ public class JsonUtilsTest {
     public void testGetStringFromJsonSuccess() throws Exception {
         JSONObject jsonObject = new JSONObject().put(KEY, VALID_VALUE);
 
-        assertEquals(getStringFromJson(jsonObject, KEY), VALID_VALUE);
+        assertThat(getStringFromJson(jsonObject, KEY)).isEqualTo(VALID_VALUE);
     }
 
     @Test
     public void testGetStringFromJsonArraySuccess() throws Exception {
         JSONArray jsonArray = new JSONArray().put(VALID_VALUE);
 
-        assertEquals(
-                JsonUtils.getStringFromJsonArrayAtIndex(jsonArray, 0, CUSTOM_ERROR), VALID_VALUE);
+        assertThat(JsonUtils.getStringFromJsonArrayAtIndex(jsonArray, 0, CUSTOM_ERROR))
+                .isEqualTo(VALID_VALUE);
     }
 
     @Test
@@ -54,9 +57,7 @@ public class JsonUtilsTest {
         assertThrows(
                 String.format(VALUE_NOT_A_STRING, KEY + "otherValue"),
                 JSONException.class,
-                () -> {
-                    getStringFromJson(jsonObject, KEY + "otherValue");
-                });
+                () -> getStringFromJson(jsonObject, KEY + "otherValue"));
     }
 
     @Test
@@ -66,9 +67,7 @@ public class JsonUtilsTest {
         assertThrows(
                 String.format(VALUE_NOT_A_STRING, KEY),
                 JSONException.class,
-                () -> {
-                    getStringFromJson(jsonObject, KEY);
-                });
+                () -> getStringFromJson(jsonObject, KEY));
     }
 
     @Test
@@ -78,9 +77,7 @@ public class JsonUtilsTest {
         assertThrows(
                 CUSTOM_ERROR,
                 JSONException.class,
-                () -> {
-                    JsonUtils.getStringFromJsonArrayAtIndex(jsonArray, 0, CUSTOM_ERROR);
-                });
+                () -> JsonUtils.getStringFromJsonArrayAtIndex(jsonArray, 0, CUSTOM_ERROR));
     }
 
     @Test
@@ -91,9 +88,7 @@ public class JsonUtilsTest {
         assertThrows(
                 CUSTOM_ERROR,
                 JSONException.class,
-                () -> {
-                    getStringFromJson(jsonObject, KEY, CUSTOM_ERROR);
-                });
+                () -> getStringFromJson(jsonObject, KEY, CUSTOM_ERROR));
     }
 
     @Test
@@ -106,8 +101,6 @@ public class JsonUtilsTest {
         assertThrows(
                 String.format(VALUE_NOT_A_STRING, KEY),
                 JSONException.class,
-                () -> {
-                    getStringFromJson(jsonObject, KEY);
-                });
+                () -> getStringFromJson(jsonObject, KEY));
     }
 }

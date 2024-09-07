@@ -23,43 +23,21 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
-import android.content.Context;
-
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.modules.utils.build.SdkLevel;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoSession;
 
-public class ServiceCompatUtilsTest {
+@MockStatic(SdkLevel.class)
+public final class ServiceCompatUtilsTest extends AdServicesExtendedMockitoTestCase {
     private static final String EXT_PACKAGE_NAME = "com.google.android.ext.services";
     private static final String NON_EXT_PACKAGE_NAME = "com.example.package";
-
-    private MockitoSession mMockitoSession;
-
-    @Mock Context mMockContext;
-
-    @Before
-    public void setUp() {
-        mMockitoSession =
-                ExtendedMockito.mockitoSession()
-                        .mockStatic(SdkLevel.class)
-                        .initMocks(this)
-                        .startMocking();
-    }
-
-    @After
-    public void tearDown() {
-        mMockitoSession.finishMocking();
-    }
 
     @Test
     public void testShouldDisableJob_S() {
         doReturn(false).when(SdkLevel::isAtLeastT);
-        assertThat(ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(mMockContext)).isFalse();
+        expect.that(ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(mMockContext)).isFalse();
         verify(mMockContext, never()).getPackageName();
     }
 

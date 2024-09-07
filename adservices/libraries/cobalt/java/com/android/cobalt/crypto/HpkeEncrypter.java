@@ -28,8 +28,6 @@ import static com.android.cobalt.crypto.PublicKeys.SHUFFLER_KEY_INDEX_PROD;
 import static com.android.cobalt.crypto.PublicKeys.SHUFFLER_KEY_PROD;
 import static com.android.cobalt.crypto.PublicKeys.X25519_PUBLIC_VALUE_LEN;
 
-import androidx.annotation.NonNull;
-
 import com.android.cobalt.CobaltPipelineType;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -55,7 +53,7 @@ public final class HpkeEncrypter implements Encrypter {
 
     /** Creates a HpkeEncrypter compatible with the specified Cobalt environment */
     public static HpkeEncrypter createForEnvironment(
-            @NonNull HpkeEncrypt encrypter, @NonNull CobaltPipelineType type) {
+            HpkeEncrypt encrypter, CobaltPipelineType type) {
         Objects.requireNonNull(type);
 
         switch (type) {
@@ -79,10 +77,10 @@ public final class HpkeEncrypter implements Encrypter {
     }
 
     HpkeEncrypter(
-            @NonNull HpkeEncrypt encrypter,
-            @NonNull byte[] shufflerKey,
+            HpkeEncrypt encrypter,
+            byte[] shufflerKey,
             int shufflerKeyIndex,
-            @NonNull byte[] analyzerKey,
+            byte[] analyzerKey,
             int analyzerKeyIndex) {
         this.mEncrypter = Objects.requireNonNull(encrypter);
         this.mShufflerKey = Objects.requireNonNull(shufflerKey);
@@ -100,7 +98,7 @@ public final class HpkeEncrypter implements Encrypter {
      * @throws EncryptionFailedException if encryption fails
      */
     @Override
-    public Optional<EncryptedMessage> encryptEnvelope(@NonNull Envelope envelope)
+    public Optional<EncryptedMessage> encryptEnvelope(Envelope envelope)
             throws EncryptionFailedException {
         Objects.requireNonNull(envelope);
 
@@ -121,8 +119,8 @@ public final class HpkeEncrypter implements Encrypter {
      * @throws EncryptionFailedException if encryption fails
      */
     @Override
-    public Optional<EncryptedMessage> encryptObservation(
-            @NonNull ObservationToEncrypt observationToEncrypt) throws EncryptionFailedException {
+    public Optional<EncryptedMessage> encryptObservation(ObservationToEncrypt observationToEncrypt)
+            throws EncryptionFailedException {
         Objects.requireNonNull(observationToEncrypt);
 
         return encrypt(

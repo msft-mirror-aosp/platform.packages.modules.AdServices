@@ -21,10 +21,12 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 
 import java.io.IOException;
 
@@ -32,11 +34,14 @@ public final class AtomicFileDatastoreTest extends AdServicesMockitoTestCase {
     private static final String FILENAME = "AtomicFileDatastoreTest.xml";
     private static final int DATASTORE_VERSION = 1;
 
+    @Mock private AdServicesErrorLogger mMockAdServicesErrorLogger;
     private AtomicFileDatastore mDatastore;
 
     @Before
     public void initializeDatastore() throws IOException {
-        mDatastore = new AtomicFileDatastore(mContext, FILENAME, DATASTORE_VERSION);
+        mDatastore =
+                new AtomicFileDatastore(
+                        mContext, FILENAME, DATASTORE_VERSION, mMockAdServicesErrorLogger);
         mDatastore.initialize();
     }
 
@@ -58,12 +63,33 @@ public final class AtomicFileDatastoreTest extends AdServicesMockitoTestCase {
                 NullPointerException.class,
                 () ->
                         new AtomicFileDatastore(
-                                /* adServicesContext= */ null, FILENAME, DATASTORE_VERSION));
+                                /* adServicesContext= */ null,
+                                FILENAME,
+                                DATASTORE_VERSION,
+                                mMockAdServicesErrorLogger));
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new AtomicFileDatastore(mContext, /* filename= */ null, DATASTORE_VERSION));
+                () ->
+                        new AtomicFileDatastore(
+                                mContext,
+                                /* filename= */ null,
+                                DATASTORE_VERSION,
+                                mMockAdServicesErrorLogger));
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new AtomicFileDatastore(mContext, /* filename= */ "", DATASTORE_VERSION));
+                () ->
+                        new AtomicFileDatastore(
+                                mContext,
+                                /* filename= */ "",
+                                DATASTORE_VERSION,
+                                mMockAdServicesErrorLogger));
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        new AtomicFileDatastore(
+                                mContext,
+                                FILENAME,
+                                DATASTORE_VERSION,
+                                /* adServicesErrorLogger= */ null));
     }
 }

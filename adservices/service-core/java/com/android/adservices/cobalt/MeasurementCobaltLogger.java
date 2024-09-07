@@ -168,7 +168,7 @@ public final class MeasurementCobaltLogger {
                         getSourceTriggerType(type, sourceType),
                         getRegistrationStatusEvent(statusCode, errorCode),
                         isEeaDevice ? EEA_REGION_CODE : ROW_REGION_CODE,
-                        hashEnrollmentIntoUnsignedInt(enrollmentId)));
+                        hashEnrollmentIntoUint(enrollmentId)));
     }
 
     @SuppressWarnings("FutureReturnValueIgnored") // TODO(b/323263328): Remove @SuppressWarnings.
@@ -177,7 +177,8 @@ public final class MeasurementCobaltLogger {
             int attrSurfaceType,
             int sourceType,
             int statusCode,
-            int errorCode) {
+            int errorCode,
+            @Nullable String enrollmentId) {
         if (!isAttributionCobaltLoggingEnabled()) {
             LogUtil.w(
                     "Skip logAttributionStatusWithAppName because Cobalt logger is not available");
@@ -191,7 +192,8 @@ public final class MeasurementCobaltLogger {
                 ImmutableList.of(
                         attrSurfaceType,
                         sourceType,
-                        getAttributionStatusEvent(statusCode, errorCode)));
+                        getAttributionStatusEvent(statusCode, errorCode),
+                        hashEnrollmentIntoUint(enrollmentId)));
     }
 
     @SuppressWarnings("FutureReturnValueIgnored") // TODO(b/323263328): Remove @SuppressWarnings.
@@ -200,7 +202,8 @@ public final class MeasurementCobaltLogger {
             int reportType,
             int reportUploadMethod,
             int statusCode,
-            int errorCode) {
+            int errorCode,
+            @Nullable String enrollmentId) {
         if (!isReportingCobaltLoggingEnabled()) {
             LogUtil.w("Skip logReportingStatusWithAppName because Cobalt logger is not available.");
             return;
@@ -213,7 +216,8 @@ public final class MeasurementCobaltLogger {
                 ImmutableList.of(
                         reportType,
                         reportUploadMethod,
-                        getReportingStatusEvent(statusCode, errorCode)));
+                        getReportingStatusEvent(statusCode, errorCode),
+                        hashEnrollmentIntoUint(enrollmentId)));
     }
 
     private boolean isRegistrationCobaltLoggingEnabled() {
@@ -297,7 +301,7 @@ public final class MeasurementCobaltLogger {
         return statusEvent;
     }
 
-    private static int hashEnrollmentIntoUnsignedInt(@Nullable String enrollmentId) {
+    private static int hashEnrollmentIntoUint(@Nullable String enrollmentId) {
         if (enrollmentId == null) {
             return 0;
         }

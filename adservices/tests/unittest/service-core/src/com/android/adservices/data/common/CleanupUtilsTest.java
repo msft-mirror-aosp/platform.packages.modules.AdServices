@@ -19,61 +19,40 @@ package com.android.adservices.data.common;
 import static com.android.adservices.service.common.AllowLists.ALLOW_ALL;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
-import static org.junit.Assert.assertEquals;
+import static com.google.common.truth.Truth.assertWithMessage;
+
+import static org.mockito.Mockito.when;
 
 import android.adservices.common.CommonFixture;
-import android.content.Context;
 import android.content.pm.ApplicationInfo;
 
-import androidx.test.core.app.ApplicationProvider;
-
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
-import org.mockito.MockitoSession;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class CleanupUtilsTest {
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
-    private MockitoSession mStaticMockSession = null;
-
-    @Before
-    public void setup() {
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .mockStatic(PackageManagerCompatUtils.class)
-                        .initMocks(this)
-                        .startMocking();
-    }
-
-    @After
-    public void teardown() {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
-    }
-
+@SpyStatic(FlagsFactory.class)
+@MockStatic(PackageManagerCompatUtils.class)
+public final class CleanupUtilsTest extends AdServicesExtendedMockitoTestCase {
     @Test
     public void testEmpty() {
         List<String> packageList = new ArrayList<>();
 
         CleanupUtils.removeAllowedPackages(
                 packageList,
-                CONTEXT.getPackageManager(),
+                mContext.getPackageManager(),
                 Arrays.asList(CommonFixture.TEST_PACKAGE_NAME_1));
 
-        assertEquals(new ArrayList<>(), packageList);
+        assertWithMessage("packageList").that(packageList).isEmpty();
     }
 
     @Test
@@ -82,8 +61,8 @@ public class CleanupUtilsTest {
         installedPackage1.packageName = CommonFixture.TEST_PACKAGE_NAME_1;
         ApplicationInfo installedPackage2 = new ApplicationInfo();
         installedPackage2.packageName = CommonFixture.TEST_PACKAGE_NAME_2;
-        doReturn(Arrays.asList(installedPackage1, installedPackage2))
-                .when(() -> PackageManagerCompatUtils.getInstalledApplications(any(), anyInt()));
+        when(PackageManagerCompatUtils.getInstalledApplications(any(), anyInt()))
+                .thenReturn(Arrays.asList(installedPackage1, installedPackage2));
         List<String> packageList =
                 new ArrayList<>(
                         Arrays.asList(
@@ -93,18 +72,18 @@ public class CleanupUtilsTest {
 
         CleanupUtils.removeAllowedPackages(
                 packageList,
-                CONTEXT.getPackageManager(),
+                mContext.getPackageManager(),
                 Arrays.asList(CommonFixture.TEST_PACKAGE_NAME_1));
 
-        assertEquals(expected, packageList);
+        assertWithMessage("packageList").that(packageList).containsExactlyElementsIn(expected);
     }
 
     @Test
     public void testCleanupNotAllowed() {
         ApplicationInfo installedPackage2 = new ApplicationInfo();
         installedPackage2.packageName = CommonFixture.TEST_PACKAGE_NAME_2;
-        doReturn(Arrays.asList(installedPackage2))
-                .when(() -> PackageManagerCompatUtils.getInstalledApplications(any(), anyInt()));
+        when(PackageManagerCompatUtils.getInstalledApplications(any(), anyInt()))
+                .thenReturn(Arrays.asList(installedPackage2));
         List<String> packageList =
                 new ArrayList<>(
                         Arrays.asList(
@@ -113,9 +92,9 @@ public class CleanupUtilsTest {
         List<String> expected = Arrays.asList(CommonFixture.TEST_PACKAGE_NAME_1);
 
         CleanupUtils.removeAllowedPackages(
-                packageList, CONTEXT.getPackageManager(), Arrays.asList(ALLOW_ALL));
+                packageList, mContext.getPackageManager(), Arrays.asList(ALLOW_ALL));
 
-        assertEquals(expected, packageList);
+        assertWithMessage("packageList").that(packageList).containsExactlyElementsIn(expected);
     }
 
     @Test
@@ -124,8 +103,8 @@ public class CleanupUtilsTest {
         installedPackage1.packageName = CommonFixture.TEST_PACKAGE_NAME_1;
         ApplicationInfo installedPackage2 = new ApplicationInfo();
         installedPackage2.packageName = CommonFixture.TEST_PACKAGE_NAME_2;
-        doReturn(Arrays.asList(installedPackage1, installedPackage2))
-                .when(() -> PackageManagerCompatUtils.getInstalledApplications(any(), anyInt()));
+        when(PackageManagerCompatUtils.getInstalledApplications(any(), anyInt()))
+                .thenReturn(Arrays.asList(installedPackage1, installedPackage2));
         List<String> packageList =
                 new ArrayList<>(
                         Arrays.asList(
@@ -135,11 +114,11 @@ public class CleanupUtilsTest {
 
         CleanupUtils.removeAllowedPackages(
                 packageList,
-                CONTEXT.getPackageManager(),
+                mContext.getPackageManager(),
                 Arrays.asList(
                         CommonFixture.TEST_PACKAGE_NAME_1, CommonFixture.TEST_PACKAGE_NAME_2));
 
-        assertEquals(expected, packageList);
+        assertWithMessage("packageList").that(packageList).containsExactlyElementsIn(expected);
     }
 
     @Test
@@ -148,8 +127,8 @@ public class CleanupUtilsTest {
         installedPackage1.packageName = CommonFixture.TEST_PACKAGE_NAME_1;
         ApplicationInfo installedPackage2 = new ApplicationInfo();
         installedPackage2.packageName = CommonFixture.TEST_PACKAGE_NAME_2;
-        doReturn(Arrays.asList(installedPackage1, installedPackage2))
-                .when(() -> PackageManagerCompatUtils.getInstalledApplications(any(), anyInt()));
+        when(PackageManagerCompatUtils.getInstalledApplications(any(), anyInt()))
+                .thenReturn(Arrays.asList(installedPackage1, installedPackage2));
         List<String> packageList =
                 new ArrayList<>(
                         Arrays.asList(
@@ -159,10 +138,10 @@ public class CleanupUtilsTest {
 
         CleanupUtils.removeAllowedPackages(
                 packageList,
-                CONTEXT.getPackageManager(),
+                mContext.getPackageManager(),
                 Arrays.asList(CommonFixture.TEST_PACKAGE_NAME_1, ALLOW_ALL));
 
-        assertEquals(expected, packageList);
+        assertWithMessage("packageList").that(packageList).containsExactlyElementsIn(expected);
     }
 
     @Test
@@ -171,8 +150,8 @@ public class CleanupUtilsTest {
         installedPackage1.packageName = CommonFixture.TEST_PACKAGE_NAME_1;
         ApplicationInfo installedPackage2 = new ApplicationInfo();
         installedPackage2.packageName = CommonFixture.TEST_PACKAGE_NAME_2;
-        doReturn(Arrays.asList(installedPackage1, installedPackage2))
-                .when(() -> PackageManagerCompatUtils.getInstalledApplications(any(), anyInt()));
+        when(PackageManagerCompatUtils.getInstalledApplications(any(), anyInt()))
+                .thenReturn(Arrays.asList(installedPackage1, installedPackage2));
         List<String> packageList =
                 new ArrayList<>(
                         Arrays.asList(
@@ -182,10 +161,10 @@ public class CleanupUtilsTest {
 
         CleanupUtils.removeAllowedPackages(
                 packageList,
-                CONTEXT.getPackageManager(),
+                mContext.getPackageManager(),
                 Arrays.asList(
                         CommonFixture.TEST_PACKAGE_NAME_1, CommonFixture.TEST_PACKAGE_NAME_1));
 
-        assertEquals(expected, packageList);
+        assertWithMessage("packageList").that(packageList).containsExactlyElementsIn(expected);
     }
 }

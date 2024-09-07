@@ -18,6 +18,7 @@ package com.android.adservices.shared.testing;
 
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
@@ -45,7 +46,6 @@ public final class AnswerSyncCallbackTest extends SyncCallbackTestCase<AnswerSyn
             SyncCallbackFactory.newSettingsBuilder().setExpectedNumberCalls(2).build();
 
     @Mock private Voider mDarthVoider;
-    @Mock private InvocationOnMock mMockInvocation;
 
     @Override
     protected AnswerSyncCallback<Void> newCallback(SyncCallbackSettings settings) {
@@ -54,13 +54,14 @@ public final class AnswerSyncCallbackTest extends SyncCallbackTestCase<AnswerSyn
 
     @Override
     protected String callCallback(AnswerSyncCallback<Void> callback) {
-        // Since mMockInvocation is not a "real" InvocationOnMock (provided by Mockito), we need
+        InvocationOnMock mockInvocation = mock(InvocationOnMock.class);
+        // Since mockInvocation is not a "real" InvocationOnMock (provided by Mockito), we need
         // to mock its toString(), otherwise it would be logged as "mMockInvocation" and we'd have
         // to return "mMockInvocation" here too (which would make the FakeLogger output confusing).
         String methodName = "mockedVoidMethod()";
-        when(mMockInvocation.toString()).thenReturn(methodName);
+        when(mockInvocation.toString()).thenReturn(methodName);
         try {
-            callback.answer(mMockInvocation);
+            callback.answer(mockInvocation);
             return methodName;
         } catch (Throwable t) {
             // Shouldn't happen

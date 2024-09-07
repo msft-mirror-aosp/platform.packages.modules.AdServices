@@ -52,7 +52,6 @@ abstract class ReportEntity {
      *
      * <p>Used by Room to instantiate objects.
      */
-    @NonNull
     static ReportEntity create(ReportKey reportKey, Optional<Integer> lastSentDayIndex) {
         return new AutoValue_ReportEntity(reportKey, lastSentDayIndex);
     }
@@ -63,7 +62,6 @@ abstract class ReportEntity {
      * <p>Ignored by Room.
      */
     @Ignore
-    @NonNull
     static ReportEntity create(ReportKey reportKey) {
         return new AutoValue_ReportEntity(reportKey, Optional.empty());
     }
@@ -74,7 +72,6 @@ abstract class ReportEntity {
      * <p>Ignored by Room.
      */
     @Ignore
-    @NonNull
     static ReportEntity create(ReportKey reportKey, int lastSentDayIndex) {
         return new AutoValue_ReportEntity(reportKey, Optional.of(lastSentDayIndex));
     }

@@ -19,26 +19,15 @@ package com.android.adservices.service.enrollment;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 
-import android.content.Context;
-
-import androidx.test.core.app.ApplicationProvider;
-
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.service.stats.AdServicesLogger;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
 /** Unit tests for {@link EnrollmentUtil} */
-public class EnrollmentUtilTest {
-    private static final Context sContext = ApplicationProvider.getApplicationContext();
-    @Mock AdServicesLogger mLogger;
-
-    @Before
-    public void setup() {
-        MockitoAnnotations.initMocks(this);
-    }
+public final class EnrollmentUtilTest extends AdServicesMockitoTestCase {
+    @Mock private AdServicesLogger mLogger;
 
     @Test
     public void logEnrollmentFileDownloadStats_nullInput_defaultValuesUsed() {

@@ -34,7 +34,7 @@ public final class IsAllowedCustomAudiencesAccessCommandTest
     private static final String ENROLLMENT_ID = "42";
 
     @Test
-    public void testRun_invalid() throws Exception {
+    public void testRun_invalid() {
         IsAllowedCustomAudiencesAccessCommand cmd = new IsAllowedCustomAudiencesAccessCommand();
 
         // no args
@@ -53,7 +53,7 @@ public final class IsAllowedCustomAudiencesAccessCommandTest
     }
 
     @Test
-    public void testRun_valid() throws Exception {
+    public void testRun_valid() {
         IsAllowedCustomAudiencesAccessCommand cmd = new IsAllowedCustomAudiencesAccessCommand();
         doReturn(true)
                 .when(

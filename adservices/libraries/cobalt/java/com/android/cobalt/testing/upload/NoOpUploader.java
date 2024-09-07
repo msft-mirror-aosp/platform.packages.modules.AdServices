@@ -18,7 +18,7 @@ package com.android.cobalt.testing.upload;
 
 import static com.android.cobalt.collect.ImmutableHelpers.toImmutableList;
 
-import android.annotation.NonNull;
+import static java.util.Objects.requireNonNull;
 
 import com.android.cobalt.upload.Uploader;
 import com.android.internal.annotations.VisibleForTesting;
@@ -47,8 +47,8 @@ public final class NoOpUploader implements Uploader {
     /** Store the provided encrypted message. */
     @Override
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PACKAGE)
-    public void upload(@NonNull EncryptedMessage encryptedMessage) {
-        mEncryptedMessages.add(encryptedMessage);
+    public void upload(EncryptedMessage encryptedMessage) {
+        mEncryptedMessages.add(requireNonNull(encryptedMessage));
     }
 
     /** Record the method was called. */

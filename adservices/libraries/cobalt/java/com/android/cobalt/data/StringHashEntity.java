@@ -89,7 +89,6 @@ public abstract class StringHashEntity {
      *
      * <p>Used by Room to instantiate objects.
      */
-    @NonNull
     static StringHashEntity create(
             ReportKey reportKey, int dayIndex, int listIndex, HashCode stringHash) {
         return new AutoValue_StringHashEntity(reportKey, dayIndex, listIndex, stringHash);
@@ -97,7 +96,6 @@ public abstract class StringHashEntity {
 
     /** Creates an {@link StringHashEntity}. */
     @Ignore
-    @NonNull
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PACKAGE)
     public static StringHashEntity create(
             ReportKey reportKey, int dayIndex, int listIndex, String string) {

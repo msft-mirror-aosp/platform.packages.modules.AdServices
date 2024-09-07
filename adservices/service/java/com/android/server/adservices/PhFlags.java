@@ -39,9 +39,19 @@ public final class PhFlags implements Flags {
     // Adservices System Service enable status keys.
     static final String KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED = "adservice_system_service_enabled";
 
+    static final String KEY_CLIENT_ERROR_LOGGING__ENABLE_CEL_FOR_SYSTEM_SERVER =
+            "ClientErrorLogging__enable_cel_for_system_server";
+
     @Override
     public boolean getAdServicesSystemServiceEnabled() {
         return getFlag(KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED, ADSERVICES_SYSTEM_SERVICE_ENABLED);
+    }
+
+    @Override
+    public boolean getEnableCelForSystemServer() {
+        return getFlag(
+                KEY_CLIENT_ERROR_LOGGING__ENABLE_CEL_FOR_SYSTEM_SERVER,
+                CLIENT_ERROR_LOGGING__ENABLE_CEL_FOR_SYSTEM_SERVER);
     }
 
     @SuppressWarnings("AvoidDeviceConfigUsage") // Helper / infra method

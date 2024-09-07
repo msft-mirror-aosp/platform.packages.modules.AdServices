@@ -20,7 +20,6 @@ import static com.android.cobalt.collect.ImmutableHelpers.toImmutableListMultima
 
 import static java.util.stream.Collectors.toMap;
 
-import android.annotation.NonNull;
 import android.util.Log;
 
 import com.android.cobalt.logging.CobaltOperationLogger;
@@ -56,10 +55,15 @@ public final class DataService {
     private final ExecutorService mExecutorService;
     private final CobaltDatabase mCobaltDatabase;
     private final DaoBuildingBlocks mDaoBuildingBlocks;
+    private final CobaltOperationLogger mOperationLogger;
 
-    public DataService(@NonNull ExecutorService executor, @NonNull CobaltDatabase cobaltDatabase) {
+    public DataService(
+            ExecutorService executor,
+            CobaltDatabase cobaltDatabase,
+            CobaltOperationLogger operationLogger) {
         this.mExecutorService = Objects.requireNonNull(executor);
         this.mCobaltDatabase = Objects.requireNonNull(cobaltDatabase);
+        this.mOperationLogger = Objects.requireNonNull(operationLogger);
 
         this.mDaoBuildingBlocks = mCobaltDatabase.daoBuildingBlocks();
     }
@@ -233,8 +237,7 @@ public final class DataService {
             EventVector eventVector,
             long eventVectorBufferMax,
             long stringBufferMax,
-            String stringValue,
-            CobaltOperationLogger operationLogger) {
+            String stringValue) {
         return Futures.submit(
                 () ->
                         mCobaltDatabase.runInTransaction(
@@ -246,8 +249,7 @@ public final class DataService {
                                                 eventVector,
                                                 eventVectorBufferMax,
                                                 stringBufferMax,
-                                                stringValue,
-                                                operationLogger)),
+                                                stringValue)),
                 mExecutorService);
     }
 
@@ -319,13 +321,12 @@ public final class DataService {
             EventVector eventVector,
             long eventVectorBufferMax,
             long stringBufferMax,
-            String stringValue,
-            CobaltOperationLogger operationLogger) {
+            String stringValue) {
         HashCode hash = StringHashEntity.getHash(stringValue);
         int index =
                 mDaoBuildingBlocks.queryStringListIndex(reportKey, dayIndex, stringBufferMax, hash);
         if (index == -1) {
-            operationLogger.logStringBufferMaxExceeded(
+            mOperationLogger.logStringBufferMaxExceeded(
                     (int) reportKey.metricId(), (int) reportKey.reportId());
             return;
         }
@@ -431,6 +432,8 @@ public final class DataService {
             AggregateValue newValue) {
         if (!canAddEventVectorToSystemProfile(
                 reportKey, dayIndex, systemProfileHash, eventVectorBufferMax)) {
+            mOperationLogger.logEventVectorBufferMaxExceeded(
+                    (int) reportKey.metricId(), (int) reportKey.reportId());
             return false;
         }
         mDaoBuildingBlocks.insertAggregateValue(

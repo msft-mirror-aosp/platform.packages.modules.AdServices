@@ -93,6 +93,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENAB
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_FAKE_REPORT_TRIGGER_TIME;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_MIN_REPORT_LIFESPAN_FOR_UNINSTALL;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_REINSTALL_REATTRIBUTION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_SEPARATE_DEBUG_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT;
@@ -492,6 +493,19 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_COBALT_OPERATIONAL_LOGGING_ENABLED,
                 COBALT_OPERATIONAL_LOGGING_ENABLED);
+    }
+
+    @Override
+    public boolean getCobaltFallBackToDefaultBaseRegistry() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_COBALT__FALL_BACK_TO_DEFAULT_BASE_REGISTRY,
+                COBALT__FALL_BACK_TO_DEFAULT_BASE_REGISTRY);
+    }
+
+    @Override
+    public String getCobaltIgnoredReportIdList() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_COBALT__IGNORED_REPORT_ID_LIST, COBALT__IGNORED_REPORT_ID_LIST);
     }
 
     @Override
@@ -2626,6 +2640,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeGetAdSelectionDataDeserializeOnlyAdRenderIds() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_GET_AD_SELECTION_DATA_DESERIALIZE_ONLY_AD_RENDER_IDS,
+                FLEDGE_GET_AD_SELECTION_DATA_DESERIALIZE_ONLY_AD_RENDER_IDS);
+    }
+
+    @Override
     public boolean getFledgeAuctionServerMultiCloudEnabled() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED,
@@ -2960,13 +2981,6 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCES,
                 MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCES);
-    }
-
-    @Override
-    public boolean getEnforceEnrollmentOriginMatch() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH,
-                MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH);
     }
 
     @Override
@@ -3405,6 +3419,20 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_MAX_REINSTALL_REATTRIBUTION_WINDOW,
                 MEASUREMENT_MAX_REINSTALL_REATTRIBUTION_WINDOW_SECONDS);
+    }
+
+    @Override
+    public boolean getMeasurementEnableMinReportLifespanForUninstall() {
+        return getDeviceConfigFlag(
+                KEY_MEASUREMENT_ENABLE_MIN_REPORT_LIFESPAN_FOR_UNINSTALL,
+                MEASUREMENT_ENABLE_MIN_REPORT_LIFESPAN_FOR_UNINSTALL);
+    }
+
+    @Override
+    public long getMeasurementMinReportLifespanForUninstallSeconds() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_MIN_REPORT_LIFESPAN_FOR_UNINSTALL_SECONDS,
+                MEASUREMENT_MIN_REPORT_LIFESPAN_FOR_UNINSTALL_SECONDS);
     }
 
     @Override
@@ -3941,11 +3969,6 @@ public final class PhFlags implements Flags {
                         + getMeasurementEnableSharedFilterDataKeysXNA());
         writer.println(
                 "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH
-                        + " = "
-                        + getEnforceEnrollmentOriginMatch());
-        writer.println(
-                "\t"
                         + FlagsConstants.KEY_MEASUREMENT_ENABLE_DEBUG_REPORT
                         + " = "
                         + getMeasurementEnableDebugReport());
@@ -3964,6 +3987,11 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_ENABLE_REINSTALL_REATTRIBUTION
                         + " = "
                         + getMeasurementEnableReinstallReattribution());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_MIN_REPORT_LIFESPAN_FOR_UNINSTALL
+                        + " = "
+                        + getMeasurementEnableMinReportLifespanForUninstall());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_MEASUREMENT_DATA_EXPIRY_WINDOW_MS
@@ -4276,6 +4304,11 @@ public final class PhFlags implements Flags {
                         + getMeasurementMaxReinstallReattributionWindowSeconds());
         writer.println(
                 "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_MIN_REPORT_LIFESPAN_FOR_UNINSTALL_SECONDS
+                        + " = "
+                        + getMeasurementMinReportLifespanForUninstallSeconds());
+        writer.println(
+                "\t"
                         + FlagsConstants.KEY_MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW
                         + " = "
                         + getMeasurementMinReportingOriginUpdateWindow());
@@ -4515,6 +4548,11 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING
                         + " = "
                         + getMeasurementEnableFlexibleContributionFiltering());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATE_DEBUG_REPORTING
+                        + " = "
+                        + getMeasurementEnableAggregateDebugReporting());
 
         writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
         writer.println(
@@ -6698,6 +6736,34 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getMeasurementEnableAggregateDebugReporting() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATE_DEBUG_REPORTING,
+                MEASUREMENT_ENABLE_AGGREGATE_DEBUG_REPORTING);
+    }
+
+    @Override
+    public int getMeasurementAdrBudgetOriginXPublisherXWindow() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ADR_BUDGET_PER_ORIGIN_PUBLISHER_WINDOW,
+                MEASUREMENT_ADR_BUDGET_PER_ORIGIN_PUBLISHER_WINDOW);
+    }
+
+    @Override
+    public int getMeasurementAdrBudgetPublisherXWindow() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ADR_BUDGET_PER_PUBLISHER_WINDOW,
+                MEASUREMENT_ADR_BUDGET_PER_PUBLISHER_WINDOW);
+    }
+
+    @Override
+    public long getMeasurementAdrBudgetWindowLengthMillis() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ADR_BUDGET_WINDOW_LENGTH_MS,
+                MEASUREMENT_ADR_BUDGET_WINDOW_LENGTH_MILLIS);
+    }
+
+    @Override
     public long getMeasurementReportingJobServiceBatchWindowMillis() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS,
@@ -7147,5 +7213,47 @@ public final class PhFlags implements Flags {
     public long getAdIdCacheTtlMs() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_AD_ID_CACHE_TTL_MS, DEFAULT_ADID_CACHE_TTL_MS);
+    }
+
+    @Override
+    public boolean getEnablePackageDenyService() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_PACKAGE_DENY__ENABLE_PACKAGE_DENY_SERVICE,
+                DEFAULT_ENABLE_PACKAGE_DENY_SERVICE);
+    }
+
+    @Override
+    public boolean getEnablePackageDenyMdd() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_PACKAGE_DENY__ENABLE_PACKAGE_DENY_MDD,
+                DEFAULT_ENABLE_PACKAGE_DENY_MDD);
+    }
+
+    @Override
+    public boolean getEnablePackageDenyJobOnPackageAdd() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_PACKAGE_DENY__ENABLE_PACKAGE_DENY_JOB_ON_PACKAGE_ADD,
+                DEFAULT_ENABLE_PACKAGE_DENY_JOB_ON_PACKAGE_ADD);
+    }
+
+    @Override
+    public boolean getEnablePackageDenyBgJob() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_PACKAGE_DENY__ENABLE_PACKAGE_DENY_BG_JOB,
+                DEFAULT_ENABLE_PACKAGE_DENY_BG_JOB);
+    }
+
+    @Override
+    public boolean getEnablePackageDenyJobOnMddDownload() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_PACKAGE_DENY__ENABLE_PACKAGE_DENY_JOB_ON_MDD_DOWNLOAD,
+                DEFAULT_ENABLE_PACKAGE_DENY_JOB_ON_MDD_DOWNLOAD);
+    }
+
+    @Override
+    public String getMddPackageDenyRegistryManifestFileUrl() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL,
+                DEFAULT_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL);
     }
 }

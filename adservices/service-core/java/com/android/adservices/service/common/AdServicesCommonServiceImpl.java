@@ -517,7 +517,6 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
             ISetAdServicesModuleOverridesCallback callback) {
 
         boolean authorizedCaller = PermissionHelper.hasModifyAdServicesStatePermission(mContext);
-
         sBackgroundExecutor.execute(
                 () -> {
                     try {
@@ -527,21 +526,23 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                             return;
                         }
                         ConsentManager consentManager = ConsentManager.getInstance();
-                        for (AdServicesModuleState adServicesModuleState :
-                                adServicesModuleStateList) {
-                            consentManager.setModuleState(adServicesModuleState);
-                        }
+                        consentManager.setModuleStates(adServicesModuleStateList);
                         callback.onResult(
                                 new AdServicesCommonResponse.Builder()
                                         .setStatusCode(STATUS_SUCCESS)
                                         .build());
 
-                        // TODO(361411984): try to trigger notification logic
+                        // TODO(361411984): Add the notification trigger logic
 
                     } catch (Exception e) {
                         LogUtil.e(
                                 "setAdServicesModuleOverrides() failed to complete: "
                                         + e.getMessage());
+                        try {
+                            callback.onFailure(STATUS_INTERNAL_ERROR);
+                        } catch (RemoteException ex) {
+                            LogUtil.e("Unable to send result to the callback " + ex.getMessage());
+                        }
                     }
                 });
     }
@@ -564,11 +565,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                             return;
                         }
                         ConsentManager consentManager = ConsentManager.getInstance();
-                        for (AdServicesModuleUserChoice userChoice :
-                                adServicesFeatureUserChoiceList) {
-                            consentManager.setUserChoice(
-                                    userChoice.getModule(), userChoice.getUserChoice());
-                        }
+                        consentManager.setUserChoices(adServicesFeatureUserChoiceList);
                         LogUtil.i("setAdServicesModuleUserChoices");
                         callback.onResult(
                                 new AdServicesCommonResponse.Builder()

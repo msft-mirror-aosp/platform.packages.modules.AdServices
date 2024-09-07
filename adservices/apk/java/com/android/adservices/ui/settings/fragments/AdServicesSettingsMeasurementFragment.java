@@ -26,7 +26,6 @@ import androidx.fragment.app.Fragment;
 
 import com.android.adservices.api.R;
 import com.android.adservices.ui.settings.activities.MeasurementActivity;
-import com.android.modules.utils.build.SdkLevel;
 
 /** Fragment for the Measurement view of the AdServices Settings App. */
 // TODO(b/269798827): Enable for R.
@@ -36,11 +35,7 @@ public class AdServicesSettingsMeasurementFragment extends Fragment {
     @Override
     public View onCreateView(
             LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        if (SdkLevel.isAtLeastR() && !SdkLevel.isAtLeastS()) {
-            return inflater.inflate(R.layout.measurement_fragment_v30, container, false);
-        } else {
-            return inflater.inflate(R.layout.measurement_fragment, container, false);
-        }
+        return inflater.inflate(R.layout.measurement_fragment, container, false);
     }
 
     @Override

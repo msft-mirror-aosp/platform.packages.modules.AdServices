@@ -27,8 +27,6 @@ import static com.google.common.truth.Truth.assertWithMessage;
 
 import android.content.Intent;
 
-import androidx.test.filters.SmallTest;
-
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
@@ -38,7 +36,6 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
-@SmallTest
 @SpyStatic(AdServicesBackCompatInit.class)
 @SetErrorLogUtilDefaultParams(
         throwable = Any.class,

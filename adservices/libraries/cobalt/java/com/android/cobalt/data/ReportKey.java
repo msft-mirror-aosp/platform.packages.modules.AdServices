@@ -59,7 +59,6 @@ public abstract class ReportKey {
      *
      * <p>Used by Room to instantiate objects.
      */
-    @NonNull
     public static ReportKey create(long customerId, long projectId, long metricId, long reportId) {
         return new AutoValue_ReportKey(customerId, projectId, metricId, reportId);
     }

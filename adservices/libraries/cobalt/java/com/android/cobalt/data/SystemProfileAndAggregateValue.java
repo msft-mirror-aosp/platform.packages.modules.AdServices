@@ -49,7 +49,6 @@ abstract class SystemProfileAndAggregateValue {
      *
      * <p>Used by Room to instantiate objects.
      */
-    @NonNull
     static SystemProfileAndAggregateValue create(
             long systemProfileHash, AggregateValue aggregateValue) {
         return new AutoValue_SystemProfileAndAggregateValue(systemProfileHash, aggregateValue);

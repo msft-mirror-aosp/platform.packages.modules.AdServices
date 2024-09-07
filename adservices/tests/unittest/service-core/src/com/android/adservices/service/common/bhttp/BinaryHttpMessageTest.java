@@ -16,9 +16,12 @@
 
 package com.android.adservices.service.common.bhttp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
+
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.EqualsTester;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -31,7 +34,7 @@ import java.util.Arrays;
  * href="https://www.ietf.org/archive/id/draft-ietf-httpbis-binary-message-06.html">Binary
  * Representation of HTTP Messages</a>
  */
-public class BinaryHttpMessageTest {
+public final class BinaryHttpMessageTest extends AdServicesUnitTestCase {
 
     private BinaryHttpMessageDeserializer mBinaryHttpMessageDeserializer;
 
@@ -177,7 +180,7 @@ public class BinaryHttpMessageTest {
 
     @Test
     public void testRequestEquals() {
-        assertEquals(
+        BinaryHttpMessage message1 =
                 BinaryHttpMessage.knownLengthRequestBuilder(
                                 RequestControlData.builder()
                                         .setMethod("POST")
@@ -190,7 +193,9 @@ public class BinaryHttpMessageTest {
                                         .appendField("User-Agent", "not" + "/telling")
                                         .build())
                         .setContent("hello, world!\r\n".getBytes())
-                        .build(),
+                        .build();
+
+        BinaryHttpMessage message2 =
                 BinaryHttpMessage.knownLengthRequestBuilder(
                                 RequestControlData.builder()
                                         .setMethod("POST")
@@ -203,11 +208,16 @@ public class BinaryHttpMessageTest {
                                         .appendField("User-Agent", "not" + "/telling")
                                         .build())
                         .setContent("hello, world!\r\n".getBytes())
-                        .build());
+                        .build();
+
+        EqualsTester et = new EqualsTester(expect);
+        et.expectObjectsAreEqual(message1, message2);
     }
 
     @Test
     public void testRequestNotEqual() {
+        EqualsTester et = new EqualsTester(expect);
+
         BinaryHttpMessage original =
                 BinaryHttpMessage.knownLengthRequestBuilder(
                                 RequestControlData.builder()
@@ -233,7 +243,7 @@ public class BinaryHttpMessageTest {
                                 Fields.builder().appendField("User-Agent", "not/telling").build())
                         .setContent("hello, world!\r\n".getBytes())
                         .build();
-        assertNotEquals(original, differentControlData);
+        et.expectObjectsAreNotEqual(original, differentControlData);
 
         BinaryHttpMessage differentHeader =
                 BinaryHttpMessage.knownLengthRequestBuilder(
@@ -247,7 +257,7 @@ public class BinaryHttpMessageTest {
                                 Fields.builder().appendField("User-Agent", "told/you").build())
                         .setContent("hello, world!\r\n".getBytes())
                         .build();
-        assertNotEquals(original, differentHeader);
+        et.expectObjectsAreNotEqual(original, differentHeader);
 
         BinaryHttpMessage noHeader =
                 BinaryHttpMessage.knownLengthRequestBuilder(
@@ -260,7 +270,7 @@ public class BinaryHttpMessageTest {
                         .setHeaderFields(Fields.EMPTY_FIELDS)
                         .setContent("hello, world!\r\n".getBytes())
                         .build();
-        assertNotEquals(original, noHeader);
+        et.expectObjectsAreNotEqual(original, noHeader);
 
         BinaryHttpMessage differentBody =
                 BinaryHttpMessage.knownLengthRequestBuilder(
@@ -274,7 +284,7 @@ public class BinaryHttpMessageTest {
                                 Fields.builder().appendField("User-Agent", "not/telling").build())
                         .setContent("goodbye, world!\r\n".getBytes())
                         .build();
-        assertNotEquals(original, differentBody);
+        et.expectObjectsAreNotEqual(original, differentBody);
 
         BinaryHttpMessage noBody =
                 BinaryHttpMessage.knownLengthRequestBuilder(
@@ -287,7 +297,7 @@ public class BinaryHttpMessageTest {
                         .setHeaderFields(
                                 Fields.builder().appendField("User-Agent", "not/telling").build())
                         .build();
-        assertNotEquals(original, noBody);
+        et.expectObjectsAreNotEqual(original, noBody);
     }
 
     @Test
@@ -446,7 +456,7 @@ public class BinaryHttpMessageTest {
 
     @Test
     public void testResponseEquals() {
-        assertEquals(
+        BinaryHttpMessage message1 =
                 BinaryHttpMessage.knownLengthResponseBuilder(
                                 ResponseControlData.builder()
                                         .setFinalStatusCode(200)
@@ -459,7 +469,9 @@ public class BinaryHttpMessageTest {
                                         .build())
                         .setHeaderFields(Fields.builder().appendField("Server", "Apache").build())
                         .setContent("Hello, world!\r\n".getBytes())
-                        .build(),
+                        .build();
+
+        BinaryHttpMessage message2 =
                 BinaryHttpMessage.knownLengthResponseBuilder(
                                 ResponseControlData.builder()
                                         .setFinalStatusCode(200)
@@ -472,11 +484,16 @@ public class BinaryHttpMessageTest {
                                         .build())
                         .setHeaderFields(Fields.builder().appendField("Server", "Apache").build())
                         .setContent("Hello, world!\r\n".getBytes())
-                        .build());
+                        .build();
+
+        EqualsTester et = new EqualsTester(expect);
+        et.expectObjectsAreEqual(message1, message2);
     }
 
     @Test
     public void testResponseNotEqual() {
+        EqualsTester et = new EqualsTester(expect);
+
         BinaryHttpMessage original =
                 BinaryHttpMessage.knownLengthResponseBuilder(
                                 ResponseControlData.builder()
@@ -506,7 +523,7 @@ public class BinaryHttpMessageTest {
                         .setHeaderFields(Fields.builder().appendField("Server", "Apache").build())
                         .setContent("Hello, world!\r\n".getBytes())
                         .build();
-        assertNotEquals(original, differentStatus);
+        et.expectObjectsAreNotEqual(original, differentStatus);
 
         BinaryHttpMessage differentHeader =
                 BinaryHttpMessage.knownLengthResponseBuilder(
@@ -522,7 +539,7 @@ public class BinaryHttpMessageTest {
                         .setHeaderFields(Fields.builder().appendField("Server", "python3").build())
                         .setContent("Hello, world!\r\n".getBytes())
                         .build();
-        assertNotEquals(original, differentHeader);
+        et.expectObjectsAreNotEqual(original, differentHeader);
 
         BinaryHttpMessage noHeader =
                 BinaryHttpMessage.knownLengthResponseBuilder(
@@ -538,7 +555,7 @@ public class BinaryHttpMessageTest {
                         .setHeaderFields(Fields.EMPTY_FIELDS)
                         .setContent("Hello, world!\r\n".getBytes())
                         .build();
-        assertNotEquals(original, noHeader);
+        et.expectObjectsAreNotEqual(original, noHeader);
 
         BinaryHttpMessage differentBody =
                 BinaryHttpMessage.knownLengthResponseBuilder(
@@ -554,7 +571,7 @@ public class BinaryHttpMessageTest {
                         .setHeaderFields(Fields.builder().appendField("Server", "Apache").build())
                         .setContent("Goodbye, world!\r\n".getBytes())
                         .build();
-        assertNotEquals(original, differentBody);
+        et.expectObjectsAreNotEqual(original, differentBody);
 
         BinaryHttpMessage noBody =
                 BinaryHttpMessage.knownLengthResponseBuilder(
@@ -569,7 +586,7 @@ public class BinaryHttpMessageTest {
                                         .build())
                         .setHeaderFields(Fields.builder().appendField("Server", "Apache").build())
                         .build();
-        assertNotEquals(original, noBody);
+        et.expectObjectsAreNotEqual(original, noBody);
 
         BinaryHttpMessage differentInformational =
                 BinaryHttpMessage.knownLengthResponseBuilder(
@@ -585,7 +602,7 @@ public class BinaryHttpMessageTest {
                         .setHeaderFields(Fields.builder().appendField("Server", "Apache").build())
                         .setContent("Hello, world!\r\n".getBytes())
                         .build();
-        assertNotEquals(original, differentInformational);
+        et.expectObjectsAreNotEqual(original, differentInformational);
 
         BinaryHttpMessage noInformational =
                 BinaryHttpMessage.knownLengthResponseBuilder(
@@ -593,7 +610,7 @@ public class BinaryHttpMessageTest {
                         .setHeaderFields(Fields.builder().appendField("Server", "Apache").build())
                         .setContent("Hello, world!\r\n".getBytes())
                         .build();
-        assertNotEquals(original, noInformational);
+        et.expectObjectsAreNotEqual(original, noInformational);
     }
 
     @Test
@@ -639,7 +656,7 @@ public class BinaryHttpMessageTest {
     }
 
     private void testPadding(BinaryHttpMessage message, int paddingLength) {
-        final byte[] encoded = message.serialize();
+        byte[] encoded = message.serialize();
 
         BinaryHttpMessage paddedMessage =
                 BinaryHttpMessage.builder()
@@ -652,26 +669,26 @@ public class BinaryHttpMessageTest {
 
         byte[] paddedEncoded = paddedMessage.serialize();
 
-        assertEquals(paddedEncoded.length, encoded.length + paddingLength);
+        assertThat(paddedEncoded.length).isEqualTo(encoded.length + paddingLength);
         assertArrayStartWithAndPaddedWithZeros(encoded, paddedEncoded);
 
-        assertEquals(
-                mBinaryHttpMessageDeserializer.deserialize(encoded),
-                mBinaryHttpMessageDeserializer.deserialize(paddedEncoded));
+        assertThat(mBinaryHttpMessageDeserializer.deserialize(encoded))
+                .isEqualTo(mBinaryHttpMessageDeserializer.deserialize(paddedEncoded));
     }
 
     private void testEncodeAndDecode(
             int[] expectedEncodedMessage, int trim, BinaryHttpMessage message) {
-        final byte[] expectedEncodedBytes = fromIntArray(expectedEncodedMessage, trim);
-        final byte[] encodedMessage = message.serialize();
+        byte[] expectedEncodedBytes = fromIntArray(expectedEncodedMessage, trim);
+        byte[] encodedMessage = message.serialize();
         assertArrayStartWithAndPaddedWithZeros(expectedEncodedBytes, encodedMessage);
-        assertEquals(message, mBinaryHttpMessageDeserializer.deserialize(expectedEncodedBytes));
+        assertThat(message)
+                .isEqualTo(mBinaryHttpMessageDeserializer.deserialize(expectedEncodedBytes));
     }
 
     private static void assertArrayStartWithAndPaddedWithZeros(byte[] target, byte[] tested) {
         assertArrayEquals(target, Arrays.copyOf(tested, target.length));
         for (int i = target.length; i < tested.length; i++) {
-            assertEquals(0, tested[i]);
+            assertThat(tested[i]).isEqualTo(0);
         }
     }
 

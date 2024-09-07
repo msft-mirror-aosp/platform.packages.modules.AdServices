@@ -52,7 +52,6 @@ public abstract class StringListEntry {
      *
      * <p>Used by Room to instantiate objects.
      */
-    @NonNull
     public static StringListEntry create(int listIndex, HashCode stringHash) {
         return new AutoValue_StringListEntry(listIndex, stringHash);
     }

@@ -39,7 +39,7 @@ import com.android.adservices.shared.common.exception.ServiceUnavailableExceptio
 import com.android.adservices.shared.testing.OutcomeReceiverForTests;
 import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
-import com.android.compatibility.common.util.ConnectivityUtils;
+import com.android.adservices.shared.testing.network.NetworkConnectionHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.Before;
@@ -76,7 +76,9 @@ public final class AppSetIdManagerTest extends CtsAppSetIdEndToEndTestCase {
         appSetIdManager.getAppSetId(CALLBACK_EXECUTOR, callback);
 
         AppSetId resultAppSetId = callback.assertResultReceived();
-        assertWithMessage("getAppSetId() result").that(resultAppSetId).isNotNull();
+        assertWithMessage("resultAppset id null for " + callback.getError())
+                .that(resultAppSetId)
+                .isNotNull();
         assertWithMessage("id on result").that(resultAppSetId.getId()).isNotNull();
     }
 
@@ -163,6 +165,7 @@ public final class AppSetIdManagerTest extends CtsAppSetIdEndToEndTestCase {
 
     // TODO(b/346854625): remove this dependency
     private void assumeOnline() {
-        assumeTrue("device must be online", ConnectivityUtils.isNetworkConnected(sContext));
+        assumeTrue(NetworkConnectionHelper.isInternetConnected(mContext));
+        assumeTrue(NetworkConnectionHelper.isInternetAvailable());
     }
 }

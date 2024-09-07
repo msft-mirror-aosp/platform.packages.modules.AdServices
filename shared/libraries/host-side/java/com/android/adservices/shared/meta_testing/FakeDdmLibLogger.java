@@ -19,6 +19,7 @@ import com.android.adservices.shared.testing.LogEntry;
 import com.android.adservices.shared.testing.Logger;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.Log.ILogOutput;
+import com.android.tradefed.log.LogUtil.CLog;
 
 import com.google.common.collect.ImmutableList;
 
@@ -40,12 +41,15 @@ public final class FakeDdmLibLogger implements ILogOutput {
     /** Factory method. */
     public static FakeDdmLibLogger addToDdmLib() {
         var logger = new FakeDdmLibLogger();
+        CLog.i("Calling com.android.ddmlib.Log.addLogger(%s)", logger);
         Log.addLogger(logger);
         return logger;
     }
 
-    /** Unreigster itself as listener. */
+    /** Unregister itself as listener. */
     public void removeSelf() {
+        // Note: message before probably won't be logged as we're intercepting it
+        CLog.i("Calling com.android.ddmlib.Log.removeLogger(%s)", this);
         Log.removeLogger(this);
     }
 

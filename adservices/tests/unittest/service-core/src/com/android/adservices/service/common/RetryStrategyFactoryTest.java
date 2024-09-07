@@ -25,7 +25,7 @@ import org.junit.Test;
 
 import java.util.concurrent.ExecutorService;
 
-public class RetryStrategyFactoryTest extends AdServicesUnitTestCase {
+public final class RetryStrategyFactoryTest extends AdServicesUnitTestCase {
     private static final int MAX_RETRY_ATTEMPTS = 1;
     private static final ExecutorService EXECUTOR_SERVICE =
             AdServicesExecutors.getLightWeightExecutor();

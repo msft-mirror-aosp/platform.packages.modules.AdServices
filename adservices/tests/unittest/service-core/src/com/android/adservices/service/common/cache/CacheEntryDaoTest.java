@@ -16,15 +16,11 @@
 
 package com.android.adservices.service.common.cache;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-
-import android.content.Context;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import androidx.room.Room;
-import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.SmallTest;
+
+import com.android.adservices.common.AdServicesUnitTestCase;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -35,11 +31,8 @@ import org.junit.Test;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
-@SmallTest
-public class CacheEntryDaoTest {
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
+public final class CacheEntryDaoTest extends AdServicesUnitTestCase {
     private static final String URL = "https://google.com";
     private static final String BODY = "This is the Google home page";
     private static final long MAX_AGE_SECONDS = 1000;
@@ -64,53 +57,56 @@ public class CacheEntryDaoTest {
     @Before
     public void setup() {
         mCacheEntryDao =
-                Room.inMemoryDatabaseBuilder(CONTEXT, CacheDatabase.class)
+                Room.inMemoryDatabaseBuilder(mContext, CacheDatabase.class)
                         .build()
                         .getCacheEntryDao();
     }
 
     @Test
     public void test_CacheIsEmptyByDefault() {
-        assertEquals(
-                "Persistence layer should have been empty", 0, mCacheEntryDao.getDBEntriesCount());
+        assertWithMessage("Persistence layer should have been empty")
+                .that(mCacheEntryDao.getDBEntriesCount())
+                .isEqualTo(0);
     }
 
     @Test
-    public void test_CacheEntryPut_Succeeds() throws ExecutionException, InterruptedException {
-        assertEquals(
-                "Persistence layer should have been empty", 0, mCacheEntryDao.getDBEntriesCount());
+    public void test_CacheEntryPut_Succeeds() {
+        assertWithMessage("Persistence layer should have been empty")
+                .that(mCacheEntryDao.getDBEntriesCount())
+                .isEqualTo(0);
 
-        assertEquals(
-                "One entry should have been inserted",
-                1,
-                mCacheEntryDao.persistCacheEntry(mCacheEntry));
-        assertEquals(
-                "Persistence layer should have 1 entry", 1, mCacheEntryDao.getDBEntriesCount());
+        assertWithMessage("One entry should have been inserted")
+                .that(mCacheEntryDao.persistCacheEntry(mCacheEntry))
+                .isEqualTo(1);
+        assertWithMessage("Persistence layer should have 1 entry")
+                .that(mCacheEntryDao.getDBEntriesCount())
+                .isEqualTo(1);
     }
 
     @Test
     public void test_CacheEntryGet_Succeeds() {
-        assertEquals(
-                "Persistence layer should have been empty", 0, mCacheEntryDao.getDBEntriesCount());
+        assertWithMessage("Persistence layer should have been empty")
+                .that(mCacheEntryDao.getDBEntriesCount())
+                .isEqualTo(0);
         mCacheEntryDao.persistCacheEntry(mCacheEntry);
-        assertEquals(
-                "Persistence layer should have 1 entry", 1, mCacheEntryDao.getDBEntriesCount());
+        assertWithMessage("Persistence layer should have 1 entry")
+                .that(mCacheEntryDao.getDBEntriesCount())
+                .isEqualTo(1);
 
         DBCacheEntry fetchedEntry = mCacheEntryDao.getCacheEntry(URL, Instant.now());
-        assertEquals(
-                "Both entries' body should have been the same",
-                fetchedEntry.getResponseBody(),
-                mCacheEntry.getResponseBody());
-        assertEquals(
-                "Both entries' response headers should have been same",
-                fetchedEntry.getResponseHeaders(),
-                mCacheEntry.getResponseHeaders());
+        expect.withMessage("Both entries' body should have been the same")
+                .that(fetchedEntry.getResponseBody())
+                .isEqualTo(mCacheEntry.getResponseBody());
+        expect.withMessage("Both entries' response headers should have been same")
+                .that(fetchedEntry.getResponseHeaders())
+                .isEqualTo(mCacheEntry.getResponseHeaders());
     }
 
     @Test
     public void test_CacheEntryGetStaleEntry_Failure() throws InterruptedException {
-        assertEquals(
-                "Persistence layer should have been empty", 0, mCacheEntryDao.getDBEntriesCount());
+        assertWithMessage("Persistence layer should have been empty")
+                .that(mCacheEntryDao.getDBEntriesCount())
+                .isEqualTo(0);
         long smallEntryMaxAgeSeconds = 1;
         DBCacheEntry cacheEntry =
                 DBCacheEntry.builder()
@@ -122,22 +118,25 @@ public class CacheEntryDaoTest {
                         .build();
         mCacheEntryDao.persistCacheEntry(cacheEntry);
         Thread.sleep(2 * 1000 * smallEntryMaxAgeSeconds);
-        assertNull(
-                "No stale cached entry should have returned",
-                mCacheEntryDao.getCacheEntry(URL, Instant.now()));
+        expect.withMessage("No stale cached entry should have returned")
+                .that(mCacheEntryDao.getCacheEntry(URL, Instant.now()))
+                .isNull();
     }
 
     @Test
     public void test_CacheEntryDeleteAll_Succeeds() {
-        assertEquals(
-                "Persistence layer should have been empty", 0, mCacheEntryDao.getDBEntriesCount());
+        assertWithMessage("Persistence layer should have been empty")
+                .that(mCacheEntryDao.getDBEntriesCount())
+                .isEqualTo(0);
         mCacheEntryDao.persistCacheEntry(mCacheEntry);
-        assertEquals(
-                "Persistence layer should have 1 entry", 1, mCacheEntryDao.getDBEntriesCount());
+        assertWithMessage("Persistence layer should have 1 entry")
+                .that(mCacheEntryDao.getDBEntriesCount())
+                .isEqualTo(1);
 
         mCacheEntryDao.deleteAll();
-        assertEquals(
-                "Persistence layer should have been empty", 0, mCacheEntryDao.getDBEntriesCount());
+        assertWithMessage("Persistence layer should have been empty")
+                .that(mCacheEntryDao.getDBEntriesCount())
+                .isEqualTo(0);
     }
 
     @Test
@@ -154,13 +153,15 @@ public class CacheEntryDaoTest {
                         .setResponseHeaders(RESPONSE_HEADERS)
                         .build();
         mCacheEntryDao.persistCacheEntry(cacheEntry);
-        assertEquals(
-                "Persistence layer should have 1 entry", 1, mCacheEntryDao.getDBEntriesCount());
+        assertWithMessage("Persistence layer should have 1 entry")
+                .that(mCacheEntryDao.getDBEntriesCount())
+                .isEqualTo(1);
 
         Thread.sleep(2 * 1000 * smallEntryMaxAgeSeconds);
         mCacheEntryDao.deleteStaleRows(largeDefaultMaxAgeSeconds, Instant.now());
-        assertEquals(
-                "Persistence layer should have been empty", 0, mCacheEntryDao.getDBEntriesCount());
+        assertWithMessage("Persistence layer should have been empty")
+                .that(mCacheEntryDao.getDBEntriesCount())
+                .isEqualTo(0);
     }
 
     @Test
@@ -180,31 +181,28 @@ public class CacheEntryDaoTest {
                             .build();
             mCacheEntryDao.persistCacheEntry(entry);
         }
-        assertEquals(
-                "Cache should have been populated with entries",
-                fakeEntriesCount,
-                mCacheEntryDao.getDBEntriesCount());
+        assertWithMessage("Cache should have been populated with entries")
+                .that(mCacheEntryDao.getDBEntriesCount())
+                .isEqualTo(fakeEntriesCount);
 
         // Prune to a desired size
         int maxCacheEntries = 10;
         mCacheEntryDao.prune(maxCacheEntries);
         // Some wait time for pruning to complete
         Thread.sleep(200);
-        assertEquals(
-                "Cache should have been pruned",
-                maxCacheEntries,
-                mCacheEntryDao.getDBEntriesCount());
+        assertWithMessage("Cache should have been pruned")
+                .that(mCacheEntryDao.getDBEntriesCount())
+                .isEqualTo(maxCacheEntries);
 
         // Check that pruning is FIFO and older entries are removed first
         mCacheEntryDao.prune(1);
         // Some wait time for pruning to complete
         Thread.sleep(200);
-        assertEquals(
-                "After pruning cached size should have reduced",
-                1,
-                mCacheEntryDao.getDBEntriesCount());
-        assertNotNull(
-                "After pruning only latest entry should have remained",
-                mCacheEntryDao.getCacheEntry(URL + (fakeEntriesCount - 1), Instant.now()));
+        assertWithMessage("After pruning cached size should have reduced")
+                .that(mCacheEntryDao.getDBEntriesCount())
+                .isEqualTo(1);
+        assertWithMessage("After pruning only latest entry should have remained")
+                .that(mCacheEntryDao.getCacheEntry(URL + (fakeEntriesCount - 1), Instant.now()))
+                .isNotNull();
     }
 }

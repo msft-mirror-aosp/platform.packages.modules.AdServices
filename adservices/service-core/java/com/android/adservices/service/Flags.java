@@ -1990,6 +1990,17 @@ public interface Flags extends ModuleSharedFlags {
         return FLEDGE_GET_AD_SELECTION_DATA_MAX_NUM_ENTIRE_PAYLOAD_COMPRESSIONS;
     }
 
+    @FeatureFlag boolean FLEDGE_GET_AD_SELECTION_DATA_DESERIALIZE_ONLY_AD_RENDER_IDS = false;
+
+    /**
+     * Returns whether querying custom audiences from the DB, for the getAdSelectionData API, will
+     * deserialize only ad render ids or the entire ad. When enabled, the DB query will only
+     * deserialize ad render ids.
+     */
+    default boolean getFledgeGetAdSelectionDataDeserializeOnlyAdRenderIds() {
+        return FLEDGE_GET_AD_SELECTION_DATA_DESERIALIZE_ONLY_AD_RENDER_IDS;
+    }
+
     // Protected signals cleanup feature flag disabled by default
     boolean PROTECTED_SIGNALS_CLEANUP_ENABLED = false;
 
@@ -3304,7 +3315,6 @@ public interface Flags extends ModuleSharedFlags {
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER = true;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS = true;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCES = true;
-    boolean MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH = false;
 
     /**
      * Returns true if Measurement Delete Registrations API should require that the calling API is
@@ -3362,10 +3372,6 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCES;
     }
 
-    /** Returns true if the Enrollment match is based on url origin matching */
-    default boolean getEnforceEnrollmentOriginMatch() {
-        return MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH;
-    }
 
     /** Returns true if Topics API should require that the calling API is running in foreground. */
     default boolean getEnforceForegroundStatusForTopics() {
@@ -4828,6 +4834,30 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     /**
+     * The flag to enable falling back to the default base registry. It prevents Cobalt using merged
+     * registry. So in case the MDD downloaded registry and merged with default registry already, we
+     * can still fall back to use the default base registry.
+     */
+    @FeatureFlag Boolean COBALT__FALL_BACK_TO_DEFAULT_BASE_REGISTRY = false;
+
+    /** Returns the flag to enable falling back to the default base registry. */
+    default boolean getCobaltFallBackToDefaultBaseRegistry() {
+        return COBALT__FALL_BACK_TO_DEFAULT_BASE_REGISTRY;
+    }
+
+    /**
+     * The flag tells Cobalt to ignore specific list of report id(s). This flag is used for
+     * out-of-band registry update. The format is a comma-separated list of 4 colon separated ints,
+     * e.g. a single value is customer_id:project_id:metric_id:report_id.
+     */
+    @ConfigFlag String COBALT__IGNORED_REPORT_ID_LIST = "";
+
+    /** Returns the flag to ignore specific list of report id(s). */
+    default String getCobaltIgnoredReportIdList() {
+        return COBALT__IGNORED_REPORT_ID_LIST;
+    }
+
+    /**
      * A feature flag to enable DB schema change to version 8 in Topics API. Version 8 is to add
      * logged_topic column to ReturnedTopic table.
      *
@@ -4878,6 +4908,21 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns whether to enable reinstall reattribution. */
     default boolean getMeasurementEnableReinstallReattribution() {
         return MEASUREMENT_ENABLE_REINSTALL_REATTRIBUTION;
+    }
+
+    @ConfigFlag
+    long MEASUREMENT_MIN_REPORT_LIFESPAN_FOR_UNINSTALL_SECONDS = TimeUnit.DAYS.toSeconds(1);
+
+    /** Minimum time a report can stay on the device after app uninstall. */
+    default long getMeasurementMinReportLifespanForUninstallSeconds() {
+        return MEASUREMENT_MIN_REPORT_LIFESPAN_FOR_UNINSTALL_SECONDS;
+    }
+
+    @FeatureFlag boolean MEASUREMENT_ENABLE_MIN_REPORT_LIFESPAN_FOR_UNINSTALL = false;
+
+    /** Returns whether to enable uninstall report feature. */
+    default boolean getMeasurementEnableMinReportLifespanForUninstall() {
+        return MEASUREMENT_ENABLE_MIN_REPORT_LIFESPAN_FOR_UNINSTALL;
     }
 
     /** Flag to enable context id for triggers */
@@ -4947,6 +4992,38 @@ public interface Flags extends ModuleSharedFlags {
      */
     default boolean getMeasurementEnableAggregateValueFilters() {
         return MEASUREMENT_ENABLE_AGGREGATE_VALUE_FILTERS;
+    }
+
+    /** Flag for enabling measurement aggregate debug reporting */
+    @FeatureFlag boolean MEASUREMENT_ENABLE_AGGREGATE_DEBUG_REPORTING = false;
+
+    /** Returns whether measurement aggregate debug reporting is enabled. */
+    default boolean getMeasurementEnableAggregateDebugReporting() {
+        return MEASUREMENT_ENABLE_AGGREGATE_DEBUG_REPORTING;
+    }
+
+    @ConfigFlag int MEASUREMENT_ADR_BUDGET_PER_ORIGIN_PUBLISHER_WINDOW = 65536; // = 2^16
+
+    /** Returns aggregatable debug reporting budget allocated per origin per publisher per window */
+    default int getMeasurementAdrBudgetOriginXPublisherXWindow() {
+        return MEASUREMENT_ADR_BUDGET_PER_ORIGIN_PUBLISHER_WINDOW;
+    }
+
+    @ConfigFlag int MEASUREMENT_ADR_BUDGET_PER_PUBLISHER_WINDOW = 1048576; // = 2^20
+
+    /** Returns aggregatable debug reporting budget allocated per publisher per window */
+    default int getMeasurementAdrBudgetPublisherXWindow() {
+        return MEASUREMENT_ADR_BUDGET_PER_PUBLISHER_WINDOW;
+    }
+
+    @ConfigFlag long MEASUREMENT_ADR_BUDGET_WINDOW_LENGTH_MILLIS = TimeUnit.DAYS.toMillis(1);
+
+    /**
+     * Returns aggregatable debug reporting budget consumption tracking window length in
+     * milliseconds.
+     */
+    default long getMeasurementAdrBudgetWindowLengthMillis() {
+        return MEASUREMENT_ADR_BUDGET_WINDOW_LENGTH_MILLIS;
     }
 
     /**
@@ -5779,6 +5856,64 @@ public interface Flags extends ModuleSharedFlags {
      */
     default long getAdIdCacheTtlMs() {
         return DEFAULT_ADID_CACHE_TTL_MS;
+    }
+
+    /** Feature flag to ramp up use of package deny service. */
+    @FeatureFlag boolean DEFAULT_ENABLE_PACKAGE_DENY_SERVICE = false;
+
+    /**
+     * @return whether to enable use of package deny service.
+     */
+    default boolean getEnablePackageDenyService() {
+        return DEFAULT_ENABLE_PACKAGE_DENY_SERVICE;
+    }
+
+    /** Feature flag to ramp up use of mdd package deny proto file. */
+    @FeatureFlag boolean DEFAULT_ENABLE_PACKAGE_DENY_MDD = false;
+
+    /**
+     * @return whether to enable use of package deny mdd file.
+     */
+    default boolean getEnablePackageDenyMdd() {
+        return DEFAULT_ENABLE_PACKAGE_DENY_MDD;
+    }
+
+    /** Feature flag to ramp up use of package deny service on adding a package. */
+    @FeatureFlag boolean DEFAULT_ENABLE_PACKAGE_DENY_JOB_ON_PACKAGE_ADD = false;
+
+    /**
+     * @return whether to enable use of package deny service on adding a package.
+     */
+    default boolean getEnablePackageDenyJobOnPackageAdd() {
+        return DEFAULT_ENABLE_PACKAGE_DENY_JOB_ON_PACKAGE_ADD;
+    }
+
+    /** Feature flag to ramp up use of package deny preprocessing background job. */
+    @FeatureFlag boolean DEFAULT_ENABLE_PACKAGE_DENY_BG_JOB = false;
+
+    /**
+     * @return whether to enable use of package deny preprocessing background job.
+     */
+    default boolean getEnablePackageDenyBgJob() {
+        return DEFAULT_ENABLE_PACKAGE_DENY_BG_JOB;
+    }
+
+    /** Feature flag to ramp up use of package deny preprocessing on mdd file download. */
+    @FeatureFlag boolean DEFAULT_ENABLE_PACKAGE_DENY_JOB_ON_MDD_DOWNLOAD = false;
+
+    /**
+     * @return whether to enable use of package deny preprocessing job on mdd file download.
+     */
+    default boolean getEnablePackageDenyJobOnMddDownload() {
+        return DEFAULT_ENABLE_PACKAGE_DENY_JOB_ON_MDD_DOWNLOAD;
+    }
+
+    /** MDD package deny registry manifest url. */
+    @ConfigFlag String DEFAULT_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL = "";
+
+    /** Returns MDD package deny registry manifest url. */
+    default String getMddPackageDenyRegistryManifestFileUrl() {
+        return DEFAULT_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

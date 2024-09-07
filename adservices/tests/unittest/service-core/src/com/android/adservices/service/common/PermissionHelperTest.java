@@ -36,19 +36,16 @@ import android.content.pm.PackageManager;
 import android.os.Process;
 import android.test.mock.MockContext;
 
-import androidx.test.filters.SmallTest;
-
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
 /** Unit tests for {@link com.android.adservices.service.common.PermissionHelper} */
-@SmallTest
-public class PermissionHelperTest {
+public final class PermissionHelperTest extends AdServicesMockitoTestCase {
     private static final String SDK_PACKAGE_NAME = "sdk_test_package_name";
     private static final String APP_PACKAGE_NAME = "app_test_package_name";
     private static final String FAKE_PERMISSION = "FAKE_PERMISSION";
@@ -60,7 +57,6 @@ public class PermissionHelperTest {
 
     @Before
     public void setup() throws Exception {
-        MockitoAnnotations.initMocks(this);
         PackageInfo packageInfoGrant = new PackageInfo();
         packageInfoGrant.requestedPermissions =
                 new String[] {

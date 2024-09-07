@@ -23,13 +23,14 @@ import android.adservices.common.AdDataFixture;
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
-import org.junit.Assert;
+import com.android.adservices.common.AdServicesUnitTestCase;
+
 import org.junit.Test;
 
 import java.util.List;
 import java.util.Locale;
 
-public class AdDataValidatorTest {
+public final class AdDataValidatorTest extends AdServicesUnitTestCase {
     private static final FrequencyCapAdDataValidator FREQUENCY_CAP_AD_DATA_VALIDATOR =
             new FrequencyCapAdDataValidatorImpl();
 
@@ -45,12 +46,11 @@ public class AdDataValidatorTest {
 
     @Test
     public void testValidAdData() {
-        Assert.assertTrue(
-                mValidator
-                        .getValidationViolations(
+        expect.that(
+                        mValidator.getValidationViolations(
                                 AdDataFixture.getValidAdsByBuyer(CommonFixture.VALID_BUYER_1)
-                                        .get(0))
-                        .isEmpty());
+                                        .get(0)))
+                .isEmpty();
     }
 
     @Test

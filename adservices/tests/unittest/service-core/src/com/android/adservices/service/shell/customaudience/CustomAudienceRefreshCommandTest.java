@@ -50,7 +50,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
 
-public class CustomAudienceRefreshCommandTest
+public final class CustomAudienceRefreshCommandTest
         extends ShellCommandTestCase<CustomAudienceRefreshCommand> {
 
     public static final Instant OVERRIDE_CURRENT_TIME = Instant.now();

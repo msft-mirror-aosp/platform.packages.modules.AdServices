@@ -18,15 +18,16 @@ package com.android.adservices.service.common.bhttp;
 
 import static com.android.adservices.service.common.bhttp.BinaryHttpTestUtil.combineSections;
 
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
+
+import com.android.adservices.common.AdServicesUnitTestCase;
 
 import org.junit.Test;
 
-public class BinaryHttpByteArrayReaderTest {
+public final class BinaryHttpByteArrayReaderTest extends AdServicesUnitTestCase {
 
     @Test
     public void testReadNextKnownLengthData_canReadAllComponents() {
@@ -40,15 +41,21 @@ public class BinaryHttpByteArrayReaderTest {
                                 expectedData // data
                                 ));
 
-        assertEquals(0, reader.getFramingIndicatorByte());
-        assertTrue(reader.hasRemainingBytes());
+        assertWithMessage("getFramingIndicatorByte")
+                .that(reader.getFramingIndicatorByte())
+                .isEqualTo(0);
+        assertWithMessage("hasRemainingBytes").that(reader.hasRemainingBytes()).isTrue();
         BinaryHttpMessageDeserializer.BinaryHttpByteArrayReader subReader =
                 reader.readNextKnownLengthData();
-        assertFalse(reader.hasRemainingBytes());
+        assertWithMessage("hasRemainingBytes").that(reader.hasRemainingBytes()).isFalse();
         assertArrayEquals(combineSections(new byte[] {0x01}, expectedData), subReader.getData());
-        assertTrue(subReader.hasRemainingBytes());
+        assertWithMessage("subReader.hasRemainingBytes")
+                .that(subReader.hasRemainingBytes())
+                .isTrue();
         assertArrayEquals(expectedData, subReader.readNextKnownLengthData().getData());
-        assertFalse(subReader.hasRemainingBytes());
+        assertWithMessage("subReader.hasRemainingBytes")
+                .that(subReader.hasRemainingBytes())
+                .isFalse();
         assertThrows(IllegalArgumentException.class, subReader::readNextKnownLengthData);
     }
 
@@ -61,8 +68,10 @@ public class BinaryHttpByteArrayReaderTest {
                                 new byte[] {0x01} // data length
                                 ));
 
-        assertEquals(0, reader.getFramingIndicatorByte());
-        assertTrue(reader.hasRemainingBytes());
+        assertWithMessage("getFramingIndicatorByte")
+                .that(reader.getFramingIndicatorByte())
+                .isEqualTo(0);
+        assertWithMessage("hasRemainingBytes").that(reader.hasRemainingBytes()).isTrue();
         assertThrows(IllegalArgumentException.class, reader::readNextKnownLengthData);
     }
 }

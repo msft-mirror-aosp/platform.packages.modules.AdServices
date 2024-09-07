@@ -29,7 +29,7 @@ import org.junit.Test;
 /** Unit test for {@link TestableSystemProperties} */
 public final class TestableSystemPropertiesTest {
     @Rule
-    public AdServicesExtendedMockitoRule mAdServicesExtendedMockitoRule =
+    public final AdServicesExtendedMockitoRule mAdServicesExtendedMockitoRule =
             new AdServicesExtendedMockitoRule(TestableSystemProperties::new);
 
     @Test
@@ -111,7 +111,7 @@ public final class TestableSystemPropertiesTest {
 
         // Verify system property from adb command returns the configured value.
         assertThat(getSystemPropertyByRunningAdbCommand(systemPropertyKey))
-                .isEqualTo(String.valueOf(shellCommandConfiguredValue));
+                .isEqualTo(shellCommandConfiguredValue);
 
         // Verify the SystemProperties getter method is stubbed to return overridden value.
         assertThat(SystemProperties.get(systemPropertyKey, defaultValue)).isEqualTo(defaultValue);

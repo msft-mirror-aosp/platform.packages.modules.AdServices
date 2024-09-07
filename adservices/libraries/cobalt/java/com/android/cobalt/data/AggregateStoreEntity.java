@@ -93,7 +93,6 @@ abstract class AggregateStoreEntity {
      *
      * <p>Used by Room to instantiate objects.
      */
-    @NonNull
     static AggregateStoreEntity create(
             ReportKey reportKey,
             int dayIndex,

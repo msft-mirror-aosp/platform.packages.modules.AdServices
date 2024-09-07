@@ -18,7 +18,6 @@ package com.android.cobalt.impl;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-import android.annotation.NonNull;
 import android.util.Log;
 
 import com.android.cobalt.CobaltLogger;
@@ -26,7 +25,6 @@ import com.android.cobalt.data.DataService;
 import com.android.cobalt.data.EventVector;
 import com.android.cobalt.data.ReportKey;
 import com.android.cobalt.domain.Project;
-import com.android.cobalt.logging.CobaltOperationLogger;
 import com.android.cobalt.system.CobaltClock;
 import com.android.cobalt.system.SystemClock;
 import com.android.cobalt.system.SystemData;
@@ -59,16 +57,14 @@ public final class CobaltLoggerImpl implements CobaltLogger {
     private final ExecutorService mExecutor;
     private final SystemClock mSystemClock;
     private final boolean mEnabled;
-    private final CobaltOperationLogger mOperationLogger;
 
     public CobaltLoggerImpl(
-            @NonNull Project project,
-            @NonNull ReleaseStage releaseStage,
-            @NonNull DataService dataService,
-            @NonNull SystemData systemData,
-            @NonNull ExecutorService executor,
-            @NonNull SystemClock systemClock,
-            @NonNull CobaltOperationLogger operationLogger,
+            Project project,
+            ReleaseStage releaseStage,
+            DataService dataService,
+            SystemData systemData,
+            ExecutorService executor,
+            SystemClock systemClock,
             boolean enabled) {
         mProject = Objects.requireNonNull(project);
         mReleaseStage = Objects.requireNonNull(releaseStage);
@@ -76,7 +72,6 @@ public final class CobaltLoggerImpl implements CobaltLogger {
         mSystemData = Objects.requireNonNull(systemData);
         mExecutor = Objects.requireNonNull(executor);
         mSystemClock = Objects.requireNonNull(systemClock);
-        mOperationLogger = Objects.requireNonNull(operationLogger);
         mEnabled = enabled;
     }
 
@@ -269,8 +264,7 @@ public final class CobaltLoggerImpl implements CobaltLogger {
                                 eventVector,
                                 report.getEventVectorBufferMax(),
                                 report.getStringBufferMax(),
-                                stringValue,
-                                mOperationLogger));
+                                stringValue));
             }
         }
 

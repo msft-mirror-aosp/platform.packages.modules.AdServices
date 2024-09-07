@@ -18,6 +18,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.android.adservices.tests.appsetid" >
     <!-- App set id requires network capabilities, adding permission to check network state -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <instrumentation
         android:name="androidx.test.runner.AndroidJUnitRunner"

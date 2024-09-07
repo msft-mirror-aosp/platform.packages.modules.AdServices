@@ -54,7 +54,6 @@ abstract class GlobalValueEntity {
      *
      * <p>Used by Room to instantiate objects.
      */
-    @NonNull
     static GlobalValueEntity create(Key key, String value) {
         return new AutoValue_GlobalValueEntity(key, value);
     }

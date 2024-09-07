@@ -16,15 +16,20 @@
 
 package com.android.adservices.data.adselection.datahandlers;
 
+import static com.google.auto.value.AutoValue.CopyAnnotations;
+
 import android.annotation.NonNull;
 import android.net.Uri;
 
 import com.google.auto.value.AutoValue;
 
+import java.util.Objects;
+
 /**
  * Data class representing the interaction event reporting data associated with an ad selection run.
  */
 @AutoValue
+@CopyAnnotations
 public abstract class RegisteredAdInteraction {
 
     /** Interaction key associated with the event being reported. */
@@ -39,6 +44,24 @@ public abstract class RegisteredAdInteraction {
     @NonNull
     public static Builder builder() {
         return new AutoValue_RegisteredAdInteraction.Builder();
+    }
+
+    /**
+     * Create a new {@link RegisteredAdInteraction}. Room uses this factory method.
+     *
+     * @param interactionKey Set the interaction key of the event.
+     * @param interactionReportingUri Set the reporting URI of the event.
+     * @return The build {@link RegisteredAdInteraction}.
+     */
+    @NonNull
+    public static RegisteredAdInteraction create(
+            @NonNull String interactionKey, @NonNull Uri interactionReportingUri) {
+        Objects.requireNonNull(interactionKey);
+        Objects.requireNonNull(interactionReportingUri);
+        return builder()
+                .setInteractionKey(interactionKey)
+                .setInteractionReportingUri(interactionReportingUri)
+                .build();
     }
 
     /** Builder for RegisteredAdInteraction. */

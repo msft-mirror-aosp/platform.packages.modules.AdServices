@@ -18,7 +18,6 @@ package com.android.adservices.service;
 
 import static com.android.adservices.common.DeviceConfigUtil.setAdservicesFlag;
 import static com.android.adservices.service.DeviceConfigAndSystemPropertiesExpectations.mockGetAdServicesFlag;
-import static com.android.adservices.service.DeviceConfigAndSystemPropertiesExpectations.verifyGetBooleanDeviceConfigFlagNotCalled;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_BACK_COMPAT;
 import static com.android.adservices.service.FlagsConstants.KEY_GLOBAL_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH;
@@ -566,7 +565,7 @@ public final class PhFlagsTestHelper {
     }
 
     /** Sets the value of {@code KEY_MEASUREMENT_KILL_SWITCH} */
-    public void setMsmmtKillSwitch(boolean value) {
+    public void setMsmtKillSwitch(boolean value) {
         // NOTE: need to set global kill-switch as well, as getMeasurementEnabled() calls it first
         setGlobalKillSwitch(value);
         mockGetAdServicesFlag(KEY_MEASUREMENT_KILL_SWITCH, value);

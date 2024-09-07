@@ -21,27 +21,20 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.shared.util.Clock;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
-public class ApiServiceLatencyCalculatorTest {
+public final class ApiServiceLatencyCalculatorTest extends AdServicesMockitoTestCase {
     private static final long START_ELAPSED_TIMESTAMP = 105L;
     private static final long CURRENT_ELAPSED_TIMESTAMP = 107L;
     private static final long STOP_ELAPSED_TIMESTAMP = 110L;
     private static final int INTERNAL_LATENCY_MS =
             (int) (STOP_ELAPSED_TIMESTAMP - START_ELAPSED_TIMESTAMP);
 
-
     @Mock private Clock mMockClock;
-
-    @Before
-    public void setUp() {
-        MockitoAnnotations.initMocks(this);
-    }
 
     @Test
     public void testApiServiceLatencyCalculator_currentElapsedTimeLatency() {

@@ -33,11 +33,11 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import androidx.test.filters.SmallTest;
-
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.stats.AdServicesStatsLog;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.mobiledatadownload.LogProto.DataDownloadFileGroupStats;
 import com.google.mobiledatadownload.LogProto.MddDownloadResultLog;
@@ -46,16 +46,13 @@ import com.google.mobiledatadownload.LogProto.MddLogData;
 import com.google.mobiledatadownload.LogProto.MddStorageStats;
 import com.google.protobuf.MessageLite;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoSession;
 import org.mockito.Spy;
 
-@SmallTest
-public class MddLoggerTest {
+@RequiresSdkLevelAtLeastS()
+@SpyStatic(AdServicesStatsLog.class)
+public final class MddLoggerTest extends AdServicesExtendedMockitoTestCase {
 
     // Enum code defined in log_enums.proto.
     private static final int EVENT_CODE_UNSPECIFIED = 0;
@@ -67,7 +64,6 @@ public class MddLoggerTest {
     private static final int TEST_DAYS = 3;
     private static final long TEST_BYTE_USED = 5;
 
-    private MockitoSession mMockitoSession;
     private MddLogger mMddLogger = new MddLogger();
     private MessageLite mMessageLite;
 
@@ -76,25 +72,6 @@ public class MddLoggerTest {
     @Spy private MddFileGroupStatus mMockMddFileGroupStatus;
     @Spy private DataDownloadFileGroupStats mSpyDataDownloadFileGroupStats;
     @Spy private MddStorageStats mMockMddStorageStats;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
-    @Before
-    public void setup() {
-        mMockitoSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(AdServicesStatsLog.class)
-                        .initMocks(this)
-                        .startMocking();
-    }
-
-    @After
-    public void teardown() {
-        if (mMockitoSession != null) {
-            mMockitoSession.finishMocking();
-        }
-    }
 
     @Test
     public void mddLoggerTest_unspecified() {

@@ -22,21 +22,20 @@ import static org.mockito.Mockito.verify;
 
 import android.content.Context;
 
+import com.android.adservices.common.AdServicesMockitoTestCase;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
 import java.util.function.BiConsumer;
 
-public class AdservicesSyncUtilTest {
+public final class AdservicesSyncUtilTest extends AdServicesMockitoTestCase {
     private AdServicesSyncUtil mAdservicesSyncUtil;
-    @Mock BiConsumer<Context, Boolean> mConsumer;
-    @Mock private Context mContext;
+    @Mock private BiConsumer<Context, Boolean> mConsumer;
 
     @Before
     public void setup() {
-        MockitoAnnotations.initMocks(this);
         mAdservicesSyncUtil = AdServicesSyncUtil.getInstance();
         doNothing().when(mConsumer).accept(any(Context.class), any(Boolean.class));
     }
@@ -44,7 +43,7 @@ public class AdservicesSyncUtilTest {
     @Test
     public void testRegisterConsumerAndExecute() {
         mAdservicesSyncUtil.register(mConsumer);
-        mAdservicesSyncUtil.execute(mContext, true);
-        verify(mConsumer).accept(mContext, true);
+        mAdservicesSyncUtil.execute(mMockContext, true);
+        verify(mConsumer).accept(mMockContext, true);
     }
 }

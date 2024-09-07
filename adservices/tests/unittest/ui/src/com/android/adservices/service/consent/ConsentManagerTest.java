@@ -169,6 +169,7 @@ import com.android.adservices.service.ui.data.UxStatesDao;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.util.EnrollmentData;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
@@ -254,15 +255,21 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     @Mock private UserProfileIdManager mUserProfileIdManagerMock;
     @Mock private UxStatesDao mUxStatesDaoMock;
     @Mock private StatsdAdServicesLogger mStatsdAdServicesLoggerMock;
+    @Mock private AdServicesErrorLogger mMockAdServicesErrorLogger;
 
     @Before
     public void setup() throws IOException {
         mDatastore =
                 new AtomicFileDatastore(
-                        mSpyContext, AppConsentDao.DATASTORE_NAME, AppConsentDao.DATASTORE_VERSION);
+                        mSpyContext,
+                        AppConsentDao.DATASTORE_NAME,
+                        AppConsentDao.DATASTORE_VERSION,
+                        mMockAdServicesErrorLogger);
         // For each file, we should ensure there is only one instance of datastore that is able to
         // access it. (Refer to AtomicFileDatastore.class)
-        mConsentDatastore = ConsentManager.createAndInitializeDataStore(mSpyContext);
+        mConsentDatastore =
+                ConsentManager.createAndInitializeDataStore(
+                        mSpyContext, mMockAdServicesErrorLogger);
         mAppConsentDaoSpy = spy(new AppConsentDao(mDatastore, mSpyContext.getPackageManager()));
         mEnrollmentDaoSpy =
                 spy(
@@ -5242,7 +5249,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                         .setModule(Module.TOPIC)
                         .setModuleState(AdServicesModuleState.MODULE_STATE_DISABLED)
                         .build();
-        spyConsentManager.setModuleState(moduleState);
+        spyConsentManager.setModuleStates(List.of(moduleState));
         data.putModuleState(moduleState);
 
         moduleState =
@@ -5250,7 +5257,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                         .setModule(Module.PA)
                         .setModuleState(AdServicesModuleState.MODULE_STATE_ENABLED)
                         .build();
-        spyConsentManager.setModuleState(moduleState);
+        spyConsentManager.setModuleStates(List.of(moduleState));
         data.putModuleState(moduleState);
 
         moduleState =
@@ -5258,9 +5265,14 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                         .setModule(Module.MEASUREMENT)
                         .setModuleState(AdServicesModuleState.MODULE_STATE_ENABLED)
                         .build();
-        spyConsentManager.setModuleState(moduleState);
-        spyConsentManager.setUserChoice(
-                Module.MEASUREMENT, AdServicesModuleUserChoice.USER_CHOICE_OPTED_OUT);
+        spyConsentManager.setModuleStates(List.of(moduleState));
+
+        AdServicesModuleUserChoice userChoice =
+                new AdServicesModuleUserChoice.Builder()
+                        .setModule(Module.MEASUREMENT)
+                        .setUserChoice(AdServicesModuleUserChoice.USER_CHOICE_OPTED_OUT)
+                        .build();
+        spyConsentManager.setUserChoices(List.of(userChoice));
         data.putModuleState(moduleState);
         data.putUserChoice(Module.MEASUREMENT, AdServicesModuleUserChoice.USER_CHOICE_OPTED_OUT);
 
@@ -5269,9 +5281,14 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                         .setModule(Module.PAS)
                         .setModuleState(AdServicesModuleState.MODULE_STATE_ENABLED)
                         .build();
-        spyConsentManager.setModuleState(moduleState);
-        spyConsentManager.setUserChoice(
-                Module.PAS, AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN);
+        spyConsentManager.setModuleStates(List.of(moduleState));
+
+        AdServicesModuleUserChoice userChoicePa =
+                new AdServicesModuleUserChoice.Builder()
+                        .setModule(Module.PAS)
+                        .setUserChoice(AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN)
+                        .build();
+        spyConsentManager.setUserChoices(List.of(userChoicePa));
         data.putModuleState(moduleState);
         data.putUserChoice(Module.PAS, AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN);
 
@@ -5280,11 +5297,13 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                 verify(mMockIAdServicesManager, never()).setModuleEnrollmentState(anyString());
                 break;
             case Flags.SYSTEM_SERVER_ONLY, Flags.PPAPI_AND_SYSTEM_SERVER:
-                doReturn(data.serialize()).when(mMockIAdServicesManager).getModuleEnrollmentState();
+                doReturn(EnrollmentData.serializeBase64(data))
+                        .when(mMockIAdServicesManager)
+                        .getModuleEnrollmentState();
                 verify(mMockIAdServicesManager, times(6)).setModuleEnrollmentState(anyString());
                 break;
             case Flags.APPSEARCH_ONLY:
-                doReturn(data.serialize())
+                doReturn(EnrollmentData.serializeBase64(data))
                         .when(mAppSearchConsentManagerMock)
                         .getModuleEnrollmentState();
                 verify(mAppSearchConsentManagerMock, times(6))

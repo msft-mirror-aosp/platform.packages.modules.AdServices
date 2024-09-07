@@ -18,13 +18,16 @@ package com.android.adservices.service.common.bhttp;
 
 import static com.android.adservices.service.common.bhttp.BinaryHttpTestUtil.combineSections;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
+
+import com.android.adservices.common.AdServicesUnitTestCase;
 
 import org.junit.Test;
 
-public class Frc9000VariableLengthIntegerTest {
+public final class Frc9000VariableLengthIntegerTest extends AdServicesUnitTestCase {
 
     @Test
     public void testFrc9000VariableLengthInteger() {
@@ -62,11 +65,11 @@ public class Frc9000VariableLengthIntegerTest {
     }
 
     private void testEquals(byte[] bytes, long number) {
-        assertEquals(
-                number,
-                new BinaryHttpMessageDeserializer.BinaryHttpByteArrayReader(
-                                combineSections(new byte[1], bytes))
-                        .readNextRfc9000Int());
+        assertThat(number)
+                .isEqualTo(
+                        new BinaryHttpMessageDeserializer.BinaryHttpByteArrayReader(
+                                        combineSections(new byte[1], bytes))
+                                .readNextRfc9000Int());
         assertArrayEquals(bytes, Frc9000VariableLengthIntegerUtil.toFrc9000Int(number));
     }
 }

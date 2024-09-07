@@ -20,6 +20,7 @@ import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.cobalt.testing.logging.FakeCobaltOperationLogger;
 
 import org.junit.Test;
 
@@ -31,20 +32,31 @@ public final class CobaltDataServiceFactoryTest extends AdServicesUnitTestCase {
     private static final ExecutorService EXECUTOR_SERVICE = Executors.newCachedThreadPool();
 
     @Test
-    public void nullContext_throwsNullPointerException() throws Exception {
+    public void testNullContext_throwsNullPointerException() throws Exception {
         assertThrows(
                 NullPointerException.class,
                 () -> {
-                    CobaltDataServiceFactory.createDataService(null, EXECUTOR_SERVICE);
+                    CobaltDataServiceFactory.createDataService(
+                            null, EXECUTOR_SERVICE, new FakeCobaltOperationLogger());
                 });
     }
 
     @Test
-    public void nullExecutorService_throwsNullPointerException() throws Exception {
+    public void testNullExecutorService_throwsNullPointerException() throws Exception {
         assertThrows(
                 NullPointerException.class,
                 () -> {
-                    CobaltDataServiceFactory.createDataService(sContext, null);
+                    CobaltDataServiceFactory.createDataService(
+                            sContext, null, new FakeCobaltOperationLogger());
+                });
+    }
+
+    @Test
+    public void testNullOperationLogger_throwsNullPointerException() throws Exception {
+        assertThrows(
+                NullPointerException.class,
+                () -> {
+                    CobaltDataServiceFactory.createDataService(sContext, EXECUTOR_SERVICE, null);
                 });
     }
 }

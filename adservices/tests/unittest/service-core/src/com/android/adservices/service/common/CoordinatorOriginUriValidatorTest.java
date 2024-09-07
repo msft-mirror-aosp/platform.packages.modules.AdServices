@@ -16,13 +16,16 @@
 
 package com.android.adservices.service.common;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import android.net.Uri;
 
-import org.junit.Assert;
+import com.android.adservices.common.AdServicesUnitTestCase;
+
 import org.junit.Before;
 import org.junit.Test;
 
-public class CoordinatorOriginUriValidatorTest {
+public final class CoordinatorOriginUriValidatorTest extends AdServicesUnitTestCase {
     private CoordinatorOriginUriValidator mValidator;
     private static final String ALLOWLIST = "https://example-2.com,https://example.com";
 
@@ -41,18 +44,17 @@ public class CoordinatorOriginUriValidatorTest {
     public void test_multiCloudFlagOff_invalidUri_hasNoViolation() {
         mValidator = CoordinatorOriginUriValidator.createDisabledInstance();
 
-        Assert.assertTrue(mValidator.getValidationViolations(Uri.parse(INVALID_URL)).isEmpty());
+        assertThat(mValidator.getValidationViolations(Uri.parse(INVALID_URL))).isEmpty();
     }
 
     @Test
     public void test_validUri_hasNoViolation() {
-        Assert.assertTrue(
-                mValidator.getValidationViolations(Uri.parse(SCHEME + HOSTNAME)).isEmpty());
+        assertThat(mValidator.getValidationViolations(Uri.parse(SCHEME + HOSTNAME))).isEmpty();
     }
 
     @Test
     public void test_nullUri_hasNoViolation() {
-        Assert.assertTrue(mValidator.getValidationViolations(null).isEmpty());
+        assertThat(mValidator.getValidationViolations(null)).isEmpty();
     }
 
     @Test

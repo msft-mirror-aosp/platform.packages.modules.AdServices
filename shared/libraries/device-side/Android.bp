@@ -31,6 +31,8 @@ java_library {
         "framework-annotations-lib",
     ],
     static_libs: [
+        "adservices-shared-error-logging",
+        "adservices-statsd",
         "adservices-shared-util",
         "modules-utils-build",
         "modules-utils-preconditions",
@@ -63,6 +65,29 @@ java_library {
         "libprotobuf-java-lite",
         "androidx.datastore_datastore",
         "androidx.datastore_datastore-guava",
+    ],
+    apex_available: [
+        "com.android.adservices",
+        "com.android.extservices",
+        "com.android.ondevicepersonalization",
+    ],
+}
+
+java_library {
+    name: "adservices-statsd",
+    sdk_version: "module_current",
+    min_sdk_version: "30",
+    srcs: [
+        ":statslog-adservices-java-gen",
+    ],
+    libs: [
+        "androidx.annotation_annotation",
+        "framework-statsd.stubs.module_lib",
+    ],
+    visibility: [
+        "//packages/modules/AdServices:__subpackages__",
+        "//packages/modules/ExtServices:__subpackages__",
+        "//packages/modules/OnDevicePersonalization:__subpackages__",
     ],
     apex_available: [
         "com.android.adservices",
@@ -218,7 +243,7 @@ java_library {
     min_sdk_version: "30",
     sdk_version: "module_current",
     srcs: [
-        "java/com/android/adservices/shared/proto/**/*.java",
+        "java/com/android/adservices/shared/util/ProtoParser.java",
     ],
     static_libs: [
         "adservices-shared-proto-lite",
@@ -382,6 +407,10 @@ java_defaults {
     // modules-utils-extended-mockito-rule-defaults once it have
     // compile_multilib: "both",
     defaults: ["modules-utils-testable-device-config-defaults"],
+    // TODO(b/345219434, b/354885695): explictily adding compile_multilib just
+    // in case the build is using the modules-utils-testable-device-config-defaults
+    // version that removed it
+    compile_multilib: "both",
     visibility: [
         "//packages/modules/AdServices:__subpackages__",
         "//packages/modules/ExtServices:__subpackages__",
@@ -398,6 +427,9 @@ java_library {
     sdk_version: "module_current",
     srcs: [
         "java/com/android/adservices/shared/util/*.java",
+    ],
+    exclude_srcs: [
+        "java/com/android/adservices/shared/util/ProtoParser.java",
     ],
     libs: [
         "framework-annotations-lib",

@@ -28,128 +28,83 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import android.os.Build;
 import android.os.SystemProperties;
 
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.modules.utils.build.SdkLevel;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import org.junit.Assume;
 import org.junit.Test;
-import org.mockito.MockitoSession;
 
-public class BuildCompatUtilsTest {
+public final class BuildCompatUtilsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
+    @RequiresSdkLevelAtLeastS()
+    @MockStatic(Build.class)
+    @SpyStatic(BuildCompatUtils.class)
     public void testIsDebuggable_SPlus_debuggable() {
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
-
-        MockitoSession session =
-                ExtendedMockito.mockitoSession()
-                        .mockStatic(Build.class)
-                        .spyStatic(BuildCompatUtils.class)
-                        .startMocking();
-
-        try {
-            doReturn(true).when(Build::isDebuggable);
-            assertWithMessage("BuildCompatUtils.isDebuggable")
-                    .that(BuildCompatUtils.isDebuggable())
-                    .isTrue();
-            verify(Build::isDebuggable, atLeastOnce());
-            verify(BuildCompatUtils::computeIsDebuggable_R, never());
-        } finally {
-            session.finishMocking();
-        }
+        doReturn(true).when(Build::isDebuggable);
+        assertWithMessage("BuildCompatUtils.isDebuggable")
+                .that(BuildCompatUtils.isDebuggable())
+                .isTrue();
+        verify(Build::isDebuggable, atLeastOnce());
+        verify(BuildCompatUtils::computeIsDebuggable_R, never());
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS()
+    @MockStatic(Build.class)
+    @SpyStatic(BuildCompatUtils.class)
     public void testIsDebuggable_SPlus_notDebuggable() {
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
-
-        MockitoSession session =
-                ExtendedMockito.mockitoSession()
-                        .mockStatic(Build.class)
-                        .spyStatic(BuildCompatUtils.class)
-                        .startMocking();
-
-        try {
-            doReturn(false).when(Build::isDebuggable);
-            assertWithMessage("BuildCompatUtils.isDebuggable")
-                    .that(BuildCompatUtils.isDebuggable())
-                    .isFalse();
-            verify(Build::isDebuggable, atLeastOnce());
-            verify(BuildCompatUtils::computeIsDebuggable_R, never());
-        } finally {
-            session.finishMocking();
-        }
+        doReturn(false).when(Build::isDebuggable);
+        assertWithMessage("BuildCompatUtils.isDebuggable")
+                .that(BuildCompatUtils.isDebuggable())
+                .isFalse();
+        verify(Build::isDebuggable, atLeastOnce());
+        verify(BuildCompatUtils::computeIsDebuggable_R, never());
     }
 
     @Test
+    @MockStatic(SdkLevel.class)
+    @SpyStatic(BuildCompatUtils.class)
     public void testIsDebuggable_RMinus_debuggable() {
-        MockitoSession session =
-                ExtendedMockito.mockitoSession()
-                        .mockStatic(SdkLevel.class)
-                        .spyStatic(BuildCompatUtils.class)
-                        .startMocking();
-
-        try {
-            doReturn(false).when(SdkLevel::isAtLeastS);
-            doReturn(true).when(BuildCompatUtils::computeIsDebuggable_R);
-            assertWithMessage("BuildCompatUtils.isDebuggable")
-                    .that(BuildCompatUtils.isDebuggable())
-                    .isTrue();
-            verify(BuildCompatUtils::computeIsDebuggable_R);
-        } finally {
-            session.finishMocking();
-        }
+        mocker.mockIsAtLeastS(false);
+        doReturn(true).when(BuildCompatUtils::computeIsDebuggable_R);
+        assertWithMessage("BuildCompatUtils.isDebuggable")
+                .that(BuildCompatUtils.isDebuggable())
+                .isTrue();
+        verify(BuildCompatUtils::computeIsDebuggable_R);
     }
 
     @Test
+    @MockStatic(SdkLevel.class)
+    @SpyStatic(BuildCompatUtils.class)
     public void testIsDebuggable_RMinus_notDebuggable() {
-        MockitoSession session =
-                ExtendedMockito.mockitoSession()
-                        .mockStatic(SdkLevel.class)
-                        .spyStatic(BuildCompatUtils.class)
-                        .startMocking();
-
-        try {
-            doReturn(false).when(SdkLevel::isAtLeastS);
-            doReturn(false).when(BuildCompatUtils::computeIsDebuggable_R);
-            assertWithMessage("BuildCompatUtils.isDebuggable")
-                    .that(BuildCompatUtils.isDebuggable())
-                    .isFalse();
-            verify(BuildCompatUtils::computeIsDebuggable_R);
-        } finally {
-            session.finishMocking();
-        }
+        mocker.mockIsAtLeastS(false);
+        doReturn(false).when(BuildCompatUtils::computeIsDebuggable_R);
+        assertWithMessage("BuildCompatUtils.isDebuggable")
+                .that(BuildCompatUtils.isDebuggable())
+                .isFalse();
+        verify(BuildCompatUtils::computeIsDebuggable_R);
     }
 
     @Test
+    @SpyStatic(SystemProperties.class)
     public void testComputeIsDebuggable_notDebuggable() {
-        MockitoSession session =
-                ExtendedMockito.mockitoSession().spyStatic(SystemProperties.class).startMocking();
-
-        try {
-            doReturn(0).when(() -> SystemProperties.getInt(anyString(), anyInt()));
-            assertWithMessage("BuildCompatUtils.computeIsDebuggable")
-                    .that(BuildCompatUtils.computeIsDebuggable_R())
-                    .isFalse();
-            verify(() -> SystemProperties.getInt("ro.debuggable", 0));
-        } finally {
-            session.finishMocking();
-        }
+        doReturn(0).when(() -> SystemProperties.getInt(anyString(), anyInt()));
+        assertWithMessage("BuildCompatUtils.computeIsDebuggable")
+                .that(BuildCompatUtils.computeIsDebuggable_R())
+                .isFalse();
+        verify(() -> SystemProperties.getInt("ro.debuggable", 0));
     }
 
     @Test
+    @SpyStatic(SystemProperties.class)
     public void testComputeIsDebuggable_debuggable() {
-        MockitoSession session =
-                ExtendedMockito.mockitoSession().spyStatic(SystemProperties.class).startMocking();
-
-        try {
-            doReturn(1).when(() -> SystemProperties.getInt(anyString(), anyInt()));
-            assertWithMessage("BuildCompatUtils.computeIsDebuggable")
-                    .that(BuildCompatUtils.computeIsDebuggable_R())
-                    .isTrue();
-            verify(() -> SystemProperties.getInt("ro.debuggable", 0));
-        } finally {
-            session.finishMocking();
-        }
+        doReturn(1).when(() -> SystemProperties.getInt(anyString(), anyInt()));
+        assertWithMessage("BuildCompatUtils.computeIsDebuggable")
+                .that(BuildCompatUtils.computeIsDebuggable_R())
+                .isTrue();
+        verify(() -> SystemProperties.getInt("ro.debuggable", 0));
     }
 }

@@ -42,6 +42,9 @@ abstract class AbstractRule implements TestRule, TestNamer {
                 mTestName = TestHelper.getTestName(description);
                 try {
                     AbstractRule.this.evaluate(base, description);
+                } catch (Throwable t) {
+                    mLog.w("%s failed; rethrowing %s", mTestName, t);
+                    throw t;
                 } finally {
                     mTestName = DEFAULT_TEST_NAME;
                 }

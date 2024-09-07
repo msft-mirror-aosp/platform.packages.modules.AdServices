@@ -20,13 +20,12 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_OUT_SELECTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
 
-import org.junit.Assert;
+import com.android.adservices.common.AdServicesUnitTestCase;
+
 import org.junit.Test;
 
-/**
- * Unit test for {@link UIStats}.
- */
-public class UIStatsTest {
+/** Unit test for {@link UIStats}. */
+public final class UIStatsTest extends AdServicesUnitTestCase {
 
     @Test
     public void testBuilderCreateSuccess() {
@@ -36,9 +35,9 @@ public class UIStatsTest {
                 .setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_OUT_SELECTED)
                 .build();
 
-        Assert.assertEquals(AD_SERVICES_SETTINGS_USAGE_REPORTED, stats.getCode());
-        Assert.assertEquals(AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW, stats.getRegion());
-        Assert.assertEquals(
-                AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_OUT_SELECTED, stats.getAction());
+        expect.that(stats.getCode()).isEqualTo(AD_SERVICES_SETTINGS_USAGE_REPORTED);
+        expect.that(stats.getRegion()).isEqualTo(AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW);
+        expect.that(stats.getAction())
+                .isEqualTo(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_OUT_SELECTED);
     }
 }

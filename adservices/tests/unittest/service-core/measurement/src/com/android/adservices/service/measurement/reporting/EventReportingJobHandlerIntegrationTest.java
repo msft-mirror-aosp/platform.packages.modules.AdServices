@@ -27,6 +27,8 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 
+import com.google.android.libraries.mobiledatadownload.internal.AndroidTimeSource;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Assert;
@@ -86,7 +88,11 @@ public class EventReportingJobHandlerIntegrationTest extends AbstractDbIntegrati
         EventReportingJobHandler spyReportingService =
                 Mockito.spy(
                         new EventReportingJobHandler(
-                                datastoreManager, mFlags, mLogger, sContext));
+                                datastoreManager,
+                                mFlags,
+                                mLogger,
+                                sContext,
+                                new AndroidTimeSource()));
         try {
             Mockito.doReturn(returnCode)
                     .when(spyReportingService)
@@ -108,12 +114,21 @@ public class EventReportingJobHandlerIntegrationTest extends AbstractDbIntegrati
                                 startValue, endValue));
                 break;
             case SINGLE_REPORT:
-                final int result = ((Number) Objects.requireNonNull(get("result"))).intValue();
+                final int uploadStatus =
+                        ((Number) Objects.requireNonNull(get("uploadStatus"))).intValue();
+                final int failureStatus =
+                        ((Number) Objects.requireNonNull(get("failureStatus"))).intValue();
                 final String id = (String) get("id");
+                ReportingStatus reportingStatus = new ReportingStatus();
+                spyReportingService.performReport(id, reportingStatus);
                 Assert.assertEquals(
-                        "Event report failed.",
-                        result,
-                        spyReportingService.performReport(id, new ReportingStatus()));
+                        "Event report failed: uploadStatus mismatch. ",
+                        uploadStatus,
+                        reportingStatus.getUploadStatus().getValue());
+                Assert.assertEquals(
+                        "Event report failed: failureStatus mismatch. ",
+                        failureStatus,
+                        reportingStatus.getFailureStatus().getValue());
                 break;
         }
     }

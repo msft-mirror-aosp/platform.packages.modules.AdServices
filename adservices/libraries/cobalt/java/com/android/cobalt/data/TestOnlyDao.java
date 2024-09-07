@@ -75,7 +75,6 @@ public abstract class TestOnlyDao {
         }
 
         /** Create a new row. */
-        @NonNull
         public static AggregateStoreTableRow create(
                 ReportKey reportKey,
                 int dayIndex,

@@ -45,9 +45,12 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 
+import java.util.concurrent.TimeUnit;
+
 public final class ClickVerifierTest extends AdServicesExtendedMockitoTestCase {
 
     private static final String SOURCE_REGISTRANT = "source_registrant";
+    private static final long MEASUREMENT_WINDOW_ONE_MINUTE = TimeUnit.MINUTES.toMillis(1);
 
     @Mock private InputManager mInputManager;
 
@@ -375,9 +378,10 @@ public final class ClickVerifierTest extends AdServicesExtendedMockitoTestCase {
             throws InterruptedException {
         // Setup
         InputEvent inputEvent = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
+        long mockedWindow = 200L;
         when(mMockFlags.getMeasurementRegistrationInputEventValidWindowMs())
-                .thenReturn(/* value */ 200L);
-        long registerTimestamp = mMockFlags.getMeasurementRegistrationInputEventValidWindowMs();
+                .thenReturn(/* value */ mockedWindow);
+        long registerTimestamp = mockedWindow;
         when(mMockFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(true);
         when(mInputManager.verifyInputEvent(inputEvent)).thenReturn(mVerifiedMotionEvent);
         when(mMockFlags.getMeasurementMaxSourcesPerClick()).thenReturn(1L);
@@ -405,8 +409,9 @@ public final class ClickVerifierTest extends AdServicesExtendedMockitoTestCase {
         InputEvent inputEvent = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
         when(mInputManager.verifyInputEvent(inputEvent)).thenReturn(mVerifiedMotionEvent);
         when(mMockFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(true);
-        when(mMockFlags.getMeasurementRegistrationInputEventValidWindowMs()).thenReturn(6000L);
-        long registerTimestamp = mMockFlags.getMeasurementRegistrationInputEventValidWindowMs() / 2;
+        when(mMockFlags.getMeasurementRegistrationInputEventValidWindowMs())
+                .thenReturn(MEASUREMENT_WINDOW_ONE_MINUTE);
+        long registerTimestamp = MEASUREMENT_WINDOW_ONE_MINUTE / 2;
         when(mMockFlags.getMeasurementIsClickDeduplicationEnabled()).thenReturn(true);
         when(mMockFlags.getMeasurementIsClickDeduplicationEnforced()).thenReturn(true);
         when(mMockFlags.getMeasurementMaxSourcesPerClick()).thenReturn(1L);
@@ -437,8 +442,9 @@ public final class ClickVerifierTest extends AdServicesExtendedMockitoTestCase {
         InputEvent inputEvent = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
         when(mInputManager.verifyInputEvent(inputEvent)).thenReturn(null);
         when(mMockFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(true);
-        when(mMockFlags.getMeasurementRegistrationInputEventValidWindowMs()).thenReturn(6000L);
-        long registerTimestamp = mMockFlags.getMeasurementRegistrationInputEventValidWindowMs() / 2;
+        when(mMockFlags.getMeasurementRegistrationInputEventValidWindowMs())
+                .thenReturn(MEASUREMENT_WINDOW_ONE_MINUTE);
+        long registerTimestamp = MEASUREMENT_WINDOW_ONE_MINUTE / 2;
         when(mMockFlags.getMeasurementIsClickDeduplicationEnabled()).thenReturn(true);
         when(mMockFlags.getMeasurementIsClickDeduplicationEnforced()).thenReturn(true);
         when(mMockFlags.getMeasurementMaxSourcesPerClick()).thenReturn(1L);
@@ -469,8 +475,9 @@ public final class ClickVerifierTest extends AdServicesExtendedMockitoTestCase {
         InputEvent inputEvent = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
         when(mInputManager.verifyInputEvent(inputEvent)).thenReturn(mVerifiedMotionEvent);
         when(mMockFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(true);
-        when(mMockFlags.getMeasurementRegistrationInputEventValidWindowMs()).thenReturn(6000L);
-        long registerTimestamp = mMockFlags.getMeasurementRegistrationInputEventValidWindowMs() * 2;
+        when(mMockFlags.getMeasurementRegistrationInputEventValidWindowMs())
+                .thenReturn(MEASUREMENT_WINDOW_ONE_MINUTE);
+        long registerTimestamp = MEASUREMENT_WINDOW_ONE_MINUTE * 2;
         when(mMockFlags.getMeasurementIsClickDeduplicationEnabled()).thenReturn(true);
         when(mMockFlags.getMeasurementIsClickDeduplicationEnforced()).thenReturn(true);
         when(mMockFlags.getMeasurementMaxSourcesPerClick()).thenReturn(1L);
@@ -501,8 +508,9 @@ public final class ClickVerifierTest extends AdServicesExtendedMockitoTestCase {
         InputEvent inputEvent = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
         when(mInputManager.verifyInputEvent(inputEvent)).thenReturn(mVerifiedMotionEvent);
         when(mMockFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(true);
-        when(mMockFlags.getMeasurementRegistrationInputEventValidWindowMs()).thenReturn(6000L);
-        long registerTimestamp = mMockFlags.getMeasurementRegistrationInputEventValidWindowMs() * 2;
+        when(mMockFlags.getMeasurementRegistrationInputEventValidWindowMs())
+                .thenReturn(MEASUREMENT_WINDOW_ONE_MINUTE);
+        long registerTimestamp = MEASUREMENT_WINDOW_ONE_MINUTE * 2;
         when(mMockFlags.getMeasurementIsClickDeduplicationEnabled()).thenReturn(true);
         when(mMockFlags.getMeasurementIsClickDeduplicationEnforced()).thenReturn(true);
         when(mMockFlags.getMeasurementMaxSourcesPerClick()).thenReturn(1L);

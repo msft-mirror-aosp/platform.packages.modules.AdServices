@@ -23,34 +23,23 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
-import android.content.Context;
-import android.util.Log;
-
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 import com.android.server.LocalManagerRegistry;
 import com.android.server.sdksandbox.SdkSandboxManagerLocal;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 
-public final class AdServicesManagerServiceLifeCycleTest {
+@SpyStatic(LocalManagerRegistry.class)
+public final class AdServicesManagerServiceLifeCycleTest extends AdServicesExtendedMockitoTestCase {
 
-    private static final String TAG = AdServicesManagerServiceLifeCycleTest.class.getSimpleName();
-
-    @Mock private Context mContext;
     @Mock private AdServicesManagerService mService;
     @Mock private SdkSandboxManagerLocal mSdkSandboxManagerLocal;
 
     // Need to use a spy to mock publishBinderService()
     private AdServicesManagerService.Lifecycle mSpyLifecycle;
-
-    @Rule
-    public final AdServicesExtendedMockitoRule extendedMockito =
-            new AdServicesExtendedMockitoRule.Builder(this)
-                    .spyStatic(LocalManagerRegistry.class)
-                    .build();
 
     @Before
     public void setUp() {
@@ -84,13 +73,13 @@ public final class AdServicesManagerServiceLifeCycleTest {
         verifyAdServiceRegisteredOnSdkManager(/* published= */ true);
     }
 
-    private static <T> void mockGetLocalManager(Class<T> managerClass, T manager) {
-        Log.v(TAG, "mockGetLocalManager(" + managerClass + ", " + manager + ")");
+    private <T> void mockGetLocalManager(Class<T> managerClass, T manager) {
+        mLog.v("mockGetLocalManager(%s, %s)", managerClass, manager);
         doReturn(manager).when(() -> LocalManagerRegistry.getManager(managerClass));
     }
 
-    private static void mockGetLocalManagerNotFound(Class<?> managerClass) {
-        Log.v(TAG, "mockGetLocalManagerNotFound(" + managerClass + ")");
+    private void mockGetLocalManagerNotFound(Class<?> managerClass) {
+        mLog.v("mockGetLocalManagerNotFound(%s)", managerClass);
         doReturn(null).when(() -> LocalManagerRegistry.getManager(managerClass));
     }
 

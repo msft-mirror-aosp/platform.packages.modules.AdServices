@@ -49,6 +49,7 @@ import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsTables;
+import com.android.adservices.errorlogging.AdServicesErrorLoggerImpl;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -70,6 +71,7 @@ import com.android.adservices.service.ui.data.UxStatesDao;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -235,7 +237,9 @@ public class ConsentManagerV2 {
                 if (sConsentManager == null) {
                     // Execute one-time consent migration if needed.
                     int consentSourceOfTruth = FlagsFactory.getFlags().getConsentSourceOfTruth();
-                    AtomicFileDatastore datastore = createAndInitializeDataStore(context);
+                    AtomicFileDatastore datastore =
+                            createAndInitializeDataStore(
+                                    context, AdServicesErrorLoggerImpl.getInstance());
                     AdServicesStorageManager adServicesManager =
                             AdServicesStorageManager.getInstance(
                                     AdServicesManager.getInstance(context));
@@ -827,12 +831,14 @@ public class ConsentManagerV2 {
     }
 
     @VisibleForTesting
-    static AtomicFileDatastore createAndInitializeDataStore(@NonNull Context context) {
+    static AtomicFileDatastore createAndInitializeDataStore(
+            Context context, AdServicesErrorLogger adServicesErrorLogger) {
         AtomicFileDatastore atomicFileDatastore =
                 new AtomicFileDatastore(
                         context,
                         ConsentConstants.STORAGE_XML_IDENTIFIER,
-                        ConsentConstants.STORAGE_VERSION);
+                        ConsentConstants.STORAGE_VERSION,
+                        adServicesErrorLogger);
 
         try {
             atomicFileDatastore.initialize();

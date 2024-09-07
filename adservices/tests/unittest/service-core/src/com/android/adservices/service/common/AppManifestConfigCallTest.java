@@ -34,13 +34,14 @@ import static com.android.adservices.service.common.AppManifestConfigCall.RESULT
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_DISALLOWED_BY_APP;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_DISALLOWED_GENERIC_ERROR;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_UNSPECIFIED;
+import static com.android.adservices.service.common.AppManifestConfigCall.apiToString;
 import static com.android.adservices.service.common.AppManifestConfigCall.isAllowed;
 import static com.android.adservices.service.common.AppManifestConfigCall.resultToString;
-import static com.android.adservices.service.common.AppManifestConfigCall.apiToString;
 
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.EqualsTester;
 
 import org.junit.Test;
 
@@ -110,40 +111,25 @@ public final class AppManifestConfigCallTest extends AdServicesUnitTestCase {
         AppManifestConfigCall otherPkg2api1 = new AppManifestConfigCall(PKG_NAME2, API_TOPICS);
         AppManifestConfigCall otherPkg2api2 = new AppManifestConfigCall(PKG_NAME2, API_ATTRIBUTION);
 
-        expectEquals(pkg1api1, pkg1api1);
-        expectEquals(pkg1api1, otherPkg1api1);
-        expectEquals(pkg1api2, pkg1api2);
-        expectEquals(pkg1api2, otherPkg1api2);
-        expectEquals(pkg2api1, pkg2api1);
-        expectEquals(pkg2api1, otherPkg2api1);
-        expectEquals(pkg2api2, pkg2api2);
-        expectEquals(pkg2api2, otherPkg2api2);
+        EqualsTester et = new EqualsTester(expect);
+        et.expectObjectsAreEqual(pkg1api1, pkg1api1);
+        et.expectObjectsAreEqual(pkg1api1, otherPkg1api1);
+        et.expectObjectsAreEqual(pkg1api2, pkg1api2);
+        et.expectObjectsAreEqual(pkg1api2, otherPkg1api2);
+        et.expectObjectsAreEqual(pkg2api1, pkg2api1);
+        et.expectObjectsAreEqual(pkg2api1, otherPkg2api1);
+        et.expectObjectsAreEqual(pkg2api2, pkg2api2);
+        et.expectObjectsAreEqual(pkg2api2, otherPkg2api2);
 
-        expectNotEquals(pkg1api1, pkg1api2);
-        expectNotEquals(pkg1api1, pkg2api1);
-        expectNotEquals(pkg1api1, pkg2api2);
+        et.expectObjectsAreNotEqual(pkg1api1, pkg1api2);
+        et.expectObjectsAreNotEqual(pkg1api1, pkg2api1);
+        et.expectObjectsAreNotEqual(pkg1api1, pkg2api2);
 
         // Adds result
         otherPkg1api1.result = RESULT_ALLOWED_APP_ALLOWS_ALL;
-        expectNotEquals(pkg1api1, otherPkg1api1);
+        et.expectObjectsAreNotEqual(pkg1api1, otherPkg1api1);
         pkg1api1.result = RESULT_ALLOWED_APP_ALLOWS_ALL;
-        expectEquals(pkg1api1, otherPkg1api1);
-    }
-
-    private void expectEquals(AppManifestConfigCall call1, AppManifestConfigCall call2) {
-        expect.withMessage("equals()").that(call1).isEqualTo(call2);
-        expect.withMessage("equals()").that(call2).isEqualTo(call1);
-        expect.withMessage("hashcode(%s, %s)", call1, call2)
-                .that(call1.hashCode())
-                .isEqualTo(call2.hashCode());
-    }
-
-    private void expectNotEquals(AppManifestConfigCall call1, AppManifestConfigCall call2) {
-        expect.withMessage("equals()").that(call1).isNotEqualTo(call2);
-        expect.withMessage("equals()").that(call2).isNotEqualTo(call1);
-        expect.withMessage("hashcode(%s, %s)", call1, call2)
-                .that(call1.hashCode())
-                .isNotEqualTo(call2.hashCode());
+        et.expectObjectsAreEqual(pkg1api1, otherPkg1api1);
     }
 
     @Test

@@ -21,7 +21,7 @@ import android.util.Log;
 import com.android.adservices.shared.common.flags.ModuleSharedFlags;
 import com.android.adservices.shared.proto.ErrorCodeList;
 import com.android.adservices.shared.proto.ErrorCodeSampleInterval;
-import com.android.adservices.shared.proto.ProtoParser;
+import com.android.adservices.shared.util.ProtoParser;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.HashMap;

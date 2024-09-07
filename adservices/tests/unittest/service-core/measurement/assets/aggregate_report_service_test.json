@@ -17,7 +17,8 @@
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0,
-            "registration_origin": "https://subdomain.example.test"
+            "registration_origin": "https://subdomain.example.test",
+            "api": "attribution-reporting"
           }
         ]
       },
@@ -36,14 +37,16 @@
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 1,
-            "registration_origin": "https://subdomain.example.test"
+            "registration_origin": "https://subdomain.example.test",
+            "api": "attribution-reporting"
           }
         ]
       },
       "param": {
         "responseCode": 200,
         "action": "SINGLE_REPORT",
-        "result": 0,
+        "uploadStatus": 1,
+        "failureStatus": 0,
         "id": "AR1",
         "registration_origin": "https://subdomain.example.test"
       }
@@ -65,7 +68,8 @@
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0,
-            "registration_origin": "https://subdomain.example.test"
+            "registration_origin": "https://subdomain.example.test",
+            "api": "attribution-reporting"
           }
         ]
       },
@@ -84,14 +88,16 @@
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0,
-            "registration_origin": "https://subdomain.example.test"
+            "registration_origin": "https://subdomain.example.test",
+            "api": "attribution-reporting"
           }
         ]
       },
       "param": {
         "responseCode": 400,
         "action": "SINGLE_REPORT",
-        "result": 4,
+        "uploadStatus": 2,
+        "failureStatus": 8,
         "id": "AR1",
         "registration_origin": "https://subdomain.example.test"
       }
@@ -113,7 +119,8 @@
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 1,
-            "registration_origin": "https://subdomain.example.test"
+            "registration_origin": "https://subdomain.example.test",
+            "api": "attribution-reporting"
           }
         ]
       },
@@ -132,14 +139,16 @@
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 1,
-            "registration_origin": "https://subdomain.example.test"
+            "registration_origin": "https://subdomain.example.test",
+            "api": "attribution-reporting"
           }
         ]
       },
       "param": {
         "responseCode": 200,
         "action": "SINGLE_REPORT",
-        "result": 2,
+        "uploadStatus": 2,
+        "failureStatus": 4,
         "id": "AR1",
         "registration_origin": "https://subdomain.example.test"
       }
@@ -161,7 +170,8 @@
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0,
-            "registration_origin": "https://subdomain.example.test"
+            "registration_origin": "https://subdomain.example.test",
+            "api": "attribution-reporting"
           },
           {
             "publisher": "https://source.site2",
@@ -172,7 +182,8 @@
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0,
-            "registration_origin": "https://subdomain.example.test"
+            "registration_origin": "https://subdomain.example.test",
+            "api": "attribution-reporting"
           }
         ]
       },
@@ -191,7 +202,8 @@
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 1,
-            "registration_origin": "https://subdomain.example.test"
+            "registration_origin": "https://subdomain.example.test",
+            "api": "attribution-reporting"
           },
           {
             "publisher": "https://source.site2",
@@ -202,7 +214,8 @@
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 1,
-            "registration_origin": "https://subdomain.example.test"
+            "registration_origin": "https://subdomain.example.test",
+            "api": "attribution-reporting"
           }
         ]
       },
@@ -231,7 +244,8 @@
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0,
-            "registration_origin": "https://subdomain.example.test"
+            "registration_origin": "https://subdomain.example.test",
+            "api": "attribution-reporting"
           },
           {
             "publisher": "https://source.site2",
@@ -242,7 +256,8 @@
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0,
-            "registration_origin": "https://subdomain.example.test"
+            "registration_origin": "https://subdomain.example.test",
+            "api": "attribution-reporting"
           },
           {
             "publisher": "https://source.site2",
@@ -253,7 +268,8 @@
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0,
-            "registration_origin": "https://subdomain.example.test"
+            "registration_origin": "https://subdomain.example.test",
+            "api": "attribution-reporting"
           }
         ]
       },
@@ -272,7 +288,8 @@
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0,
-            "registration_origin": "https://subdomain.example.test"
+            "registration_origin": "https://subdomain.example.test",
+            "api": "attribution-reporting"
           },
           {
             "publisher": "https://source.site2",
@@ -283,7 +300,8 @@
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0,
-            "registration_origin": "https://subdomain.example.test"
+            "registration_origin": "https://subdomain.example.test",
+            "api": "attribution-reporting"
           },
           {
             "publisher": "https://source.site2",
@@ -294,7 +312,8 @@
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 1,
-            "registration_origin": "https://subdomain.example.test"
+            "registration_origin": "https://subdomain.example.test",
+            "api": "attribution-reporting"
           }
         ]
       },
