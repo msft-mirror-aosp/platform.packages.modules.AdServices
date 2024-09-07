@@ -39,10 +39,13 @@ import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.util.Applications;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.MeasurementReportsStats;
 import com.android.internal.annotations.VisibleForTesting;
+
+import com.google.android.libraries.mobiledatadownload.internal.AndroidTimeSource;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -66,6 +69,7 @@ public class EventReportingJobHandler {
     private final AdServicesLogger mLogger;
     private ReportingStatus.ReportType mReportType;
     private ReportingStatus.UploadMethod mUploadMethod;
+    private final AndroidTimeSource mTimeSource;
 
     private Context mContext;
 
@@ -73,8 +77,9 @@ public class EventReportingJobHandler {
     EventReportingJobHandler(
             DatastoreManager datastoreManager,
             Flags flags,
-            Context context) {
-        this(datastoreManager, flags, AdServicesLoggerImpl.getInstance(), context);
+            Context context,
+            AndroidTimeSource timeSource) {
+        this(datastoreManager, flags, AdServicesLoggerImpl.getInstance(), context, timeSource);
     }
 
     EventReportingJobHandler(
@@ -83,13 +88,15 @@ public class EventReportingJobHandler {
             AdServicesLogger logger,
             ReportingStatus.ReportType reportType,
             ReportingStatus.UploadMethod uploadMethod,
-            Context context) {
+            Context context,
+            AndroidTimeSource timeSource) {
         mDatastoreManager = datastoreManager;
         mFlags = flags;
         mLogger = logger;
         mReportType = reportType;
         mUploadMethod = uploadMethod;
         mContext = context;
+        mTimeSource = timeSource;
     }
 
     @VisibleForTesting
@@ -97,11 +104,13 @@ public class EventReportingJobHandler {
             DatastoreManager datastoreManager,
             Flags flags,
             AdServicesLogger logger,
-            Context context) {
+            Context context,
+            AndroidTimeSource timeSource) {
         mDatastoreManager = datastoreManager;
         mFlags = flags;
         mLogger = logger;
         mContext = context;
+        mTimeSource = timeSource;
     }
 
     /**
@@ -223,7 +232,8 @@ public class EventReportingJobHandler {
         }
         EventReport eventReport = eventReportOpt.get();
         enrollmentId = eventReport.getEnrollmentId();
-        reportingStatus.setReportingDelay(System.currentTimeMillis() - eventReport.getReportTime());
+        reportingStatus.setReportingDelay(
+                mTimeSource.currentTimeMillis() - eventReport.getReportTime());
         reportingStatus.setSourceRegistrant(getAppPackageName(eventReport));
         if (mIsDebugInstance
                 && eventReport.getDebugReportStatus() != EventReport.DebugReportStatus.PENDING) {
@@ -242,6 +252,21 @@ public class EventReportingJobHandler {
                     reportingStatus,
                     UploadStatus.FAILURE,
                     FailureStatus.REPORT_NOT_PENDING,
+                    enrollmentId);
+            return;
+        }
+
+        // Event Report on device for more than minimum lifespan and source/trigger app is
+        // uninstalled then we skip sending the report.
+        if (mFlags.getMeasurementEnableMinReportLifespanForUninstall()
+                && eventReportCreatedBeforeLifespan(eventReport.getTriggerTime())
+                && (!anyPublisherAppInstalled(eventReport)
+                        || !anyTriggerDestinationAppInstalled(eventReport))) {
+            mDatastoreManager.runInTransaction(dao -> dao.deleteEventReport(eventReport));
+            setAndLogReportingStatus(
+                    reportingStatus,
+                    UploadStatus.FAILURE,
+                    FailureStatus.APP_UNINSTALLED_OR_OUTSIDE_WINDOW,
                     enrollmentId);
             return;
         }
@@ -438,6 +463,25 @@ public class EventReportingJobHandler {
         // When coarse_event_report_destinations = false or only web destinations are available,
         // check arDebug value.
         return hasTriggerArDebug;
+    }
+
+    private boolean eventReportCreatedBeforeLifespan(long triggerTime) {
+        return triggerTime
+                        + TimeUnit.SECONDS.toMillis(
+                                mFlags.getMeasurementMinReportLifespanForUninstallSeconds())
+                < mTimeSource.currentTimeMillis();
+    }
+
+    private boolean anyTriggerDestinationAppInstalled(EventReport eventReport) {
+        return Applications.anyAppsInstalled(mContext, eventReport.getAttributionDestinations());
+    }
+
+    private boolean anyPublisherAppInstalled(EventReport eventReport) {
+        Optional<Source> sourceOpt =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) -> dao.getSource(eventReport.getSourceId()));
+        return sourceOpt.isPresent()
+                && Applications.anyAppsInstalled(mContext, List.of(sourceOpt.get().getPublisher()));
     }
 
     private void setAndLogReportingStatus(

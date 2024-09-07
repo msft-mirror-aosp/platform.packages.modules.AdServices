@@ -584,6 +584,19 @@ public class AsyncSourceFetcher {
                 builder.setEventLevelEpsilon((double) mFlags.getMeasurementPrivacyEpsilon());
             }
         }
+        if (mFlags.getMeasurementEnableAggregateDebugReporting()
+                && !json.isNull(SourceHeaderContract.AGGREGATABLE_DEBUG_REPORTING)) {
+            Optional<String> validAggregateDebugReporting =
+                    FetcherUtil.getValidAggregateDebugReportingString(
+                            json.getJSONObject(SourceHeaderContract.AGGREGATABLE_DEBUG_REPORTING),
+                            mFlags);
+            if (!validAggregateDebugReporting.isPresent()) {
+                LoggerFactory.getMeasurementLogger()
+                        .d("parseSource: aggregatable debug reporting is invalid.");
+                return false;
+            }
+            builder.setAggregateDebugReportingString(validAggregateDebugReporting.get());
+        }
         return true;
     }
 
@@ -1222,6 +1235,7 @@ public class AsyncSourceFetcher {
         String DESTINATION_LIMIT_PRIORITY = "destination_limit_priority";
         String DESTINATION_LIMIT_ALGORITHM = "destination_limit_algorithm";
         String EVENT_LEVEL_EPSILON = "event_level_epsilon";
+        String AGGREGATABLE_DEBUG_REPORTING = "aggregatable_debug_reporting";
     }
 
     private interface SourceRequestContract {

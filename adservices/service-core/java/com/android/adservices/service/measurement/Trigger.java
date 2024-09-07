@@ -25,6 +25,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregatableValuesConfig;
+import com.android.adservices.service.measurement.aggregation.AggregateDebugReporting;
 import com.android.adservices.service.measurement.aggregation.AggregateDeduplicationKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
@@ -84,6 +85,7 @@ public class Trigger {
     @Nullable private String mAttributionScopesString;
     @Nullable private Integer mAggregatableFilteringIdMaxBytes;
     @Nullable private String mAggregateDebugReportingString;
+    @Nullable private AggregateDebugReporting mAggregateDebugReporting;
 
     @IntDef(value = {Status.PENDING, Status.IGNORED, Status.ATTRIBUTED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -638,6 +640,21 @@ public class Trigger {
     @Nullable
     public String getAggregateDebugReportingString() {
         return mAggregateDebugReportingString;
+    }
+
+    /** Returns the aggregate debug reporting object as a string */
+    @Nullable
+    public AggregateDebugReporting getAggregateDebugReportingObject() throws JSONException {
+        if (mAggregateDebugReportingString == null) {
+            return null;
+        }
+        if (mAggregateDebugReporting == null) {
+            mAggregateDebugReporting =
+                    new AggregateDebugReporting.Builder(
+                                    new JSONObject(mAggregateDebugReportingString))
+                            .build();
+        }
+        return mAggregateDebugReporting;
     }
 
     /** Builder for {@link Trigger}. */
