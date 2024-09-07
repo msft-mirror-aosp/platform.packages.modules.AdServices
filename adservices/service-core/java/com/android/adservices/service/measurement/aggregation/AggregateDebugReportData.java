@@ -20,7 +20,12 @@ import android.annotation.NonNull;
 
 import com.android.adservices.service.measurement.util.Validation;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.math.BigInteger;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
@@ -79,11 +84,43 @@ public class AggregateDebugReportData {
             mValue = value;
         }
 
+        public Builder(JSONObject aggregateDebugReportData) throws JSONException {
+            if (!aggregateDebugReportData.isNull(AggregateDebugReportDataHeaderContract.TYPES)) {
+                mReportType = new HashSet<>();
+                JSONArray reportTypeList =
+                        aggregateDebugReportData.getJSONArray(
+                                AggregateDebugReportDataHeaderContract.TYPES);
+                for (int j = 0; j < reportTypeList.length(); j++) {
+                    String reportTypeString = reportTypeList.getString(j);
+                    mReportType.add(reportTypeString);
+                }
+            }
+            if (!aggregateDebugReportData.isNull(
+                    AggregateDebugReportDataHeaderContract.KEY_PIECE)) {
+                String hexString =
+                        aggregateDebugReportData
+                                .getString(AggregateDebugReportDataHeaderContract.KEY_PIECE)
+                                .substring(2);
+                mKeyPiece = new BigInteger(hexString, 16);
+            }
+            if (!aggregateDebugReportData.isNull(AggregateDebugReportDataHeaderContract.VALUE)) {
+                mValue =
+                        aggregateDebugReportData.getInt(
+                                AggregateDebugReportDataHeaderContract.VALUE);
+            }
+        }
+
         /** Build the {@link AggregateDebugReportData} */
         @NonNull
         public AggregateDebugReportData build() {
             Validation.validateNonNull(mReportType, mKeyPiece);
             return new AggregateDebugReportData(this);
         }
+    }
+
+    public interface AggregateDebugReportDataHeaderContract {
+        String TYPES = "types";
+        String KEY_PIECE = "key_piece";
+        String VALUE = "value";
     }
 }

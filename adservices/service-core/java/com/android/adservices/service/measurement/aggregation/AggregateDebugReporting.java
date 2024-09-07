@@ -19,7 +19,12 @@ package com.android.adservices.service.measurement.aggregation;
 import android.annotation.NonNull;
 import android.net.Uri;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -97,10 +102,52 @@ public class AggregateDebugReporting {
             mAggregationCoordinatorOrigin = aggregationCoordinatorOrigin;
         }
 
+        public Builder(JSONObject aggregateDebugReporting) throws JSONException {
+            if (!aggregateDebugReporting.isNull(AggregateDebugReportingHeaderContract.BUDGET)) {
+                mBudget =
+                        aggregateDebugReporting.getInt(
+                                AggregateDebugReportingHeaderContract.BUDGET);
+            }
+            if (!aggregateDebugReporting.isNull(AggregateDebugReportingHeaderContract.KEY_PIECE)) {
+                String hexString =
+                        aggregateDebugReporting
+                                .getString(AggregateDebugReportingHeaderContract.KEY_PIECE)
+                                .substring(2);
+                mKeyPiece = new BigInteger(hexString, 16);
+            }
+            if (!aggregateDebugReporting.isNull(AggregateDebugReportingHeaderContract.DEBUG_DATA)) {
+                mAggregateDebugReportDataList = new ArrayList<>();
+                JSONArray aggregateDebugReportDataArray =
+                        aggregateDebugReporting.getJSONArray(
+                                AggregateDebugReportingHeaderContract.DEBUG_DATA);
+                for (int i = 0; i < aggregateDebugReportDataArray.length(); i++) {
+                    mAggregateDebugReportDataList.add(
+                            new AggregateDebugReportData.Builder(
+                                            aggregateDebugReportDataArray.getJSONObject(i))
+                                    .build());
+                }
+            }
+            if (!aggregateDebugReporting.isNull(
+                    AggregateDebugReportingHeaderContract.AGGREGATION_COORDINATOR_ORIGIN)) {
+                mAggregationCoordinatorOrigin =
+                        Uri.parse(
+                                aggregateDebugReporting.getString(
+                                        AggregateDebugReportingHeaderContract
+                                                .AGGREGATION_COORDINATOR_ORIGIN));
+            }
+        }
+
         /** Build the {@link AggregateDebugReporting} */
         @NonNull
         public AggregateDebugReporting build() {
             return new AggregateDebugReporting(this);
         }
+    }
+
+    public interface AggregateDebugReportingHeaderContract {
+        String BUDGET = "budget";
+        String KEY_PIECE = "key_piece";
+        String DEBUG_DATA = "debug_data";
+        String AGGREGATION_COORDINATOR_ORIGIN = "aggregation_coordinator_origin";
     }
 }

@@ -166,8 +166,7 @@ public final class SourceFixture {
                         + "\"key_piece\": \"0x222\","
                         + "\"value\": 222"
                         + "}"
-                        + "],"
-                        + "\"aggregation_coordinator_origin\":\"https://aws.example\"}";
+                        + "]}";
         public static final int AGGREGATE_DEBUG_REPORT_CONTRIBUTIONS = 100;
 
         public static final String buildAggregateSource() {
