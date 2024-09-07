@@ -26,7 +26,6 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
-import com.android.adservices.service.measurement.aggregation.AggregateDebugReporting;
 import com.android.adservices.service.measurement.noising.Combinatorics;
 import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
@@ -123,9 +122,6 @@ public class Source {
     private long mDestinationLimitPriority;
     @Nullable private DestinationLimitAlgorithm mDestinationLimitAlgorithm;
     @Nullable private Double mEventLevelEpsilon;
-    @Nullable private String mAggregateDebugReportingString;
-    @Nullable private AggregateDebugReporting mAggregateDebugReporting;
-    private int mAggregateDebugReportContributions;
 
     /**
      * Parses and returns the event_report_windows Returns null if parsing fails or if there is no
@@ -679,10 +675,7 @@ public class Source {
                 && Objects.equals(mMaxEventStates, source.mMaxEventStates)
                 && mDestinationLimitPriority == source.mDestinationLimitPriority
                 && Objects.equals(mDestinationLimitAlgorithm, source.mDestinationLimitAlgorithm)
-                && Objects.equals(mEventLevelEpsilon, source.mEventLevelEpsilon)
-                && Objects.equals(
-                        mAggregateDebugReportingString, source.mAggregateDebugReportingString)
-                && mAggregateDebugReportContributions == source.mAggregateDebugReportContributions;
+                && Objects.equals(mEventLevelEpsilon, source.mEventLevelEpsilon);
     }
 
     @Override
@@ -738,9 +731,7 @@ public class Source {
                 mMaxEventStates,
                 mDestinationLimitPriority,
                 mDestinationLimitAlgorithm,
-                mEventLevelEpsilon,
-                mAggregateDebugReportingString,
-                mAggregateDebugReportContributions);
+                mEventLevelEpsilon);
     }
 
     public void setAttributionMode(@AttributionMode int attributionMode) {
@@ -1245,11 +1236,6 @@ public class Source {
         mAggregateContributions = aggregateContributions;
     }
 
-    /** Set the aggregate debug contributions value. */
-    public void setAggregateDebugContributions(int aggregateDebugContributions) {
-        mAggregateDebugReportContributions = aggregateDebugContributions;
-    }
-
     /**
      * Generates AggregatableFilterData from aggregate filter string in Source, including entries
      * for source type and duration from source to trigger if lookback window filter is enabled.
@@ -1431,32 +1417,6 @@ public class Source {
         return mDestinationLimitAlgorithm;
     }
 
-    /** Returns the aggregate debug reporting object as a string */
-    @Nullable
-    public String getAggregateDebugReportingString() {
-        return mAggregateDebugReportingString;
-    }
-
-    /** Returns the aggregate debug reporting object as a string */
-    @Nullable
-    public AggregateDebugReporting getAggregateDebugReportingObject() throws JSONException {
-        if (mAggregateDebugReportingString == null) {
-            return null;
-        }
-        if (mAggregateDebugReporting == null) {
-            mAggregateDebugReporting =
-                    new AggregateDebugReporting.Builder(
-                                    new JSONObject(mAggregateDebugReportingString))
-                            .build();
-        }
-        return mAggregateDebugReporting;
-    }
-
-    /** Returns the aggregate debug reporting contributions */
-    public int getAggregateDebugReportContributions() {
-        return mAggregateDebugReportContributions;
-    }
-
     /** Builder for {@link Source}. */
     public static final class Builder {
         private final Source mBuilding;
@@ -1515,7 +1475,6 @@ public class Source {
             builder.setAttributedTriggers(copyFrom.mAttributedTriggers);
             builder.setTriggerSpecs(copyFrom.mTriggerSpecs);
             builder.setTriggerDataMatching(copyFrom.mTriggerDataMatching);
-            builder.setTriggerData(copyFrom.mTriggerData);
             builder.setCoarseEventReportDestinations(copyFrom.mCoarseEventReportDestinations);
             builder.setSharedDebugKey(copyFrom.mSharedDebugKey);
             builder.setDropSourceIfInstalled(copyFrom.mDropSourceIfInstalled);
@@ -1525,9 +1484,6 @@ public class Source {
             builder.setDestinationLimitPriority(copyFrom.mDestinationLimitPriority);
             builder.setDestinationLimitAlgorithm(copyFrom.mDestinationLimitAlgorithm);
             builder.setEventLevelEpsilon(copyFrom.mEventLevelEpsilon);
-            builder.setAggregateDebugReportingString(copyFrom.mAggregateDebugReportingString);
-            builder.setAggregateDebugReportContributions(
-                    copyFrom.mAggregateDebugReportContributions);
             return builder;
         }
 
@@ -1935,22 +1891,6 @@ public class Source {
         public Builder setDestinationLimitAlgorithm(
                 @Nullable DestinationLimitAlgorithm destinationLimitAlgorithm) {
             mBuilding.mDestinationLimitAlgorithm = destinationLimitAlgorithm;
-            return this;
-        }
-
-        /** See {@link Source#getAggregateDebugReportingString()}. */
-        @NonNull
-        public Builder setAggregateDebugReportingString(
-                @Nullable String aggregateDebugReportingString) {
-            mBuilding.mAggregateDebugReportingString = aggregateDebugReportingString;
-            return this;
-        }
-
-        /** See {@link Source#getAggregateDebugReportContributions()}. */
-        @NonNull
-        public Builder setAggregateDebugReportContributions(
-                int aggregateDebugReportingContributions) {
-            mBuilding.mAggregateDebugReportContributions = aggregateDebugReportingContributions;
             return this;
         }
 

@@ -311,17 +311,6 @@
 
     <issue
         id="NewApi"
-        message="Call requires API level 31 (current min is 30): `getDenyPackageManifestPopulator`"
-        errorLine1="                MobileDataDownloadFactory.getDenyPackageManifestPopulator("
-        errorLine2="                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
-            line="974"
-            column="43"/>
-    </issue>
-
-    <issue
-        id="NewApi"
         message="Call requires API level 31 (current min is 30): `getMdd`"
         errorLine1="        doReturn(mMdd).when(() -> MobileDataDownloadFactory.getMdd(any(Flags.class)));"
         errorLine2="                                                            ~~~~~~">

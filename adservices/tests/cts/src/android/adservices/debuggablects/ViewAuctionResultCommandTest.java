@@ -100,16 +100,6 @@ public class ViewAuctionResultCommandTest extends FledgeDebuggableScenarioTest {
                 .isEmpty();
         assertThat(actual.getWinReportingUrls().getTopLevelSellerReportingUrls().getReportingUrl())
                 .isEmpty();
-        assertThat(
-                        actual.getWinReportingUrls()
-                                .getTopLevelSellerReportingUrls()
-                                .getInteractionReportingUrls())
-                .isEmpty();
-        assertThat(
-                        actual.getWinReportingUrls()
-                                .getBuyerReportingUrls()
-                                .getInteractionReportingUrls())
-                .isEmpty();
         assertThat(dispatcher.getVerifyCalledPaths()).isEqualTo(dispatcher.getCalledPaths());
     }
 }

@@ -322,25 +322,25 @@ public class AsyncRegistrationQueueRunner {
                     && Applications.anyAppsInstalled(mContext, source.getAppDestinations())) {
                 source.setStatus(Source.Status.MARKED_TO_DELETE);
             }
-            DebugReportApi.Type adrType = DebugReportApi.Type.SOURCE_SUCCESS;
             Map<String, String> additionalDebugReportParams = null;
             if (mFlags.getMeasurementEnableSourceDestinationLimitPriority()
                     && InsertSourcePermission.ALLOWED_FIFO_SUCCESS.equals(sourceAllowedToInsert)) {
                 int limit = mFlags.getMeasurementMaxDistinctDestinationsInActiveSource();
-                adrType = DebugReportApi.Type.SOURCE_DESTINATION_LIMIT_REPLACED;
                 additionalDebugReportParams =
                         Map.of(DebugReportApi.Body.SOURCE_DESTINATION_LIMIT, String.valueOf(limit));
             }
             insertSourceFromTransaction(source, fakeReports, dao, additionalDebugReportParams);
             scheduleSourceSuccessOrNoisedDebugReport(
-                    source, dao, additionalDebugReportParams, adrType);
+                    mDebugReportApi, source, dao, additionalDebugReportParams);
         }
     }
 
     @VisibleForTesting
-    boolean areValidSourcePrivacyParameters(
-            Source source, DebugReportApi debugReportApi, IMeasurementDao dao, Flags flags)
-            throws DatastoreException {
+    static boolean areValidSourcePrivacyParameters(
+            Source source,
+            DebugReportApi debugReportApi,
+            IMeasurementDao dao,
+            Flags flags) throws DatastoreException {
         try {
             if (!source.validateAndSetNumReportStates(flags)
                     || !source.hasValidInformationGain(flags)) {
@@ -603,10 +603,7 @@ public class AsyncRegistrationQueueRunner {
             // Source won't be inserted, yet we produce a success to debug report to avoid side
             // channel leakage of cross site data
             scheduleSourceSuccessOrNoisedDebugReport(
-                    source,
-                    dao,
-                    additionalDebugReportParams,
-                    DebugReportApi.Type.SOURCE_DESTINATION_GLOBAL_RATE_LIMIT);
+                    mDebugReportApi, source, dao, additionalDebugReportParams);
             return InsertSourcePermission.NOT_ALLOWED;
         }
 
@@ -621,10 +618,7 @@ public class AsyncRegistrationQueueRunner {
         if (numOfOriginExcludingRegistrationOrigin
                 >= mFlags.getMeasurementMaxReportingOriginsPerSourceReportingSitePerWindow()) {
             scheduleSourceSuccessOrNoisedDebugReport(
-                    source,
-                    dao,
-                    additionalDebugReportParams,
-                    DebugReportApi.Type.SOURCE_REPORTING_ORIGIN_PER_SITE_LIMIT);
+                    mDebugReportApi, source, dao, additionalDebugReportParams);
             LoggerFactory.getMeasurementLogger()
                     .d(
                             "insertSources: Max limit of 1 reporting origin for publisher - %s and"
@@ -780,7 +774,7 @@ public class AsyncRegistrationQueueRunner {
         return false;
     }
 
-    private boolean isDestinationOutOfBounds(
+    private static boolean isDestinationOutOfBounds(
             DebugReportApi debugReportApi,
             Source source,
             Uri publisher,
@@ -844,8 +838,7 @@ public class AsyncRegistrationQueueRunner {
                         requestTime);
         if (distinctReportingOriginCount
                 >= flags.getMeasurementMaxDistinctRepOrigPerPublXDestInSource()) {
-            scheduleSourceSuccessOrNoisedDebugReport(
-                    source, dao, null, DebugReportApi.Type.SOURCE_SUCCESS);
+            scheduleSourceSuccessOrNoisedDebugReport(debugReportApi, source, dao, null);
             LoggerFactory.getMeasurementLogger()
                     .d(
                             "AsyncRegistrationQueueRunner: "
@@ -912,7 +905,7 @@ public class AsyncRegistrationQueueRunner {
             if (destinationCount + webDestinations.size() > limit) {
                 LoggerFactory.getMeasurementLogger()
                         .d(
-                                "AsyncRegistrationQueueRunner: Web destination global rate limit "
+                                "AsyncRegistrationQueueRunner: App destination global rate limit "
                                         + "exceeded");
                 return true;
             }
@@ -1159,16 +1152,16 @@ public class AsyncRegistrationQueueRunner {
         return request.getRegistrant();
     }
 
-    private void scheduleSourceSuccessOrNoisedDebugReport(
+    private static void scheduleSourceSuccessOrNoisedDebugReport(
+            DebugReportApi debugReportApi,
             Source source,
             IMeasurementDao dao,
-            Map<String, String> additionalDebugReportParams,
-            DebugReportApi.Type adrReportType) {
+            Map<String, String> additionalDebugReportParams) {
         if (source.getAttributionMode() == Source.AttributionMode.TRUTHFULLY) {
-            mDebugReportApi.scheduleSourceSuccessDebugReport(
-                    source, dao, additionalDebugReportParams, adrReportType);
+            debugReportApi.scheduleSourceSuccessDebugReport(
+                    source, dao, additionalDebugReportParams);
         } else {
-            mDebugReportApi.scheduleSourceNoisedDebugReport(
+            debugReportApi.scheduleSourceNoisedDebugReport(
                     source, dao, additionalDebugReportParams);
         }
     }

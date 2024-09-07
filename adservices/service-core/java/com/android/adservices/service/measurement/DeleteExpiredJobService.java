@@ -73,9 +73,8 @@ public final class DeleteExpiredJobService extends JobService {
         sBackgroundExecutor.execute(
                 () -> {
                     Flags flags = FlagsFactory.getFlags();
-                    long currentTimeMillis = System.currentTimeMillis();
                     long earliestValidInsertion =
-                            currentTimeMillis
+                            System.currentTimeMillis()
                                     - FlagsFactory.getFlags().getMeasurementDataExpiryWindowMs();
                     int retryLimit =
                             FlagsFactory.getFlags()
@@ -86,9 +85,7 @@ public final class DeleteExpiredJobService extends JobService {
                                             dao.deleteExpiredRecords(
                                                     earliestValidInsertion,
                                                     retryLimit,
-                                                    getEarliestValidAppReportInsertion(flags),
-                                                    getEarliestValidAggregateDebugReportInsertion(
-                                                            flags, currentTimeMillis)));
+                                                    getEarliestValidAppReportInsertion(flags)));
 
                     boolean shouldRetry = false;
                     AdServicesJobServiceLogger.getInstance()
@@ -102,17 +99,11 @@ public final class DeleteExpiredJobService extends JobService {
         return true;
     }
 
-    @Nullable
-    private Long getEarliestValidAppReportInsertion(Flags flags) {
+    private @Nullable Long getEarliestValidAppReportInsertion(Flags flags) {
         return flags.getMeasurementEnableReinstallReattribution()
                 ? System.currentTimeMillis()
                         - flags.getMeasurementMaxReinstallReattributionWindowSeconds()
                 : null;
-    }
-
-    private long getEarliestValidAggregateDebugReportInsertion(
-            Flags flags, long currentTimeMillis) {
-        return currentTimeMillis - flags.getMeasurementAdrBudgetWindowLengthMillis();
     }
 
     @Override

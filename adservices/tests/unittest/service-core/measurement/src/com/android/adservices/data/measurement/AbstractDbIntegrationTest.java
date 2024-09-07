@@ -423,9 +423,6 @@ public abstract class AbstractDbIntegrationTest {
         values.put(
                 MeasurementTables.SourceContract.EVENT_ATTRIBUTION_STATUS,
                 source.getEventAttributionStatus());
-        values.put(
-                MeasurementTables.SourceContract.AGGREGATE_DEBUG_REPORTING,
-                source.getAggregateDebugReportingString());
         long row = db.insert(MeasurementTables.SourceContract.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("Source insertion failed");
@@ -464,8 +461,7 @@ public abstract class AbstractDbIntegrationTest {
                 MeasurementTables.TriggerContract.AGGREGATE_TRIGGER_DATA,
                 trigger.getAggregateTriggerData());
         values.put(
-                MeasurementTables.TriggerContract.AGGREGATE_VALUES,
-                trigger.getAggregateValuesString());
+                MeasurementTables.TriggerContract.AGGREGATE_VALUES, trigger.getAggregateValues());
         values.put(MeasurementTables.TriggerContract.ENROLLMENT_ID, trigger.getEnrollmentId());
         values.put(MeasurementTables.TriggerContract.STATUS, trigger.getStatus());
         values.put(MeasurementTables.TriggerContract.TRIGGER_TIME, trigger.getTriggerTime());
@@ -486,9 +482,6 @@ public abstract class AbstractDbIntegrationTest {
         values.put(
                 MeasurementTables.TriggerContract.AGGREGATABLE_SOURCE_REGISTRATION_TIME_CONFIG,
                 trigger.getAggregatableSourceRegistrationTimeConfig().name());
-        values.put(
-                MeasurementTables.TriggerContract.AGGREGATE_DEBUG_REPORTING,
-                trigger.getAggregateDebugReportingString());
         long row = db.insert(MeasurementTables.TriggerContract.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("Trigger insertion failed");
@@ -603,7 +596,6 @@ public abstract class AbstractDbIntegrationTest {
                 aggregateReport.getDedupKey() != null
                         ? aggregateReport.getDedupKey().getValue()
                         : null);
-        values.put(MeasurementTables.AggregateReport.API, aggregateReport.getApi());
         long row = db.insert(MeasurementTables.AggregateReport.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("AggregateReport insertion failed");

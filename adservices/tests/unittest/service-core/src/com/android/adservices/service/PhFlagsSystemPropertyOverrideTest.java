@@ -90,7 +90,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
     private final PhFlagsTestHelper mFlagsTestHelper = new PhFlagsTestHelper(mPhFlags, expect);
 
     private final FlagGuard mMsmtKillSwitchGuard =
-            value -> mFlagsTestHelper.setMsmtKillSwitch(!value);
+            value -> mFlagsTestHelper.setMsmmtKillSwitch(!value);
 
     @Rule
     public final AdServicesSystemPropertiesDumperRule sysPropDumper =
@@ -194,7 +194,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
         mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
                 KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH,
                 "MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH",
-                value -> mFlagsTestHelper.setMsmtKillSwitch(!value),
+                value -> mFlagsTestHelper.setMsmmtKillSwitch(!value),
                 Flags::getMeasurementApiDeleteRegistrationsKillSwitch);
     }
 
@@ -219,7 +219,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
         mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
                 KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH,
                 "MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH",
-                value -> mFlagsTestHelper.setMsmtKillSwitch(!value),
+                value -> mFlagsTestHelper.setMsmmtKillSwitch(!value),
                 Flags::getMeasurementRollbackDeletionAppSearchKillSwitch);
     }
 
@@ -319,7 +319,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
         mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
                 KEY_MEASUREMENT_API_STATUS_KILL_SWITCH,
                 "MEASUREMENT_API_STATUS_KILL_SWITCH",
-                value -> mFlagsTestHelper.setMsmtKillSwitch(!value),
+                value -> mFlagsTestHelper.setMsmmtKillSwitch(!value),
                 Flags::getMeasurementApiStatusKillSwitch);
     }
 
@@ -336,7 +336,7 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
         mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
                 KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH,
                 "MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH",
-                value -> mFlagsTestHelper.setMsmtKillSwitch(!value),
+                value -> mFlagsTestHelper.setMsmmtKillSwitch(!value),
                 Flags::getMeasurementApiRegisterSourceKillSwitch);
     }
 

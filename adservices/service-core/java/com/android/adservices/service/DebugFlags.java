@@ -27,7 +27,6 @@ import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_AUCT
 import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_PROTECTED_APP_SIGNALS_CLI_ENABLED;
-import static com.android.adservices.service.DebugFlagsConstants.KEY_PROTECTED_APP_SIGNALS_ENCODER_LOGIC_REGISTERED_BROADCAST_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_RECORD_TOPICS_COMPLETE_BROADCAST_ENABLED;
 
 import androidx.annotation.VisibleForTesting;
@@ -75,10 +74,6 @@ public final class DebugFlags extends CommonDebugFlags {
     static final boolean CONSENT_MANAGER_DEBUG_MODE = false;
     static final boolean DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE = false;
 
-    /** Default for if Protected App Signals sends a broadcast after encoder logic is registered. */
-    static final boolean DEFAULT_PROTECTED_APP_SIGNALS_ENCODER_LOGIC_REGISTERED_BROADCAST_ENABLED =
-            false;
-
     public static DebugFlags getInstance() {
         return sInstance;
     }
@@ -111,12 +106,6 @@ public final class DebugFlags extends CommonDebugFlags {
     public boolean getProtectedAppSignalsCommandsEnabled() {
         return getBoolean(
                 KEY_PROTECTED_APP_SIGNALS_CLI_ENABLED, DEFAULT_PROTECTED_APP_SIGNALS_CLI_ENABLED);
-    }
-
-    public boolean getProtectedAppSignalsEncoderLogicRegisteredBroadcastEnabled() {
-        return getBoolean(
-                KEY_PROTECTED_APP_SIGNALS_ENCODER_LOGIC_REGISTERED_BROADCAST_ENABLED,
-                DEFAULT_PROTECTED_APP_SIGNALS_ENCODER_LOGIC_REGISTERED_BROADCAST_ENABLED);
     }
 
     public boolean getAdSelectionCommandsEnabled() {

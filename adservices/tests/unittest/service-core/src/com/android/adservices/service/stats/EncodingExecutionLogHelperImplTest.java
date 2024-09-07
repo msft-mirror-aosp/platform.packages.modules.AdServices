@@ -25,7 +25,6 @@ import static org.mockito.Mockito.when;
 
 import android.adservices.common.AdTechIdentifier;
 
-import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.stats.pas.EncodingExecutionLogHelper;
@@ -36,17 +35,19 @@ import com.android.adservices.shared.util.Clock;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-public final class EncodingExecutionLogHelperImplTest extends AdServicesMockitoTestCase {
+public class EncodingExecutionLogHelperImplTest {
 
-    @Mock private AdServicesLogger mAdServicesLoggerMock;
-    @Mock private Clock mClockMock;
-    @Mock private EnrollmentDao mEnrollmentDaoMock;
+    @Mock AdServicesLogger mAdServicesLoggerMock;
+    @Mock Clock mClockMock;
+    @Mock EnrollmentDao mEnrollmentDaoMock;
 
     private EncodingExecutionLogHelper mEncodingExecutionLogger;
 
     @Before
     public void setUp() {
+        MockitoAnnotations.initMocks(this);
         mEncodingExecutionLogger =
                 new EncodingExecutionLogHelperImpl(
                         mAdServicesLoggerMock, mClockMock, mEnrollmentDaoMock);

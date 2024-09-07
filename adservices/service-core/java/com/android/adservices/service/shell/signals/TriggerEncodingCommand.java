@@ -127,7 +127,7 @@ public class TriggerEncodingCommand extends AbstractShellCommand {
             return updateAndTriggerEncoding(buyer, out);
         } catch (InterruptedException | ExecutionException | IllegalStateException e) {
             err.write(ERROR_FAIL_TO_ENCODE_SIGNALS);
-            sLogger.w(e, ERROR_FAIL_TO_ENCODE_SIGNALS);
+            sLogger.v(e.getMessage());
             return toShellCommandResult(
                     ShellCommandStats.RESULT_GENERIC_ERROR, getMetricsLoggerCommand());
         } catch (TimeoutException e) {

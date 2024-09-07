@@ -73,21 +73,19 @@ public final class AggregatableAttributionTriggerTest {
         List<AggregateTriggerData> aggregateTriggerDataList = createAggregateTriggerData();
         AggregateTriggerData attributionTriggerData1 = aggregateTriggerDataList.get(0);
         AggregateTriggerData attributionTriggerData2 = aggregateTriggerDataList.get(1);
-        Map<String, AggregatableKeyValue> values = new HashMap<>();
-        values.put("campCounts", new AggregatableKeyValue.Builder(1).build());
-        values.put("campGeoCounts", new AggregatableKeyValue.Builder(100).build());
-        List<AggregatableValuesConfig> configList = new ArrayList<>();
-        configList.add(new AggregatableValuesConfig.Builder(values).build());
+        Map<String, Integer> values = new HashMap<>();
+        values.put("campCounts", 1);
+        values.put("campGeoCounts", 100);
         if (aggregateDeduplicationKeys != null) {
             return new AggregatableAttributionTrigger.Builder()
                     .setTriggerData(Arrays.asList(attributionTriggerData1, attributionTriggerData2))
-                    .setValueConfigs(configList)
+                    .setValues(values)
                     .setAggregateDeduplicationKeys(aggregateDeduplicationKeys)
                     .build();
         }
         return new AggregatableAttributionTrigger.Builder()
                 .setTriggerData(Arrays.asList(attributionTriggerData1, attributionTriggerData2))
-                .setValueConfigs(configList)
+                .setValues(values)
                 .build();
     }
 
@@ -126,27 +124,13 @@ public final class AggregatableAttributionTriggerTest {
     public void testCreationWithValues() throws Exception {
         AggregatableAttributionTrigger attributionTrigger = createExampleWithValues(null);
 
-        assertThat(attributionTrigger.getTriggerData().size()).isEqualTo(2);
-        assertThat(attributionTrigger.getTriggerData().get(0).getKey().longValue()).isEqualTo(159L);
-        assertThat(attributionTrigger.getTriggerData().get(0).getSourceKeys().size()).isEqualTo(2);
-        assertThat(attributionTrigger.getTriggerData().get(1).getKey().longValue()).isEqualTo(5L);
-        assertThat(attributionTrigger.getTriggerData().get(1).getSourceKeys().size()).isEqualTo(3);
-        assertThat(
-                        attributionTrigger
-                                .getValueConfigs()
-                                .get(0)
-                                .getValues()
-                                .get("campCounts")
-                                .getValue())
-                .isEqualTo(1);
-        assertThat(
-                        attributionTrigger
-                                .getValueConfigs()
-                                .get(0)
-                                .getValues()
-                                .get("campGeoCounts")
-                                .getValue())
-                .isEqualTo(100);
+        assertEquals(attributionTrigger.getTriggerData().size(), 2);
+        assertEquals(attributionTrigger.getTriggerData().get(0).getKey().longValue(), 159L);
+        assertEquals(attributionTrigger.getTriggerData().get(0).getSourceKeys().size(), 2);
+        assertEquals(attributionTrigger.getTriggerData().get(1).getKey().longValue(), 5L);
+        assertEquals(attributionTrigger.getTriggerData().get(1).getSourceKeys().size(), 3);
+        assertEquals(attributionTrigger.getValues().get("campCounts").intValue(), 1);
+        assertEquals(attributionTrigger.getValues().get("campGeoCounts").intValue(), 100);
     }
 
     @Test
@@ -204,15 +188,14 @@ public final class AggregatableAttributionTriggerTest {
                         .setKey(BigInteger.valueOf(159L))
                         .setSourceKeys(new HashSet<>(Arrays.asList("campCounts", "campGeoCounts")))
                         .build();
-        Map<String, AggregatableKeyValue> values = new HashMap<>();
-        values.put("campCounts", new AggregatableKeyValue.Builder(1).build());
-        values.put("campGeoCounts", new AggregatableKeyValue.Builder(100).build());
+        Map<String, Integer> values = new HashMap<>();
+        values.put("campCounts", 1);
+        values.put("campGeoCounts", 100);
 
         final AggregatableAttributionTrigger attributionTrigger2 =
                 new AggregatableAttributionTrigger.Builder()
                         .setTriggerData(Arrays.asList(attributionTriggerData1))
-                        .setValueConfigs(
-                                List.of(new AggregatableValuesConfig.Builder(values).build()))
+                        .setValues(values)
                         .build();
         final Set<AggregatableAttributionTrigger> attributionTriggerSet1 =
                 Set.of(attributionTrigger1);

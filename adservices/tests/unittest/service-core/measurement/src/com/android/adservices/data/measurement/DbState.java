@@ -421,7 +421,7 @@ public class DbState {
                 .setEnrollmentId(tJSON.getString("enrollmentId"))
                 .setEventTriggers(tJSON.getString("eventTriggers"))
                 .setAggregateTriggerData(tJSON.optString("aggregatableTriggerData", null))
-                .setAggregateValuesString(tJSON.optString("aggregatableValues", null))
+                .setAggregateValues(tJSON.optString("aggregatableValues", null))
                 .setTriggerTime(tJSON.getLong("triggerTime"))
                 .setStatus(tJSON.getInt("status"))
                 .setRegistrant(Uri.parse(tJSON.getString("registrant")))
@@ -575,7 +575,6 @@ public class DbState {
                                                 "aggregation_coordinator_origin",
                                                 "https://test.test")))
                         .setIsFakeReport(rJSON.optBoolean("isFakeReport", false))
-                        .setApi(rJSON.optString("api", null))
                         .setTriggerContextId(rJSON.optString("triggerContextId", null));
 
         if (rJSON.opt("dedupKey") != null) {

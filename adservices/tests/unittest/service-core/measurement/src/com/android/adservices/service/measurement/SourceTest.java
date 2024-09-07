@@ -43,9 +43,6 @@ import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
-import com.android.adservices.service.measurement.aggregation.AggregateDebugReportData;
-import com.android.adservices.service.measurement.aggregation.AggregateDebugReporting;
-import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -106,8 +103,6 @@ public final class SourceTest extends AdServicesMockitoTestCase {
         assertEquals(Source.TriggerDataMatching.MODULUS, source.getTriggerDataMatching());
         assertNull(source.getTriggerData());
         assertNull(source.getAttributedTriggers());
-        assertNull(source.getAggregateDebugReportingString());
-        assertEquals(0, source.getAggregateDebugReportContributions());
     }
 
     @Test
@@ -132,9 +127,6 @@ public final class SourceTest extends AdServicesMockitoTestCase {
         String debugWebAdId = "SAMPLE_DEBUG_WEB_ADID";
         TriggerSpecs triggerSpecs = SourceFixture.getValidTriggerSpecsValueSum();
         Double event_level_epsilon = 10d;
-        String aggregateDebugReportingString =
-                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT;
-        int aggregateDebugReportContributions = 1024;
         assertEquals(
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
@@ -193,8 +185,6 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                         .setDestinationLimitPriority(100L)
                         .setDestinationLimitAlgorithm(Source.DestinationLimitAlgorithm.FIFO)
                         .setEventLevelEpsilon(event_level_epsilon)
-                        .setAggregateDebugReportingString(aggregateDebugReportingString)
-                        .setAggregateDebugReportContributions(aggregateDebugReportContributions)
                         .build(),
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
@@ -253,8 +243,6 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                         .setDestinationLimitPriority(100L)
                         .setDestinationLimitAlgorithm(Source.DestinationLimitAlgorithm.FIFO)
                         .setEventLevelEpsilon(event_level_epsilon)
-                        .setAggregateDebugReportingString(aggregateDebugReportingString)
-                        .setAggregateDebugReportContributions(aggregateDebugReportContributions)
                         .build());
     }
 
@@ -572,23 +560,6 @@ public final class SourceTest extends AdServicesMockitoTestCase {
         assertNotEquals(
                 SourceFixture.getMinimalValidSourceBuilder().setEventLevelEpsilon(10D).build(),
                 SourceFixture.getMinimalValidSourceBuilder().setEventLevelEpsilon(11D).build());
-        assertThat(
-                        SourceFixture.getMinimalValidSourceBuilder()
-                                .setAggregateDebugReportingString(
-                                        "{\"budget\":1024,\"key_piece\":\"0x1\"}")
-                                .build())
-                .isNotEqualTo(
-                        SourceFixture.getMinimalValidSourceBuilder()
-                                .setAggregateDebugReportingString(
-                                        "{\"budget\":1024,\"key_piece\":\"0x2\"}")
-                                .build());
-        assertNotEquals(
-                SourceFixture.getMinimalValidSourceBuilder()
-                        .setAggregateDebugReportContributions(1024)
-                        .build(),
-                SourceFixture.getMinimalValidSourceBuilder()
-                        .setAggregateDebugReportContributions(1025)
-                        .build());
     }
 
     @Test
@@ -615,9 +586,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                 SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
                 SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
-                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON,
-                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT,
-                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT_CONTRIBUTIONS);
+                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON);
 
         assertInvalidSourceArguments(
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
@@ -641,9 +610,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                 SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
                 SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
-                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON,
-                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT,
-                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT_CONTRIBUTIONS);
+                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON);
     }
 
     @Test
@@ -671,9 +638,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                 SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
                 SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
-                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON,
-                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT,
-                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT_CONTRIBUTIONS);
+                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON);
 
         // Invalid web Uri
         assertInvalidSourceArguments(
@@ -698,9 +663,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                 SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
                 SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
-                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON,
-                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT,
-                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT_CONTRIBUTIONS);
+                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON);
 
         // Empty app destinations list
         assertInvalidSourceArguments(
@@ -725,9 +688,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                 SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
                 SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
-                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON,
-                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT,
-                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT_CONTRIBUTIONS);
+                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON);
 
         // Empty web destinations list
         assertInvalidSourceArguments(
@@ -752,9 +713,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                 SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
                 SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
-                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON,
-                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT,
-                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT_CONTRIBUTIONS);
+                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON);
 
         // Too many app destinations
         assertInvalidSourceArguments(
@@ -781,9 +740,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                 SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
                 SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
-                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON,
-                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT,
-                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT_CONTRIBUTIONS);
+                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON);
     }
 
     @Test
@@ -810,9 +767,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                 SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
                 SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
-                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON,
-                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT,
-                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT_CONTRIBUTIONS);
+                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON);
     }
 
     @Test
@@ -839,9 +794,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                 SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
                 SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
-                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON,
-                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT,
-                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT_CONTRIBUTIONS);
+                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON);
 
         assertInvalidSourceArguments(
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
@@ -865,9 +818,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                 SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
                 SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
-                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON,
-                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT,
-                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT_CONTRIBUTIONS);
+                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON);
     }
 
     @Test
@@ -894,9 +845,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                 SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
                 SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
-                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON,
-                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT,
-                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT_CONTRIBUTIONS);
+                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON);
     }
 
     @Test
@@ -937,55 +886,6 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                         .get()
                         .getFilterMap()
                         .getAttributionFilterMap());
-    }
-
-    @Test
-    public void aggregateDebugReport_parsing_asExpected() throws JSONException {
-        // Setup
-        String aggregateDebugReport =
-                "{\"budget\":1024,"
-                        + "\"key_piece\":\"0x100\","
-                        + "\"debug_data\":["
-                        + "{"
-                        + "\"types\": [\"source-destination-limit\"],"
-                        + "\"key_piece\": \"0x111\","
-                        + "\"value\": 111"
-                        + "},"
-                        + "{"
-                        + "\"types\": [\"default\"],"
-                        + "\"key_piece\": \"0x222\","
-                        + "\"value\": 222"
-                        + "}"
-                        + "]}";
-        Source source =
-                SourceFixture.getValidSourceBuilder()
-                        .setAggregateDebugReportingString(aggregateDebugReport)
-                        .build();
-
-        // Execution
-        AggregateDebugReportData debugData1 =
-                new AggregateDebugReportData.Builder(
-                                Collections.singleton(
-                                        DebugReportApi.Type.SOURCE_DESTINATION_LIMIT.getValue()),
-                                new BigInteger("111", 16),
-                                111)
-                        .build();
-        AggregateDebugReportData debugData2 =
-                new AggregateDebugReportData.Builder(
-                                Collections.singleton(DebugReportApi.Type.DEFAULT.getValue()),
-                                new BigInteger("222", 16),
-                                222)
-                        .build();
-
-        // Assertion
-        assertThat(source.getAggregateDebugReportingObject())
-                .isEqualTo(
-                        new AggregateDebugReporting.Builder(
-                                        1024,
-                                        new BigInteger("100", 16),
-                                        Arrays.asList(debugData1, debugData2),
-                                        null)
-                                .build());
     }
 
     @Test
@@ -1457,9 +1357,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
             @Nullable String sharedFilterDataKeys,
             @Nullable Long installTime,
             Uri registrationOrigin,
-            @Nullable Double eventLevelEpsilon,
-            @Nullable String aggregateDebugReportingString,
-            @Nullable Integer aggregateDebugReportContributions) {
+            @Nullable Double eventLevelEpsilon) {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -1486,9 +1384,6 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                                 .setRegistrationOrigin(registrationOrigin)
                                 .setSharedFilterDataKeys(sharedFilterDataKeys)
                                 .setEventLevelEpsilon(eventLevelEpsilon)
-                                .setAggregateDebugReportingString(aggregateDebugReportingString)
-                                .setAggregateDebugReportContributions(
-                                        aggregateDebugReportContributions)
                                 .build());
     }
 

@@ -21,12 +21,10 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
 
-import com.android.adservices.LogUtil;
 import com.android.modules.utils.build.SdkLevel;
 
 /** ContentProvider for monitoring changes to {@link AsyncRegistration}. */
-public final class AsyncRegistrationContentProvider extends ContentProvider {
-
+public class AsyncRegistrationContentProvider extends ContentProvider {
     /**
      * Gets the Trigger URI of this content provider
      *
@@ -42,7 +40,6 @@ public final class AsyncRegistrationContentProvider extends ContentProvider {
 
     @Override
     public boolean onCreate() {
-        LogUtil.d("AsyncRegistrationContentProvider.onCreate()");
         return true;
     }
 

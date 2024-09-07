@@ -31,9 +31,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /** Unit tests for {@link AggregatableValuesConfig} */
 @RunWith(MockitoJUnitRunner.class)
@@ -42,73 +40,8 @@ public final class AggregatableValuesConfigTest {
     @Mock Flags mFlags;
 
     @Test
-    public void testBuilderWithJsonObject_success() throws Exception {
-        // Build values
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("campaignCounts", 32768);
-        jsonObject.put("geoValue", 1664);
-        AggregatableValuesConfig aggregatableValuesConfig =
-                new AggregatableValuesConfig.Builder(jsonObject).build();
-        assertThat(aggregatableValuesConfig.getValues()).isNotNull();
-        assertThat(aggregatableValuesConfig.getValues().size()).isEqualTo(2);
-        assertThat(aggregatableValuesConfig.getValues().get("campaignCounts").getValue())
-                .isEqualTo(32768);
-        assertThat(aggregatableValuesConfig.getValues().get("geoValue").getValue()).isEqualTo(1664);
-    }
-
-    @Test
     public void testBuilderWithJsonObjectFromArray_success() throws Exception {
         when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
-        AggregatableValuesConfig aggregatableValuesConfig = createSimpleAggregatableValuesConfig();
-        assertThat(aggregatableValuesConfig.getValues()).isNotNull();
-        assertThat(aggregatableValuesConfig.getValues().size()).isEqualTo(2);
-        assertThat(aggregatableValuesConfig.getValues().get("campaignCounts").getValue())
-                .isEqualTo(32768);
-        assertThat(aggregatableValuesConfig.getValues().get("geoValue").getValue()).isEqualTo(1664);
-        assertThat(aggregatableValuesConfig.getFilterSet().size()).isEqualTo(1);
-        assertThat(aggregatableValuesConfig.getFilterSet().get(0).getStringListValue("conversion"))
-                .isEqualTo(Collections.singletonList("electronics"));
-        assertThat(aggregatableValuesConfig.getNotFilterSet().get(0).getStringListValue("product"))
-                .isEqualTo(List.of("1234", "2345"));
-    }
-
-    @Test
-    public void testHashCode_equals() throws Exception {
-        final AggregatableValuesConfig aggregatableValuesConfig1 =
-                createSimpleAggregatableValuesConfig();
-        final AggregatableValuesConfig aggregatableValuesConfig2 =
-                createSimpleAggregatableValuesConfig();
-        assertThat(aggregatableValuesConfig1.hashCode())
-                .isEqualTo(aggregatableValuesConfig2.hashCode());
-        assertThat(aggregatableValuesConfig1).isEqualTo(aggregatableValuesConfig2);
-    }
-
-    @Test
-    public void testHashCode_notEquals() throws Exception {
-        final AggregatableValuesConfig aggregatableValuesConfig1 =
-                createSimpleAggregatableValuesConfig();
-        JSONObject jsonObj1Values = new JSONObject();
-        jsonObj1Values.put("campaignCounts", 32768);
-        jsonObj1Values.put("geoValue", 1664);
-        JSONObject jsonObject = new JSONObject().put("values", jsonObj1Values);
-        final AggregatableValuesConfig aggregatableValuesConfig2 =
-                new AggregatableValuesConfig.Builder(jsonObject, mFlags).build();
-        assertThat(aggregatableValuesConfig1.hashCode())
-                .isNotEqualTo(aggregatableValuesConfig2.hashCode());
-        assertThat(aggregatableValuesConfig1).isNotEqualTo(aggregatableValuesConfig2);
-    }
-
-    @Test
-    public void testGetConfigValuesMap_success() throws Exception {
-        Map<String, Integer> expectedConfigValuesMap = new HashMap<>();
-        expectedConfigValuesMap.put("campaignCounts", 32768);
-        expectedConfigValuesMap.put("geoValue", 1664);
-        AggregatableValuesConfig aggregatableValuesConfig = createSimpleAggregatableValuesConfig();
-        assertThat(aggregatableValuesConfig.getConfigValuesMap())
-                .isEqualTo(expectedConfigValuesMap);
-    }
-
-    private AggregatableValuesConfig createSimpleAggregatableValuesConfig() throws Exception {
         // Build values
         JSONObject jsonObj1Values = new JSONObject();
         jsonObj1Values.put("campaignCounts", 32768);
@@ -124,6 +57,18 @@ public final class AggregatableValuesConfigTest {
         jsonObj.put("values", jsonObj1Values);
         jsonObj.put("filters", filterMapJson);
         jsonObj.put("not_filters", notFilterMapJson);
-        return new AggregatableValuesConfig.Builder(jsonObj, mFlags).build();
+        // Assert AggregatableValuesConfig gets populated
+        AggregatableValuesConfig aggregatableValuesConfig =
+                new AggregatableValuesConfig.Builder(jsonObj, mFlags).build();
+        assertThat(aggregatableValuesConfig.getValues()).isNotNull();
+        assertThat(aggregatableValuesConfig.getValues().size()).isEqualTo(2);
+        assertThat(aggregatableValuesConfig.getValues().get("campaignCounts").getValue())
+                .isEqualTo(32768);
+        assertThat(aggregatableValuesConfig.getValues().get("geoValue").getValue()).isEqualTo(1664);
+        assertThat(aggregatableValuesConfig.getFilterSet().size()).isEqualTo(1);
+        assertThat(aggregatableValuesConfig.getFilterSet().get(0).getStringListValue("conversion"))
+                .isEqualTo(Collections.singletonList("electronics"));
+        assertThat(aggregatableValuesConfig.getNotFilterSet().get(0).getStringListValue("product"))
+                .isEqualTo(List.of("1234", "2345"));
     }
 }

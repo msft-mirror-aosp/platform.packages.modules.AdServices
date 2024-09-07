@@ -25,7 +25,7 @@ import org.junit.Test;
 public final class JobServiceLoggingCallbackTest extends SharedMockitoTestCase {
 
     private static final long INJECTION_TIMEOUT_MS = 200;
-    private static final long CALLBACK_TIMEOUT_MS = INJECTION_TIMEOUT_MS + 5_000;
+    private static final long CALLBACK_TIMEOUT_MS = INJECTION_TIMEOUT_MS + 400;
 
     @Test
     public void testCustomMethods() throws Exception {

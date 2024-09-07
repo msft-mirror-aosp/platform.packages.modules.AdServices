@@ -21,7 +21,6 @@ import static java.util.function.Predicate.not;
 import android.database.Cursor;
 import android.net.Uri;
 
-import com.android.adservices.data.measurement.MeasurementTables.SourceContract;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
@@ -255,14 +254,6 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.SourceContract.EVENT_LEVEL_EPSILON,
                 builder::setEventLevelEpsilon);
-        setTextColumn(
-                cursor,
-                MeasurementTables.SourceContract.AGGREGATE_DEBUG_REPORTING,
-                builder::setAggregateDebugReportingString);
-        setIntColumn(
-                cursor,
-                SourceContract.AGGREGATE_DEBUG_REPORT_CONTRIBUTIONS,
-                builder::setAggregateDebugReportContributions);
 
         return builder.build();
     }
@@ -290,10 +281,8 @@ public class SqliteObjectMapper {
                 builder::setRegistrant);
         setTextColumn(cursor, MeasurementTables.TriggerContract.AGGREGATE_TRIGGER_DATA,
                 builder::setAggregateTriggerData);
-        setTextColumn(
-                cursor,
-                MeasurementTables.TriggerContract.AGGREGATE_VALUES,
-                builder::setAggregateValuesString);
+        setTextColumn(cursor, MeasurementTables.TriggerContract.AGGREGATE_VALUES,
+                builder::setAggregateValues);
         setTextColumn(
                 cursor,
                 MeasurementTables.TriggerContract.AGGREGATABLE_DEDUPLICATION_KEYS,
@@ -355,10 +344,6 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.TriggerContract.AGGREGATABLE_FILTERING_ID_MAX_BYTES,
                 builder::setAggregatableFilteringIdMaxBytes);
-        setTextColumn(
-                cursor,
-                MeasurementTables.TriggerContract.AGGREGATE_DEBUG_REPORTING,
-                builder::setAggregateDebugReportingString);
         return builder.build();
     }
 
@@ -420,7 +405,6 @@ public class SqliteObjectMapper {
                 builder::setTriggerContextId);
         setLongColumn(
                 cursor, MeasurementTables.AggregateReport.TRIGGER_TIME, builder::setTriggerTime);
-        setTextColumn(cursor, MeasurementTables.AggregateReport.API, builder::setApi);
         return builder.build();
     }
 

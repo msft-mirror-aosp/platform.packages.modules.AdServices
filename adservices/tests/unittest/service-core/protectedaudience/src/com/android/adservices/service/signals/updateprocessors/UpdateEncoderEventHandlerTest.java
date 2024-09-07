@@ -26,18 +26,13 @@ import static org.mockito.Mockito.when;
 
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
-import android.content.Context;
 import android.net.Uri;
 
-import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.signals.DBEncoderEndpoint;
 import com.android.adservices.data.signals.EncoderEndpointsDao;
 import com.android.adservices.data.signals.EncoderLogicHandler;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.shared.testing.SdkLevelSupportRule;
-
-import com.google.common.util.concurrent.FluentFuture;
-import com.google.common.util.concurrent.Futures;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -56,7 +51,6 @@ public class UpdateEncoderEventHandlerTest {
     @Mock private EncoderEndpointsDao mEncoderEndpointsDaoMock;
 
     @Mock private EncoderLogicHandler mEncoderLogicHandlerMock;
-    @Mock private Context mMockContext;
 
     @Captor private ArgumentCaptor<DBEncoderEndpoint> mEndpointCaptor;
 
@@ -68,12 +62,7 @@ public class UpdateEncoderEventHandlerTest {
     @Before
     public void setup() {
         mHandler =
-                new UpdateEncoderEventHandler(
-                        mEncoderEndpointsDaoMock,
-                        mEncoderLogicHandlerMock,
-                        mMockContext,
-                        AdServicesExecutors.getBackgroundExecutor(),
-                        false);
+                new UpdateEncoderEventHandler(mEncoderEndpointsDaoMock, mEncoderLogicHandlerMock);
     }
 
     @Test
@@ -92,9 +81,6 @@ public class UpdateEncoderEventHandlerTest {
         AdTechIdentifier buyer = CommonFixture.VALID_BUYER_1;
         Uri uri = CommonFixture.getUri(buyer, "/encoder");
         when(mEncoderEndpointsDaoMock.getEndpoint(buyer)).thenReturn(null);
-        when(mEncoderLogicHandlerMock.downloadAndUpdate(
-                        buyer, DevContext.createForDevOptionsDisabled()))
-                .thenReturn(FluentFuture.from(Futures.immediateFuture(true)));
         mHandler.handle(
                 buyer,
                 UpdateEncoderEvent.builder()

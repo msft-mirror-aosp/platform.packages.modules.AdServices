@@ -19,7 +19,6 @@ package com.android.cobalt.observations;
 import static java.util.Objects.requireNonNull;
 
 import com.android.cobalt.data.EventVector;
-import com.android.cobalt.logging.CobaltOperationLogger;
 
 import com.google.cobalt.AggregateValue;
 import com.google.cobalt.MetricDefinition;
@@ -38,17 +37,12 @@ final class PrivateIntegerEncoder implements PrivateObservationGenerator.Encoder
     private final MetricDefinition mMetric;
     private final ReportDefinition mReport;
     private final SecureRandom mSecureRandom;
-    private final CobaltOperationLogger mOperationLogger;
 
     PrivateIntegerEncoder(
-            SecureRandom secureRandom,
-            MetricDefinition metric,
-            ReportDefinition report,
-            CobaltOperationLogger operationLogger) {
+            SecureRandom secureRandom, MetricDefinition metric, ReportDefinition report) {
         this.mSecureRandom = requireNonNull(secureRandom);
         this.mMetric = requireNonNull(metric);
         this.mReport = requireNonNull(report);
-        this.mOperationLogger = requireNonNull(operationLogger);
     }
 
     /**
@@ -63,9 +57,7 @@ final class PrivateIntegerEncoder implements PrivateObservationGenerator.Encoder
         int maxEventVectorIndex =
                 PrivateIndexCalculations.getNumEventVectors(mMetric.getMetricDimensionsList()) - 1;
         int eventVectorIndex = PrivateIndexCalculations.eventVectorToIndex(eventVector, mMetric);
-        if (aggregateValue.getIntegerValue() > mReport.getMaxValue()) {
-            mOperationLogger.logMaxValueExceeded(mMetric.getId(), mReport.getId());
-        }
+
         long clippedValue =
                 PrivateIndexCalculations.clipValue(aggregateValue.getIntegerValue(), mReport);
         int clippedValueIndex =

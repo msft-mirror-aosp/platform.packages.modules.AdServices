@@ -543,11 +543,12 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
         mLogger = new StatsdAdServicesLogger(mMockFlags);
 
         int apiName = AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
+        String appPackageName = null;
         int resultCode = STATUS_SUCCESS;
         int latencyMs = 10;
 
         // Log api call with app package name.
-        mLogger.logFledgeApiCallStats(apiName, null, resultCode, latencyMs);
+        mLogger.logFledgeApiCallStats(apiName, appPackageName, resultCode, latencyMs);
 
         // Verify app package name is logged.
         verify(
@@ -582,11 +583,12 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
         mLogger = new StatsdAdServicesLogger(mMockFlags);
 
         int apiName = AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
+        String appPackageName = TEST_PACKAGE_NAME;
         int resultCode = STATUS_SUCCESS;
         int latencyMs = 10;
 
         // Log api call with app package name.
-        mLogger.logFledgeApiCallStats(apiName, TEST_PACKAGE_NAME, resultCode, latencyMs);
+        mLogger.logFledgeApiCallStats(apiName, appPackageName, resultCode, latencyMs);
 
         // Verify app package name is not logged.
         verify(
@@ -1376,6 +1378,10 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                 DestinationRegisteredBeaconsReportedStats
                         .InteractionKeySizeRangeType
                         .EQUAL_TO_MAXIMUM_KEY_SIZE);
+        int[] keySizeRangeTypeArray = new int[] {
+                /* LARGER_THAN_MAXIMUM_KEY_SIZE */ 4,
+                /* SMALLER_THAN_MAXIMUM_KEY_SIZE */ 2,
+                /* EQUAL_TO_MAXIMUM_KEY_SIZE */ 3};
 
         DestinationRegisteredBeaconsReportedStats stats =
                 DestinationRegisteredBeaconsReportedStats.builder()

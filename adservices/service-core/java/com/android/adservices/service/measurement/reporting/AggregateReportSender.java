@@ -29,11 +29,22 @@ import java.net.URL;
  */
 public class AggregateReportSender extends MeasurementReportSender {
 
-    private final String mReportUriPath;
+    @VisibleForTesting
+    public static final String AGGREGATE_ATTRIBUTION_REPORT_URI_PATH =
+            ".well-known/attribution-reporting/report-aggregate-attribution";
 
-    public AggregateReportSender(Context context, String reportUriPath) {
+    @VisibleForTesting
+    public static final String DEBUG_AGGREGATE_ATTRIBUTION_REPORT_URI_PATH =
+            ".well-known/attribution-reporting/debug/report-aggregate-attribution";
+
+    private String mReportUriPath;
+
+    public AggregateReportSender(boolean isDebugReport, Context context) {
         super(context);
-        mReportUriPath = reportUriPath;
+        this.mReportUriPath = AGGREGATE_ATTRIBUTION_REPORT_URI_PATH;
+        if (isDebugReport) {
+            this.mReportUriPath = DEBUG_AGGREGATE_ATTRIBUTION_REPORT_URI_PATH;
+        }
     }
 
     /** The report uri path. */

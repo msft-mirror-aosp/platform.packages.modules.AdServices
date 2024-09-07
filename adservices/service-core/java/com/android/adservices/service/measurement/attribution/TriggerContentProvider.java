@@ -21,13 +21,13 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
 
-import com.android.adservices.LogUtil;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.modules.utils.build.SdkLevel;
 
-/** ContentProvider for monitoring changes to {@link Trigger}. */
-public final class TriggerContentProvider extends ContentProvider {
-
+/**
+ * ContentProvider for monitoring changes to {@link Trigger}.
+ */
+public class TriggerContentProvider extends ContentProvider {
     /**
      * Gets the Trigger URI of this content provider
      *
@@ -43,7 +43,6 @@ public final class TriggerContentProvider extends ContentProvider {
 
     @Override
     public boolean onCreate() {
-        LogUtil.d("TriggerContentProvider.onCreate()");
         return true;
     }
 

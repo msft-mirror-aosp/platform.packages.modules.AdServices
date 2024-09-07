@@ -20,8 +20,7 @@ import com.android.adservices.common.AdServicesUnitTestCase;
 
 import org.junit.Test;
 
-public final class TopicsEncryptionEpochComputationReportedStatsTest
-        extends AdServicesUnitTestCase {
+public class TopicsEncryptionEpochComputationReportedStatsTest extends AdServicesUnitTestCase {
     private static final int COUNT_OF_TOPICS_BEFORE_ENCRYPTION = 5;
     private static final int COUNT_OF_EMPTY_ENCRYPTED_TOPICS = 3;
     private static final int COUNT_OF_ENCRYPTED_TOPICS = 2;

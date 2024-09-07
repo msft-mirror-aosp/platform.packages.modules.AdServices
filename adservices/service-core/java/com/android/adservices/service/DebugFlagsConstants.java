@@ -47,11 +47,6 @@ public final class DebugFlagsConstants {
     public static final String KEY_PROTECTED_APP_SIGNALS_CLI_ENABLED =
             "fledge_is_app_signals_cli_enabled";
 
-    /** Key for feature flagging the broadcast after encoder logic registration (for testing). */
-    public static final String
-            KEY_PROTECTED_APP_SIGNALS_ENCODER_LOGIC_REGISTERED_BROADCAST_ENABLED =
-                    "protected_app_signals_encoder_logic_registered_broadcast_enabled";
-
     /** Key for feature flagging adselection CLI. */
     public static final String KEY_AD_SELECTION_CLI_ENABLED = "fledge_is_ad_selection_cli_enabled";
 

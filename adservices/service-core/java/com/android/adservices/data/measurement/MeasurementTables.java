@@ -47,7 +47,6 @@ public final class MeasurementTables {
         MeasurementTables.AttributionContract.TABLE,
         MeasurementTables.AsyncRegistrationContract.TABLE,
         MeasurementTables.DebugReportContract.TABLE,
-        MeasurementTables.AggregatableDebugReportBudgetTrackerContract.TABLE,
         MeasurementTables.XnaIgnoredSourcesContract.TABLE,
         KeyValueDataContract.TABLE,
         AppReportHistoryContract.TABLE,
@@ -150,8 +149,6 @@ public final class MeasurementTables {
         String REINSTALL_REATTRIBUTION_WINDOW = "reinstall_reattribution_window";
         String DESTINATION_LIMIT_PRIORITY = "destination_limit_priority";
         String EVENT_LEVEL_EPSILON = "event_level_epsilon";
-        String AGGREGATE_DEBUG_REPORTING = "aggregate_debug_reporting";
-        String AGGREGATE_DEBUG_REPORT_CONTRIBUTIONS = "aggregate_debug_report_contributions";
     }
 
     /** Contract for sub-table for destinations in Source. */
@@ -201,7 +198,6 @@ public final class MeasurementTables {
         String TRIGGER_CONTEXT_ID = "trigger_context_id";
         String ATTRIBUTION_SCOPES = "attribution_scope";
         String AGGREGATABLE_FILTERING_ID_MAX_BYTES = "aggregatable_filtering_id_max_bytes";
-        String AGGREGATE_DEBUG_REPORTING = "aggregate_debug_reporting";
     }
 
     /** Contract for EventReport. */
@@ -271,7 +267,6 @@ public final class MeasurementTables {
         String IS_FAKE_REPORT = "is_fake_report";
         String TRIGGER_CONTEXT_ID = "trigger_context_id";
         String TRIGGER_TIME = "trigger_time";
-        String API = "api";
     }
 
     /** Contract for aggregate encryption key. */
@@ -295,18 +290,6 @@ public final class MeasurementTables {
         String REFERENCE_ID = "reference_id";
         String INSERTION_TIME = "insertion_time";
         String REGISTRANT = "registrant";
-    }
-
-    /** Contract for aggregatable debug report budget. */
-    public interface AggregatableDebugReportBudgetTrackerContract {
-        String TABLE = MSMT_TABLE_PREFIX + "aggregatable_debug_report_budget_tracker";
-        String REPORT_GENERATION_TIME = "report_generation_time";
-        String TOP_LEVEL_REGISTRANT = "top_level_registrant";
-        String REGISTRANT_APP = "registrant_app";
-        String REGISTRATION_ORIGIN = "registration_origin";
-        String SOURCE_ID = "source_id";
-        String TRIGGER_ID = "trigger_id";
-        String CONTRIBUTIONS = "contributions";
     }
 
     /** Contract for xna ignored sources. */
@@ -581,11 +564,7 @@ public final class MeasurementTables {
                     + SourceContract.TRIGGER_DATA
                     + " TEXT, "
                     + SourceContract.EVENT_LEVEL_EPSILON
-                    + " DOUBLE, "
-                    + SourceContract.AGGREGATE_DEBUG_REPORTING
-                    + " TEXT, "
-                    + SourceContract.AGGREGATE_DEBUG_REPORT_CONTRIBUTIONS
-                    + " INTEGER "
+                    + " DOUBLE "
                     + ")";
 
     public static final String CREATE_TABLE_SOURCE_DESTINATION_LATEST =
@@ -727,9 +706,7 @@ public final class MeasurementTables {
                     + TriggerContract.ATTRIBUTION_SCOPES
                     + " TEXT, "
                     + TriggerContract.AGGREGATABLE_FILTERING_ID_MAX_BYTES
-                    + " INTEGER, "
-                    + TriggerContract.AGGREGATE_DEBUG_REPORTING
-                    + " TEXT "
+                    + " INTEGER "
                     + ")";
 
     // Only used in V3
@@ -1025,8 +1002,6 @@ public final class MeasurementTables {
                     + " TEXT, "
                     + AggregateReport.TRIGGER_TIME
                     + " INTEGER, "
-                    + AggregateReport.API
-                    + " TEXT, "
                     + "FOREIGN KEY ("
                     + AggregateReport.SOURCE_ID
                     + ") REFERENCES "
@@ -1107,40 +1082,6 @@ public final class MeasurementTables {
                     + " INTEGER, "
                     + DebugReportContract.REGISTRANT
                     + " TEXT "
-                    + ")";
-
-    public static final String CREATE_TABLE_AGGREGATABLE_DEBUG_REPORT_BUDGET_TRACKER_LATEST =
-            "CREATE TABLE IF NOT EXISTS "
-                    + AggregatableDebugReportBudgetTrackerContract.TABLE
-                    + " ("
-                    + AggregatableDebugReportBudgetTrackerContract.REPORT_GENERATION_TIME
-                    + " INTEGER, "
-                    + AggregatableDebugReportBudgetTrackerContract.TOP_LEVEL_REGISTRANT
-                    + " TEXT, "
-                    + AggregatableDebugReportBudgetTrackerContract.REGISTRANT_APP
-                    + " TEXT, "
-                    + AggregatableDebugReportBudgetTrackerContract.REGISTRATION_ORIGIN
-                    + " TEXT, "
-                    + AggregatableDebugReportBudgetTrackerContract.SOURCE_ID
-                    + " TEXT, "
-                    + AggregatableDebugReportBudgetTrackerContract.TRIGGER_ID
-                    + " TEXT, "
-                    + AggregatableDebugReportBudgetTrackerContract.CONTRIBUTIONS
-                    + " INTEGER, "
-                    + "FOREIGN KEY ("
-                    + AggregatableDebugReportBudgetTrackerContract.SOURCE_ID
-                    + ") REFERENCES "
-                    + SourceContract.TABLE
-                    + "("
-                    + SourceContract.ID
-                    + ") ON DELETE CASCADE "
-                    + "FOREIGN KEY ("
-                    + AggregatableDebugReportBudgetTrackerContract.TRIGGER_ID
-                    + ") REFERENCES "
-                    + TriggerContract.TABLE
-                    + "("
-                    + TriggerContract.ID
-                    + ") ON DELETE CASCADE"
                     + ")";
 
     public static final String CREATE_TABLE_XNA_IGNORED_SOURCES_V6 =
@@ -1448,7 +1389,6 @@ public final class MeasurementTables {
                             CREATE_TABLE_AGGREGATE_ENCRYPTION_KEY_LATEST,
                             CREATE_TABLE_ASYNC_REGISTRATION_LATEST,
                             CREATE_TABLE_DEBUG_REPORT_LATEST,
-                            CREATE_TABLE_AGGREGATABLE_DEBUG_REPORT_BUDGET_TRACKER_LATEST,
                             CREATE_TABLE_XNA_IGNORED_SOURCES_LATEST,
                             CREATE_TABLE_KEY_VALUE_STORE_LATEST,
                             CREATE_TABLE_APP_REPORT_HISTORY_LATEST));

@@ -50,7 +50,9 @@ public class E2EMockTest extends E2EAbstractMockTest {
             Map<String, String> phFlagsMap)
             throws RemoteException {
         super(actions, expectedOutput, paramsProvider, name, phFlagsMap);
-        mAttributionHelper = TestObjectProvider.getAttributionJobHandler(mDatastoreManager, mFlags);
+        mAttributionHelper =
+                TestObjectProvider.getAttributionJobHandler(
+                        mDatastoreManager, mFlags, mErrorLogger);
         mMeasurementImpl =
                 TestObjectProvider.getMeasurementImpl(
                         mDatastoreManager,

@@ -16,8 +16,8 @@
 
 package com.android.adservices.service;
 
-/** Specifies what kind of feature flag it is. */
-enum FeatureFlagType {
+/** Specifies what kind of a feature flag it is. */
+public enum FeatureFlagType {
     FEATURE_FLAG,
     FEATURE_FLAG_BACKED_BY_LEGACY_KILL_SWITCH,
     LEGACY_KILL_SWITCH

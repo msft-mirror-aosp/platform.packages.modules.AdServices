@@ -135,21 +135,6 @@
         android:supportsRtl="true"
         android:icon="@drawable/ic_android_icon"
         android:theme="@style/FilterTouches">
-
-        <!--
-            This provider must be initialized first (before the other providers), hence
-            the higher android:initOrder.
-            NOTE: in theory the order of components (provider / activity / service)
-            shouldn't matter, but it doesn't hurt to define it first, just in case...
-        -->
-        <provider
-            android:name=
-                "com.android.adservices.service.common.AdServicesInternalProvider"
-            android:authorities="com.android.adservices.provider.internal"
-            android:exported="false"
-            android:initOrder="999999999"
-        />
-
         <!-- Activity for the main view of Adservices Settings UI-->
         <activity
             android:name="com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity"
@@ -481,24 +466,23 @@
             </intent-filter>
         </receiver>
 
-        <!--
-            NOTE: all providers must have initOrder lower than AdServicesInternalProvider's
-            (higher numbers are initialized first)
-        -->
-
         <provider
             android:name=
                 "com.android.adservices.service.measurement.attribution.TriggerContentProvider"
             android:authorities="com.android.adservices.provider.trigger"
             android:exported="false"
-            android:initOrder="100"
         />
         <provider
             android:name=
                 "com.android.adservices.service.measurement.registration.AsyncRegistrationContentProvider"
             android:authorities="com.android.adservices.provider.asyncregistration"
             android:exported="false"
-            android:initOrder="50"
+        />
+        <provider
+            android:name=
+                "com.android.adservices.service.common.AdServicesInternalProvider"
+            android:authorities="com.android.adservices.provider.internal"
+            android:exported="false"
         />
     </application>
 </manifest>

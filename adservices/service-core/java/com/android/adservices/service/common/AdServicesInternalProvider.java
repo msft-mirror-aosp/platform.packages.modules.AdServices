@@ -17,7 +17,6 @@ package com.android.adservices.service.common;
 
 import android.content.Context;
 
-import com.android.adservices.LogUtil;
 import com.android.adservices.shared.common.ApplicationContextProvider;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 
@@ -29,12 +28,6 @@ import java.io.PrintWriter;
  * not associated with a service).
  */
 public final class AdServicesInternalProvider extends ApplicationContextProvider {
-
-    @Override
-    public boolean onCreate() {
-        LogUtil.d("AdServicesInternalProvider.onCreate()");
-        return super.onCreate();
-    }
 
     @Override
     public void dump(FileDescriptor fd, PrintWriter writer, String[] args) {

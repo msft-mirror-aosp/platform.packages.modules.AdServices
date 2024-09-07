@@ -41,7 +41,6 @@ public class AggregateReportBody {
     private String mSourceRegistrationTime;
     private String mScheduledReportTime;
     private String mApiVersion;
-    private String mApi;
     private String mReportId;
     private String mReportingOrigin;
     private String mDebugCleartextPayload;
@@ -89,7 +88,6 @@ public class AggregateReportBody {
         mSourceRegistrationTime = other.mSourceRegistrationTime;
         mScheduledReportTime = other.mScheduledReportTime;
         mApiVersion = other.mApiVersion;
-        mApi = other.mApi;
         mReportId = other.mReportId;
         mReportingOrigin = other.mReportingOrigin;
         mDebugCleartextPayload = other.mDebugCleartextPayload;
@@ -133,7 +131,7 @@ public class AggregateReportBody {
     JSONObject sharedInfoToJson(Flags flags) throws JSONException {
         JSONObject sharedInfoJson = new JSONObject();
 
-        sharedInfoJson.put(SharedInfoKeys.API_NAME, mApi);
+        sharedInfoJson.put(SharedInfoKeys.API_NAME, API_NAME);
         sharedInfoJson.put(SharedInfoKeys.ATTRIBUTION_DESTINATION, mAttributionDestination);
         sharedInfoJson.put(SharedInfoKeys.REPORT_ID, mReportId);
         sharedInfoJson.put(SharedInfoKeys.REPORTING_ORIGIN, mReportingOrigin);
@@ -221,15 +219,6 @@ public class AggregateReportBody {
          */
         public @NonNull Builder setApiVersion(@NonNull String version) {
             mBuilding.mApiVersion = version;
-            return this;
-        }
-
-        /**
-         * The API name, e.g. "attribution-reporting", "attribution-reporting-debug", used to
-         * generate the aggregate report.
-         */
-        public @NonNull Builder setApi(@NonNull String api) {
-            mBuilding.mApi = api;
             return this;
         }
 

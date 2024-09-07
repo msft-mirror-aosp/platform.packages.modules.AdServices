@@ -20,7 +20,7 @@ import com.android.adservices.common.AdServicesUnitTestCase;
 
 import org.junit.Test;
 
-public final class AdCounterHistogramUpdaterReportedStatsTest extends AdServicesUnitTestCase {
+public class AdCounterHistogramUpdaterReportedStatsTest extends AdServicesUnitTestCase {
     private static final int LATENCY_IN_MILLIS = 100;
     private static final int STATUS_CODE = 0;
     private static final int TOTAL_NUMBER_OF_EVENTS_IN_DATABASE_AFTER_INSERT = 20;

@@ -49,7 +49,6 @@ import java.time.Instant;
 public final class TriggerEncodingCommandTest extends ShellCommandTestCase<TriggerEncodingCommand> {
     private static final AdTechIdentifier BUYER = CommonFixture.VALID_BUYER_1;
 
-
     @ShellCommandStats.Command
     private static final int EXPECTED_COMMAND = COMMAND_APP_SIGNALS_TRIGGER_ENCODING;
 

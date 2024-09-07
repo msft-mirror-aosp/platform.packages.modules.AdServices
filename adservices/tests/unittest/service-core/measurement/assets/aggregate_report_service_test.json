@@ -17,8 +17,7 @@
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0,
-            "registration_origin": "https://subdomain.example.test",
-            "api": "attribution-reporting"
+            "registration_origin": "https://subdomain.example.test"
           }
         ]
       },
@@ -37,8 +36,7 @@
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 1,
-            "registration_origin": "https://subdomain.example.test",
-            "api": "attribution-reporting"
+            "registration_origin": "https://subdomain.example.test"
           }
         ]
       },
@@ -68,8 +66,7 @@
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0,
-            "registration_origin": "https://subdomain.example.test",
-            "api": "attribution-reporting"
+            "registration_origin": "https://subdomain.example.test"
           }
         ]
       },
@@ -88,8 +85,7 @@
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0,
-            "registration_origin": "https://subdomain.example.test",
-            "api": "attribution-reporting"
+            "registration_origin": "https://subdomain.example.test"
           }
         ]
       },
@@ -119,8 +115,7 @@
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 1,
-            "registration_origin": "https://subdomain.example.test",
-            "api": "attribution-reporting"
+            "registration_origin": "https://subdomain.example.test"
           }
         ]
       },
@@ -139,8 +134,7 @@
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 1,
-            "registration_origin": "https://subdomain.example.test",
-            "api": "attribution-reporting"
+            "registration_origin": "https://subdomain.example.test"
           }
         ]
       },
@@ -170,8 +164,7 @@
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0,
-            "registration_origin": "https://subdomain.example.test",
-            "api": "attribution-reporting"
+            "registration_origin": "https://subdomain.example.test"
           },
           {
             "publisher": "https://source.site2",
@@ -182,8 +175,7 @@
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0,
-            "registration_origin": "https://subdomain.example.test",
-            "api": "attribution-reporting"
+            "registration_origin": "https://subdomain.example.test"
           }
         ]
       },
@@ -202,8 +194,7 @@
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 1,
-            "registration_origin": "https://subdomain.example.test",
-            "api": "attribution-reporting"
+            "registration_origin": "https://subdomain.example.test"
           },
           {
             "publisher": "https://source.site2",
@@ -214,8 +205,7 @@
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 1,
-            "registration_origin": "https://subdomain.example.test",
-            "api": "attribution-reporting"
+            "registration_origin": "https://subdomain.example.test"
           }
         ]
       },
@@ -244,8 +234,7 @@
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0,
-            "registration_origin": "https://subdomain.example.test",
-            "api": "attribution-reporting"
+            "registration_origin": "https://subdomain.example.test"
           },
           {
             "publisher": "https://source.site2",
@@ -256,8 +245,7 @@
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0,
-            "registration_origin": "https://subdomain.example.test",
-            "api": "attribution-reporting"
+            "registration_origin": "https://subdomain.example.test"
           },
           {
             "publisher": "https://source.site2",
@@ -268,8 +256,7 @@
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0,
-            "registration_origin": "https://subdomain.example.test",
-            "api": "attribution-reporting"
+            "registration_origin": "https://subdomain.example.test"
           }
         ]
       },
@@ -288,8 +275,7 @@
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0,
-            "registration_origin": "https://subdomain.example.test",
-            "api": "attribution-reporting"
+            "registration_origin": "https://subdomain.example.test"
           },
           {
             "publisher": "https://source.site2",
@@ -300,8 +286,7 @@
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 0,
-            "registration_origin": "https://subdomain.example.test",
-            "api": "attribution-reporting"
+            "registration_origin": "https://subdomain.example.test"
           },
           {
             "publisher": "https://source.site2",
@@ -312,8 +297,7 @@
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
             "status": 1,
-            "registration_origin": "https://subdomain.example.test",
-            "api": "attribution-reporting"
+            "registration_origin": "https://subdomain.example.test"
           }
         ]
       },

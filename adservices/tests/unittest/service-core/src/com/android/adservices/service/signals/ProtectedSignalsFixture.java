@@ -25,7 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public final class ProtectedSignalsFixture {
+public class ProtectedSignalsFixture {
 
     private static final Instant NOW = CommonFixture.FIXED_NOW;
     public static final String PACKAGE_NAME_PREFIX = "com.fake.package";
@@ -52,6 +52,21 @@ public final class ProtectedSignalsFixture {
         }
 
         return protectedSignalsMap;
+    }
+
+    /**
+     * Creates a {@link ProtectedSignal} with a {@code com.fake.package} package and a {@code
+     * CommonFixture.FIXED_NOW} creation time.
+     *
+     * @param value The value for the signal.
+     * @return The signal.
+     */
+    public static ProtectedSignal generateHexProtectedSignal(String value) {
+        return ProtectedSignal.builder()
+                .setCreationTime(NOW)
+                .setHexEncodedValue(getHexString(value))
+                .setPackageName(generatePackageName(value))
+                .build();
     }
 
     /**

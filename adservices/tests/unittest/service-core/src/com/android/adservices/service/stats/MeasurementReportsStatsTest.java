@@ -20,12 +20,13 @@ import static com.android.adservices.ResultCode.RESULT_OK;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__EVENT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MESUREMENT_REPORTS_UPLOADED;
 
-import com.android.adservices.common.AdServicesUnitTestCase;
-
+import org.junit.Assert;
 import org.junit.Test;
 
-/** Unit test for {@link MeasurementReportsStats}. */
-public final class MeasurementReportsStatsTest extends AdServicesUnitTestCase {
+/**
+ * Unit test for {@link MeasurementReportsStats}.
+ */
+public class MeasurementReportsStatsTest {
 
     @Test
     public void testBuilderCreateSucceed() {
@@ -37,17 +38,11 @@ public final class MeasurementReportsStatsTest extends AdServicesUnitTestCase {
                         .setResultCode(RESULT_OK)
                         .setSourceRegistrant(appPackageName)
                         .build();
-        expect.withMessage("code")
-                .that(measurementReportsStats.getCode())
-                .isEqualTo(AD_SERVICES_MESUREMENT_REPORTS_UPLOADED);
-        expect.withMessage("type")
-                .that(measurementReportsStats.getType())
-                .isEqualTo(AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__EVENT);
-        expect.withMessage("result code")
-                .that(measurementReportsStats.getResultCode())
-                .isEqualTo(RESULT_OK);
-        expect.withMessage("package name")
-                .that(measurementReportsStats.getSourceRegistrant())
-                .isEqualTo(appPackageName);
+        Assert.assertEquals(AD_SERVICES_MESUREMENT_REPORTS_UPLOADED,
+                measurementReportsStats.getCode());
+        Assert.assertEquals(AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__EVENT,
+                measurementReportsStats.getType());
+        Assert.assertEquals(RESULT_OK, measurementReportsStats.getResultCode());
+        Assert.assertEquals(appPackageName, measurementReportsStats.getSourceRegistrant());
     }
 }

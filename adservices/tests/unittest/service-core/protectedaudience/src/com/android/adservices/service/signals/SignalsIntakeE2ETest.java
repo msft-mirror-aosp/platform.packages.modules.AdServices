@@ -189,12 +189,7 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
                         mAdServicesLoggerMock,
                         mFakeFlags);
         mUpdateEncoderEventHandler =
-                new UpdateEncoderEventHandler(
-                        mEncoderEndpointsDao,
-                        mEncoderLogicHandler,
-                        mSpyContext,
-                        AdServicesExecutors.getBackgroundExecutor(),
-                        /* isCompletionBroadcastEnabled= */ false);
+                new UpdateEncoderEventHandler(mEncoderEndpointsDao, mEncoderLogicHandler);
         int oversubscriptionBytesLimit =
                 mFakeFlags.getProtectedSignalsMaxSignalSizePerBuyerWithOversubsciptionBytes();
         mSignalEvictionController =

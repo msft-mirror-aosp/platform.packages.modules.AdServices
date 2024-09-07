@@ -129,7 +129,7 @@ public final class ObservationGeneratorFactory {
                         mSystemData,
                         mPrivacyGenerator,
                         mSecureRandom,
-                        new PrivateIntegerEncoder(mSecureRandom, metric, report, mOperationLogger),
+                        new PrivateIntegerEncoder(mSecureRandom, metric, report),
                         mOperationLogger,
                         mProject.getCustomerId(),
                         mProject.getProjectId(),

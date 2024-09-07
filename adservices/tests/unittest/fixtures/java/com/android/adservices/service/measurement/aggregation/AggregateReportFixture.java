@@ -57,8 +57,7 @@ public final class AggregateReportFixture {
                 .setAggregationCoordinatorOrigin(
                         ValidAggregateReportParams.AGGREGATION_COORDINATOR_ORIGIN)
                 .setIsFakeReport(false)
-                .setTriggerContextId(ValidAggregateReportParams.TRIGGER_CONTEXT_ID)
-                .setApi(ValidAggregateReportParams.API);
+                .setTriggerContextId(ValidAggregateReportParams.TRIGGER_CONTEXT_ID);
     }
 
     public static AggregateReport getValidAggregateReport() {
@@ -80,7 +79,6 @@ public final class AggregateReportFixture {
         public static final Uri AGGREGATION_COORDINATOR_ORIGIN =
                 WebUtil.validUri("https://coordinator.example.test");
         public static final String TRIGGER_CONTEXT_ID = "trigger_context_id";
-        public static final String API = "attribution-reporting";
 
         public static final String getDebugPayload() {
             List<AggregateHistogramContribution> contributions = new ArrayList<>();

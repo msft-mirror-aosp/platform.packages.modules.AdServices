@@ -29,7 +29,6 @@ import org.json.JSONException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.stream.IntStream;
@@ -60,7 +59,7 @@ public class AggregatePayloadGenerator {
                 source.getAggregatableAttributionSource(trigger, mFlags);
         Optional<AggregatableAttributionTrigger> aggregateAttributionTrigger =
                 trigger.getAggregatableAttributionTrigger(mFlags);
-        if (aggregateAttributionSource.isEmpty() || aggregateAttributionTrigger.isEmpty()) {
+        if (!aggregateAttributionSource.isPresent() || !aggregateAttributionTrigger.isPresent()) {
             return Optional.empty();
         }
 
@@ -111,17 +110,15 @@ public class AggregatePayloadGenerator {
         }
 
         List<AggregateHistogramContribution> contributions = new ArrayList<>();
-        Optional<Map<String, Integer>> maybeMatchedValueMap =
-                getMatchedValueMap(attributionTrigger, sourceFilterMap, filter);
-        if (maybeMatchedValueMap.isPresent()) {
-            for (String id : aggregateSourceMap.navigableKeySet()) {
-                if (maybeMatchedValueMap.get().containsKey(id)) {
-                    contributions.add(
-                            buildContribution(
-                                    aggregateSourceMap.get(id),
-                                    maybeMatchedValueMap.get().get(id)));
-                }
+        for (String id : aggregateSourceMap.navigableKeySet()) {
+            if (!attributionTrigger.getValues().containsKey(id)) {
+                continue;
             }
+            AggregateHistogramContribution contribution =
+                    new AggregateHistogramContribution.Builder()
+                            .setKey(aggregateSourceMap.get(id))
+                            .setValue(attributionTrigger.getValues().get(id)).build();
+            contributions.add(contribution);
         }
         if (contributions.size() > 0) {
             if (mFlags.getMeasurementEnableAggregatableReportPayloadPadding()) {
@@ -154,46 +151,5 @@ public class AggregatePayloadGenerator {
                         contributions.size(),
                         mFlags.getMeasurementMaxAggregateKeysPerSourceRegistration())
                 .forEach(i -> contributions.add(padding));
-    }
-
-    /**
-     * Returns first matched value map from getValueConfigs against Source filters or value map from
-     * getValues.
-     */
-    public Optional<Map<String, Integer>> getMatchedValueMap(
-            AggregatableAttributionTrigger aggregatableAttributionTrigger,
-            FilterMap sourceFilterMap,
-            Filter filter) {
-        if (aggregatableAttributionTrigger.getValueConfigs() != null) {
-            for (AggregatableValuesConfig aggregatableValuesConfig :
-                    aggregatableAttributionTrigger.getValueConfigs()) {
-                boolean matchedFilters =
-                        aggregatableValuesConfig.getFilterSet() == null
-                                ? true
-                                : filter.isFilterMatch(
-                                        sourceFilterMap,
-                                        aggregatableValuesConfig.getFilterSet(),
-                                        true);
-                if (!matchedFilters) {
-                    continue;
-                }
-                boolean matchedNotFilters =
-                        aggregatableValuesConfig.getNotFilterSet() == null
-                                ? true
-                                : filter.isFilterMatch(
-                                        sourceFilterMap,
-                                        aggregatableValuesConfig.getNotFilterSet(),
-                                        false);
-                if (matchedNotFilters) {
-                    return Optional.of(aggregatableValuesConfig.getConfigValuesMap());
-                }
-            }
-        }
-        return Optional.empty();
-    }
-
-    /** Add a new contribution with key, value to the existing list of contributions. */
-    private AggregateHistogramContribution buildContribution(BigInteger key, int value) {
-        return new AggregateHistogramContribution.Builder().setKey(key).setValue(value).build();
     }
 }

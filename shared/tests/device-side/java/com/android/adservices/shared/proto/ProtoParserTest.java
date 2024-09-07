@@ -16,8 +16,6 @@
 
 package com.android.adservices.shared.proto;
 
-import static com.android.adservices.shared.util.ProtoParser.parseBase64EncodedStringToProto;
-
 import android.util.Base64;
 
 import com.android.adservices.shared.SharedMockitoTestCase;
@@ -40,7 +38,7 @@ public final class ProtoParserTest extends SharedMockitoTestCase {
         String encodedStr = getBase64EncodedString(SAMPLE_RATE, Base64.DEFAULT);
 
         ErrorCodeSampleInterval actual =
-                parseBase64EncodedStringToProto(
+                ProtoParser.parseBase64EncodedStringToProto(
                         ErrorCodeSampleInterval.parser(), PROPERTY_NAME, encodedStr);
 
         expect.that(actual).isNotNull();
@@ -52,7 +50,7 @@ public final class ProtoParserTest extends SharedMockitoTestCase {
         String encodedStr = getBase64EncodedString(SAMPLE_RATE, Base64.NO_WRAP | Base64.NO_PADDING);
 
         ErrorCodeSampleInterval actual =
-                parseBase64EncodedStringToProto(
+                ProtoParser.parseBase64EncodedStringToProto(
                         ErrorCodeSampleInterval.parser(), PROPERTY_NAME, encodedStr);
 
         expect.that(actual).isNotNull();
@@ -62,8 +60,8 @@ public final class ProtoParserTest extends SharedMockitoTestCase {
     @Test
     public void parseBase64EncodedStringToProto_incorrectEncodedString() {
         ErrorCodeSampleInterval actual =
-                parseBase64EncodedStringToProto(
-                        ErrorCodeSampleInterval.parser(), PROPERTY_NAME, /* value= */ "xyz");
+                ProtoParser.parseBase64EncodedStringToProto(
+                        ErrorCodeSampleInterval.parser(), PROPERTY_NAME, /*value= */ "xyz");
 
         expect.that(actual).isNull();
     }
@@ -71,8 +69,8 @@ public final class ProtoParserTest extends SharedMockitoTestCase {
     @Test
     public void parseBase64EncodedStringToProto_emptyEncodedString() {
         ErrorCodeSampleInterval actual =
-                parseBase64EncodedStringToProto(
-                        ErrorCodeSampleInterval.parser(), PROPERTY_NAME, /* value= */ "");
+                ProtoParser.parseBase64EncodedStringToProto(
+                        ErrorCodeSampleInterval.parser(), PROPERTY_NAME, /*value= */ "");
 
         expect.that(actual).isNull();
     }
@@ -80,8 +78,8 @@ public final class ProtoParserTest extends SharedMockitoTestCase {
     @Test
     public void parseBase64EncodedStringToProto_nullEncodedString() {
         ErrorCodeSampleInterval actual =
-                parseBase64EncodedStringToProto(
-                        ErrorCodeSampleInterval.parser(), PROPERTY_NAME, /* value= */ null);
+                ProtoParser.parseBase64EncodedStringToProto(
+                        ErrorCodeSampleInterval.parser(), PROPERTY_NAME, /*value= */ null);
 
         expect.that(actual).isNull();
     }

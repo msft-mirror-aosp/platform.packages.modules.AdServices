@@ -2946,11 +2946,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 .countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
                         any(), any(), anyInt(), anyString(), anyLong(), anyLong());
         verify(mDebugReportApi)
-                .scheduleSourceSuccessDebugReport(
-                        eq(SOURCE_1),
-                        eq(mMeasurementDao),
-                        eq(null),
-                        eq(DebugReportApi.Type.SOURCE_DESTINATION_GLOBAL_RATE_LIMIT));
+                .scheduleSourceSuccessDebugReport(eq(SOURCE_1), eq(mMeasurementDao), eq(null));
     }
 
     @Test
@@ -3042,11 +3038,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 .countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
                         any(), any(), anyInt(), anyString(), anyLong(), anyLong());
         verify(mDebugReportApi)
-                .scheduleSourceSuccessDebugReport(
-                        eq(SOURCE_1),
-                        eq(mMeasurementDao),
-                        eq(null),
-                        eq(DebugReportApi.Type.SOURCE_DESTINATION_GLOBAL_RATE_LIMIT));
+                .scheduleSourceSuccessDebugReport(eq(SOURCE_1), eq(mMeasurementDao), eq(null));
     }
 
     @Test
@@ -3399,12 +3391,6 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         verify(mMeasurementDao, times(2))
                 .countDistinctDestinationsPerPublisherPerRateLimitWindow(
                         any(), anyInt(), anyList(), anyInt(), anyLong(), anyLong());
-        verify(mDebugReportApi)
-                .scheduleSourceSuccessDebugReport(
-                        eq(SOURCE_1),
-                        eq(mMeasurementDao),
-                        eq(null),
-                        eq(DebugReportApi.Type.SOURCE_REPORTING_ORIGIN_PER_SITE_LIMIT));
     }
 
     @Test
@@ -5592,10 +5578,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 ArgumentCaptor.forClass(Map.class);
         verify(mDebugReportApi)
                 .scheduleSourceSuccessDebugReport(
-                        eq(SOURCE_1),
-                        eq(mMeasurementDao),
-                        additionalParamsCaptor.capture(),
-                        eq(DebugReportApi.Type.SOURCE_DESTINATION_LIMIT_REPLACED));
+                        eq(SOURCE_1), eq(mMeasurementDao), additionalParamsCaptor.capture());
         assertEquals(
                 Map.of(DebugReportApi.Body.SOURCE_DESTINATION_LIMIT, String.valueOf(limit)),
                 additionalParamsCaptor.getValue());
@@ -5612,7 +5595,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 getSpyAsyncRegistrationQueueRunner();
         // It's infeasible that isSourceAllowedToInsert returns ALLOWED_FIFO_SUCCESS when FIFO is
         // disabled as per the code but we are testing two independent classes
-        doReturn(InsertSourcePermission.ALLOWED)
+        doReturn(InsertSourcePermission.ALLOWED_FIFO_SUCCESS)
                 .when(asyncRegistrationQueueRunner)
                 .isSourceAllowedToInsert(any(Source.class), any(Uri.class), anyInt(), any(), any());
         AsyncRegistration validAsyncRegistration = createAsyncRegistrationForAppSource();
@@ -5626,10 +5609,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 ArgumentCaptor.forClass(Map.class);
         verify(mDebugReportApi)
                 .scheduleSourceSuccessDebugReport(
-                        eq(SOURCE_1),
-                        eq(mMeasurementDao),
-                        additionalParamsCaptor.capture(),
-                        eq(DebugReportApi.Type.SOURCE_SUCCESS));
+                        eq(SOURCE_1), eq(mMeasurementDao), additionalParamsCaptor.capture());
         assertNull(additionalParamsCaptor.getValue());
     }
 
@@ -5655,10 +5635,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 ArgumentCaptor.forClass(Map.class);
         verify(mDebugReportApi)
                 .scheduleSourceSuccessDebugReport(
-                        eq(SOURCE_1),
-                        eq(mMeasurementDao),
-                        additionalParamsCaptor.capture(),
-                        eq(DebugReportApi.Type.SOURCE_SUCCESS));
+                        eq(SOURCE_1), eq(mMeasurementDao), additionalParamsCaptor.capture());
         assertNull(additionalParamsCaptor.getValue());
     }
 

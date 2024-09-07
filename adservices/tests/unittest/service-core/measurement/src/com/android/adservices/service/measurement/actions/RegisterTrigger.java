@@ -25,10 +25,7 @@ import static com.android.adservices.service.measurement.E2EAbstractTest.hasArDe
 import android.adservices.measurement.RegistrationRequest;
 import android.net.Uri;
 
-import androidx.annotation.Nullable;
-
 import com.android.adservices.service.measurement.E2EAbstractTest.TestFormatJsonMapping;
-import com.android.adservices.service.measurement.InteropTestReader;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -47,11 +44,6 @@ public final class RegisterTrigger implements Action {
     public final boolean mArDebugPermission;
 
     public RegisterTrigger(JSONObject obj) throws JSONException {
-        this(obj, null);
-    }
-
-    public RegisterTrigger(JSONObject obj, @Nullable InteropTestReader interopTestReader)
-            throws JSONException {
         JSONObject regParamsJson = obj.getJSONObject(
                 TestFormatJsonMapping.REGISTRATION_REQUEST_KEY);
 
@@ -71,7 +63,7 @@ public final class RegisterTrigger implements Action {
                         .setAdIdValue(regParamsJson.optString(TestFormatJsonMapping.PLATFORM_AD_ID))
                         .build();
 
-        mUriToResponseHeadersMap = getUriToResponseHeadersMap(obj, interopTestReader);
+        mUriToResponseHeadersMap = getUriToResponseHeadersMap(obj);
         mTimestamp = obj.getLong(TestFormatJsonMapping.TIMESTAMP_KEY);
         mAdIdPermission = hasAdIdPermission(obj);
         mArDebugPermission = hasArDebugPermission(obj);

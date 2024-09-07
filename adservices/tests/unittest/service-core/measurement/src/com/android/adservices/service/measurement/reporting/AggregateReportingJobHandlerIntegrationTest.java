@@ -17,7 +17,6 @@
 package com.android.adservices.service.measurement.reporting;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -114,8 +113,7 @@ public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbInteg
         try {
             Mockito.doReturn(returnCode)
                     .when(spyReportingService)
-                    .makeHttpPostRequest(
-                            Mockito.eq(Uri.parse(registration_origin)), any(), any(), anyString());
+                    .makeHttpPostRequest(Mockito.eq(Uri.parse(registration_origin)), any(), any());
         } catch (IOException e) {
             Assert.fail();
         }
