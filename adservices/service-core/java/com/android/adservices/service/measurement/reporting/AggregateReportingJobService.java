@@ -41,6 +41,7 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.android.libraries.mobiledatadownload.internal.AndroidTimeSource;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.util.concurrent.Future;
@@ -116,7 +117,8 @@ public final class AggregateReportingJobService extends JobService {
                                             AdServicesLoggerImpl.getInstance(),
                                             ReportingStatus.ReportType.AGGREGATE,
                                             ReportingStatus.UploadMethod.REGULAR,
-                                            getApplicationContext())
+                                            getApplicationContext(),
+                                            new AndroidTimeSource())
                                     .performScheduledPendingReportsInWindow(
                                             System.currentTimeMillis()
                                                     - maxAggregateReportUploadRetryWindowMs,

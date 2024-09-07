@@ -86,12 +86,12 @@ public final class MaintenanceJobServiceTest extends AdServicesJobServiceTestCas
 
     // Mock EpochManager and CacheManager as the methods called are tested in corresponding
     // unit test. In this test, only verify whether specific method is initiated.
-    @Mock EpochManager mMockEpochManager;
-    @Mock CacheManager mMockCacheManager;
-    @Mock BlockedTopicsManager mBlockedTopicsManager;
-    @Mock AppUpdateManager mMockAppUpdateManager;
-    @Mock JobParameters mMockJobParameters;
-    @Mock JobScheduler mMockJobScheduler;
+    @Mock private EpochManager mMockEpochManager;
+    @Mock private CacheManager mMockCacheManager;
+    @Mock private BlockedTopicsManager mBlockedTopicsManager;
+    @Mock private AppUpdateManager mMockAppUpdateManager;
+    @Mock private JobParameters mMockJobParameters;
+    @Mock private JobScheduler mMockJobScheduler;
     @Mock private PackageManager mPackageManagerMock;
     @Mock private FledgeMaintenanceTasksWorker mFledgeMaintenanceTasksWorkerMock;
     @Mock private SignalsMaintenanceTasksWorker mSignalsMaintenanceTasksWorkerMock;
@@ -172,7 +172,7 @@ public final class MaintenanceJobServiceTest extends AdServicesJobServiceTestCas
 
     @Test
     public void testOnStartJob_SelectAdsKillSwitchOn() throws InterruptedException {
-        final TopicsWorker topicsWorker =
+        TopicsWorker topicsWorker =
                 new TopicsWorker(
                         mMockEpochManager,
                         mMockCacheManager,
@@ -222,7 +222,7 @@ public final class MaintenanceJobServiceTest extends AdServicesJobServiceTestCas
 
     @Test
     public void testOnStartJob_SignalsDisabled() throws InterruptedException {
-        final TopicsWorker topicsWorker =
+        TopicsWorker topicsWorker =
                 new TopicsWorker(
                         mMockEpochManager,
                         mMockCacheManager,
@@ -280,7 +280,7 @@ public final class MaintenanceJobServiceTest extends AdServicesJobServiceTestCas
     @Test
     public void testOnStartJob_killSwitchOnDoesFledgeJobWhenTopicsJobThrowsException()
             throws Exception {
-        final TopicsWorker topicsWorker =
+        TopicsWorker topicsWorker =
                 new TopicsWorker(
                         mMockEpochManager,
                         mMockCacheManager,
@@ -349,7 +349,7 @@ public final class MaintenanceJobServiceTest extends AdServicesJobServiceTestCas
     @Test
     public void testOnStartJob_killSwitchOnDoesTopicsJobWhenFledgeThrowsException()
             throws Exception {
-        final TopicsWorker topicsWorker =
+        TopicsWorker topicsWorker =
                 new TopicsWorker(
                         mMockEpochManager,
                         mMockCacheManager,
@@ -562,7 +562,7 @@ public final class MaintenanceJobServiceTest extends AdServicesJobServiceTestCas
 
     @Test
     public void testSchedule_jobInfoIsPersisted() {
-        final ArgumentCaptor<JobInfo> argumentCaptor = ArgumentCaptor.forClass(JobInfo.class);
+        ArgumentCaptor<JobInfo> argumentCaptor = ArgumentCaptor.forClass(JobInfo.class);
 
         MaintenanceJobService.schedule(
                 mContext, mMockJobScheduler, MAINTENANCE_JOB_PERIOD_MS, MAINTENANCE_JOB_FLEX_MS);
@@ -624,7 +624,7 @@ public final class MaintenanceJobServiceTest extends AdServicesJobServiceTestCas
     public void testOnStartJob_killSwitchOff() throws Exception {
         JobServiceLoggingCallback loggingCallback = syncPersistJobExecutionData(mSpyLogger);
 
-        final TopicsWorker topicsWorker =
+        TopicsWorker topicsWorker =
                 new TopicsWorker(
                         mMockEpochManager,
                         mMockCacheManager,
