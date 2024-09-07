@@ -44,9 +44,12 @@ import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.util.Applications;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.MeasurementReportsStats;
 import com.android.internal.annotations.VisibleForTesting;
+
+import com.google.android.libraries.mobiledatadownload.internal.AndroidTimeSource;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -65,15 +68,38 @@ import java.util.concurrent.TimeUnit;
 
 public class AggregateReportingJobHandler {
     private static final int MAX_HTTP_SUCCESS_CODE = 299;
+
+    /** {@link Uri} where attribution-success aggregate reports are sent with a delay. */
+    @VisibleForTesting
+    public static final String AGGREGATE_ATTRIBUTION_REPORT_URI_PATH =
+            ".well-known/attribution-reporting/report-aggregate-attribution";
+
+    /**
+     * {@link Uri} where debug attribution-success aggregate reports are sent, which are essentially
+     * a copy of regular trigger attribution aggregate reports, but sent immediately.
+     */
+    @VisibleForTesting
+    public static final String DEBUG_AGGREGATE_ATTRIBUTION_REPORT_URI_PATH =
+            ".well-known/attribution-reporting/debug/report-aggregate-attribution";
+
+    /**
+     * {@link Uri} where registration/attribution error related aggregate debug reports are sent
+     * that consume from source level L1 budget.
+     */
+    @VisibleForTesting
+    public static final String AGGREGATE_DEBUG_REPORT_URI_PATH =
+            ".well-known/attribution-reporting/debug/report-aggregate-debug";
+
     private final DatastoreManager mDatastoreManager;
     private final AggregateEncryptionKeyManager mAggregateEncryptionKeyManager;
     private boolean mIsDebugInstance;
     private final Flags mFlags;
-    private ReportingStatus.ReportType mReportType;
-    private ReportingStatus.UploadMethod mUploadMethod;
+    private final ReportingStatus.ReportType mReportType;
+    private final ReportingStatus.UploadMethod mUploadMethod;
     private final AdServicesLogger mLogger;
 
     private final Context mContext;
+    private final AndroidTimeSource mTimeSource;
 
     AggregateReportingJobHandler(
             DatastoreManager datastoreManager,
@@ -82,7 +108,8 @@ public class AggregateReportingJobHandler {
             AdServicesLogger logger,
             ReportingStatus.ReportType reportType,
             ReportingStatus.UploadMethod uploadMethod,
-            Context context) {
+            Context context,
+            AndroidTimeSource timeSource) {
         mDatastoreManager = datastoreManager;
         mAggregateEncryptionKeyManager = aggregateEncryptionKeyManager;
         mFlags = flags;
@@ -90,6 +117,7 @@ public class AggregateReportingJobHandler {
         mReportType = reportType;
         mUploadMethod = uploadMethod;
         mContext = context;
+        mTimeSource = timeSource;
     }
 
     @VisibleForTesting
@@ -98,7 +126,8 @@ public class AggregateReportingJobHandler {
             AggregateEncryptionKeyManager aggregateEncryptionKeyManager,
             Flags flags,
             AdServicesLogger logger,
-            Context context) {
+            Context context,
+            AndroidTimeSource timeSource) {
         this(
                 datastoreManager,
                 aggregateEncryptionKeyManager,
@@ -106,7 +135,8 @@ public class AggregateReportingJobHandler {
                 logger,
                 ReportingStatus.ReportType.UNKNOWN,
                 ReportingStatus.UploadMethod.UNKNOWN,
-                context);
+                context,
+                timeSource);
     }
 
     /**
@@ -141,7 +171,7 @@ public class AggregateReportingJobHandler {
                                         windowStartTime, windowEndTime);
                             }
                         });
-        if (!pendingAggregateReportsInWindowOpt.isPresent()) {
+        if (pendingAggregateReportsInWindowOpt.isEmpty()) {
             // Failure during aggregate report retrieval
             return true;
         }
@@ -242,7 +272,7 @@ public class AggregateReportingJobHandler {
         AggregateReport aggregateReport = aggregateReportOpt.get();
         enrollmentId = aggregateReport.getEnrollmentId();
         reportingStatus.setReportingDelay(
-                System.currentTimeMillis() - aggregateReport.getScheduledReportTime());
+                mTimeSource.currentTimeMillis() - aggregateReport.getScheduledReportTime());
         reportingStatus.setSourceRegistrant(getAppPackageName(aggregateReport));
         if (mIsDebugInstance
                 && aggregateReport.getDebugReportStatus()
@@ -265,6 +295,20 @@ public class AggregateReportingJobHandler {
             return;
         }
 
+        // Aggregate Report on device for more than minimum lifespan
+        if (mFlags.getMeasurementEnableMinReportLifespanForUninstall()
+                && aggregateReportCreatedBeforeLifespan(aggregateReport.getTriggerTime())
+                && (!anyPublisherAppInstalled(aggregateReport)
+                        || !anyTriggerDestinationAppInstalled(aggregateReport))) {
+            mDatastoreManager.runInTransaction(dao -> dao.deleteAggregateReport(aggregateReport));
+            setAndLogReportingStatus(
+                    reportingStatus,
+                    UploadStatus.FAILURE,
+                    FailureStatus.APP_UNINSTALLED_OR_OUTSIDE_WINDOW,
+                    enrollmentId);
+            return;
+        }
+
         try {
             Uri reportingOrigin = aggregateReport.getRegistrationOrigin();
             JSONObject aggregateReportJsonBody =
@@ -279,7 +323,10 @@ public class AggregateReportingJobHandler {
 
             int returnCode =
                     makeHttpPostRequest(
-                            reportingOrigin, aggregateReportJsonBody, triggerDebugHeaderAvailable);
+                            reportingOrigin,
+                            aggregateReportJsonBody,
+                            triggerDebugHeaderAvailable,
+                            aggregateReport.getApi());
 
             // Code outside [200, 299] is a failure according to HTTP protocol.
             if (returnCode < HttpURLConnection.HTTP_OK || returnCode > MAX_HTTP_SUCCESS_CODE) {
@@ -401,6 +448,22 @@ public class AggregateReportingJobHandler {
                 aggregateReport.getScheduledReportTime());
     }
 
+    private boolean aggregateReportCreatedBeforeLifespan(long triggerTime) {
+        return triggerTime
+                        + TimeUnit.SECONDS.toMillis(
+                                mFlags.getMeasurementMinReportLifespanForUninstallSeconds())
+                < mTimeSource.currentTimeMillis();
+    }
+
+    private boolean anyTriggerDestinationAppInstalled(AggregateReport aggregateReport) {
+        return Applications.anyAppsInstalled(
+                mContext, List.of(aggregateReport.getAttributionDestination()));
+    }
+
+    private boolean anyPublisherAppInstalled(AggregateReport aggregateReport) {
+        return Applications.anyAppsInstalled(mContext, List.of(aggregateReport.getPublisher()));
+    }
+
     /** Creates the JSON payload for the POST request from the AggregateReport. */
     @VisibleForTesting
     JSONObject createReportJsonPayload(AggregateReport aggregateReport, Uri reportingOrigin,
@@ -421,6 +484,7 @@ public class AggregateReportingJobHandler {
                                 TimeUnit.MILLISECONDS.toSeconds(
                                         aggregateReport.getScheduledReportTime())))
                 .setApiVersion(aggregateReport.getApiVersion())
+                .setApi(aggregateReport.getApi())
                 .setReportingOrigin(reportingOrigin.toString())
                 .setDebugCleartextPayload(aggregateReport.getDebugCleartextPayload())
                 .setSourceDebugKey(aggregateReport.getSourceDebugKey())
@@ -439,16 +503,32 @@ public class AggregateReportingJobHandler {
     /** Makes the POST request to the reporting URL. */
     @VisibleForTesting
     public int makeHttpPostRequest(
-            Uri adTechDomain, JSONObject aggregateReportBody, @Nullable Boolean hasTriggerDebug)
+            Uri adTechDomain,
+            JSONObject aggregateReportBody,
+            @Nullable Boolean hasTriggerDebug,
+            String api)
             throws IOException {
         AggregateReportSender aggregateReportSender =
-                new AggregateReportSender(mIsDebugInstance, mContext);
+                new AggregateReportSender(mContext, getReportUriPath(api));
         Map<String, String> headers =
                 hasTriggerDebug == null
                         ? null
                         : Map.of("Trigger-Debugging-Available", hasTriggerDebug.toString());
         return aggregateReportSender.sendReportWithHeaders(
                 adTechDomain, aggregateReportBody, headers);
+    }
+
+    @VisibleForTesting
+    String getReportUriPath(String api) {
+        if (!mIsDebugInstance) {
+            return AGGREGATE_ATTRIBUTION_REPORT_URI_PATH;
+        }
+
+        if (AggregateDebugReportApi.AGGREGATE_DEBUG_REPORT_API.equals(api)) {
+            return AGGREGATE_DEBUG_REPORT_URI_PATH;
+        }
+
+        return DEBUG_AGGREGATE_ATTRIBUTION_REPORT_URI_PATH;
     }
 
     @Nullable

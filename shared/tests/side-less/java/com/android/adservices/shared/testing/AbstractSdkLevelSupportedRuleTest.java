@@ -55,6 +55,25 @@ import java.util.Arrays;
  * <p>By default, it uses a {@link FakeSdkLevelSupportedRule bogus rule} so it can be run by IDEs,\
  * but subclasses should implement {@link #newRule(Level, Level)} and {@link
  * #newRuleForDeviceLevelAndRuleAtLeastLevel(Level)}.
+ *
+ * <p>Noticed that currently there is not Android project to run these side-less tests, so you would
+ * need to use either the device-side ({@code AdServicesSharedLibrariesUnitTests}) or host-side
+* ({@code AdServicesSharedLibrariesHostTests}) project:
+ *
+ * <ul>
+ *   <li>{@code atest AdServicesSharedLibrariesUnitTests:AbstractSdkLevelSupportedRuleTest}
+ *   <li>{@code atest AdServicesSharedLibrariesHostTests:AbstractSdkLevelSupportedRuleTest}
+ * </ul>
+ *
+ * <p>Similarly, you could use run the "side-specific" test as well:
+ *
+ * <ul>
+ *   <li>{@code atest AdServicesSharedLibrariesUnitTests:HostSideSdkLevelSupportedRuleTest}
+ *   <li>{@code atest AdServicesSharedLibrariesHostTests:SdkLevelSupportedRuleTest}
+ * </ul>
+ *
+ * <p>Notice that when running the host-side tests, you can use the {@code --host} option so it
+ * doesn't require a connected device.
  */
 public class AbstractSdkLevelSupportedRuleTest extends SharedSidelessTestCase {
 

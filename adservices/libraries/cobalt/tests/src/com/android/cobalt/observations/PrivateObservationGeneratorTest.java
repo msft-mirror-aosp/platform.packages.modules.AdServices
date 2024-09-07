@@ -155,7 +155,7 @@ public final class PrivateObservationGeneratorTest {
                 new SystemData(SYSTEM_PROFILE_1.getAppVersion()),
                 mPrivacyGenerator,
                 mSecureRandom,
-                new PrivateIntegerEncoder(mSecureRandom, metric, report),
+                new PrivateIntegerEncoder(mSecureRandom, metric, report, mOperationLogger),
                 mOperationLogger,
                 customerId,
                 projectId,

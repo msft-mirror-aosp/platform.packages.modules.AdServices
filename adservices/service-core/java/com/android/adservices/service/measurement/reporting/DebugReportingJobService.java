@@ -40,6 +40,7 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.android.libraries.mobiledatadownload.internal.AndroidTimeSource;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.util.concurrent.Future;
@@ -167,13 +168,15 @@ public final class DebugReportingJobService extends JobService {
                             DatastoreManager datastoreManager =
                                     DatastoreManagerFactory.getDatastoreManager(
                                             getApplicationContext());
+                            AndroidTimeSource timeSource = new AndroidTimeSource();
                             new EventReportingJobHandler(
                                             datastoreManager,
                                             FlagsFactory.getFlags(),
                                             AdServicesLoggerImpl.getInstance(),
                                             ReportingStatus.ReportType.DEBUG_EVENT,
                                             ReportingStatus.UploadMethod.REGULAR,
-                                            getApplicationContext())
+                                            getApplicationContext(),
+                                            timeSource)
                                     .setIsDebugInstance(true)
                                     .performScheduledPendingReportsInWindow(0, 0);
                             new AggregateReportingJobHandler(
@@ -184,7 +187,8 @@ public final class DebugReportingJobService extends JobService {
                                             AdServicesLoggerImpl.getInstance(),
                                             ReportingStatus.ReportType.DEBUG_AGGREGATE,
                                             ReportingStatus.UploadMethod.REGULAR,
-                                            getApplicationContext())
+                                            getApplicationContext(),
+                                            timeSource)
                                     .setIsDebugInstance(true)
                                     .performScheduledPendingReportsInWindow(0, 0);
                         });

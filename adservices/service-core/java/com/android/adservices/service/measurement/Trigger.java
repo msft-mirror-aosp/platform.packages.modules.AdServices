@@ -25,6 +25,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregatableValuesConfig;
+import com.android.adservices.service.measurement.aggregation.AggregateDebugReporting;
 import com.android.adservices.service.measurement.aggregation.AggregateDeduplicationKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
@@ -83,6 +84,8 @@ public class Trigger {
     @Nullable private String mTriggerContextId;
     @Nullable private String mAttributionScopesString;
     @Nullable private Integer mAggregatableFilteringIdMaxBytes;
+    @Nullable private String mAggregateDebugReportingString;
+    @Nullable private AggregateDebugReporting mAggregateDebugReporting;
 
     @IntDef(value = {Status.PENDING, Status.IGNORED, Status.ATTRIBUTED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -141,7 +144,9 @@ public class Trigger {
                 && Objects.equals(mTriggerContextId, trigger.mTriggerContextId)
                 && Objects.equals(mAttributionScopesString, trigger.mAttributionScopesString)
                 && Objects.equals(
-                        mAggregatableFilteringIdMaxBytes, trigger.mAggregatableFilteringIdMaxBytes);
+                        mAggregatableFilteringIdMaxBytes, trigger.mAggregatableFilteringIdMaxBytes)
+                && Objects.equals(
+                        mAggregateDebugReportingString, trigger.mAggregateDebugReportingString);
     }
 
     @Override
@@ -172,7 +177,8 @@ public class Trigger {
                 mAggregatableSourceRegistrationTimeConfig,
                 mTriggerContextId,
                 mAttributionScopesString,
-                mAggregatableFilteringIdMaxBytes);
+                mAggregatableFilteringIdMaxBytes,
+                mAggregateDebugReportingString);
     }
 
     /** Unique identifier for the {@link Trigger}. */
@@ -630,6 +636,27 @@ public class Trigger {
         return attributionScopes;
     }
 
+    /** Returns the aggregate debug reporting object as a string */
+    @Nullable
+    public String getAggregateDebugReportingString() {
+        return mAggregateDebugReportingString;
+    }
+
+    /** Returns the aggregate debug reporting object as a string */
+    @Nullable
+    public AggregateDebugReporting getAggregateDebugReportingObject() throws JSONException {
+        if (mAggregateDebugReportingString == null) {
+            return null;
+        }
+        if (mAggregateDebugReporting == null) {
+            mAggregateDebugReporting =
+                    new AggregateDebugReporting.Builder(
+                                    new JSONObject(mAggregateDebugReportingString))
+                            .build();
+        }
+        return mAggregateDebugReporting;
+    }
+
     /** Builder for {@link Trigger}. */
     public static final class Builder {
 
@@ -836,6 +863,14 @@ public class Trigger {
         public Builder setAggregatableFilteringIdMaxBytes(
                 @Nullable Integer aggregatableFilteringIdMaxBytes) {
             mBuilding.mAggregatableFilteringIdMaxBytes = aggregatableFilteringIdMaxBytes;
+            return this;
+        }
+
+        /** See {@link Trigger#getAggregateDebugReportingString()}. */
+        @NonNull
+        public Builder setAggregateDebugReportingString(
+                @Nullable String aggregateDebugReportingString) {
+            mBuilding.mAggregateDebugReportingString = aggregateDebugReportingString;
             return this;
         }
 

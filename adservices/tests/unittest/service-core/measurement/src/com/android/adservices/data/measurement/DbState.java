@@ -575,6 +575,7 @@ public class DbState {
                                                 "aggregation_coordinator_origin",
                                                 "https://test.test")))
                         .setIsFakeReport(rJSON.optBoolean("isFakeReport", false))
+                        .setApi(rJSON.optString("api", null))
                         .setTriggerContextId(rJSON.optString("triggerContextId", null));
 
         if (rJSON.opt("dedupKey") != null) {

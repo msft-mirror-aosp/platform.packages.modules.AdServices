@@ -70,6 +70,6 @@ public class AppDeletionIntegrationTest extends AbstractDbIntegrationTest {
                                 DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger),
                         FlagsFactory.getFlags(),
                         mLogger)
-                .deleteAppUninstalledData(mUri);
+                .deleteAppUninstalledData(mUri, 0);
     }
 }

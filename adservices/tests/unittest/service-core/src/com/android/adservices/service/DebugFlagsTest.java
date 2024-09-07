@@ -43,7 +43,7 @@ import static com.android.adservices.service.DebugFlagsConstants.KEY_PROTECTED_A
 import static com.android.adservices.service.DebugFlagsConstants.KEY_PROTECTED_APP_SIGNALS_ENCODER_LOGIC_REGISTERED_BROADCAST_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_RECORD_TOPICS_COMPLETE_BROADCAST_ENABLED;
 
-import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import android.util.Log;
 
@@ -175,11 +175,15 @@ public final class DebugFlagsTest extends AdServicesExtendedMockitoTestCase {
     private void testDebugFlag(
             String flagName, Boolean defaultValue, Flaginator<DebugFlags, Boolean> flaginator) {
         // Without any overriding, the value is the hard coded constant.
-        assertThat(flaginator.getFlagValue(mDebugFlags)).isEqualTo(defaultValue);
+        assertWithMessage("before overriding")
+                .that(flaginator.getFlagValue(mDebugFlags))
+                .isEqualTo(defaultValue);
 
         boolean phOverridingValue = !defaultValue;
         setSystemProperty(flagName, String.valueOf(phOverridingValue));
-        assertThat(flaginator.getFlagValue(mDebugFlags)).isEqualTo(phOverridingValue);
+        assertWithMessage("after overriding")
+                .that(flaginator.getFlagValue(mDebugFlags))
+                .isEqualTo(phOverridingValue);
     }
 
     private void setSystemProperty(String name, String value) {
