@@ -1990,6 +1990,17 @@ public interface Flags extends ModuleSharedFlags {
         return FLEDGE_GET_AD_SELECTION_DATA_MAX_NUM_ENTIRE_PAYLOAD_COMPRESSIONS;
     }
 
+    @FeatureFlag boolean FLEDGE_GET_AD_SELECTION_DATA_DESERIALIZE_ONLY_AD_RENDER_IDS = false;
+
+    /**
+     * Returns whether querying custom audiences from the DB, for the getAdSelectionData API, will
+     * deserialize only ad render ids or the entire ad. When enabled, the DB query will only
+     * deserialize ad render ids.
+     */
+    default boolean getFledgeGetAdSelectionDataDeserializeOnlyAdRenderIds() {
+        return FLEDGE_GET_AD_SELECTION_DATA_DESERIALIZE_ONLY_AD_RENDER_IDS;
+    }
+
     // Protected signals cleanup feature flag disabled by default
     boolean PROTECTED_SIGNALS_CLEANUP_ENABLED = false;
 
@@ -4899,6 +4910,21 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_ENABLE_REINSTALL_REATTRIBUTION;
     }
 
+    @ConfigFlag
+    long MEASUREMENT_MIN_REPORT_LIFESPAN_FOR_UNINSTALL_SECONDS = TimeUnit.DAYS.toSeconds(1);
+
+    /** Minimum time a report can stay on the device after app uninstall. */
+    default long getMeasurementMinReportLifespanForUninstallSeconds() {
+        return MEASUREMENT_MIN_REPORT_LIFESPAN_FOR_UNINSTALL_SECONDS;
+    }
+
+    @FeatureFlag boolean MEASUREMENT_ENABLE_MIN_REPORT_LIFESPAN_FOR_UNINSTALL = false;
+
+    /** Returns whether to enable uninstall report feature. */
+    default boolean getMeasurementEnableMinReportLifespanForUninstall() {
+        return MEASUREMENT_ENABLE_MIN_REPORT_LIFESPAN_FOR_UNINSTALL;
+    }
+
     /** Flag to enable context id for triggers */
     boolean MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID = false;
 
@@ -4974,6 +5000,30 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns whether measurement aggregate debug reporting is enabled. */
     default boolean getMeasurementEnableAggregateDebugReporting() {
         return MEASUREMENT_ENABLE_AGGREGATE_DEBUG_REPORTING;
+    }
+
+    @ConfigFlag int MEASUREMENT_ADR_BUDGET_PER_ORIGIN_PUBLISHER_WINDOW = 65536; // = 2^16
+
+    /** Returns aggregatable debug reporting budget allocated per origin per publisher per window */
+    default int getMeasurementAdrBudgetOriginXPublisherXWindow() {
+        return MEASUREMENT_ADR_BUDGET_PER_ORIGIN_PUBLISHER_WINDOW;
+    }
+
+    @ConfigFlag int MEASUREMENT_ADR_BUDGET_PER_PUBLISHER_WINDOW = 1048576; // = 2^20
+
+    /** Returns aggregatable debug reporting budget allocated per publisher per window */
+    default int getMeasurementAdrBudgetPublisherXWindow() {
+        return MEASUREMENT_ADR_BUDGET_PER_PUBLISHER_WINDOW;
+    }
+
+    @ConfigFlag long MEASUREMENT_ADR_BUDGET_WINDOW_LENGTH_MILLIS = TimeUnit.DAYS.toMillis(1);
+
+    /**
+     * Returns aggregatable debug reporting budget consumption tracking window length in
+     * milliseconds.
+     */
+    default long getMeasurementAdrBudgetWindowLengthMillis() {
+        return MEASUREMENT_ADR_BUDGET_WINDOW_LENGTH_MILLIS;
     }
 
     /**

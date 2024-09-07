@@ -107,6 +107,6 @@ public class DeleteExpiredDynamicIntegrationTest extends AbstractDbIntegrationTe
                 System.currentTimeMillis() - Flags.MEASUREMENT_DATA_EXPIRY_WINDOW_MS;
         int retryLimit = Flags.MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST;
         mDatastoreManager.runInTransaction(
-                dao -> dao.deleteExpiredRecords(earliestValidInsertion, retryLimit, null));
+                dao -> dao.deleteExpiredRecords(earliestValidInsertion, retryLimit, null, 0));
     }
 }
