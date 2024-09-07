@@ -20,13 +20,15 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Test;
-import org.mockito.MockitoSession;
 
-public class StatsdStopWatchTest {
+@SpyStatic(AdServicesStatsLog.class)
+public final class StatsdStopWatchTest extends AdServicesExtendedMockitoTestCase {
     @Test
     public void testStopForSandboxInit() {
         verifyStatsLogWrite(
@@ -57,36 +59,24 @@ public class StatsdStopWatchTest {
     }
 
     private void verifyStatsLogWrite(String metricName, int code) {
-        MockitoSession staticMockitoSession =
-                ExtendedMockito.mockitoSession().spyStatic(AdServicesStatsLog.class).startMocking();
-        try {
-            StatsdStopWatch watch = new StatsdStopWatch(metricName);
-            watch.stop();
+        StatsdStopWatch watch = new StatsdStopWatch(metricName);
+        watch.stop();
 
-            ExtendedMockito.verify(
-                    () ->
-                            AdServicesStatsLog.write(
-                                    eq(AdServicesStatsLog.JSSCRIPTENGINE_LATENCY_REPORTED),
-                                    eq(code),
-                                    anyLong()));
-        } finally {
-            staticMockitoSession.finishMocking();
-        }
+        ExtendedMockito.verify(
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(AdServicesStatsLog.JSSCRIPTENGINE_LATENCY_REPORTED),
+                                eq(code),
+                                anyLong()));
     }
 
     @Test
     public void testMultipleStopsSingleWrite() {
-        MockitoSession staticMockitoSession =
-                ExtendedMockito.mockitoSession().spyStatic(AdServicesStatsLog.class).startMocking();
-        try {
-            StatsdStopWatch watch =
-                    new StatsdStopWatch(JSScriptEngineLogConstants.WEBVIEW_EXECUTION_TIME);
-            watch.stop();
-            watch.stop();
+        StatsdStopWatch watch =
+                new StatsdStopWatch(JSScriptEngineLogConstants.WEBVIEW_EXECUTION_TIME);
+        watch.stop();
+        watch.stop();
 
-            ExtendedMockito.verify(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyLong()));
-        } finally {
-            staticMockitoSession.finishMocking();
-        }
+        ExtendedMockito.verify(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyLong()));
     }
 }

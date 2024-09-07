@@ -307,8 +307,9 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                                     input.getCallerPackageName(),
                                     mFlags.getDisableFledgeEnrollmentCheck(),
                                     mFlags.getEnforceForegroundStatusForSignals(),
-                                    // Consent is enforced in a separate call below.
-                                    false,
+                                    // TODO (b/327187357): Move per-API/per-app consent into the
+                                    //  filter
+                                    /* enforceConsent= */ false,
                                     !mFlags.getConsentNotificationDebugMode(),
                                     callerUid,
                                     apiName,
@@ -338,7 +339,10 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                     }
                 }
 
-                // Fail silently for revoked user consent
+                // Fail silently for revoked per-API or per-app user consent
+                // For UX notification or Privacy Sandbox opt-out failures, see the consent check in
+                // the service filter
+                // TODO (b/327187357): Move per-API/per-app consent into the filter
                 if (mConsentManager.isPasFledgeConsentGiven()
                         && !mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
                                 input.getCallerPackageName())) {
@@ -429,6 +433,14 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
         boolean isFilterException = t instanceof FilterException;
 
         if (isFilterException) {
+            if (t.getCause() instanceof ConsentManager.RevokedConsentException) {
+                sLogger.v("Send success to caller for consent failure");
+                callback.onSuccess();
+                // This return code may not be the most accurate (could be due to notification
+                // failure or all APIs opted out), but filters have already logged the API response
+                // at this point
+                return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
+            }
             resultCode = FilterException.getResultCode(t);
         } else if (t instanceof IllegalArgumentException) {
             resultCode = AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;

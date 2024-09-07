@@ -42,11 +42,11 @@ public abstract class CommonDebugFlags {
     @VisibleForTesting static final boolean DEFAULT_ADSERVICES_SHELL_COMMAND_ENABLED = false;
 
     public boolean getAdServicesShellCommandEnabled() {
-        return getDebugFlag(
+        return getBoolean(
                 KEY_ADSERVICES_SHELL_COMMAND_ENABLED, DEFAULT_ADSERVICES_SHELL_COMMAND_ENABLED);
     }
 
-    static boolean getDebugFlag(String name, boolean defaultValue) {
+    static boolean getBoolean(String name, boolean defaultValue) {
         return SystemProperties.getBoolean(getSystemPropertyName(name), defaultValue);
     }
 

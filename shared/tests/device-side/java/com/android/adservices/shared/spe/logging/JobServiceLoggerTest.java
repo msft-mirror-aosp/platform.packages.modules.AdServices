@@ -43,6 +43,7 @@ import static org.mockito.Mockito.when;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.platform.test.annotations.DisabledOnRavenwood;
 
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.spe.SpeMockitoTestCase;
@@ -59,6 +60,10 @@ import org.mockito.Mock;
 import java.util.concurrent.Executors;
 
 /** Unit test for {@link JobServiceLogger}. */
+@DisabledOnRavenwood(
+        blockedBy =
+                Context.class) // TODO(b/362475922): remove when Context.deleteSharedPreferences()
+// is supported
 public final class JobServiceLoggerTest extends SpeMockitoTestCase {
     // Use an arbitrary job ID for testing. It won't have side effect to use production id as
     // the test doesn't actually schedule a job. This avoids complicated mocking logic.

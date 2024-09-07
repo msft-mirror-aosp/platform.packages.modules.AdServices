@@ -145,6 +145,10 @@ public final class FlagsConstants {
             "cobalt_registry_out_of_band_update_enabled";
     public static final String KEY_COBALT_OPERATIONAL_LOGGING_ENABLED =
             "cobalt_operational_logging_enabled";
+    public static final String KEY_COBALT__FALL_BACK_TO_DEFAULT_BASE_REGISTRY =
+            "Cobalt__fall_back_to_default_base_registry";
+    public static final String KEY_COBALT__IGNORED_REPORT_ID_LIST =
+            "Cobalt__ignored_report_id_list";
 
     // Measurement keys
     public static final String KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS =
@@ -217,8 +221,6 @@ public final class FlagsConstants {
             "measurement_enforce_foreground_status_register_web_source";
     public static final String KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER =
             "measurement_enforce_foreground_status_register_web_trigger";
-    public static final String KEY_MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH =
-            "measurement_enforce_enrollment_origin_match";
     public static final String KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_DELETE_REGISTRATIONS =
             "measurement_enforce_foreground_status_delete_registrations";
     public static final String KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS =
@@ -824,6 +826,9 @@ public final class FlagsConstants {
             KEY_FLEDGE_GET_AD_SELECTION_DATA_MAX_NUM_ENTIRE_PAYLOAD_COMPRESSIONS =
                     "fledge_get_ad_selection_data_max_num_entire_payload_compressions";
 
+    public static final String KEY_FLEDGE_GET_AD_SELECTION_DATA_DESERIALIZE_ONLY_AD_RENDER_IDS =
+            "fledge_get_ad_selection_data_deserialize_only_ad_render_ids";
+
     // Fledge invoking app status keys
     public static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION =
             "fledge_ad_selection_enforce_foreground_status_run_ad_selection";
@@ -1361,6 +1366,12 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_MAX_REINSTALL_REATTRIBUTION_WINDOW =
             "measurement_max_reinstall_reattribution_window";
 
+    public static final String KEY_MEASUREMENT_ENABLE_MIN_REPORT_LIFESPAN_FOR_UNINSTALL =
+            "Measurement__enable_min_report_lifespan_for_uninstall";
+
+    public static final String KEY_MEASUREMENT_MIN_REPORT_LIFESPAN_FOR_UNINSTALL_SECONDS =
+            "Measurement__min_report_lifespan_for_uninstall_seconds";
+
     public static final String KEY_MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK =
             "measurement_enable_navigation_reporting_origin_check";
 
@@ -1388,6 +1399,18 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING =
             "measurement_enable_flexible_contribution_filtering";
+
+    public static final String KEY_MEASUREMENT_ENABLE_AGGREGATE_DEBUG_REPORTING =
+            "Measurement__enable_aggregate_debug_reporting";
+
+    public static final String KEY_MEASUREMENT_ADR_BUDGET_PER_ORIGIN_PUBLISHER_WINDOW =
+            "Measurement__adr_budget_per_origin_publisher_window";
+
+    public static final String KEY_MEASUREMENT_ADR_BUDGET_PER_PUBLISHER_WINDOW =
+            "Measurement__adr_budget_per_publisher_window";
+
+    public static final String KEY_MEASUREMENT_ADR_BUDGET_WINDOW_LENGTH_MS =
+            "Measurement__adr_budget_window_length_ms";
 
     // Database Schema Version Flags
     public static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_8 =
@@ -1622,4 +1645,28 @@ public final class FlagsConstants {
 
     /** Key for ad id cache ttl. */
     public static final String KEY_AD_ID_CACHE_TTL_MS = "ad_id_cache_ttl_ms";
+
+    /** Key for package deny service enabled. */
+    public static final String KEY_PACKAGE_DENY__ENABLE_PACKAGE_DENY_SERVICE =
+            "PackageDeny__enable_package_deny_service";
+
+    /** Key for package deny mdd file download enabled */
+    public static final String KEY_PACKAGE_DENY__ENABLE_PACKAGE_DENY_MDD =
+            "PackageDeny__enable_package_deny_mdd";
+
+    /** Key for package deny preprocess job on package add */
+    public static final String KEY_PACKAGE_DENY__ENABLE_PACKAGE_DENY_JOB_ON_PACKAGE_ADD =
+            "PackageDeny__enable_package_deny_job_on_package_add";
+
+    /** Key for package deny preprocess periodic job */
+    public static final String KEY_PACKAGE_DENY__ENABLE_PACKAGE_DENY_BG_JOB =
+            "PackageDeny__enable_package_deny_bg_job";
+
+    /** Key for package deny preprocess job on mdd file download */
+    public static final String KEY_PACKAGE_DENY__ENABLE_PACKAGE_DENY_JOB_ON_MDD_DOWNLOAD =
+            "PackageDeny__enable_package_deny_job_on_mdd_download";
+
+    /** Key for MDD Package Deny registry manifest file url */
+    public static final String KEY_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL =
+            "DownloadConfig__default_mdd_package_deny_manifest_file_url";
 }
