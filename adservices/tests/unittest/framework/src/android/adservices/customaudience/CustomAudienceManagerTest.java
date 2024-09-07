@@ -18,35 +18,29 @@ package android.adservices.customaudience;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import android.content.Context;
 import android.os.Build;
 
-import androidx.test.core.app.ApplicationProvider;
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
+import com.android.adservices.shared.testing.annotations.RequiresSdkRange;
 
-import com.android.adservices.common.SdkLevelSupportRule;
-
-import org.junit.Assume;
-import org.junit.Rule;
 import org.junit.Test;
 
 /** Unit tests for {@link CustomAudienceManager} */
-public class CustomAudienceManagerTest {
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
+@RequiresSdkLevelAtLeastS
+public class CustomAudienceManagerTest extends AdServicesUnitTestCase {
     @Test
+    @RequiresSdkLevelAtLeastT
     public void testCustomAudienceManagerCtor_TPlus() {
-        Assume.assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU);
-        final Context context = ApplicationProvider.getApplicationContext();
-        assertThat(CustomAudienceManager.get(context)).isNotNull();
-        assertThat(context.getSystemService(CustomAudienceManager.class)).isNotNull();
+        assertThat(CustomAudienceManager.get(mContext)).isNotNull();
+        assertThat(mContext.getSystemService(CustomAudienceManager.class)).isNotNull();
     }
 
     @Test
-    public void testCustomAudiencerManagerCtor_SMinus() {
-        Assume.assumeTrue(Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU);
-        final Context context = ApplicationProvider.getApplicationContext();
-        assertThat(CustomAudienceManager.get(context)).isNotNull();
-        assertThat(context.getSystemService(CustomAudienceManager.class)).isNull();
+    @RequiresSdkRange(atMost = Build.VERSION_CODES.S_V2)
+    public void testCustomAudienceManagerCtor_SMinus() {
+        assertThat(CustomAudienceManager.get(mContext)).isNotNull();
+        assertThat(mContext.getSystemService(CustomAudienceManager.class)).isNull();
     }
 }

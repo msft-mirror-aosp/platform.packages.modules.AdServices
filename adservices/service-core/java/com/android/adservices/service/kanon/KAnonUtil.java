@@ -16,18 +16,24 @@
 
 package com.android.adservices.service.kanon;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
+import java.util.List;
+
 import private_join_and_compute.anonymous_counting_tokens.SchemeParameters;
 import private_join_and_compute.anonymous_counting_tokens.SchemeParametersV0;
 
 public class KAnonUtil {
+    private static final String SHA256 = "SHA-256";
 
+    /** Returns the SchemeParameters that are used in {@link AnonymousCountingTokens}. */
     public static SchemeParameters getSchemeParameters() {
         long kDefaultSecurityParameter = 128;
         long kDefaultChallengeLength = 128;
         long kDefaultCamenischShoupS = 1;
         long kDefaultCurveId = 415;
-        int kDefaultModulusLengthBits = 3072;
-        int test_modulus_length = 1536;
         String random_oracle_prefix =
                 "ActV0SchemeParametersPedersenBatchSize32ModulusLengthBits2048CamenischShoupVectorLength2";
         long pedersen_batch_size = 32;
@@ -45,5 +51,22 @@ public class KAnonUtil {
                         .setModulusLengthBits(modulus_length)
                         .build();
         return SchemeParameters.newBuilder().setSchemeParametersV0(schemeParametersV0).build();
+    }
+
+    /** Creates a {@link KAnonMessageEntity} using the given WinningUrl and AdSelectionId. */
+    public static List<KAnonMessageEntity> getKAnonEntitiesFromAuctionResult(
+            String winningUrl, long adSelectionId) throws NoSuchAlgorithmException {
+        MessageDigest md = MessageDigest.getInstance(SHA256);
+        byte[] digestedBytes = md.digest(winningUrl.getBytes(StandardCharsets.UTF_8));
+        KAnonMessageEntity kAnonMessageEntity =
+                KAnonMessageEntity.builder()
+                        .setStatus(KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED)
+                        .setAdSelectionId(adSelectionId)
+                        .setHashSet(
+                                Base64.getUrlEncoder()
+                                        .withoutPadding()
+                                        .encodeToString(digestedBytes))
+                        .build();
+        return List.of(kAnonMessageEntity);
     }
 }

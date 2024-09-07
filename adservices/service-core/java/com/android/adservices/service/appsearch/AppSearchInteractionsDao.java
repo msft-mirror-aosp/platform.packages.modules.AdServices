@@ -38,7 +38,6 @@ import java.util.concurrent.Executor;
  * This class represents the data access object for the manual interactions recorded for the
  * notification shown to the user and the feature type.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 @Document
 class AppSearchInteractionsDao extends AppSearchDao {

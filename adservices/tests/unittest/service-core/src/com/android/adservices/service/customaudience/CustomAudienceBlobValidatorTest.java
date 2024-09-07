@@ -86,7 +86,6 @@ import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.TrustedBiddingData;
 import android.net.Uri;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.AdDataConversionStrategy;
 import com.android.adservices.data.customaudience.AdDataConversionStrategyFactory;
@@ -98,6 +97,7 @@ import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.FrequencyCapAdDataValidator;
 import com.android.adservices.service.common.FrequencyCapAdDataValidatorImpl;
 import com.android.adservices.service.common.JsonValidator;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.collect.ImmutableList;
 
@@ -113,7 +113,7 @@ import java.util.Locale;
 
 public class CustomAudienceBlobValidatorTest {
     private static final AdDataConversionStrategy AD_DATA_CONVERSION_STRATEGY =
-            AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true);
+            AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true, true);
     private final AdTechIdentifierValidator mValidBuyerValidator =
             new AdTechIdentifierValidator(CLASS_NAME, AD_TECH_ROLE_BUYER);
     private final CustomAudienceNameValidator mValidNameValidator =
@@ -1655,7 +1655,7 @@ public class CustomAudienceBlobValidatorTest {
                                 Locale.ENGLISH,
                                 AdRenderIdValidator.AD_RENDER_ID_TOO_LONG,
                                 FLAGS_FOR_TEST.getFledgeAuctionServerAdRenderIdMaxLength(),
-                                tooLongAdRenderId.getBytes().length)));
+                                tooLongAdRenderId.getBytes(StandardCharsets.UTF_8).length)));
     }
 
     @Test

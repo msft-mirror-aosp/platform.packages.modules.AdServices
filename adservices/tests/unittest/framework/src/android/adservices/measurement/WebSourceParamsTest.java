@@ -16,17 +16,17 @@
 
 package android.adservices.measurement;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
 
 import android.net.Uri;
 import android.os.Parcel;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
+
 import org.junit.Test;
 
 /** Unit tests for {@link WebSourceParams}. */
-public class WebSourceParamsTest {
+public final class WebSourceParamsTest extends AdServicesUnitTestCase {
     private static final Uri REGISTRATION_URI = Uri.parse("https://foo.test");
     private static final WebSourceParams WEB_SOURCE_PARAMS =
             new WebSourceParams.Builder(REGISTRATION_URI).setDebugKeyAllowed(true).build();
@@ -36,8 +36,8 @@ public class WebSourceParamsTest {
     }
 
     private void verifyExampleRegistration(WebSourceParams request) {
-        assertEquals(REGISTRATION_URI, request.getRegistrationUri());
-        assertTrue(request.isDebugKeyAllowed());
+        expect.that(request.getRegistrationUri()).isEqualTo(REGISTRATION_URI);
+        expect.that(request.isDebugKeyAllowed()).isTrue();
     }
 
     @Test
@@ -49,14 +49,14 @@ public class WebSourceParamsTest {
     public void testRegistrationUriWithoutScheme_throwsException() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new WebSourceParams.Builder(Uri.parse("foo.test")).build());
+                () -> new WebSourceParams.Builder(Uri.parse("foo.test")));
     }
 
     @Test
     public void testRegistrationUriWithNonHttpsScheme_throwsException() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new WebSourceParams.Builder(Uri.parse("http://foo.test")).build());
+                () -> new WebSourceParams.Builder(Uri.parse("http://foo.test")));
     }
 
     @Test
@@ -70,6 +70,6 @@ public class WebSourceParamsTest {
 
     @Test
     public void testDescribeContents() {
-        assertEquals(0, createExampleRegistration().describeContents());
+        expect.that(createExampleRegistration().describeContents()).isEqualTo(0);
     }
 }

@@ -56,13 +56,12 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
 /** Encapsulates the Set App Install Advertisers logic */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class AppInstallAdvertisersSetter {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
     @VisibleForTesting
-    public static final String FILTERING_IS_DISABLED = "Ad selection filtering disabled";
+    public static final String FILTERING_IS_DISABLED = "App install filtering disabled";
 
     private static final String AD_TECH_IDENTIFIER_ERROR_MESSAGE_SCOPE = "app install adtech set";
     private static final String AD_TECH_IDENTIFIER_ERROR_MESSAGE_ROLE = "adtech";
@@ -232,7 +231,7 @@ public class AppInstallAdvertisersSetter {
 
     private Void doSetAppInstallAdvertisers(
             Set<AdTechIdentifier> advertisers, String callerPackageName) {
-        if (!mFlags.getFledgeAdSelectionFilteringEnabled()) {
+        if (!mFlags.getFledgeAppInstallFilteringEnabled()) {
             sLogger.v(FILTERING_IS_DISABLED);
             throw new IllegalStateException(FILTERING_IS_DISABLED);
         }

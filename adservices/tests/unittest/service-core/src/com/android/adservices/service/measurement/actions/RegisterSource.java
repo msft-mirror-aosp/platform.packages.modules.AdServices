@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement.actions;
 
+import static com.android.adservices.service.measurement.E2ETest.getFirstUrl;
 import static com.android.adservices.service.measurement.E2ETest.getInputEvent;
 import static com.android.adservices.service.measurement.E2ETest.getUriConfigMap;
 import static com.android.adservices.service.measurement.E2ETest.getUriToResponseHeadersMap;
@@ -56,22 +57,35 @@ public final class RegisterSource implements Action {
 
         mPublisher = regParamsJson.optString(TestFormatJsonMapping.CONTEXT_ORIGIN_URI_KEY);
 
-        mRegistrationRequest =
+        RegistrationRequest.Builder registrationRequestBuilder =
                 new RegistrationRequest.Builder(
                                 RegistrationRequest.REGISTER_SOURCE,
-                                Uri.parse(
-                                        regParamsJson.getString(
-                                                TestFormatJsonMapping.REGISTRATION_URI_KEY)),
+                                Uri.parse(getFirstUrl(obj)),
                                 packageName,
                                 /* sdkPackageName = */ "")
-                        .setInputEvent(
-                                regParamsJson
-                                                .getString(TestFormatJsonMapping.INPUT_EVENT_KEY)
-                                                .equals(TestFormatJsonMapping.SOURCE_VIEW_TYPE)
-                                        ? null
-                                        : getInputEvent())
-                        .setAdIdValue(regParamsJson.optString(TestFormatJsonMapping.PLATFORM_AD_ID))
-                        .build();
+                        .setAdIdValue(regParamsJson.optString(
+                                TestFormatJsonMapping.PLATFORM_AD_ID));
+
+        if (!regParamsJson.isNull(TestFormatJsonMapping.INPUT_EVENT_KEY)) {
+            registrationRequestBuilder
+                    .setInputEvent(
+                            regParamsJson
+                                            .getString(TestFormatJsonMapping.INPUT_EVENT_KEY)
+                                            .equals(TestFormatJsonMapping.SOURCE_VIEW_TYPE)
+                                    ? null
+                                    : getInputEvent());
+        // Interop tests are using a different mapping for source type
+        } else {
+            registrationRequestBuilder
+                    .setInputEvent(
+                            regParamsJson.getString(
+                                    TestFormatJsonMapping.INTEROP_INPUT_EVENT_KEY).equals(
+                                            TestFormatJsonMapping.INTEROP_SOURCE_VIEW_TYPE)
+                                    ? null
+                                    : getInputEvent());
+        }
+
+        mRegistrationRequest = registrationRequestBuilder.build();
         mUriToResponseHeadersMap = getUriToResponseHeadersMap(obj);
         mTimestamp = obj.getLong(TestFormatJsonMapping.TIMESTAMP_KEY);
         mDebugReporting = hasSourceDebugReportingPermission(obj);

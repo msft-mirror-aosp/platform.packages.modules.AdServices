@@ -24,7 +24,7 @@ import android.os.Parcel;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.common.RequiresSdkLevelAtLeastS;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Test;
 
@@ -64,7 +64,7 @@ public final class GetAppSetIdParamTest extends AdServicesUnitTestCase {
             parcel.recycle();
         }
 
-        assertThat(GetAppSetIdParam.CREATOR.newArray(1).length).isEqualTo(1);
+        assertThat(GetAppSetIdParam.CREATOR.newArray(1)).hasLength(1);
     }
 
     @Test

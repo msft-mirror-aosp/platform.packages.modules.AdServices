@@ -30,6 +30,7 @@ android_test {
     static_libs: [
         "adservices-service-core",
         "adservices-assets",
+        "adservices-test-mockito-expectations",
         "adservices-test-utility",
         "androidx.fragment_fragment",
         "androidx.test.espresso.contrib",
@@ -68,6 +69,7 @@ android_test {
     static_libs: [
         "adservices-assets",
         "adservices-service-core",
+        "adservices-test-mockito-expectations",
         "adservices-test-utility",
         "androidx.fragment_fragment",
         "androidx.room_room-runtime",

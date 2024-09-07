@@ -24,6 +24,9 @@ package com.android.adservices.service;
  */
 public final class CommonFlagsConstants {
 
+    // AdServices Namespace String from DeviceConfig class is not available in S Minus
+    public static final String NAMESPACE_ADSERVICES = "adservices";
+
     private CommonFlagsConstants() {
         throw new UnsupportedOperationException("Contains only static constants");
     }
@@ -31,4 +34,8 @@ public final class CommonFlagsConstants {
     // Whether Adservices Shell Command interface is enabled
     public static final String KEY_ADSERVICES_SHELL_COMMAND_ENABLED =
             "adservices_shell_command_enabled";
+
+    // Whether AdServices system service is enabled
+    public static final String KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED =
+            "adservice_system_service_enabled";
 }

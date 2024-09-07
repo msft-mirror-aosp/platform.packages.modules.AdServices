@@ -17,7 +17,7 @@
 package com.android.adservices.service.adselection;
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockAdServicesJobServiceLogger;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlags;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mocker;
 import static com.android.adservices.mockito.MockitoExpectations.mockBackgroundJobsLoggingKillSwitch;
 import static com.android.adservices.mockito.MockitoExpectations.syncLogExecutionStats;
 import static com.android.adservices.mockito.MockitoExpectations.syncPersistJobExecutionData;
@@ -55,14 +55,14 @@ import android.content.ComponentName;
 import android.content.Context;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.RequiresSdkLevelAtLeastS;
-import com.android.adservices.common.synccallback.JobServiceLoggingCallback;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.shared.testing.JobServiceLoggingCallback;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
@@ -350,7 +350,7 @@ public final class DebugReportSenderJobServiceTest extends AdServicesExtendedMoc
     @Test
     public void testOnStartJob_shouldDisableJobTrueWithoutLogging() {
         Flags mockFlag = mock(Flags.class);
-        mockGetFlags(mockFlag);
+        mocker.mockGetFlags(mockFlag);
         mockBackgroundJobsLoggingKillSwitch(mockFlag, /* overrideValue= */ true);
         AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mockFlag);
 
@@ -459,7 +459,7 @@ public final class DebugReportSenderJobServiceTest extends AdServicesExtendedMoc
     @Test
     public void testOnStartJob_shouldDisableJobTrueWithLoggingEnabled() {
         Flags mockFlag = mock(Flags.class);
-        mockGetFlags(mockFlag);
+        mocker.mockGetFlags(mockFlag);
         mockBackgroundJobsLoggingKillSwitch(mockFlag, /* overrideValue= */ true);
         AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mockFlag);
 
@@ -487,7 +487,7 @@ public final class DebugReportSenderJobServiceTest extends AdServicesExtendedMoc
     public void testOnStopJobWithLogging() throws InterruptedException {
         Flags mockFlag =
                 new DebugReportSenderJobServiceTestFlags.FlagsWithGaUxDisabledLoggingEnabled();
-        mockGetFlags(mockFlag);
+        mocker.mockGetFlags(mockFlag);
         AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, mockFlag);
         JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
@@ -500,7 +500,7 @@ public final class DebugReportSenderJobServiceTest extends AdServicesExtendedMoc
     public void testOnStartJobConsentRevokedGaUxEnabledWithoutLogging() {
         Flags flags =
                 new DebugReportSenderJobServiceTestFlags.FlagsWithGaUxEnabledLoggingDisabled();
-        mockGetFlags(flags);
+        mocker.mockGetFlags(flags);
         AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, flags);
 
         testOnStartJobConsentRevokedGaUxEnabled();
@@ -511,7 +511,7 @@ public final class DebugReportSenderJobServiceTest extends AdServicesExtendedMoc
     @Test
     public void testOnStartJobConsentRevokedGaUxEnabledWithLogging() throws InterruptedException {
         Flags flags = new DebugReportSenderJobServiceTestFlags.FlagsWithGaUxEnabledLoggingEnabled();
-        mockGetFlags(flags);
+        mocker.mockGetFlags(flags);
         AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(sContext, flags);
         JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);
         JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);

@@ -41,6 +41,10 @@ android_test {
         "modules-utils-build",
         "SdkSandboxTestUtils",
     ],
+    data: [
+        ":SocketApp",
+        ":SocketSdkProvider",
+    ],
     test_suites: [
         "cts",
         "mts-adservices",

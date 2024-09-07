@@ -28,6 +28,7 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.profiling.Tracing;
+import com.android.adservices.service.stats.SelectAdsFromOutcomesExecutionLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.FluentFuture;
@@ -93,6 +94,7 @@ public class AdOutcomeSelectorImpl implements AdOutcomeSelector {
         mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(flags);
         mFlags = flags;
         mDevContext = devContext;
+
         mJsFetcher =
                 new JsFetcher(
                         mBackgroundExecutorService,
@@ -107,15 +109,17 @@ public class AdOutcomeSelectorImpl implements AdOutcomeSelector {
      *
      * @param adSelectionIdWithBidAndRenderUris list of ad selection id and bid pairs
      * @param config {@link AdSelectionFromOutcomesConfig} instance
-     * @return a Future of {@code Long} {code @AdSelectionId} of the winner. If no winner then
+     * @return a Future of {@code Long} {code @AdSelectionId} of the winner. If no winner, then
      *     returns null
      */
     @Override
     public FluentFuture<Long> runAdOutcomeSelector(
             @NonNull List<AdSelectionResultBidAndUri> adSelectionIdWithBidAndRenderUris,
-            @NonNull AdSelectionFromOutcomesConfig config) {
+            @NonNull AdSelectionFromOutcomesConfig config,
+            @NonNull SelectAdsFromOutcomesExecutionLogger selectAdsFromOutcomesExecutionLogger) {
         Objects.requireNonNull(adSelectionIdWithBidAndRenderUris);
         Objects.requireNonNull(config);
+        Objects.requireNonNull(selectAdsFromOutcomesExecutionLogger);
 
         AdServicesHttpClientRequest outcomeSelectorLogicUriHttpRequest =
                 AdServicesHttpClientRequest.builder()
@@ -126,7 +130,10 @@ public class AdOutcomeSelectorImpl implements AdOutcomeSelector {
 
         FluentFuture<String> selectionLogicJsFuture =
                 mJsFetcher.getOutcomeSelectionLogic(
-                        outcomeSelectorLogicUriHttpRequest, mAdSelectionDevOverridesHelper, config);
+                        outcomeSelectorLogicUriHttpRequest,
+                        mAdSelectionDevOverridesHelper,
+                        config,
+                        selectAdsFromOutcomesExecutionLogger);
 
         FluentFuture<Long> selectedOutcomeFuture =
                 selectionLogicJsFuture.transformAsync(
@@ -134,7 +141,8 @@ public class AdOutcomeSelectorImpl implements AdOutcomeSelector {
                                 mAdSelectionScriptEngine.selectOutcome(
                                         selectionLogic,
                                         adSelectionIdWithBidAndRenderUris,
-                                        config.getSelectionSignals()),
+                                        config.getSelectionSignals(),
+                                        selectAdsFromOutcomesExecutionLogger),
                         mLightweightExecutorService);
 
         int traceCookie = Tracing.beginAsyncSection(Tracing.RUN_OUTCOME_SELECTION);

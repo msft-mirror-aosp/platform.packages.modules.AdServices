@@ -17,6 +17,7 @@
 package com.android.adservices.service.adselection.encryption;
 
 import static com.android.adservices.service.adselection.encryption.AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
@@ -24,14 +25,21 @@ import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.when;
 
+import android.content.Context;
+
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.EncryptionContextDao;
 import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.modules.utils.testing.ExtendedMockitoRule;
 
 import com.google.common.io.BaseEncoding;
 import com.google.common.util.concurrent.FluentFuture;
@@ -40,17 +48,17 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
 
 import java.nio.charset.StandardCharsets;
 import java.security.spec.InvalidKeySpecException;
 import java.util.concurrent.ExecutorService;
 
-public class ObliviousHttpEncryptorImplTest {
+@ExtendedMockitoRule.SpyStatic(FlagsFactory.class)
+public class ObliviousHttpEncryptorImplTest extends AdServicesExtendedMockitoTestCase {
+    @Mock private Flags mMockFlags;
+
     private static final String SERVER_PUBLIC_KEY =
             "6d21cfe09fbea5122f9ebc2eb2a69fcc4f06408cd54aac934f012e76fcdcef62";
-    @Rule public final MockitoRule mockito = MockitoJUnit.rule();
 
     @Mock AdSelectionEncryptionKeyManager mEncryptionKeyManagerMock;
 
@@ -58,35 +66,45 @@ public class ObliviousHttpEncryptorImplTest {
 
     private ObliviousHttpEncryptor mObliviousHttpEncryptor;
     private ExecutorService mLightweightExecutor;
+    private DevContext mDevContext;
 
     @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setUp() {
+        Context context = ApplicationProvider.getApplicationContext();
         mLightweightExecutor = AdServicesExecutors.getLightWeightExecutor();
         mEncryptionContextDao =
-                Room.inMemoryDatabaseBuilder(
-                                ApplicationProvider.getApplicationContext(),
-                                AdSelectionServerDatabase.class)
+                Room.inMemoryDatabaseBuilder(context, AdSelectionServerDatabase.class)
                         .build()
                         .encryptionContextDao();
 
         mObliviousHttpEncryptor =
                 new ObliviousHttpEncryptorImpl(
                         mEncryptionKeyManagerMock, mEncryptionContextDao, mLightweightExecutor);
+
+        mDevContext =
+                DevContext.builder()
+                        .setDevOptionsEnabled(true)
+                        .setCallingAppPackageName(context.getPackageName())
+                        .build();
+
+        mocker.mockGetFlags(mMockFlags);
     }
 
     @Test
     public void test_encryptBytes_invalidPlainText() {
         assertThrows(
                 NullPointerException.class,
-                () -> mObliviousHttpEncryptor.encryptBytes(null, 1L, 1000L, null));
+                () -> mObliviousHttpEncryptor.encryptBytes(null, 1L, 1000L, null, mDevContext));
     }
 
     @Test
     public void test_encryptBytes_success() throws Exception {
-        when(mEncryptionKeyManagerMock.getLatestOhttpKeyConfigOfType(AUCTION, 1000L, null))
+        doReturn(false).when(mMockFlags).getFledgeAuctionServerMediaTypeChangeEnabled();
+        when(mEncryptionKeyManagerMock.getLatestOhttpKeyConfigOfType(
+                        AUCTION, 1000L, null, mDevContext))
                 .thenReturn(FluentFuture.from(immediateFuture(getKeyConfig(4))));
 
         String plainText = "test request 1";
@@ -97,12 +115,45 @@ public class ObliviousHttpEncryptorImplTest {
                                 .lowerCase()
                                 .encode(
                                         mObliviousHttpEncryptor
-                                                .encryptBytes(plainTextBytes, 1L, 1000L, null)
+                                                .encryptBytes(
+                                                        plainTextBytes,
+                                                        1L,
+                                                        1000L,
+                                                        null,
+                                                        mDevContext)
                                                 .get()))
                 // Only the Ohttp header containing key ID and algorithm IDs is same across
                 // multiple test runs since, a random seed is used to generate rest of the
                 // cipher text.
                 .startsWith("04002000010002");
+    }
+
+    @Test
+    public void test_encryptBytes_success_withServerAuctionMediaTypeChange() throws Exception {
+        doReturn(true).when(mMockFlags).getFledgeAuctionServerMediaTypeChangeEnabled();
+        when(mEncryptionKeyManagerMock.getLatestOhttpKeyConfigOfType(
+                        AUCTION, 1000L, null, mDevContext))
+                .thenReturn(FluentFuture.from(immediateFuture(getKeyConfig(4))));
+
+        String plainText = "test request 1";
+        byte[] plainTextBytes = plainText.getBytes(StandardCharsets.US_ASCII);
+
+        assertThat(
+                        BaseEncoding.base16()
+                                .lowerCase()
+                                .encode(
+                                        mObliviousHttpEncryptor
+                                                .encryptBytes(
+                                                        plainTextBytes,
+                                                        1L,
+                                                        1000L,
+                                                        null,
+                                                        mDevContext)
+                                                .get()))
+                // Only the Ohttp header containing key ID and algorithm IDs is same across
+                // multiple test runs since, a random seed is used to generate rest of the
+                // cipher text.
+                .startsWith("0004002000010002");
     }
 
     @Test
@@ -127,14 +178,18 @@ public class ObliviousHttpEncryptorImplTest {
 
     @Test
     public void test_decryptBytes_success() throws Exception {
-        when(mEncryptionKeyManagerMock.getLatestOhttpKeyConfigOfType(AUCTION, 1000, null))
+        doReturn(false).when(mMockFlags).getFledgeAuctionServerMediaTypeChangeEnabled();
+        when(mEncryptionKeyManagerMock.getLatestOhttpKeyConfigOfType(
+                        AUCTION, 1000, null, mDevContext))
                 .thenReturn(FluentFuture.from(immediateFuture(getKeyConfig(4))));
 
         String plainText = "test request 1";
         byte[] plainTextBytes = plainText.getBytes(StandardCharsets.US_ASCII);
 
         byte[] encryptedBytes =
-                mObliviousHttpEncryptor.encryptBytes(plainTextBytes, 1L, 1000L, null).get();
+                mObliviousHttpEncryptor
+                        .encryptBytes(plainTextBytes, 1L, 1000L, null, mDevContext)
+                        .get();
 
         assertThat(encryptedBytes).isNotNull();
         assertThat(encryptedBytes).isNotEmpty();
@@ -147,7 +202,34 @@ public class ObliviousHttpEncryptorImplTest {
                 BaseEncoding.base16().lowerCase().decode(responseCipherText);
 
         mObliviousHttpEncryptor.decryptBytes(responseCipherTextBytes, 1L);
-        // TODO(b/288615368): Decrypted bytes are null. This should be not null.
+    }
+
+    @Test
+    public void test_decryptBytes_success_withServerAuctionMediaTypeChange() throws Exception {
+        doReturn(true).when(mMockFlags).getFledgeAuctionServerMediaTypeChangeEnabled();
+        when(mEncryptionKeyManagerMock.getLatestOhttpKeyConfigOfType(
+                        AUCTION, 1000, null, mDevContext))
+                .thenReturn(FluentFuture.from(immediateFuture(getKeyConfig(4))));
+
+        String plainText = "test request 1";
+        byte[] plainTextBytes = plainText.getBytes(StandardCharsets.US_ASCII);
+
+        byte[] encryptedBytes =
+                mObliviousHttpEncryptor
+                        .encryptBytes(plainTextBytes, 1L, 1000L, null, mDevContext)
+                        .get();
+
+        assertThat(encryptedBytes).isNotNull();
+        assertThat(encryptedBytes).isNotEmpty();
+        assertThat(mEncryptionContextDao.getEncryptionContext(1L, AUCTION)).isNotNull();
+
+        String responseCipherText =
+                "37bea600af9cab94b009b0f4dac9576b6b118142e67eb64cffaf52ef72c82cfe06e2a"
+                        + "d6ffb09334c60dd4de5b1339f2e13eab21a662fac2effab65ed959d58";
+        byte[] responseCipherTextBytes =
+                BaseEncoding.base16().lowerCase().decode(responseCipherText);
+
+        mObliviousHttpEncryptor.decryptBytes(responseCipherTextBytes, 1L);
     }
 
     private ObliviousHttpKeyConfig getKeyConfig(int keyIdentifier) throws InvalidKeySpecException {

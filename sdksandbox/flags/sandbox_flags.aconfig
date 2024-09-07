@@ -23,6 +23,16 @@ flag {
 }
 
 flag {
+    name: "selinux_input_selector"
+    namespace: "sdk_sandbox"
+    description: "Bug fix for the SDK sandbox selinux input selector"
+    bug: "295861450"
+    metadata {
+        purpose: PURPOSE_BUGFIX
+    }
+}
+
+flag {
     name: "first_and_last_sdk_sandbox_uid_public"
     namespace: "sdk_sandbox"
     description: "Make Process#FIRST_SDK_SANDBOX_UID and Process#LAST_SDK_SANDBOX_UID public"
@@ -48,4 +58,11 @@ flag {
     namespace: "sdk_sandbox"
     description: "Get the the effective target Sdk version for the sdk sandbox process"
     bug: "271547387"
+}
+
+flag {
+    name: "sdk_sandbox_dex_verifier"
+    namespace: "sdk_sandbox"
+    description: "Enables the static dex verifier for the SDK sandbox to run on new SDKs"
+    bug: "231441674"
 }

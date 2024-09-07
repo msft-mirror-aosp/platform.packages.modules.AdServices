@@ -231,13 +231,12 @@ public class SdkSandboxManagerServiceUnitTest {
                                 new SdkSandboxStatsdLogger()));
 
         mService = new SdkSandboxManagerService(mSpyContext, mInjector);
-        mService.forceEnableSandbox();
         sSdkSandboxManagerLocal = mService.getLocalManager();
         assertThat(sSdkSandboxManagerLocal).isNotNull();
 
         sSdkSandboxSettingsListener = mService.getSdkSandboxSettingsListener();
-        assertThat(sSdkSandboxSettingsListener).isNotNull();
         mDeviceConfigUtil = new DeviceConfigUtil(sSdkSandboxSettingsListener);
+        mDeviceConfigUtil.setDeviceConfigProperty(PROPERTY_DISABLE_SANDBOX, "false");
 
         mClientAppUid = Process.myUid();
         mSandboxLatencyInfo = new SandboxLatencyInfo();
@@ -1652,7 +1651,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
     @Test
     public void testIsDisabled() {
-        mService.forceEnableSandbox();
+        mDeviceConfigUtil.setDeviceConfigProperty(PROPERTY_DISABLE_SANDBOX, "false");
         assertThat(mService.isSdkSandboxDisabled()).isFalse();
     }
 
@@ -1661,13 +1660,12 @@ public class SdkSandboxManagerServiceUnitTest {
         // SDK sandbox is enabled for an emulator, even if the killswitch is turned on provided
         // AdServices APK is present.
         Mockito.when(mInjector.isEmulator()).thenReturn(true);
-        sSdkSandboxSettingsListener.setKillSwitchState(true);
+        mDeviceConfigUtil.setDeviceConfigProperty(PROPERTY_DISABLE_SANDBOX, "true");
         assertThat(mService.isSdkSandboxDisabled()).isFalse();
 
         // SDK sandbox is disabled when the killswitch is enabled if the device is not an emulator.
-        mService.clearSdkSandboxState();
         Mockito.when(mInjector.isEmulator()).thenReturn(false);
-        sSdkSandboxSettingsListener.setKillSwitchState(true);
+        mDeviceConfigUtil.setDeviceConfigProperty(PROPERTY_DISABLE_SANDBOX, "true");
         assertThat(mService.isSdkSandboxDisabled()).isTrue();
     }
 
@@ -1676,18 +1674,17 @@ public class SdkSandboxManagerServiceUnitTest {
         // SDK sandbox is disabled for an emulator, if AdServices APK is not present.
         Mockito.doReturn(false).when(mInjector).isAdServiceApkPresent();
         Mockito.when(mInjector.isEmulator()).thenReturn(true);
-        sSdkSandboxSettingsListener.setKillSwitchState(true);
+        mDeviceConfigUtil.setDeviceConfigProperty(PROPERTY_DISABLE_SANDBOX, "true");
         assertThat(mService.isSdkSandboxDisabled()).isTrue();
     }
 
     @Test
     public void testSdkSandboxDisabledForAdServiceApkMissing() {
         Mockito.doReturn(true).when(mInjector).isAdServiceApkPresent();
-        sSdkSandboxSettingsListener.setKillSwitchState(false);
+        mDeviceConfigUtil.setDeviceConfigProperty(PROPERTY_DISABLE_SANDBOX, "false");
         assertThat(mService.isSdkSandboxDisabled()).isFalse();
 
         Mockito.doReturn(false).when(mInjector).isAdServiceApkPresent();
-        sSdkSandboxSettingsListener.setKillSwitchState(false);
         assertThat(mService.isSdkSandboxDisabled()).isTrue();
     }
 
@@ -1695,7 +1692,6 @@ public class SdkSandboxManagerServiceUnitTest {
     public void testKillswitchStopsSandbox() throws Exception {
         disableKillUid();
         mDeviceConfigUtil.setDeviceConfigProperty(PROPERTY_DISABLE_SANDBOX, "false");
-        sSdkSandboxSettingsListener.setKillSwitchState(false);
         loadSdk(SDK_NAME);
         mDeviceConfigUtil.setDeviceConfigProperty(PROPERTY_DISABLE_SANDBOX, "true");
         int callingUid = Binder.getCallingUid();
@@ -1708,7 +1704,7 @@ public class SdkSandboxManagerServiceUnitTest {
         disableNetworkPermissionChecks();
         disableForegroundCheck();
 
-        sSdkSandboxSettingsListener.setKillSwitchState(true);
+        mDeviceConfigUtil.setDeviceConfigProperty(PROPERTY_DISABLE_SANDBOX, "true");
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         mService.loadSdk(
                 TEST_PACKAGE,

@@ -19,9 +19,9 @@ package com.android.adservices.service.signals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Assert;
 import org.junit.Before;

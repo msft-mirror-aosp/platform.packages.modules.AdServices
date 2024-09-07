@@ -29,12 +29,13 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.cobalt.CobaltLogger;
 import com.android.cobalt.domain.Project;
 
 import com.google.cobalt.MetricDefinition;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Before;
@@ -68,7 +69,7 @@ public final class TopicsCobaltLoggerTest {
     @Before
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
-        mTopicsCobaltLogger = new TopicsCobaltLogger(mMockCobaltLogger);
+        mTopicsCobaltLogger = new TopicsCobaltLogger(Suppliers.memoize(() -> mMockCobaltLogger));
     }
 
     @Test

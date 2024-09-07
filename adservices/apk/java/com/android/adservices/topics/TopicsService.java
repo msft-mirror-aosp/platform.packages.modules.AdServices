@@ -28,7 +28,7 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.enrollment.EnrollmentDao;
-import com.android.adservices.download.MddJobService;
+import com.android.adservices.download.MddJob;
 import com.android.adservices.download.MobileDataDownloadFactory;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.FlagsFactory;
@@ -42,7 +42,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.encryptionkey.EncryptionKeyJobService;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.topics.CacheManager;
-import com.android.adservices.service.topics.EpochJobService;
+import com.android.adservices.service.topics.EpochJob;
 import com.android.adservices.service.topics.EpochManager;
 import com.android.adservices.service.topics.TopicsServiceImpl;
 import com.android.adservices.service.topics.TopicsWorker;
@@ -53,7 +53,6 @@ import java.io.PrintWriter;
 import java.util.Objects;
 
 /** Topics Service */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class TopicsService extends Service {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
@@ -83,13 +82,13 @@ public class TopicsService extends Service {
             mTopicsService =
                     new TopicsServiceImpl(
                             this,
-                            TopicsWorker.getInstance(this),
+                            TopicsWorker.getInstance(),
                             ConsentManager.getInstance(),
                             AdServicesLoggerImpl.getInstance(),
                             Clock.getInstance(),
                             FlagsFactory.getFlags(),
                             Throttler.getInstance(FlagsFactory.getFlags()),
-                            EnrollmentDao.getInstance(this),
+                            EnrollmentDao.getInstance(),
                             appImportanceFilter);
             mTopicsService.init();
         }
@@ -102,8 +101,8 @@ public class TopicsService extends Service {
     private void schedulePeriodicJobs() {
         MaintenanceJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
         EncryptionKeyJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
-        MddJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
-        EpochJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
+        MddJob.scheduleAllMddJobs();
+        EpochJob.schedule();
     }
 
     private boolean hasUserConsent() {
@@ -130,9 +129,9 @@ public class TopicsService extends Service {
         FlagsFactory.getFlags().dump(writer, args);
         if (BuildCompatUtils.isDebuggable()) {
             writer.println("Build is Debuggable, dumping information for TopicsService");
-            EpochManager.getInstance(this).dump(writer, args);
-            CacheManager.getInstance(this).dump(writer, args);
-            MobileDataDownloadFactory.dump(this, writer);
+            EpochManager.getInstance().dump(writer, args);
+            CacheManager.getInstance().dump(writer, args);
+            MobileDataDownloadFactory.dump(writer);
             writer.println("=== User Consent State For Topics Service ===");
             writer.println("User Consent is given: " + hasUserConsent());
         } else {

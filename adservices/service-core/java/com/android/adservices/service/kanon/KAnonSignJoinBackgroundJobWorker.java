@@ -96,7 +96,7 @@ public class KAnonSignJoinBackgroundJobWorker {
                                     mFlags.getFledgeKAnonMessagesPerBackgroundProcess());
                             return null;
                         },
-                        AdServicesExecutors.getLightWeightExecutor());
+                        AdServicesExecutors.getBackgroundExecutor());
     }
 
     /** Requests that any ongoing work be stopped. */

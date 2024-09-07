@@ -23,6 +23,7 @@ import android.net.Uri;
 import android.os.Parcel;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.EqualsTester;
 
 import org.junit.Test;
 
@@ -158,6 +159,7 @@ public final class ScheduleCustomAudienceUpdateInputTest extends AdServicesUnitT
 
     @Test
     public void testEquals_Same() {
+        EqualsTester et = new EqualsTester(expect);
         ScheduleCustomAudienceUpdateInput request1 =
                 new ScheduleCustomAudienceUpdateInput.Builder(
                                 VALID_UPDATE_URI_1,
@@ -173,11 +175,12 @@ public final class ScheduleCustomAudienceUpdateInputTest extends AdServicesUnitT
                                 VALID_DELAY,
                                 VALID_PARTIAL_CA_LIST)
                         .build();
-        expectObjectsAreEqual(request2, request1);
+        et.expectObjectsAreEqual(request2, request1);
     }
 
     @Test
     public void testEquals_Different() {
+        EqualsTester et = new EqualsTester(expect);
         ScheduleCustomAudienceUpdateInput request1 =
                 new ScheduleCustomAudienceUpdateInput.Builder(
                                 VALID_UPDATE_URI_1,
@@ -194,7 +197,7 @@ public final class ScheduleCustomAudienceUpdateInputTest extends AdServicesUnitT
                                 Collections.emptyList())
                         .build();
 
-        expectObjectsAreNotEqual(request1, request2);
+        et.expectObjectsAreNotEqual(request1, request2);
     }
 
     @Test
@@ -217,7 +220,7 @@ public final class ScheduleCustomAudienceUpdateInputTest extends AdServicesUnitT
                         .build()
                         .hashCode();
 
-        expect.withMessage("Object hash").that(request1Hash == request2Hash).isTrue();
+        expect.withMessage("Object hash").that(request1Hash).isEqualTo(request2Hash);
     }
 
     @Test
@@ -240,7 +243,7 @@ public final class ScheduleCustomAudienceUpdateInputTest extends AdServicesUnitT
                         .build()
                         .hashCode();
 
-        expect.withMessage("Object hash").that(request1Hash == request2Hash).isFalse();
+        expect.withMessage("Object hash").that(request1Hash).isNotEqualTo(request2Hash);
     }
 
     @Test

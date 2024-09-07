@@ -24,8 +24,6 @@ import java.util.List;
 
 /** Topics part of the app manifest config (<ad-services-config>). */
 public final class AppManifestIncludesSdkLibraryConfig {
-    private final boolean mContainsByDefault;
-
     private final @Nullable List<String> mIncludesSdkLibraries;
 
     /**
@@ -33,11 +31,8 @@ public final class AppManifestIncludesSdkLibraryConfig {
      *
      * @param containsByDefault whether {@link #contains(String)} should return {@code true} by
      *     default (i.e, when {@link #mIncludesSdkLibraries} is {@code null})
-     * @param includesSdkLibraries corresponds to the list in the config.
      */
-    public AppManifestIncludesSdkLibraryConfig(
-            boolean containsByDefault, @Nullable List<String> includesSdkLibraries) {
-        mContainsByDefault = containsByDefault;
+    public AppManifestIncludesSdkLibraryConfig(@Nullable List<String> includesSdkLibraries) {
         mIncludesSdkLibraries = includesSdkLibraries;
     }
 
@@ -46,13 +41,10 @@ public final class AppManifestIncludesSdkLibraryConfig {
      *
      * <p>It returns {@code true} if either the {@code id} is explicitly (i.e., when the app config
      * XML has a {@code <includes-sdk-library>} entry with such id) or implicitly (i.e., when the
-     * app config XML doesn't have any {@code <includes-sdk-library>} AND this object was
-     * constructed with {@code containsByDefault=true}) included.
+     * app config XML doesn't have any {@code <includes-sdk-library>).
      */
     public boolean contains(String id) {
-        return mIncludesSdkLibraries == null
-                ? mContainsByDefault
-                : mIncludesSdkLibraries.contains(id);
+        return mIncludesSdkLibraries == null || mIncludesSdkLibraries.contains(id);
     }
 
     @VisibleForTesting

@@ -49,7 +49,6 @@ import android.os.Parcel;
 
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.topics.Topic;
@@ -59,6 +58,7 @@ import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.mockito.ExtendedMockitoExpectations;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.appsearch.AppSearchConsentManager;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;

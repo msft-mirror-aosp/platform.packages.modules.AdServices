@@ -35,7 +35,7 @@ public class TestUtil {
     private Instrumentation mInstrumentation;
     private String mTag;
     // Used to get the package name. Copied over from com.android.adservices.AdServicesCommon
-    private static final String TOPICS_SERVICE_NAME = "android.adservices.TOPICS_SERVICE";
+    private static final String MEASUREMENT_SERVICE_NAME = "android.adservices.MEASUREMENT_SERVICE";
     private static final String EXT_SERVICES_PACKAGE_NAME = "ext.adservices";
     // The JobId of the Epoch Computation.
     private static final int EPOCH_JOB_ID = 2;
@@ -234,7 +234,7 @@ public class TestUtil {
     @SuppressWarnings("deprecation")
     // Used to get the package name. Copied over from com.android.adservices.AndroidServiceBinder
     public String getAdServicesPackageName() {
-        final Intent intent = new Intent(TOPICS_SERVICE_NAME);
+        final Intent intent = new Intent(MEASUREMENT_SERVICE_NAME);
         List<ResolveInfo> resolveInfos =
                 ApplicationProvider.getApplicationContext()
                         .getPackageManager()
@@ -255,7 +255,7 @@ public class TestUtil {
             Log.d(
                     mTag,
                     "Failed to find resolveInfo for adServices service. Intent action: "
-                            + TOPICS_SERVICE_NAME);
+                            + MEASUREMENT_SERVICE_NAME);
             return null;
         }
 
@@ -263,7 +263,7 @@ public class TestUtil {
             String str =
                     String.format(
                             "Found multiple services (%1$s) for the same intent action (%2$s)",
-                            TOPICS_SERVICE_NAME, resolveInfos);
+                            MEASUREMENT_SERVICE_NAME, resolveInfos);
             Log.d(mTag, str);
             return null;
         }

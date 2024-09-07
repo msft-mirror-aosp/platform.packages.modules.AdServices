@@ -16,6 +16,8 @@
 
 package android.adservices.customaudience;
 
+import static com.android.adservices.flags.Flags.FLAG_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED;
+
 import android.adservices.adselection.GetAdSelectionDataRequest;
 import android.adservices.common.AdData;
 import android.adservices.common.AdSelectionSignals;
@@ -67,6 +69,7 @@ public final class CustomAudience implements Parcelable {
     @NonNull private final Uri mBiddingLogicUri;
     @NonNull private final List<AdData> mAds;
     @AuctionServerRequestFlag private final int mAuctionServerRequestFlags;
+    private final double mPriority;
 
     /** @hide */
     @IntDef(
@@ -104,6 +107,7 @@ public final class CustomAudience implements Parcelable {
         mBiddingLogicUri = builder.mBiddingLogicUri;
         mAds = builder.mAds;
         mAuctionServerRequestFlags = builder.mAuctionServerRequestFlags;
+        mPriority = builder.mPriority;
     }
 
     private CustomAudience(@NonNull Parcel in) {
@@ -127,6 +131,7 @@ public final class CustomAudience implements Parcelable {
         mBiddingLogicUri = Uri.CREATOR.createFromParcel(in);
         mAds = in.createTypedArrayList(AdData.CREATOR);
         mAuctionServerRequestFlags = in.readInt();
+        mPriority = in.readDouble();
     }
 
     @Override
@@ -157,6 +162,7 @@ public final class CustomAudience implements Parcelable {
         mBiddingLogicUri.writeToParcel(dest, flags);
         dest.writeTypedList(mAds);
         dest.writeInt(mAuctionServerRequestFlags);
+        dest.writeDouble(mPriority);
     }
 
     @Override
@@ -182,6 +188,8 @@ public final class CustomAudience implements Parcelable {
                 + mAds
                 + ", mAuctionServerRequestFlags="
                 + mAuctionServerRequestFlags
+                + ", mPriority="
+                + mPriority
                 + '}';
     }
 
@@ -204,6 +212,9 @@ public final class CustomAudience implements Parcelable {
     /**
      * The custom audience's name is an arbitrary string provided by the owner and buyer on creation
      * of the {@link CustomAudience} object.
+     *
+     * <p>The overall size of the CA is limited and the size of this field is considered using
+     * {@link String#getBytes()} in {@code UTF-8} encoding.
      *
      * @return the String name of the custom audience
      */
@@ -316,6 +327,9 @@ public final class CustomAudience implements Parcelable {
      * participate in ad selection until a valid list of ads are provided via the daily update for
      * the custom audience.
      *
+     * <p>The combined ads size of the CA is limited and the sizes of each ad's string fields are
+     * considered using {@link String#getBytes()} in {@code UTF-8} encoding.
+     *
      * @return a {@link List} of {@link AdData} objects representing ads currently served by the
      *     custom audience
      */
@@ -341,6 +355,22 @@ public final class CustomAudience implements Parcelable {
     }
 
     /**
+     * Returns the priority of this CustomAudience with respect to other CustomAudiences for this
+     * buyer.
+     *
+     * <p>This means if there is insufficient space during buyer input generation in the {@link
+     * android.adservices.adselection.AdSelectionManager#getAdSelectionData(GetAdSelectionDataRequest,
+     * Executor, OutcomeReceiver)} call, the service will attempt to include the highest priority
+     * custom audiences first.
+     *
+     * <p>The default value if this field is not set is 0.
+     */
+    @FlaggedApi(FLAG_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED)
+    public double getPriority() {
+        return mPriority;
+    }
+
+    /**
      * Checks whether two {@link CustomAudience} objects contain the same information.
      */
     @Override
@@ -357,7 +387,8 @@ public final class CustomAudience implements Parcelable {
                 && Objects.equals(mTrustedBiddingData, that.mTrustedBiddingData)
                 && mBiddingLogicUri.equals(that.mBiddingLogicUri)
                 && mAds.equals(that.mAds)
-                && mAuctionServerRequestFlags == that.mAuctionServerRequestFlags;
+                && mAuctionServerRequestFlags == that.mAuctionServerRequestFlags
+                && mPriority == that.mPriority;
     }
 
     /**
@@ -375,7 +406,8 @@ public final class CustomAudience implements Parcelable {
                 mTrustedBiddingData,
                 mBiddingLogicUri,
                 mAds,
-                mAuctionServerRequestFlags);
+                mAuctionServerRequestFlags,
+                mPriority);
     }
 
     /** Builder for {@link CustomAudience} objects. */
@@ -390,6 +422,7 @@ public final class CustomAudience implements Parcelable {
         @Nullable private Uri mBiddingLogicUri;
         @Nullable private List<AdData> mAds;
         @AuctionServerRequestFlag private int mAuctionServerRequestFlags;
+        private double mPriority;
 
         // TODO(b/232883403): We may need to add @NonNUll members as args.
         public Builder() {
@@ -518,6 +551,18 @@ public final class CustomAudience implements Parcelable {
         public CustomAudience.Builder setAuctionServerRequestFlags(
                 @AuctionServerRequestFlag int auctionServerRequestFlags) {
             mAuctionServerRequestFlags = auctionServerRequestFlags;
+            return this;
+        }
+
+        /**
+         * Sets the priority for this custom audience.
+         *
+         * <p>See {@link #getPriority()} for further details.
+         */
+        @FlaggedApi(FLAG_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED)
+        @NonNull
+        public CustomAudience.Builder setPriority(double priority) {
+            mPriority = priority;
             return this;
         }
 

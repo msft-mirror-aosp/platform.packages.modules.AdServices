@@ -23,8 +23,8 @@ import static com.android.adservices.service.adselection.AuctionServerPayloadFor
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.Flags;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Before;
 import org.junit.Rule;

@@ -37,13 +37,13 @@ import android.database.sqlite.SQLiteConstraintException;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.HistogramEvent;
 import com.android.adservices.service.adselection.HistogramEventFixture;
 import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;

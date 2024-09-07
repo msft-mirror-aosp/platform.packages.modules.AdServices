@@ -45,13 +45,13 @@ import android.content.ComponentName;
 import android.content.Context;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
@@ -120,7 +120,7 @@ public final class BackgroundKeyFetchJobServiceTest extends AdServicesExtendedMo
 
     @Test
     public void testOnStartJobConsentRevokedGaUxDisabled() throws Exception {
-        extendedMockito.mockGetFlags(mFlagsWithEnabledBgFGaUxDisabled);
+        mocker.mockGetFlags(mFlagsWithEnabledBgFGaUxDisabled);
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.REVOKED)
                 .when(mConsentManagerMock)
@@ -148,7 +148,7 @@ public final class BackgroundKeyFetchJobServiceTest extends AdServicesExtendedMo
 
     @Test
     public void testOnStartJobAdSelectionDataKillSwitchOn() throws Exception {
-        extendedMockito.mockGetFlags(mFlagsWithAdSelectionDataKillSwitchOn);
+        mocker.mockGetFlags(mFlagsWithAdSelectionDataKillSwitchOn);
         doReturn(JOB_SCHEDULER).when(mBgFJobServiceSpy).getSystemService(JobScheduler.class);
         doNothing().when(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
 
@@ -172,7 +172,7 @@ public final class BackgroundKeyFetchJobServiceTest extends AdServicesExtendedMo
 
     @Test
     public void testOnStartJobAdSelectionDataKillSwitchOff() throws Exception {
-        extendedMockito.mockGetFlags(mFlagsWithAdSelectionDataKillSwitchOff);
+        mocker.mockGetFlags(mFlagsWithAdSelectionDataKillSwitchOff);
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
@@ -204,7 +204,7 @@ public final class BackgroundKeyFetchJobServiceTest extends AdServicesExtendedMo
     public void testOnStartJobUpdateSuccessdd() throws Exception {
         Flags flagsWithEnabledBgFGaUxDisabledWithoutLogging =
                 new BackgroundKeyFetchJobServiceTest.FlagsWithEnabledBgFGaUxEnabledWithoutLogging();
-        extendedMockito.mockGetFlags(flagsWithEnabledBgFGaUxDisabledWithoutLogging);
+        mocker.mockGetFlags(flagsWithEnabledBgFGaUxDisabledWithoutLogging);
         AdServicesJobServiceLogger spyLogger =
                 mockAdServicesJobServiceLogger(
                         sContext, flagsWithEnabledBgFGaUxDisabledWithoutLogging);
@@ -240,7 +240,7 @@ public final class BackgroundKeyFetchJobServiceTest extends AdServicesExtendedMo
     public void testOnStartJobUpdateTimeoutHandled() throws Exception {
         Flags flagsWithEnabledBgFGaUxDisabled =
                 new BackgroundKeyFetchJobServiceTest.FlagsWithEnabledBgFGaUxDisabled();
-        extendedMockito.mockGetFlags(flagsWithEnabledBgFGaUxDisabled);
+        mocker.mockGetFlags(flagsWithEnabledBgFGaUxDisabled);
 
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
@@ -272,7 +272,7 @@ public final class BackgroundKeyFetchJobServiceTest extends AdServicesExtendedMo
     @Test
     public void testOnStartJobUpdateExecutionExceptionHandled() throws Exception {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
-        extendedMockito.mockGetFlags(mFlagsWithEnabledBgFGaUxDisabled);
+        mocker.mockGetFlags(mFlagsWithEnabledBgFGaUxDisabled);
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
@@ -303,7 +303,7 @@ public final class BackgroundKeyFetchJobServiceTest extends AdServicesExtendedMo
 
     @Test
     public void testOnStopJobCallsStopWork() {
-        extendedMockito.mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
 
         doReturn(mBgFWorkerMock).when(() -> BackgroundKeyFetchWorker.getInstance(any()));
         doNothing().when(mBgFWorkerMock).stopWork();
@@ -390,7 +390,7 @@ public final class BackgroundKeyFetchJobServiceTest extends AdServicesExtendedMo
     @Test
     public void testOnStartJob_shouldDisableJobTrue() throws Exception {
         // Logging killswitch is on.
-        extendedMockito.mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
 
         doReturn(true)
                 .when(

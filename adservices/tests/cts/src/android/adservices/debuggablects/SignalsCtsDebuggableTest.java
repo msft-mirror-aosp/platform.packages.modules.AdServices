@@ -21,46 +21,40 @@ import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNAL
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
 
 import android.adservices.clients.signals.ProtectedSignalsClient;
 import android.adservices.signals.UpdateSignalsRequest;
 import android.adservices.utils.CtsWebViewSupportUtil;
 import android.adservices.utils.MockWebServerRule;
 import android.adservices.utils.ScenarioDispatcher;
+import android.adservices.utils.ScenarioDispatcherFactory;
 import android.net.Uri;
 
-
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.RequiresSdkLevelAtLeastT;
-import com.android.adservices.common.SupportedByConditionRule;
-import com.android.adservices.common.annotations.SetFlagDisabled;
-import com.android.adservices.common.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.SupportedByConditionRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
+import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 
-import com.google.mockwebserver.MockWebServer;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-@SetFlagDisabled(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
+@SetFlagEnabled(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
 @SetFlagEnabled(KEY_PROTECTED_SIGNALS_ENABLED)
 @RequiresSdkLevelAtLeastT
 public final class SignalsCtsDebuggableTest extends ForegroundDebuggableCtsTest {
-    private static final String POSTFIX = "signals";
-    private static final String FIRST_POSTFIX = "signalsFirst";
-    private static final String SECOND_POSTFIX = "signalsSecond";
+    private static final String POSTFIX = "/signals";
+    private static final String FIRST_POSTFIX = "/signalsFirst";
+    private static final String SECOND_POSTFIX = "/signalsSecond";
 
     private String mServerBaseAddress;
-    private MockWebServer mMockWebServer;
 
     private ProtectedSignalsClient mProtectedSignalsClient;
 
@@ -84,18 +78,12 @@ public final class SignalsCtsDebuggableTest extends ForegroundDebuggableCtsTest 
                         .build();
     }
 
-    @After
-    public void tearDown() throws IOException {
-        if (mMockWebServer != null) {
-            mMockWebServer.shutdown();
-        }
-    }
-
     @Test
     public void testUpdateSignals_success() throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario("scenarios/signals-default.json", "");
-        setupDefaultMockWebServer(dispatcher);
+                setupDispatcher(
+                        ScenarioDispatcherFactory.createFromScenarioFile(
+                                "scenarios/signals-default.json"));
         Uri firstUri = Uri.parse(mServerBaseAddress + FIRST_POSTFIX);
         Uri secondUri = Uri.parse(mServerBaseAddress + SECOND_POSTFIX);
         UpdateSignalsRequest firstRequest = new UpdateSignalsRequest.Builder(firstUri).build();
@@ -108,44 +96,38 @@ public final class SignalsCtsDebuggableTest extends ForegroundDebuggableCtsTest 
     }
 
     @Test
+    @SetFlagDisabled(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
     public void testUpdateSignals_badUri_failure() throws Exception {
-        ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario("scenarios/signals-default.json", "");
-        setupDefaultMockWebServer(dispatcher);
-        Uri uri = Uri.parse("");
+        setupDispatcher(
+                ScenarioDispatcherFactory.createFromScenarioFile("scenarios/signals-default.json"));
+        Uri uri = Uri.EMPTY;
         UpdateSignalsRequest request = new UpdateSignalsRequest.Builder(uri).build();
         ExecutionException e =
                 assertThrows(
                         ExecutionException.class,
                         () -> mProtectedSignalsClient.updateSignals(request).get());
-        assertEquals("SecurityException", e.getCause().getClass().getSimpleName());
+        assertThat(e.getCause()).isInstanceOf(SecurityException.class);
     }
 
     @Test
     public void testUpdateSignals_badJson_failure() throws Exception {
-        ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario("scenarios/signals-bad-json.json", "");
-        setupDefaultMockWebServer(dispatcher);
+        setupDispatcher(
+                ScenarioDispatcherFactory.createFromScenarioFile(
+                        "scenarios/signals-bad-json.json"));
         Uri uri = Uri.parse(mServerBaseAddress + POSTFIX);
         UpdateSignalsRequest request = new UpdateSignalsRequest.Builder(uri).build();
         ExecutionException e =
                 assertThrows(
                         ExecutionException.class,
                         () -> mProtectedSignalsClient.updateSignals(request).get());
-        assertTrue(e.getCause() instanceof IllegalArgumentException);
+        assertThat(e.getCause()).isInstanceOf(IllegalArgumentException.class);
     }
 
-    // TODO(b/299336069) Get rid of the repeated code here.
-    private void setupDefaultMockWebServer(ScenarioDispatcher dispatcher) throws Exception {
-        if (mMockWebServer != null) {
-            mMockWebServer.shutdown();
-        }
-        mMockWebServer = mMockWebServerRule.startMockWebServer(dispatcher);
-        mServerBaseAddress = getServerBaseAddress();
-    }
-
-    private String getServerBaseAddress() {
-        return String.format(
-                "https://%s:%s/", mMockWebServer.getHostName(), mMockWebServer.getPort());
+    private ScenarioDispatcher setupDispatcher(ScenarioDispatcherFactory scenarioDispatcherFactory)
+            throws Exception {
+        ScenarioDispatcher scenarioDispatcher =
+                mMockWebServerRule.startMockWebServer(scenarioDispatcherFactory);
+        mServerBaseAddress = scenarioDispatcher.getBaseAddressWithPrefix().toString();
+        return scenarioDispatcher;
     }
 }

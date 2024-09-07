@@ -71,7 +71,7 @@ public class RoomSchemaMigrationGuardrailTest {
     private static final Map<Class<? extends RoomDatabase>, List<Object>> ADDITIONAL_CONVERTOR =
             ImmutableMap.of(
                     CustomAudienceDatabase.class,
-                    ImmutableList.of(new DBCustomAudience.Converters(true, true)));
+                    ImmutableList.of(new DBCustomAudience.Converters(true, true, true)));
 
     private static final List<DatabaseWithVersion> BYPASS_DATABASE_VERSIONS_NEW_FIELD_ONLY =
             ImmutableList.of(new DatabaseWithVersion(CustomAudienceDatabase.class, 2));

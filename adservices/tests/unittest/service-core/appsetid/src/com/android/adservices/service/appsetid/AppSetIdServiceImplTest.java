@@ -16,15 +16,12 @@
 
 package com.android.adservices.service.appsetid;
 
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_CALLING_PACKAGE_DOES_NOT_BELONG_TO_CALLING_ID;
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_CALLING_PACKAGE_NOT_FOUND;
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST;
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
+import static com.android.adservices.mockito.MockitoExpectations.mockCobaltLoggingFlags;
 import static com.android.adservices.mockito.MockitoExpectations.mockLogApiCallStats;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__APPSETID;
@@ -38,8 +35,10 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -54,10 +53,8 @@ import android.os.Process;
 
 import androidx.annotation.NonNull;
 
+import com.android.adservices.NoOpServiceBinder;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.IntFailureSyncCallback;
-import com.android.adservices.common.NoFailureSyncCallback;
-import com.android.adservices.common.RequiresSdkLevelAtLeastT;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -67,13 +64,15 @@ import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ApiCallStats;
+import com.android.adservices.shared.testing.IntFailureSyncCallback;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
+import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 import com.android.adservices.shared.util.Clock;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 
 import java.util.concurrent.CountDownLatch;
@@ -88,16 +87,15 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
             "com.android.adservices.servicecoreappsetidtest";
     private static final String INVALID_PACKAGE_NAME = "com.do_not_exists";
     private static final String SOME_SDK_NAME = "SomeSdkName";
-    private static final int BINDER_CONNECTION_TIMEOUT_MS = 5_000;
+    private static final int BACKGROUND_THREAD_TIMEOUT_MS = 7_000;
     private static final String SDK_PACKAGE_NAME = "test_package_name";
     private static final String APPSETID_API_ALLOW_LIST =
             "com.android.adservices.servicecoreappsetidtest";
     private static final int SANDBOX_UID = 25000;
-    private final AdServicesLogger mAdServicesLogger =
-            Mockito.spy(AdServicesLoggerImpl.getInstance());
+    private final AdServicesLogger mAdServicesLogger = spy(AdServicesLoggerImpl.getInstance());
+    private final AppSetIdWorker mAppSetIdWorker = new AppSetIdWorker(new NoOpServiceBinder<>());
 
     private CallerMetadata mCallerMetadata;
-    private AppSetIdWorker mAppSetIdWorker;
     private GetAppSetIdParam mRequest;
 
     @Mock private PackageManager mPackageManager;
@@ -110,9 +108,6 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
 
     @Before
     public void setup() throws Exception {
-        mAppSetIdWorker = Mockito.spy(AppSetIdWorker.getInstance());
-        doReturn(null).when(mAppSetIdWorker).getService();
-
         when(mClock.elapsedRealtime()).thenReturn(150L, 200L);
         mCallerMetadata = new CallerMetadata.Builder().setBinderElapsedTimestamp(100L).build();
         mRequest =
@@ -132,7 +127,9 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
                         eq(Throttler.ApiKey.APPSETID_API_APP_PACKAGE_NAME), anyString()))
                 .thenReturn(true);
 
-        extendedMockito.mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
+
+        mockCobaltLoggingFlags(mMockFlags, false);
     }
 
     @Test
@@ -142,9 +139,8 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
         when(mMockFlags.getPpapiAppAllowList()).thenReturn("");
         invokeGetAppSetIdAndVerifyError(
                 mContext,
-                STATUS_CALLER_NOT_ALLOWED, /* checkLoggingStatus */
-                true,
-                FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST);
+                STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST,
+                /* checkLoggingStatus */ true);
     }
 
     @Test
@@ -162,11 +158,7 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
                 .thenReturn(false);
         // We don't log STATUS_RATE_LIMIT_REACHED for getAppSetId API.
         invokeGetAppSetIdAndVerifyError(
-                mContext,
-                STATUS_RATE_LIMIT_REACHED,
-                request, /* checkLoggingStatus */
-                false,
-                FAILURE_REASON_UNSET);
+                mContext, STATUS_RATE_LIMIT_REACHED, request, /* checkLoggingStatus */ false);
     }
 
     @Test
@@ -247,10 +239,9 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
 
         invokeGetAppSetIdAndVerifyError(
                 mContext,
-                STATUS_CALLER_NOT_ALLOWED,
-                mRequest, /* checkLoggingStatus */
-                true,
-                FAILURE_REASON_PACKAGE_NOT_IN_ALLOWLIST);
+                STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST,
+                mRequest,
+                /* checkLoggingStatus */ true);
     }
 
     @Test
@@ -267,11 +258,7 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
                         .build();
 
         invokeGetAppSetIdAndVerifyError(
-                mSpyContext,
-                STATUS_UNAUTHORIZED,
-                mRequest, /* checkLoggingStatus */
-                true,
-                FAILURE_REASON_CALLING_PACKAGE_NOT_FOUND);
+                mSpyContext, STATUS_UNAUTHORIZED, mRequest, /* checkLoggingStatus */ true);
     }
 
     @Test
@@ -287,32 +274,26 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
                         .build();
 
         invokeGetAppSetIdAndVerifyError(
-                mSpyContext,
-                STATUS_UNAUTHORIZED,
-                mRequest, /* checkLoggingStatus */
-                true,
-                FAILURE_REASON_CALLING_PACKAGE_DOES_NOT_BELONG_TO_CALLING_ID);
+                mSpyContext, STATUS_UNAUTHORIZED, mRequest, /* checkLoggingStatus */ true);
     }
 
     private void invokeGetAppSetIdAndVerifyError(
-            Context context, int expectedResultCode, boolean checkLoggingStatus, int failureReason)
+            Context context, int expectedResultCode, boolean checkLoggingStatus)
             throws InterruptedException {
-        invokeGetAppSetIdAndVerifyError(
-                context, expectedResultCode, mRequest, checkLoggingStatus, failureReason);
+        invokeGetAppSetIdAndVerifyError(context, expectedResultCode, mRequest, checkLoggingStatus);
     }
 
     private void invokeGetAppSetIdAndVerifyError(
             Context context,
             int expectedResultCode,
             GetAppSetIdParam request,
-            boolean checkLoggingStatus,
-            int failureReason)
+            boolean checkLoggingStatus)
             throws InterruptedException {
         SyncIGetAppSetIdCallback callback =
-                new SyncIGetAppSetIdCallback(BINDER_CONNECTION_TIMEOUT_MS);
+                new SyncIGetAppSetIdCallback(BACKGROUND_THREAD_TIMEOUT_MS);
 
         CountDownLatch logOperationCalledLatch = new CountDownLatch(1);
-        Mockito.doAnswer(
+        doAnswer(
                         (Answer<Object>)
                                 invocation -> {
                                     // The method logAPiCallStats is called.
@@ -352,7 +333,6 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
                     .isEqualTo(request.getAppPackageName());
             assertThat(argument.getValue().getSdkPackageName())
                     .isEqualTo(request.getSdkPackageName());
-            assertThat(argument.getValue().getFailureReason()).isEqualTo(failureReason);
         }
     }
 
@@ -364,8 +344,8 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
                         .setAppSetIdScope(0)
                         .build();
 
-        NoFailureSyncCallback<ApiCallStats> logApiCallStatsCallback =
-                mockLogApiCallStats(mAdServicesLogger);
+        ResultSyncCallback<ApiCallStats> logApiCallStatsCallback =
+                mockLogApiCallStats(mAdServicesLogger, BACKGROUND_THREAD_TIMEOUT_MS);
 
         GetAppSetIdResult getAppSetIdResult = getAppSetIdResults(appSetIdServiceImpl);
 
@@ -380,7 +360,7 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
             throws Exception {
         // To capture result in inner class, we have to declare final.
         SyncIGetAppSetIdCallback callback =
-                new SyncIGetAppSetIdCallback(BINDER_CONNECTION_TIMEOUT_MS);
+                new SyncIGetAppSetIdCallback(BACKGROUND_THREAD_TIMEOUT_MS);
 
         appSetIdServiceImpl.getAppSetId(mRequest, mCallerMetadata, callback);
 
@@ -414,7 +394,7 @@ public final class AppSetIdServiceImplTest extends AdServicesExtendedMockitoTest
     private static final class SyncIGetAppSetIdCallback
             extends IntFailureSyncCallback<GetAppSetIdResult> implements IGetAppSetIdCallback {
 
-        private SyncIGetAppSetIdCallback(int timeout) {
+        private SyncIGetAppSetIdCallback(long timeout) {
             super(timeout);
         }
 

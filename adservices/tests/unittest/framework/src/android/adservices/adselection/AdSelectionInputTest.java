@@ -18,27 +18,19 @@ package android.adservices.adselection;
 
 import static android.adservices.adselection.AdSelectionConfigFixture.anAdSelectionConfig;
 
-import static com.google.common.truth.Truth.assertThat;
-
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 import android.os.Parcel;
 
-import androidx.test.filters.SmallTest;
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
-import com.android.adservices.common.SdkLevelSupportRule;
-
-import org.junit.Rule;
 import org.junit.Test;
 
 /** Unit tests for {@link AdSelectionInput} */
-@SmallTest
-public final class AdSelectionInputTest {
+@RequiresSdkLevelAtLeastS
+public final class AdSelectionInputTest extends AdServicesUnitTestCase {
     private static final String CALLER_PACKAGE_NAME = "callerPackageName";
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testWriteToParcel() throws Exception {
@@ -56,8 +48,8 @@ public final class AdSelectionInputTest {
 
         AdSelectionInput fromParcel = AdSelectionInput.CREATOR.createFromParcel(p);
 
-        assertThat(fromParcel.getAdSelectionConfig()).isEqualTo(testAdSelectionConfig);
-        assertThat(fromParcel.getCallerPackageName()).isEqualTo(CALLER_PACKAGE_NAME);
+        expect.that(fromParcel.getAdSelectionConfig()).isEqualTo(testAdSelectionConfig);
+        expect.that(fromParcel.getCallerPackageName()).isEqualTo(CALLER_PACKAGE_NAME);
     }
 
     @Test
@@ -66,25 +58,22 @@ public final class AdSelectionInputTest {
 
         assertThrows(
                 NullPointerException.class,
-                () -> {
-                    new AdSelectionInput.Builder()
-                            .setAdSelectionConfig(testAdSelectionConfig)
-                            // Not setting CallerPackageName making it null.
-                            .build();
-                });
+                () ->
+                        new AdSelectionInput.Builder()
+                                .setAdSelectionConfig(testAdSelectionConfig)
+                                // Not setting CallerPackageName making it null.
+                                .build());
     }
 
     @Test
     public void testFailsToBuildWithNullAdSelectionConfig() {
-
         assertThrows(
                 NullPointerException.class,
-                () -> {
-                    new AdSelectionInput.Builder()
-                            .setCallerPackageName(CALLER_PACKAGE_NAME)
-                            // Not setting AdSelectionConfig making it null.
-                            .build();
-                });
+                () ->
+                        new AdSelectionInput.Builder()
+                                .setCallerPackageName(CALLER_PACKAGE_NAME)
+                                // Not setting AdSelectionConfig making it null.
+                                .build());
     }
 
     @Test
@@ -97,6 +86,6 @@ public final class AdSelectionInputTest {
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
                         .build();
 
-        assertEquals(obj.describeContents(), 0);
+        expect.that(obj.describeContents()).isEqualTo(0);
     }
 }

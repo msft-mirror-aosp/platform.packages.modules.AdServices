@@ -56,14 +56,12 @@
   "description": "One event source with two trigger specs, see comment above for full description.",
   "phflags_override": {
     "measurement_flex_api_max_information_gain_navigation": 15,
-    "measurement_flexible_event_reporting_api_enabled": "true",
-    "measurement_min_event_report_delay_millis": 0
+    "measurement_flexible_event_reporting_api_enabled": "true"
   },
   "input": {
     "sources": [
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "source_type": "navigation",
           "registrant": "example.1s1.test"
         },
@@ -107,7 +105,6 @@
     "triggers": [
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "example.2d1.test"
         },
         "responses": [
@@ -134,7 +131,6 @@
       },
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "example.2d1.test"
         },
         "responses": [
@@ -160,7 +156,6 @@
       },
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "example.2d1.test"
         },
         "responses": [
@@ -187,7 +182,6 @@
       },
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "example.2d1.test"
         },
         "responses": [
@@ -214,7 +208,6 @@
       },
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "example.2d1.test"
         },
         "responses": [
@@ -241,7 +234,6 @@
       },
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "example.2d1.test"
         },
         "responses": [
@@ -266,7 +258,6 @@
       },
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "example.2d1.test"
         },
         "responses": [
@@ -293,7 +284,6 @@
       },
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "example.2d1.test"
         },
         "responses": [
@@ -318,7 +308,6 @@
       },
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "example.2d1.test"
         },
         "responses": [
@@ -345,7 +334,6 @@
       },
       {
         "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
           "registrant": "example.2d1.test"
         },
         "responses": [

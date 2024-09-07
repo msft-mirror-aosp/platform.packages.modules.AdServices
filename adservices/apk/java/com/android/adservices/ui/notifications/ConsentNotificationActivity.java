@@ -89,21 +89,17 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
         Context context = getApplicationContext();
 
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
-        if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()) {
+        if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()
+                || FlagsFactory.getFlags().getUiOtaResourcesFeatureEnabled()) {
             OTAResourcesManager.applyOTAResources(context, true);
         }
 
         if (FlagsFactory.getFlags().getConsentNotificationActivityDebugMode()
                 || isUxStatesReady(this)) {
-            initWithUx(this, context);
+            initWithUx(context, /* beforePasUxActive */ true);
         } else {
             initFragment();
         }
-    }
-
-    @Override
-    public void initBeta() {
-        setContentView(R.layout.consent_notification_activity);
     }
 
     @Override
@@ -132,11 +128,7 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
     }
 
     private void initFragment() {
-        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
-            setContentView(R.layout.consent_notification_ga_v2_activity);
-        } else {
-            setContentView(R.layout.consent_notification_activity);
-        }
+        setContentView(R.layout.consent_notification_ga_v2_activity);
     }
 
     /**

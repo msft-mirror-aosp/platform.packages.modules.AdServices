@@ -28,15 +28,12 @@ import androidx.lifecycle.Observer;
 import com.android.adservices.api.R;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.UiStatsLogger;
-import com.android.adservices.ui.settings.DialogFragmentManager;
-import com.android.adservices.ui.settings.DialogManager;
 import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
 import com.android.adservices.ui.settings.activities.AppsActivity;
 import com.android.adservices.ui.settings.activities.MeasurementActivity;
 import com.android.adservices.ui.settings.activities.TopicsActivity;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsMainFragment;
 import com.android.adservices.ui.settings.viewmodels.MainViewModel;
-import com.android.settingslib.widget.MainSwitchBar;
 
 import java.util.HashMap;
 import java.util.Locale;
@@ -66,22 +63,6 @@ public class MainActionDelegate {
                     }
                     try {
                         switch (event) {
-                            case SWITCH_ON_PRIVACY_SANDBOX_BETA:
-                                mMainViewModel.setConsent(true);
-                                break;
-                            case SWITCH_OFF_PRIVACY_SANDBOX_BETA:
-                                if (FlagsFactory.getFlags().getUiDialogsFeatureEnabled()) {
-                                    if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
-                                        DialogFragmentManager.showOptOutDialogFragment(
-                                                mAdServicesSettingsMainActivity, mMainViewModel);
-                                    } else {
-                                        DialogManager.showOptOutDialog(
-                                                mAdServicesSettingsMainActivity, mMainViewModel);
-                                    }
-                                } else {
-                                    mMainViewModel.setConsent(false);
-                                }
-                                break;
                             case DISPLAY_APPS_FRAGMENT:
                                 UiStatsLogger.logManageAppsSelected();
                                 mAdServicesSettingsMainActivity.startActivity(
@@ -117,30 +98,7 @@ public class MainActionDelegate {
      * @param fragment the fragment to be initialized.
      */
     public void initMainFragment(AdServicesSettingsMainFragment fragment) {
-        // Hide the main toggle and the entry point of Measurement
-        // in Main page behind the GaUxFeature Flag
-
-        int[] betaLayout =
-                new int[] {
-                    R.id.main_switch_bar,
-                    R.id.above_pic_paragraph,
-                    R.id.main_view_pic,
-                    R.id.main_view_footer
-                };
-
-        int[] gaUxLayout = new int[] {R.id.main_view_ga_pic, R.id.main_view_ga_footer};
-
-        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
-            mAdServicesSettingsMainActivity.setTitle(R.string.settingsUI_main_view_ga_title);
-            setLayoutVisibility(betaLayout, View.GONE);
-            setLayoutVisibility(gaUxLayout, View.VISIBLE);
-        } else {
-            mAdServicesSettingsMainActivity.setTitle(R.string.settingsUI_main_view_title);
-            setLayoutVisibility(betaLayout, View.VISIBLE);
-            setLayoutVisibility(gaUxLayout, View.GONE);
-        }
-
-        configureConsentSwitch(fragment);
+        mAdServicesSettingsMainActivity.setTitle(R.string.settingsUI_main_view_ga_title);
         configureMeasurementButton(fragment);
         configureTopicsButton(fragment);
         configureAppsButton(fragment);
@@ -159,23 +117,6 @@ public class MainActionDelegate {
         for (int each : layoutList) {
             mAdServicesSettingsMainActivity.findViewById(each).setVisibility(visibility);
         }
-    }
-
-    private void configureConsentSwitch(AdServicesSettingsMainFragment fragment) {
-        MainSwitchBar mainSwitchBar =
-                mAdServicesSettingsMainActivity.findViewById(R.id.main_switch_bar);
-
-        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
-            mainSwitchBar.setVisibility(View.GONE);
-            return;
-        } else {
-            mainSwitchBar.setVisibility(View.VISIBLE);
-        }
-
-        mMainViewModel.getConsent().observe(fragment, mainSwitchBar::setChecked);
-
-        mainSwitchBar.setOnClickListener(
-                switchBar -> mMainViewModel.consentSwitchClickHandler((MainSwitchBar) switchBar));
     }
 
     private void configureTopicsButton(AdServicesSettingsMainFragment fragment) {

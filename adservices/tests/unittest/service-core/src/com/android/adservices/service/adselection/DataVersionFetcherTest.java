@@ -19,8 +19,7 @@ package com.android.adservices.service.adselection;
 import static android.adservices.adselection.CustomAudienceBiddingInfoFixture.DATA_VERSION_1;
 import static android.adservices.adselection.CustomAudienceBiddingInfoFixture.DATA_VERSION_2;
 
-import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_BIDDING_KEY;
-import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_SCORING_KEY;
+import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_KEY;
 import static com.android.adservices.service.adselection.DataVersionFetcher.MAX_UNSIGNED_8_BIT;
 import static com.android.adservices.service.adselection.DataVersionFetcher.getBuyerDataVersion;
 import static com.android.adservices.service.adselection.DataVersionFetcher.getSellerDataVersion;
@@ -30,8 +29,8 @@ import static org.junit.Assert.assertThrows;
 
 import android.net.Uri;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -55,13 +54,12 @@ public class DataVersionFetcherTest {
                             .setHeaders(
                                     new JSONObject(
                                             ImmutableMap.of(
-                                                    DATA_VERSION_HEADER_BIDDING_KEY,
+                                                    DATA_VERSION_HEADER_KEY,
                                                     List.of(DATA_VERSION_1))))
                             .build());
 
     public static final Map<String, List<String>> VALID_HEADERS_SELLER =
-            ImmutableMap.of(
-                    DATA_VERSION_HEADER_SCORING_KEY, List.of(Integer.toString(DATA_VERSION_1)));
+            ImmutableMap.of(DATA_VERSION_HEADER_KEY, List.of(Integer.toString(DATA_VERSION_1)));
 
     @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
@@ -88,7 +86,7 @@ public class DataVersionFetcherTest {
                                 .setHeaders(
                                         new JSONObject(
                                                 ImmutableMap.of(
-                                                        DATA_VERSION_HEADER_BIDDING_KEY,
+                                                        DATA_VERSION_HEADER_KEY,
                                                         List.of(DATA_VERSION_1, DATA_VERSION_2))))
                                 .build());
 
@@ -101,7 +99,7 @@ public class DataVersionFetcherTest {
     public void testGetSellerDataVersionHeaderTakesFirstOfMultipleValues() {
         Map<String, List<String>> headersMultipleValues =
                 ImmutableMap.of(
-                        DATA_VERSION_HEADER_SCORING_KEY,
+                        DATA_VERSION_HEADER_KEY,
                         List.of(
                                 Integer.toString(DATA_VERSION_1),
                                 Integer.toString(DATA_VERSION_2)));
@@ -131,7 +129,7 @@ public class DataVersionFetcherTest {
                                 .setHeaders(
                                         new JSONObject(
                                                 ImmutableMap.of(
-                                                        DATA_VERSION_HEADER_BIDDING_KEY,
+                                                        DATA_VERSION_HEADER_KEY,
                                                         List.of(DATA_VERSION_1))))
                                 .build());
 
@@ -175,9 +173,7 @@ public class DataVersionFetcherTest {
                                 .setBody(new JSONObject())
                                 .setHeaders(
                                         new JSONObject()
-                                                .put(
-                                                        DATA_VERSION_HEADER_BIDDING_KEY,
-                                                        DATA_VERSION_1))
+                                                .put(DATA_VERSION_HEADER_KEY, DATA_VERSION_1))
                                 .build());
         assertThrows(
                 IllegalStateException.class,
@@ -197,7 +193,7 @@ public class DataVersionFetcherTest {
                                 .setHeaders(
                                         new JSONObject(
                                                 ImmutableMap.of(
-                                                        DATA_VERSION_HEADER_BIDDING_KEY,
+                                                        DATA_VERSION_HEADER_KEY,
                                                         List.of("invalid"))))
                                 .build());
         assertThrows(
@@ -211,7 +207,7 @@ public class DataVersionFetcherTest {
     public void testGetSellerDataVersionHeaderThrowsExceptionWhenHeadersDoesNotParseIntoInt()
             throws Exception {
         Map<String, List<String>> headersWithNonIntValue =
-                ImmutableMap.of(DATA_VERSION_HEADER_SCORING_KEY, List.of("incorrectValue"));
+                ImmutableMap.of(DATA_VERSION_HEADER_KEY, List.of("incorrectValue"));
 
         assertThrows(
                 IllegalStateException.class, () -> getSellerDataVersion(headersWithNonIntValue));
@@ -228,7 +224,7 @@ public class DataVersionFetcherTest {
                                 .setHeaders(
                                         new JSONObject(
                                                 ImmutableMap.of(
-                                                        DATA_VERSION_HEADER_BIDDING_KEY,
+                                                        DATA_VERSION_HEADER_KEY,
                                                         List.of(MAX_UNSIGNED_8_BIT + 1))))
                                 .build());
         assertThrows(
@@ -243,8 +239,7 @@ public class DataVersionFetcherTest {
             throws Exception {
         Map<String, List<String>> headersWithExceedingIntValue =
                 ImmutableMap.of(
-                        DATA_VERSION_HEADER_SCORING_KEY,
-                        List.of(Integer.toString(MAX_UNSIGNED_8_BIT + 1)));
+                        DATA_VERSION_HEADER_KEY, List.of(Integer.toString(MAX_UNSIGNED_8_BIT + 1)));
 
         assertThrows(
                 IllegalStateException.class,
@@ -262,8 +257,7 @@ public class DataVersionFetcherTest {
                                 .setHeaders(
                                         new JSONObject(
                                                 ImmutableMap.of(
-                                                        DATA_VERSION_HEADER_BIDDING_KEY,
-                                                        List.of(-1))))
+                                                        DATA_VERSION_HEADER_KEY, List.of(-1))))
                                 .build());
         assertThrows(
                 IllegalStateException.class,
@@ -276,7 +270,7 @@ public class DataVersionFetcherTest {
     public void testGetSellerDataVersionHeaderThrowsExceptionWhenDataVersionIsNegative()
             throws Exception {
         Map<String, List<String>> headersWithNegativeIntValue =
-                ImmutableMap.of(DATA_VERSION_HEADER_SCORING_KEY, List.of(Integer.toString(-1)));
+                ImmutableMap.of(DATA_VERSION_HEADER_KEY, List.of(Integer.toString(-1)));
 
         assertThrows(
                 IllegalStateException.class,

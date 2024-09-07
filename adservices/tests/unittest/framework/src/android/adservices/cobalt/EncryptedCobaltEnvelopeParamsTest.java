@@ -24,7 +24,7 @@ import static org.junit.Assert.assertThrows;
 
 import android.os.Parcel;
 
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -55,6 +55,8 @@ public final class EncryptedCobaltEnvelopeParamsTest {
         assertThat(params.getEnvironment()).isEqualTo(ENVIRONMENT_PROD);
         assertThat(params.getKeyIndex()).isEqualTo(KEY_INDEX);
         assertThat(params.getCipherText()).isEqualTo(BYTES);
+        // No file descriptor marshalling.
+        assertThat(params.describeContents()).isEqualTo(0);
     }
 
     @Test
@@ -71,5 +73,7 @@ public final class EncryptedCobaltEnvelopeParamsTest {
         assertThat(outputParams.getEnvironment()).isEqualTo(ENVIRONMENT_PROD);
         assertThat(outputParams.getKeyIndex()).isEqualTo(KEY_INDEX);
         assertThat(outputParams.getCipherText()).isEqualTo(BYTES);
+        // No file descriptor marshalling.
+        assertThat(outputParams.describeContents()).isEqualTo(0);
     }
 }

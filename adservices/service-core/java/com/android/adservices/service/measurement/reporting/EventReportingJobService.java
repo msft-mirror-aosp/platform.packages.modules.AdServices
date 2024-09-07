@@ -66,7 +66,7 @@ public final class EventReportingJobService extends JobService {
             return skipAndCancelBackgroundJob(params, /* skipReason=*/ 0, /* doRecord=*/ false);
         }
 
-        AdServicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStartJob(MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID);
 
         if (FlagsFactory.getFlags().getMeasurementJobEventReportingKillSwitch()) {
@@ -83,7 +83,7 @@ public final class EventReportingJobService extends JobService {
                         () -> {
                             processPendingReports();
 
-                            AdServicesJobServiceLogger.getInstance(EventReportingJobService.this)
+                            AdServicesJobServiceLogger.getInstance()
                                     .recordJobFinished(
                                             MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID,
                                             /* isSuccessful= */ true,
@@ -127,7 +127,7 @@ public final class EventReportingJobService extends JobService {
         if (mExecutorFuture != null) {
             shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
         }
-        AdServicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStopJob(params, MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID, shouldRetry);
         return shouldRetry;
     }
@@ -191,7 +191,7 @@ public final class EventReportingJobService extends JobService {
         }
 
         if (doRecord) {
-            AdServicesJobServiceLogger.getInstance(this)
+            AdServicesJobServiceLogger.getInstance()
                     .recordJobSkipped(MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID, skipReason);
         }
 

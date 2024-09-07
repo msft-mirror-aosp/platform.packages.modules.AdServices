@@ -16,8 +16,12 @@
 
 package com.android.adservices.ohttp;
 
+import static com.android.adservices.service.adselection.encryption.AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION;
+
 import com.android.adservices.ohttp.algorithms.KemAlgorithmSpec;
 import com.android.adservices.ohttp.algorithms.UnsupportedHpkeAlgorithmException;
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.adselection.encryption.AdSelectionEncryptionKey;
 import com.android.internal.util.Preconditions;
 
 import com.google.auto.value.AutoValue;
@@ -37,7 +41,6 @@ public abstract class ObliviousHttpKeyConfig {
     private static int sKdfIdSizeInBytes = 2;
     private static int sAeadIdSizeInBytes = 2;
     private static int sSymmetricAlgorithmsLengthInBytes = 2;
-    private static String sOhttpReqLabel = "message/bhttp request";
 
     /** Returns the Key Identifier that tells the server which public key we are using */
     public abstract int keyId();
@@ -66,6 +69,29 @@ public abstract class ObliviousHttpKeyConfig {
     /** Returns the public key in byte array format */
     @SuppressWarnings("mutable")
     abstract byte[] publicKey();
+
+    /** Returns true if the changed format for the auction server media type should be used */
+    public static boolean useFledgeAuctionServerMediaTypeChange(
+            @AdSelectionEncryptionKey.AdSelectionEncryptionKeyType int keyType) {
+        return keyType == AUCTION
+                && FlagsFactory.getFlags().getFledgeAuctionServerMediaTypeChangeEnabled();
+    }
+
+    /** Returns the OhttpRequestLabel depending on the FledgeAuctionServerMediaType */
+    public static String getOhttpRequestLabel(boolean useFledgeAuctionServerMediaTypeChange) {
+        if (useFledgeAuctionServerMediaTypeChange) {
+            return "message/auction request";
+        }
+        return "message/bhttp request";
+    }
+
+    /** Returns the OhttpResponseLabel depending on the FledgeAuctionServerMediaType */
+    public static String getOhttpResponseLabel(boolean useFledgeAuctionServerMediaTypeChange) {
+        if (useFledgeAuctionServerMediaTypeChange) {
+            return "message/auction response";
+        }
+        return "message/bhttp response";
+    }
 
     /**
      * Parses the keyConfig into its respective components
@@ -166,13 +192,14 @@ public abstract class ObliviousHttpKeyConfig {
      *
      * <p>https://www.ietf.org/archive/id/draft-ietf-ohai-ohttp-03.html#name-hpke-encapsulation
      *
-     * <pre>info = concat(encode_str("message/bhttp request"),
+     * <pre>info = concat(encode_str("message/label request"),
      *             encode(1, 0),
      *             hdr)</pre>
      */
-    public RecipientKeyInfo createRecipientKeyInfo() throws IOException {
+    public RecipientKeyInfo createRecipientKeyInfo(boolean hasMediaTypeChanged) throws IOException {
 
-        byte[] ohttpReqLabelBytes = sOhttpReqLabel.getBytes(StandardCharsets.US_ASCII);
+        byte[] ohttpReqLabelBytes =
+                getOhttpRequestLabel(hasMediaTypeChanged).getBytes(StandardCharsets.US_ASCII);
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         outputStream.write(ohttpReqLabelBytes);
         outputStream.write((byte) 0);

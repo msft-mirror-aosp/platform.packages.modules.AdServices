@@ -15,26 +15,19 @@
  */
 package android.adservices.topics;
 
-import static com.google.common.truth.Truth.assertThat;
-
 import static org.junit.Assert.assertThrows;
 
-import androidx.test.filters.SmallTest;
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
-import com.android.adservices.common.SdkLevelSupportRule;
-
-import org.junit.Rule;
 import org.junit.Test;
 
 /** Unit tests for {@link GetTopicsParam} */
-@SmallTest
-public final class GetTopicsParamTest {
+@RequiresSdkLevelAtLeastS
+public final class GetTopicsParamTest extends AdServicesUnitTestCase {
     private static final String SOME_PACKAGE_NAME = "SomePackageName";
     private static final String SOME_SDK_NAME = "SomeSdkName";
     private static final String SOME_SDK_PACKAGE_NAME = "SomeSdkPackageName";
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void test_nonNull() {
@@ -46,34 +39,30 @@ public final class GetTopicsParamTest {
                         .setShouldRecordObservation(false)
                         .build();
 
-        assertThat(request.getSdkName()).isEqualTo(SOME_SDK_NAME);
-        assertThat(request.getSdkPackageName()).isEqualTo(SOME_SDK_PACKAGE_NAME);
-        assertThat(request.getAppPackageName()).isEqualTo(SOME_PACKAGE_NAME);
-        assertThat(request.shouldRecordObservation()).isEqualTo(false);
+        expect.that(request.getSdkName()).isEqualTo(SOME_SDK_NAME);
+        expect.that(request.getSdkPackageName()).isEqualTo(SOME_SDK_PACKAGE_NAME);
+        expect.that(request.getAppPackageName()).isEqualTo(SOME_PACKAGE_NAME);
+        expect.that(request.shouldRecordObservation()).isEqualTo(false);
     }
 
     @Test
     public void test_nullAppPackageName_throwsIllegalArgumentException() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> {
-                    GetTopicsParam unusedRequest =
-                            new GetTopicsParam.Builder()
-                                    // Not setting AppPackagename making it null.
-                                    .setSdkName(SOME_SDK_NAME)
-                                    .build();
-                });
+                () ->
+                        new GetTopicsParam.Builder()
+                                // Not setting AppPackageName making it null.
+                                .setSdkName(SOME_SDK_NAME)
+                                .build());
 
         // Null AppPackageName.
         assertThrows(
                 IllegalArgumentException.class,
-                () -> {
-                    GetTopicsParam unusedRequest =
-                            new GetTopicsParam.Builder()
-                                    .setAppPackageName(null)
-                                    .setSdkName(SOME_SDK_NAME)
-                                    .build();
-                });
+                () ->
+                        new GetTopicsParam.Builder()
+                                .setAppPackageName(null)
+                                .setSdkName(SOME_SDK_NAME)
+                                .build());
     }
 
     @Test
@@ -81,13 +70,11 @@ public final class GetTopicsParamTest {
         // Empty AppPackageName.
         assertThrows(
                 IllegalArgumentException.class,
-                () -> {
-                    GetTopicsParam unusedRequest =
-                            new GetTopicsParam.Builder()
-                                    .setAppPackageName("")
-                                    .setSdkName(SOME_SDK_NAME)
-                                    .build();
-                });
+                () ->
+                        new GetTopicsParam.Builder()
+                                .setAppPackageName("")
+                                .setSdkName(SOME_SDK_NAME)
+                                .build());
     }
 
     @Test
@@ -99,10 +86,10 @@ public final class GetTopicsParamTest {
                         .setSdkPackageName(SOME_SDK_PACKAGE_NAME)
                         .build();
 
-        assertThat(request.getSdkName()).isEqualTo(SOME_SDK_NAME);
-        assertThat(request.getSdkPackageName()).isEqualTo(SOME_SDK_PACKAGE_NAME);
-        assertThat(request.getAppPackageName()).isEqualTo(SOME_PACKAGE_NAME);
+        expect.that(request.getSdkName()).isEqualTo(SOME_SDK_NAME);
+        expect.that(request.getSdkPackageName()).isEqualTo(SOME_SDK_PACKAGE_NAME);
+        expect.that(request.getAppPackageName()).isEqualTo(SOME_PACKAGE_NAME);
         // Not setting RecordObservation will get default value.
-        assertThat(request.shouldRecordObservation()).isTrue();
+        expect.that(request.shouldRecordObservation()).isTrue();
     }
 }

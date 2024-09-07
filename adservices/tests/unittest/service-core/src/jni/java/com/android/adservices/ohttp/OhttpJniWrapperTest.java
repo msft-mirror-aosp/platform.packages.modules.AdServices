@@ -18,15 +18,24 @@ package com.android.adservices.ohttp;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
+import com.android.modules.utils.testing.ExtendedMockitoRule;
+
 import com.google.common.io.BaseEncoding;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 
-public class OhttpJniWrapperTest {
+@ExtendedMockitoRule.SpyStatic(FlagsFactory.class)
+public class OhttpJniWrapperTest extends AdServicesExtendedMockitoTestCase {
+    @Mock private Flags mMockFlags;
 
     private static final String SERVER_PUBLIC_KEY =
             "6d21cfe09fbea5122f9ebc2eb2a69fcc4f06408cd54aac934f012e76fcdcef62";
@@ -37,6 +46,11 @@ public class OhttpJniWrapperTest {
     private static final String KEM_SEED = "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww";
 
     private final OhttpJniWrapper mOhttpJniWrapper = OhttpJniWrapper.getInstance();
+
+    @Before
+    public void setExpectations() {
+        mocker.mockGetFlags(mMockFlags);
+    }
 
     @Test
     public void hpkeKemDhkemX25519HkdfSha256_success_nonZeroReference() {
@@ -65,12 +79,13 @@ public class OhttpJniWrapperTest {
 
     @Test
     public void hpkeCtxSetupSenderWithSeed_returnsCorrectSharedSecret() throws Exception {
+        boolean hasMediaTypeChanged = false;
         KemNativeRef kem = KemNativeRef.getHpkeKemDhkemX25519HkdfSha256Reference();
         KdfNativeRef kdf = KdfNativeRef.getHpkeKdfHkdfSha256Reference();
         AeadNativeRef aead = AeadNativeRef.getHpkeAeadAes256GcmReference();
         HpkeContextNativeRef evpCtxSender = HpkeContextNativeRef.createHpkeContextReference();
         byte[] seedBytes = KEM_SEED.getBytes(StandardCharsets.US_ASCII);
-        byte[] recipientKeyInfoBytes = createRecipientKeyInfoBytes();
+        byte[] recipientKeyInfoBytes = createRecipientKeyInfoBytes(hasMediaTypeChanged);
         byte[] keyBytes = BaseEncoding.base16().lowerCase().decode(SERVER_PUBLIC_KEY);
 
         EncapsulatedSharedSecret enc =
@@ -78,18 +93,41 @@ public class OhttpJniWrapperTest {
                         evpCtxSender, kem, kdf, aead, keyBytes, recipientKeyInfoBytes, seedBytes);
 
         Assert.assertEquals(
-                BaseEncoding.base16().lowerCase().encode(enc.getBytes()),
-                "1cf579aba45a10ba1d1ef06d91fca2aa9ed0a1150515653155405d0b18cb9a67");
+                "1cf579aba45a10ba1d1ef06d91fca2aa9ed0a1150515653155405d0b18cb9a67",
+                BaseEncoding.base16().lowerCase().encode(enc.getBytes()));
     }
 
     @Test
-    public void hpkeEncrypt_returnsCorrectResponse() throws Exception {
+    public void
+            hpkeCtxSetupSenderWithSeed_returnsCorrectSharedSecret_withServerAuctionMediaTypeChange()
+                    throws Exception {
+        boolean hasMediaTypeChanged = true;
         KemNativeRef kem = KemNativeRef.getHpkeKemDhkemX25519HkdfSha256Reference();
         KdfNativeRef kdf = KdfNativeRef.getHpkeKdfHkdfSha256Reference();
         AeadNativeRef aead = AeadNativeRef.getHpkeAeadAes256GcmReference();
         HpkeContextNativeRef evpCtxSender = HpkeContextNativeRef.createHpkeContextReference();
         byte[] seedBytes = KEM_SEED.getBytes(StandardCharsets.US_ASCII);
-        byte[] recipientKeyInfoBytes = createRecipientKeyInfoBytes();
+        byte[] recipientKeyInfoBytes = createRecipientKeyInfoBytes(hasMediaTypeChanged);
+        byte[] keyBytes = BaseEncoding.base16().lowerCase().decode(SERVER_PUBLIC_KEY);
+
+        EncapsulatedSharedSecret enc =
+                mOhttpJniWrapper.hpkeCtxSetupSenderWithSeed(
+                        evpCtxSender, kem, kdf, aead, keyBytes, recipientKeyInfoBytes, seedBytes);
+
+        Assert.assertEquals(
+                "1cf579aba45a10ba1d1ef06d91fca2aa9ed0a1150515653155405d0b18cb9a67",
+                BaseEncoding.base16().lowerCase().encode(enc.getBytes()));
+    }
+
+    @Test
+    public void hpkeEncrypt_returnsCorrectResponse() throws Exception {
+        boolean hasMediaTypeChanged = false;
+        KemNativeRef kem = KemNativeRef.getHpkeKemDhkemX25519HkdfSha256Reference();
+        KdfNativeRef kdf = KdfNativeRef.getHpkeKdfHkdfSha256Reference();
+        AeadNativeRef aead = AeadNativeRef.getHpkeAeadAes256GcmReference();
+        HpkeContextNativeRef evpCtxSender = HpkeContextNativeRef.createHpkeContextReference();
+        byte[] seedBytes = KEM_SEED.getBytes(StandardCharsets.US_ASCII);
+        byte[] recipientKeyInfoBytes = createRecipientKeyInfoBytes(hasMediaTypeChanged);
         byte[] keyBytes = BaseEncoding.base16().lowerCase().decode(SERVER_PUBLIC_KEY);
         String plainText = "test request 1";
         byte[] plainTextBytes = plainText.getBytes(StandardCharsets.US_ASCII);
@@ -109,23 +147,62 @@ public class OhttpJniWrapperTest {
                         null);
 
         Assert.assertEquals(
+                "1cf579aba45a10ba1d1ef06d91fca2aa9ed0a1150515653155405d0b18cb9a67",
                 BaseEncoding.base16()
                         .lowerCase()
-                        .encode(response.encapsulatedSharedSecret().getBytes()),
-                "1cf579aba45a10ba1d1ef06d91fca2aa9ed0a1150515653155405d0b18cb9a67");
+                        .encode(response.encapsulatedSharedSecret().getBytes()));
         Assert.assertEquals(
-                BaseEncoding.base16().lowerCase().encode(response.cipherText()),
-                "2ef2da3b97acee493624b9959f0fc6df008a6f0701c923c5a60ed0ed2c34");
+                "2ef2da3b97acee493624b9959f0fc6df008a6f0701c923c5a60ed0ed2c34",
+                BaseEncoding.base16().lowerCase().encode(response.cipherText()));
     }
 
     @Test
-    public void hpkeEncrypt_emptyPlainText_returnsNullCipherText() throws Exception {
+    public void hpkeEncrypt_returnsCorrectResponse_withServerAuctionMediaTypeChange()
+            throws Exception {
+        boolean hasMediaTypeChanged = true;
         KemNativeRef kem = KemNativeRef.getHpkeKemDhkemX25519HkdfSha256Reference();
         KdfNativeRef kdf = KdfNativeRef.getHpkeKdfHkdfSha256Reference();
         AeadNativeRef aead = AeadNativeRef.getHpkeAeadAes256GcmReference();
         HpkeContextNativeRef evpCtxSender = HpkeContextNativeRef.createHpkeContextReference();
         byte[] seedBytes = KEM_SEED.getBytes(StandardCharsets.US_ASCII);
-        byte[] recipientKeyInfoBytes = createRecipientKeyInfoBytes();
+        byte[] recipientKeyInfoBytes = createRecipientKeyInfoBytes(hasMediaTypeChanged);
+        byte[] keyBytes = BaseEncoding.base16().lowerCase().decode(SERVER_PUBLIC_KEY);
+        String plainText = "test request 1";
+        byte[] plainTextBytes = plainText.getBytes(StandardCharsets.US_ASCII);
+
+        mOhttpJniWrapper.hpkeCtxSetupSenderWithSeed(
+                evpCtxSender, kem, kdf, aead, keyBytes, recipientKeyInfoBytes, seedBytes);
+        HpkeEncryptResponse response =
+                mOhttpJniWrapper.hpkeEncrypt(
+                        evpCtxSender,
+                        kem,
+                        kdf,
+                        aead,
+                        keyBytes,
+                        recipientKeyInfoBytes,
+                        seedBytes,
+                        plainTextBytes,
+                        null);
+
+        Assert.assertEquals(
+                "1cf579aba45a10ba1d1ef06d91fca2aa9ed0a1150515653155405d0b18cb9a67",
+                BaseEncoding.base16()
+                        .lowerCase()
+                        .encode(response.encapsulatedSharedSecret().getBytes()));
+        Assert.assertEquals(
+                "70fbc40afc43d174f4b43cad7157d7b82b42f00aba7333d5f6c998918cca",
+                BaseEncoding.base16().lowerCase().encode(response.cipherText()));
+    }
+
+    @Test
+    public void hpkeEncrypt_emptyPlainText_returnsNullCipherText() throws Exception {
+        boolean hasMediaTypeChanged = false;
+        KemNativeRef kem = KemNativeRef.getHpkeKemDhkemX25519HkdfSha256Reference();
+        KdfNativeRef kdf = KdfNativeRef.getHpkeKdfHkdfSha256Reference();
+        AeadNativeRef aead = AeadNativeRef.getHpkeAeadAes256GcmReference();
+        HpkeContextNativeRef evpCtxSender = HpkeContextNativeRef.createHpkeContextReference();
+        byte[] seedBytes = KEM_SEED.getBytes(StandardCharsets.US_ASCII);
+        byte[] recipientKeyInfoBytes = createRecipientKeyInfoBytes(hasMediaTypeChanged);
         byte[] keyBytes = BaseEncoding.base16().lowerCase().decode(SERVER_PUBLIC_KEY);
 
         mOhttpJniWrapper.hpkeCtxSetupSenderWithSeed(
@@ -143,21 +220,82 @@ public class OhttpJniWrapperTest {
                         null);
 
         Assert.assertEquals(
+                "1cf579aba45a10ba1d1ef06d91fca2aa9ed0a1150515653155405d0b18cb9a67",
                 BaseEncoding.base16()
                         .lowerCase()
-                        .encode(response.encapsulatedSharedSecret().getBytes()),
-                "1cf579aba45a10ba1d1ef06d91fca2aa9ed0a1150515653155405d0b18cb9a67");
+                        .encode(response.encapsulatedSharedSecret().getBytes()));
+        Assert.assertNull(response.cipherText());
+    }
+
+    @Test
+    public void hpkeEncrypt_emptyPlainText_returnsNullCipherText_withServerAuctionMediaTypeChange()
+            throws Exception {
+        boolean hasMediaTypeChanged = true;
+        KemNativeRef kem = KemNativeRef.getHpkeKemDhkemX25519HkdfSha256Reference();
+        KdfNativeRef kdf = KdfNativeRef.getHpkeKdfHkdfSha256Reference();
+        AeadNativeRef aead = AeadNativeRef.getHpkeAeadAes256GcmReference();
+        HpkeContextNativeRef evpCtxSender = HpkeContextNativeRef.createHpkeContextReference();
+        byte[] seedBytes = KEM_SEED.getBytes(StandardCharsets.US_ASCII);
+        byte[] recipientKeyInfoBytes = createRecipientKeyInfoBytes(hasMediaTypeChanged);
+        byte[] keyBytes = BaseEncoding.base16().lowerCase().decode(SERVER_PUBLIC_KEY);
+
+        mOhttpJniWrapper.hpkeCtxSetupSenderWithSeed(
+                evpCtxSender, kem, kdf, aead, keyBytes, recipientKeyInfoBytes, seedBytes);
+        HpkeEncryptResponse response =
+                mOhttpJniWrapper.hpkeEncrypt(
+                        evpCtxSender,
+                        kem,
+                        kdf,
+                        aead,
+                        keyBytes,
+                        recipientKeyInfoBytes,
+                        seedBytes,
+                        null,
+                        null);
+
+        Assert.assertEquals(
+                "1cf579aba45a10ba1d1ef06d91fca2aa9ed0a1150515653155405d0b18cb9a67",
+                BaseEncoding.base16()
+                        .lowerCase()
+                        .encode(response.encapsulatedSharedSecret().getBytes()));
         Assert.assertNull(response.cipherText());
     }
 
     @Test
     public void hpkeCtxSetupSenderWithSeed_nullContext_throwsException() throws Exception {
+        boolean hasMediaTypeChanged = false;
         KemNativeRef kem = KemNativeRef.getHpkeKemDhkemX25519HkdfSha256Reference();
         KdfNativeRef kdf = KdfNativeRef.getHpkeKdfHkdfSha256Reference();
         AeadNativeRef aead = AeadNativeRef.getHpkeAeadAes256GcmReference();
         HpkeContextNativeRef evpCtxSender = null;
         byte[] seedBytes = KEM_SEED.getBytes(StandardCharsets.US_ASCII);
-        byte[] recipientKeyInfoBytes = createRecipientKeyInfoBytes();
+        byte[] recipientKeyInfoBytes = createRecipientKeyInfoBytes(hasMediaTypeChanged);
+        byte[] keyBytes = BaseEncoding.base16().lowerCase().decode(SERVER_PUBLIC_KEY);
+
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        mOhttpJniWrapper.hpkeCtxSetupSenderWithSeed(
+                                evpCtxSender,
+                                kem,
+                                kdf,
+                                aead,
+                                keyBytes,
+                                recipientKeyInfoBytes,
+                                seedBytes));
+    }
+
+    @Test
+    public void
+            hpkeCtxSetupSenderWithSeed_nullContext_throwsException_withServerAuctionMediaChange()
+                    throws Exception {
+        boolean hasMediaTypeChanged = true;
+        KemNativeRef kem = KemNativeRef.getHpkeKemDhkemX25519HkdfSha256Reference();
+        KdfNativeRef kdf = KdfNativeRef.getHpkeKdfHkdfSha256Reference();
+        AeadNativeRef aead = AeadNativeRef.getHpkeAeadAes256GcmReference();
+        HpkeContextNativeRef evpCtxSender = null;
+        byte[] seedBytes = KEM_SEED.getBytes(StandardCharsets.US_ASCII);
+        byte[] recipientKeyInfoBytes = createRecipientKeyInfoBytes(hasMediaTypeChanged);
         byte[] keyBytes = BaseEncoding.base16().lowerCase().decode(SERVER_PUBLIC_KEY);
 
         assertThrows(
@@ -175,12 +313,39 @@ public class OhttpJniWrapperTest {
 
     @Test
     public void hpkeCtxSetupSenderWithSeed_emptyPublicKey_throwsException() throws Exception {
+        boolean hasMediaTypeChanged = false;
         KemNativeRef kem = KemNativeRef.getHpkeKemDhkemX25519HkdfSha256Reference();
         KdfNativeRef kdf = KdfNativeRef.getHpkeKdfHkdfSha256Reference();
         AeadNativeRef aead = AeadNativeRef.getHpkeAeadAes256GcmReference();
         HpkeContextNativeRef evpCtxSender = HpkeContextNativeRef.createHpkeContextReference();
         byte[] seedBytes = KEM_SEED.getBytes(StandardCharsets.US_ASCII);
-        byte[] recipientKeyInfoBytes = createRecipientKeyInfoBytes();
+        byte[] recipientKeyInfoBytes = createRecipientKeyInfoBytes(hasMediaTypeChanged);
+        byte[] keyBytes = null;
+
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        mOhttpJniWrapper.hpkeCtxSetupSenderWithSeed(
+                                evpCtxSender,
+                                kem,
+                                kdf,
+                                aead,
+                                keyBytes,
+                                recipientKeyInfoBytes,
+                                seedBytes));
+    }
+
+    @Test
+    public void
+            hpkeCtxSetupSenderWithSeed_emptyPublicKey_throwsException_withServerAuctionMediaChange()
+                    throws Exception {
+        boolean hasMediaTypeChanged = true;
+        KemNativeRef kem = KemNativeRef.getHpkeKemDhkemX25519HkdfSha256Reference();
+        KdfNativeRef kdf = KdfNativeRef.getHpkeKdfHkdfSha256Reference();
+        AeadNativeRef aead = AeadNativeRef.getHpkeAeadAes256GcmReference();
+        HpkeContextNativeRef evpCtxSender = HpkeContextNativeRef.createHpkeContextReference();
+        byte[] seedBytes = KEM_SEED.getBytes(StandardCharsets.US_ASCII);
+        byte[] recipientKeyInfoBytes = createRecipientKeyInfoBytes(hasMediaTypeChanged);
         byte[] keyBytes = null;
 
         assertThrows(
@@ -198,13 +363,35 @@ public class OhttpJniWrapperTest {
 
     @Test
     public void hpkeCtxSetupSenderWithSeed_invalidPublicKey_returnsNullArray() throws Exception {
+        boolean hasMediaTypeChanged = false;
         KemNativeRef kem = KemNativeRef.getHpkeKemDhkemX25519HkdfSha256Reference();
         KdfNativeRef kdf = KdfNativeRef.getHpkeKdfHkdfSha256Reference();
         AeadNativeRef aead = AeadNativeRef.getHpkeAeadAes256GcmReference();
         HpkeContextNativeRef evpCtxSender = HpkeContextNativeRef.createHpkeContextReference();
         String serverPublicKey = "abcd";
         byte[] seedBytes = KEM_SEED.getBytes(StandardCharsets.US_ASCII);
-        byte[] recipientKeyInfoBytes = createRecipientKeyInfoBytes();
+        byte[] recipientKeyInfoBytes = createRecipientKeyInfoBytes(hasMediaTypeChanged);
+        byte[] keyBytes = BaseEncoding.base16().lowerCase().decode(serverPublicKey);
+
+        EncapsulatedSharedSecret enc =
+                mOhttpJniWrapper.hpkeCtxSetupSenderWithSeed(
+                        evpCtxSender, kem, kdf, aead, keyBytes, recipientKeyInfoBytes, seedBytes);
+
+        Assert.assertNull(enc.getBytes());
+    }
+
+    @Test
+    public void
+            hpkeCtxSetupSenderWithSeed_invalidPublicKey_returnsNullArray_withServerAuctionMedia()
+                    throws Exception {
+        boolean hasMediaTypeChanged = true;
+        KemNativeRef kem = KemNativeRef.getHpkeKemDhkemX25519HkdfSha256Reference();
+        KdfNativeRef kdf = KdfNativeRef.getHpkeKdfHkdfSha256Reference();
+        AeadNativeRef aead = AeadNativeRef.getHpkeAeadAes256GcmReference();
+        HpkeContextNativeRef evpCtxSender = HpkeContextNativeRef.createHpkeContextReference();
+        String serverPublicKey = "abcd";
+        byte[] seedBytes = KEM_SEED.getBytes(StandardCharsets.US_ASCII);
+        byte[] recipientKeyInfoBytes = createRecipientKeyInfoBytes(hasMediaTypeChanged);
         byte[] keyBytes = BaseEncoding.base16().lowerCase().decode(serverPublicKey);
 
         EncapsulatedSharedSecret enc =
@@ -216,16 +403,35 @@ public class OhttpJniWrapperTest {
 
     @Test
     public void hpkeExport_returnsCorrectSecret() throws Exception {
+        boolean hasMediaTypeChanged = false;
         HpkeContextNativeRef evpCtxSender = setupAndGetHpkeContext();
-        String label = "message/bhttp response";
-        byte[] labelBytes = label.getBytes(StandardCharsets.US_ASCII);
+        byte[] labelBytes =
+                ObliviousHttpKeyConfig.getOhttpResponseLabel(hasMediaTypeChanged)
+                        .getBytes(StandardCharsets.US_ASCII);
 
         HpkeExportResponse hpkeExportedSecret =
                 mOhttpJniWrapper.hpkeExport(evpCtxSender, labelBytes, 32);
 
         Assert.assertEquals(
-                BaseEncoding.base16().lowerCase().encode(hpkeExportedSecret.getBytes()),
-                "3b8795c1fdb196febef3c9ab31bd9d7d55c63c828feeb686c2233e90c1d440d4");
+                "3b8795c1fdb196febef3c9ab31bd9d7d55c63c828feeb686c2233e90c1d440d4",
+                BaseEncoding.base16().lowerCase().encode(hpkeExportedSecret.getBytes()));
+    }
+
+    @Test
+    public void hpkeExport_returnsCorrectSecret_withServerAuctionMediaTypeChange()
+            throws Exception {
+        boolean hasMediaTypeChanged = true;
+        HpkeContextNativeRef evpCtxSender = setupAndGetHpkeContext();
+        byte[] labelBytes =
+                ObliviousHttpKeyConfig.getOhttpResponseLabel(hasMediaTypeChanged)
+                        .getBytes(StandardCharsets.US_ASCII);
+
+        HpkeExportResponse hpkeExportedSecret =
+                mOhttpJniWrapper.hpkeExport(evpCtxSender, labelBytes, 32);
+
+        Assert.assertEquals(
+                "3657435a70941e1de741b8f2203adb282bcf81f8337960d51d43784fc14ebed4",
+                BaseEncoding.base16().lowerCase().encode(hpkeExportedSecret.getBytes()));
     }
 
     @Test
@@ -247,8 +453,8 @@ public class OhttpJniWrapperTest {
                         salt);
 
         Assert.assertEquals(
-                BaseEncoding.base16().lowerCase().encode(extract.getBytes()),
-                "095b6f1ef722296230a76445694d7d1f7017f541732915bc1034af039e18abf0");
+                "095b6f1ef722296230a76445694d7d1f7017f541732915bc1034af039e18abf0",
+                BaseEncoding.base16().lowerCase().encode(extract.getBytes()));
     }
 
     @Test
@@ -267,8 +473,8 @@ public class OhttpJniWrapperTest {
                         32);
 
         Assert.assertEquals(
-                BaseEncoding.base16().lowerCase().encode(expandedKey.getBytes()),
-                "373975f067d2ba1afb5ef6183715ab36f9a61e6d9a405a1b080a3afdc127258a");
+                "373975f067d2ba1afb5ef6183715ab36f9a61e6d9a405a1b080a3afdc127258a",
+                BaseEncoding.base16().lowerCase().encode(expandedKey.getBytes()));
     }
 
     @Test
@@ -313,20 +519,65 @@ public class OhttpJniWrapperTest {
                         cipherText);
 
         Assert.assertEquals(
-                BaseEncoding.base16().lowerCase().encode(plainText),
-                "7465737420726573706f6e73652031");
+                "7465737420726573706f6e73652031",
+                BaseEncoding.base16().lowerCase().encode(plainText));
     }
 
     @Test
     public void hpkeSetupRecipient_missingkey_throwsError() throws Exception {
-
+        boolean hasMediaTypeChanged = false;
         KemNativeRef kem = KemNativeRef.getHpkeKemDhkemX25519HkdfSha256Reference();
         KdfNativeRef kdf = KdfNativeRef.getHpkeKdfHkdfSha256Reference();
         AeadNativeRef aead = AeadNativeRef.getHpkeAeadAes256GcmReference();
         HpkeContextNativeRef evpCtxSender = HpkeContextNativeRef.createHpkeContextReference();
 
         byte[] seedBytes = KEM_SEED.getBytes(StandardCharsets.US_ASCII);
-        byte[] recipientKeyInfoBytes = createRecipientKeyInfoBytes();
+        byte[] recipientKeyInfoBytes = createRecipientKeyInfoBytes(hasMediaTypeChanged);
+        byte[] keyBytes = BaseEncoding.base16().lowerCase().decode(SERVER_PUBLIC_KEY);
+        String plainText = "test request 1";
+        byte[] plainTextBytes = plainText.getBytes(StandardCharsets.US_ASCII);
+
+        mOhttpJniWrapper.hpkeCtxSetupSenderWithSeed(
+                evpCtxSender, kem, kdf, aead, keyBytes, recipientKeyInfoBytes, seedBytes);
+        HpkeEncryptResponse response =
+                mOhttpJniWrapper.hpkeEncrypt(
+                        evpCtxSender,
+                        kem,
+                        kdf,
+                        aead,
+                        keyBytes,
+                        recipientKeyInfoBytes,
+                        seedBytes,
+                        plainTextBytes,
+                        null);
+
+        byte[] privateKeyBytes = BaseEncoding.base16().lowerCase().decode("3b");
+
+        HpkeContextNativeRef evpCtxRecipient = HpkeContextNativeRef.createHpkeContextReference();
+        assertThrows(
+                IllegalStateException.class,
+                () ->
+                        mOhttpJniWrapper.hpkeSetupRecipient(
+                                evpCtxRecipient,
+                                kem,
+                                kdf,
+                                aead,
+                                OhttpGatewayPrivateKey.create(privateKeyBytes),
+                                response.encapsulatedSharedSecret(),
+                                RecipientKeyInfo.create(recipientKeyInfoBytes)));
+    }
+
+    @Test
+    public void hpkeSetupRecipient_missingkey_throwsError_withServerAuctionMediaTypeChange()
+            throws Exception {
+        boolean hasMediaTypeChanged = true;
+        KemNativeRef kem = KemNativeRef.getHpkeKemDhkemX25519HkdfSha256Reference();
+        KdfNativeRef kdf = KdfNativeRef.getHpkeKdfHkdfSha256Reference();
+        AeadNativeRef aead = AeadNativeRef.getHpkeAeadAes256GcmReference();
+        HpkeContextNativeRef evpCtxSender = HpkeContextNativeRef.createHpkeContextReference();
+
+        byte[] seedBytes = KEM_SEED.getBytes(StandardCharsets.US_ASCII);
+        byte[] recipientKeyInfoBytes = createRecipientKeyInfoBytes(hasMediaTypeChanged);
         byte[] keyBytes = BaseEncoding.base16().lowerCase().decode(SERVER_PUBLIC_KEY);
         String plainText = "test request 1";
         byte[] plainTextBytes = plainText.getBytes(StandardCharsets.US_ASCII);
@@ -363,13 +614,55 @@ public class OhttpJniWrapperTest {
 
     @Test
     public void hpkeSetupRecipient_successful() throws Exception {
+        boolean hasMediaTypeChanged = false;
         KemNativeRef kem = KemNativeRef.getHpkeKemDhkemX25519HkdfSha256Reference();
         KdfNativeRef kdf = KdfNativeRef.getHpkeKdfHkdfSha256Reference();
         AeadNativeRef aead = AeadNativeRef.getHpkeAeadAes256GcmReference();
         HpkeContextNativeRef evpCtxSender = HpkeContextNativeRef.createHpkeContextReference();
 
         byte[] seedBytes = KEM_SEED.getBytes(StandardCharsets.US_ASCII);
-        byte[] recipientKeyInfoBytes = createRecipientKeyInfoBytes();
+        byte[] recipientKeyInfoBytes = createRecipientKeyInfoBytes(hasMediaTypeChanged);
+        byte[] keyBytes = BaseEncoding.base16().lowerCase().decode(SERVER_PUBLIC_KEY);
+        String plainText = "test request 1";
+        byte[] plainTextBytes = plainText.getBytes(StandardCharsets.US_ASCII);
+
+        mOhttpJniWrapper.hpkeCtxSetupSenderWithSeed(
+                evpCtxSender, kem, kdf, aead, keyBytes, recipientKeyInfoBytes, seedBytes);
+        HpkeEncryptResponse response =
+                mOhttpJniWrapper.hpkeEncrypt(
+                        evpCtxSender,
+                        kem,
+                        kdf,
+                        aead,
+                        keyBytes,
+                        recipientKeyInfoBytes,
+                        seedBytes,
+                        plainTextBytes,
+                        null);
+
+        byte[] privateKeyBytes = BaseEncoding.base16().lowerCase().decode(SERVER_PRIVATE_KEY);
+        HpkeContextNativeRef evpCtxRecipient = HpkeContextNativeRef.createHpkeContextReference();
+        assertTrue(
+                mOhttpJniWrapper.hpkeSetupRecipient(
+                        evpCtxRecipient,
+                        kem,
+                        kdf,
+                        aead,
+                        OhttpGatewayPrivateKey.create(privateKeyBytes),
+                        response.encapsulatedSharedSecret(),
+                        RecipientKeyInfo.create(recipientKeyInfoBytes)));
+    }
+
+    @Test
+    public void hpkeSetupRecipient_successful_withServerAuctionMediaTypeChange() throws Exception {
+        boolean hasMediaTypeChanged = true;
+        KemNativeRef kem = KemNativeRef.getHpkeKemDhkemX25519HkdfSha256Reference();
+        KdfNativeRef kdf = KdfNativeRef.getHpkeKdfHkdfSha256Reference();
+        AeadNativeRef aead = AeadNativeRef.getHpkeAeadAes256GcmReference();
+        HpkeContextNativeRef evpCtxSender = HpkeContextNativeRef.createHpkeContextReference();
+
+        byte[] seedBytes = KEM_SEED.getBytes(StandardCharsets.US_ASCII);
+        byte[] recipientKeyInfoBytes = createRecipientKeyInfoBytes(hasMediaTypeChanged);
         byte[] keyBytes = BaseEncoding.base16().lowerCase().decode(SERVER_PUBLIC_KEY);
         String plainText = "test request 1";
         byte[] plainTextBytes = plainText.getBytes(StandardCharsets.US_ASCII);
@@ -403,13 +696,14 @@ public class OhttpJniWrapperTest {
 
     @Test
     public void gatewayDecrypt_returnsCorrectResponse() throws Exception {
+        boolean hasMediaTypeChanged = false;
         KemNativeRef kem = KemNativeRef.getHpkeKemDhkemX25519HkdfSha256Reference();
         KdfNativeRef kdf = KdfNativeRef.getHpkeKdfHkdfSha256Reference();
         AeadNativeRef aead = AeadNativeRef.getHpkeAeadAes256GcmReference();
         HpkeContextNativeRef evpCtxSender = HpkeContextNativeRef.createHpkeContextReference();
 
         byte[] seedBytes = KEM_SEED.getBytes(StandardCharsets.US_ASCII);
-        byte[] recipientKeyInfoBytes = createRecipientKeyInfoBytes();
+        byte[] recipientKeyInfoBytes = createRecipientKeyInfoBytes(hasMediaTypeChanged);
         byte[] keyBytes = BaseEncoding.base16().lowerCase().decode(SERVER_PUBLIC_KEY);
         String plainText = "test request 1";
         byte[] plainTextBytes = plainText.getBytes(StandardCharsets.US_ASCII);
@@ -444,7 +738,55 @@ public class OhttpJniWrapperTest {
 
         String unencryptedText = new String(decryptResponse.getBytes(), StandardCharsets.US_ASCII);
 
-        Assert.assertEquals(unencryptedText, plainText);
+        Assert.assertEquals(plainText, unencryptedText);
+    }
+
+    @Test
+    public void gatewayDecrypt_returnsCorrectResponse_withServerAuctionMediaTypeChange()
+            throws Exception {
+        boolean hasMediaTypeChanged = true;
+        KemNativeRef kem = KemNativeRef.getHpkeKemDhkemX25519HkdfSha256Reference();
+        KdfNativeRef kdf = KdfNativeRef.getHpkeKdfHkdfSha256Reference();
+        AeadNativeRef aead = AeadNativeRef.getHpkeAeadAes256GcmReference();
+        HpkeContextNativeRef evpCtxSender = HpkeContextNativeRef.createHpkeContextReference();
+
+        byte[] seedBytes = KEM_SEED.getBytes(StandardCharsets.US_ASCII);
+        byte[] recipientKeyInfoBytes = createRecipientKeyInfoBytes(hasMediaTypeChanged);
+        byte[] keyBytes = BaseEncoding.base16().lowerCase().decode(SERVER_PUBLIC_KEY);
+        String plainText = "test request 1";
+        byte[] plainTextBytes = plainText.getBytes(StandardCharsets.US_ASCII);
+
+        mOhttpJniWrapper.hpkeCtxSetupSenderWithSeed(
+                evpCtxSender, kem, kdf, aead, keyBytes, recipientKeyInfoBytes, seedBytes);
+        HpkeEncryptResponse response =
+                mOhttpJniWrapper.hpkeEncrypt(
+                        evpCtxSender,
+                        kem,
+                        kdf,
+                        aead,
+                        keyBytes,
+                        recipientKeyInfoBytes,
+                        seedBytes,
+                        plainTextBytes,
+                        null);
+
+        byte[] privateKeyBytes = BaseEncoding.base16().lowerCase().decode(SERVER_PRIVATE_KEY);
+        HpkeContextNativeRef evpCtxRecipient = HpkeContextNativeRef.createHpkeContextReference();
+        mOhttpJniWrapper.hpkeSetupRecipient(
+                evpCtxRecipient,
+                kem,
+                kdf,
+                aead,
+                OhttpGatewayPrivateKey.create(privateKeyBytes),
+                response.encapsulatedSharedSecret(),
+                RecipientKeyInfo.create(recipientKeyInfoBytes));
+        GatewayDecryptResponse decryptResponse =
+                mOhttpJniWrapper.gatewayDecrypt(
+                        evpCtxRecipient, kem, kdf, aead, response.cipherText());
+
+        String unencryptedText = new String(decryptResponse.getBytes(), StandardCharsets.US_ASCII);
+
+        Assert.assertEquals(plainText, unencryptedText);
     }
 
     private HpkeContextNativeRef setupAndGetHpkeContext() throws Exception {
@@ -453,7 +795,7 @@ public class OhttpJniWrapperTest {
         AeadNativeRef aead = AeadNativeRef.getHpkeAeadAes256GcmReference();
         HpkeContextNativeRef evpCtxSender = HpkeContextNativeRef.createHpkeContextReference();
         byte[] seedBytes = KEM_SEED.getBytes(StandardCharsets.US_ASCII);
-        byte[] recipientKeyInfoBytes = createRecipientKeyInfoBytes();
+        byte[] recipientKeyInfoBytes = createRecipientKeyInfoBytes(false);
         byte[] keyBytes = BaseEncoding.base16().lowerCase().decode(SERVER_PUBLIC_KEY);
 
         mOhttpJniWrapper.hpkeCtxSetupSenderWithSeed(
@@ -463,13 +805,14 @@ public class OhttpJniWrapperTest {
     }
 
     // This method will eventually be part of ObliviousHttpKeyConfig
-    private static byte[] createRecipientKeyInfoBytes() throws Exception {
+    private static byte[] createRecipientKeyInfoBytes(boolean hasMediaTypeChanged)
+            throws Exception {
         /*
           hdr = concat(encode(1, keyID),
                encode(2, kemID),
                encode(2, kdfID),
                encode(2, aeadID))
-          info = concat(encode_str("message/bhttp request"),
+          info = concat(encode_str("message/label request"),
                 encode(1, 0),
                 hdr)
         */
@@ -477,8 +820,9 @@ public class OhttpJniWrapperTest {
         int kemId = 0x0020;
         int kdfId = 0x0001;
         int aeadId = 0x0002;
-        String httpLabel = "message/bhttp request";
-        byte[] b = httpLabel.getBytes(StandardCharsets.US_ASCII);
+        byte[] b =
+                ObliviousHttpKeyConfig.getOhttpRequestLabel(hasMediaTypeChanged)
+                        .getBytes(StandardCharsets.US_ASCII);
         byte[] header = new byte[7];
         header[0] = (byte) keyId;
         header[1] = header[3] = header[5] = (byte) 0;
