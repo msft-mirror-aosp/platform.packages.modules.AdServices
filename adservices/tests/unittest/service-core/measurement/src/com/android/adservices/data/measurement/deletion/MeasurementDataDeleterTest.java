@@ -34,6 +34,7 @@ import static org.mockito.Mockito.when;
 import android.adservices.measurement.DeletionParam;
 import android.adservices.measurement.DeletionRequest;
 import android.net.Uri;
+import android.util.Pair;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.measurement.DatastoreException;
@@ -55,6 +56,8 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
+import com.google.common.truth.Truth;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -71,6 +74,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 @SpyStatic(FlagsFactory.class)
 public final class MeasurementDataDeleterTest extends AdServicesExtendedMockitoTestCase {
@@ -475,7 +479,7 @@ public final class MeasurementDataDeleterTest extends AdServicesExtendedMockitoT
 
         // Execution
         mMeasurementDataDeleter.deleteAppUninstalledData(
-                Uri.parse(ANDROID_APP_SCHEME + "://" + APP_PACKAGE_NAME));
+                Uri.parse(ANDROID_APP_SCHEME + "://" + APP_PACKAGE_NAME), 0);
 
         // Assertions
         verify(mMeasurementDao).undoInstallAttribution(any());
@@ -489,10 +493,108 @@ public final class MeasurementDataDeleterTest extends AdServicesExtendedMockitoT
 
         // Execution
         mMeasurementDataDeleter.deleteAppUninstalledData(
-                Uri.parse(ANDROID_APP_SCHEME + "://" + APP_PACKAGE_NAME));
+                Uri.parse(ANDROID_APP_SCHEME + "://" + APP_PACKAGE_NAME), 0);
 
         // Assertions
         verify(mMeasurementDao, never()).undoInstallAttribution(any());
+    }
+
+    @Test
+    public void deleteAppUninstalledData_uninstallEnabled_success() throws DatastoreException {
+        // Setup
+        when(mMockFlags.getMeasurementEnableMinReportLifespanForUninstall()).thenReturn(true);
+        when(mMockFlags.getMeasurementMinReportLifespanForUninstallSeconds())
+                .thenReturn(TimeUnit.DAYS.toMillis(1));
+
+        Set<String> triggerIds = Set.of("triggerId1", "triggerId2");
+        List<String> sourceIds = List.of("sourceId1", "sourceId2");
+        List<String> asyncRegistrationIds = List.of("asyncRegId1", "asyncRegId2");
+        Source source1 = SourceFixture.getMinimalValidSourceBuilder().setId("sourceId1").build();
+        Source source2 = SourceFixture.getMinimalValidSourceBuilder().setId("sourceId2").build();
+        Trigger trigger1 = TriggerFixture.getValidTriggerBuilder().setId("triggerId1").build();
+        Trigger trigger2 = TriggerFixture.getValidTriggerBuilder().setId("triggerId2").build();
+        Uri packageName = Uri.parse(ANDROID_APP_SCHEME + "://" + APP_PACKAGE_NAME);
+        final DeletionParam deletionParam =
+                new DeletionParam.Builder(
+                                /* originUris= */ Collections.emptyList(),
+                                /* domainUris= */ Collections.emptyList(),
+                                /* start= */ Instant.MIN,
+                                /* end= */ Instant.MAX,
+                                /* appPackageName= */ packageName.getHost(),
+                                /* sdkPackageName= */ "")
+                        .setMatchBehavior(DeletionRequest.MATCH_BEHAVIOR_PRESERVE)
+                        .build();
+
+        when(mEventReport1.getId()).thenReturn("eventReportId1");
+        when(mEventReport2.getId()).thenReturn("eventReportId2");
+        when(mAggregateReport1.getId()).thenReturn("aggregateReportId1");
+        when(mAggregateReport2.getId()).thenReturn("aggregateReportId2");
+
+        doNothing()
+                .when(mMeasurementDataDeleter)
+                .resetAggregateContributions(
+                        mMeasurementDao, List.of(mAggregateReport1, mAggregateReport2));
+        doNothing()
+                .when(mMeasurementDataDeleter)
+                .resetDedupKeys(mMeasurementDao, List.of(mEventReport1, mEventReport2));
+        when(mMeasurementDao.fetchMatchingEventReports(sourceIds, triggerIds))
+                .thenReturn(List.of(mEventReport1, mEventReport2));
+        when(mMeasurementDao.fetchMatchingAggregateReports(sourceIds, triggerIds))
+                .thenReturn(List.of(mAggregateReport1, mAggregateReport2));
+        when(mMeasurementDao.fetchMatchingSources(
+                        packageName,
+                        deletionParam.getStart(),
+                        deletionParam.getEnd(),
+                        deletionParam.getOriginUris(),
+                        deletionParam.getDomainUris(),
+                        deletionParam.getMatchBehavior()))
+                .thenReturn(Arrays.asList(source1.getId(), source2.getId()));
+        when(mMeasurementDao.fetchMatchingAsyncRegistrations(
+                        packageName,
+                        deletionParam.getStart(),
+                        deletionParam.getEnd(),
+                        deletionParam.getOriginUris(),
+                        deletionParam.getDomainUris(),
+                        deletionParam.getMatchBehavior()))
+                .thenReturn(asyncRegistrationIds);
+        when(mMeasurementDao.fetchMatchingTriggers(
+                        packageName,
+                        deletionParam.getStart(),
+                        deletionParam.getEnd(),
+                        deletionParam.getOriginUris(),
+                        deletionParam.getDomainUris(),
+                        deletionParam.getMatchBehavior()))
+                .thenReturn(Set.of(trigger1.getId(), trigger2.getId()));
+
+        Pair<List<String>, List<String>> sourceIdsUninstall =
+                new Pair<>(Arrays.asList(source1.getId()), Arrays.asList(source2.getId()));
+
+        Pair<List<String>, List<String>> triggerIdsUninstall =
+                new Pair<>(Arrays.asList(trigger1.getId()), Arrays.asList(trigger2.getId()));
+
+        when(mMeasurementDao.fetchMatchingSourcesUninstall(packageName, 0))
+                .thenReturn(sourceIdsUninstall);
+        when(mMeasurementDao.fetchMatchingTriggersUninstall(packageName, 0))
+                .thenReturn(triggerIdsUninstall);
+
+        when(mEventReport1.getSourceId()).thenReturn("sourceId1");
+        when(mEventReport2.getSourceId()).thenReturn("sourceId2");
+        when(mMeasurementDao.getSource(source1.getId())).thenReturn(source1);
+        when(mMeasurementDao.getSource(source2.getId())).thenReturn(source2);
+
+        // Execution
+        boolean result = mMeasurementDataDeleter.deleteAppUninstalledData(packageName, 0);
+
+        // Assertions
+        Truth.assertThat(result).isTrue();
+
+        verify(mMeasurementDao).deleteSources(sourceIdsUninstall.first);
+        verify(mMeasurementDao).deleteTriggers(triggerIdsUninstall.first);
+
+        verify(mMeasurementDao)
+                .updateSourceStatus(sourceIdsUninstall.second, Source.Status.MARKED_TO_DELETE);
+        verify(mMeasurementDao)
+                .updateTriggerStatus(triggerIdsUninstall.second, Trigger.Status.MARKED_TO_DELETE);
     }
 
     @Test

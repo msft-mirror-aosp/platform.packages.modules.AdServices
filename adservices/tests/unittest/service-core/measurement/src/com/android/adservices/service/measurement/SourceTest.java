@@ -43,6 +43,9 @@ import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
+import com.android.adservices.service.measurement.aggregation.AggregateDebugReportData;
+import com.android.adservices.service.measurement.aggregation.AggregateDebugReporting;
+import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -934,6 +937,55 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                         .get()
                         .getFilterMap()
                         .getAttributionFilterMap());
+    }
+
+    @Test
+    public void aggregateDebugReport_parsing_asExpected() throws JSONException {
+        // Setup
+        String aggregateDebugReport =
+                "{\"budget\":1024,"
+                        + "\"key_piece\":\"0x100\","
+                        + "\"debug_data\":["
+                        + "{"
+                        + "\"types\": [\"source-destination-limit\"],"
+                        + "\"key_piece\": \"0x111\","
+                        + "\"value\": 111"
+                        + "},"
+                        + "{"
+                        + "\"types\": [\"default\"],"
+                        + "\"key_piece\": \"0x222\","
+                        + "\"value\": 222"
+                        + "}"
+                        + "]}";
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setAggregateDebugReportingString(aggregateDebugReport)
+                        .build();
+
+        // Execution
+        AggregateDebugReportData debugData1 =
+                new AggregateDebugReportData.Builder(
+                                Collections.singleton(
+                                        DebugReportApi.Type.SOURCE_DESTINATION_LIMIT.getValue()),
+                                new BigInteger("111", 16),
+                                111)
+                        .build();
+        AggregateDebugReportData debugData2 =
+                new AggregateDebugReportData.Builder(
+                                Collections.singleton(DebugReportApi.Type.DEFAULT.getValue()),
+                                new BigInteger("222", 16),
+                                222)
+                        .build();
+
+        // Assertion
+        assertThat(source.getAggregateDebugReportingObject())
+                .isEqualTo(
+                        new AggregateDebugReporting.Builder(
+                                        1024,
+                                        new BigInteger("100", 16),
+                                        Arrays.asList(debugData1, debugData2),
+                                        null)
+                                .build());
     }
 
     @Test

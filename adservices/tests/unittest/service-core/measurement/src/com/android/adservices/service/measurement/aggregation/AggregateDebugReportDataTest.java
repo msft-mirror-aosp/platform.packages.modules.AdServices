@@ -21,6 +21,9 @@ import static org.junit.Assert.assertThrows;
 
 import androidx.test.filters.SmallTest;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.Test;
 
 import java.math.BigInteger;
@@ -92,6 +95,63 @@ public final class AggregateDebugReportDataTest {
                                         /* keyPiece= */ null,
                                         /* value= */ 0)
                                 .build());
+    }
+
+    @Test
+    public void buildFromJson_success() throws JSONException {
+        JSONObject dataObj = new JSONObject();
+        dataObj.put("key_piece", "0x3");
+        dataObj.put("value", 65536);
+        JSONArray types = new JSONArray(Arrays.asList("source-noised", "source-unknown-error"));
+        dataObj.put("types", types);
+
+        AggregateDebugReportData aggregateDebugReportData =
+                new AggregateDebugReportData.Builder(dataObj).build();
+        assertThat(new HashSet<>(Arrays.asList("source-noised", "source-unknown-error")))
+                .isEqualTo(aggregateDebugReportData.getReportType());
+        assertThat(new BigInteger("3", 16)).isEqualTo(aggregateDebugReportData.getKeyPiece());
+        assertThat(aggregateDebugReportData.getValue()).isEqualTo(65536);
+    }
+
+    @Test
+    public void buildFromJson_nullKeyPiece() throws JSONException {
+        JSONObject dataObj = new JSONObject();
+        dataObj.put("key_piece", null);
+        dataObj.put("value", 65536);
+        JSONArray types = new JSONArray(Arrays.asList("source-noised"));
+        dataObj.put("types", types);
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new AggregateDebugReportData.Builder(dataObj).build());
+    }
+
+    @Test
+    public void buildFromJson_nullValue() throws JSONException {
+        JSONObject dataObj = new JSONObject();
+        dataObj.put("key_piece", "0x3");
+        dataObj.put("value", null);
+        JSONArray types = new JSONArray(Arrays.asList("source-noised"));
+        dataObj.put("types", types);
+
+        AggregateDebugReportData aggregateDebugReportData =
+                new AggregateDebugReportData.Builder(dataObj).build();
+        assertThat(new HashSet<>(Arrays.asList("source-noised")))
+                .isEqualTo(aggregateDebugReportData.getReportType());
+        assertThat(new BigInteger("3", 16)).isEqualTo(aggregateDebugReportData.getKeyPiece());
+        assertThat(aggregateDebugReportData.getValue()).isEqualTo(0);
+    }
+
+    @Test
+    public void buildFromJson_nullTypes() throws JSONException {
+        JSONObject dataObj = new JSONObject();
+        dataObj.put("key_piece", "0x3");
+        dataObj.put("value", 65536);
+        dataObj.put("types", null);
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new AggregateDebugReportData.Builder(dataObj).build());
     }
 
     private static AggregateDebugReportData createExample1AggregateDebugReportData() {

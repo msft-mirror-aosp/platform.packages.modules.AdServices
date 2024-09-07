@@ -17,10 +17,15 @@ package com.android.adservices.service.measurement.aggregation;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertThrows;
+
 import android.net.Uri;
 
 import androidx.test.filters.SmallTest;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.Test;
 
 import java.math.BigInteger;
@@ -71,6 +76,209 @@ public final class AggregateDebugReportingTest {
                 .isEqualTo(aggregateDebugReporting.getAggregateDebugReportDataList());
         assertThat(Uri.parse("https://cloud.coordination.test"))
                 .isEqualTo(aggregateDebugReporting.getAggregationCoordinatorOrigin());
+    }
+
+    @Test
+    public void buildFromJson_success() throws JSONException {
+        JSONObject obj = new JSONObject();
+        obj.put("key_piece", "0x3");
+        obj.put("budget", 65536);
+        obj.put("aggregation_coordinator_origin", "https://cloud.coordination.test");
+        JSONObject dataObj = new JSONObject();
+        dataObj.put("key_piece", "0x3");
+        dataObj.put("value", 65536);
+        JSONArray types = new JSONArray(Arrays.asList("source-noised", "source-unknown-error"));
+        dataObj.put("types", types);
+        obj.put("debug_data", new JSONArray(Arrays.asList(dataObj)));
+
+        AggregateDebugReporting aggregateDebugReporting =
+                new AggregateDebugReporting.Builder(obj).build();
+        assertThat(new BigInteger("3", 16)).isEqualTo(aggregateDebugReporting.getKeyPiece());
+        assertThat(aggregateDebugReporting.getBudget()).isEqualTo(65536);
+        assertThat(Uri.parse("https://cloud.coordination.test"))
+                .isEqualTo(aggregateDebugReporting.getAggregationCoordinatorOrigin());
+        assertThat(
+                        Arrays.asList(
+                                new AggregateDebugReportData.Builder(
+                                                /* reportType= */ new HashSet<>(
+                                                        Arrays.asList(
+                                                                "source-noised",
+                                                                "source-unknown-error")),
+                                                /* keyPiece= */ new BigInteger("3", 16),
+                                                /* value= */ 65536)
+                                        .build()))
+                .isEqualTo(aggregateDebugReporting.getAggregateDebugReportDataList());
+    }
+
+    @Test
+    public void buildFromJson_nullKeyPiece() throws JSONException {
+        JSONObject obj = new JSONObject();
+        obj.put("key_piece", null);
+        obj.put("budget", 65536);
+        obj.put("aggregation_coordinator_origin", "https://cloud.coordination.test");
+        JSONObject dataObj = new JSONObject();
+        dataObj.put("key_piece", "0x3");
+        dataObj.put("value", 65536);
+        JSONArray types = new JSONArray(Arrays.asList("source-noised"));
+        dataObj.put("types", types);
+        obj.put("debug_data", new JSONArray(Arrays.asList(dataObj)));
+
+        AggregateDebugReporting aggregateDebugReporting =
+                new AggregateDebugReporting.Builder(obj).build();
+        assertThat(aggregateDebugReporting.getKeyPiece()).isNull();
+        assertThat(aggregateDebugReporting.getBudget()).isEqualTo(65536);
+        assertThat(Uri.parse("https://cloud.coordination.test"))
+                .isEqualTo(aggregateDebugReporting.getAggregationCoordinatorOrigin());
+        assertThat(
+                        Arrays.asList(
+                                new AggregateDebugReportData.Builder(
+                                                /* reportType= */ new HashSet<>(
+                                                        Arrays.asList("source-noised")),
+                                                /* keyPiece= */ new BigInteger("3", 16),
+                                                /* value= */ 65536)
+                                        .build()))
+                .isEqualTo(aggregateDebugReporting.getAggregateDebugReportDataList());
+    }
+
+    @Test
+    public void buildFromJson_nullBudget() throws JSONException {
+        JSONObject obj = new JSONObject();
+        obj.put("key_piece", "0x3");
+        obj.put("budget", null);
+        obj.put("aggregation_coordinator_origin", "https://cloud.coordination.test");
+        JSONObject dataObj = new JSONObject();
+        dataObj.put("key_piece", "0x3");
+        dataObj.put("value", 65536);
+        JSONArray types = new JSONArray(Arrays.asList("source-noised"));
+        dataObj.put("types", types);
+        obj.put("debug_data", new JSONArray(Arrays.asList(dataObj)));
+
+        AggregateDebugReporting aggregateDebugReporting =
+                new AggregateDebugReporting.Builder(obj).build();
+        assertThat(new BigInteger("3", 16)).isEqualTo(aggregateDebugReporting.getKeyPiece());
+        assertThat(aggregateDebugReporting.getBudget()).isEqualTo(0);
+        assertThat(Uri.parse("https://cloud.coordination.test"))
+                .isEqualTo(aggregateDebugReporting.getAggregationCoordinatorOrigin());
+        assertThat(
+                        Arrays.asList(
+                                new AggregateDebugReportData.Builder(
+                                                /* reportType= */ new HashSet<>(
+                                                        Arrays.asList("source-noised")),
+                                                /* keyPiece= */ new BigInteger("3", 16),
+                                                /* value= */ 65536)
+                                        .build()))
+                .isEqualTo(aggregateDebugReporting.getAggregateDebugReportDataList());
+    }
+
+    @Test
+    public void buildFromJson_nullAggregationCoordinatorOrigin() throws JSONException {
+        JSONObject obj = new JSONObject();
+        obj.put("key_piece", "0x3");
+        obj.put("budget", 65536);
+        obj.put("aggregation_coordinator_origin", null);
+        JSONObject dataObj = new JSONObject();
+        dataObj.put("key_piece", "0x3");
+        dataObj.put("value", 65536);
+        JSONArray types = new JSONArray(Arrays.asList("source-noised"));
+        dataObj.put("types", types);
+        obj.put("debug_data", new JSONArray(Arrays.asList(dataObj)));
+
+        AggregateDebugReporting aggregateDebugReporting =
+                new AggregateDebugReporting.Builder(obj).build();
+        assertThat(new BigInteger("3", 16)).isEqualTo(aggregateDebugReporting.getKeyPiece());
+        assertThat(aggregateDebugReporting.getBudget()).isEqualTo(65536);
+        assertThat(aggregateDebugReporting.getAggregationCoordinatorOrigin()).isNull();
+        assertThat(
+                        Arrays.asList(
+                                new AggregateDebugReportData.Builder(
+                                                /* reportType= */ new HashSet<>(
+                                                        Arrays.asList("source-noised")),
+                                                /* keyPiece= */ new BigInteger("3", 16),
+                                                /* value= */ 65536)
+                                        .build()))
+                .isEqualTo(aggregateDebugReporting.getAggregateDebugReportDataList());
+    }
+
+    @Test
+    public void buildFromJson_nullDebugData() throws JSONException {
+        JSONObject obj = new JSONObject();
+        obj.put("key_piece", "0x3");
+        obj.put("budget", 65536);
+        obj.put("aggregation_coordinator_origin", "https://cloud.coordination.test");
+        obj.put("debug_data", null);
+
+        AggregateDebugReporting aggregateDebugReporting =
+                new AggregateDebugReporting.Builder(obj).build();
+        assertThat(new BigInteger("3", 16)).isEqualTo(aggregateDebugReporting.getKeyPiece());
+        assertThat(aggregateDebugReporting.getBudget()).isEqualTo(65536);
+        assertThat(Uri.parse("https://cloud.coordination.test"))
+                .isEqualTo(aggregateDebugReporting.getAggregationCoordinatorOrigin());
+        assertThat(aggregateDebugReporting.getAggregateDebugReportDataList()).isNull();
+    }
+
+    @Test
+    public void buildFromJson_nullDebugDataKeyPiece() throws JSONException {
+        JSONObject obj = new JSONObject();
+        obj.put("key_piece", "0x3");
+        obj.put("budget", 65536);
+        obj.put("aggregation_coordinator_origin", "https://cloud.coordination.test");
+        JSONObject dataObj = new JSONObject();
+        dataObj.put("key_piece", null);
+        dataObj.put("value", 65536);
+        JSONArray types = new JSONArray(Arrays.asList("source-noised"));
+        dataObj.put("types", types);
+        obj.put("debug_data", new JSONArray(Arrays.asList(dataObj)));
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new AggregateDebugReporting.Builder(obj).build());
+    }
+
+    @Test
+    public void buildFromJson_nullDebugDataValue() throws JSONException {
+        JSONObject obj = new JSONObject();
+        obj.put("key_piece", "0x3");
+        obj.put("budget", 65536);
+        obj.put("aggregation_coordinator_origin", "https://cloud.coordination.test");
+        JSONObject dataObj = new JSONObject();
+        dataObj.put("key_piece", "0x3");
+        dataObj.put("value", null);
+        JSONArray types = new JSONArray(Arrays.asList("source-noised"));
+        dataObj.put("types", types);
+        obj.put("debug_data", new JSONArray(Arrays.asList(dataObj)));
+
+        AggregateDebugReporting aggregateDebugReporting =
+                new AggregateDebugReporting.Builder(obj).build();
+        assertThat(new BigInteger("3", 16)).isEqualTo(aggregateDebugReporting.getKeyPiece());
+        assertThat(aggregateDebugReporting.getBudget()).isEqualTo(65536);
+        assertThat(Uri.parse("https://cloud.coordination.test"))
+                .isEqualTo(aggregateDebugReporting.getAggregationCoordinatorOrigin());
+        assertThat(
+                        Arrays.asList(
+                                new AggregateDebugReportData.Builder(
+                                                /* reportType= */ new HashSet<>(
+                                                        Arrays.asList("source-noised")),
+                                                /* keyPiece= */ new BigInteger("3", 16),
+                                                /* value= */ 0)
+                                        .build()))
+                .isEqualTo(aggregateDebugReporting.getAggregateDebugReportDataList());
+    }
+
+    @Test
+    public void buildFromJson_nullDebugDataTypes() throws JSONException {
+        JSONObject obj = new JSONObject();
+        obj.put("key_piece", "0x3");
+        obj.put("budget", 65536);
+        obj.put("aggregation_coordinator_origin", "https://cloud.coordination.test");
+        JSONObject dataObj = new JSONObject();
+        dataObj.put("key_piece", "0x3");
+        dataObj.put("value", 65536);
+        dataObj.put("types", null);
+        obj.put("debug_data", new JSONArray(Arrays.asList(dataObj)));
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new AggregateDebugReporting.Builder(obj).build());
     }
 
     private static AggregateDebugReporting createExample1AggregateDebugReporting() {
