@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.fixture;
 
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
+
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -24,7 +26,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import android.os.SystemProperties;
 import android.util.Log;
 
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.dx.mockito.inline.extended.StaticMockitoSessionBuilder;
 import com.android.modules.utils.testing.StaticMockFixture;
 
@@ -37,7 +38,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class TestableSystemProperties implements StaticMockFixture {
 
     private static final String TAG = TestableSystemProperties.class.getSimpleName();
-    private static Map<String, String> sKeyValueMap = new ConcurrentHashMap<>();
+    private static final Map<String, String> sKeyValueMap = new ConcurrentHashMap<>();
 
     @Override
     public StaticMockitoSessionBuilder setUpMockedClasses(
@@ -48,15 +49,15 @@ public final class TestableSystemProperties implements StaticMockFixture {
 
     @Override
     public void setUpMockBehaviors() {
-        ExtendedMockito.doAnswer(invocation -> getIntValue(invocation))
+        doAnswer(TestableSystemProperties::getIntValue)
                 .when(() -> SystemProperties.getInt(anyString(), anyInt()));
-        ExtendedMockito.doAnswer(invocation -> getLongValue(invocation))
+        doAnswer(TestableSystemProperties::getLongValue)
                 .when(() -> SystemProperties.getLong(anyString(), anyLong()));
-        ExtendedMockito.doAnswer(invocation -> getBooleanValue(invocation))
+        doAnswer(TestableSystemProperties::getBooleanValue)
                 .when(() -> SystemProperties.getBoolean(anyString(), anyBoolean()));
-        ExtendedMockito.doAnswer(invocation -> getStringValue(invocation))
+        doAnswer(TestableSystemProperties::getStringValue)
                 .when(() -> SystemProperties.get(anyString(), anyString()));
-        ExtendedMockito.doAnswer(invocation -> getStringValueWithoutDefault(invocation))
+        doAnswer(TestableSystemProperties::getStringValueWithoutDefault)
                 .when(() -> SystemProperties.get(anyString()));
     }
 

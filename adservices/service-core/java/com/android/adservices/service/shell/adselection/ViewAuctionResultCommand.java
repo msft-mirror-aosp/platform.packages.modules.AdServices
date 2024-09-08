@@ -16,6 +16,9 @@
 
 package com.android.adservices.service.shell.adselection;
 
+import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER;
+import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
+
 import static com.android.adservices.service.shell.adselection.AdSelectionShellCommandConstants.AD_SELECTION_ID;
 import static com.android.adservices.service.shell.adselection.AdSelectionShellCommandConstants.FIRST_ARG_FOR_PARSING;
 import static com.android.adservices.service.shell.adselection.AdSelectionShellCommandConstants.OUTPUT_PROTO_FIELD_NAME;
@@ -89,7 +92,11 @@ public class ViewAuctionResultCommand extends AbstractShellCommand {
             AuctionResult result =
                     AdSelectionEntryHelper.getAuctionResultFromAdSelectionEntry(
                             mAdSelectionEntryDao.getAdSelectionEntityById(adSelectionId),
-                            mAdSelectionEntryDao.getReportingUris(adSelectionId));
+                            mAdSelectionEntryDao.getReportingUris(adSelectionId),
+                            mAdSelectionEntryDao.listRegisteredAdInteractions(
+                                    adSelectionId, FLAG_REPORTING_DESTINATION_BUYER),
+                            mAdSelectionEntryDao.listRegisteredAdInteractions(
+                                    adSelectionId, FLAG_REPORTING_DESTINATION_SELLER));
             out.printf(
                     new JSONObject()
                             .put(

@@ -364,13 +364,13 @@ public final class MeasurementImpl {
      * Delete all records from a specific package and return a boolean value to indicate whether any
      * data was deleted.
      */
-    public boolean deletePackageRecords(Uri packageUri) {
+    public boolean deletePackageRecords(Uri packageUri, long eventTime) {
         Uri appUri = getAppUri(packageUri);
         LoggerFactory.getMeasurementLogger().d("Deleting records for " + appUri);
         mReadWriteLock.writeLock().lock();
         boolean didDeletionOccur = false;
         try {
-            didDeletionOccur = mMeasurementDataDeleter.deleteAppUninstalledData(appUri);
+            didDeletionOccur = mMeasurementDataDeleter.deleteAppUninstalledData(appUri, eventTime);
             if (didDeletionOccur) {
                 markDeletion();
             }
@@ -414,7 +414,7 @@ public final class MeasurementImpl {
 
         if (uninstalledAppsOpt.isPresent()) {
             for (Uri uninstalledAppName : uninstalledAppsOpt.get()) {
-                deletePackageRecords(uninstalledAppName);
+                deletePackageRecords(uninstalledAppName, System.currentTimeMillis());
             }
         }
     }
