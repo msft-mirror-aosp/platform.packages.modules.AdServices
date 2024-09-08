@@ -158,6 +158,17 @@
     <issue
         id="VisibleForTests"
         message="This method should only be accessed from tests or within private scope"
+        errorLine1="                MobileDataDownloadFactory.getDenyPackageManifestPopulator("
+        errorLine2="                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="974"
+            column="43"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
         errorLine1="        EncryptionKeyDao encryptionKeyDao = new EncryptionKeyDao(mDbHelper);"
         errorLine2="                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
