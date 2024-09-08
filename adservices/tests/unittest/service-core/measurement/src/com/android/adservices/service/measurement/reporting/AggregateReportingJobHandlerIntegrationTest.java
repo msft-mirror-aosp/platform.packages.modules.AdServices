@@ -17,6 +17,7 @@
 package com.android.adservices.service.measurement.reporting;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -33,6 +34,8 @@ import com.android.adservices.service.measurement.aggregation.AggregateEncryptio
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
+
+import com.google.android.libraries.mobiledatadownload.internal.AndroidTimeSource;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -109,11 +112,13 @@ public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbInteg
                                 mockKeyManager,
                                 FakeFlagsFactory.getFlagsForTest(),
                                 mLogger,
-                                sContext));
+                                sContext,
+                                new AndroidTimeSource()));
         try {
             Mockito.doReturn(returnCode)
                     .when(spyReportingService)
-                    .makeHttpPostRequest(Mockito.eq(Uri.parse(registration_origin)), any(), any());
+                    .makeHttpPostRequest(
+                            Mockito.eq(Uri.parse(registration_origin)), any(), any(), anyString());
         } catch (IOException e) {
             Assert.fail();
         }
@@ -128,13 +133,21 @@ public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbInteg
                                 startValue, endValue));
                 break;
             case SINGLE_REPORT:
-                final int result = ((Number) Objects.requireNonNull(get("result"))).intValue();
+                final int uploadStatus =
+                        ((Number) Objects.requireNonNull(get("uploadStatus"))).intValue();
+                final int failureStatus =
+                        ((Number) Objects.requireNonNull(get("failureStatus"))).intValue();
                 final String id = (String) get("id");
+                ReportingStatus status = new ReportingStatus();
+                spyReportingService.performReport(id, AggregateCryptoFixture.getKey(), status);
                 Assert.assertEquals(
-                        "Aggregate report failed.",
-                        result,
-                        spyReportingService.performReport(
-                                id, AggregateCryptoFixture.getKey(), new ReportingStatus()));
+                        "Aggregate report failed: report upload status mismatch.",
+                        uploadStatus,
+                        status.getUploadStatus().getValue());
+                Assert.assertEquals(
+                        "Aggregate report failed: failure status mismatch",
+                        failureStatus,
+                        status.getFailureStatus().getValue());
                 break;
         }
     }

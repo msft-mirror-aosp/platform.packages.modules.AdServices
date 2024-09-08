@@ -75,6 +75,7 @@ import com.android.adservices.service.measurement.registration.AsyncRegistration
 import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueRunner;
 import com.android.adservices.service.measurement.registration.AsyncSourceFetcher;
 import com.android.adservices.service.measurement.registration.AsyncTriggerFetcher;
+import com.android.adservices.service.measurement.reporting.AggregateDebugReportApi;
 import com.android.adservices.service.measurement.reporting.AggregateReportingJobHandlerWrapper;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.DebugReportingJobHandlerWrapper;
@@ -82,6 +83,15 @@ import com.android.adservices.service.measurement.reporting.EventReportWindowCal
 import com.android.adservices.service.measurement.reporting.EventReportingJobHandlerWrapper;
 import com.android.adservices.service.stats.NoOpLoggerImpl;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
+
+import co.nstant.in.cbor.CborDecoder;
+import co.nstant.in.cbor.CborException;
+import co.nstant.in.cbor.model.Array;
+import co.nstant.in.cbor.model.ByteString;
+import co.nstant.in.cbor.model.DataItem;
+import co.nstant.in.cbor.model.UnicodeString;
+
+import com.google.android.libraries.mobiledatadownload.internal.AndroidTimeSource;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -108,13 +118,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import javax.net.ssl.HttpsURLConnection;
-
-import co.nstant.in.cbor.CborDecoder;
-import co.nstant.in.cbor.CborException;
-import co.nstant.in.cbor.model.Array;
-import co.nstant.in.cbor.model.ByteString;
-import co.nstant.in.cbor.model.DataItem;
-import co.nstant.in.cbor.model.UnicodeString;
 
 /**
  * End-to-end test from source and trigger registration to attribution reporting, using mocked HTTP
@@ -205,12 +208,11 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
                         EnrollmentUtil.getInstance());
         mDebugReportApi =
                 new DebugReportApi(
-                        sContext,
+                        ApplicationProvider.getApplicationContext(),
                         mFlags,
                         new EventReportWindowCalcDelegate(mFlags),
                         new SourceNoiseHandler(mFlags),
-                        new SQLDatastoreManager(
-                                DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger));
+                        new AggregateDebugReportApi(mFlags, new AndroidTimeSource()));
 
         mImpressionNoiseUtil = spy(new ImpressionNoiseUtil());
 
@@ -505,7 +507,7 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
     void processAction(UninstallApp uninstallApp) {
         Assert.assertTrue(
                 "measurementDao.undoInstallAttribution failed",
-                mMeasurementImpl.deletePackageRecords(uninstallApp.mUri));
+                mMeasurementImpl.deletePackageRecords(uninstallApp.mUri, uninstallApp.mTimestamp));
     }
 
     @Override
@@ -767,7 +769,7 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
     private void runDeleteExpiredRecordsJob(long earliestValidInsertion) {
         int retryLimit = Flags.MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST;
         mDatastoreManager.runInTransaction(
-                dao -> dao.deleteExpiredRecords(earliestValidInsertion, retryLimit, null));
+                dao -> dao.deleteExpiredRecords(earliestValidInsertion, retryLimit, null, 0));
     }
 
     void updateEnrollment(String uri) {
