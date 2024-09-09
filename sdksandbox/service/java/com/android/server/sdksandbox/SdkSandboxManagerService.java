@@ -29,6 +29,7 @@ import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_SERVICE;
 
 import static com.android.adservices.flags.Flags.sdksandboxDumpEffectiveTargetSdkVersion;
 import static com.android.adservices.flags.Flags.sdksandboxInvalidateEffectiveTargetSdkVersionCache;
+import static com.android.adservices.flags.Flags.sdksandboxUseEffectiveTargetSdkVersionForRestrictions;
 import static com.android.sdksandbox.flags.Flags.sandboxActivitySdkBasedContext;
 import static com.android.sdksandbox.flags.Flags.serviceRestrictionPackageNameLogicUpdated;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__FAILURE_SECURITY_EXCEPTION;
@@ -2253,7 +2254,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     // Returns null if an allowlist was not set at all.
     @Nullable
-    private ArraySet<String> getBroadcastReceiverAllowlist() {
+    private ArraySet<String> getBroadcastReceiverAllowlist(int sdkSandboxUid) {
         synchronized (mLock) {
             if (mSdkSandboxSettingsListener.applySdkSandboxRestrictionsNext()) {
                 return mSdkSandboxSettingsListener.getNextBroadcastReceiverAllowlist();
@@ -2266,7 +2267,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 return null;
             }
             // TODO(b/271547387): Filter out the allowlist based on targetSdkVersion.
-            return broadcastReceiverAllowlist.get(Build.VERSION_CODES.UPSIDE_DOWN_CAKE);
+            return broadcastReceiverAllowlist.get(
+                    getEffectiveTargetSdkVersionForRestrictions(sdkSandboxUid));
         }
     }
 
@@ -2382,6 +2384,18 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
         }
         return false;
+    }
+
+    private int getEffectiveTargetSdkVersionForRestrictions(int sdkSandboxUid) {
+        int effectiveTargetSdkVersion = Build.VERSION_CODES.UPSIDE_DOWN_CAKE;
+        if (sdksandboxUseEffectiveTargetSdkVersionForRestrictions()) {
+            try {
+                effectiveTargetSdkVersion = getEffectiveTargetSdkVersion(sdkSandboxUid);
+            } catch (PackageManager.NameNotFoundException e) {
+                Log.w(TAG, "Client package not found for sdk sandbox uid: " + sdkSandboxUid);
+            }
+        }
+        return effectiveTargetSdkVersion;
     }
 
     private int getEffectiveTargetSdkVersion(int sdkSandboxUid)
@@ -2622,6 +2636,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 return false;
             }
 
+            int sdkSandboxUid = Binder.getCallingUid();
+
             /**
              * By clearing the calling identity, system server identity is set which allows us to
              * call {@DeviceConfig.getBoolean}
@@ -2633,7 +2649,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     return true;
                 }
 
-                ArraySet<String> broadcastReceiverAllowlist = getBroadcastReceiverAllowlist();
+                ArraySet<String> broadcastReceiverAllowlist =
+                        getBroadcastReceiverAllowlist(sdkSandboxUid);
                 // If an allowlist was not set at all, only allow protected broadcasts. Note that
                 // this is different from an empty allowlist (which blocks all BroadcastReceivers).
                 if (broadcastReceiverAllowlist == null) {
