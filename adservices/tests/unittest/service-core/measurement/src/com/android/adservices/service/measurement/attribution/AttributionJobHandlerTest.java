@@ -4851,6 +4851,8 @@ public class AttributionJobHandlerTest {
         verify(mMeasurementDao, never()).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
+        verify(mDebugReportApi)
+                .scheduleNullDebugReport(eq(source), eq(trigger), eq(mMeasurementDao));
     }
 
     @Test

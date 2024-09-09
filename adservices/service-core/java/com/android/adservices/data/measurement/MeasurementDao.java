@@ -724,10 +724,8 @@ class MeasurementDao implements IMeasurementDao {
             return null;
         }
 
-        String sourceId = UUID.randomUUID().toString();
-
         ContentValues values = new ContentValues();
-        values.put(SourceContract.ID, sourceId);
+        values.put(SourceContract.ID, source.getId());
         values.put(SourceContract.EVENT_ID, source.getEventId().getValue());
         values.put(SourceContract.PUBLISHER, source.getPublisher().toString());
         values.put(SourceContract.PUBLISHER_TYPE, source.getPublisherType());
@@ -824,7 +822,7 @@ class MeasurementDao implements IMeasurementDao {
         if (source.getAppDestinations() != null) {
             for (Uri appDestination : source.getAppDestinations()) {
                 ContentValues destinationValues = new ContentValues();
-                destinationValues.put(SourceDestination.SOURCE_ID, sourceId);
+                destinationValues.put(SourceDestination.SOURCE_ID, source.getId());
                 destinationValues.put(SourceDestination.DESTINATION_TYPE, EventSurfaceType.APP);
                 destinationValues.put(SourceDestination.DESTINATION, appDestination.toString());
                 long destinationRowId =
@@ -848,7 +846,7 @@ class MeasurementDao implements IMeasurementDao {
         if (source.getWebDestinations() != null) {
             for (Uri webDestination : source.getWebDestinations()) {
                 ContentValues destinationValues = new ContentValues();
-                destinationValues.put(SourceDestination.SOURCE_ID, sourceId);
+                destinationValues.put(SourceDestination.SOURCE_ID, source.getId());
                 destinationValues.put(SourceDestination.DESTINATION_TYPE, EventSurfaceType.WEB);
                 destinationValues.put(SourceDestination.DESTINATION, webDestination.toString());
                 long destinationRowId =
@@ -872,7 +870,8 @@ class MeasurementDao implements IMeasurementDao {
         if (attributionScopeEnabled && source.getAttributionScopes() != null) {
             for (String attributionScope : new HashSet<>(source.getAttributionScopes())) {
                 ContentValues attributionScopeValues = new ContentValues();
-                attributionScopeValues.put(SourceAttributionScopeContract.SOURCE_ID, sourceId);
+                attributionScopeValues.put(
+                        SourceAttributionScopeContract.SOURCE_ID, source.getId());
                 attributionScopeValues.put(
                         SourceAttributionScopeContract.ATTRIBUTION_SCOPE, attributionScope);
                 long attributionScopeRowId =
@@ -893,7 +892,7 @@ class MeasurementDao implements IMeasurementDao {
                 }
             }
         }
-        return sourceId;
+        return source.getId();
     }
 
     private List<Source> populateAttributionScopes(List<Source> sources) throws DatastoreException {
@@ -2787,7 +2786,9 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.AggregateReport.ID, aggregateReport.getId());
         values.put(
                 MeasurementTables.AggregateReport.PUBLISHER,
-                aggregateReport.getPublisher().toString());
+                Optional.ofNullable(aggregateReport.getPublisher())
+                        .map(Uri::toString)
+                        .orElse(null));
         values.put(
                 MeasurementTables.AggregateReport.ATTRIBUTION_DESTINATION,
                 aggregateReport.getAttributionDestination().toString());

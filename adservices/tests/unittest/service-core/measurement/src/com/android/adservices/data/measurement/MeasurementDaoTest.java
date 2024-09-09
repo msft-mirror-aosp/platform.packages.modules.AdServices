@@ -4502,13 +4502,15 @@ public class MeasurementDaoTest {
                         .build());
         Source originalSource = sourceList.get(0);
         insertAttributedTrigger(originalSource.getTriggerSpecs(), eventReportList.get(0));
-        mDatastoreManager.runInTransaction(
-                measurementDao -> {
-                    Source newSource = measurementDao.getSource(originalSource.getId());
-                    assertNotEquals(originalSource, newSource);
-                    assertEquals(
-                            0, newSource.getTriggerSpecs().getAttributedTriggers().size());
-                });
+        Optional<Source> newSource =
+                mDatastoreManager.runInTransactionWithResult(
+                        measurementDao -> measurementDao.getSource(originalSource.getId()));
+        assertTrue(newSource.isPresent());
+
+        assertNotEquals(newSource.get(), originalSource);
+        newSource.get().buildTriggerSpecs();
+        assertEquals(0, newSource.get().getTriggerSpecs().getAttributedTriggers().size());
+
         mDatastoreManager.runInTransaction(
                 measurementDao ->
                         measurementDao.updateSourceAttributedTriggers(
@@ -4517,8 +4519,11 @@ public class MeasurementDaoTest {
 
         mDatastoreManager.runInTransaction(
                 measurementDao -> {
-                    Source newSource = measurementDao.getSource(originalSource.getId());
-                    assertEquals(originalSource, newSource);
+                    assertEquals(
+                            originalSource.attributedTriggersToJsonFlexApi(),
+                            measurementDao
+                                    .getSource(originalSource.getId())
+                                    .getEventAttributionStatus());
                 });
     }
 

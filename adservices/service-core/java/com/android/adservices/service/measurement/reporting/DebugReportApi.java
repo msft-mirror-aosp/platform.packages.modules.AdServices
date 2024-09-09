@@ -35,8 +35,6 @@ import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.internal.annotations.VisibleForTesting;
 
-import com.google.android.libraries.mobiledatadownload.internal.AndroidTimeSource;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -54,7 +52,7 @@ public class DebugReportApi {
 
     /** Define different verbose debug report types. */
     public enum Type {
-        DEFAULT("default"),
+        DEFAULT("unspecified"),
         SOURCE_DESTINATION_LIMIT("source-destination-limit"),
         SOURCE_DESTINATION_RATE_LIMIT("source-destination-rate-limit"),
         SOURCE_DESTINATION_PER_DAY_RATE_LIMIT("source-destination-per-day-rate-limit"),
@@ -158,7 +156,7 @@ public class DebugReportApi {
                 flags,
                 new EventReportWindowCalcDelegate(flags),
                 new SourceNoiseHandler(flags),
-                new AggregateDebugReportApi(flags, new AndroidTimeSource()));
+                new AggregateDebugReportApi(flags));
     }
 
     @VisibleForTesting
@@ -319,10 +317,20 @@ public class DebugReportApi {
                 dao);
     }
 
+    /**
+     * Schedules a null report when attribution is successful. We generate ADR but not verbose debug
+     * report for attribution-success case. This API integrates {@link
+     * com.android.adservices.service.measurement.attribution.AttributionJobHandler} with {@link
+     * AggregateDebugReportApi}.
+     */
+    public void scheduleNullDebugReport(Source source, Trigger trigger, IMeasurementDao dao) {
+        mAggregateDebugReportApi.scheduleNullDebugReport(source, trigger, dao);
+    }
+
     /** Schedules the Source Destination limit type Debug Report */
     private void scheduleSourceDestinationLimitDebugReport(
             Source source, String limit, Type type, IMeasurementDao dao) {
-        mAggregateDebugReportApi.scheduleSourceRegistrationErrorDebugReport(source, type, dao);
+        mAggregateDebugReportApi.scheduleSourceRegistrationDebugReport(source, type, dao);
         if (isSourceDebugFlagDisabled(Type.SOURCE_DESTINATION_LIMIT)) {
             return;
         }
@@ -393,7 +401,7 @@ public class DebugReportApi {
             @Nullable Map<String, String> additionalBodyParams,
             IMeasurementDao dao,
             @Nullable DebugReportApi.Type differentReportTypeForAdr) {
-        mAggregateDebugReportApi.scheduleSourceRegistrationErrorDebugReport(
+        mAggregateDebugReportApi.scheduleSourceRegistrationDebugReport(
                 source, differentReportTypeForAdr != null ? differentReportTypeForAdr : type, dao);
         Objects.requireNonNull(source, "source cannot be null");
         Objects.requireNonNull(type, "type cannot be null");

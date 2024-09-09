@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import static com.android.adservices.service.measurement.util.Applications.ANDROID_APP_SCHEME;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_DATASTORE_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_PARSING_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
@@ -27,6 +28,7 @@ import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateDebugReportData;
@@ -34,8 +36,7 @@ import com.android.adservices.service.measurement.aggregation.AggregateDebugRepo
 import com.android.adservices.service.measurement.aggregation.AggregateDebugReporting;
 import com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
-
-import com.google.android.libraries.mobiledatadownload.TimeSource;
+import com.android.adservices.service.measurement.util.BaseUriExtractor;
 
 import org.json.JSONException;
 
@@ -54,20 +55,19 @@ import java.util.stream.IntStream;
 public class AggregateDebugReportApi {
     static final String AGGREGATE_DEBUG_REPORT_API = "attribution-reporting-debug";
     // TODO(b/364768862): Bump this to 1.0 based on flexible contribution filtering flag
-    private static final String API_VERSION = "0.1";
+    private static final String PRE_FLEXIBLE_CONTRIBUTION_FILTERING_API_VERSION = "0.1";
+    private static final String POST_FLEXIBLE_CONTRIBUTION_FILTERING_API_VERSION = "1.0";
     private final Flags mFlags;
-    private final TimeSource mTimeSource;
 
-    public AggregateDebugReportApi(Flags flags, TimeSource timeSource) {
+    public AggregateDebugReportApi(Flags flags) {
         mFlags = flags;
-        mTimeSource = timeSource;
     }
 
     /**
      * Schedule debug reports for all source registration errors related, i.e. "source-*" debug
      * reports.
      */
-    public void scheduleSourceRegistrationErrorDebugReport(
+    public void scheduleSourceRegistrationDebugReport(
             Source source, DebugReportApi.Type type, IMeasurementDao measurementDao) {
         if (!mFlags.getMeasurementEnableAggregateDebugReporting()
                 || source.getAggregateDebugReportingString() == null) {
@@ -82,6 +82,11 @@ public class AggregateDebugReportApi {
         }
 
         try {
+            if (source.getAggregateDebugReportingObject() == null
+                    || source.getAggregateDebugReportingObject().getAggregateDebugReportDataList()
+                            == null) {
+                return;
+            }
             AggregateDebugReporting sourceAggregateDebugReporting =
                     source.getAggregateDebugReportingObject();
             Optional<AggregateDebugReportData> firstMatchingAggregateReportData =
@@ -96,7 +101,7 @@ public class AggregateDebugReportApi {
 
             AggregateDebugReportData debugReportData = firstMatchingAggregateReportData.get();
 
-            if (debugReportData.getValue() + source.getAggregateContributions()
+            if (debugReportData.getValue() + source.getAggregateDebugReportContributions()
                     > source.getAggregateDebugReportingObject().getBudget()) {
                 LoggerFactory.getMeasurementLogger()
                         .d(
@@ -107,13 +112,24 @@ public class AggregateDebugReportApi {
                 return;
             }
 
+            Optional<Uri> baseOrigin = extractBaseUri(source.getRegistrationOrigin());
+            Optional<Uri> basePublisher = extractBaseUri(source.getPublisher());
+
+            if (baseOrigin.isEmpty() || basePublisher.isEmpty()) {
+                LoggerFactory.getMeasurementLogger()
+                        .d(
+                                "Not generating aggregate debug report of type=%s; "
+                                        + "Invalid origin or top level site",
+                                type);
+                return;
+            }
+
             if (!isWithinRateLimits(
-                    source.getRegistrationOrigin(),
-                    source.getPublisher(),
+                    baseOrigin.get(),
+                    basePublisher.get(),
                     source.getPublisherType(),
                     measurementDao,
-                    (mTimeSource.currentTimeMillis()
-                            - mFlags.getMeasurementAdrBudgetWindowLengthMillis()),
+                    (source.getEventTime() - mFlags.getMeasurementAdrBudgetWindowLengthMillis()),
                     debugReportData.getValue())) {
                 LoggerFactory.getMeasurementLogger()
                         .d(
@@ -124,6 +140,7 @@ public class AggregateDebugReportApi {
                 return;
             }
 
+            LoggerFactory.getMeasurementLogger().d("Generating debug report type=%s", type);
             AggregateHistogramContribution contributions =
                     createContributions(
                             debugReportData, sourceAggregateDebugReporting.getKeyPiece());
@@ -132,13 +149,16 @@ public class AggregateDebugReportApi {
             measurementDao.insertAggregateReport(createAggregateReport(source, contributions));
             source.setAggregateDebugContributions(
                     debugReportData.getValue() + source.getAggregateDebugReportContributions());
-            measurementDao.updateSourceAggregateDebugContributions(source);
+            if (type == DebugReportApi.Type.SOURCE_SUCCESS) {
+                measurementDao.updateSourceAggregateDebugContributions(source);
+            }
             measurementDao.insertAggregateDebugReportRecord(
                     createAggregateDebugReportRecord(
                             aggregateReport,
                             contributions.getValue(),
                             source.getRegistrant(),
-                            source.getPublisher()));
+                            basePublisher.get(),
+                            baseOrigin.get()));
         } catch (JSONException e) {
             // This isn't expected as at this point all data is valid.
             ErrorLogUtil.e(
@@ -164,8 +184,7 @@ public class AggregateDebugReportApi {
             DebugReportApi.Type type,
             IMeasurementDao measurementDao) {
         if (!mFlags.getMeasurementEnableAggregateDebugReporting()
-                || source.getAggregateDebugReportingString() == null
-                || trigger.getAggregateDebugReportingString() == null) {
+                || source.getAggregateDebugReportingString() == null) {
             LoggerFactory.getMeasurementLogger()
                     .d(
                             "Aggregate debug reporting on source disabled; "
@@ -179,11 +198,15 @@ public class AggregateDebugReportApi {
         }
 
         try {
+            List<AggregateDebugReportData> triggerDebugDataList =
+                    Optional.ofNullable(trigger.getAggregateDebugReportingObject())
+                            .map(AggregateDebugReporting::getAggregateDebugReportDataList)
+                            .orElse(null);
+            if (triggerDebugDataList == null) {
+                return;
+            }
             Optional<AggregateDebugReportData> firstMatchingAggregateReportData =
-                    getFirstMatchingAggregateReportData(
-                            trigger.getAggregateDebugReportingObject()
-                                    .getAggregateDebugReportDataList(),
-                            type);
+                    getFirstMatchingAggregateReportData(triggerDebugDataList, type);
             if (firstMatchingAggregateReportData.isEmpty()) {
                 LoggerFactory.getMeasurementLogger()
                         .d("No matching debug data to generate aggregate debug report.");
@@ -192,7 +215,7 @@ public class AggregateDebugReportApi {
             }
 
             AggregateDebugReportData debugReportData = firstMatchingAggregateReportData.get();
-            if (debugReportData.getValue() + source.getAggregateContributions()
+            if (debugReportData.getValue() + source.getAggregateDebugReportContributions()
                     > source.getAggregateDebugReportingObject().getBudget()) {
                 LoggerFactory.getMeasurementLogger()
                         .d(
@@ -202,13 +225,24 @@ public class AggregateDebugReportApi {
                 return;
             }
 
+            Optional<Uri> baseOrigin = extractBaseUri(trigger.getRegistrationOrigin());
+            Uri baseTopLevelSite = trigger.getAttributionDestinationBaseUri();
+
+            if (baseOrigin.isEmpty() || baseTopLevelSite == null) {
+                LoggerFactory.getMeasurementLogger()
+                        .d(
+                                "Not generating aggregate debug report of type=%s; "
+                                        + "Invalid origin or top level site",
+                                type);
+                return;
+            }
+
             if (!isWithinRateLimits(
-                    trigger.getRegistrationOrigin(),
-                    trigger.getAttributionDestination(),
+                    baseOrigin.get(),
+                    baseTopLevelSite,
                     trigger.getDestinationType(),
                     measurementDao,
-                    (mTimeSource.currentTimeMillis()
-                            - mFlags.getMeasurementAdrBudgetWindowLengthMillis()),
+                    (trigger.getTriggerTime() - mFlags.getMeasurementAdrBudgetWindowLengthMillis()),
                     debugReportData.getValue())) {
                 LoggerFactory.getMeasurementLogger()
                         .d(
@@ -226,6 +260,7 @@ public class AggregateDebugReportApi {
                                     .getKeyPiece()
                                     .or(trigger.getAggregateDebugReportingObject().getKeyPiece()));
 
+            LoggerFactory.getMeasurementLogger().d("Generating debug report type=%s", type);
             AggregateReport aggregateReport = createAggregateReport(source, trigger, contributions);
             measurementDao.insertAggregateReport(aggregateReport);
             measurementDao.insertAggregateDebugReportRecord(
@@ -233,7 +268,8 @@ public class AggregateDebugReportApi {
                             aggregateReport,
                             contributions.getValue(),
                             trigger.getRegistrant(),
-                            trigger.getAttributionDestination()));
+                            baseTopLevelSite,
+                            baseOrigin.get()));
 
             source.setAggregateDebugContributions(
                     debugReportData.getValue() + source.getAggregateDebugReportContributions());
@@ -273,11 +309,17 @@ public class AggregateDebugReportApi {
         }
 
         try {
+            if (trigger.getAggregateDebugReportingObject() == null
+                    || trigger.getAggregateDebugReportingObject().getAggregateDebugReportDataList()
+                            == null) {
+                return;
+            }
+            DebugReportApi.Type type = DebugReportApi.Type.TRIGGER_NO_MATCHING_SOURCE;
             Optional<AggregateDebugReportData> firstMatchingAggregateReportData =
                     getFirstMatchingAggregateReportData(
                             trigger.getAggregateDebugReportingObject()
                                     .getAggregateDebugReportDataList(),
-                            DebugReportApi.Type.TRIGGER_NO_MATCHING_SOURCE);
+                            type);
             if (firstMatchingAggregateReportData.isEmpty()) {
                 LoggerFactory.getMeasurementLogger()
                         .d("No matching debug data to generate aggregate debug report.");
@@ -287,19 +329,30 @@ public class AggregateDebugReportApi {
 
             AggregateDebugReportData errorDebugReportingData =
                     firstMatchingAggregateReportData.get();
+
+            Optional<Uri> baseOrigin = extractBaseUri(trigger.getRegistrationOrigin());
+            Uri baseTopLevelSite = trigger.getAttributionDestinationBaseUri();
+            if (baseOrigin.isEmpty() || baseTopLevelSite == null) {
+                LoggerFactory.getMeasurementLogger()
+                        .d(
+                                "Not generating aggregate debug report of type=%s; "
+                                        + "Invalid origin or top level site",
+                                type);
+                return;
+            }
+
             if (!isWithinRateLimits(
-                    trigger.getRegistrationOrigin(),
-                    trigger.getAttributionDestination(),
+                    baseOrigin.get(),
+                    baseTopLevelSite,
                     trigger.getDestinationType(),
                     measurementDao,
-                    (mTimeSource.currentTimeMillis()
-                            - mFlags.getMeasurementAdrBudgetWindowLengthMillis()),
+                    (trigger.getTriggerTime() - mFlags.getMeasurementAdrBudgetWindowLengthMillis()),
                     errorDebugReportingData.getValue())) {
                 LoggerFactory.getMeasurementLogger()
                         .d(
                                 "Not generating aggregate debug report of type=%s ;rate limit"
                                         + " exceeded",
-                                DebugReportApi.Type.TRIGGER_NO_MATCHING_SOURCE);
+                                type);
                 measurementDao.insertAggregateReport(generateNullAggregateReport(trigger));
                 return;
             }
@@ -309,6 +362,7 @@ public class AggregateDebugReportApi {
                             errorDebugReportingData,
                             trigger.getAggregateDebugReportingObject().getKeyPiece());
 
+            LoggerFactory.getMeasurementLogger().d("Generating debug report type=%s", type);
             AggregateReport aggregateReport = createAggregateReport(trigger, contributions);
             measurementDao.insertAggregateReport(aggregateReport);
             measurementDao.insertAggregateDebugReportRecord(
@@ -316,7 +370,41 @@ public class AggregateDebugReportApi {
                             aggregateReport,
                             contributions.getValue(),
                             trigger.getRegistrant(),
-                            trigger.getAttributionDestination()));
+                            baseTopLevelSite,
+                            baseOrigin.get()));
+        } catch (JSONException e) {
+            // This isn't expected as at this point all data is valid.
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_PARSING_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
+        } catch (DatastoreException e) {
+            // This isn't expected as at this point all data is valid.
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_DATASTORE_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
+        }
+    }
+
+    /** Create a null aggregate report, primarily when attribution is successful. */
+    public void scheduleNullDebugReport(
+            Source source, Trigger trigger, IMeasurementDao measurementDao) {
+        if (!mFlags.getMeasurementEnableAggregateDebugReporting()
+                || trigger.getAggregateDebugReportingString() == null) {
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "Aggregate debug reporting on source disabled; "
+                                    + "flag=%s; "
+                                    + "aggregatable_debug_reporting available=%s",
+                            mFlags.getMeasurementEnableAggregateDebugReporting(),
+                            trigger.getAggregateDebugReportingString() != null);
+            return;
+        }
+
+        try {
+            AggregateReport aggregateReport = generateNullAggregateReport(source, trigger);
+            measurementDao.insertAggregateReport(aggregateReport);
         } catch (JSONException e) {
             // This isn't expected as at this point all data is valid.
             ErrorLogUtil.e(
@@ -354,7 +442,7 @@ public class AggregateDebugReportApi {
                 // We don't want to deliver regular aggregate reports
                 .setStatus(AggregateReport.Status.MARKED_TO_DELETE)
                 .setDebugReportStatus(AggregateReport.DebugReportStatus.PENDING)
-                .setApiVersion(API_VERSION)
+                .setApiVersion(getApiVersion())
                 .setSourceId(null)
                 .setTriggerId(trigger.getId())
                 .setRegistrationOrigin(trigger.getRegistrationOrigin())
@@ -374,11 +462,13 @@ public class AggregateDebugReportApi {
                 .setDebugCleartextPayload(
                         AggregateReport.generateDebugPayload(
                                 getPaddedContributions(Collections.singletonList(contributions))))
-                // We don't want to deliver regular aggregate reports
+                // We don't want to deliver regular aggregate reports for ADRs
                 .setStatus(AggregateReport.Status.MARKED_TO_DELETE)
                 .setDebugReportStatus(AggregateReport.DebugReportStatus.PENDING)
-                .setApiVersion(API_VERSION)
-                .setSourceId(source.getId())
+                .setApiVersion(getApiVersion())
+                // As source/trigger registration might have failed
+                .setSourceId(null)
+                .setTriggerId(null)
                 .setRegistrationOrigin(source.getRegistrationOrigin())
                 .setApi(AGGREGATE_DEBUG_REPORT_API)
                 .setAggregationCoordinatorOrigin(
@@ -403,7 +493,8 @@ public class AggregateDebugReportApi {
                 // We don't want to deliver regular aggregate reports
                 .setStatus(AggregateReport.Status.MARKED_TO_DELETE)
                 .setDebugReportStatus(AggregateReport.DebugReportStatus.PENDING)
-                .setApiVersion(API_VERSION)
+                .setApiVersion(getApiVersion())
+                // As source/trigger registration might have failed
                 .setSourceId(source.getId())
                 .setTriggerId(trigger.getId())
                 .setRegistrationOrigin(trigger.getRegistrationOrigin())
@@ -432,7 +523,7 @@ public class AggregateDebugReportApi {
         if ((measurementDao.sumAggregateDebugReportBudgetXPublisherXWindow(
                                 topLevelSite, topLevelSiteType, windowStartTime)
                         + newContributions)
-                > mFlags.getMeasurementAdrBudgetOriginXPublisherXWindow()) {
+                > mFlags.getMeasurementAdrBudgetPublisherXWindow()) {
             return false;
         }
 
@@ -442,6 +533,9 @@ public class AggregateDebugReportApi {
     private Optional<AggregateDebugReportData> getFirstMatchingAggregateReportData(
             Collection<AggregateDebugReportData> aggregateDebugReportDataList,
             DebugReportApi.Type reportType) {
+        if (aggregateDebugReportDataList == null) {
+            return Optional.empty();
+        }
         return aggregateDebugReportDataList.stream()
                 .filter(
                         data ->
@@ -469,12 +563,13 @@ public class AggregateDebugReportApi {
             AggregateReport aggregateReport,
             int contributionValue,
             Uri registrantApp,
-            Uri topLevelSite) {
+            Uri topLevelSite,
+            Uri origin) {
         return new AggregateDebugReportRecord.Builder(
                         aggregateReport.getScheduledReportTime(),
                         topLevelSite,
                         registrantApp,
-                        aggregateReport.getRegistrationOrigin(),
+                        origin,
                         contributionValue)
                 .setSourceId(aggregateReport.getSourceId())
                 .setTriggerId(aggregateReport.getTriggerId())
@@ -509,7 +604,7 @@ public class AggregateDebugReportApi {
     }
 
     private AggregateReport generateNullAggregateReport(Trigger trigger) throws JSONException {
-        return new AggregateReport.Builder()
+        return generateBaseNullReportBuilder()
                 .setRegistrationOrigin(trigger.getRegistrationOrigin())
                 .setAttributionDestination(trigger.getAttributionDestination())
                 .setScheduledReportTime(trigger.getTriggerTime())
@@ -523,10 +618,11 @@ public class AggregateDebugReportApi {
     private AggregateReport.Builder generateBaseNullReportBuilder() throws JSONException {
         String debugPayload =
                 AggregateReport.generateDebugPayload(
-                        getPaddedContributions(Collections.emptyList()));
+                        getPaddedContributions(
+                                Collections.singletonList(createPaddingContribution())));
         return new AggregateReport.Builder()
                 .setId(UUID.randomUUID().toString())
-                .setApiVersion(API_VERSION)
+                .setApiVersion(getApiVersion())
                 // exclude by default
                 .setSourceRegistrationTime(null)
                 .setDebugCleartextPayload(debugPayload)
@@ -543,7 +639,9 @@ public class AggregateDebugReportApi {
             List<AggregateHistogramContribution> contributions) {
         List<AggregateHistogramContribution> paddedContributions = new ArrayList<>(contributions);
         if (mFlags.getMeasurementEnableAggregatableReportPayloadPadding()) {
-            IntStream.range(0, mFlags.getMeasurementMaxAggregateKeysPerSourceRegistration())
+            IntStream.range(
+                            contributions.size(),
+                            mFlags.getMeasurementMaxAggregateKeysPerSourceRegistration())
                     .forEach(i -> paddedContributions.add(createPaddingContribution()));
         }
         return paddedContributions;
@@ -551,5 +649,19 @@ public class AggregateDebugReportApi {
 
     private AggregateHistogramContribution createPaddingContribution() {
         return new AggregateHistogramContribution.Builder().setPaddingContribution().build();
+    }
+
+    private static Optional<Uri> extractBaseUri(Uri uri) {
+        if (uri.getScheme().equals(ANDROID_APP_SCHEME)) {
+            return Optional.of(BaseUriExtractor.getBaseUri(uri));
+        }
+        return WebAddresses.topPrivateDomainAndScheme(uri);
+    }
+
+    private String getApiVersion() {
+        if (mFlags.getMeasurementEnableFlexibleContributionFiltering()) {
+            return POST_FLEXIBLE_CONTRIBUTION_FILTERING_API_VERSION;
+        }
+        return PRE_FLEXIBLE_CONTRIBUTION_FILTERING_API_VERSION;
     }
 }

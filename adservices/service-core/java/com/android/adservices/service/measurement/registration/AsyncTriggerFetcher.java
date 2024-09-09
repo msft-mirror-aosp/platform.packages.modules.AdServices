@@ -684,12 +684,12 @@ public class AsyncTriggerFetcher {
                     FetcherUtil.getValidAggregateDebugReportingString(
                             json.getJSONObject(TriggerHeaderContract.AGGREGATABLE_DEBUG_REPORTING),
                             mFlags);
-            if (!validAggregateDebugReporting.isPresent()) {
+            if (validAggregateDebugReporting.isPresent()) {
+                builder.setAggregateDebugReportingString(validAggregateDebugReporting.get());
+            } else {
                 LoggerFactory.getMeasurementLogger()
                         .d("parseTrigger: aggregatable debug reporting is invalid.");
-                return false;
             }
-            builder.setAggregateDebugReportingString(validAggregateDebugReporting.get());
         }
 
         return true;

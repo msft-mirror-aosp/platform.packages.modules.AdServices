@@ -1019,7 +1019,7 @@ public class TriggerTest {
                         + "\"value\": 444"
                         + "},"
                         + "{"
-                        + "\"types\": [\"default\"],"
+                        + "\"types\": [\"unspecified\"],"
                         + "\"key_piece\": \"0x555\","
                         + "\"value\": 555"
                         + "}"
