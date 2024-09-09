@@ -22,6 +22,8 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_JSON_PARSING_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static java.util.Map.entry;
 
 import android.net.Uri;
@@ -62,7 +64,7 @@ public final class EncryptionKeyConverterUtilTest extends AdServicesExtendedMock
         Optional<EncryptionKey> keyOptional =
                 createEncryptionKeyFromJson(new JSONObject(SIGNING_V3_DEFAULT_VALUES));
 
-        expect.that(keyOptional.isPresent()).isTrue();
+        assertThat(keyOptional.isPresent()).isTrue();
         EncryptionKey encryptionKey = keyOptional.get();
         expect.that(encryptionKey.getKeyType()).isEqualTo(EncryptionKey.KeyType.SIGNING);
         expect.that(encryptionKey.getEnrollmentId()).isEqualTo("TEST0");
@@ -84,7 +86,7 @@ public final class EncryptionKeyConverterUtilTest extends AdServicesExtendedMock
 
         Optional<EncryptionKey> keyOptional = createEncryptionKeyFromJson(jsonObject);
 
-        expect.that(keyOptional.isPresent()).isTrue();
+        assertThat(keyOptional.isPresent()).isTrue();
         EncryptionKey encryptionKey = keyOptional.get();
         expect.that(encryptionKey.getKeyType()).isEqualTo(EncryptionKey.KeyType.ENCRYPTION);
         expect.that(encryptionKey.getEnrollmentId()).isEqualTo("TEST0");
