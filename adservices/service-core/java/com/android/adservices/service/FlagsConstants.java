@@ -925,8 +925,6 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH =
             "measurement_rollback_deletion_app_search_kill_switch";
-    public static final String KEY_MEASUREMENT_ROLLBACK_DELETION_R_ENABLED =
-            "measurement_rollback_deletion_r_enabled";
     public static final String KEY_TOPICS_KILL_SWITCH = "topics_kill_switch";
     public static final String KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH =
             "topics_on_device_classifier_kill_switch";

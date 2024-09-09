@@ -1818,19 +1818,6 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    @SuppressWarnings("AvoidSystemPropertiesUsage")
-    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
-    public boolean getMeasurementRollbackDeletionREnabled() {
-        String flagName = FlagsConstants.KEY_MEASUREMENT_ROLLBACK_DELETION_R_ENABLED;
-        return !getGlobalKillSwitch()
-                && !getLegacyMeasurementKillSwitch()
-                && SystemProperties.getBoolean(
-                        getSystemPropertyName(flagName),
-                        /* def= */ getDeviceConfigFlag(
-                                flagName, MEASUREMENT_ROLLBACK_DELETION_R_ENABLED));
-    }
-
-    @Override
     public String getMeasurementDebugJoinKeyEnrollmentAllowlist() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST,
