@@ -27,12 +27,15 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.EventReport;
 
+import com.google.android.libraries.mobiledatadownload.internal.AndroidTimeSource;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A wrapper class to expose a constructor for EventReportingJobHandler in testing.
@@ -46,14 +49,22 @@ public class EventReportingJobHandlerWrapper {
             Flags flags,
             Context context)
             throws IOException, JSONException {
+
+        // Mock TimeSource
+        AndroidTimeSource mTimeSource = Mockito.spy(new AndroidTimeSource());
+
         // Set up event reporting job handler spy
         EventReportingJobHandler eventReportingJobHandler =
                 Mockito.spy(
-                        new EventReportingJobHandler(datastoreManager, flags, context)
+                        new EventReportingJobHandler(datastoreManager, flags, context, mTimeSource)
                                 .setIsDebugInstance(isDebugInstance));
         Mockito.doReturn(200)
                 .when(eventReportingJobHandler)
                 .makeHttpPostRequest(any(), any(), any());
+
+        Mockito.doReturn(windowEndTime + TimeUnit.HOURS.toMillis(2))
+                .when(mTimeSource)
+                .currentTimeMillis();
 
         // Perform event reports and capture arguments
         eventReportingJobHandler.performScheduledPendingReportsInWindow(

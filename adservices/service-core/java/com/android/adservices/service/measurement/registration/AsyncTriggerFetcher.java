@@ -469,7 +469,7 @@ public class AsyncTriggerFetcher {
                     return false;
                 }
                 asyncFetchStatus.setIsTriggerAggregatableValueFiltersConfigured(true);
-                builder.setAggregateValues(
+                builder.setAggregateValuesString(
                         json.getString(TriggerHeaderContract.AGGREGATABLE_VALUES));
             } else {
                 if (!isValidAggregateValues(
@@ -483,7 +483,7 @@ public class AsyncTriggerFetcher {
                                                     .HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER));
                     return false;
                 }
-                builder.setAggregateValues(
+                builder.setAggregateValuesString(
                         json.getString(TriggerHeaderContract.AGGREGATABLE_VALUES));
             }
         }
@@ -644,7 +644,7 @@ public class AsyncTriggerFetcher {
                             TriggerHeaderContract.ATTRIBUTION_SCOPES,
                             Integer.MAX_VALUE,
                             Integer.MAX_VALUE);
-            if (attributionScopes.isEmpty() || attributionScopes.get().isEmpty()) {
+            if (attributionScopes.isEmpty()) {
                 LoggerFactory.getMeasurementLogger()
                         .e(
                                 String.format(
@@ -657,6 +657,21 @@ public class AsyncTriggerFetcher {
             builder.setAttributionScopesString(
                     json.getJSONArray(TriggerHeaderContract.ATTRIBUTION_SCOPES).toString());
         }
+
+        if (mFlags.getMeasurementEnableAggregateDebugReporting()
+                && !json.isNull(TriggerHeaderContract.AGGREGATABLE_DEBUG_REPORTING)) {
+            Optional<String> validAggregateDebugReporting =
+                    FetcherUtil.getValidAggregateDebugReportingString(
+                            json.getJSONObject(TriggerHeaderContract.AGGREGATABLE_DEBUG_REPORTING),
+                            mFlags);
+            if (!validAggregateDebugReporting.isPresent()) {
+                LoggerFactory.getMeasurementLogger()
+                        .d("parseTrigger: aggregatable debug reporting is invalid.");
+                return false;
+            }
+            builder.setAggregateDebugReportingString(validAggregateDebugReporting.get());
+        }
+
         return true;
     }
 
@@ -1028,8 +1043,8 @@ public class AsyncTriggerFetcher {
         return true;
     }
 
-    private static Uri getAttributionDestination(Uri destination,
-            AsyncRegistration.RegistrationType registrationType) {
+    private static Uri getAttributionDestination(
+            Uri destination, AsyncRegistration.RegistrationType registrationType) {
         return registrationType == AsyncRegistration.RegistrationType.APP_TRIGGER
                 ? BaseUriExtractor.getBaseUri(destination)
                 : destination;
@@ -1074,6 +1089,7 @@ public class AsyncTriggerFetcher {
         String AGGREGATABLE_SOURCE_REGISTRATION_TIME = "aggregatable_source_registration_time";
         String TRIGGER_CONTEXT_ID = "trigger_context_id";
         String ATTRIBUTION_SCOPES = "attribution_scopes";
+        String AGGREGATABLE_DEBUG_REPORTING = "aggregatable_debug_reporting";
     }
 
     private interface OdpTriggerHeaderContract {

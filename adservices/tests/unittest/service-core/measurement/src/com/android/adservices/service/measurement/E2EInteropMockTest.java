@@ -82,6 +82,9 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                         "basic_aggregatable.json",
                         "channel_capacity.json",
                         "clamp_aggregatable_report_window.json",
+                        "clamp_event_report_window.json",
+                        "clamp_expiry.json",
+                        "custom_trigger_data.json",
                         "destination_limit.json",
                         "destination_rate_limit.json",
                         "destination_validation.json",
@@ -90,11 +93,14 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                         "event_level_storage_limit.json",
                         "event_level_trigger_filter_data.json",
                         "event_report_window.json",
+                        "event_report_windows.json",
+                        "expired_source.json",
                         "fenced.json",
                         "filter_data_validation.json",
                         "header_presence.json",
                         "lookback_window_precision.json",
                         "max_aggregatable_reports_per_source.json",
+                        "max_event_level_reports_per_source.json",
                         "max_trigger_state_cardinality.json",
                         "multiple_destinations.json",
                         "null_aggregatable_report.json",
@@ -158,8 +164,19 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                             FlagsConstants
                                     .KEY_MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE),
                     entry(
-                            "max_event_info_gain",
+                            "max_event_level_channel_capacity_event",
                             FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT),
+                    entry(
+                            "max_event_level_channel_capacity_navigation",
+                            FlagsConstants
+                                    .KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION),
+                    entry(
+                            "max_event_level_channel_capacity_scopes_event",
+                            FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT),
+                    entry(
+                            "max_event_level_channel_capacity_scopes_navigation",
+                            FlagsConstants
+                                    .KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION),
                     entry(
                             "rate_limit_max_reporting_origins_per_source_reporting_site",
                             FlagsConstants
@@ -190,10 +207,15 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                                     .KEY_MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION));
 
     private static String preprocessor(String json) {
-        return json.replaceAll("\\.test(?=[\"\\/])", ".com")
+        // In a header response provided in string format, .test could also be surrounded by escaped
+        // quotes.
+        return json.replaceAll("\\.test(?=[\"\\/\\\\])", ".com")
                 // Remove comments
                 .replaceAll("^\\s*\\/\\/.+\\n", "")
-                .replaceAll("\"destination\":", "\"web_destination\":");
+                .replaceAll("\"destination\":", "\"web_destination\":")
+                // In a header response provided in string format, destination may be surronded by
+                // escaped quotes.
+                .replaceAll("\\\\\"destination\\\\\":", "\\\\\"web_destination\\\\\":");
     }
 
     private static final Map<String, String> sPhFlagsForInterop =
@@ -230,7 +252,14 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                     entry(FlagsConstants.KEY_MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM, "1"),
                     entry(FlagsConstants.KEY_MEASUREMENT_ENABLE_LOOKBACK_WINDOW_FILTER, "true"),
                     entry(FlagsConstants.KEY_MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED, "true"),
-                    entry(FlagsConstants.KEY_MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT, "true"));
+                    entry(FlagsConstants.KEY_MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT, "true"),
+                    entry(
+                            FlagsConstants.KEY_MEASUREMENT_ENABLE_EVENT_LEVEL_EPSILON_IN_SOURCE,
+                            "true"),
+                    entry(FlagsConstants
+                            .KEY_MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT,
+                            "true"),
+                    entry(FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATE_VALUE_FILTERS, "true"));
 
     @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> getData() throws IOException, JSONException {
@@ -257,9 +286,7 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                                     return phFlagsMap;
                                 })
                         .get());
-        mAttributionHelper =
-                TestObjectProvider.getAttributionJobHandler(
-                        mDatastoreManager, mFlags, mErrorLogger);
+        mAttributionHelper = TestObjectProvider.getAttributionJobHandler(mDatastoreManager, mFlags);
         mMeasurementImpl =
                 TestObjectProvider.getMeasurementImpl(
                         mDatastoreManager,

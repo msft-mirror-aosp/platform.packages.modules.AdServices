@@ -66,7 +66,6 @@ public final class ApiCallStatsTest extends AdServicesUnitTestCase {
         expect.withMessage("%s.getLatencyMillisecond()", stats)
                 .that(stats.getLatencyMillisecond())
                 .isEqualTo(LATENCY_MS);
-
         expect.withMessage("%s.getResultCode()", stats)
                 .that(stats.getResultCode())
                 .isEqualTo(STATUS_INVALID_ARGUMENT);
