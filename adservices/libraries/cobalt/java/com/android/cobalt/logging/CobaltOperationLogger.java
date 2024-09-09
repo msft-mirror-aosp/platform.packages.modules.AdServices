@@ -34,4 +34,12 @@ public interface CobaltOperationLogger {
      * @param reportId the Cobalt report id of the event that is being logged
      */
     void logEventVectorBufferMaxExceeded(int metricId, int reportId);
+
+    /**
+     * Logs that a Cobalt logging event exceeds the max value when calculating its private index.
+     *
+     * @param metricId the Cobalt metric id of the event that is being logged
+     * @param reportId the Cobalt report id of the event that is being logged
+     */
+    void logMaxValueExceeded(int metricId, int reportId);
 }

@@ -19,6 +19,9 @@ package com.android.adservices.service.measurement.reporting;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -37,7 +40,7 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.TriggerFixture;
-import com.android.adservices.service.measurement.reporting.DebugReportApi.Type;
+import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -75,13 +78,23 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
 
     private DebugReportApi mDebugReportApi;
     @Mock private IMeasurementDao mMeasurementDao;
+    @Mock private EventReportWindowCalcDelegate mEventReportWindowCalcDelegate;
+    @Mock private SourceNoiseHandler mSourceNoiseHandler;
+    @Mock private AggregateDebugReportApi mAggregateDebugReportApi;
 
     @Before
     public void setup() {
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.schedule(any(), any()));
         mocker.mockGetFlagsForTesting();
-        mDebugReportApi = spy(new DebugReportApi(mContext, mMockFlags));
+        mDebugReportApi =
+                spy(
+                        new DebugReportApi(
+                                mContext,
+                                mMockFlags,
+                                mEventReportWindowCalcDelegate,
+                                mSourceNoiseHandler,
+                                mAggregateDebugReportApi));
 
         when(mMockFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist())
                 .thenReturn(SourceFixture.ValidSourceParams.ENROLLMENT_ID);
@@ -97,6 +110,10 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         when(mMockFlags.getMeasurementMaxReportStatesPerSourceRegistration())
                 .thenReturn(Flags.MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION);
         when(mMockFlags.getMeasurementAttributionScopeMaxInfoGainNavigation()).thenReturn(11.5f);
+        when(mEventReportWindowCalcDelegate.getReportingTime(
+                        any(Source.class), anyLong(), anyInt()))
+                .thenReturn(100L);
+        when(mSourceNoiseHandler.getRandomizedTriggerRate(any(Source.class))).thenReturn(0.0D);
     }
 
     @Test
@@ -114,16 +131,20 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
-        mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao, Map.of());
+        mDebugReportApi.scheduleSourceSuccessDebugReport(
+                source, mMeasurementDao, Map.of(), DebugReportApi.Type.SOURCE_SUCCESS);
         ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
         verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
         DebugReport report = captor.getValue();
         assertSourceDebugReportParameters(
                 report,
-                DebugReportApi.Type.SOURCE_SUCCESS,
+                DebugReportApi.Type.SOURCE_SUCCESS.getValue(),
                 SourceFixture.ValidSourceParams.PUBLISHER.toString(),
                 SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS.get(0).toString(),
                 Map.of());
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source), eq(DebugReportApi.Type.SOURCE_SUCCESS), eq(mMeasurementDao));
     }
 
     @Test
@@ -141,16 +162,20 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
-        mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao, Map.of());
+        mDebugReportApi.scheduleSourceSuccessDebugReport(
+                source, mMeasurementDao, Map.of(), DebugReportApi.Type.SOURCE_SUCCESS);
         ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
         verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
         DebugReport report = captor.getValue();
         assertSourceDebugReportParameters(
                 report,
-                DebugReportApi.Type.SOURCE_SUCCESS,
+                DebugReportApi.Type.SOURCE_SUCCESS.getValue(),
                 SourceFixture.ValidSourceParams.WEB_PUBLISHER.toString(),
                 SourceFixture.ValidSourceParams.WEB_DESTINATIONS.get(0).toString(),
                 Map.of());
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source), eq(DebugReportApi.Type.SOURCE_SUCCESS), eq(mMeasurementDao));
     }
 
     @Test
@@ -168,17 +193,21 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
-        mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao, Map.of());
+        mDebugReportApi.scheduleSourceSuccessDebugReport(
+                source, mMeasurementDao, Map.of(), DebugReportApi.Type.SOURCE_SUCCESS);
         ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
         verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
         DebugReport actualReport = captor.getValue();
 
         assertSourceDebugReportParameters(
                 actualReport,
-                DebugReportApi.Type.SOURCE_SUCCESS,
+                DebugReportApi.Type.SOURCE_SUCCESS.getValue(),
                 SourceFixture.ValidSourceParams.PUBLISHER.toString(),
                 SourceFixture.ValidSourceParams.WEB_DESTINATIONS.get(0).toString(),
                 Map.of());
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source), eq(DebugReportApi.Type.SOURCE_SUCCESS), eq(mMeasurementDao));
     }
 
     @Test
@@ -197,17 +226,21 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
-        mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao, Map.of());
+        mDebugReportApi.scheduleSourceSuccessDebugReport(
+                source, mMeasurementDao, Map.of(), DebugReportApi.Type.SOURCE_SUCCESS);
         ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
         verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
         DebugReport actualReport = captor.getValue();
 
         assertSourceDebugReportParameters(
                 actualReport,
-                DebugReportApi.Type.SOURCE_SUCCESS,
+                DebugReportApi.Type.SOURCE_SUCCESS.getValue(),
                 SourceFixture.ValidSourceParams.WEB_PUBLISHER.toString(),
                 SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS.get(0).toString(),
                 Map.of());
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source), eq(DebugReportApi.Type.SOURCE_SUCCESS), eq(mMeasurementDao));
     }
 
     @Test
@@ -226,14 +259,15 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
-        mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao, Map.of());
+        mDebugReportApi.scheduleSourceSuccessDebugReport(
+                source, mMeasurementDao, Map.of(), DebugReportApi.Type.SOURCE_SUCCESS);
         ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
         verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
         DebugReport actualReport = captor.getValue();
 
         assertSourceDebugReportParameters(
                 actualReport,
-                DebugReportApi.Type.SOURCE_SUCCESS,
+                DebugReportApi.Type.SOURCE_SUCCESS.getValue(),
                 SourceFixture.ValidSourceParams.PUBLISHER.toString(),
                 new JSONArray(
                                 Arrays.asList(
@@ -245,6 +279,9 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                                                 .toString()))
                         .toString(),
                 Map.of());
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source), eq(DebugReportApi.Type.SOURCE_SUCCESS), eq(mMeasurementDao));
     }
 
     @Test
@@ -263,14 +300,15 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
-        mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao, Map.of());
+        mDebugReportApi.scheduleSourceSuccessDebugReport(
+                source, mMeasurementDao, Map.of(), DebugReportApi.Type.SOURCE_SUCCESS);
         ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
         verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
         DebugReport actualReport = captor.getValue();
 
         assertSourceDebugReportParameters(
                 actualReport,
-                DebugReportApi.Type.SOURCE_SUCCESS,
+                DebugReportApi.Type.SOURCE_SUCCESS.getValue(),
                 SourceFixture.ValidSourceParams.WEB_PUBLISHER.toString(),
                 new JSONArray(
                                 Arrays.asList(
@@ -282,6 +320,9 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                                                 .toString()))
                         .toString(),
                 Map.of());
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source), eq(DebugReportApi.Type.SOURCE_SUCCESS), eq(mMeasurementDao));
     }
 
     @Test
@@ -300,8 +341,12 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
-        mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao, Map.of());
+        mDebugReportApi.scheduleSourceSuccessDebugReport(
+                source, mMeasurementDao, Map.of(), DebugReportApi.Type.SOURCE_SUCCESS);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source), eq(DebugReportApi.Type.SOURCE_SUCCESS), eq(mMeasurementDao));
     }
 
     @Test
@@ -320,8 +365,12 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
-        mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao, Map.of());
+        mDebugReportApi.scheduleSourceSuccessDebugReport(
+                source, mMeasurementDao, Map.of(), DebugReportApi.Type.SOURCE_SUCCESS);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source), eq(DebugReportApi.Type.SOURCE_SUCCESS), eq(mMeasurementDao));
     }
 
     @Test
@@ -337,8 +386,12 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
-        mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao, Map.of());
+        mDebugReportApi.scheduleSourceSuccessDebugReport(
+                source, mMeasurementDao, Map.of(), DebugReportApi.Type.SOURCE_SUCCESS);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source), eq(DebugReportApi.Type.SOURCE_SUCCESS), eq(mMeasurementDao));
     }
 
     @Test
@@ -353,8 +406,12 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
-        mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao, Map.of());
+        mDebugReportApi.scheduleSourceSuccessDebugReport(
+                source, mMeasurementDao, Map.of(), DebugReportApi.Type.SOURCE_SUCCESS);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source), eq(DebugReportApi.Type.SOURCE_SUCCESS), eq(mMeasurementDao));
     }
 
     @Test
@@ -372,8 +429,12 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
-        mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao, Map.of());
+        mDebugReportApi.scheduleSourceSuccessDebugReport(
+                source, mMeasurementDao, Map.of(), DebugReportApi.Type.SOURCE_SUCCESS);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source), eq(DebugReportApi.Type.SOURCE_SUCCESS), eq(mMeasurementDao));
     }
 
     @Test
@@ -390,8 +451,12 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
-        mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao, Map.of());
+        mDebugReportApi.scheduleSourceSuccessDebugReport(
+                source, mMeasurementDao, Map.of(), DebugReportApi.Type.SOURCE_SUCCESS);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source), eq(DebugReportApi.Type.SOURCE_SUCCESS), eq(mMeasurementDao));
     }
 
     @Test
@@ -416,10 +481,15 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         DebugReport report = captor.getValue();
         assertSourceDebugReportParameters(
                 report,
-                DebugReportApi.Type.SOURCE_DESTINATION_LIMIT,
+                DebugReportApi.Type.SOURCE_DESTINATION_LIMIT.getValue(),
                 SourceFixture.ValidSourceParams.PUBLISHER.toString(),
                 SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS.get(0).toString(),
                 Map.of(DebugReportApi.Body.LIMIT, LIMIT));
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source),
+                        eq(DebugReportApi.Type.SOURCE_DESTINATION_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -445,10 +515,15 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         DebugReport report = captor.getValue();
         assertSourceDebugReportParameters(
                 report,
-                DebugReportApi.Type.SOURCE_DESTINATION_RATE_LIMIT,
+                DebugReportApi.Type.SOURCE_DESTINATION_RATE_LIMIT.getValue(),
                 SourceFixture.ValidSourceParams.PUBLISHER.toString(),
                 SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS.get(0).toString(),
                 Map.of(DebugReportApi.Body.LIMIT, LIMIT));
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source),
+                        eq(DebugReportApi.Type.SOURCE_DESTINATION_RATE_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -474,10 +549,15 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         DebugReport report = captor.getValue();
         assertSourceDebugReportParameters(
                 report,
-                DebugReportApi.Type.SOURCE_DESTINATION_PER_DAY_RATE_LIMIT,
+                DebugReportApi.Type.SOURCE_DESTINATION_PER_DAY_RATE_LIMIT.getValue(),
                 SourceFixture.ValidSourceParams.PUBLISHER.toString(),
                 SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS.get(0).toString(),
                 Map.of(DebugReportApi.Body.LIMIT, LIMIT));
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source),
+                        eq(DebugReportApi.Type.SOURCE_DESTINATION_PER_DAY_RATE_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -490,6 +570,11 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
 
         mDebugReportApi.scheduleSourceDestinationLimitDebugReport(source, LIMIT, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source),
+                        eq(DebugReportApi.Type.SOURCE_DESTINATION_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -504,6 +589,11 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleSourceDestinationPerMinuteRateLimitDebugReport(
                 source, LIMIT, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source),
+                        eq(DebugReportApi.Type.SOURCE_DESTINATION_RATE_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -517,6 +607,11 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleSourceDestinationPerDayRateLimitDebugReport(
                 source, LIMIT, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source),
+                        eq(DebugReportApi.Type.SOURCE_DESTINATION_PER_DAY_RATE_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -529,6 +624,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
 
         mDebugReportApi.scheduleSourceDestinationLimitDebugReport(source, LIMIT, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source),
+                        eq(DebugReportApi.Type.SOURCE_DESTINATION_LIMIT),
+                        eq(mMeasurementDao));
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source),
+                        eq(DebugReportApi.Type.SOURCE_DESTINATION_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -543,6 +648,11 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleSourceDestinationPerMinuteRateLimitDebugReport(
                 source, LIMIT, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source),
+                        eq(DebugReportApi.Type.SOURCE_DESTINATION_RATE_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -557,6 +667,11 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleSourceDestinationPerDayRateLimitDebugReport(
                 source, LIMIT, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source),
+                        eq(DebugReportApi.Type.SOURCE_DESTINATION_PER_DAY_RATE_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -574,6 +689,11 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
 
         mDebugReportApi.scheduleSourceDestinationLimitDebugReport(source, LIMIT, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source),
+                        eq(DebugReportApi.Type.SOURCE_DESTINATION_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -593,6 +713,11 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleSourceDestinationPerMinuteRateLimitDebugReport(
                 source, LIMIT, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source),
+                        eq(DebugReportApi.Type.SOURCE_DESTINATION_RATE_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -612,6 +737,11 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleSourceDestinationPerDayRateLimitDebugReport(
                 source, LIMIT, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source),
+                        eq(DebugReportApi.Type.SOURCE_DESTINATION_PER_DAY_RATE_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -628,6 +758,11 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
 
         mDebugReportApi.scheduleSourceDestinationLimitDebugReport(source, LIMIT, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source),
+                        eq(DebugReportApi.Type.SOURCE_DESTINATION_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -645,6 +780,11 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleSourceDestinationPerMinuteRateLimitDebugReport(
                 source, LIMIT, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source),
+                        eq(DebugReportApi.Type.SOURCE_DESTINATION_RATE_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -666,10 +806,13 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         DebugReport report = captor.getValue();
         assertSourceDebugReportParameters(
                 report,
-                DebugReportApi.Type.SOURCE_NOISED,
+                DebugReportApi.Type.SOURCE_NOISED.getValue(),
                 SourceFixture.ValidSourceParams.PUBLISHER.toString(),
                 SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS.get(0).toString(),
                 additionalParam);
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source), eq(DebugReportApi.Type.SOURCE_NOISED), eq(mMeasurementDao));
     }
 
     @Test
@@ -695,7 +838,7 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         DebugReport report = captor.getValue();
         assertSourceDebugReportParameters(
                 report,
-                DebugReportApi.Type.SOURCE_NOISED,
+                DebugReportApi.Type.SOURCE_NOISED.getValue(),
                 SourceFixture.ValidSourceParams.WEB_PUBLISHER.toString(),
                 new JSONArray(
                                 Arrays.asList(
@@ -707,6 +850,9 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                                                 .toString()))
                         .toString(),
                 additionalParam);
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source), eq(DebugReportApi.Type.SOURCE_NOISED), eq(mMeasurementDao));
     }
 
     @Test
@@ -724,6 +870,9 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
 
         mDebugReportApi.scheduleSourceNoisedDebugReport(source, mMeasurementDao, null);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source), eq(DebugReportApi.Type.SOURCE_NOISED), eq(mMeasurementDao));
     }
 
     @Test
@@ -741,6 +890,9 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
 
         mDebugReportApi.scheduleSourceNoisedDebugReport(source, mMeasurementDao, null);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source), eq(DebugReportApi.Type.SOURCE_NOISED), eq(mMeasurementDao));
     }
 
     @Test
@@ -758,6 +910,9 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
 
         mDebugReportApi.scheduleSourceNoisedDebugReport(source, mMeasurementDao, null);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source), eq(DebugReportApi.Type.SOURCE_NOISED), eq(mMeasurementDao));
     }
 
     @Test
@@ -774,6 +929,9 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
 
         mDebugReportApi.scheduleSourceNoisedDebugReport(source, mMeasurementDao, null);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source), eq(DebugReportApi.Type.SOURCE_NOISED), eq(mMeasurementDao));
     }
 
     @Test
@@ -789,6 +947,9 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
 
         mDebugReportApi.scheduleSourceNoisedDebugReport(source, mMeasurementDao, null);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source), eq(DebugReportApi.Type.SOURCE_NOISED), eq(mMeasurementDao));
     }
 
     @Test
@@ -808,10 +969,15 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         DebugReport report = captor.getValue();
         assertSourceDebugReportParameters(
                 report,
-                DebugReportApi.Type.SOURCE_STORAGE_LIMIT,
+                DebugReportApi.Type.SOURCE_STORAGE_LIMIT.getValue(),
                 SourceFixture.ValidSourceParams.PUBLISHER.toString(),
                 SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS.get(0).toString(),
                 Map.of(DebugReportApi.Body.LIMIT, LIMIT));
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source),
+                        eq(DebugReportApi.Type.SOURCE_STORAGE_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -829,6 +995,11 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
 
         mDebugReportApi.scheduleSourceStorageLimitDebugReport(source, LIMIT, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source),
+                        eq(DebugReportApi.Type.SOURCE_STORAGE_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -846,6 +1017,11 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
 
         mDebugReportApi.scheduleSourceStorageLimitDebugReport(source, LIMIT, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source),
+                        eq(DebugReportApi.Type.SOURCE_STORAGE_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -862,6 +1038,11 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
 
         mDebugReportApi.scheduleSourceStorageLimitDebugReport(source, LIMIT, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source),
+                        eq(DebugReportApi.Type.SOURCE_STORAGE_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -879,6 +1060,11 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
 
         mDebugReportApi.scheduleSourceStorageLimitDebugReport(source, LIMIT, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source),
+                        eq(DebugReportApi.Type.SOURCE_STORAGE_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -901,10 +1087,15 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         DebugReport report = captor.getValue();
         assertSourceDebugReportParameters(
                 report,
-                DebugReportApi.Type.SOURCE_UNKNOWN_ERROR,
+                DebugReportApi.Type.SOURCE_UNKNOWN_ERROR.getValue(),
                 SourceFixture.ValidSourceParams.PUBLISHER.toString(),
                 SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS.get(0).toString(),
                 Map.of());
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source),
+                        eq(DebugReportApi.Type.SOURCE_UNKNOWN_ERROR),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -929,7 +1120,7 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         DebugReport report = captor.getValue();
         assertSourceDebugReportParameters(
                 report,
-                DebugReportApi.Type.SOURCE_UNKNOWN_ERROR,
+                DebugReportApi.Type.SOURCE_UNKNOWN_ERROR.getValue(),
                 SourceFixture.ValidSourceParams.WEB_PUBLISHER.toString(),
                 new JSONArray(
                                 Arrays.asList(
@@ -941,6 +1132,11 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                                                 .toString()))
                         .toString(),
                 Map.of());
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source),
+                        eq(DebugReportApi.Type.SOURCE_UNKNOWN_ERROR),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -961,6 +1157,11 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
 
         mDebugReportApi.scheduleSourceUnknownErrorDebugReport(source, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source),
+                        eq(DebugReportApi.Type.SOURCE_UNKNOWN_ERROR),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -981,6 +1182,11 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
 
         mDebugReportApi.scheduleSourceUnknownErrorDebugReport(source, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source),
+                        eq(DebugReportApi.Type.SOURCE_UNKNOWN_ERROR),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -998,6 +1204,11 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
 
         mDebugReportApi.scheduleSourceUnknownErrorDebugReport(source, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source),
+                        eq(DebugReportApi.Type.SOURCE_UNKNOWN_ERROR),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -1014,6 +1225,11 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
 
         mDebugReportApi.scheduleSourceUnknownErrorDebugReport(source, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source),
+                        eq(DebugReportApi.Type.SOURCE_UNKNOWN_ERROR),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -1033,6 +1249,11 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
 
         mDebugReportApi.scheduleSourceUnknownErrorDebugReport(source, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source),
+                        eq(DebugReportApi.Type.SOURCE_UNKNOWN_ERROR),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -1052,6 +1273,11 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
 
         mDebugReportApi.scheduleSourceUnknownErrorDebugReport(source, mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source),
+                        eq(DebugReportApi.Type.SOURCE_UNKNOWN_ERROR),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -1068,6 +1294,8 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
                 trigger, mMeasurementDao, DebugReportApi.Type.TRIGGER_NO_MATCHING_SOURCE);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerNoMatchingSourceDebugReport(eq(trigger), eq(mMeasurementDao));
     }
 
     @Test
@@ -1087,10 +1315,13 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         DebugReport report = captor.getValue();
         Assert.assertEquals(
                 TriggerFixture.ValidTriggerParams.ENROLLMENT_ID, report.getEnrollmentId());
-        Assert.assertEquals(Type.TRIGGER_NO_MATCHING_SOURCE, report.getType());
+        Assert.assertEquals(
+                DebugReportApi.Type.TRIGGER_NO_MATCHING_SOURCE.getValue(), report.getType());
         Assert.assertEquals(
                 TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN,
                 report.getRegistrationOrigin());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerNoMatchingSourceDebugReport(eq(trigger), eq(mMeasurementDao));
     }
 
     @Test
@@ -1108,6 +1339,8 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
                 trigger, mMeasurementDao, DebugReportApi.Type.TRIGGER_NO_MATCHING_SOURCE);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerNoMatchingSourceDebugReport(eq(trigger), eq(mMeasurementDao));
     }
 
     @Test
@@ -1125,6 +1358,8 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
                 trigger, mMeasurementDao, DebugReportApi.Type.TRIGGER_NO_MATCHING_SOURCE);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerNoMatchingSourceDebugReport(eq(trigger), eq(mMeasurementDao));
     }
 
     @Test
@@ -1137,6 +1372,8 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
                 trigger, mMeasurementDao, DebugReportApi.Type.TRIGGER_NO_MATCHING_SOURCE);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerNoMatchingSourceDebugReport(eq(trigger), eq(mMeasurementDao));
     }
 
     @Test
@@ -1153,6 +1390,8 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
                 trigger, mMeasurementDao, DebugReportApi.Type.TRIGGER_UNKNOWN_ERROR);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerNoMatchingSourceDebugReport(eq(trigger), eq(mMeasurementDao));
     }
 
     @Test
@@ -1168,6 +1407,8 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
                 trigger, mMeasurementDao, DebugReportApi.Type.TRIGGER_UNKNOWN_ERROR);
         verify(mMeasurementDao, times(1)).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerNoMatchingSourceDebugReport(eq(trigger), eq(mMeasurementDao));
     }
 
     @Test
@@ -1185,6 +1426,8 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
                 trigger, mMeasurementDao, DebugReportApi.Type.TRIGGER_UNKNOWN_ERROR);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerNoMatchingSourceDebugReport(eq(trigger), eq(mMeasurementDao));
     }
 
     @Test
@@ -1202,6 +1445,8 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
                 trigger, mMeasurementDao, DebugReportApi.Type.TRIGGER_UNKNOWN_ERROR);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerNoMatchingSourceDebugReport(eq(trigger), eq(mMeasurementDao));
     }
 
     @Test
@@ -1214,6 +1459,8 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
                 trigger, mMeasurementDao, DebugReportApi.Type.TRIGGER_UNKNOWN_ERROR);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerNoMatchingSourceDebugReport(eq(trigger), eq(mMeasurementDao));
     }
 
     @Test
@@ -1236,10 +1483,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_NO_MATCHING_FILTER_DATA);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_NO_MATCHING_FILTER_DATA),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -1262,10 +1515,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_NO_MATCHING_FILTER_DATA);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_NO_MATCHING_FILTER_DATA),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -1295,10 +1554,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_NO_MATCHING_FILTER_DATA);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_NO_MATCHING_FILTER_DATA),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -1320,17 +1585,24 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_NO_MATCHING_FILTER_DATA);
         ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
         verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
         DebugReport report = captor.getValue();
         assertEquals(TriggerFixture.ValidTriggerParams.ENROLLMENT_ID, report.getEnrollmentId());
-        assertEquals(Type.TRIGGER_NO_MATCHING_FILTER_DATA, report.getType());
+        assertEquals(
+                DebugReportApi.Type.TRIGGER_NO_MATCHING_FILTER_DATA.getValue(), report.getType());
         assertEquals(
                 TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN,
                 report.getRegistrationOrigin());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_NO_MATCHING_FILTER_DATA),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -1354,10 +1626,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_NO_MATCHING_FILTER_DATA);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_NO_MATCHING_FILTER_DATA),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -1382,10 +1660,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_NO_MATCHING_FILTER_DATA);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_NO_MATCHING_FILTER_DATA),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -1405,10 +1689,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_NO_MATCHING_FILTER_DATA);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_NO_MATCHING_FILTER_DATA),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -1432,10 +1722,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_NO_MATCHING_CONFIGURATIONS);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_NO_MATCHING_CONFIGURATIONS),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -1459,10 +1755,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_NO_MATCHING_CONFIGURATIONS);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_NO_MATCHING_CONFIGURATIONS),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -1493,10 +1795,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_NO_MATCHING_CONFIGURATIONS);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_NO_MATCHING_CONFIGURATIONS),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -1519,17 +1827,25 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_NO_MATCHING_CONFIGURATIONS);
         ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
         verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
         DebugReport report = captor.getValue();
         assertEquals(TriggerFixture.ValidTriggerParams.ENROLLMENT_ID, report.getEnrollmentId());
-        assertEquals(Type.TRIGGER_EVENT_NO_MATCHING_CONFIGURATIONS, report.getType());
+        assertEquals(
+                DebugReportApi.Type.TRIGGER_EVENT_NO_MATCHING_CONFIGURATIONS.getValue(),
+                report.getType());
         assertEquals(
                 TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN,
                 report.getRegistrationOrigin());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_NO_MATCHING_CONFIGURATIONS),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -1553,10 +1869,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_NO_MATCHING_CONFIGURATIONS);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_NO_MATCHING_CONFIGURATIONS),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -1581,10 +1903,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_NO_MATCHING_CONFIGURATIONS);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_NO_MATCHING_CONFIGURATIONS),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -1604,10 +1932,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_NO_MATCHING_CONFIGURATIONS);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_NO_MATCHING_CONFIGURATIONS),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -1634,6 +1968,12 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_LOW_PRIORITY);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_LOW_PRIORITY),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -1660,6 +2000,12 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_LOW_PRIORITY);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_LOW_PRIORITY),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -1693,6 +2039,12 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_LOW_PRIORITY);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_LOW_PRIORITY),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -1722,10 +2074,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
         DebugReport report = captor.getValue();
         assertEquals(TriggerFixture.ValidTriggerParams.ENROLLMENT_ID, report.getEnrollmentId());
-        assertEquals(Type.TRIGGER_EVENT_LOW_PRIORITY, report.getType());
+        assertEquals(DebugReportApi.Type.TRIGGER_EVENT_LOW_PRIORITY.getValue(), report.getType());
         assertEquals(
                 TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN,
                 report.getRegistrationOrigin());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_LOW_PRIORITY),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -1753,6 +2111,12 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_LOW_PRIORITY);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_LOW_PRIORITY),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -1780,6 +2144,12 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_LOW_PRIORITY);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_LOW_PRIORITY),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -1804,6 +2174,12 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_LOW_PRIORITY);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_LOW_PRIORITY),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -1830,6 +2206,12 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_EXCESSIVE_REPORTS);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_EXCESSIVE_REPORTS),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -1856,6 +2238,12 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_EXCESSIVE_REPORTS);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_EXCESSIVE_REPORTS),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -1889,6 +2277,12 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_EXCESSIVE_REPORTS);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_EXCESSIVE_REPORTS),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -1917,10 +2311,17 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
         DebugReport report = captor.getValue();
         assertEquals(TriggerFixture.ValidTriggerParams.ENROLLMENT_ID, report.getEnrollmentId());
-        assertEquals(Type.TRIGGER_EVENT_EXCESSIVE_REPORTS, report.getType());
+        assertEquals(
+                DebugReportApi.Type.TRIGGER_EVENT_EXCESSIVE_REPORTS.getValue(), report.getType());
         assertEquals(
                 TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN,
                 report.getRegistrationOrigin());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_EXCESSIVE_REPORTS),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -1948,6 +2349,12 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_EXCESSIVE_REPORTS);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_EXCESSIVE_REPORTS),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -1976,6 +2383,12 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_EXCESSIVE_REPORTS);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_EXCESSIVE_REPORTS),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -2001,6 +2414,12 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_EXCESSIVE_REPORTS);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_EXCESSIVE_REPORTS),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -2027,6 +2446,12 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -2049,10 +2474,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -2082,10 +2513,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -2114,10 +2551,18 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
         DebugReport report = captor.getValue();
         assertEquals(TriggerFixture.ValidTriggerParams.ENROLLMENT_ID, report.getEnrollmentId());
-        assertEquals(Type.TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT, report.getType());
+        assertEquals(
+                DebugReportApi.Type.TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT.getValue(),
+                report.getType());
         assertEquals(
                 TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN,
                 report.getRegistrationOrigin());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -2146,6 +2591,12 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -2174,6 +2625,12 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -2197,6 +2654,12 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -2219,10 +2682,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_REPORT_WINDOW_PASSED);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_REPORT_WINDOW_PASSED),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -2245,10 +2714,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_REPORT_WINDOW_PASSED);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_REPORT_WINDOW_PASSED),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -2278,10 +2753,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_REPORT_WINDOW_PASSED);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_REPORT_WINDOW_PASSED),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -2303,17 +2784,25 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_REPORT_WINDOW_PASSED);
         ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
         verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
         DebugReport report = captor.getValue();
         assertEquals(TriggerFixture.ValidTriggerParams.ENROLLMENT_ID, report.getEnrollmentId());
-        assertEquals(Type.TRIGGER_EVENT_REPORT_WINDOW_PASSED, report.getType());
+        assertEquals(
+                DebugReportApi.Type.TRIGGER_EVENT_REPORT_WINDOW_PASSED.getValue(),
+                report.getType());
         assertEquals(
                 TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN,
                 report.getRegistrationOrigin());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_REPORT_WINDOW_PASSED),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -2337,10 +2826,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_REPORT_WINDOW_PASSED);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_REPORT_WINDOW_PASSED),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -2364,10 +2859,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_REPORT_WINDOW_PASSED);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_REPORT_WINDOW_PASSED),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -2386,10 +2887,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_REPORT_WINDOW_PASSED);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_REPORT_WINDOW_PASSED),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -2416,6 +2923,12 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_REPORTING_ORIGIN_LIMIT);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_REPORTING_ORIGIN_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -2438,10 +2951,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_REPORTING_ORIGIN_LIMIT);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_REPORTING_ORIGIN_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -2471,10 +2990,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_REPORTING_ORIGIN_LIMIT);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_REPORTING_ORIGIN_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -2503,10 +3028,17 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
         DebugReport report = captor.getValue();
         assertEquals(TriggerFixture.ValidTriggerParams.ENROLLMENT_ID, report.getEnrollmentId());
-        assertEquals(Type.TRIGGER_REPORTING_ORIGIN_LIMIT, report.getType());
+        assertEquals(
+                DebugReportApi.Type.TRIGGER_REPORTING_ORIGIN_LIMIT.getValue(), report.getType());
         assertEquals(
                 TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN,
                 report.getRegistrationOrigin());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_REPORTING_ORIGIN_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -2534,6 +3066,12 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_REPORTING_ORIGIN_LIMIT);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_REPORTING_ORIGIN_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -2562,6 +3100,12 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_REPORTING_ORIGIN_LIMIT);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_REPORTING_ORIGIN_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -2585,6 +3129,12 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_REPORTING_ORIGIN_LIMIT);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_REPORTING_ORIGIN_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -2607,10 +3157,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_NOISE);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_NOISE),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -2633,10 +3189,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_NOISE);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_NOISE),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -2666,10 +3228,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_NOISE);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_NOISE),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -2691,17 +3259,23 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_NOISE);
         ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
         verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
         DebugReport report = captor.getValue();
         assertEquals(TriggerFixture.ValidTriggerParams.ENROLLMENT_ID, report.getEnrollmentId());
-        assertEquals(Type.TRIGGER_EVENT_NOISE, report.getType());
+        assertEquals(DebugReportApi.Type.TRIGGER_EVENT_NOISE.getValue(), report.getType());
         assertEquals(
                 TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN,
                 report.getRegistrationOrigin());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_NOISE),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -2725,10 +3299,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_NOISE);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_NOISE),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -2752,10 +3332,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_NOISE);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_NOISE),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -2774,10 +3360,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_NOISE);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_NOISE),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -2804,6 +3396,12 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_STORAGE_LIMIT);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_STORAGE_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -2826,10 +3424,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_STORAGE_LIMIT);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_STORAGE_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -2859,10 +3463,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_STORAGE_LIMIT);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_STORAGE_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -2891,10 +3501,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
         DebugReport report = captor.getValue();
         assertEquals(TriggerFixture.ValidTriggerParams.ENROLLMENT_ID, report.getEnrollmentId());
-        assertEquals(Type.TRIGGER_EVENT_STORAGE_LIMIT, report.getType());
+        assertEquals(DebugReportApi.Type.TRIGGER_EVENT_STORAGE_LIMIT.getValue(), report.getType());
         assertEquals(
                 TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN,
                 report.getRegistrationOrigin());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_STORAGE_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -2922,6 +3538,12 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_STORAGE_LIMIT);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_STORAGE_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -2949,6 +3571,12 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_STORAGE_LIMIT);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_STORAGE_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -2971,6 +3599,12 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_STORAGE_LIMIT);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_STORAGE_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -2993,10 +3627,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_AGGREGATE_REPORT_WINDOW_PASSED);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_AGGREGATE_REPORT_WINDOW_PASSED),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -3019,10 +3659,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_AGGREGATE_REPORT_WINDOW_PASSED);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_AGGREGATE_REPORT_WINDOW_PASSED),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -3052,10 +3698,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_AGGREGATE_REPORT_WINDOW_PASSED);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_AGGREGATE_REPORT_WINDOW_PASSED),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -3077,7 +3729,7 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_AGGREGATE_REPORT_WINDOW_PASSED);
 
@@ -3085,10 +3737,18 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
         DebugReport report = captor.getValue();
         assertEquals(TriggerFixture.ValidTriggerParams.ENROLLMENT_ID, report.getEnrollmentId());
-        assertEquals(Type.TRIGGER_AGGREGATE_REPORT_WINDOW_PASSED, report.getType());
+        assertEquals(
+                DebugReportApi.Type.TRIGGER_AGGREGATE_REPORT_WINDOW_PASSED.getValue(),
+                report.getType());
         assertEquals(
                 TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN,
                 report.getRegistrationOrigin());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_AGGREGATE_REPORT_WINDOW_PASSED),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -3112,10 +3772,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_AGGREGATE_REPORT_WINDOW_PASSED);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_AGGREGATE_REPORT_WINDOW_PASSED),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -3140,10 +3806,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_AGGREGATE_REPORT_WINDOW_PASSED);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_AGGREGATE_REPORT_WINDOW_PASSED),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -3163,10 +3835,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_AGGREGATE_REPORT_WINDOW_PASSED);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_AGGREGATE_REPORT_WINDOW_PASSED),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -3193,6 +3871,12 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_AGGREGATE_INSUFFICIENT_BUDGET);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_AGGREGATE_INSUFFICIENT_BUDGET),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -3215,10 +3899,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_AGGREGATE_INSUFFICIENT_BUDGET);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_AGGREGATE_INSUFFICIENT_BUDGET),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -3248,10 +3938,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_AGGREGATE_INSUFFICIENT_BUDGET);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_AGGREGATE_INSUFFICIENT_BUDGET),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -3277,6 +3973,12 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_AGGREGATE_INSUFFICIENT_BUDGET);
         verify(mMeasurementDao, times(1)).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_AGGREGATE_INSUFFICIENT_BUDGET),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -3305,6 +4007,12 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_AGGREGATE_INSUFFICIENT_BUDGET);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_AGGREGATE_INSUFFICIENT_BUDGET),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -3333,6 +4041,12 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_AGGREGATE_INSUFFICIENT_BUDGET);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_AGGREGATE_INSUFFICIENT_BUDGET),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -3356,6 +4070,12 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_AGGREGATE_INSUFFICIENT_BUDGET);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_AGGREGATE_INSUFFICIENT_BUDGET),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -3378,10 +4098,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_AGGREGATE_NO_CONTRIBUTIONS);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_AGGREGATE_NO_CONTRIBUTIONS),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -3404,10 +4130,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_AGGREGATE_NO_CONTRIBUTIONS);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_AGGREGATE_NO_CONTRIBUTIONS),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -3437,10 +4169,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_AGGREGATE_NO_CONTRIBUTIONS);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_AGGREGATE_NO_CONTRIBUTIONS),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -3462,10 +4200,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_AGGREGATE_NO_CONTRIBUTIONS);
         verify(mMeasurementDao, times(1)).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_AGGREGATE_NO_CONTRIBUTIONS),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -3490,10 +4234,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_AGGREGATE_NO_CONTRIBUTIONS);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_AGGREGATE_NO_CONTRIBUTIONS),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -3518,10 +4268,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_AGGREGATE_NO_CONTRIBUTIONS);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_AGGREGATE_NO_CONTRIBUTIONS),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -3541,10 +4297,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_AGGREGATE_NO_CONTRIBUTIONS);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_AGGREGATE_NO_CONTRIBUTIONS),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -3571,6 +4333,12 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_AGGREGATE_STORAGE_LIMIT);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_AGGREGATE_STORAGE_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -3593,10 +4361,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_AGGREGATE_STORAGE_LIMIT);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_AGGREGATE_STORAGE_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -3626,10 +4400,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_AGGREGATE_STORAGE_LIMIT);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_AGGREGATE_STORAGE_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -3655,6 +4435,12 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_AGGREGATE_STORAGE_LIMIT);
         verify(mMeasurementDao, times(1)).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_AGGREGATE_STORAGE_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -3682,6 +4468,12 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_AGGREGATE_STORAGE_LIMIT);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_AGGREGATE_STORAGE_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -3710,6 +4502,12 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_AGGREGATE_STORAGE_LIMIT);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_AGGREGATE_STORAGE_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -3733,6 +4531,12 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_AGGREGATE_STORAGE_LIMIT);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_AGGREGATE_STORAGE_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -3755,10 +4559,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_REPORT_WINDOW_NOT_STARTED);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_REPORT_WINDOW_NOT_STARTED),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -3781,10 +4591,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_REPORT_WINDOW_NOT_STARTED);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_REPORT_WINDOW_NOT_STARTED),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -3814,10 +4630,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_REPORT_WINDOW_NOT_STARTED);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_REPORT_WINDOW_NOT_STARTED),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -3839,10 +4661,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_REPORT_WINDOW_NOT_STARTED);
         verify(mMeasurementDao, times(1)).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_REPORT_WINDOW_NOT_STARTED),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -3866,10 +4694,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_REPORT_WINDOW_NOT_STARTED);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_REPORT_WINDOW_NOT_STARTED),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -3894,10 +4728,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_REPORT_WINDOW_NOT_STARTED);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_REPORT_WINDOW_NOT_STARTED),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -3917,10 +4757,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_REPORT_WINDOW_NOT_STARTED);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_REPORT_WINDOW_NOT_STARTED),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -3943,10 +4789,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_NO_MATCHING_TRIGGER_DATA);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_NO_MATCHING_TRIGGER_DATA),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -3969,10 +4821,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_NO_MATCHING_TRIGGER_DATA);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_NO_MATCHING_TRIGGER_DATA),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -4002,10 +4860,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_NO_MATCHING_TRIGGER_DATA);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_NO_MATCHING_TRIGGER_DATA),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -4027,10 +4891,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_NO_MATCHING_TRIGGER_DATA);
         verify(mMeasurementDao, times(1)).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_NO_MATCHING_TRIGGER_DATA),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -4055,10 +4925,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_NO_MATCHING_TRIGGER_DATA);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_NO_MATCHING_TRIGGER_DATA),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -4083,10 +4959,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_NO_MATCHING_TRIGGER_DATA);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_NO_MATCHING_TRIGGER_DATA),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -4106,10 +4988,16 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source,
                 trigger,
-                /* limit =*/ null,
+                /* limit= */ null,
                 mMeasurementDao,
                 DebugReportApi.Type.TRIGGER_EVENT_NO_MATCHING_TRIGGER_DATA);
         verify(mMeasurementDao, never()).insertDebugReport(any());
+        verify(mAggregateDebugReportApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(DebugReportApi.Type.TRIGGER_EVENT_NO_MATCHING_TRIGGER_DATA),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -4162,10 +5050,15 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
         assertSourceDebugReportParameters(
                 captor.getValue(),
-                DebugReportApi.Type.SOURCE_MAX_EVENT_STATES_LIMIT,
+                DebugReportApi.Type.SOURCE_MAX_EVENT_STATES_LIMIT.getValue(),
                 SourceFixture.ValidSourceParams.PUBLISHER.toString(),
                 SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS.get(0).toString(),
                 Map.of(DebugReportApi.Body.LIMIT, String.valueOf(source.getMaxEventStates())));
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source),
+                        eq(DebugReportApi.Type.SOURCE_MAX_EVENT_STATES_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     @Test
@@ -4203,10 +5096,15 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
 
         assertSourceDebugReportParameters(
                 captor.getValue(),
-                DebugReportApi.Type.SOURCE_SCOPES_CHANNEL_CAPACITY_LIMIT,
+                DebugReportApi.Type.SOURCE_SCOPES_CHANNEL_CAPACITY_LIMIT.getValue(),
                 SourceFixture.ValidSourceParams.PUBLISHER.toString(),
                 SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS.get(0).toString(),
                 Map.of(DebugReportApi.Body.LIMIT, String.valueOf(11.5f)));
+        verify(mAggregateDebugReportApi)
+                .scheduleSourceRegistrationErrorDebugReport(
+                        eq(source),
+                        eq(DebugReportApi.Type.SOURCE_SCOPES_CHANNEL_CAPACITY_LIMIT),
+                        eq(mMeasurementDao));
     }
 
     private static void assertSourceDebugReportParameters(
