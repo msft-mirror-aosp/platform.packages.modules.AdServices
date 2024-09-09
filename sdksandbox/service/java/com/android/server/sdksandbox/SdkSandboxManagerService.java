@@ -2266,7 +2266,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         return EXTRA_SANDBOXED_ACTIVITY_HANDLER;
     }
 
-    private ArraySet<String> getContentProviderAllowlist() {
+    private ArraySet<String> getContentProviderAllowlist(int sdkSandboxUid) {
         String curWebViewPackageName = WebViewUpdateService.getCurrentWebViewPackageName();
         ArraySet<String> contentProviderAuthoritiesAllowlist = new ArraySet<>();
         // TODO(b/279557220): Make curWebViewPackageName a static variable once fixed.
@@ -2285,11 +2285,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 return contentProviderAuthoritiesAllowlist;
             }
 
-            // TODO(b/271547387): Filter out the allowlist based on targetSdkVersion.
             ArraySet<String> contentProviderAllowlistForTargetSdkVersion =
                     mSdkSandboxSettingsListener
                             .getContentProviderAllowlistPerTargetSdkVersion()
-                            .get(Build.VERSION_CODES.UPSIDE_DOWN_CAKE);
+                            .get(getEffectiveTargetSdkVersionForRestrictions(sdkSandboxUid));
             if (contentProviderAllowlistForTargetSdkVersion != null) {
                 contentProviderAuthoritiesAllowlist.addAll(
                         contentProviderAllowlistForTargetSdkVersion);
@@ -2400,7 +2399,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 mSdkSandboxSettingsListener.applySdkSandboxRestrictionsNext()
                         ? mSdkSandboxSettingsListener.getNextServiceAllowlist()
                         : mSdkSandboxSettingsListener.getServiceAllowlistForTargetSdkVersion(
-                                /* targetSdkVersion= */ 34);
+                                /* targetSdkVersion= */ Build.VERSION_CODES.UPSIDE_DOWN_CAKE);
 
         if (allowedServices == null) {
             return false;
@@ -2576,6 +2575,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 return true;
             }
 
+            int sdkSandboxUid = Binder.getCallingUid();
+
             /**
              * By clearing the calling identity, system server identity is set which allows us to
              * call {@DeviceConfig.getBoolean}
@@ -2585,7 +2586,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             try {
                 return !mSdkSandboxSettingsListener.areRestrictionsEnforced()
                         || StringHelper.doesInputMatchAnyWildcardPattern(
-                                getContentProviderAllowlist(), providerInfo.authority)
+                                getContentProviderAllowlist(sdkSandboxUid), providerInfo.authority)
                         || StringHelper.doesInputMatchAnyWildcardPattern(
                                 mTestCpAllowlist, providerInfo.authority);
             } finally {
