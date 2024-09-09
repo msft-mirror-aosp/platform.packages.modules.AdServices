@@ -22,9 +22,9 @@ import static android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_
 import static android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE_COMPAT;
 import static android.adservices.common.AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID;
 import static android.adservices.common.AdServicesPermissions.UPDATE_PRIVILEGED_AD_ID_COMPAT;
+import static android.adservices.common.AndroidRCommonUtil.invokeCallbackOnErrorOnRvc;
 
 import android.adservices.adid.AdId;
-import android.adservices.exceptions.AdServicesException;
 import android.annotation.CallbackExecutor;
 import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
@@ -596,15 +596,5 @@ public class AdServicesCommonManager {
             executor.execute(
                     () -> callback.onError(new IllegalStateException("Internal Error!", e)));
         }
-    }
-
-    private <T> boolean invokeCallbackOnErrorOnRvc(
-            AdServicesOutcomeReceiver<T, Exception> callback) {
-        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.R) {
-            callback.onError(new AdServicesException("AdServices is not supported on Android R"));
-            return true;
-        }
-
-        return false;
     }
 }
