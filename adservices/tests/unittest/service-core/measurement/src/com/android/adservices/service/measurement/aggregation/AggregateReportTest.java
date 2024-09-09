@@ -58,6 +58,8 @@ public final class AggregateReportTest {
                     + "}";
     private static final long TRIGGER_TIME = 1000L;
 
+    private static final String API = "attribution-reporting";
+
     private AggregateReport createAttributionReport() {
         return new AggregateReport.Builder()
                 .setId("1")
@@ -78,6 +80,7 @@ public final class AggregateReportTest {
                 .setRegistrationOrigin(
                         AggregateReportFixture.ValidAggregateReportParams.REGISTRATION_ORIGIN)
                 .setTriggerTime(TRIGGER_TIME)
+                .setApi(API)
                 .build();
     }
 
@@ -149,6 +152,7 @@ public final class AggregateReportTest {
                 attributionReport.getRegistrationOrigin());
         assertEquals(TRIGGER_TIME, attributionReport.getTriggerTime());
         assertFalse(attributionReport.isFakeReport());
+        assertEquals(API, attributionReport.getApi());
     }
 
     @Test
@@ -228,6 +232,7 @@ public final class AggregateReportTest {
         assertNull(attributionReport.getTriggerId());
         assertNull(attributionReport.getRegistrationOrigin());
         assertFalse(attributionReport.isFakeReport());
+        assertNull(attributionReport.getApi());
     }
 
     @Test

@@ -17,7 +17,7 @@
 package com.android.adservices.service;
 
 /** Interface used to abstract the feature flags / kill switches guarding a flag. */
-public interface FlagGuard {
+interface FlagGuard {
 
     /** Enables / disables a {link FlagGuard} */
     void setEnabled(boolean value);

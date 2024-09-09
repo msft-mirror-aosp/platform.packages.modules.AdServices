@@ -252,8 +252,11 @@ public class EncoderLogicHandler {
                                 + " entry");
             }
             buyerLock.unlock();
+        } else {
+            sLogger.v("Failed to acquire lock for buyer: %s", buyer);
         }
         Trace.endSection();
+        sLogger.v("Encoder update succeeded: %b", updateSucceeded);
         return updateSucceeded;
     }
 
