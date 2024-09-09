@@ -344,7 +344,12 @@ public class AsyncRegistrationQueueRunner {
         try {
             if (!source.validateAndSetNumReportStates(flags)
                     || !source.hasValidInformationGain(flags)) {
-                debugReportApi.scheduleSourceFlexibleEventReportApiDebugReport(source, dao);
+                debugReportApi.scheduleSourceReport(
+                        source,
+                        DebugReportApi.Type.SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR,
+                        /* additionalBodyParams= */ null,
+                        dao,
+                        /* differentReportTypeForAdr= */ null);
                 return false;
             }
             if (flags.getMeasurementEnableAttributionScope()) {
@@ -372,7 +377,12 @@ public class AsyncRegistrationQueueRunner {
         } catch (ArithmeticException e) {
             LoggerFactory.getMeasurementLogger()
                     .e(e, "Calculating the number of report states overflowed.");
-            debugReportApi.scheduleSourceFlexibleEventReportApiDebugReport(source, dao);
+            debugReportApi.scheduleSourceReport(
+                    source,
+                    DebugReportApi.Type.SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR,
+                    /* additionalBodyParams= */ null,
+                    dao,
+                    /* differentReportTypeForAdr= */ null);
             return false;
         }
 
@@ -470,8 +480,12 @@ public class AsyncRegistrationQueueRunner {
                     .d(
                             "insertSources: Max limit of %s sources for publisher - %s reached.",
                             mFlags.getMeasurementMaxSourcesPerPublisher(), publisher);
-            mDebugReportApi.scheduleSourceStorageLimitDebugReport(
-                    source, String.valueOf(numOfSourcesPerPublisher), dao);
+            mDebugReportApi.scheduleSourceReport(
+                    source,
+                    DebugReportApi.Type.SOURCE_STORAGE_LIMIT,
+                    Map.of(DebugReportApi.Body.LIMIT, String.valueOf(numOfSourcesPerPublisher)),
+                    dao,
+                    /* differentReportTypeForAdr= */ null);
             return InsertSourcePermission.NOT_ALLOWED;
         }
 
@@ -1036,7 +1050,12 @@ public class AsyncRegistrationQueueRunner {
         try {
             return dao.insertSource(source);
         } catch (DatastoreException e) {
-            mDebugReportApi.scheduleSourceUnknownErrorDebugReport(source, dao);
+            mDebugReportApi.scheduleSourceReport(
+                    source,
+                    DebugReportApi.Type.SOURCE_UNKNOWN_ERROR,
+                    /* additionalBodyParams= */ null,
+                    dao,
+                    /* differentReportTypeForAdr= */ null);
             LoggerFactory.getMeasurementLogger()
                     .e(e, "Insert source to DB error, generate source-unknown-error report");
             throw new DatastoreException(
@@ -1164,13 +1183,14 @@ public class AsyncRegistrationQueueRunner {
             IMeasurementDao dao,
             Map<String, String> additionalDebugReportParams,
             DebugReportApi.Type adrReportType) {
-        if (source.getAttributionMode() == Source.AttributionMode.TRUTHFULLY) {
-            mDebugReportApi.scheduleSourceSuccessDebugReport(
-                    source, dao, additionalDebugReportParams, adrReportType);
-        } else {
-            mDebugReportApi.scheduleSourceNoisedDebugReport(
-                    source, dao, additionalDebugReportParams);
+        DebugReportApi.Type type = DebugReportApi.Type.SOURCE_SUCCESS;
+        if (source.getAttributionMode() != Source.AttributionMode.TRUTHFULLY) {
+            type = DebugReportApi.Type.SOURCE_NOISED;
+            adrReportType = null;
         }
+
+        mDebugReportApi.scheduleSourceReport(
+                source, type, additionalDebugReportParams, dao, adrReportType);
     }
 
     private void notifyTriggerContentProvider() {
