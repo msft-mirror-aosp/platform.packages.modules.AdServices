@@ -472,19 +472,6 @@ public final class MeasurementImplTest {
     }
 
     @Test
-    public void testDeleteRegistrations_success_recordsDeletion_R() {
-        Assume.assumeTrue(!SdkLevel.isAtLeastS());
-        Flags mockFlags = Mockito.mock(Flags.class);
-
-        doReturn(false).when(mockFlags).getMeasurementRollbackDeletionKillSwitch();
-        doReturn(true).when(mockFlags).getMeasurementRollbackDeletionREnabled();
-        MeasurementRollbackCompatManager mockRollbackManager =
-                doDeleteRegistrationsCompat(mockFlags);
-
-        Mockito.verify(mockRollbackManager).recordAdServicesDeletionOccurred();
-    }
-
-    @Test
     public void testDeleteRegistrations_success_recordsDeletionInSystemServer_flagOff() {
         Flags mockFlags = Mockito.mock(Flags.class);
 
@@ -508,18 +495,6 @@ public final class MeasurementImplTest {
         Flags mockFlags = Mockito.mock(Flags.class);
 
         doReturn(true).when(mockFlags).getMeasurementRollbackDeletionAppSearchKillSwitch();
-        MeasurementRollbackCompatManager mockRollbackManager =
-                doDeleteRegistrationsCompat(mockFlags);
-
-        Mockito.verify(mockRollbackManager, Mockito.never()).recordAdServicesDeletionOccurred();
-    }
-
-    @Test
-    public void testDeleteRegistrations_success_recordsDeletionInAppSearch_flagOff_R() {
-        ExtendedMockito.doReturn(false).when(SdkLevel::isAtLeastS);
-        Flags mockFlags = Mockito.mock(Flags.class);
-
-        doReturn(false).when(mockFlags).getMeasurementRollbackDeletionREnabled();
         MeasurementRollbackCompatManager mockRollbackManager =
                 doDeleteRegistrationsCompat(mockFlags);
 
@@ -584,20 +559,6 @@ public final class MeasurementImplTest {
 
         Flags mockFlags = Mockito.mock(Flags.class);
         doReturn(false).when(mockFlags).getMeasurementRollbackDeletionKillSwitch();
-
-        MeasurementRollbackCompatManager mockRollbackManager =
-                doDeletePackageRecordsCompat(mockFlags);
-
-        Mockito.verify(mockRollbackManager).recordAdServicesDeletionOccurred();
-    }
-
-    @Test
-    public void testDeletePackageRecords_success_recordsDeletion_R() {
-        Assume.assumeTrue(!SdkLevel.isAtLeastS());
-
-        Flags mockFlags = Mockito.mock(Flags.class);
-        doReturn(false).when(mockFlags).getMeasurementRollbackDeletionKillSwitch();
-        doReturn(true).when(mockFlags).getMeasurementRollbackDeletionREnabled();
 
         MeasurementRollbackCompatManager mockRollbackManager =
                 doDeletePackageRecordsCompat(mockFlags);
@@ -679,20 +640,6 @@ public final class MeasurementImplTest {
         Mockito.verify(mockRollbackManager).recordAdServicesDeletionOccurred();
     }
 
-    @Test
-    public void testDeleteAllMeasurementData_success_recordsDeletion_R() {
-        Assume.assumeTrue(!SdkLevel.isAtLeastS());
-
-        Flags mockFlags = Mockito.mock(Flags.class);
-        doReturn(false).when(mockFlags).getMeasurementRollbackDeletionKillSwitch();
-        doReturn(true).when(mockFlags).getMeasurementRollbackDeletionREnabled();
-
-        MeasurementRollbackCompatManager mockRollbackManager =
-                doDeleteAllMeasurementDataCompat(mockFlags);
-
-        Mockito.verify(mockRollbackManager).recordAdServicesDeletionOccurred();
-    }
-
     private MeasurementRollbackCompatManager doDeleteAllMeasurementDataCompat(Flags mockFlags) {
         ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlags);
 
@@ -742,20 +689,6 @@ public final class MeasurementImplTest {
 
         Flags mockFlags = Mockito.mock(Flags.class);
         doReturn(false).when(mockFlags).getMeasurementRollbackDeletionKillSwitch();
-
-        MeasurementRollbackCompatManager mockRollbackManager =
-                doDeleteAllUninstalledMeasurementDataCompat(mockFlags);
-
-        Mockito.verify(mockRollbackManager).recordAdServicesDeletionOccurred();
-    }
-
-    @Test
-    public void testDeleteAllUninstalledMeasurementData_success_recordsDeletion_R() {
-        Assume.assumeTrue(!SdkLevel.isAtLeastS());
-
-        Flags mockFlags = Mockito.mock(Flags.class);
-        doReturn(false).when(mockFlags).getMeasurementRollbackDeletionKillSwitch();
-        doReturn(true).when(mockFlags).getMeasurementRollbackDeletionREnabled();
 
         MeasurementRollbackCompatManager mockRollbackManager =
                 doDeleteAllUninstalledMeasurementDataCompat(mockFlags);
@@ -813,7 +746,7 @@ public final class MeasurementImplTest {
         Flags mockFlags = Mockito.mock(Flags.class);
         doReturn(false).when(mockFlags).getMeasurementRollbackDeletionKillSwitch();
         doReturn(false).when(mockFlags).getMeasurementRollbackDeletionAppSearchKillSwitch();
-        checkIfNeedsToHandleReconciliationCompat(mockFlags, false);
+        checkIfNeedsToHandleReconciliationCompat(mockFlags, false, true);
     }
 
     @Test
@@ -822,8 +755,7 @@ public final class MeasurementImplTest {
 
         Flags mockFlags = Mockito.mock(Flags.class);
         doReturn(false).when(mockFlags).getMeasurementRollbackDeletionKillSwitch();
-        doReturn(true).when(mockFlags).getMeasurementRollbackDeletionREnabled();
-        checkIfNeedsToHandleReconciliationCompat(mockFlags, false);
+        checkIfNeedsToHandleReconciliationCompat(mockFlags, false, false);
     }
 
     @Test
@@ -833,21 +765,11 @@ public final class MeasurementImplTest {
 
         Flags mockFlags = Mockito.mock(Flags.class);
         doReturn(false).when(mockFlags).getMeasurementRollbackDeletionKillSwitch();
-        checkIfNeedsToHandleReconciliationCompat(mockFlags, true);
+        checkIfNeedsToHandleReconciliationCompat(mockFlags, true, true);
     }
 
-    @Test
-    public void testCheckIfNeedsToHandleReconciliation_clearsData_R() {
-        ExtendedMockito.doReturn(false).when(SdkLevel::isAtLeastT);
-        ExtendedMockito.doReturn(true).when(SdkLevel::isAtLeastS);
-
-        Flags mockFlags = Mockito.mock(Flags.class);
-        doReturn(false).when(mockFlags).getMeasurementRollbackDeletionKillSwitch();
-        doReturn(true).when(mockFlags).getMeasurementRollbackDeletionREnabled();
-        checkIfNeedsToHandleReconciliationCompat(mockFlags, true);
-    }
-
-    private void checkIfNeedsToHandleReconciliationCompat(Flags mockFlags, boolean returnValue) {
+    private void checkIfNeedsToHandleReconciliationCompat(
+            Flags mockFlags, boolean returnValue, boolean callsManager) {
         ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlags);
 
         MeasurementRollbackCompatManager mockManager =
@@ -859,7 +781,9 @@ public final class MeasurementImplTest {
         MeasurementImpl measurement = createMeasurementImpl();
         assertThat(measurement.checkIfNeedsToHandleReconciliation()).isEqualTo(returnValue);
 
-        Mockito.verify(mockManager).needsToHandleRollbackReconciliation();
+        if (callsManager) {
+            Mockito.verify(mockManager).needsToHandleRollbackReconciliation();
+        }
     }
 
     @Test
@@ -883,7 +807,6 @@ public final class MeasurementImplTest {
 
         Flags mockFlags = Mockito.mock(Flags.class);
         doReturn(true).when(mockFlags).getMeasurementRollbackDeletionAppSearchKillSwitch();
-        doReturn(false).when(mockFlags).getMeasurementRollbackDeletionREnabled();
         ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlags);
 
         MeasurementImpl measurement = createMeasurementImpl();

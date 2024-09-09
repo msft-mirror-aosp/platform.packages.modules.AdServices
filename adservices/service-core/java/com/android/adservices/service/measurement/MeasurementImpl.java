@@ -78,7 +78,6 @@ import javax.annotation.concurrent.ThreadSafe;
  *
  * @hide
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 @ThreadSafe
 @WorkerThread
@@ -578,7 +577,7 @@ public final class MeasurementImpl {
                     .needsToHandleRollbackReconciliation(AdServicesManager.MEASUREMENT_DELETION);
         }
 
-        // Not on Android T+. Check if flag is enabled if on R/S.
+        // Not on Android T+. Check if flag is enabled if on S.
         if (isMeasurementRollbackCompatDisabled()) {
             LoggerFactory.getMeasurementLogger()
                     .e("Rollback deletion disabled. Not checking compatible store for rollback.");
@@ -609,7 +608,7 @@ public final class MeasurementImpl {
             return;
         }
 
-        // If on Android R/S, check if the appropriate flag is enabled, otherwise do nothing.
+        // If on Android S, check if the appropriate flag is enabled, otherwise do nothing.
         if (isMeasurementRollbackCompatDisabled()) {
             LoggerFactory.getMeasurementLogger()
                     .e("Rollback deletion disabled. Not storing status in compatible store.");
@@ -628,8 +627,6 @@ public final class MeasurementImpl {
         }
 
         Flags flags = FlagsFactory.getFlags();
-        return SdkLevel.isAtLeastS()
-                ? flags.getMeasurementRollbackDeletionAppSearchKillSwitch()
-                : !flags.getMeasurementRollbackDeletionREnabled();
+        return !SdkLevel.isAtLeastS() || flags.getMeasurementRollbackDeletionAppSearchKillSwitch();
     }
 }

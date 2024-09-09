@@ -60,7 +60,6 @@ import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_REQ
 import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS;
 import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_SERVICE_MIN_EXECUTION_WINDOW_MILLIS;
-import static com.android.adservices.service.Flags.MEASUREMENT_ROLLBACK_DELETION_R_ENABLED;
 import static com.android.adservices.service.Flags.MEASUREMENT_TRIGGER_DEBUG_SIGNAL_PROBABILITY_FOR_FAKE_REPORTS;
 import static com.android.adservices.service.Flags.PPAPI_AND_ADEXT_SERVICE;
 import static com.android.adservices.service.Flags.PPAPI_AND_SYSTEM_SERVER;
@@ -238,28 +237,6 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 .isEqualTo(expected);
 
         expect.withMessage("getEnableRvcUx()").that(mFlags.getEnableRvcUx()).isEqualTo(expected);
-    }
-
-    @Test
-    @RequiresSdkRange(atMost = RVC, reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
-    public void testMeasurementRollbackDeletionREnabled_isR() {
-        assertMeasurementRollbackDeletionREnabled(true);
-    }
-
-    @Test
-    @RequiresSdkLevelAtLeastS(reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
-    public void testaMeasurementRollbackDeletionREnabled_isAtLeastS() {
-        assertMeasurementRollbackDeletionREnabled(false);
-    }
-
-    private void assertMeasurementRollbackDeletionREnabled(boolean expected) {
-        expect.withMessage("MEASUREMENT_ROLLBACK_DELETION_R_ENABLED")
-                .that(MEASUREMENT_ROLLBACK_DELETION_R_ENABLED)
-                .isEqualTo(expected);
-
-        expect.withMessage("getMeasurementRollbackDeletionREnabled()")
-                .that(mFlags.getMeasurementRollbackDeletionREnabled())
-                .isEqualTo(expected);
     }
 
     @Test
