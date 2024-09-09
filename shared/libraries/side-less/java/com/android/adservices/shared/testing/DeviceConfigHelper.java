@@ -20,6 +20,7 @@ import static com.android.adservices.shared.testing.AndroidSdk.Level.T;
 
 import com.android.adservices.shared.testing.AndroidSdk.Level;
 import com.android.adservices.shared.testing.Logger.RealLogger;
+import com.android.adservices.shared.testing.device.DeviceConfig;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,6 +34,8 @@ import java.util.regex.Pattern;
 
 // TODO(b/294423183): add unit tests
 // TODO(b/294423183): use an existing class like DeviceConfigStateManager or DeviceConfigStateHelper
+// TODO(b/294423183): migrate into the new com.android.adservices.shared.testing.device.DeviceConfig
+// interface instead (which is being implemented from scratch with unit tests)
 /**
  * Helper class to set {@link android.provider.DeviceConfig} flags and properly reset then to their
  * original values.
@@ -99,12 +102,12 @@ public final class DeviceConfigHelper {
     }
 
     /** Sets the synchronization mode. */
-    public void setSyncDisabledMode(SyncDisabledModeForTest mode) {
+    public void setSyncDisabledMode(DeviceConfig.SyncDisabledModeForTest mode) {
         mInterface.setSyncDisabledModeForTest(mode);
     }
 
     /** Gets the synchronization mode. */
-    public SyncDisabledModeForTest getSyncDisabledMode() {
+    public DeviceConfig.SyncDisabledModeForTest getSyncDisabledMode() {
         return mInterface.getSyncDisabledModeForTest();
     }
 
@@ -154,12 +157,6 @@ public final class DeviceConfigHelper {
         mInterface.syncDelete(name);
     }
 
-    enum SyncDisabledModeForTest {
-        NONE,
-        PERSISTENT,
-        UNTIL_REBOOT
-    }
-
     // TODO(b/294423183); move to a separate file (and rename it?)?
     // TODO(b/294423183): add unit tests
     /**
@@ -183,7 +180,7 @@ public final class DeviceConfigHelper {
         }
 
         /** Sets the synchronization mode. */
-        public void setSyncDisabledModeForTest(SyncDisabledModeForTest mode) {
+        public void setSyncDisabledModeForTest(DeviceConfig.SyncDisabledModeForTest mode) {
             String value = mode.name().toLowerCase(Locale.ENGLISH);
             mLog.v("setSyncDisabledModeForTest(%s)", value);
 
@@ -196,25 +193,26 @@ public final class DeviceConfigHelper {
         }
 
         /** Gets the synchronization mode. */
-        public SyncDisabledModeForTest getSyncDisabledModeForTest() {
+        public DeviceConfig.SyncDisabledModeForTest getSyncDisabledModeForTest() {
             mLog.d("getSyncDisabledModeForTest() invoked");
 
             if (getDeviceApiLevel().isAtLeast(T)) {
                 String value = runShellCommand("device_config get_sync_disabled_for_tests").trim();
                 mLog.v("get_sync_disabled_for_tests=%s using run shell command", value);
-                return SyncDisabledModeForTest.valueOf(value.toUpperCase(Locale.ENGLISH));
+                return DeviceConfig.SyncDisabledModeForTest.valueOf(
+                        value.toUpperCase(Locale.ENGLISH));
             } else if (getDeviceApiLevel().isAtLeast(S)) {
                 String value = runShellCommand("device_config is_sync_disabled_for_tests").trim();
                 mLog.v("is_sync_disabled_for_tests=%s using run shell command", value);
                 // If the value is "true", it's not possible to figure out if the mode is
                 // "persistent" or "until_reboot". Assume "persistent".
                 return Boolean.parseBoolean(value)
-                        ? SyncDisabledModeForTest.PERSISTENT
-                        : SyncDisabledModeForTest.NONE;
+                        ? DeviceConfig.SyncDisabledModeForTest.PERSISTENT
+                        : DeviceConfig.SyncDisabledModeForTest.NONE;
             }
 
             // TODO(b/294423183): figure out a solution for R when needed
-            return SyncDisabledModeForTest.NONE;
+            return DeviceConfig.SyncDisabledModeForTest.NONE;
         }
 
         /** Gets the value of a property. */
