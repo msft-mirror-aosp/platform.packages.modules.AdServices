@@ -42,10 +42,11 @@ android_test {
         "androidx.room_room-runtime",
     ],
     libs: [
-        "android.test.base",
+        "android.test.base.stubs.system",
         "android.test.mock.stubs",
         "framework-adservices.impl",
         "framework-annotations-lib",
+        "framework-configinfrastructure.stubs.module_lib",
     ],
     test_suites: [
         "general-tests",
@@ -82,9 +83,10 @@ android_test {
     ],
     libs: [
         "android.ext.adservices",
-        "android.test.base",
+        "android.test.base.stubs.system",
         "android.test.mock.stubs",
         "framework-annotations-lib",
+        "framework-configinfrastructure.stubs.module_lib",
     ],
     test_suites: [
         "general-tests",
