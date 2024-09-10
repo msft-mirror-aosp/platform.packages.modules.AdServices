@@ -205,7 +205,7 @@ public class PackageChangedReceiver extends BroadcastReceiver {
                                         SdkLevel.isAtLeastS()
                                                 ? context
                                                 : context.getApplicationContext())
-                                .deletePackageRecords(packageUri));
+                                .deletePackageRecords(packageUri, System.currentTimeMillis()));
 
         // Log wipeout event triggered by request to uninstall package on device
         WipeoutStatus wipeoutStatus = new WipeoutStatus();
@@ -223,7 +223,8 @@ public class PackageChangedReceiver extends BroadcastReceiver {
         LogUtil.d("Package Data Cleared: " + packageUri);
         sBackgroundExecutor.execute(
                 () -> {
-                    MeasurementImpl.getInstance(context).deletePackageRecords(packageUri);
+                    MeasurementImpl.getInstance(context)
+                            .deletePackageRecords(packageUri, System.currentTimeMillis());
                 });
 
         WipeoutStatus wipeoutStatus = new WipeoutStatus();

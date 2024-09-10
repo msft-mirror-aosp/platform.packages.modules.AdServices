@@ -20,10 +20,9 @@ import static android.adservices.debuggablects.CustomAudienceShellCommandHelper.
 import static android.adservices.debuggablects.CustomAudienceSubject.assertThat;
 
 import static com.android.adservices.service.CommonFlagsConstants.KEY_ADSERVICES_SHELL_COMMAND_ENABLED;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
-import static com.android.adservices.service.FlagsConstants.PPAPI_AND_SYSTEM_SERVER;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -34,10 +33,10 @@ import android.adservices.utils.CustomAudienceTestFixture;
 
 import com.android.adservices.common.AdServicesShellCommandHelper;
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.annotations.SetPpapiAppAllowList;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
-import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 import com.android.adservices.shared.testing.shell.CommandResult;
 
 import com.google.errorprone.annotations.FormatMethod;
@@ -52,11 +51,12 @@ import org.junit.Test;
 
 import java.util.List;
 
-@SetFlagEnabled(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
-@SetIntegerFlag(name = KEY_CONSENT_SOURCE_OF_TRUTH, value = PPAPI_AND_SYSTEM_SERVER)
 @EnableDebugFlag(KEY_ADSERVICES_SHELL_COMMAND_ENABLED)
 @EnableDebugFlag(KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED)
+@EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
 @RequiresSdkLevelAtLeastS(reason = "Custom Audience is enabled for S+")
+@SetFlagEnabled(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
+@SetPpapiAppAllowList
 public final class CustomAudienceShellCommandsE2ETest extends ForegroundDebuggableCtsTest {
     private static final String OWNER = sPackageName;
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("localhost");
@@ -148,6 +148,8 @@ public final class CustomAudienceShellCommandsE2ETest extends ForegroundDebuggab
         assertThat(customAudience).hasValidActivationTime();
         assertThat(customAudience).hasValidationFailures(0);
         assertThat(customAudience).hasTimeoutFailures(0);
+        assertThat(customAudience.getBoolean("is_eligible_for_on_device_auction")).isEqualTo(true);
+        assertThat(customAudience.getBoolean("is_eligible_for_server_auction")).isEqualTo(false);
     }
 
     @Test

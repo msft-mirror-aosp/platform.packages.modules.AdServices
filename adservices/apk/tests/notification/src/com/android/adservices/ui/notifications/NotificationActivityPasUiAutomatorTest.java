@@ -30,9 +30,11 @@ import static com.android.adservices.ui.util.NotificationActivityTestUtil.WINDOW
 import static com.google.common.truth.Truth.assertThat;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.FlakyTest;
 import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiObject2;
 import androidx.test.uiautomator.Until;
+
 
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
@@ -130,6 +132,7 @@ public final class NotificationActivityPasUiAutomatorTest extends AdServicesUiTe
     }
 
     @Test
+    @FlakyTest(bugId = 353988743)
     public void firstTimeRowCombinedTextShownTest() throws Exception {
         // disable both Fledge and Measurement
         ApkTestUtil.launchSettingView(mDevice, LAUNCH_TIMEOUT);

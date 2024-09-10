@@ -30,7 +30,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.Objects;
 
 /**
- * Represents the user's opted-in/opted-out choice for individual module in AdServices.
+ * Represents the user's choice for the modules in AdServices. Can be unknown, opted-in, or
+ * opted-out.
  *
  * @hide
  */
@@ -42,7 +43,7 @@ public final class AdServicesModuleUserChoice implements Parcelable {
     public static final int USER_CHOICE_UNKNOWN = 0;
 
     /** User opted in state */
-    public static final int USER_CHOICE_OPTED_ID = 1;
+    public static final int USER_CHOICE_OPTED_IN = 1;
 
     /** User opted out state */
     public static final int USER_CHOICE_OPTED_OUT = 2;
@@ -54,7 +55,7 @@ public final class AdServicesModuleUserChoice implements Parcelable {
      */
     @IntDef(
             prefix = {""},
-            value = {USER_CHOICE_UNKNOWN, USER_CHOICE_OPTED_ID, USER_CHOICE_OPTED_OUT})
+            value = {USER_CHOICE_UNKNOWN, USER_CHOICE_OPTED_IN, USER_CHOICE_OPTED_OUT})
     @Retention(RetentionPolicy.SOURCE)
     public @interface ModuleUserChoiceCode {}
 
@@ -62,13 +63,14 @@ public final class AdServicesModuleUserChoice implements Parcelable {
 
     @ModuleUserChoiceCode private int mUserChoice;
 
-    private AdServicesModuleUserChoice(@NonNull Parcel in) {
-
+    private AdServicesModuleUserChoice(Parcel in) {
+        Objects.requireNonNull(in, "Parcel is null");
         mModule = in.readInt();
         mUserChoice = in.readInt();
     }
 
-    private AdServicesModuleUserChoice(int module, int userChoice) {
+    private AdServicesModuleUserChoice(
+            @Module.ModuleCode int module, @ModuleUserChoiceCode int userChoice) {
         this.mModule = module;
         this.mUserChoice = userChoice;
     }
@@ -78,7 +80,6 @@ public final class AdServicesModuleUserChoice implements Parcelable {
             new Creator<>() {
                 @Override
                 public AdServicesModuleUserChoice createFromParcel(Parcel in) {
-                    Objects.requireNonNull(in);
                     return new AdServicesModuleUserChoice(in);
                 }
 
@@ -88,41 +89,25 @@ public final class AdServicesModuleUserChoice implements Parcelable {
                 }
             };
 
-    /**
-     * Describe the kinds of special objects contained in this Parcelable instance's marshaled
-     * representation. For example, if the object will include a file descriptor in the output of
-     * {@link #writeToParcel(Parcel, int)}, the return value of this method must include the {@link
-     * #CONTENTS_FILE_DESCRIPTOR} bit.
-     *
-     * @return a bitmask indicating the set of special object types marshaled by this Parcelable
-     *     object instance.
-     */
     @Override
     public int describeContents() {
         return 0;
     }
 
-    /**
-     * Flatten this object in to a Parcel.
-     *
-     * @param dest The Parcel in which the object should be written.
-     * @param flags Additional flags about how the object should be written. May be 0 or {@link
-     *     #PARCELABLE_WRITE_RETURN_VALUE}.
-     */
     @Override
     public void writeToParcel(@NonNull Parcel dest, int flags) {
-        Objects.requireNonNull(dest);
+        Objects.requireNonNull(dest, "Parcel is null");
         dest.writeInt(mModule);
         dest.writeInt(mUserChoice);
     }
 
     /** Gets the name of current module */
-    public int getModule() {
+    public @Module.ModuleCode int getModule() {
         return mModule;
     }
 
     /** Gets the user opted in/out choice of current module */
-    public int getUserChoice() {
+    public @ModuleUserChoiceCode int getUserChoice() {
         return mUserChoice;
     }
 

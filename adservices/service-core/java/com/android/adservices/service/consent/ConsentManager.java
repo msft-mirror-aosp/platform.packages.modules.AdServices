@@ -31,6 +31,11 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
 import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.U18_UX;
 
+import android.adservices.common.AdServicesModuleState;
+import android.adservices.common.AdServicesModuleState.ModuleStateCode;
+import android.adservices.common.AdServicesModuleUserChoice;
+import android.adservices.common.AdServicesModuleUserChoice.ModuleUserChoiceCode;
+import android.adservices.common.Module.ModuleCode;
 import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.annotation.SuppressLint;
@@ -49,7 +54,7 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
-import com.android.adservices.data.common.BooleanFileDatastore;
+import com.android.adservices.data.common.AtomicFileDatastore;
 import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
@@ -58,6 +63,7 @@ import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsTables;
+import com.android.adservices.errorlogging.AdServicesErrorLoggerImpl;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -76,8 +82,10 @@ import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.service.topics.TopicsWorker;
 import com.android.adservices.service.ui.data.UxStatesDao;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
+import com.android.adservices.service.ui.util.EnrollmentData;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
 import com.android.modules.utils.build.SdkLevel;
@@ -129,7 +137,7 @@ public class ConsentManager {
 
     private final Flags mFlags;
     private final TopicsWorker mTopicsWorker;
-    private final BooleanFileDatastore mDatastore;
+    private final AtomicFileDatastore mDatastore;
     private final AppConsentDao mAppConsentDao;
     private final EnrollmentDao mEnrollmentDao;
     private final MeasurementImpl mMeasurementImpl;
@@ -157,7 +165,7 @@ public class ConsentManager {
             @NonNull ProtectedSignalsDao protectedSignalsDao,
             @NonNull FrequencyCapDao frequencyCapDao,
             @NonNull AdServicesManager adServicesManager,
-            @NonNull BooleanFileDatastore booleanFileDatastore,
+            @NonNull AtomicFileDatastore atomicFileDatastore,
             @NonNull AppSearchConsentManager appSearchConsentManager,
             @NonNull UserProfileIdManager userProfileIdManager,
             @NonNull UxStatesDao uxStatesDao,
@@ -166,43 +174,41 @@ public class ConsentManager {
             @Flags.ConsentSourceOfTruth int consentSourceOfTruth,
             boolean enableAppsearchConsentData,
             boolean enableAdExtServiceConsentData) {
-        Objects.requireNonNull(topicsWorker);
-        Objects.requireNonNull(appConsentDao);
-        Objects.requireNonNull(measurementImpl);
-        Objects.requireNonNull(customAudienceDao);
-        Objects.requireNonNull(appInstallDao);
-        Objects.requireNonNull(protectedSignalsDao);
-        Objects.requireNonNull(frequencyCapDao);
-        Objects.requireNonNull(booleanFileDatastore);
-        Objects.requireNonNull(userProfileIdManager);
+        mTopicsWorker = Objects.requireNonNull(topicsWorker, "topicsWorker cannot be null");
+        mAppConsentDao = Objects.requireNonNull(appConsentDao, "appConsentDao cannot be null");
+        mMeasurementImpl =
+                Objects.requireNonNull(measurementImpl, "measurementImpl cannot be null");
+        mCustomAudienceDao =
+                Objects.requireNonNull(customAudienceDao, "customAudienceDao cannot be null");
+        mAppInstallDao = Objects.requireNonNull(appInstallDao, "appInstallDao cannot be null");
+        mProtectedSignalsDao =
+                Objects.requireNonNull(protectedSignalsDao, "protectedSignalsDao cannot be null");
+        mFrequencyCapDao =
+                Objects.requireNonNull(frequencyCapDao, "frequencyCapDao cannot be null");
+        mDatastore =
+                Objects.requireNonNull(atomicFileDatastore, "atomicFileDatastore cannot be null");
+        mUserProfileIdManager =
+                Objects.requireNonNull(userProfileIdManager, "userProfileIdManager cannot be null");
 
         if (consentSourceOfTruth == Flags.SYSTEM_SERVER_ONLY
                 || consentSourceOfTruth == Flags.PPAPI_AND_SYSTEM_SERVER) {
-            Objects.requireNonNull(adServicesManager);
+            Objects.requireNonNull(adServicesManager, "adServicesManager cannot be null");
         }
 
         if (enableAppsearchConsentData) {
-            Objects.requireNonNull(appSearchConsentManager);
+            Objects.requireNonNull(
+                    appSearchConsentManager, "appSearchConsentManager cannot be null");
         }
 
         if (enableAdExtServiceConsentData) {
-            Objects.requireNonNull(adExtDataManager);
+            Objects.requireNonNull(adExtDataManager, "adExtDataManager cannot be null");
         }
 
         mAdServicesManager = adServicesManager;
-        mTopicsWorker = topicsWorker;
-        mDatastore = booleanFileDatastore;
-        mAppConsentDao = appConsentDao;
         mEnrollmentDao = enrollmentDao;
-        mMeasurementImpl = measurementImpl;
-        mCustomAudienceDao = customAudienceDao;
-        mAppInstallDao = appInstallDao;
-        mProtectedSignalsDao = protectedSignalsDao;
-        mFrequencyCapDao = frequencyCapDao;
         mUxStatesDao = uxStatesDao;
 
         mAppSearchConsentManager = appSearchConsentManager;
-        mUserProfileIdManager = userProfileIdManager;
         mAdExtDataManager = adExtDataManager;
         mFlags = flags;
         mConsentSourceOfTruth = consentSourceOfTruth;
@@ -224,7 +230,9 @@ public class ConsentManager {
                 if (sConsentManager == null) {
                     // Execute one-time consent migration if needed.
                     int consentSourceOfTruth = FlagsFactory.getFlags().getConsentSourceOfTruth();
-                    BooleanFileDatastore datastore = createAndInitializeDataStore(context);
+                    AtomicFileDatastore datastore =
+                            createAndInitializeDataStore(
+                                    context, AdServicesErrorLoggerImpl.getInstance());
                     AdServicesManager adServicesManager = AdServicesManager.getInstance(context);
                     AppConsentDao appConsentDao = AppConsentDao.getInstance(context);
 
@@ -322,7 +330,7 @@ public class ConsentManager {
             ConsentManagerV2.getInstance().enable(context);
             return;
         }
-        Objects.requireNonNull(context);
+        Objects.requireNonNull(context, "context cannot be null");
 
         // Check current value, if it is already enabled, skip this enable process. so that the Api
         // won't be reset. Only add this logic to "enable" not "disable", since if it already
@@ -360,7 +368,7 @@ public class ConsentManager {
             ConsentManagerV2.getInstance().disable(context);
             return;
         }
-        Objects.requireNonNull(context);
+        Objects.requireNonNull(context, "context cannot be null");
 
         UiStatsLogger.logOptOutSelected();
         // Disable all the APIs
@@ -396,7 +404,7 @@ public class ConsentManager {
             ConsentManagerV2.getInstance().enable(context, apiType);
             return;
         }
-        Objects.requireNonNull(context);
+        Objects.requireNonNull(context, "context cannot be null");
         // Check current value, if it is already enabled, skip this enable process. so that the Api
         // won't be reset.
         if (mFlags.getConsentManagerLazyEnableMode()
@@ -437,7 +445,7 @@ public class ConsentManager {
             ConsentManagerV2.getInstance().disable(context, apiType);
             return;
         }
-        Objects.requireNonNull(context);
+        Objects.requireNonNull(context, "context cannot be null");
 
         UiStatsLogger.logOptOutSelected(apiType);
 
@@ -457,13 +465,11 @@ public class ConsentManager {
         }
     }
 
-    private boolean areAllApisDisabled() {
-        if (getConsent(AdServicesApiType.TOPICS).isGiven()
-                || getConsent(AdServicesApiType.MEASUREMENTS).isGiven()
-                || getConsent(AdServicesApiType.FLEDGE).isGiven()) {
-            return false;
-        }
-        return true;
+    /** Returns true if all APIs are disabled. */
+    public boolean areAllApisDisabled() {
+        return !getConsent(AdServicesApiType.TOPICS).isGiven()
+                && !getConsent(AdServicesApiType.MEASUREMENTS).isGiven()
+                && !getConsent(AdServicesApiType.FLEDGE).isGiven();
     }
 
     /**
@@ -484,7 +490,9 @@ public class ConsentManager {
 
         return executeGettersByConsentSourceOfTruth(
                 /* defaultReturn= */ AdServicesApiConsent.REVOKED,
-                () -> AdServicesApiConsent.getConsent(mDatastore.get(ConsentConstants.CONSENT_KEY)),
+                () ->
+                        AdServicesApiConsent.getConsent(
+                                mDatastore.getBoolean(ConsentConstants.CONSENT_KEY)),
                 () ->
                         AdServicesApiConsent.getConsent(
                                 mAdServicesManager.getConsent(ConsentParcel.ALL_API).isIsGiven()),
@@ -520,7 +528,7 @@ public class ConsentManager {
                 /* defaultReturn= */ AdServicesApiConsent.REVOKED,
                 () ->
                         AdServicesApiConsent.getConsent(
-                                mDatastore.get(apiType.toPpApiDatastoreKey())),
+                                mDatastore.getBoolean(apiType.toPpApiDatastoreKey())),
                 () ->
                         AdServicesApiConsent.getConsent(
                                 mAdServicesManager
@@ -1086,7 +1094,7 @@ public class ConsentManager {
         }
         executeSettersByConsentSourceOfTruth(
                 () ->
-                        mDatastore.put(
+                        mDatastore.putBoolean(
                                 ConsentConstants.NOTIFICATION_DISPLAYED_ONCE,
                                 wasNotificationDisplayed),
                 () -> mAdServicesManager.recordNotificationDisplayed(wasNotificationDisplayed),
@@ -1114,7 +1122,7 @@ public class ConsentManager {
         }
         return executeGettersByConsentSourceOfTruth(
                 /* defaultReturn= */ true,
-                () -> mDatastore.get(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE),
+                () -> mDatastore.getBoolean(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE),
                 () -> mAdServicesManager.wasNotificationDisplayed(),
                 () -> mAppSearchConsentManager.wasNotificationDisplayed(),
                 () -> false, // Beta UX is never shown on R, so this info is not stored.
@@ -1136,7 +1144,7 @@ public class ConsentManager {
         }
         executeSettersByConsentSourceOfTruth(
                 () ->
-                        mDatastore.put(
+                        mDatastore.putBoolean(
                                 ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE,
                                 wasGaUxDisplayed),
                 () -> mAdServicesManager.recordGaUxNotificationDisplayed(wasGaUxDisplayed),
@@ -1162,7 +1170,7 @@ public class ConsentManager {
         }
         return executeGettersByConsentSourceOfTruth(
                 /* defaultReturn= */ true,
-                () -> mDatastore.get(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE),
+                () -> mDatastore.getBoolean(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE),
                 () -> mAdServicesManager.wasGaUxNotificationDisplayed(),
                 () -> mAppSearchConsentManager.wasGaUxNotificationDisplayed(),
                 () -> false, // GA UX is never shown on R, so this info is not stored.
@@ -1180,7 +1188,7 @@ public class ConsentManager {
         }
         executeSettersByConsentSourceOfTruth(
                 () ->
-                        mDatastore.put(
+                        mDatastore.putBoolean(
                                 ConsentConstants.PAS_NOTIFICATION_DISPLAYED_ONCE, wasPasDisplayed),
                 () -> mAdServicesManager.recordPasNotificationDisplayed(wasPasDisplayed),
                 () -> {
@@ -1210,7 +1218,7 @@ public class ConsentManager {
         }
         return executeGettersByConsentSourceOfTruth(
                 /* defaultReturn= */ true,
-                () -> mDatastore.get(ConsentConstants.PAS_NOTIFICATION_DISPLAYED_ONCE),
+                () -> mDatastore.getBoolean(ConsentConstants.PAS_NOTIFICATION_DISPLAYED_ONCE),
                 () -> mAdServicesManager.wasPasNotificationDisplayed(),
                 () -> false, // PAS update not supported on S yet
                 () -> false, // PAS update not supported on R yet
@@ -1228,7 +1236,7 @@ public class ConsentManager {
         }
         return executeGettersByConsentSourceOfTruth(
                 /* defaultReturn= */ false,
-                () -> mDatastore.get(ConsentConstants.DEFAULT_CONSENT),
+                () -> mDatastore.getBoolean(ConsentConstants.DEFAULT_CONSENT),
                 () -> mAdServicesManager.getDefaultConsent(),
                 () -> mAppSearchConsentManager.getConsent(ConsentConstants.DEFAULT_CONSENT),
                 () -> false, // Beta UX never shown on R, so we don't store this info.
@@ -1250,7 +1258,7 @@ public class ConsentManager {
         }
         return executeGettersByConsentSourceOfTruth(
                 /* defaultReturn= */ false,
-                () -> mDatastore.get(ConsentConstants.TOPICS_DEFAULT_CONSENT),
+                () -> mDatastore.getBoolean(ConsentConstants.TOPICS_DEFAULT_CONSENT),
                 () -> mAdServicesManager.getTopicsDefaultConsent(),
                 () -> mAppSearchConsentManager.getConsent(ConsentConstants.TOPICS_DEFAULT_CONSENT),
                 () -> {
@@ -1274,7 +1282,7 @@ public class ConsentManager {
         }
         return executeGettersByConsentSourceOfTruth(
                 /* defaultReturn= */ false,
-                () -> mDatastore.get(ConsentConstants.FLEDGE_DEFAULT_CONSENT),
+                () -> mDatastore.getBoolean(ConsentConstants.FLEDGE_DEFAULT_CONSENT),
                 () -> mAdServicesManager.getFledgeDefaultConsent(),
                 () -> mAppSearchConsentManager.getConsent(ConsentConstants.FLEDGE_DEFAULT_CONSENT),
                 () -> {
@@ -1298,12 +1306,12 @@ public class ConsentManager {
         }
         return executeGettersByConsentSourceOfTruth(
                 /* defaultReturn= */ false,
-                () -> mDatastore.get(ConsentConstants.MEASUREMENT_DEFAULT_CONSENT),
+                () -> mDatastore.getBoolean(ConsentConstants.MEASUREMENT_DEFAULT_CONSENT),
                 () -> mAdServicesManager.getMeasurementDefaultConsent(),
                 () ->
                         mAppSearchConsentManager.getConsent(
                                 ConsentConstants.MEASUREMENT_DEFAULT_CONSENT),
-                () -> mDatastore.get(ConsentConstants.MEASUREMENT_DEFAULT_CONSENT),
+                () -> mDatastore.getBoolean(ConsentConstants.MEASUREMENT_DEFAULT_CONSENT),
                 /* errorLogger= */ null);
     }
 
@@ -1318,10 +1326,10 @@ public class ConsentManager {
         }
         return executeGettersByConsentSourceOfTruth(
                 /* defaultReturn= */ false,
-                () -> mDatastore.get(ConsentConstants.DEFAULT_AD_ID_STATE),
+                () -> mDatastore.getBoolean(ConsentConstants.DEFAULT_AD_ID_STATE),
                 () -> mAdServicesManager.getDefaultAdIdState(),
                 () -> mAppSearchConsentManager.getConsent(ConsentConstants.DEFAULT_AD_ID_STATE),
-                () -> mDatastore.get(ConsentConstants.DEFAULT_AD_ID_STATE),
+                () -> mDatastore.getBoolean(ConsentConstants.DEFAULT_AD_ID_STATE),
                 /* errorLogger= */ null);
     }
 
@@ -1332,7 +1340,7 @@ public class ConsentManager {
             return;
         }
         executeSettersByConsentSourceOfTruth(
-                () -> mDatastore.put(ConsentConstants.DEFAULT_CONSENT, defaultConsent),
+                () -> mDatastore.putBoolean(ConsentConstants.DEFAULT_CONSENT, defaultConsent),
                 () -> mAdServicesManager.recordDefaultConsent(defaultConsent),
                 () ->
                         mAppSearchConsentManager.setConsent(
@@ -1358,7 +1366,9 @@ public class ConsentManager {
             return;
         }
         executeSettersByConsentSourceOfTruth(
-                () -> mDatastore.put(ConsentConstants.TOPICS_DEFAULT_CONSENT, defaultConsent),
+                () ->
+                        mDatastore.putBoolean(
+                                ConsentConstants.TOPICS_DEFAULT_CONSENT, defaultConsent),
                 () -> mAdServicesManager.recordTopicsDefaultConsent(defaultConsent),
                 () ->
                         mAppSearchConsentManager.setConsent(
@@ -1380,7 +1390,9 @@ public class ConsentManager {
             return;
         }
         executeSettersByConsentSourceOfTruth(
-                () -> mDatastore.put(ConsentConstants.FLEDGE_DEFAULT_CONSENT, defaultConsent),
+                () ->
+                        mDatastore.putBoolean(
+                                ConsentConstants.FLEDGE_DEFAULT_CONSENT, defaultConsent),
                 () -> mAdServicesManager.recordFledgeDefaultConsent(defaultConsent),
                 () ->
                         mAppSearchConsentManager.setConsent(
@@ -1402,13 +1414,15 @@ public class ConsentManager {
             return;
         }
         executeSettersByConsentSourceOfTruth(
-                () -> mDatastore.put(ConsentConstants.MEASUREMENT_DEFAULT_CONSENT, defaultConsent),
+                () ->
+                        mDatastore.putBoolean(
+                                ConsentConstants.MEASUREMENT_DEFAULT_CONSENT, defaultConsent),
                 () -> mAdServicesManager.recordMeasurementDefaultConsent(defaultConsent),
                 () ->
                         mAppSearchConsentManager.setConsent(
                                 ConsentConstants.MEASUREMENT_DEFAULT_CONSENT, defaultConsent),
                 () -> // Same as PPAPI_ONLY. Rollback-safety not required.
-                mDatastore.put(ConsentConstants.MEASUREMENT_DEFAULT_CONSENT, defaultConsent),
+                mDatastore.putBoolean(ConsentConstants.MEASUREMENT_DEFAULT_CONSENT, defaultConsent),
                 /* errorLogger= */ null);
     }
 
@@ -1419,13 +1433,13 @@ public class ConsentManager {
             return;
         }
         executeSettersByConsentSourceOfTruth(
-                () -> mDatastore.put(ConsentConstants.DEFAULT_AD_ID_STATE, defaultAdIdState),
+                () -> mDatastore.putBoolean(ConsentConstants.DEFAULT_AD_ID_STATE, defaultAdIdState),
                 () -> mAdServicesManager.recordDefaultAdIdState(defaultAdIdState),
                 () ->
                         mAppSearchConsentManager.setConsent(
                                 ConsentConstants.DEFAULT_AD_ID_STATE, defaultAdIdState),
                 () -> // Same as PPAPI_ONLY. Rollback-safety not required.
-                mDatastore.put(ConsentConstants.DEFAULT_AD_ID_STATE, defaultAdIdState),
+                mDatastore.putBoolean(ConsentConstants.DEFAULT_AD_ID_STATE, defaultAdIdState),
                 /* errorLogger= */ null);
     }
 
@@ -1433,9 +1447,9 @@ public class ConsentManager {
             throws IOException {
         for (PrivacySandboxFeatureType featureType : PrivacySandboxFeatureType.values()) {
             if (featureType.name().equals(currentFeatureType.name())) {
-                mDatastore.put(featureType.name(), true);
+                mDatastore.putBoolean(featureType.name(), true);
             } else {
-                mDatastore.put(featureType.name(), false);
+                mDatastore.putBoolean(featureType.name(), false);
             }
         }
     }
@@ -1478,7 +1492,7 @@ public class ConsentManager {
 
     private PrivacySandboxFeatureType getPrivacySandboxFeatureFromApp() throws IOException {
         for (PrivacySandboxFeatureType featureType : PrivacySandboxFeatureType.values()) {
-            if (Boolean.TRUE.equals(mDatastore.get(featureType.name()))) {
+            if (Boolean.TRUE.equals(mDatastore.getBoolean(featureType.name()))) {
                 return featureType;
             }
         }
@@ -1518,17 +1532,19 @@ public class ConsentManager {
     }
 
     private static void storeUserManualInteractionToPpApi(
-            @UserManualInteraction int interaction, BooleanFileDatastore datastore)
+            @UserManualInteraction int interaction, AtomicFileDatastore datastore)
             throws IOException {
         switch (interaction) {
             case NO_MANUAL_INTERACTIONS_RECORDED:
-                datastore.put(ConsentConstants.MANUAL_INTERACTION_WITH_CONSENT_RECORDED, false);
+                datastore.putBoolean(
+                        ConsentConstants.MANUAL_INTERACTION_WITH_CONSENT_RECORDED, false);
                 break;
             case UNKNOWN:
                 datastore.remove(ConsentConstants.MANUAL_INTERACTION_WITH_CONSENT_RECORDED);
                 break;
             case MANUAL_INTERACTIONS_RECORDED:
-                datastore.put(ConsentConstants.MANUAL_INTERACTION_WITH_CONSENT_RECORDED, true);
+                datastore.putBoolean(
+                        ConsentConstants.MANUAL_INTERACTION_WITH_CONSENT_RECORDED, true);
                 break;
             default:
                 throw new IllegalArgumentException(
@@ -1538,7 +1554,7 @@ public class ConsentManager {
 
     private int getUserManualInteractionWithConsentInternal() {
         Boolean manualInteractionWithConsent =
-                mDatastore.get(ConsentConstants.MANUAL_INTERACTION_WITH_CONSENT_RECORDED);
+                mDatastore.getBoolean(ConsentConstants.MANUAL_INTERACTION_WITH_CONSENT_RECORDED);
         if (manualInteractionWithConsent == null) {
             return UNKNOWN;
         } else if (Boolean.TRUE.equals(manualInteractionWithConsent)) {
@@ -1572,40 +1588,47 @@ public class ConsentManager {
     }
 
     @VisibleForTesting
-    static BooleanFileDatastore createAndInitializeDataStore(@NonNull Context context) {
-        BooleanFileDatastore booleanFileDatastore =
-                new BooleanFileDatastore(
+    static AtomicFileDatastore createAndInitializeDataStore(
+            Context context, AdServicesErrorLogger adServicesErrorLogger) {
+        AtomicFileDatastore atomicFileDatastore =
+                new AtomicFileDatastore(
                         context,
                         ConsentConstants.STORAGE_XML_IDENTIFIER,
-                        ConsentConstants.STORAGE_VERSION);
+                        ConsentConstants.STORAGE_VERSION,
+                        adServicesErrorLogger);
 
         try {
-            booleanFileDatastore.initialize();
+            atomicFileDatastore.initialize();
             // TODO(b/259607624): implement a method in the datastore which would support
             // this exact scenario - if the value is null, return default value provided
             // in the parameter (similar to SP apply etc.)
-            if (booleanFileDatastore.get(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE) == null) {
-                booleanFileDatastore.put(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE, false);
-            }
-            if (booleanFileDatastore.get(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE)
+            if (atomicFileDatastore.getBoolean(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE)
                     == null) {
-                booleanFileDatastore.put(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE, false);
+                atomicFileDatastore.putBoolean(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE, false);
             }
-            if (booleanFileDatastore.get(ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED) == null) {
-                booleanFileDatastore.put(ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED, false);
-            }
-            if (booleanFileDatastore.get(ConsentConstants.PAS_NOTIFICATION_DISPLAYED_ONCE)
+            if (atomicFileDatastore.getBoolean(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE)
                     == null) {
-                booleanFileDatastore.put(ConsentConstants.PAS_NOTIFICATION_DISPLAYED_ONCE, false);
+                atomicFileDatastore.putBoolean(
+                        ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE, false);
             }
-            if (booleanFileDatastore.get(ConsentConstants.PAS_NOTIFICATION_OPENED) == null) {
-                booleanFileDatastore.put(ConsentConstants.PAS_NOTIFICATION_OPENED, false);
+            if (atomicFileDatastore.getBoolean(ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED)
+                    == null) {
+                atomicFileDatastore.putBoolean(
+                        ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED, false);
+            }
+            if (atomicFileDatastore.getBoolean(ConsentConstants.PAS_NOTIFICATION_DISPLAYED_ONCE)
+                    == null) {
+                atomicFileDatastore.putBoolean(
+                        ConsentConstants.PAS_NOTIFICATION_DISPLAYED_ONCE, false);
+            }
+            if (atomicFileDatastore.getBoolean(ConsentConstants.PAS_NOTIFICATION_OPENED) == null) {
+                atomicFileDatastore.putBoolean(ConsentConstants.PAS_NOTIFICATION_OPENED, false);
             }
         } catch (IOException | IllegalArgumentException | NullPointerException e) {
             throw new RuntimeException("Failed to initialize the File Datastore!", e);
         }
 
-        return booleanFileDatastore;
+        return atomicFileDatastore;
     }
 
     // Handle different migration requests based on current consent source of Truth
@@ -1616,11 +1639,11 @@ public class ConsentManager {
     @VisibleForTesting
     static void handleConsentMigrationIfNeeded(
             @NonNull Context context,
-            @NonNull BooleanFileDatastore datastore,
+            @NonNull AtomicFileDatastore datastore,
             AdServicesManager adServicesManager,
             @NonNull StatsdAdServicesLogger statsdAdServicesLogger,
             @Flags.ConsentSourceOfTruth int consentSourceOfTruth) {
-        Objects.requireNonNull(context);
+        Objects.requireNonNull(context, "context cannot be null");
         // On R/S, handleConsentMigrationIfNeeded should never be executed.
         // It is a T+ feature. On T+, this function should only execute if it's within the
         // AdServices
@@ -1631,10 +1654,10 @@ public class ConsentManager {
             LogUtil.d("Aborting attempt to migrate consent in ExtServices");
             return;
         }
-        Objects.requireNonNull(datastore);
+        Objects.requireNonNull(datastore, "datastore cannot be null");
         if (consentSourceOfTruth == Flags.PPAPI_AND_SYSTEM_SERVER
                 || consentSourceOfTruth == Flags.SYSTEM_SERVER_ONLY) {
-            Objects.requireNonNull(adServicesManager);
+            Objects.requireNonNull(adServicesManager, "adServicesManager cannot be null");
         }
 
         switch (consentSourceOfTruth) {
@@ -1670,22 +1693,22 @@ public class ConsentManager {
 
     @VisibleForTesting
     void setConsentToPpApi(boolean isGiven) throws IOException {
-        mDatastore.put(ConsentConstants.CONSENT_KEY, isGiven);
+        mDatastore.putBoolean(ConsentConstants.CONSENT_KEY, isGiven);
     }
 
     @VisibleForTesting
     void setConsentPerApiToPpApi(AdServicesApiType apiType, boolean isGiven) throws IOException {
-        mDatastore.put(apiType.toPpApiDatastoreKey(), isGiven);
+        mDatastore.putBoolean(apiType.toPpApiDatastoreKey(), isGiven);
     }
 
     @VisibleForTesting
     boolean getConsentFromPpApi() {
-        return mDatastore.get(ConsentConstants.CONSENT_KEY);
+        return mDatastore.getBoolean(ConsentConstants.CONSENT_KEY);
     }
 
     @VisibleForTesting
     boolean getConsentPerApiFromPpApi(AdServicesApiType apiType) {
-        return Boolean.TRUE.equals(mDatastore.get(apiType.toPpApiDatastoreKey()));
+        return Boolean.TRUE.equals(mDatastore.getBoolean(apiType.toPpApiDatastoreKey()));
     }
 
     // Set the aggregated consent so that after the rollback of the module
@@ -1736,7 +1759,7 @@ public class ConsentManager {
     @VisibleForTesting
     static void setConsentToSystemServer(
             @NonNull AdServicesManager adServicesManager, boolean isGiven) {
-        Objects.requireNonNull(adServicesManager);
+        Objects.requireNonNull(adServicesManager, "adServicesManager cannot be null");
 
         ConsentParcel consentParcel =
                 new ConsentParcel.Builder()
@@ -1750,7 +1773,7 @@ public class ConsentManager {
             @NonNull AdServicesManager adServicesManager,
             @ConsentParcel.ConsentApiType int consentApiType,
             boolean isGiven) {
-        Objects.requireNonNull(adServicesManager);
+        Objects.requireNonNull(adServicesManager, "adServicesManager cannot be null");
 
         if (isGiven) {
             adServicesManager.setConsent(ConsentParcel.createGivenConsent(consentApiType));
@@ -1763,13 +1786,13 @@ public class ConsentManager {
     static boolean getPerApiConsentFromSystemServer(
             @NonNull AdServicesManager adServicesManager,
             @ConsentParcel.ConsentApiType int consentApiType) {
-        Objects.requireNonNull(adServicesManager);
+        Objects.requireNonNull(adServicesManager, "adServicesManager cannot be null");
         return adServicesManager.getConsent(consentApiType).isIsGiven();
     }
 
     @VisibleForTesting
     static boolean getConsentFromSystemServer(@NonNull AdServicesManager adServicesManager) {
-        Objects.requireNonNull(adServicesManager);
+        Objects.requireNonNull(adServicesManager, "adServicesManager cannot be null");
         return getPerApiConsentFromSystemServer(adServicesManager, ConsentParcel.ALL_API);
     }
 
@@ -1779,12 +1802,12 @@ public class ConsentManager {
     @SuppressWarnings("NewApi")
     static void migratePpApiConsentToSystemService(
             @NonNull Context context,
-            @NonNull BooleanFileDatastore datastore,
+            @NonNull AtomicFileDatastore datastore,
             @NonNull AdServicesManager adServicesManager,
             @NonNull StatsdAdServicesLogger statsdAdServicesLogger) {
-        Objects.requireNonNull(context);
-        Objects.requireNonNull(datastore);
-        Objects.requireNonNull(adServicesManager);
+        Objects.requireNonNull(context, "context cannot be null");
+        Objects.requireNonNull(datastore, "datastore cannot be null");
+        Objects.requireNonNull(adServicesManager, "adServicesManager cannot be null");
 
         AppConsents appConsents = null;
         try {
@@ -1813,7 +1836,8 @@ public class ConsentManager {
             }
             LogUtil.d("Started migrating Consent from PPAPI to System Service");
 
-            Boolean consentKey = Boolean.TRUE.equals(datastore.get(ConsentConstants.CONSENT_KEY));
+            Boolean consentKey =
+                    Boolean.TRUE.equals(datastore.getBoolean(ConsentConstants.CONSENT_KEY));
 
             // Migrate Consent and Notification Displayed to System Service.
             // Set consent enabled only when value is TRUE. FALSE and null are regarded as disabled.
@@ -1821,12 +1845,13 @@ public class ConsentManager {
 
             // Set notification displayed only when value is TRUE. FALSE and null are regarded as
             // not displayed.
-            if (Boolean.TRUE.equals(datastore.get(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE))) {
+            if (Boolean.TRUE.equals(
+                    datastore.getBoolean(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE))) {
                 adServicesManager.recordNotificationDisplayed(true);
             }
 
             Boolean manualInteractionRecorded =
-                    datastore.get(ConsentConstants.MANUAL_INTERACTION_WITH_CONSENT_RECORDED);
+                    datastore.getBoolean(ConsentConstants.MANUAL_INTERACTION_WITH_CONSENT_RECORDED);
             if (manualInteractionRecorded != null) {
                 adServicesManager.recordUserManualInteractionWithConsent(
                         manualInteractionRecorded ? 1 : -1);
@@ -1881,7 +1906,7 @@ public class ConsentManager {
     // consent cannot be migrated back to PPAPI. This data clearing should only happen once.
     @VisibleForTesting
     static void clearPpApiConsent(
-            @NonNull Context context, @NonNull BooleanFileDatastore datastore) {
+            @NonNull Context context, @NonNull AtomicFileDatastore datastore) {
         // Exit if PPAPI consent has cleared.
         SharedPreferences sharedPreferences =
                 context.getSharedPreferences(
@@ -1917,8 +1942,8 @@ public class ConsentManager {
     @VisibleForTesting
     static void resetSharedPreference(
             @NonNull Context context, @NonNull String sharedPreferenceKey) {
-        Objects.requireNonNull(context);
-        Objects.requireNonNull(sharedPreferenceKey);
+        Objects.requireNonNull(context, "context cannot be null");
+        Objects.requireNonNull(sharedPreferenceKey, "sharedPreferenceKey cannot be null");
 
         SharedPreferences sharedPreferences =
                 context.getSharedPreferences(
@@ -2014,13 +2039,13 @@ public class ConsentManager {
     @VisibleForTesting
     static void handleConsentMigrationFromAppSearchIfNeeded(
             @NonNull Context context,
-            @NonNull BooleanFileDatastore datastore,
+            @NonNull AtomicFileDatastore datastore,
             @NonNull AppConsentDao appConsentDao,
             @NonNull AppSearchConsentManager appSearchConsentManager,
             @NonNull AdServicesManager adServicesManager,
             @NonNull StatsdAdServicesLogger statsdAdServicesLogger) {
-        Objects.requireNonNull(context);
-        Objects.requireNonNull(appSearchConsentManager);
+        Objects.requireNonNull(context, "context cannot be null");
+        Objects.requireNonNull(appSearchConsentManager, "appSearchConsentManager cannot be null");
         LogUtil.d("Check migrating Consent from AppSearch to PPAPI and System Service");
 
         // On R/S, this function should never be executed because AppSearch to PPAPI and
@@ -2116,45 +2141,47 @@ public class ConsentManager {
     static AppConsents migrateAppSearchConsents(
             AppSearchConsentManager appSearchConsentManager,
             AdServicesManager adServicesManager,
-            BooleanFileDatastore datastore)
+            AtomicFileDatastore datastore)
             throws IOException {
         boolean consented = appSearchConsentManager.getConsent(ConsentConstants.CONSENT_KEY);
-        datastore.put(ConsentConstants.CONSENT_KEY, consented);
+        datastore.putBoolean(ConsentConstants.CONSENT_KEY, consented);
         adServicesManager.setConsent(getConsentParcel(ConsentParcel.ALL_API, consented));
 
         // Record default consents.
         boolean defaultConsent =
                 appSearchConsentManager.getConsent(ConsentConstants.DEFAULT_CONSENT);
-        datastore.put(ConsentConstants.DEFAULT_CONSENT, defaultConsent);
+        datastore.putBoolean(ConsentConstants.DEFAULT_CONSENT, defaultConsent);
         adServicesManager.recordDefaultConsent(defaultConsent);
         boolean topicsDefaultConsented =
                 appSearchConsentManager.getConsent(ConsentConstants.TOPICS_DEFAULT_CONSENT);
-        datastore.put(ConsentConstants.TOPICS_DEFAULT_CONSENT, topicsDefaultConsented);
+        datastore.putBoolean(ConsentConstants.TOPICS_DEFAULT_CONSENT, topicsDefaultConsented);
         adServicesManager.recordTopicsDefaultConsent(topicsDefaultConsented);
         boolean fledgeDefaultConsented =
                 appSearchConsentManager.getConsent(ConsentConstants.FLEDGE_DEFAULT_CONSENT);
-        datastore.put(ConsentConstants.FLEDGE_DEFAULT_CONSENT, fledgeDefaultConsented);
+        datastore.putBoolean(ConsentConstants.FLEDGE_DEFAULT_CONSENT, fledgeDefaultConsented);
         adServicesManager.recordFledgeDefaultConsent(fledgeDefaultConsented);
         boolean measurementDefaultConsented =
                 appSearchConsentManager.getConsent(ConsentConstants.MEASUREMENT_DEFAULT_CONSENT);
-        datastore.put(ConsentConstants.MEASUREMENT_DEFAULT_CONSENT, measurementDefaultConsented);
+        datastore.putBoolean(
+                ConsentConstants.MEASUREMENT_DEFAULT_CONSENT, measurementDefaultConsented);
         adServicesManager.recordMeasurementDefaultConsent(measurementDefaultConsented);
 
         // Record per API consents.
         boolean topicsConsented =
                 appSearchConsentManager.getConsent(AdServicesApiType.TOPICS.toPpApiDatastoreKey());
-        datastore.put(AdServicesApiType.TOPICS.toPpApiDatastoreKey(), topicsConsented);
+        datastore.putBoolean(AdServicesApiType.TOPICS.toPpApiDatastoreKey(), topicsConsented);
         setPerApiConsentToSystemServer(
                 adServicesManager, AdServicesApiType.TOPICS.toConsentApiType(), topicsConsented);
         boolean fledgeConsented =
                 appSearchConsentManager.getConsent(AdServicesApiType.FLEDGE.toPpApiDatastoreKey());
-        datastore.put(AdServicesApiType.FLEDGE.toPpApiDatastoreKey(), fledgeConsented);
+        datastore.putBoolean(AdServicesApiType.FLEDGE.toPpApiDatastoreKey(), fledgeConsented);
         setPerApiConsentToSystemServer(
                 adServicesManager, AdServicesApiType.FLEDGE.toConsentApiType(), fledgeConsented);
         boolean measurementConsented =
                 appSearchConsentManager.getConsent(
                         AdServicesApiType.MEASUREMENTS.toPpApiDatastoreKey());
-        datastore.put(AdServicesApiType.MEASUREMENTS.toPpApiDatastoreKey(), measurementConsented);
+        datastore.putBoolean(
+                AdServicesApiType.MEASUREMENTS.toPpApiDatastoreKey(), measurementConsented);
         setPerApiConsentToSystemServer(
                 adServicesManager,
                 AdServicesApiType.MEASUREMENTS.toConsentApiType(),
@@ -2207,10 +2234,10 @@ public class ConsentManager {
         }
         return executeGettersByConsentSourceOfTruth(
                 /* defaultReturn= */ false,
-                () -> mDatastore.get(ConsentConstants.IS_AD_ID_ENABLED),
+                () -> mDatastore.getBoolean(ConsentConstants.IS_AD_ID_ENABLED),
                 () -> mAdServicesManager.isAdIdEnabled(),
                 () -> mAppSearchConsentManager.isAdIdEnabled(),
-                () -> mDatastore.get(ConsentConstants.IS_AD_ID_ENABLED),
+                () -> mDatastore.getBoolean(ConsentConstants.IS_AD_ID_ENABLED),
                 /* errorLogger= */ null);
     }
 
@@ -2221,11 +2248,11 @@ public class ConsentManager {
             return;
         }
         executeSettersByConsentSourceOfTruth(
-                () -> mDatastore.put(ConsentConstants.IS_AD_ID_ENABLED, isAdIdEnabled),
+                () -> mDatastore.putBoolean(ConsentConstants.IS_AD_ID_ENABLED, isAdIdEnabled),
                 () -> mAdServicesManager.setAdIdEnabled(isAdIdEnabled),
                 () -> mAppSearchConsentManager.setAdIdEnabled(isAdIdEnabled),
                 // Doesn't need to be rollback-safe. Same as PPAPI_ONLY.
-                () -> mDatastore.put(ConsentConstants.IS_AD_ID_ENABLED, isAdIdEnabled),
+                () -> mDatastore.putBoolean(ConsentConstants.IS_AD_ID_ENABLED, isAdIdEnabled),
                 /* errorLogger= */ null);
     }
 
@@ -2236,7 +2263,7 @@ public class ConsentManager {
         }
         return executeGettersByConsentSourceOfTruth(
                 /* defaultReturn= */ false,
-                () -> mDatastore.get(ConsentConstants.IS_U18_ACCOUNT),
+                () -> mDatastore.getBoolean(ConsentConstants.IS_U18_ACCOUNT),
                 () -> mAdServicesManager.isU18Account(),
                 () -> mAppSearchConsentManager.isU18Account(),
                 () -> mAdExtDataManager.getIsU18Account(),
@@ -2250,7 +2277,7 @@ public class ConsentManager {
             return;
         }
         executeSettersByConsentSourceOfTruth(
-                () -> mDatastore.put(ConsentConstants.IS_U18_ACCOUNT, isU18Account),
+                () -> mDatastore.putBoolean(ConsentConstants.IS_U18_ACCOUNT, isU18Account),
                 () -> mAdServicesManager.setU18Account(isU18Account),
                 () -> mAppSearchConsentManager.setU18Account(isU18Account),
                 () -> mAdExtDataManager.setIsU18Account(isU18Account),
@@ -2264,10 +2291,10 @@ public class ConsentManager {
         }
         return executeGettersByConsentSourceOfTruth(
                 /* defaultReturn= */ false,
-                () -> mDatastore.get(ConsentConstants.IS_ENTRY_POINT_ENABLED),
+                () -> mDatastore.getBoolean(ConsentConstants.IS_ENTRY_POINT_ENABLED),
                 () -> mAdServicesManager.isEntryPointEnabled(),
                 () -> mAppSearchConsentManager.isEntryPointEnabled(),
-                () -> mDatastore.get(ConsentConstants.IS_ENTRY_POINT_ENABLED),
+                () -> mDatastore.getBoolean(ConsentConstants.IS_ENTRY_POINT_ENABLED),
                 /* errorLogger= */ null);
     }
 
@@ -2278,11 +2305,15 @@ public class ConsentManager {
             return;
         }
         executeSettersByConsentSourceOfTruth(
-                () -> mDatastore.put(ConsentConstants.IS_ENTRY_POINT_ENABLED, isEntryPointEnabled),
+                () ->
+                        mDatastore.putBoolean(
+                                ConsentConstants.IS_ENTRY_POINT_ENABLED, isEntryPointEnabled),
                 () -> mAdServicesManager.setEntryPointEnabled(isEntryPointEnabled),
                 () -> mAppSearchConsentManager.setEntryPointEnabled(isEntryPointEnabled),
                 // Doesn't need to be rollback-safe. Same as PPAPI_ONLY.
-                () -> mDatastore.put(ConsentConstants.IS_ENTRY_POINT_ENABLED, isEntryPointEnabled),
+                () ->
+                        mDatastore.putBoolean(
+                                ConsentConstants.IS_ENTRY_POINT_ENABLED, isEntryPointEnabled),
                 /* errorLogger= */ null);
     }
 
@@ -2293,7 +2324,7 @@ public class ConsentManager {
         }
         return executeGettersByConsentSourceOfTruth(
                 /* defaultReturn= */ false,
-                () -> mDatastore.get(ConsentConstants.IS_ADULT_ACCOUNT),
+                () -> mDatastore.getBoolean(ConsentConstants.IS_ADULT_ACCOUNT),
                 () -> mAdServicesManager.isAdultAccount(),
                 () -> mAppSearchConsentManager.isAdultAccount(),
                 () -> mAdExtDataManager.getIsAdultAccount(),
@@ -2307,7 +2338,7 @@ public class ConsentManager {
             return;
         }
         executeSettersByConsentSourceOfTruth(
-                () -> mDatastore.put(ConsentConstants.IS_ADULT_ACCOUNT, isAdultAccount),
+                () -> mDatastore.putBoolean(ConsentConstants.IS_ADULT_ACCOUNT, isAdultAccount),
                 () -> mAdServicesManager.setAdultAccount(isAdultAccount),
                 () -> mAppSearchConsentManager.setAdultAccount(isAdultAccount),
                 () -> mAdExtDataManager.setIsAdultAccount(isAdultAccount),
@@ -2323,7 +2354,7 @@ public class ConsentManager {
         }
         return executeGettersByConsentSourceOfTruth(
                 /* defaultReturn= */ true,
-                () -> mDatastore.get(ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED),
+                () -> mDatastore.getBoolean(ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED),
                 () -> mAdServicesManager.wasU18NotificationDisplayed(),
                 () -> mAppSearchConsentManager.wasU18NotificationDisplayed(),
                 () -> // On Android R only U18 notification is allowed to be displayed.
@@ -2339,7 +2370,7 @@ public class ConsentManager {
         }
         executeSettersByConsentSourceOfTruth(
                 () ->
-                        mDatastore.put(
+                        mDatastore.putBoolean(
                                 ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED,
                                 wasU18NotificationDisplayed),
                 () -> mAdServicesManager.setU18NotificationDisplayed(wasU18NotificationDisplayed),
@@ -2368,26 +2399,7 @@ public class ConsentManager {
                 () -> mUxStatesDao.getUx(),
                 () -> convertUxString(mAdServicesManager.getUx()),
                 () -> mAppSearchConsentManager.getUx(),
-                () -> {
-                    PrivacySandboxUxCollection ux = mUxStatesDao.getUx();
-
-                    // Workaround to make getUx() rollback safe on R. Rollback could change
-                    // ux enum to UNSUPPORTED_UX after daily ping and before the
-                    // notification is displayed.
-
-                    if (ux == PrivacySandboxUxCollection.UNSUPPORTED_UX) {
-                        // Use getIsU18Account to infer ux enum since getIsU18Account is
-                        // rollback safe
-                        if (mFlags.getU18UxEnabled() && mAdExtDataManager.getIsU18Account()) {
-                            ux = PrivacySandboxUxCollection.U18_UX;
-                        } else if (mAdExtDataManager.getIsAdultAccount()) {
-                            // Use getIsAdultAccount to infer ux enum since getIsAdultAccount is
-                            // rollback safe
-                            ux = PrivacySandboxUxCollection.RVC_UX;
-                        }
-                    }
-                    return ux;
-                },
+                () -> mUxStatesDao.getUx(),
                 /* errorLogger= */ null);
     }
 
@@ -2403,6 +2415,78 @@ public class ConsentManager {
                 () -> mAppSearchConsentManager.setUx(ux),
                 () -> // Same as PPAPI_ONLY. Doesn't need to be rollback safe
                 mUxStatesDao.setUx(ux),
+                /* errorLogger= */ null);
+    }
+
+    /**
+     * Get module state for desired module.
+     *
+     * @param module desired module
+     * @return module state
+     */
+    @ModuleStateCode
+    public int getModuleState(@ModuleCode int module) {
+        EnrollmentData data = EnrollmentData.deserializeFromBase64(getModuleEnrollmentState());
+        return data.getModuleState(module);
+    }
+
+    /**
+     * Sets module state for a module.
+     *
+     * @param moduleState object to set
+     */
+    public void setModuleStates(List<AdServicesModuleState> moduleStates) {
+        EnrollmentData data = EnrollmentData.deserializeFromBase64(getModuleEnrollmentState());
+        for (AdServicesModuleState moduleState : moduleStates) {
+            data.putModuleState(moduleState);
+        }
+        setModuleEnrollmentData(EnrollmentData.serializeBase64(data));
+    }
+
+    /**
+     * Gets user choice for a module.
+     *
+     * @param module Module to get
+     * @return User choice of the module
+     */
+    @ModuleUserChoiceCode
+    public int getUserChoice(@ModuleCode int module) {
+        EnrollmentData data = EnrollmentData.deserializeFromBase64(getModuleEnrollmentState());
+        return data.getUserChoice(module);
+    }
+
+    /**
+     * Sets user choice for a module.
+     *
+     * @param module Module to set
+     * @param userChoices User choices to store
+     */
+    public void setUserChoices(List<AdServicesModuleUserChoice> userChoices) {
+        EnrollmentData data = EnrollmentData.deserializeFromBase64(getModuleEnrollmentState());
+        for (AdServicesModuleUserChoice userChoice : userChoices) {
+            data.putUserChoice(userChoice);
+        }
+        setModuleEnrollmentData(EnrollmentData.serializeBase64(data));
+    }
+
+    /** Set module enrollment data to storage based on consent_source_of_truth. */
+    private String getModuleEnrollmentState() {
+        return executeGettersByConsentSourceOfTruth(
+                "",
+                () -> mDatastore.getString(ConsentConstants.MODULE_ENROLLMENT_STATE),
+                () -> mAdServicesManager.getModuleEnrollmentState(),
+                () -> mAppSearchConsentManager.getModuleEnrollmentState(),
+                () -> "", // TODO(b/348473253): implement datastore if needed
+                /* errorLogger= */ null);
+    }
+
+    /** Set module enrollment data to storage based on consent_source_of_truth. */
+    private void setModuleEnrollmentData(String data) {
+        executeSettersByConsentSourceOfTruth(
+                () -> mDatastore.putString(ConsentConstants.MODULE_ENROLLMENT_STATE, data),
+                () -> mAdServicesManager.setModuleEnrollmentState(data),
+                () -> mAppSearchConsentManager.setModuleEnrollmentState(data),
+                () -> {}, // TODO(b/348473253): implement datastore if needed
                 /* errorLogger= */ null);
     }
 
@@ -2498,11 +2582,11 @@ public class ConsentManager {
         }
         return executeGettersByConsentSourceOfTruth(
                 /* defaultReturn= */ false,
-                () -> mDatastore.get(ConsentConstants.IS_MEASUREMENT_DATA_RESET),
+                () -> mDatastore.getBoolean(ConsentConstants.IS_MEASUREMENT_DATA_RESET),
                 () -> mAdServicesManager.isMeasurementDataReset(),
                 () -> mAppSearchConsentManager.isMeasurementDataReset(),
                 () -> // Doesn't need to be rollback-safe. Same as PPAPI_ONLY.
-                mDatastore.get(ConsentConstants.IS_MEASUREMENT_DATA_RESET),
+                mDatastore.getBoolean(ConsentConstants.IS_MEASUREMENT_DATA_RESET),
                 /* errorLogger= */ null);
     }
 
@@ -2514,12 +2598,13 @@ public class ConsentManager {
         }
         executeSettersByConsentSourceOfTruth(
                 () ->
-                        mDatastore.put(
+                        mDatastore.putBoolean(
                                 ConsentConstants.IS_MEASUREMENT_DATA_RESET, isMeasurementDataReset),
                 () -> mAdServicesManager.setMeasurementDataReset(isMeasurementDataReset),
                 () -> mAppSearchConsentManager.setMeasurementDataReset(isMeasurementDataReset),
                 () -> // Doesn't need to be rollback-safe. Same as PPAPI_ONLY.
-                mDatastore.put(ConsentConstants.IS_MEASUREMENT_DATA_RESET, isMeasurementDataReset),
+                mDatastore.putBoolean(
+                                ConsentConstants.IS_MEASUREMENT_DATA_RESET, isMeasurementDataReset),
                 /* errorLogger= */ null);
     }
 
@@ -2532,11 +2617,11 @@ public class ConsentManager {
         }
         return executeGettersByConsentSourceOfTruth(
                 /* defaultReturn= */ false,
-                () -> mDatastore.get(ConsentConstants.IS_PA_DATA_RESET),
+                () -> mDatastore.getBoolean(ConsentConstants.IS_PA_DATA_RESET),
                 () -> mAdServicesManager.isPaDataReset(),
                 () -> mAppSearchConsentManager.isPaDataReset(),
                 () -> // Doesn't need to be rollback-safe. Same as PPAPI_ONLY.
-                mDatastore.get(ConsentConstants.IS_PA_DATA_RESET),
+                mDatastore.getBoolean(ConsentConstants.IS_PA_DATA_RESET),
                 /* errorLogger= */ null);
     }
 
@@ -2547,11 +2632,11 @@ public class ConsentManager {
             return;
         }
         executeSettersByConsentSourceOfTruth(
-                () -> mDatastore.put(ConsentConstants.IS_PA_DATA_RESET, isPaDataReset),
+                () -> mDatastore.putBoolean(ConsentConstants.IS_PA_DATA_RESET, isPaDataReset),
                 () -> mAdServicesManager.setPaDataReset(isPaDataReset),
                 () -> mAppSearchConsentManager.setPaDataReset(isPaDataReset),
                 () -> // Doesn't need to be rollback-safe. Same as PPAPI_ONLY.
-                mDatastore.put(ConsentConstants.IS_PA_DATA_RESET, isPaDataReset),
+                mDatastore.putBoolean(ConsentConstants.IS_PA_DATA_RESET, isPaDataReset),
                 /* errorLogger= */ null);
     }
 
@@ -2562,7 +2647,7 @@ public class ConsentManager {
     public Boolean wasPasNotificationOpened() {
         return executeGettersByConsentSourceOfTruth(
                 /* defaultReturn= */ false,
-                () -> mDatastore.get(ConsentConstants.PAS_NOTIFICATION_OPENED),
+                () -> mDatastore.getBoolean(ConsentConstants.PAS_NOTIFICATION_OPENED),
                 () -> mAdServicesManager.wasPasNotificationOpened(),
                 () -> false,
                 () -> false,
@@ -2573,7 +2658,7 @@ public class ConsentManager {
     public void recordPasNotificationOpened(boolean wasPasNotificationOpened) {
         executeSettersByConsentSourceOfTruth(
                 () ->
-                        mDatastore.put(
+                        mDatastore.putBoolean(
                                 ConsentConstants.PAS_NOTIFICATION_OPENED, wasPasNotificationOpened),
                 () -> mAdServicesManager.recordPasNotificationOpened(wasPasNotificationOpened),
                 // APPSEARCH_ONLY is only set on S which has not implemented PAS updates.

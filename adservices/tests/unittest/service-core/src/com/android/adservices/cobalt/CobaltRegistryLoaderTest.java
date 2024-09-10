@@ -26,9 +26,6 @@ import com.android.cobalt.registry.RegistryValidator;
 
 import com.google.cobalt.MetricDefinition;
 import com.google.cobalt.ReportDefinition;
-import com.google.cobalt.ReportDefinition.ReportingInterval;
-import com.google.cobalt.StringSketchParameters;
-import com.google.cobalt.SystemProfileSelectionPolicy;
 
 import org.junit.Test;
 
@@ -61,19 +58,10 @@ public final class CobaltRegistryLoaderTest extends AdServicesUnitTestCase {
 
         for (MetricDefinition metric : registry.getMetrics()) {
             for (ReportDefinition report : metric.getReportsList()) {
-                assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
-                        .isTrue();
+                assertThat(RegistryValidator.isValid(metric, report)).isTrue();
                 if (report.getReportName().endsWith(REPORT_NAME_DOGFOOD_SUFFIX)) {
                     assertThat(report.getMaxReleaseStage()).isEqualTo(DOGFOOD);
                 }
-                assertThat(report.getReportingInterval()).isEqualTo(ReportingInterval.DAYS_1);
-                assertThat(report.getExperimentIdList()).isEmpty();
-                assertThat(report.getSystemProfileSelection())
-                        .isEqualTo(SystemProfileSelectionPolicy.REPORT_ALL);
-                assertThat(report.getStringSketchParams())
-                        .isEqualTo(StringSketchParameters.getDefaultInstance());
-                assertThat(report.getExpeditedSending()).isFalse();
-                assertThat(report.getExperimentIdList()).isEmpty();
             }
         }
     }

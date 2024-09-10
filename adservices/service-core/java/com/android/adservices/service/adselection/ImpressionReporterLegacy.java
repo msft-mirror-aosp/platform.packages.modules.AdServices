@@ -23,6 +23,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARG
 import static android.adservices.common.AdServicesStatusUtils.STATUS_IO_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
+import static com.android.adservices.service.common.AppManifestConfigCall.API_AD_SELECTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
 
 import android.adservices.adselection.AdSelectionConfig;
@@ -31,7 +32,6 @@ import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
-import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
@@ -282,6 +282,7 @@ public class ImpressionReporterLegacy {
                                         mFlags
                                                 .getEnforceForegroundStatusForFledgeReportImpression(),
                                         true,
+                                        !mFlags.getConsentNotificationDebugMode(),
                                         mCallerUid,
                                         AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
                                         Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS,
@@ -473,9 +474,10 @@ public class ImpressionReporterLegacy {
             try {
                 buyerValidator.validate(reportingUris.buyerReportingUri);
                 if (!mFlags.getDisableFledgeEnrollmentCheck()) {
-                    mFledgeAuthorizationFilter.assertAdTechEnrolled(
-                            AdTechIdentifier.fromString(reportingUris.buyerReportingUri.getHost()),
-                            AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION);
+                    mFledgeAuthorizationFilter.assertAdTechFromUriEnrolled(
+                            reportingUris.buyerReportingUri,
+                            AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                            API_AD_SELECTION);
                 }
                 // Perform reporting if no exception was thrown
                 buyerFuture =

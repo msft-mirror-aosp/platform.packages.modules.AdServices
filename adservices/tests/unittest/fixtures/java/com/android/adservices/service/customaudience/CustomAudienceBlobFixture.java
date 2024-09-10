@@ -19,6 +19,7 @@ package com.android.adservices.service.customaudience;
 import static com.android.adservices.service.customaudience.CustomAudienceBlob.AUCTION_SERVER_REQUEST_FLAGS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceBlob.BUYER_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceBlob.OWNER_KEY;
+import static com.android.adservices.service.customaudience.CustomAudienceBlob.PRIORITY_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.ADS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.AD_COUNTERS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.AD_FILTERS_KEY;
@@ -344,6 +345,19 @@ public class CustomAudienceBlobFixture {
             }
             return addToJSONObject(
                     json, AUCTION_SERVER_REQUEST_FLAGS_KEY, auctionServerRequestFlagsArray, false);
+        }
+        return json;
+    }
+
+    /**
+     * Converts a list of {@link String} into a JSONObject with a keyed field for priority.
+     *
+     * <p>Optionally adds harmless junk to the object by adding unexpected fields.
+     */
+    public static JSONObject addPriority(
+            JSONObject json, Double priority, boolean shouldAddHarmlessJunk) throws JSONException {
+        if (priority != null) {
+            return addToJSONObject(json, PRIORITY_KEY, priority, shouldAddHarmlessJunk);
         }
         return json;
     }

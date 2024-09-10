@@ -29,7 +29,6 @@ import android.content.pm.PackageManager;
 import android.os.IBinder;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.appsetid.AppSetIdWorker;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -49,7 +48,6 @@ import java.io.StringWriter;
 @SpyStatic(AdServicesLoggerImpl.class)
 @SpyStatic(AppImportanceFilter.class)
 public final class AppSetIdServiceTest extends AdServicesExtendedMockitoTestCase {
-    @Mock Flags mMockFlags;
     @Mock AppSetIdWorker mMockAppSetIdWorker;
     @Mock AppImportanceFilter mMockAppImportanceFilter;
     @Mock PackageManager mMockPackageManager;

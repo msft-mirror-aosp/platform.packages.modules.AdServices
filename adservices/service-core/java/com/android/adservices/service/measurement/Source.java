@@ -26,6 +26,7 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
+import com.android.adservices.service.measurement.aggregation.AggregateDebugReporting;
 import com.android.adservices.service.measurement.noising.Combinatorics;
 import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
@@ -121,6 +122,10 @@ public class Source {
     @Nullable private Long mMaxEventStates;
     private long mDestinationLimitPriority;
     @Nullable private DestinationLimitAlgorithm mDestinationLimitAlgorithm;
+    @Nullable private Double mEventLevelEpsilon;
+    @Nullable private String mAggregateDebugReportingString;
+    @Nullable private AggregateDebugReporting mAggregateDebugReporting;
+    private int mAggregateDebugReportContributions;
 
     /**
      * Parses and returns the event_report_windows Returns null if parsing fails or if there is no
@@ -267,13 +272,13 @@ public class Source {
     }
 
     /**
-     * Verifies whether the source contains a valid maximum event states value.
+     * Verifies whether the source contains valid attribution scope values.
      *
      * @param flags flag values
      */
-    public boolean validateMaxEventStates(Flags flags) {
+    public AttributionScopeValidationResult validateAttributionScopeValues(Flags flags) {
         if (!flags.getMeasurementEnableAttributionScope() || getAttributionScopeLimit() == null) {
-            return true;
+            return AttributionScopeValidationResult.VALID;
         }
         if (getMaxEventStates() == null) {
             throw new IllegalStateException(
@@ -288,9 +293,12 @@ public class Source {
                     "Num states should be validated before validating max event states");
         }
         if (getSourceType() == SourceType.EVENT && numStates > getMaxEventStates()) {
-            return false;
+            return AttributionScopeValidationResult.INVALID_MAX_EVENT_STATES_LIMIT;
         }
-        return true;
+        if (!hasValidAttributionScopeInformationGain(flags, numStates)) {
+            return AttributionScopeValidationResult.INVALID_INFORMATION_GAIN_LIMIT;
+        }
+        return AttributionScopeValidationResult.VALID;
     }
 
     /**
@@ -317,30 +325,41 @@ public class Source {
     }
 
     /**
-     * Compute information gain for the source given the numTriggerStates. Attribution scope limit
-     * and max event states will also be considered if attribution scope is enabled.
-     *
-     * @param flags flag values.
-     * @param flipProbability the flip probability, used only if attribution scope is not enabled.
-     * @param numTriggerStates num of trigger states.
+     * @param flags flag values
+     * @return the information gain thereshold for attribution scopes.
      */
-    double getInformationGain(Flags flags, long numTriggerStates, double flipProbability) {
-        if (flags.getMeasurementEnableAttributionScope()) {
-            long attributionScopeLimit =
-                    getAttributionScopeLimit() == null ? 1L : getAttributionScopeLimit();
-            long maxEventStates = getMaxEventStates() == null ? 1L : getMaxEventStates();
-            return Combinatorics.getMaxInformationGainWithAttributionScope(
-                    numTriggerStates,
-                    attributionScopeLimit,
-                    maxEventStates,
-                    flags.getMeasurementPrivacyEpsilon());
+    public double getAttributionScopeInfoGainThreshold(Flags flags) {
+        if (getDestinationTypeMultiplier(flags) == 2) {
+            return mSourceType == SourceType.EVENT
+                    ? flags.getMeasurementAttributionScopeMaxInfoGainDualDestinationEvent()
+                    : flags.getMeasurementAttributionScopeMaxInfoGainDualDestinationNavigation();
         }
-        return Combinatorics.getInformationGain(numTriggerStates, flipProbability);
+        return mSourceType == SourceType.EVENT
+                ? flags.getMeasurementAttributionScopeMaxInfoGainEvent()
+                : flags.getMeasurementAttributionScopeMaxInfoGainNavigation();
+    }
+
+    /** Retrieves the default epsilon or epsilon defined from Source. */
+    public double getConditionalEventLevelEpsilon(Flags flags) {
+        if (flags.getMeasurementEnableEventLevelEpsilonInSource()
+                && getEventLevelEpsilon() != null) {
+            return getEventLevelEpsilon();
+        }
+        return flags.getMeasurementPrivacyEpsilon();
     }
 
     private boolean isFlexLiteApiValueValid(Flags flags) {
-        return getInformationGain(flags, getNumStates(flags), getFlipProbability(flags))
+        return Combinatorics.getInformationGain(getNumStates(flags), getFlipProbability(flags))
                 <= getInformationGainThreshold(flags);
+    }
+
+    private boolean hasValidAttributionScopeInformationGain(Flags flags, long numStates) {
+        if (!flags.getMeasurementEnableAttributionScope() || getAttributionScopeLimit() == null) {
+            return true;
+        }
+        return Combinatorics.getMaxInformationGainWithAttributionScope(
+                        numStates, getAttributionScopeLimit(), getMaxEventStates())
+                <= getAttributionScopeInfoGainThreshold(flags);
     }
 
     private void buildPrivacyParameters(Flags flags) {
@@ -352,7 +371,7 @@ public class Source {
             setFlipProbability(mTriggerSpecs.getFlipProbability(this, flags));
             return;
         }
-        double epsilon = (double) flags.getMeasurementPrivacyEpsilon();
+        double epsilon = getConditionalEventLevelEpsilon(flags);
         setFlipProbability(Combinatorics.getFlipProbability(getNumStates(flags), epsilon));
     }
 
@@ -408,6 +427,23 @@ public class Source {
     public enum TriggerDataMatching {
         MODULUS,
         EXACT
+    }
+
+    /** The validation result attribution scope values. */
+    public enum AttributionScopeValidationResult {
+        VALID(true),
+        INVALID_MAX_EVENT_STATES_LIMIT(false),
+        INVALID_INFORMATION_GAIN_LIMIT(false);
+
+        private final boolean mIsValid;
+
+        AttributionScopeValidationResult(boolean isValid) {
+            mIsValid = isValid;
+        }
+
+        public boolean isValid() {
+            return mIsValid;
+        }
     }
 
     public enum SourceType {
@@ -642,7 +678,11 @@ public class Source {
                 && Objects.equals(mAttributionScopeLimit, source.mAttributionScopeLimit)
                 && Objects.equals(mMaxEventStates, source.mMaxEventStates)
                 && mDestinationLimitPriority == source.mDestinationLimitPriority
-                && Objects.equals(mDestinationLimitAlgorithm, source.mDestinationLimitAlgorithm);
+                && Objects.equals(mDestinationLimitAlgorithm, source.mDestinationLimitAlgorithm)
+                && Objects.equals(mEventLevelEpsilon, source.mEventLevelEpsilon)
+                && Objects.equals(
+                        mAggregateDebugReportingString, source.mAggregateDebugReportingString)
+                && mAggregateDebugReportContributions == source.mAggregateDebugReportContributions;
     }
 
     @Override
@@ -697,7 +737,10 @@ public class Source {
                 mAttributionScopeLimit,
                 mMaxEventStates,
                 mDestinationLimitPriority,
-                mDestinationLimitAlgorithm);
+                mDestinationLimitAlgorithm,
+                mEventLevelEpsilon,
+                mAggregateDebugReportingString,
+                mAggregateDebugReportContributions);
     }
 
     public void setAttributionMode(@AttributionMode int attributionMode) {
@@ -948,6 +991,12 @@ public class Source {
         return mSharedFilterDataKeys;
     }
 
+    /** Returns the epsilon value set by source. */
+    @Nullable
+    public Double getEventLevelEpsilon() {
+        return mEventLevelEpsilon;
+    }
+
     /**
      * Returns aggregate source string used for aggregation. aggregate source json is a JSONArray.
      * Example: [{ // Generates a "0x159" key piece (low order bits of the key) named //
@@ -1168,11 +1217,6 @@ public class Source {
         mNumStates = numStates;
     }
 
-    /** Set max event states for the {@link Source}. */
-    private void setMaxEventStates(long maxEventStates) {
-        mMaxEventStates = maxEventStates;
-    }
-
     /** Set flip probability for the {@link Source}. */
     private void setFlipProbability(double flipProbability) {
         mFlipProbability = flipProbability;
@@ -1199,6 +1243,11 @@ public class Source {
      */
     public void setAggregateContributions(int aggregateContributions) {
         mAggregateContributions = aggregateContributions;
+    }
+
+    /** Set the aggregate debug contributions value. */
+    public void setAggregateDebugContributions(int aggregateDebugContributions) {
+        mAggregateDebugReportContributions = aggregateDebugContributions;
     }
 
     /**
@@ -1351,6 +1400,11 @@ public class Source {
         return mAttributionScopes;
     }
 
+    /** Sets the attribution scopes. */
+    public void setAttributionScopes(@Nullable List<String> attributionScopes) {
+        mAttributionScopes = attributionScopes;
+    }
+
     /** Returns the attribution scope limit for the source. It should be positive. */
     @Nullable
     public Long getAttributionScopeLimit() {
@@ -1380,6 +1434,32 @@ public class Source {
     @Nullable
     public DestinationLimitAlgorithm getDestinationLimitAlgorithm() {
         return mDestinationLimitAlgorithm;
+    }
+
+    /** Returns the aggregate debug reporting object as a string */
+    @Nullable
+    public String getAggregateDebugReportingString() {
+        return mAggregateDebugReportingString;
+    }
+
+    /** Returns the aggregate debug reporting object as a string */
+    @Nullable
+    public AggregateDebugReporting getAggregateDebugReportingObject() throws JSONException {
+        if (mAggregateDebugReportingString == null) {
+            return null;
+        }
+        if (mAggregateDebugReporting == null) {
+            mAggregateDebugReporting =
+                    new AggregateDebugReporting.Builder(
+                                    new JSONObject(mAggregateDebugReportingString))
+                            .build();
+        }
+        return mAggregateDebugReporting;
+    }
+
+    /** Returns the aggregate debug reporting contributions */
+    public int getAggregateDebugReportContributions() {
+        return mAggregateDebugReportContributions;
     }
 
     /** Builder for {@link Source}. */
@@ -1440,6 +1520,7 @@ public class Source {
             builder.setAttributedTriggers(copyFrom.mAttributedTriggers);
             builder.setTriggerSpecs(copyFrom.mTriggerSpecs);
             builder.setTriggerDataMatching(copyFrom.mTriggerDataMatching);
+            builder.setTriggerData(copyFrom.mTriggerData);
             builder.setCoarseEventReportDestinations(copyFrom.mCoarseEventReportDestinations);
             builder.setSharedDebugKey(copyFrom.mSharedDebugKey);
             builder.setDropSourceIfInstalled(copyFrom.mDropSourceIfInstalled);
@@ -1448,6 +1529,10 @@ public class Source {
             builder.setMaxEventStates(copyFrom.mMaxEventStates);
             builder.setDestinationLimitPriority(copyFrom.mDestinationLimitPriority);
             builder.setDestinationLimitAlgorithm(copyFrom.mDestinationLimitAlgorithm);
+            builder.setEventLevelEpsilon(copyFrom.mEventLevelEpsilon);
+            builder.setAggregateDebugReportingString(copyFrom.mAggregateDebugReportingString);
+            builder.setAggregateDebugReportContributions(
+                    copyFrom.mAggregateDebugReportContributions);
             return builder;
         }
 
@@ -1667,6 +1752,12 @@ public class Source {
             return this;
         }
 
+        /** See {@link Source#getEventLevelEpsilon()} ()}. */
+        public Builder setEventLevelEpsilon(@Nullable Double eventLevelEpsilon) {
+            mBuilding.mEventLevelEpsilon = eventLevelEpsilon;
+            return this;
+        }
+
         /** See {@link Source#getAggregateSource()} */
         @NonNull
         public Builder setAggregateSource(@Nullable String aggregateSource) {
@@ -1849,6 +1940,22 @@ public class Source {
         public Builder setDestinationLimitAlgorithm(
                 @Nullable DestinationLimitAlgorithm destinationLimitAlgorithm) {
             mBuilding.mDestinationLimitAlgorithm = destinationLimitAlgorithm;
+            return this;
+        }
+
+        /** See {@link Source#getAggregateDebugReportingString()}. */
+        @NonNull
+        public Builder setAggregateDebugReportingString(
+                @Nullable String aggregateDebugReportingString) {
+            mBuilding.mAggregateDebugReportingString = aggregateDebugReportingString;
+            return this;
+        }
+
+        /** See {@link Source#getAggregateDebugReportContributions()}. */
+        @NonNull
+        public Builder setAggregateDebugReportContributions(
+                int aggregateDebugReportingContributions) {
+            mBuilding.mAggregateDebugReportContributions = aggregateDebugReportingContributions;
             return this;
         }
 

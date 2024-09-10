@@ -23,12 +23,12 @@ import android.app.sdksandbox.testutils.SdkSandboxStorageManagerUtility;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.content.pm.ProviderInfo;
 import android.os.FileUtils;
 import android.os.UserHandle;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 import com.android.server.pm.PackageManagerLocal;
 import com.android.server.sdksandbox.SdkSandboxStorageManager.StorageDirInfo;
 import com.android.server.sdksandbox.SdkSandboxStorageManager.SubDirectories;
@@ -50,7 +50,7 @@ import java.util.Set;
 import java.util.UUID;
 
 /** Unit tests for {@link SdkSandboxStorageManager}. */
-public class SdkSandboxStorageManagerUnitTest {
+public class SdkSandboxStorageManagerUnitTest extends DeviceSupportedBaseTest {
 
     /** Test directory on Android where all storage will be created */
     private static final int CLIENT_UID = 11000;

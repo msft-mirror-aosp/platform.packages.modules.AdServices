@@ -16,7 +16,9 @@
 
 package android.adservices.debuggablects;
 
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_HTTP_CACHE_ENABLE;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED;
 
@@ -30,10 +32,10 @@ import android.adservices.adid.AdIdCompatibleManager;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.adservices.adselection.AdSelectionOutcome;
+import android.adservices.clients.adselection.AdSelectionClient;
+import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudience;
-import android.adservices.customaudience.FetchAndJoinCustomAudienceRequest;
-import android.adservices.utils.FledgeScenarioTest;
 import android.adservices.utils.ScenarioDispatcher;
 import android.adservices.utils.ScenarioDispatcherFactory;
 import android.adservices.utils.Scenarios;
@@ -41,9 +43,9 @@ import android.net.Uri;
 import android.util.Log;
 
 import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
+import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
-import com.android.compatibility.common.util.ShellUtils;
 
 import com.google.common.util.concurrent.MoreExecutors;
 
@@ -58,7 +60,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 @SetFlagDisabled(KEY_FLEDGE_HTTP_CACHE_ENABLE)
-public class AdSelectionTest extends FledgeScenarioTest {
+@SetFlagDisabled(KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED)
+@EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
+public final class AdSelectionTest extends FledgeDebuggableScenarioTest {
 
     /**
      * End-to-end test for ad selection.
@@ -73,6 +77,20 @@ public class AdSelectionTest extends FledgeScenarioTest {
      */
     @Test
     public void testAdSelection_withBiddingAndScoringLogic_happyPath() throws Exception {
+        testAdSelectionHelper(mCustomAudienceClient, mAdSelectionClient);
+    }
+
+    @Test
+    public void testAdSelection_withBiddingAndScoringLogic_happyPath_usingGetMethod()
+            throws Exception {
+        testAdSelectionHelper(
+                mCustomAudienceClientUsingGetMethod, mAdSelectionClientUsingGetMethod);
+    }
+
+    private void testAdSelectionHelper(
+            AdvertisingCustomAudienceClient customAudienceClient,
+            AdSelectionClient adSelectionClient)
+            throws Exception {
         ScenarioDispatcher dispatcher =
                 setupDispatcher(
                         ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
@@ -81,11 +99,11 @@ public class AdSelectionTest extends FledgeScenarioTest {
                 makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
 
         try {
-            joinCustomAudience(SHIRTS_CA);
-            AdSelectionOutcome result = doSelectAds(adSelectionConfig);
+            joinCustomAudience(customAudienceClient, SHIRTS_CA);
+            AdSelectionOutcome result = doSelectAds(adSelectionClient, adSelectionConfig);
             assertThat(result.hasOutcome()).isTrue();
         } finally {
-            leaveCustomAudience(SHIRTS_CA);
+            leaveCustomAudience(customAudienceClient, SHIRTS_CA);
         }
 
         assertThat(dispatcher.getCalledPaths())
@@ -197,51 +215,6 @@ public class AdSelectionTest extends FledgeScenarioTest {
                 .containsAtLeastElementsIn(dispatcher.getVerifyCalledPaths());
     }
 
-    /**
-     * Test that custom audience can be successfully fetched from a server and joined to participate
-     * in a successful ad selection (Remarketing CUJ 169).
-     */
-    @Test
-    public void testAdSelection_withFetchCustomAudience_fetchesAndReturnsSuccessfully()
-            throws Exception {
-        ScenarioDispatcher dispatcher =
-                setupDispatcher(
-                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
-                                "scenarios/remarketing-cuj-fetchCA.json"));
-        AdSelectionConfig adSelectionConfig =
-                makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
-        String customAudienceName = "hats";
-
-        try {
-            CustomAudience customAudience = makeCustomAudience(customAudienceName).build();
-            ShellUtils.runShellCommand(
-                    "device_config put adservices fledge_fetch_custom_audience_enabled true");
-            mCustomAudienceClient
-                    .fetchAndJoinCustomAudience(
-                            new FetchAndJoinCustomAudienceRequest.Builder(
-                                            Uri.parse(
-                                                    dispatcher.getBaseAddressWithPrefix().toString()
-                                                            + Scenarios.FETCH_CA_PATH))
-                                    .setActivationTime(customAudience.getActivationTime())
-                                    .setExpirationTime(customAudience.getExpirationTime())
-                                    .setName(customAudience.getName())
-                                    .setUserBiddingSignals(customAudience.getUserBiddingSignals())
-                                    .build())
-                    .get(5, TimeUnit.SECONDS);
-            Log.d(TAG, "Joined Custom Audience: " + customAudienceName);
-            AdSelectionOutcome result = doSelectAds(adSelectionConfig);
-            assertThat(result.hasOutcome()).isTrue();
-            assertThat(result.getRenderUri()).isNotNull();
-        } finally {
-            ShellUtils.runShellCommand(
-                    "device_config put adservices fledge_fetch_custom_audience_enabled false");
-            leaveCustomAudience(customAudienceName);
-        }
-
-        assertThat(dispatcher.getCalledPaths())
-                .containsAtLeastElementsIn(dispatcher.getVerifyCalledPaths());
-    }
-
     /** Test that ad selection fails with an expired custom audience. */
     @Test
     public void testAdSelection_withShortlyExpiringCustomAudience_selectAdsThrowsException()
@@ -314,6 +287,33 @@ public class AdSelectionTest extends FledgeScenarioTest {
                 setupDispatcher(
                         ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
                                 "scenarios/remarketing-cuj-164.json"));
+        AdSelectionConfig adSelectionConfig =
+                makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
+
+        try {
+            joinCustomAudience(SHOES_CA);
+            joinCustomAudience(SHIRTS_CA);
+            setDebugReportingEnabledForTesting(true);
+            AdSelectionOutcome result = doSelectAds(adSelectionConfig);
+            assertThat(result.hasOutcome()).isTrue();
+        } finally {
+            setDebugReportingEnabledForTesting(false);
+            leaveCustomAudience(SHOES_CA);
+            joinCustomAudience(SHIRTS_CA);
+        }
+
+        assertThat(dispatcher.getCalledPaths())
+                .containsAtLeastElementsIn(dispatcher.getVerifyCalledPaths());
+    }
+
+    /** Test that buyer and seller receive win and loss debug reports for bids = 0.0. */
+    @Test
+    public void testAdSelection_withDebugReportingIsSentForZeroBid() throws Exception {
+        assumeTrue(isAdIdSupported());
+        ScenarioDispatcher dispatcher =
+                setupDispatcher(
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-debug-reporting-zero-bid.json"));
         AdSelectionConfig adSelectionConfig =
                 makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
 

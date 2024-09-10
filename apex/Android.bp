@@ -38,7 +38,9 @@ apex {
     key: "com.android.adservices.key",
     bootclasspath_fragments: ["com.android.adservices-bootclasspath-fragment"],
     systemserverclasspath_fragments: ["com.android.adservices-systemserverclasspath-fragment"],
-    prebuilts: ["current_sdkinfo"],
+    prebuilts: [
+        "current_sdkinfo",
+    ],
     certificate: ":com.android.adservices.certificate",
     defaults: ["t-launched-apex-module"],
     jni_libs: [

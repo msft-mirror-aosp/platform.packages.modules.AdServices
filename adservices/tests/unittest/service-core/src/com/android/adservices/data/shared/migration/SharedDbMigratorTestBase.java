@@ -16,7 +16,7 @@
 
 package com.android.adservices.data.shared.migration;
 
-import static com.android.adservices.data.DbTestUtil.getDbHelperForTest;
+import static com.android.adservices.common.DbTestUtil.getDbHelperForTest;
 import static com.android.adservices.data.shared.migration.MigrationTestHelper.createReferenceDbAtVersion;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -28,7 +28,7 @@ import android.database.sqlite.SQLiteDatabase;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.data.shared.SharedDbHelper;
 
 import org.junit.Before;

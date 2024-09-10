@@ -42,6 +42,7 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.android.libraries.mobiledatadownload.internal.AndroidTimeSource;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.util.concurrent.Future;
@@ -100,36 +101,34 @@ public final class AggregateFallbackReportingJobService extends JobService {
 
     @VisibleForTesting
     void processPendingReports() {
-        final JobLockHolder lock = JobLockHolder.getInstance(AGGREGATE_REPORTING);
-        if (lock.tryLock()) {
-            try {
-                final long windowStartTime =
-                        System.currentTimeMillis()
-                                - FlagsFactory.getFlags()
-                                        .getMeasurementMaxAggregateReportUploadRetryWindowMs();
-                final long windowEndTime =
-                        System.currentTimeMillis()
-                                - AdServicesConfig
-                                        .getMeasurementAggregateMainReportingJobPeriodMs();
-                DatastoreManager datastoreManager =
-                        DatastoreManagerFactory.getDatastoreManager(getApplicationContext());
-                new AggregateReportingJobHandler(
-                                datastoreManager,
-                                new AggregateEncryptionKeyManager(
-                                        datastoreManager, getApplicationContext()),
-                                FlagsFactory.getFlags(),
-                                AdServicesLoggerImpl.getInstance(),
-                                ReportingStatus.ReportType.AGGREGATE,
-                                ReportingStatus.UploadMethod.FALLBACK,
-                                getApplicationContext())
-                        .performScheduledPendingReportsInWindow(windowStartTime, windowEndTime);
-                return;
-            } finally {
-                lock.unlock();
-            }
-        }
-        LoggerFactory.getMeasurementLogger()
-                .d("AggregateFallbackReportingJobService did not acquire the lock");
+        JobLockHolder.getInstance(AGGREGATE_REPORTING)
+                .runWithLock(
+                        "AggregateFallbackReportingJobService",
+                        () -> {
+                            long windowStartTime =
+                                    System.currentTimeMillis()
+                                            - FlagsFactory.getFlags()
+                                                    .getMeasurementMaxAggregateReportUploadRetryWindowMs();
+                            long windowEndTime =
+                                    System.currentTimeMillis()
+                                            - AdServicesConfig
+                                                    .getMeasurementAggregateMainReportingJobPeriodMs();
+                            DatastoreManager datastoreManager =
+                                    DatastoreManagerFactory.getDatastoreManager(
+                                            getApplicationContext());
+                            new AggregateReportingJobHandler(
+                                            datastoreManager,
+                                            new AggregateEncryptionKeyManager(
+                                                    datastoreManager, getApplicationContext()),
+                                            FlagsFactory.getFlags(),
+                                            AdServicesLoggerImpl.getInstance(),
+                                            ReportingStatus.ReportType.AGGREGATE,
+                                            ReportingStatus.UploadMethod.FALLBACK,
+                                            getApplicationContext(),
+                                            new AndroidTimeSource())
+                                    .performScheduledPendingReportsInWindow(
+                                            windowStartTime, windowEndTime);
+                        });
     }
 
     @Override

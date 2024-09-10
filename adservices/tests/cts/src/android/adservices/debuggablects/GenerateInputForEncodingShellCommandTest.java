@@ -16,19 +16,22 @@
 
 package android.adservices.debuggablects;
 
+import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
+
 import static com.android.adservices.service.CommonFlagsConstants.KEY_ADSERVICES_SHELL_COMMAND_ENABLED;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_PROTECTED_APP_SIGNALS_CLI_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_APP_ALLOW_LIST;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.PPAPI_AND_SYSTEM_SERVER;
-import static com.android.adservices.service.signals.ProtectedSignalsArgumentUtil.validateAndSerializeBase64;
+import static com.android.adservices.service.signals.ProtectedSignalsArgumentImpl.validateAndSerializeBase64;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.clients.signals.ProtectedSignalsClient;
 import android.adservices.common.AdTechIdentifier;
-import android.adservices.common.CommonFixture;
 import android.adservices.signals.UpdateSignalsRequest;
 import android.adservices.utils.MockWebServerRule;
 import android.adservices.utils.ScenarioDispatcher;
@@ -37,8 +40,6 @@ import android.net.Uri;
 
 import com.android.adservices.common.AdServicesShellCommandHelper;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.WebViewSupportUtil;
-import com.android.adservices.shared.testing.SupportedByConditionRule;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
@@ -46,7 +47,6 @@ import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 import com.android.adservices.shared.testing.shell.CommandResult;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -58,8 +58,9 @@ import java.util.concurrent.TimeUnit;
 @SetIntegerFlag(name = KEY_CONSENT_SOURCE_OF_TRUTH, value = PPAPI_AND_SYSTEM_SERVER)
 @EnableDebugFlag(KEY_ADSERVICES_SHELL_COMMAND_ENABLED)
 @EnableDebugFlag(KEY_PROTECTED_APP_SIGNALS_CLI_ENABLED)
+@EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
 @RequiresSdkLevelAtLeastT(reason = "Protected App Signals is enabled for T+")
-public class GenerateInputForEncodingShellCommandTest extends ForegroundDebuggableCtsTest {
+public final class GenerateInputForEncodingShellCommandTest extends ForegroundDebuggableCtsTest {
 
     private static final String STATUS_FINISHED = "FINISHED";
     private static final int PAS_API_TIMEOUT_SEC = 10;
@@ -72,15 +73,13 @@ public class GenerateInputForEncodingShellCommandTest extends ForegroundDebuggab
     @Rule(order = 6)
     public MockWebServerRule mMockWebServerRule =
             MockWebServerRule.forHttps(
-                    sContext, "adservices_untrusted_test_server.p12", "adservices_test");
-
-    @Rule(order = 7)
-    public final SupportedByConditionRule webViewSupportsJSSandbox =
-            WebViewSupportUtil.createJSSandboxAvailableRule(sContext);
+                    mContext, "adservices_untrusted_test_server.p12", "adservices_test");
 
     @Before
     public void setUp() throws Exception {
-        AdservicesTestHelper.killAdservicesProcess(sContext);
+        flags.setFlag(KEY_PAS_APP_ALLOW_LIST, new String[] {TEST_PACKAGE_NAME}, ",");
+
+        AdservicesTestHelper.killAdservicesProcess(mContext);
 
         if (sdkLevel.isAtLeastT()) {
             assertForegroundActivityStarted();
@@ -88,13 +87,12 @@ public class GenerateInputForEncodingShellCommandTest extends ForegroundDebuggab
 
         mProtectedSignalsClient =
                 new ProtectedSignalsClient.Builder()
-                        .setContext(sContext)
+                        .setContext(mContext)
                         .setExecutor(Executors.newCachedThreadPool())
                         .build();
     }
 
     @Test
-    @Ignore("BudId=343259894")
     public void testRun_generateInputForEncoding_happyPath() throws Exception {
         ScenarioDispatcherFactory scenarioDispatcherFactory =
                 ScenarioDispatcherFactory.createFromScenarioFile(
@@ -124,6 +122,6 @@ public class GenerateInputForEncodingShellCommandTest extends ForegroundDebuggab
 
         assertThat(commandResult.getOut()).contains(validateAndSerializeBase64("AAAAAQ=="));
         assertThat(commandResult.getOut()).contains(validateAndSerializeBase64("AAAAAg=="));
-        assertThat(commandResult.getOut()).contains(CommonFixture.TEST_PACKAGE_NAME);
+        assertThat(commandResult.getOut()).contains(TEST_PACKAGE_NAME);
     }
 }

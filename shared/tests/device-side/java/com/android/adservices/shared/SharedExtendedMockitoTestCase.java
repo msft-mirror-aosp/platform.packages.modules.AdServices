@@ -16,14 +16,22 @@
 
 package com.android.adservices.shared;
 
+import static org.mockito.Mockito.mock;
+
+import android.content.Context;
+import android.platform.test.annotations.DisabledOnRavenwood;
+
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.mockito.AndroidExtendedMockitoMocker;
 import com.android.adservices.mockito.AndroidStaticMocker;
 import com.android.adservices.mockito.LogInterceptor;
-
+import com.android.adservices.shared.common.flags.ModuleSharedFlags;
+import com.android.adservices.shared.testing.CallSuper;
 
 import org.junit.Rule;
 
+// TODO(b/335935200): fix this
+@DisabledOnRavenwood(reason = "Uses ExtendedMockito")
 public abstract class SharedExtendedMockitoTestCase extends SharedUnitTestCase {
 
     @Rule(order = 10)
@@ -32,6 +40,22 @@ public abstract class SharedExtendedMockitoTestCase extends SharedUnitTestCase {
 
     /** Provides common expectations. */
     public final Mocker mocker = new Mocker(extendedMockito);
+
+    protected final Context mMockContext = mock(Context.class);
+    protected final ModuleSharedFlags mMockFlags = mock(ModuleSharedFlags.class);
+
+    private static final String REASON_SESSION_MANAGED_BY_RULE =
+            "mockito session is automatically managed by a @Rule";
+
+    // TODO(b/361555631): rename to testSharedExtendedMockitoTestCaseFixtures() and annotate it with
+    // @MetaTest
+    @CallSuper
+    @Override
+    protected void assertValidTestCaseFixtures() throws Exception {
+        super.assertValidTestCaseFixtures();
+
+        checkProhibitedMockitoFields(SharedExtendedMockitoTestCase.class, this);
+    }
 
     public static final class Mocker implements AndroidStaticMocker {
 

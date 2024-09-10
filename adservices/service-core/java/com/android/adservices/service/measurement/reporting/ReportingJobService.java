@@ -43,6 +43,7 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.android.libraries.mobiledatadownload.internal.AndroidTimeSource;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.util.Optional;
@@ -309,60 +310,56 @@ public final class ReportingJobService extends JobService {
 
     @VisibleForTesting
     void processPendingAggregateReports() {
-        final JobLockHolder lock = JobLockHolder.getInstance(AGGREGATE_REPORTING);
-        if (lock.tryLock()) {
-            try {
-                long maxAggregateReportUploadRetryWindowMs =
-                        FlagsFactory.getFlags()
-                                .getMeasurementMaxAggregateReportUploadRetryWindowMs();
-                DatastoreManager datastoreManager =
-                        DatastoreManagerFactory.getDatastoreManager(getApplicationContext());
-                new AggregateReportingJobHandler(
-                                datastoreManager,
-                                new AggregateEncryptionKeyManager(
-                                        datastoreManager, getApplicationContext()),
-                                FlagsFactory.getFlags(),
-                                AdServicesLoggerImpl.getInstance(),
-                                ReportingStatus.ReportType.AGGREGATE,
-                                ReportingStatus.UploadMethod.REGULAR,
-                                getApplicationContext())
-                        .performScheduledPendingReportsInWindow(
-                                System.currentTimeMillis() - maxAggregateReportUploadRetryWindowMs,
-                                System.currentTimeMillis());
-                return;
-            } finally {
-                lock.unlock();
-            }
-        }
-        LoggerFactory.getMeasurementLogger()
-                .d("ReportingJobService did not acquire the lock for Aggregate Reporting");
+        JobLockHolder.getInstance(AGGREGATE_REPORTING)
+                .runWithLock(
+                        "ReportingJobService",
+                        () -> {
+                            long maxAggregateReportUploadRetryWindowMs =
+                                    FlagsFactory.getFlags()
+                                            .getMeasurementMaxAggregateReportUploadRetryWindowMs();
+                            DatastoreManager datastoreManager =
+                                    DatastoreManagerFactory.getDatastoreManager(
+                                            getApplicationContext());
+                            new AggregateReportingJobHandler(
+                                            datastoreManager,
+                                            new AggregateEncryptionKeyManager(
+                                                    datastoreManager, getApplicationContext()),
+                                            FlagsFactory.getFlags(),
+                                            AdServicesLoggerImpl.getInstance(),
+                                            ReportingStatus.ReportType.AGGREGATE,
+                                            ReportingStatus.UploadMethod.REGULAR,
+                                            getApplicationContext(),
+                                            new AndroidTimeSource())
+                                    .performScheduledPendingReportsInWindow(
+                                            System.currentTimeMillis()
+                                                    - maxAggregateReportUploadRetryWindowMs,
+                                            System.currentTimeMillis());
+                        });
     }
 
     @VisibleForTesting
     void processPendingEventReports() {
-        final JobLockHolder lock = JobLockHolder.getInstance(EVENT_REPORTING);
-        if (lock.tryLock()) {
-            try {
-                long maxEventReportUploadRetryWindowMs =
-                        FlagsFactory.getFlags().getMeasurementMaxEventReportUploadRetryWindowMs();
-                new EventReportingJobHandler(
-                                DatastoreManagerFactory.getDatastoreManager(
-                                        getApplicationContext()),
-                                FlagsFactory.getFlags(),
-                                AdServicesLoggerImpl.getInstance(),
-                                ReportingStatus.ReportType.EVENT,
-                                ReportingStatus.UploadMethod.REGULAR,
-                                getApplicationContext())
-                        .performScheduledPendingReportsInWindow(
-                                System.currentTimeMillis() - maxEventReportUploadRetryWindowMs,
-                                System.currentTimeMillis());
-                return;
-            } finally {
-                lock.unlock();
-            }
-        }
-        LoggerFactory.getMeasurementLogger()
-                .d("ReportingJobService did not acquire the lock for Event Reporting");
+        JobLockHolder.getInstance(EVENT_REPORTING)
+                .runWithLock(
+                        "ReportingJobService",
+                        () -> {
+                            long maxEventReportUploadRetryWindowMs =
+                                    FlagsFactory.getFlags()
+                                            .getMeasurementMaxEventReportUploadRetryWindowMs();
+                            new EventReportingJobHandler(
+                                            DatastoreManagerFactory.getDatastoreManager(
+                                                    getApplicationContext()),
+                                            FlagsFactory.getFlags(),
+                                            AdServicesLoggerImpl.getInstance(),
+                                            ReportingStatus.ReportType.EVENT,
+                                            ReportingStatus.UploadMethod.REGULAR,
+                                            getApplicationContext(),
+                                            new AndroidTimeSource())
+                                    .performScheduledPendingReportsInWindow(
+                                            System.currentTimeMillis()
+                                                    - maxEventReportUploadRetryWindowMs,
+                                            System.currentTimeMillis());
+                        });
     }
 
     @VisibleForTesting

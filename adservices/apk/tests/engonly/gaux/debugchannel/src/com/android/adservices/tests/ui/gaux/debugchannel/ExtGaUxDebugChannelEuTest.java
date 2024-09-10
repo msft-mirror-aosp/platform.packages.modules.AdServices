@@ -15,37 +15,37 @@
  */
 package com.android.adservices.tests.ui.gaux.debugchannel;
 
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_AD_SERVICES_SYSTEM_API;
+import static com.android.adservices.service.FlagsConstants.KEY_IS_EEA_DEVICE;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.common.AdServicesCommonManager;
 import android.adservices.common.AdServicesStates;
-import android.content.Context;
 import android.os.OutcomeReceiver;
 import android.platform.test.rule.ScreenRecordRule;
 
 import androidx.test.platform.app.InstrumentationRegistry;
-import androidx.test.runner.AndroidJUnit4;
 import androidx.test.uiautomator.UiDevice;
 
-import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.tests.ui.libs.AdservicesWorkflows;
 import com.android.adservices.tests.ui.libs.UiConstants;
 import com.android.adservices.tests.ui.libs.UiUtils;
 
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.util.concurrent.Executors;
 
 /** Test for verifying user consent notification trigger behaviors. */
-@RunWith(AndroidJUnit4.class)
 @ScreenRecordRule.ScreenRecord
-public class ExtGaUxDebugChannelEuTest {
+@SetFlagEnabled(KEY_ENABLE_AD_SERVICES_SYSTEM_API)
+@SetFlagEnabled(KEY_IS_EEA_DEVICE)
+public final class ExtGaUxDebugChannelEuTest extends AdExtServicesGaUxDebugChannelTestCase {
 
     private AdServicesCommonManager mCommonManager;
 
@@ -55,17 +55,13 @@ public class ExtGaUxDebugChannelEuTest {
 
     private OutcomeReceiver<Boolean, Exception> mCallback;
 
-    private static final Context sContext =
-            InstrumentationRegistry.getInstrumentation().getContext();
-
     @Rule public final ScreenRecordRule sScreenRecordRule = new ScreenRecordRule();
 
     @Before
     public void setUp() throws Exception {
-        // Skip the test if it runs on unsupported platforms.
-        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
+        mTestName = getTestName();
 
-        UiUtils.resetAdServicesConsentData(sContext);
+        UiUtils.resetAdServicesConsentData(sContext, flags);
 
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
@@ -75,9 +71,9 @@ public class ExtGaUxDebugChannelEuTest {
 
         // consent debug mode is turned on for this test class as we only care about the
         // first trigger (API call).
-        UiUtils.enableConsentDebugMode();
-        UiUtils.disableNotificationFlowV2();
-        UiUtils.disableOtaStrings();
+        UiUtils.enableConsentDebugMode(flags);
+        UiUtils.disableNotificationFlowV2(flags);
+        UiUtils.disableOtaStrings(flags);
 
         mCallback =
                 new OutcomeReceiver<>() {
@@ -97,8 +93,6 @@ public class ExtGaUxDebugChannelEuTest {
 
     @After
     public void tearDown() throws Exception {
-        if (!AdservicesTestHelper.isDeviceSupported()) return;
-
         UiUtils.takeScreenshot(mDevice, getClass().getSimpleName() + "_" + mTestName + "_");
 
         mDevice.pressHome();
@@ -107,8 +101,6 @@ public class ExtGaUxDebugChannelEuTest {
     /** Verify that entry point disabled can not trigger consent notification. */
     @Test
     public void testEntryPointDisabled() throws Exception {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
         mCommonManager.enableAdServices(
                 new AdServicesStates.Builder()
                         .setAdIdEnabled(true)
@@ -130,8 +122,6 @@ public class ExtGaUxDebugChannelEuTest {
     /** Verify that when request sent from entry point, we won't trigger notification. */
     @Test
     public void testFromEntryPointRequest() throws Exception {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
         mCommonManager.enableAdServices(
                 new AdServicesStates.Builder()
                         .setAdIdEnabled(false)
@@ -154,8 +144,6 @@ public class ExtGaUxDebugChannelEuTest {
     /** Verify that non-adult account can not trigger consent notification. */
     @Test
     public void testNonAdultAccount() throws Exception {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
         mCommonManager.enableAdServices(
                 new AdServicesStates.Builder()
                         .setAdIdEnabled(true)
@@ -179,8 +167,6 @@ public class ExtGaUxDebugChannelEuTest {
      */
     @Test
     public void testGaEuAdIdEnabled() throws Exception {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
         mCommonManager.enableAdServices(
                 new AdServicesStates.Builder()
                         .setAdIdEnabled(true)
@@ -202,8 +188,6 @@ public class ExtGaUxDebugChannelEuTest {
     /** Verify that for GA, EU devices with zeroed-out AdId, the EU notification is displayed. */
     @Test
     public void testGaEuAdIdDisabled() throws Exception {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
         mCommonManager.enableAdServices(
                 new AdServicesStates.Builder()
                         .setAdIdEnabled(false)

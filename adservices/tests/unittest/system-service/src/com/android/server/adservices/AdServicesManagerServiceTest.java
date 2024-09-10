@@ -63,6 +63,8 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.service.ui.enrollment.collection.GaUxEnrollmentChannelCollection;
+import com.android.adservices.service.ui.enrollment.collection.U18UxEnrollmentChannelCollection;
 import com.android.adservices.shared.testing.annotations.DisableDebugFlag;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.modules.utils.testing.TestableDeviceConfig;
@@ -93,9 +95,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -1184,6 +1188,27 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
                             assertThat(service.getEnrollmentChannel())
                                     .isEqualTo(channel.toString());
                         });
+    }
+
+    @Test
+    public void enrollmentChannelConformanceWithServiceCoreTest() {
+        AdServicesManagerService service =
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+        // Since unit test cannot execute an IPC call currently, disable the permission check.
+        disableEnforceAdServicesManagerPermission(service);
+
+        // check each UX to ensure all enrollment channel values are accounted for
+        Object[] ssChannels = PrivacySandboxEnrollmentChannelCollection.values();
+        Consumer<Object> consumer =
+                channel -> {
+                    Stream<Object> stream = Arrays.stream(ssChannels);
+                    Boolean hasMatchingEntry =
+                            stream.anyMatch(
+                                    ssChannel -> ssChannel.toString().equals(channel.toString()));
+                    assertThat(hasMatchingEntry).isTrue();
+                };
+        Stream.of(GaUxEnrollmentChannelCollection.values()).forEach(consumer);
+        Stream.of(U18UxEnrollmentChannelCollection.values()).forEach(consumer);
     }
 
     private static String handleShellCommand(Binder binder) throws IOException {

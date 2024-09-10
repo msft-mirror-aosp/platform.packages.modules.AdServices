@@ -56,12 +56,6 @@ java_library {
     ], //do not add any other static libs to SdkSandbox, else proguard will shrink it.
 }
 
-prebuilt_etc {
-    name: "com.android.adservices.sdksandbox.xml",
-    sub_dir: "permissions",
-    src: "com.android.adservices.sdksandbox.xml",
-}
-
 android_app {
     name: "SdkSandbox",
     libs: [
@@ -95,5 +89,4 @@ android_app {
             "com.android.server.sdksandbox.**",
         ],
     },
-    required: ["com.android.adservices.sdksandbox.xml"],
 }

@@ -23,12 +23,14 @@ import static org.junit.Assert.assertThrows;
 
 import android.content.Context;
 import android.content.pm.ProviderInfo;
+import android.platform.test.annotations.DisabledOnRavenwood;
 
 import com.android.adservices.shared.SharedMockitoTestCase;
 
 import org.junit.Test;
 import org.mockito.Mock;
 
+@DisabledOnRavenwood(blockedBy = android.content.ContentProvider.class)
 public final class ApplicationContextProviderTest extends SharedMockitoTestCase {
 
     private final ApplicationContextProvider mProvider = new ApplicationContextProvider();

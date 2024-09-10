@@ -20,6 +20,7 @@ android_test {
     name: "AdExtServicesGaUxDebugChannelEuTest",
     srcs: [
         "src/com/android/adservices/tests/ui/gaux/debugchannel/ExtGaUxDebugChannelEuTest.java",
+        "src/com/android/adservices/tests/ui/gaux/debugchannel/AdExtServicesGaUxDebugChannelTestCase.java",
     ],
     static_libs: [
         "adservices-assets",
@@ -31,7 +32,7 @@ android_test {
         "platform-test-rules",
     ],
     libs: [
-        "android.test.base",
+        "android.test.base.stubs.system",
         "framework-adservices-lib",
     ],
     test_suites: [
@@ -51,6 +52,7 @@ android_test {
     name: "AdExtServicesGaUxDebugChannelRowTest",
     srcs: [
         "src/com/android/adservices/tests/ui/gaux/debugchannel/ExtGaUxDebugChannelRowTest.java",
+        "src/com/android/adservices/tests/ui/gaux/debugchannel/AdExtServicesGaUxDebugChannelTestCase.java",
     ],
     static_libs: [
         "adservices-assets",
@@ -62,7 +64,7 @@ android_test {
         "platform-test-rules",
     ],
     libs: [
-        "android.test.base",
+        "android.test.base.stubs.system",
         "framework-adservices-lib",
     ],
     test_suites: [
@@ -82,6 +84,7 @@ android_test {
     name: "AdExtServicesGaUxDebugChannelApiOffTest",
     srcs: [
         "src/com/android/adservices/tests/ui/gaux/debugchannel/ExtGaUxDebugChannelApiOffTest.java",
+        "src/com/android/adservices/tests/ui/gaux/debugchannel/AdExtServicesGaUxDebugChannelTestCase.java",
     ],
     static_libs: [
         "adservices-assets",
@@ -93,7 +96,7 @@ android_test {
         "platform-test-rules",
     ],
     libs: [
-        "android.test.base",
+        "android.test.base.stubs.system",
         "framework-adservices-lib",
     ],
     test_suites: [

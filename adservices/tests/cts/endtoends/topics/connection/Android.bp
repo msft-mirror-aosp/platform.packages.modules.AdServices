@@ -30,8 +30,8 @@ android_test {
         "adservices-test-utility",
     ],
     libs: [
-        "android.test.base",
-        "framework-adservices",
+        "android.test.base.stubs.system",
+        "framework-adservices.stubs.module_lib",
         "framework-sdksandbox.impl",
     ],
     test_suites: [
@@ -62,8 +62,8 @@ android_test {
     ],
     libs: [
         "android.ext.adservices",
-        "android.test.base",
-        "framework-adservices",
+        "android.test.base.stubs.system",
+        "framework-adservices.stubs.module_lib",
         "framework-sdksandbox.impl",
     ],
     test_suites: [

@@ -149,6 +149,13 @@ public class FailableResultSyncCallback<R, F> extends AbstractSyncCallback
 
     @Override
     public final R assertResultReceived() throws InterruptedException {
+        return internalAssertResultReceived();
+    }
+
+    /**
+     * "Real" implementation of {@link #assertResultReceived()}, can be overridden by subclasses.
+     */
+    protected R internalAssertResultReceived() throws InterruptedException {
         assertCalled();
         return getResult();
     }

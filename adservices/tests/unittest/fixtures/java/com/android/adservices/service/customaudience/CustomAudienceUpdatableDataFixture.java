@@ -22,6 +22,7 @@ import static com.android.adservices.service.customaudience.CustomAudienceUpdata
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.AD_RENDER_ID_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.AUCTION_SERVER_REQUEST_FLAGS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.METADATA_KEY;
+import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.PRIORITY_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.RENDER_URI_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.TRUSTED_BIDDING_DATA_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.TRUSTED_BIDDING_KEYS_KEY;
@@ -206,6 +207,29 @@ public class CustomAudienceUpdatableDataFixture {
     }
 
     /**
+     * Converts the input user bidding signals, trusted bidding data, list of ads, and a priority
+     * value to a valid JSON object and returns it as a serialized string.
+     *
+     * <p>Optionally adds harmless junk to the response by adding unexpected fields.
+     */
+    public static String toJsonResponseString(
+            String userBiddingSignals,
+            DBTrustedBiddingData trustedBiddingData,
+            List<DBAdData> ads,
+            double priority,
+            boolean shouldAddHarmlessJunk)
+            throws JSONException {
+        JSONObject jsonResponse = new JSONObject();
+
+        jsonResponse = addToJsonObject(jsonResponse, userBiddingSignals, shouldAddHarmlessJunk);
+        jsonResponse = addToJsonObject(jsonResponse, trustedBiddingData, shouldAddHarmlessJunk);
+        jsonResponse = addToJsonObject(jsonResponse, ads, shouldAddHarmlessJunk);
+        jsonResponse = addPriorityValueToJsonObject(jsonResponse, priority, shouldAddHarmlessJunk);
+
+        return jsonResponse.toString();
+    }
+
+    /**
      * Converts a string representation of a JSON object into a JSONObject with a keyed field for
      * user bidding signals.
      *
@@ -336,6 +360,27 @@ public class CustomAudienceUpdatableDataFixture {
             JsonFixture.addHarmlessJunkValues(array);
         }
         jsonResponse.put(AUCTION_SERVER_REQUEST_FLAGS_KEY, array);
+        return jsonResponse;
+    }
+
+    /**
+     * Converts a double containing a priority value into a JSONObject keyed on {@link
+     * CustomAudienceUpdatableDataReader#PRIORITY_KEY}.
+     *
+     * <p>Optionally adds harmless junk to the object by adding unexpected fields.
+     */
+    public static JSONObject addPriorityValueToJsonObject(
+            JSONObject jsonResponse, double priority, boolean shouldAddHarmlessJunk)
+            throws JSONException {
+        if (jsonResponse == null) {
+            jsonResponse = new JSONObject();
+        }
+        JSONObject object = new JSONObject();
+        object.put(PRIORITY_KEY, priority);
+        if (shouldAddHarmlessJunk) {
+            JsonFixture.addHarmlessJunkValues(object);
+        }
+        jsonResponse.put(PRIORITY_KEY, object);
         return jsonResponse;
     }
 

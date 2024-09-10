@@ -15,6 +15,7 @@
  */
 package com.android.adservices.service.measurement.registration;
 
+import static com.android.adservices.service.measurement.registration.AsyncFetchStatus.EntityStatus;
 import static com.android.adservices.service.measurement.util.BaseUriExtractor.getBaseUri;
 import static com.android.adservices.service.measurement.util.MathUtils.extractValidNumberInRange;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_INVALID;
@@ -108,15 +109,18 @@ public class AsyncSourceFetcher {
         mDebugReportApi = debugReportApi;
     }
 
-    private boolean parseCommonSourceParams(
-            JSONObject json,
+    private boolean parseValidateSource(
+            String registrationHeaderStr,
             AsyncRegistration asyncRegistration,
             Source.Builder builder,
-            String enrollmentId)
+            String enrollmentId,
+            AsyncFetchStatus asyncFetchStatus)
             throws JSONException {
+        JSONObject json = new JSONObject(registrationHeaderStr);
         if (json.isNull(SourceHeaderContract.DESTINATION)
                 && json.isNull(SourceHeaderContract.WEB_DESTINATION)) {
-            throw new JSONException("Expected a destination");
+            LoggerFactory.getMeasurementLogger().d("Source registration expected a destination.");
+            return false;
         }
         long sourceEventTime = asyncRegistration.getRequestTime();
         UnsignedLong eventId = new UnsignedLong(0L);
@@ -134,11 +138,12 @@ public class AsyncSourceFetcher {
             UnsignedLong expiryUnsigned =
                     extractValidNumberInRange(
                             new UnsignedLong(json.getString(SourceHeaderContract.EXPIRY)),
-                            new UnsignedLong(mFlags
-                                    .getMeasurementMinReportingRegisterSourceExpirationInSeconds()),
-                            new UnsignedLong(mFlags
-                                    .getMeasurementMaxReportingRegisterSourceExpirationInSeconds())
-                    );
+                            new UnsignedLong(
+                                    mFlags
+                                            .getMeasurementMinReportingRegisterSourceExpirationInSeconds()),
+                            new UnsignedLong(
+                                    mFlags
+                                            .getMeasurementMaxReportingRegisterSourceExpirationInSeconds()));
             // Relies on expiryUnsigned not using the 64th bit.
             expiry = expiryUnsigned.getValue();
             if (asyncRegistration.getSourceType() == Source.SourceType.EVENT) {
@@ -155,11 +160,11 @@ public class AsyncSourceFetcher {
                     extractValidNumberInRange(
                             new UnsignedLong(
                                     json.getString(SourceHeaderContract.EVENT_REPORT_WINDOW)),
-                            new UnsignedLong(mFlags
-                                    .getMeasurementMinimumEventReportWindowInSeconds()),
-                            new UnsignedLong(mFlags
-                                    .getMeasurementMaxReportingRegisterSourceExpirationInSeconds())
-                    );
+                            new UnsignedLong(
+                                    mFlags.getMeasurementMinimumEventReportWindowInSeconds()),
+                            new UnsignedLong(
+                                    mFlags
+                                            .getMeasurementMaxReportingRegisterSourceExpirationInSeconds()));
             // Relies on eventReportWindowUnsigned not using the 64th bit.
             eventReportWindow = Math.min(expiry, eventReportWindowUnsigned.getValue());
             effectiveExpiry = eventReportWindow;
@@ -173,11 +178,12 @@ public class AsyncSourceFetcher {
                             new UnsignedLong(
                                     json.getString(
                                             SourceHeaderContract.AGGREGATABLE_REPORT_WINDOW)),
-                            new UnsignedLong(mFlags
-                                    .getMeasurementMinimumAggregatableReportWindowInSeconds()),
-                            new UnsignedLong(mFlags
-                                    .getMeasurementMaxReportingRegisterSourceExpirationInSeconds())
-                    );
+                            new UnsignedLong(
+                                    mFlags
+                                            .getMeasurementMinimumAggregatableReportWindowInSeconds()),
+                            new UnsignedLong(
+                                    mFlags
+                                            .getMeasurementMaxReportingRegisterSourceExpirationInSeconds()));
             // Relies on aggregateReportWindowUnsigned not using the 64th bit.
             aggregateReportWindow = Math.min(expiry, aggregateReportWindowUnsigned.getValue());
         } else {
@@ -332,7 +338,9 @@ public class AsyncSourceFetcher {
                 return false;
             }
             if (jsonDestinations.length() == 0 && appUri == null) {
-                throw new JSONException("Expected a destination");
+                LoggerFactory.getMeasurementLogger()
+                        .d("Source registration expected a destination.");
+                return false;
             }
             for (int i = 0; i < jsonDestinations.length(); i++) {
                 Uri destination = Uri.parse(jsonDestinations.getString(i));
@@ -374,12 +382,11 @@ public class AsyncSourceFetcher {
 
         if (mFlags.getMeasurementEnableTriggerDataMatching()
                 && !json.isNull(SourceHeaderContract.TRIGGER_DATA_MATCHING)) {
-            // If the token for trigger_data_matching is not in the predefined list, it will throw
-            // IllegalArgumentException that will be caught by the overall parser.
+            // If the token for trigger_data_matching is not in the predefined list, it will
+            // throw IllegalArgumentException that will be caught by the overall parser.
             triggerDataMatching =
                     Source.TriggerDataMatching.valueOf(
-                            json
-                                    .getString(SourceHeaderContract.TRIGGER_DATA_MATCHING)
+                            json.getString(SourceHeaderContract.TRIGGER_DATA_MATCHING)
                                     .toUpperCase(Locale.ENGLISH));
             builder.setTriggerDataMatching(triggerDataMatching);
         }
@@ -387,11 +394,10 @@ public class AsyncSourceFetcher {
         JSONObject eventReportWindows = null;
         Integer maxEventLevelReports = null;
         if (!json.isNull(SourceHeaderContract.MAX_EVENT_LEVEL_REPORTS)) {
-            Object maxEventLevelReportsObj = json.get(
-                    SourceHeaderContract.MAX_EVENT_LEVEL_REPORTS);
-            maxEventLevelReports =
-                    json.getInt(SourceHeaderContract.MAX_EVENT_LEVEL_REPORTS);
-            if (!FetcherUtil.is64BitInteger(maxEventLevelReportsObj) || maxEventLevelReports < 0
+            Object maxEventLevelReportsObj = json.get(SourceHeaderContract.MAX_EVENT_LEVEL_REPORTS);
+            maxEventLevelReports = json.getInt(SourceHeaderContract.MAX_EVENT_LEVEL_REPORTS);
+            if (!FetcherUtil.is64BitInteger(maxEventLevelReportsObj)
+                    || maxEventLevelReports < 0
                     || maxEventLevelReports > mFlags.getMeasurementFlexApiMaxEventReports()) {
                 return false;
             }
@@ -423,13 +429,13 @@ public class AsyncSourceFetcher {
         if (mFlags.getMeasurementEnableV1SourceTriggerData()
                 && !json.isNull(SourceHeaderContract.TRIGGER_DATA)) {
             if (!json.isNull(SourceHeaderContract.TRIGGER_SPECS)) {
-                LoggerFactory.getMeasurementLogger().d(
-                        "Only one of trigger_data or trigger_specs is expected");
+                LoggerFactory.getMeasurementLogger()
+                        .d("Only one of trigger_data or trigger_specs is expected");
                 return false;
             }
             // Validate input type
-            Optional<JSONArray> maybeTriggerDataListJson = extractLongJsonArray(
-                    json, TriggerSpecs.FlexEventReportJsonKeys.TRIGGER_DATA);
+            Optional<JSONArray> maybeTriggerDataListJson =
+                    extractLongJsonArray(json, TriggerSpecs.FlexEventReportJsonKeys.TRIGGER_DATA);
             if (maybeTriggerDataListJson.isEmpty()) {
                 return false;
             }
@@ -439,8 +445,8 @@ public class AsyncSourceFetcher {
             Set<UnsignedLong> triggerDataSet = new HashSet<>();
 
             // Validate unique trigger data and their magnitude
-            Optional<Set<UnsignedLong>> maybeTriggerDataSet = populateAndValidateTriggerDataSet(
-                    triggerDataSet, triggerDataList);
+            Optional<Set<UnsignedLong>> maybeTriggerDataSet =
+                    populateAndValidateTriggerDataSet(triggerDataSet, triggerDataList);
             if (maybeTriggerDataSet.isEmpty()) {
                 return false;
             }
@@ -454,8 +460,8 @@ public class AsyncSourceFetcher {
         if (mFlags.getMeasurementFlexibleEventReportingApiEnabled()
                 && !json.isNull(SourceHeaderContract.TRIGGER_SPECS)) {
             if (!json.isNull(SourceHeaderContract.TRIGGER_DATA)) {
-                LoggerFactory.getMeasurementLogger().d(
-                        "Only one of trigger_data or trigger_specs is expected");
+                LoggerFactory.getMeasurementLogger()
+                        .d("Only one of trigger_data or trigger_specs is expected");
                 return false;
             }
 
@@ -463,9 +469,7 @@ public class AsyncSourceFetcher {
 
             final int finalMaxEventLevelReports =
                     Source.getOrDefaultMaxEventLevelReports(
-                            asyncRegistration.getSourceType(),
-                            maxEventLevelReports,
-                            mFlags);
+                            asyncRegistration.getSourceType(), maxEventLevelReports, mFlags);
 
             Optional<TriggerSpec[]> maybeTriggerSpecArray =
                     getValidTriggerSpecs(
@@ -482,10 +486,7 @@ public class AsyncSourceFetcher {
             }
 
             builder.setTriggerSpecs(
-                    new TriggerSpecs(
-                            maybeTriggerSpecArray.get(),
-                            finalMaxEventLevelReports,
-                            null));
+                    new TriggerSpecs(maybeTriggerSpecArray.get(), finalMaxEventLevelReports, null));
         }
 
         if (mFlags.getMeasurementEnableSharedSourceDebugKey()
@@ -495,11 +496,12 @@ public class AsyncSourceFetcher {
                         new UnsignedLong(json.getString(SourceHeaderContract.SHARED_DEBUG_KEY)));
             } catch (NumberFormatException e) {
                 LoggerFactory.getMeasurementLogger()
-                        .e(e, "parseCommonSourceParams: parsing shared debug key failed");
+                        .e(e, "parseValidateSource: parsing shared debug key failed");
             }
         }
 
         if (mFlags.getMeasurementEnableAttributionScope()
+                && !json.isNull(SourceHeaderContract.ATTRIBUTION_SCOPES)
                 && !populateAttributionScopeFields(json, builder)) {
             return false;
         }
@@ -528,53 +530,108 @@ public class AsyncSourceFetcher {
                         Source.DestinationLimitAlgorithm.valueOf(destinationLimitAlgorithm));
             }
         }
+        if (!json.isNull(SourceHeaderContract.AGGREGATION_KEYS)) {
+            if (!areValidAggregationKeys(
+                    json.getJSONObject(SourceHeaderContract.AGGREGATION_KEYS))) {
+                LoggerFactory.getMeasurementLogger()
+                        .e(
+                                String.format(
+                                        "AsyncSourceFetcher: Invalid aggregation keys in %s"
+                                                + " header.",
+                                        SourceHeaderContract
+                                                .HEADER_ATTRIBUTION_REPORTING_REGISTER_SOURCE));
+                return false;
+            }
+            builder.setAggregateSource(json.getString(SourceHeaderContract.AGGREGATION_KEYS));
+        }
+        if (mFlags.getMeasurementEnableXNA()
+                && !json.isNull(SourceHeaderContract.SHARED_AGGREGATION_KEYS)) {
+            // Parsed as JSONArray for validation
+            JSONArray sharedAggregationKeys =
+                    json.getJSONArray(SourceHeaderContract.SHARED_AGGREGATION_KEYS);
+            builder.setSharedAggregationKeys(sharedAggregationKeys.toString());
+        }
+        if (mFlags.getMeasurementEnableSharedFilterDataKeysXNA()
+                && !json.isNull(SourceHeaderContract.SHARED_FILTER_DATA_KEYS)) {
+            // Parsed as JSONArray for validation
+            JSONArray sharedFilterDataKeys =
+                    json.getJSONArray(SourceHeaderContract.SHARED_FILTER_DATA_KEYS);
+            builder.setSharedFilterDataKeys(sharedFilterDataKeys.toString());
+        }
+        if (mFlags.getMeasurementEnablePreinstallCheck()
+                && !json.isNull(SourceHeaderContract.DROP_SOURCE_IF_INSTALLED)) {
+            builder.setDropSourceIfInstalled(
+                    json.getBoolean(SourceHeaderContract.DROP_SOURCE_IF_INSTALLED));
+        }
+        if (mFlags.getMeasurementEnableEventLevelEpsilonInSource()) {
+            if (!json.isNull(SourceHeaderContract.EVENT_LEVEL_EPSILON)) {
+                Object eventLevelEpsilon = json.get(SourceHeaderContract.EVENT_LEVEL_EPSILON);
+                Optional<Double> validEventLevelEpsilon =
+                        validateAndGetEventLevelEpsilon(eventLevelEpsilon);
+                if (validEventLevelEpsilon.isEmpty()) {
+                    LoggerFactory.getMeasurementLogger()
+                            .e(
+                                    String.format(
+                                            "AsyncSourceFetcher: Invalid event level epsilon in"
+                                                    + " %s header.",
+                                            SourceHeaderContract
+                                                    .HEADER_ATTRIBUTION_REPORTING_REGISTER_SOURCE));
+                    return false;
+                }
+                asyncFetchStatus.setIsEventLevelEpsilonConfigured(true);
+                builder.setEventLevelEpsilon(validEventLevelEpsilon.get());
+            } else {
+                builder.setEventLevelEpsilon((double) mFlags.getMeasurementPrivacyEpsilon());
+            }
+        }
+        if (mFlags.getMeasurementEnableAggregateDebugReporting()
+                && !json.isNull(SourceHeaderContract.AGGREGATABLE_DEBUG_REPORTING)) {
+            Optional<String> validAggregateDebugReporting =
+                    FetcherUtil.getValidAggregateDebugReportingString(
+                            json.getJSONObject(SourceHeaderContract.AGGREGATABLE_DEBUG_REPORTING),
+                            mFlags);
+            if (!validAggregateDebugReporting.isPresent()) {
+                LoggerFactory.getMeasurementLogger()
+                        .d("parseSource: aggregatable debug reporting is invalid.");
+                return false;
+            }
+            builder.setAggregateDebugReportingString(validAggregateDebugReporting.get());
+        }
         return true;
     }
 
     // Populates attribution scope fields if they are available.
     // Returns false if the json fields are invalid.
     // Note returning true doesn't indicate whether the fields are populated or not.
-    private boolean populateAttributionScopeFields(JSONObject json, Source.Builder builder)
+    private boolean populateAttributionScopeFields(JSONObject parentJson, Source.Builder builder)
             throws JSONException {
-        // Parses attribution scopes.
-        List<String> attributionScopes = new ArrayList<>();
-        if (!json.isNull(SourceHeaderContract.ATTRIBUTION_SCOPES)) {
-            Optional<List<String>> maybeAttributionScopes =
-                    FetcherUtil.extractStringArray(
-                            json,
-                            SourceHeaderContract.ATTRIBUTION_SCOPES,
-                            mFlags.getMeasurementMaxAttributionScopesPerSource(),
-                            mFlags.getMeasurementMaxAttributionScopeLength());
-            if (maybeAttributionScopes.isEmpty()) {
-                return false;
-            }
-            attributionScopes = maybeAttributionScopes.get();
+        JSONObject json = parentJson.getJSONObject(SourceHeaderContract.ATTRIBUTION_SCOPES);
+        if (json.isNull(SourceHeaderContract.ATTRIBUTION_SCOPE_LIMIT)
+                || json.isNull(SourceHeaderContract.ATTRIBUTION_SCOPES_VALUES)) {
+            LoggerFactory.getMeasurementLogger()
+                    .e("Attribution scope limit and values should be set for attribution scopes");
+            return false;
         }
 
-        // Parses attribution scope limit, can be optional.
-        if (json.isNull(SourceHeaderContract.ATTRIBUTION_SCOPE_LIMIT)) {
-            if (!attributionScopes.isEmpty()) {
-                LoggerFactory.getMeasurementLogger()
-                        .e(
-                                "Attribution scope limit should be set if attribution scopes are "
-                                        + "not empty.");
-                return false;
-            }
-            if (!json.isNull(SourceHeaderContract.MAX_EVENT_STATES)) {
-                LoggerFactory.getMeasurementLogger()
-                        .e(
-                                "Attribution scope limit should be set if max event states is "
-                                        + "set.");
-                return false;
-            }
-            return true;
-        }
+        // Parses attribution scope limit.
         Optional<Long> maybeAttributionScopeLimit =
                 FetcherUtil.extractLong(json, SourceHeaderContract.ATTRIBUTION_SCOPE_LIMIT);
         if (maybeAttributionScopeLimit.isEmpty()) {
             return false;
         }
         long attributionScopeLimit = maybeAttributionScopeLimit.get();
+
+        // Parses attribution scopes values.
+        Optional<List<String>> maybeAttributionScopes =
+                FetcherUtil.extractStringArray(
+                        json,
+                        SourceHeaderContract.ATTRIBUTION_SCOPES_VALUES,
+                        mFlags.getMeasurementMaxAttributionScopesPerSource(),
+                        mFlags.getMeasurementMaxAttributionScopeLength());
+        if (maybeAttributionScopes.isEmpty()) {
+            return false;
+        }
+        List<String> attributionScopes = maybeAttributionScopes.get();
 
         // Parses max event states, can be optional, fallback to default max event states.
         long maxEventStates = Source.DEFAULT_MAX_EVENT_STATES;
@@ -721,7 +778,7 @@ public class AsyncSourceFetcher {
 
         TriggerSpec.SummaryOperatorType summaryWindowOperator =
                 TriggerSpec.SummaryOperatorType.COUNT;
-        if (!triggerSpecJson.isNull(TriggerSpecs.FlexEventReportJsonKeys.SUMMARY_WINDOW_OPERATOR)) {
+        if (!triggerSpecJson.isNull(TriggerSpecs.FlexEventReportJsonKeys.SUMMARY_OPERATOR)) {
             // If a summary window operator is not in the predefined list, it will throw
             // IllegalArgumentException that will be caught by the overall parser.
             summaryWindowOperator =
@@ -729,7 +786,7 @@ public class AsyncSourceFetcher {
                             triggerSpecJson
                                     .getString(
                                             TriggerSpecs.FlexEventReportJsonKeys
-                                                    .SUMMARY_WINDOW_OPERATOR)
+                                                    .SUMMARY_OPERATOR)
                                     .toUpperCase(Locale.ENGLISH));
         }
         List<Long> summaryBuckets = null;
@@ -865,86 +922,102 @@ public class AsyncSourceFetcher {
             return Optional.empty();
         }
         builder.setRegistrationOrigin(registrationUriOrigin.get());
-
         builder.setPlatformAdId(asyncRegistration.getPlatformAdId());
-
-        List<String> field =
-                headers.get(SourceHeaderContract.HEADER_ATTRIBUTION_REPORTING_REGISTER_SOURCE);
-        if (field == null || field.size() != 1) {
-            LoggerFactory.getMeasurementLogger()
-                    .d(
-                            "AsyncSourceFetcher: "
-                                    + "Invalid Attribution-Reporting-Register-Source header.");
-            asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.HEADER_ERROR);
-            return Optional.empty();
-        }
-        String registrationHeaderStr = field.get(0);
 
         boolean isHeaderErrorDebugReportEnabled =
                 FetcherUtil.isHeaderErrorDebugReportEnabled(
                         headers.get(SourceHeaderContract.HEADER_ATTRIBUTION_REPORTING_INFO),
                         mFlags);
+        String registrationHeaderStr = null;
         try {
-            JSONObject json = new JSONObject(registrationHeaderStr);
-            boolean isValid =
-                    parseCommonSourceParams(json, asyncRegistration, builder, enrollmentId);
-            if (!isValid) {
-                asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
+            List<String> field =
+                    headers.get(SourceHeaderContract.HEADER_ATTRIBUTION_REPORTING_REGISTER_SOURCE);
+
+            // Check the source registration header size. Only one header is accepted.
+            if (field == null || field.size() != 1) {
+                registrationHeaderStr = field == null ? null : field.toString();
+                asyncFetchStatus.setEntityStatus(EntityStatus.HEADER_ERROR);
+                LoggerFactory.getMeasurementLogger()
+                        .e(
+                                String.format(
+                                        "AsyncSourceFetcher: Null or multiple %s headers.",
+                                        SourceHeaderContract
+                                                .HEADER_ATTRIBUTION_REPORTING_REGISTER_SOURCE));
+                FetcherUtil.sendHeaderErrorDebugReport(
+                        isHeaderErrorDebugReportEnabled,
+                        mDebugReportApi,
+                        mDatastoreManager,
+                        asyncRegistration.getTopOrigin(),
+                        registrationUriOrigin.get(),
+                        asyncRegistration.getRegistrant(),
+                        SourceHeaderContract.HEADER_ATTRIBUTION_REPORTING_REGISTER_SOURCE,
+                        enrollmentId,
+                        registrationHeaderStr);
                 return Optional.empty();
             }
-            if (!json.isNull(SourceHeaderContract.AGGREGATION_KEYS)) {
-                if (!areValidAggregationKeys(
-                        json.getJSONObject(SourceHeaderContract.AGGREGATION_KEYS))) {
-                    asyncFetchStatus.setEntityStatus(
-                            AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
-                    return Optional.empty();
-                }
-                builder.setAggregateSource(json.getString(SourceHeaderContract.AGGREGATION_KEYS));
+
+            // Validate the source header parameters.
+            registrationHeaderStr = field.get(0);
+            boolean isValid =
+                    parseValidateSource(
+                            registrationHeaderStr,
+                            asyncRegistration,
+                            builder,
+                            enrollmentId,
+                            asyncFetchStatus);
+            if (!isValid) {
+                asyncFetchStatus.setEntityStatus(EntityStatus.VALIDATION_ERROR);
+                LoggerFactory.getMeasurementLogger()
+                        .e(
+                                String.format(
+                                        "AsyncSourceFetcher: Invalid source params in %s header.",
+                                        SourceHeaderContract
+                                                .HEADER_ATTRIBUTION_REPORTING_REGISTER_SOURCE));
+                FetcherUtil.sendHeaderErrorDebugReport(
+                        isHeaderErrorDebugReportEnabled,
+                        mDebugReportApi,
+                        mDatastoreManager,
+                        asyncRegistration.getTopOrigin(),
+                        registrationUriOrigin.get(),
+                        asyncRegistration.getRegistrant(),
+                        SourceHeaderContract.HEADER_ATTRIBUTION_REPORTING_REGISTER_SOURCE,
+                        enrollmentId,
+                        registrationHeaderStr);
+                return Optional.empty();
             }
-            if (mFlags.getMeasurementEnableXNA()
-                    && !json.isNull(SourceHeaderContract.SHARED_AGGREGATION_KEYS)) {
-                // Parsed as JSONArray for validation
-                JSONArray sharedAggregationKeys =
-                        json.getJSONArray(SourceHeaderContract.SHARED_AGGREGATION_KEYS);
-                builder.setSharedAggregationKeys(sharedAggregationKeys.toString());
-            }
-            if (mFlags.getMeasurementEnableSharedFilterDataKeysXNA()
-                    && !json.isNull(SourceHeaderContract.SHARED_FILTER_DATA_KEYS)) {
-                // Parsed as JSONArray for validation
-                JSONArray sharedFilterDataKeys =
-                        json.getJSONArray(SourceHeaderContract.SHARED_FILTER_DATA_KEYS);
-                builder.setSharedFilterDataKeys(sharedFilterDataKeys.toString());
-            }
-            if (mFlags.getMeasurementEnablePreinstallCheck()
-                    && !json.isNull(SourceHeaderContract.DROP_SOURCE_IF_INSTALLED)) {
-                builder.setDropSourceIfInstalled(
-                        json.getBoolean(SourceHeaderContract.DROP_SOURCE_IF_INSTALLED));
-            }
-            asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.SUCCESS);
+
+            // Set success status and return parsed source if no error.
+            asyncFetchStatus.setEntityStatus(EntityStatus.SUCCESS);
             return Optional.of(builder.build());
         } catch (JSONException e) {
-            String errMsg = "Source JSON parsing failed";
-            LoggerFactory.getMeasurementLogger().d(e, errMsg);
-            asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.PARSING_ERROR);
-            if (isHeaderErrorDebugReportEnabled) {
-                mDatastoreManager.runInTransaction(
-                        (dao) -> {
-                            mDebugReportApi.scheduleHeaderErrorReport(
-                                    asyncRegistration.getRegistrationUri(),
-                                    asyncRegistration.getRegistrant(),
-                                    SourceHeaderContract
-                                            .HEADER_ATTRIBUTION_REPORTING_REGISTER_SOURCE,
-                                    enrollmentId,
-                                    errMsg,
-                                    registrationHeaderStr,
-                                    dao);
-                        });
-            }
+            asyncFetchStatus.setEntityStatus(EntityStatus.PARSING_ERROR);
+            LoggerFactory.getMeasurementLogger()
+                    .d(e, "AsyncSourceFetcher: Source JSON Parsing Exception.");
+            FetcherUtil.sendHeaderErrorDebugReport(
+                    isHeaderErrorDebugReportEnabled,
+                    mDebugReportApi,
+                    mDatastoreManager,
+                    asyncRegistration.getTopOrigin(),
+                    registrationUriOrigin.get(),
+                    asyncRegistration.getRegistrant(),
+                    SourceHeaderContract.HEADER_ATTRIBUTION_REPORTING_REGISTER_SOURCE,
+                    enrollmentId,
+                    registrationHeaderStr);
             return Optional.empty();
         } catch (IllegalArgumentException | ArithmeticException e) {
+            asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
             LoggerFactory.getMeasurementLogger().d(e, "AsyncSourceFetcher: IllegalArgumentException"
                     + " or ArithmeticException");
-            asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
+            FetcherUtil.sendHeaderErrorDebugReport(
+                    isHeaderErrorDebugReportEnabled,
+                    mDebugReportApi,
+                    mDatastoreManager,
+                    asyncRegistration.getTopOrigin(),
+                    registrationUriOrigin.get(),
+                    asyncRegistration.getRegistrant(),
+                    SourceHeaderContract.HEADER_ATTRIBUTION_REPORTING_REGISTER_SOURCE,
+                    enrollmentId,
+                    registrationHeaderStr);
             return Optional.empty();
         }
     }
@@ -1020,10 +1093,10 @@ public class AsyncSourceFetcher {
             }
         }
 
-        asyncRedirects.configure(headers, mFlags, asyncRegistration);
+        asyncRedirects.configure(headers, asyncRegistration);
 
         if (!isSourceHeaderPresent(headers)) {
-            asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.HEADER_MISSING);
+            asyncFetchStatus.setEntityStatus(EntityStatus.HEADER_MISSING);
             asyncFetchStatus.setRedirectOnlyStatus(true);
             return Optional.empty();
         }
@@ -1044,21 +1117,31 @@ public class AsyncSourceFetcher {
                     .d(
                             "fetchSource: Valid enrollment id not found. Registration URI: %s",
                             asyncRegistration.getRegistrationUri());
-            asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.INVALID_ENROLLMENT);
+            asyncFetchStatus.setEntityStatus(EntityStatus.INVALID_ENROLLMENT);
             ErrorLogUtil.e(
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_INVALID,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             return Optional.empty();
         }
 
-        Optional<Source> parsedSource =
-                parseSource(asyncRegistration, enrollmentId.get(), headers, asyncFetchStatus);
-        return parsedSource;
+        return parseSource(asyncRegistration, enrollmentId.get(), headers, asyncFetchStatus);
     }
 
     private boolean isSourceHeaderPresent(Map<String, List<String>> headers) {
         return headers.containsKey(
                 SourceHeaderContract.HEADER_ATTRIBUTION_REPORTING_REGISTER_SOURCE);
+    }
+
+    private Optional<Double> validateAndGetEventLevelEpsilon(Object eventLevelEpsilonObj) {
+        if (!(eventLevelEpsilonObj instanceof Number)) {
+            return Optional.empty();
+        }
+        Double validEventLevelEpsilon = (Double) ((Number) eventLevelEpsilonObj).doubleValue();
+        if (validEventLevelEpsilon < 0
+                || validEventLevelEpsilon > mFlags.getMeasurementPrivacyEpsilon()) {
+            return Optional.empty();
+        }
+        return Optional.of(validEventLevelEpsilon);
     }
 
     private boolean areValidAggregationKeys(JSONObject aggregationKeys) {
@@ -1146,10 +1229,13 @@ public class AsyncSourceFetcher {
         String TRIGGER_DATA_MATCHING = "trigger_data_matching";
         String TRIGGER_DATA = "trigger_data";
         String ATTRIBUTION_SCOPES = "attribution_scopes";
-        String ATTRIBUTION_SCOPE_LIMIT = "attribution_scope_limit";
+        String ATTRIBUTION_SCOPE_LIMIT = "limit";
+        String ATTRIBUTION_SCOPES_VALUES = "values";
         String MAX_EVENT_STATES = "max_event_states";
         String DESTINATION_LIMIT_PRIORITY = "destination_limit_priority";
         String DESTINATION_LIMIT_ALGORITHM = "destination_limit_algorithm";
+        String EVENT_LEVEL_EPSILON = "event_level_epsilon";
+        String AGGREGATABLE_DEBUG_REPORTING = "aggregatable_debug_reporting";
     }
 
     private interface SourceRequestContract {

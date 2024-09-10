@@ -16,7 +16,7 @@
 
 package com.android.server.sdksandbox;
 
-import static com.android.sdksandbox.flags.Flags.sdkSandboxDexVerifier;
+import static com.android.sdksandbox.flags.Flags.sdkSandboxVerifySdkDexFiles;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -33,6 +33,7 @@ import android.util.Log;
 
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.sdksandbox.verifier.SdkDexVerifier;
+import com.android.server.sdksandbox.verifier.SdkDexVerifier.VerificationResult;
 
 /**
  * Broadcast Receiver for receiving new Sdk install requests and verifying Sdk code before running
@@ -75,7 +76,7 @@ public class SdkSandboxVerifierReceiver extends BroadcastReceiver {
         int verificationId = intent.getIntExtra(PackageManager.EXTRA_VERIFICATION_ID, -1);
 
         boolean isRestrictionsEnabled =
-                sdkSandboxDexVerifier()
+                sdkSandboxVerifySdkDexFiles()
                         && DeviceConfig.getBoolean(
                                 DeviceConfig.NAMESPACE_ADSERVICES,
                                 SdkSandboxManagerService.PROPERTY_ENFORCE_RESTRICTIONS,
@@ -114,9 +115,9 @@ public class SdkSandboxVerifierReceiver extends BroadcastReceiver {
                                 apkPath,
                                 packageInfo.packageName,
                                 targetSdkVersion,
-                                new OutcomeReceiver<Void, Exception>() {
+                                new OutcomeReceiver<VerificationResult, Exception>() {
                                     @Override
-                                    public void onResult(Void result) {}
+                                    public void onResult(VerificationResult result) {}
 
                                     @Override
                                     public void onError(Exception e) {
