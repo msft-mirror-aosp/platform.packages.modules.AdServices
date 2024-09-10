@@ -40,7 +40,7 @@ java_library {
     ],
     libs: [
         "framework-adservices.impl",
-        "framework-configinfrastructure",
+        "framework-configinfrastructure.stubs.module_lib",
         "adservices-service-core",
         "auto_value_annotations",
         "framework-annotations-lib",

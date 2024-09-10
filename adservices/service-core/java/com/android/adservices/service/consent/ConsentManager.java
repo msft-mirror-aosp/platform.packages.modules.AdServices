@@ -2399,26 +2399,7 @@ public class ConsentManager {
                 () -> mUxStatesDao.getUx(),
                 () -> convertUxString(mAdServicesManager.getUx()),
                 () -> mAppSearchConsentManager.getUx(),
-                () -> {
-                    PrivacySandboxUxCollection ux = mUxStatesDao.getUx();
-
-                    // Workaround to make getUx() rollback safe on R. Rollback could change
-                    // ux enum to UNSUPPORTED_UX after daily ping and before the
-                    // notification is displayed.
-
-                    if (ux == PrivacySandboxUxCollection.UNSUPPORTED_UX) {
-                        // Use getIsU18Account to infer ux enum since getIsU18Account is
-                        // rollback safe
-                        if (mFlags.getU18UxEnabled() && mAdExtDataManager.getIsU18Account()) {
-                            ux = PrivacySandboxUxCollection.U18_UX;
-                        } else if (mAdExtDataManager.getIsAdultAccount()) {
-                            // Use getIsAdultAccount to infer ux enum since getIsAdultAccount is
-                            // rollback safe
-                            ux = PrivacySandboxUxCollection.RVC_UX;
-                        }
-                    }
-                    return ux;
-                },
+                () -> mUxStatesDao.getUx(),
                 /* errorLogger= */ null);
     }
 

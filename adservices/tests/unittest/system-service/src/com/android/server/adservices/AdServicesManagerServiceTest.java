@@ -64,7 +64,6 @@ import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.ui.enrollment.collection.GaUxEnrollmentChannelCollection;
-import com.android.adservices.service.ui.enrollment.collection.RvcUxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.enrollment.collection.U18UxEnrollmentChannelCollection;
 import com.android.adservices.shared.testing.annotations.DisableDebugFlag;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
@@ -1209,7 +1208,6 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
                     assertThat(hasMatchingEntry).isTrue();
                 };
         Stream.of(GaUxEnrollmentChannelCollection.values()).forEach(consumer);
-        Stream.of(RvcUxEnrollmentChannelCollection.values()).forEach(consumer);
         Stream.of(U18UxEnrollmentChannelCollection.values()).forEach(consumer);
     }
 

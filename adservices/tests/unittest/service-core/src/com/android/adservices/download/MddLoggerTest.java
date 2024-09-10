@@ -64,7 +64,7 @@ public final class MddLoggerTest extends AdServicesExtendedMockitoTestCase {
     private static final int TEST_DAYS = 3;
     private static final long TEST_BYTE_USED = 5;
 
-    private MddLogger mMddLogger = new MddLogger();
+    private final MddLogger mMddLogger = new MddLogger();
     private MessageLite mMessageLite;
 
     @Mock private MessageLite mMockLog;

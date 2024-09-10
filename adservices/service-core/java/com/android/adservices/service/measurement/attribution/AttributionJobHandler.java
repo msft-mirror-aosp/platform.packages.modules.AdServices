@@ -561,7 +561,7 @@ class AttributionJobHandler {
                                             .build())
                             .setStatus(AggregateReport.Status.PENDING)
                             .setDebugReportStatus(debugReportStatus)
-                            .setApiVersion(API_VERSION)
+                            .setApiVersion(getApiVersion())
                             .setSourceDebugKey(sourceDebugKey)
                             .setTriggerDebugKey(triggerDebugKey)
                             .setSourceId(source.getId())
@@ -619,6 +619,13 @@ class AttributionJobHandler {
                                     + " parse aggregate fields.");
             return TriggeringStatus.DROPPED;
         }
+    }
+
+    private String getApiVersion() {
+        if (mFlags.getMeasurementEnableFlexibleContributionFiltering()) {
+            return "1.0";
+        }
+        return API_VERSION;
     }
 
     @Nullable
@@ -729,7 +736,11 @@ class AttributionJobHandler {
         AggregateReport.Builder nullReportBuilder =
                 new AggregateReport.Builder()
                         .getNullAggregateReportBuilder(
-                                trigger, sourceTime, getAggregateReportDelay(), API_VERSION, API);
+                                trigger,
+                                sourceTime,
+                                getAggregateReportDelay(),
+                                getApiVersion(),
+                                API);
 
         if (mFlags.getMeasurementEnableAggregatableReportPayloadPadding()) {
             AggregateHistogramContribution paddingContribution =

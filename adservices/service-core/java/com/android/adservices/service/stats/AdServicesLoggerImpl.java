@@ -432,6 +432,12 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
         mStatsdAdServicesLogger.logUpdateSignalsApiCalledStats(stats);
     }
 
+    @Override
+    public void logTopicsScheduleEpochJobSettingReportedStats(
+            TopicsScheduleEpochJobSettingReportedStats stats) {
+        mStatsdAdServicesLogger.logTopicsScheduleEpochJobSettingReportedStats(stats);
+    }
+
     /** Logs api call error status using {@code CobaltLogger}. */
     @VisibleForTesting // used by testCobaltLogAppNameApiError_nullPackageName only
     void cobaltLogAppNameApiError(String appPackageName, int apiName, int errorCode) {

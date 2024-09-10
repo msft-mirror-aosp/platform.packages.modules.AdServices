@@ -144,7 +144,7 @@ public final class MddJobTest extends AdServicesJobTestCase {
         FutureSyncCallback<Void> encryptionCallBack = mockEncryptionReadFromMdd();
 
         ListenableFuture<ExecutionResult> unusedFuture =
-                mMddJob.getExecutionFuture(sContext, mMockParams);
+                mMddJob.getExecutionFuture(mContext, mMockParams);
         // Call it to suppress the linter.
         assertThat(unusedFuture.get()).isEqualTo(SUCCESS);
 

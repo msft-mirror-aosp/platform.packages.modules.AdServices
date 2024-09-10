@@ -55,4 +55,9 @@ public class AggregatableKeyValue {
             return new AggregatableKeyValue(this);
         }
     }
+
+    public interface AggregatableKeyValueContract {
+        String VALUE = "value";
+        String FILTERING_ID = "filtering_id";
+    }
 }

@@ -68,6 +68,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_SCO
 import static com.android.adservices.service.stats.AdServicesStatsLog.SERVER_AUCTION_BACKGROUND_KEY_FETCH_ENABLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.TOPICS_ENCRYPTION_EPOCH_COMPUTATION_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.TOPICS_ENCRYPTION_GET_TOPICS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.TOPICS_SCHEDULE_EPOCH_JOB_SETTING_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.UPDATE_SIGNALS_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.UPDATE_SIGNALS_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.BACKGROUND_KEY_FETCH_STATUS_NO_OP;
@@ -2411,6 +2412,38 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                                 eq(123.4F),
                                 eq(345.67F),
                                 eq(0.0001F));
+        verify(writeInvocation);
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testLogTopicsScheduleEpochJobSettingReportedStats_success() {
+        TopicsScheduleEpochJobSettingReportedStats stats =
+                TopicsScheduleEpochJobSettingReportedStats.builder()
+                        .setRescheduleEpochJobStatus(0)
+                        .setPreviousEpochJobSetting(1)
+                        .setCurrentEpochJobSetting(2)
+                        .setScheduleIfNeededEpochJobStatus(1)
+                        .build();
+        doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(), anyInt(), anyInt(), anyInt(), anyInt()));
+
+        // Invoke logging call.
+        mLogger.logTopicsScheduleEpochJobSettingReportedStats(stats);
+
+        // Verify only compat logging took place.
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                TOPICS_SCHEDULE_EPOCH_JOB_SETTING_REPORTED,
+                                0,
+                                1,
+                                2,
+                                1);
         verify(writeInvocation);
 
         verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));

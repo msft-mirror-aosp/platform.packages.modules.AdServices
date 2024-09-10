@@ -81,14 +81,30 @@ public final class TestHelper {
     }
 
     /**
-     * Util method to throw exception if description is not a test node. Use this to throw exception
-     * for rules that can only be used on individual tests, not as @ClassRule or in a suite.
+     * Helper method to throw exception if description is not a test node.
+     *
+     * <p>Use this to throw exception for rules that can only be used on individual tests, not
+     * as @ClassRule or in a suite.
      */
     public static void throwIfNotTest(Description description) {
         if (!description.isTest()) {
             throw new IllegalStateException(
                     "This rule can only be applied to individual tests, it cannot be used as"
                             + " @ClassRule or in a test suite");
+        }
+    }
+
+    /**
+     * Helper method to throw exception if description is a test node.
+     *
+     * <p>Use this to throw exception for rules that CANNOT be used on individual tests, only
+     * as @ClassRule or in a suite.
+     */
+    public static void throwIfTest(Description description) {
+        if (description.isTest() && !description.isSuite()) {
+            throw new IllegalStateException(
+                    "This rule can only be used as a @ClassRule or in a test suit, it cannot be"
+                            + " applied to individual tests as a @Rule");
         }
     }
 

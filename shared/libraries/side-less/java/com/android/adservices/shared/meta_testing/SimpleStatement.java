@@ -17,8 +17,11 @@ package com.android.adservices.shared.meta_testing;
 
 import com.android.adservices.shared.testing.DynamicLogger;
 import com.android.adservices.shared.testing.Logger;
+import com.android.adservices.shared.testing.Nullable;
 
 import org.junit.runners.model.Statement;
+
+import java.util.Objects;
 
 /** A simple JUnit statement that provides methods to assert if was evaluated or not. */
 public final class SimpleStatement extends Statement {
@@ -26,30 +29,47 @@ public final class SimpleStatement extends Statement {
     private final Logger mLog = new Logger(DynamicLogger.getInstance(), SimpleStatement.class);
 
     private boolean mEvaluated;
-    private Throwable mThrowable;
+
+    @Nullable private Throwable mThrowable;
+    @Nullable private Runnable mRunnable;
 
     @Override
     public void evaluate() throws Throwable {
         mLog.d("evaluate() called");
         mEvaluated = true;
+        if (mRunnable != null) {
+            mLog.d("Calling Runnable %s", mRunnable);
+            mRunnable.run();
+            return;
+        }
         if (mThrowable != null) {
-            mLog.i("Throwing %s", mThrowable);
+            mLog.d("Throwing %s", mThrowable);
             throw mThrowable;
         }
-        mLog.d("Saul Goodman!");
+        mLog.d("So Long, and Thanks for All the Fish");
     }
 
+    /** Runs the given {@code runnable} at the beginning of the {@link #evaluate()} method. */
+    public void onEvaluate(Runnable runnable) {
+        mLog.d("onEvaluate(%s)", runnable);
+        mRunnable = Objects.requireNonNull(runnable, "Runnable cannto be run");
+    }
+
+    /** Throws the given exception in the {@link #evaluate()} method. */
+    /** Set a {@code runnable} to be run at the beginning of the {@link #evaluate()} method. */
     public void failWith(Throwable t) {
         mLog.d("failWith(%s)", t);
-        mThrowable = t;
+        mThrowable = Objects.requireNonNull(t, "Throwable cannot be null");
     }
 
+    /** Makes sure {@link #evaluate()} was called. */
     public void assertEvaluated() {
         if (!mEvaluated) {
             throw new AssertionError("test statement was not evaluated");
         }
     }
 
+    /** Makes sure {@link #evaluate()} was NOT called. */
     public void assertNotEvaluated() {
         if (mEvaluated) {
             throw new AssertionError("test statement was evaluated");
@@ -58,6 +78,12 @@ public final class SimpleStatement extends Statement {
 
     @Override
     public String toString() {
-        return "[SimpleStatement: mEvaluated=" + mEvaluated + ", mThrowable=" + mThrowable + ']';
+        return "[SimpleStatement: mEvaluated="
+                + mEvaluated
+                + ", mThrowable="
+                + mThrowable
+                + ", mRunnable="
+                + mRunnable
+                + ']';
     }
 }

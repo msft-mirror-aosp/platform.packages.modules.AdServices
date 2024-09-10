@@ -21,9 +21,9 @@ android_test {
     name: "SdkSandboxUiTests",
     srcs: ["src/**/*.java"],
     libs: [
-        "android.test.base",
-        "android.test.mock",
-        "android.test.runner",
+        "android.test.base.stubs.system",
+        "android.test.mock.stubs.system",
+        "android.test.runner.stubs.system",
     ],
     static_libs: [
         "androidx.test.ext.junit",
@@ -36,5 +36,5 @@ android_test {
     asset_dirs: ["assets"],
     resource_dirs: ["res"],
     test_suites: ["general-tests"],
-    jarjar_rules: ":test-jarjar-rules",
+    jarjar_rules: ":test-service-jarjar-rules",
 }

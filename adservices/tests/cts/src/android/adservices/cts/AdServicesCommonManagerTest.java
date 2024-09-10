@@ -19,7 +19,7 @@ package android.adservices.cts;
 import static android.adservices.common.AdServicesModuleState.MODULE_STATE_ENABLED;
 import static android.adservices.common.AdServicesModuleUserChoice.USER_CHOICE_OPTED_OUT;
 import static android.adservices.common.Module.MEASUREMENT;
-import static android.adservices.common.Module.TOPIC;
+import static android.adservices.common.Module.TOPICS;
 
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED;
@@ -196,13 +196,13 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
 
         AdServicesModuleUserChoice adServicesModuleUserChoice =
                 new AdServicesModuleUserChoice.Builder()
-                        .setModule(TOPIC)
+                        .setModule(TOPICS)
                         .setUserChoice(USER_CHOICE_OPTED_OUT)
                         .build();
         List<AdServicesModuleUserChoice> adServicesModuleUserChoiceList =
                 Arrays.asList(adServicesModuleUserChoice);
 
-        expect.that(adServicesModuleUserChoice.getModule()).isEqualTo(TOPIC);
+        expect.that(adServicesModuleUserChoice.getModule()).isEqualTo(TOPICS);
         expect.that(adServicesModuleUserChoice.getUserChoice()).isEqualTo(USER_CHOICE_OPTED_OUT);
 
         mCommonManager.setAdServicesModuleUserChoices(

@@ -105,6 +105,8 @@ public final class FlagsConstants {
     public static final String KEY_TOPICS_ENCRYPTION_ENABLED = "topics_encryption_enabled";
     public static final String KEY_TOPICS_ENCRYPTION_METRICS_ENABLED =
             "topics_encryption_metrics_enabled";
+    public static final String KEY_TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_LOGGING_ENABLED =
+            "topics_epoch_job_battery_constraint_logging_enabled";
     public static final String KEY_TOPICS_DISABLE_PLAINTEXT_RESPONSE =
             "topics_disable_plaintext_response";
     public static final String KEY_TOPICS_TEST_ENCRYPTION_PUBLIC_KEY =
@@ -1395,6 +1397,9 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES =
             "measurement_default_filtering_id_max_bytes";
 
+    public static final String KEY_MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES =
+            "Measurement__max_filtering_id_max_bytes";
+
     public static final String KEY_MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING =
             "measurement_enable_flexible_contribution_filtering";
 
@@ -1422,8 +1427,6 @@ public final class FlagsConstants {
             "notification_dmsmissed_on_click";
 
     public static final String KEY_U18_UX_ENABLED = "u18_ux_enabled";
-
-    public static final String KEY_RVC_UX_ENABLED = "rvc_ux_enabled";
 
     public static final String KEY_RVC_POST_OTA_NOTIFICATION_ENABLED =
             "rvc_post_ota_notification_enabled";

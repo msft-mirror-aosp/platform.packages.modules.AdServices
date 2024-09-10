@@ -37,7 +37,6 @@ import java.util.List;
 // this class
 class SdkSandboxRestrictionManager {
 
-    private static final String TAG = "SdkSandboxManager";
     private static final int DEFAULT_TARGET_SDK_VERSION = Build.VERSION_CODES.UPSIDE_DOWN_CAKE;
 
     private final Object mLock = new Object();
@@ -74,6 +73,21 @@ class SdkSandboxRestrictionManager {
     /** Cache and get the effectiveTargetSdkVersion for the sdk sandbox process */
     public int getEffectiveTargetSdkVersion(int appUid)
             throws PackageManager.NameNotFoundException {
+        synchronized (mLock) {
+            if (mEffectiveTargetSdkVersions.containsKey(appUid)) {
+                return mEffectiveTargetSdkVersions.get(appUid);
+            }
+        }
+
+        // If the device's SDK version is less than or equal to the default value, we can return it
+        // immediately.
+        if (mInjector.getCurrentSdkLevel() <= DEFAULT_TARGET_SDK_VERSION) {
+            synchronized (mLock) {
+                mEffectiveTargetSdkVersions.put(appUid, DEFAULT_TARGET_SDK_VERSION);
+                return DEFAULT_TARGET_SDK_VERSION;
+            }
+        }
+
         PackageManagerHelper packageManagerHelper = mInjector.getPackageManagerHelper(appUid);
         List<String> packageNames = packageManagerHelper.getPackageNamesForUid(appUid);
 
@@ -82,27 +96,23 @@ class SdkSandboxRestrictionManager {
 
         for (String packageName : packageNames) {
             int effectiveTargetSdkVersionForPackage =
-                    getEffectiveTargetSdkVersion(appUid, packageName, packageManagerHelper);
+                    getEffectiveTargetSdkVersion(packageName, packageManagerHelper);
             if (effectiveTargetSdkVersionForPackage == DEFAULT_TARGET_SDK_VERSION) {
-                return effectiveTargetSdkVersionForPackage;
+                effectiveTargetSdkVersion = DEFAULT_TARGET_SDK_VERSION;
+                break;
             }
             effectiveTargetSdkVersion =
                     Integer.min(effectiveTargetSdkVersion, effectiveTargetSdkVersionForPackage);
         }
-
-        return effectiveTargetSdkVersion;
+        synchronized (mLock) {
+            mEffectiveTargetSdkVersions.put(appUid, effectiveTargetSdkVersion);
+            return mEffectiveTargetSdkVersions.get(appUid);
+        }
     }
 
     private int getEffectiveTargetSdkVersion(
-            int appUid, String packageName, PackageManagerHelper packageManagerHelper)
+            String packageName, PackageManagerHelper packageManagerHelper)
             throws PackageManager.NameNotFoundException {
-        // If the device's SDK version is equal to the default value, we can return it immediately.
-        if (mInjector.getCurrentSdkLevel() <= DEFAULT_TARGET_SDK_VERSION) {
-            synchronized (mLock) {
-                mEffectiveTargetSdkVersions.put(appUid, DEFAULT_TARGET_SDK_VERSION);
-                return mEffectiveTargetSdkVersions.get(appUid);
-            }
-        }
 
         List<SharedLibraryInfo> sharedLibraries =
                 packageManagerHelper.getSdkSharedLibraryInfo(packageName);
@@ -116,18 +126,15 @@ class SdkSandboxRestrictionManager {
                                     | PackageManager.MATCH_ANY_USER);
 
             targetSdkVersion = Integer.min(targetSdkVersion, applicationInfo.targetSdkVersion);
-            // If the targetSdkVersion of an SDK is equal to the default value, we can return it
+            // If the targetSdkVersion of an SDK is less than or equal to the default value, we can
+            // return it
             // immediately.
-            if (targetSdkVersion == DEFAULT_TARGET_SDK_VERSION) {
+            if (targetSdkVersion <= DEFAULT_TARGET_SDK_VERSION) {
                 break;
             }
         }
         // Return defaultTargetSdkVersion if the calculated targetSdkVersion is less than the
         // defaultTargetSdkVersion because restrictions logic starts from UPSIDE_DOWN_CAKE
-        synchronized (mLock) {
-            mEffectiveTargetSdkVersions.put(
-                    appUid, Integer.max(targetSdkVersion, DEFAULT_TARGET_SDK_VERSION));
-            return mEffectiveTargetSdkVersions.get(appUid);
-        }
+        return Integer.max(targetSdkVersion, DEFAULT_TARGET_SDK_VERSION);
     }
 }
