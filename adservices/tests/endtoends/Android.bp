@@ -36,7 +36,7 @@ android_test {
         "adservices-test-utility",
     ],
     libs: [
-        "android.test.base",
+        "android.test.base.stubs.system",
     ],
     test_suites: [
         "general-tests",
@@ -67,7 +67,7 @@ android_test {
         "adservices-test-utility",
     ],
     libs: [
-        "android.test.base",
+        "android.test.base.stubs.system",
         "android.ext.adservices",
     ],
     test_suites: [

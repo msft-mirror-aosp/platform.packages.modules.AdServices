@@ -959,6 +959,19 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
         verify(mStatsdLoggerMock).logUpdateSignalsProcessReportedStats(eq(stats));
     }
 
+    @Test
+    public void testLogTopicsScheduleEpochJobSettingReportedStats() {
+        TopicsScheduleEpochJobSettingReportedStats stats =
+                TopicsScheduleEpochJobSettingReportedStats.builder()
+                        .setRescheduleEpochJobStatus(0)
+                        .setPreviousEpochJobSetting(1)
+                        .setCurrentEpochJobSetting(2)
+                        .setScheduleIfNeededEpochJobStatus(1)
+                        .build();
+        mAdservicesLogger.logTopicsScheduleEpochJobSettingReportedStats(stats);
+        verify(mStatsdLoggerMock).logTopicsScheduleEpochJobSettingReportedStats(eq(stats));
+    }
+
     private void mockAppNameApiErrorLogger() {
         when(mMockFlags.getCobaltLoggingEnabled()).thenReturn(true);
         when(mMockFlags.getAppNameApiErrorCobaltLoggingEnabled()).thenReturn(true);

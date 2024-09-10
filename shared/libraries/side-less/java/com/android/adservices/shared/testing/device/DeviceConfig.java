@@ -26,6 +26,7 @@ public interface DeviceConfig {
 
     /* Synchronization mode */
     enum SyncDisabledModeForTest {
+        UNSUPPORTED,
         NONE,
         PERSISTENT,
         UNTIL_REBOOT
