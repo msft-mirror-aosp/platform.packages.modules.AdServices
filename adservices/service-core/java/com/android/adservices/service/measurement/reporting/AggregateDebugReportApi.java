@@ -53,7 +53,7 @@ import java.util.stream.IntStream;
  * Generates and schedules aggregate debug reports in the supported ad-tech side erroneous cases.
  */
 public class AggregateDebugReportApi {
-    static final String AGGREGATE_DEBUG_REPORT_API = "attribution-reporting-debug";
+    public static final String AGGREGATE_DEBUG_REPORT_API = "attribution-reporting-debug";
     // TODO(b/364768862): Bump this to 1.0 based on flexible contribution filtering flag
     private static final String PRE_FLEXIBLE_CONTRIBUTION_FILTERING_API_VERSION = "0.1";
     private static final String POST_FLEXIBLE_CONTRIBUTION_FILTERING_API_VERSION = "1.0";
@@ -221,6 +221,17 @@ public class AggregateDebugReportApi {
                         .d(
                                 "Not generating aggregate debug report %s because it exceeds source"
                                         + " budget");
+                measurementDao.insertAggregateReport(generateNullAggregateReport(source, trigger));
+                return;
+            }
+
+            if (measurementDao.countNumAggregateReportsPerSource(
+                            source.getId(), AGGREGATE_DEBUG_REPORT_API)
+                    >= mFlags.getMeasurementMaxAdrCountPerSource()) {
+                LoggerFactory.getMeasurementLogger()
+                        .d(
+                                "Not generating aggregate debug report %s because it exceeds"
+                                        + " maximum number of reports per source ");
                 measurementDao.insertAggregateReport(generateNullAggregateReport(source, trigger));
                 return;
             }

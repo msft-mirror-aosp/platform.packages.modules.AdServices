@@ -98,7 +98,7 @@ import java.util.stream.Collectors;
 
 class AttributionJobHandler {
 
-    private static final String API = "attribution-reporting";
+    @VisibleForTesting static final String API = "attribution-reporting";
     private static final String API_VERSION = "0.1";
     private static final String AGGREGATE_REPORT_DELAY_DELIMITER = ",";
     private final DatastoreManager mDatastoreManager;
@@ -467,7 +467,7 @@ class AttributionJobHandler {
             return TriggeringStatus.DROPPED;
         }
 
-        if (measurementDao.getNumAggregateReportsPerSource(source.getId())
+        if (measurementDao.countNumAggregateReportsPerSource(source.getId(), API)
                 >= mFlags.getMeasurementMaxAggregateReportsPerSource()) {
             LoggerFactory.getMeasurementLogger()
                     .d(

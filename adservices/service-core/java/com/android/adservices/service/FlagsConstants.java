@@ -1415,6 +1415,9 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_ADR_BUDGET_WINDOW_LENGTH_MS =
             "Measurement__adr_budget_window_length_ms";
 
+    public static final String KEY_MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE =
+            "Measurement__max_adr_count_per_source";
+
     // Database Schema Version Flags
     public static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_8 =
             "enable_database_schema_version_8";

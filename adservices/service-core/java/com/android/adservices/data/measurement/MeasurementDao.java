@@ -636,14 +636,17 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public int getNumAggregateReportsPerSource(@NonNull String sourceId) throws DatastoreException {
+    public int countNumAggregateReportsPerSource(String sourceId, String api)
+            throws DatastoreException {
         String query =
                 String.format(
                         Locale.ENGLISH,
-                        "SELECT COUNT(*) FROM %1$s WHERE %2$s = '%3$s'",
+                        "SELECT COUNT(*) FROM %1$s WHERE %2$s = '%3$s' AND %4$s = '%5$s'",
                         MeasurementTables.AggregateReport.TABLE,
                         MeasurementTables.AggregateReport.SOURCE_ID,
-                        sourceId);
+                        sourceId,
+                        MeasurementTables.AggregateReport.API,
+                        api);
         return (int) DatabaseUtils.longForQuery(mSQLTransaction.getDatabase(), query, null);
     }
 

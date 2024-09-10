@@ -52,6 +52,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_PER_D
 import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW_IN_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW;
 import static com.android.adservices.service.Flags.MEASUREMENT_KILL_SWITCH;
+import static com.android.adservices.service.Flags.MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_REINSTALL_REATTRIBUTION_WINDOW_SECONDS;
 import static com.android.adservices.service.Flags.MEASUREMENT_MIN_REPORT_LIFESPAN_FOR_UNINSTALL_SECONDS;
@@ -1028,6 +1029,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getMeasurementAdrBudgetWindowLengthMillis",
                 MEASUREMENT_ADR_BUDGET_WINDOW_LENGTH_MILLIS,
                 Flags::getMeasurementAdrBudgetWindowLengthMillis);
+    }
+
+    @Test
+    public void testGetMeasurementMaxAdrCountPerSource() {
+        testFlag(
+                "getMeasurementMaxAdrCountPerSource",
+                MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE,
+                Flags::getMeasurementMaxAdrCountPerSource);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

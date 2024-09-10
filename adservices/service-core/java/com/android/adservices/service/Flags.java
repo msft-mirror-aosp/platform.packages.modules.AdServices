@@ -5007,6 +5007,13 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_ADR_BUDGET_WINDOW_LENGTH_MILLIS;
     }
 
+    @ConfigFlag int MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE = 5;
+
+    /** Returns maximum number of aggregatable debug reports allowed per source. */
+    default int getMeasurementMaxAdrCountPerSource() {
+        return MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE;
+    }
+
     /**
      * Default whether to limit logging for enrollment metrics to avoid performance issues. This
      * includes not logging data that requires database queries and downloading MDD files.
