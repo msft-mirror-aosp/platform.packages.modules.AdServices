@@ -52,6 +52,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_PER_D
 import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW_IN_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW;
 import static com.android.adservices.service.Flags.MEASUREMENT_KILL_SWITCH;
+import static com.android.adservices.service.Flags.MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_REINSTALL_REATTRIBUTION_WINDOW_SECONDS;
 import static com.android.adservices.service.Flags.MEASUREMENT_MIN_REPORT_LIFESPAN_FOR_UNINSTALL_SECONDS;
 import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_PERSISTED;
@@ -934,6 +935,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getMeasurementDefaultFilteringIdMaxBytes",
                 MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES,
                 Flags::getMeasurementDefaultFilteringIdMaxBytes);
+    }
+
+    @Test
+    public void testGetMeasurementValidFilteringIdMaxBytes() {
+        testFlag(
+                "getMeasurementValidFilteringIdMaxBytes",
+                MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES,
+                Flags::getMeasurementMaxFilteringIdMaxBytes);
     }
 
     @Test

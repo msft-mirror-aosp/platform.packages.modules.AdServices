@@ -1397,6 +1397,9 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES =
             "measurement_default_filtering_id_max_bytes";
 
+    public static final String KEY_MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES =
+            "Measurement__max_filtering_id_max_bytes";
+
     public static final String KEY_MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING =
             "measurement_enable_flexible_contribution_filtering";
 

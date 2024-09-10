@@ -5018,10 +5018,16 @@ public interface Flags extends ModuleSharedFlags {
         return ENROLLMENT_ENABLE_LIMITED_LOGGING;
     }
 
-    @ConfigFlag int MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES = 8;
+    @ConfigFlag int MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES = 1;
 
     default int getMeasurementDefaultFilteringIdMaxBytes() {
         return MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES;
+    }
+
+    @ConfigFlag int MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES = 8;
+
+    default int getMeasurementMaxFilteringIdMaxBytes() {
+        return MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES;
     }
 
     @FeatureFlag boolean MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING = false;

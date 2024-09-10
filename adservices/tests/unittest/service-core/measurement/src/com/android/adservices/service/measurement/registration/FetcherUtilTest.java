@@ -316,83 +316,122 @@ public final class FetcherUtilTest {
 
     @Test
     public void extractIntegralValue_posIntegralNumber_success() throws Exception {
-        JSONObject obj = new JSONObject().put(KEY, 123);
+        JSONObject jsonObj = new JSONObject().put(KEY, 123);
         assertWithMessage("extractValueOfValidPositiveIntegralNumber")
-                .that(FetcherUtil.extractIntegralValue(obj, KEY))
+                .that(FetcherUtil.extractIntegralValue(jsonObj, KEY))
+                .isEqualTo(Optional.of(new BigDecimal(123)));
+        Object obj = jsonObj.get(KEY);
+        assertWithMessage("extractValueOfValidPositiveIntegralNumber")
+                .that(FetcherUtil.extractIntegralValue(obj))
                 .isEqualTo(Optional.of(new BigDecimal(123)));
     }
 
     @Test
     public void extractIntegralValue_negativeIntegralNumber_success() throws Exception {
-        JSONObject obj = new JSONObject().put(KEY, -123);
+        JSONObject jsonObj = new JSONObject().put(KEY, -123);
         assertWithMessage("extractValueOfValidNegativeIntegralNumber")
-                .that(FetcherUtil.extractIntegralValue(obj, KEY))
+                .that(FetcherUtil.extractIntegralValue(jsonObj, KEY))
+                .isEqualTo(Optional.of(new BigDecimal(-123)));
+        Object obj = jsonObj.get(KEY);
+        assertWithMessage("extractValueOfValidNegativeIntegralNumber")
+                .that(FetcherUtil.extractIntegralValue(obj))
                 .isEqualTo(Optional.of(new BigDecimal(-123)));
     }
 
     @Test
     public void extractIntegralValue_zeroInput_success() throws Exception {
-        JSONObject obj = new JSONObject().put(KEY, 0);
+        JSONObject jsonObj = new JSONObject().put(KEY, 0);
         assertWithMessage("extractValueOfZero")
-                .that(FetcherUtil.extractIntegralValue(obj, KEY))
+                .that(FetcherUtil.extractIntegralValue(jsonObj, KEY))
+                .isEqualTo(Optional.of(new BigDecimal(0)));
+        Object obj = jsonObj.get(KEY);
+        assertWithMessage("extractValueOfZero")
+                .that(FetcherUtil.extractIntegralValue(obj))
                 .isEqualTo(Optional.of(new BigDecimal(0)));
     }
 
     @Test
     public void extractIntegralValue_posNumWithDecimalZero_success() throws Exception {
-        JSONObject obj = new JSONObject().put(KEY, 12.0);
+        JSONObject jsonObj = new JSONObject().put(KEY, 12.0);
         assertWithMessage("extractValueOfValidPosNumberWithDecimalOfZero")
                 .that(
-                        FetcherUtil.extractIntegralValue(obj, KEY)
+                        FetcherUtil.extractIntegralValue(jsonObj, KEY)
                                 .get()
                                 .compareTo(new BigDecimal(12.0)))
+                .isEqualTo(0);
+        Object obj = jsonObj.get(KEY);
+        assertWithMessage("extractValueOfValidPosNumberWithDecimalOfZero")
+                .that(FetcherUtil.extractIntegralValue(obj).get().compareTo(new BigDecimal(12.0)))
                 .isEqualTo(0);
     }
 
     @Test
     public void extractIntegralValue_negNumWithDecimalZero_success() throws Exception {
-        JSONObject obj = new JSONObject().put(KEY, -12.0);
+        JSONObject jsonObj = new JSONObject().put(KEY, -12.0);
         assertWithMessage("extractValueOfValidNegNumberWithDecimalOfZero")
                 .that(
-                        FetcherUtil.extractIntegralValue(obj, KEY)
+                        FetcherUtil.extractIntegralValue(jsonObj, KEY)
                                 .get()
                                 .compareTo(new BigDecimal(-12.0)))
+                .isEqualTo(0);
+        Object obj = jsonObj.get(KEY);
+        assertWithMessage("extractValueOfValidNegNumberWithDecimalOfZero")
+                .that(FetcherUtil.extractIntegralValue(obj).get().compareTo(new BigDecimal(-12.0)))
                 .isEqualTo(0);
     }
 
     @Test
     public void extractIntegralValue_posNumWithDecimalNonZero_fails() throws Exception {
-        JSONObject obj = new JSONObject().put(KEY, 3.4);
+        JSONObject jsonObj = new JSONObject().put(KEY, 3.4);
         assertWithMessage("extractValueOfValidPosNumberWithDecimalNonZero")
-                .that(FetcherUtil.extractIntegralValue(obj, KEY))
+                .that(FetcherUtil.extractIntegralValue(jsonObj, KEY))
+                .isEqualTo(Optional.empty());
+        Object obj = jsonObj.get(KEY);
+        assertWithMessage("extractValueOfValidPosNumberWithDecimalNonZero")
+                .that(FetcherUtil.extractIntegralValue(obj))
                 .isEqualTo(Optional.empty());
     }
 
     @Test
     public void extractIntegralValue_negNumWithDecimalNonZero_fails() throws Exception {
-        JSONObject obj = new JSONObject().put(KEY, -5.6);
+        JSONObject jsonObj = new JSONObject().put(KEY, -5.6);
         assertWithMessage("extractValueOfValidNegNumberWithDecimalNonZero")
-                .that(FetcherUtil.extractIntegralValue(obj, KEY))
+                .that(FetcherUtil.extractIntegralValue(jsonObj, KEY))
+                .isEqualTo(Optional.empty());
+        Object obj = jsonObj.get(KEY);
+        assertWithMessage("extractValueOfValidNegNumberWithDecimalNonZero")
+                .that(FetcherUtil.extractIntegralValue(obj))
                 .isEqualTo(Optional.empty());
     }
 
     @Test
     public void extractIntegralValue_posIntegralSciNotation_success() throws Exception {
-        JSONObject obj = new JSONObject().put(KEY, 1.23e3);
+        JSONObject jsonObj = new JSONObject().put(KEY, 1.23e3);
         assertWithMessage("extractValueOfPosSciNotation")
                 .that(
-                        FetcherUtil.extractIntegralValue(obj, KEY)
+                        FetcherUtil.extractIntegralValue(jsonObj, KEY)
                                 .get()
                                 .compareTo(new BigDecimal(1230.0)))
+                .isEqualTo(0);
+        Object obj = jsonObj.get(KEY);
+        assertWithMessage("extractValueOfPosSciNotation")
+                .that(FetcherUtil.extractIntegralValue(obj).get().compareTo(new BigDecimal(1230.0)))
                 .isEqualTo(0);
     }
 
     @Test
     public void extractIntegralValue_negIntegralSciNotation_success() throws Exception {
-        JSONObject obj = new JSONObject().put(KEY, -3.456e3);
+        JSONObject jsonObj = new JSONObject().put(KEY, -3.456e3);
         assertWithMessage("extractValueOfNegSciNotation")
                 .that(
-                        FetcherUtil.extractIntegralValue(obj, KEY)
+                        FetcherUtil.extractIntegralValue(jsonObj, KEY)
+                                .get()
+                                .compareTo(new BigDecimal(-3456.0)))
+                .isEqualTo(0);
+        Object obj = jsonObj.get(KEY);
+        assertWithMessage("extractValueOfNegSciNotation")
+                .that(
+                        FetcherUtil.extractIntegralValue(obj)
                                 .get()
                                 .compareTo(new BigDecimal(-3456.0)))
                 .isEqualTo(0);
@@ -400,25 +439,37 @@ public final class FetcherUtilTest {
 
     @Test
     public void extractIntegralValue_posNonIntegralSciNotation_fails() throws Exception {
-        JSONObject obj = new JSONObject().put(KEY, 1.23e1);
+        JSONObject jsonObj = new JSONObject().put(KEY, 1.23e1);
         assertWithMessage("extractValueOfPosNonIntegralSciNotation")
-                .that(FetcherUtil.extractIntegralValue(obj, KEY))
+                .that(FetcherUtil.extractIntegralValue(jsonObj, KEY))
+                .isEqualTo(Optional.empty());
+        Object obj = jsonObj.get(KEY);
+        assertWithMessage("extractValueOfPosNonIntegralSciNotation")
+                .that(FetcherUtil.extractIntegralValue(obj))
                 .isEqualTo(Optional.empty());
     }
 
     @Test
     public void extractIntegralValue_negNonIntegralSciNotation_fails() throws Exception {
-        JSONObject obj = new JSONObject().put(KEY, -0.345e2);
+        JSONObject jsonObj = new JSONObject().put(KEY, -0.345e2);
         assertWithMessage("extractValueOfNegNonIntegralSciNotation")
-                .that(FetcherUtil.extractIntegralValue(obj, KEY))
+                .that(FetcherUtil.extractIntegralValue(jsonObj, KEY))
+                .isEqualTo(Optional.empty());
+        Object obj = jsonObj.get(KEY);
+        assertWithMessage("extractValueOfNegNonIntegralSciNotation")
+                .that(FetcherUtil.extractIntegralValue(obj))
                 .isEqualTo(Optional.empty());
     }
 
     @Test
     public void extractIntegralValue_nonNumericInput_fails() throws Exception {
-        JSONObject obj = new JSONObject().put(KEY, "78");
+        JSONObject jsonObj = new JSONObject().put(KEY, "78");
         assertWithMessage("extractValueOfNonNumericInput")
-                .that(FetcherUtil.extractIntegralValue(obj, KEY))
+                .that(FetcherUtil.extractIntegralValue(jsonObj, KEY))
+                .isEqualTo(Optional.empty());
+        Object obj = jsonObj.get(KEY);
+        assertWithMessage("extractValueOfNonNumericInput")
+                .that(FetcherUtil.extractIntegralValue(obj))
                 .isEqualTo(Optional.empty());
     }
 
