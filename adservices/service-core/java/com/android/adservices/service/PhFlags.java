@@ -6011,20 +6011,6 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getEnableRvcUx() {
-        return getEnableAdServicesSystemApi()
-                && getDeviceConfigFlag(FlagsConstants.KEY_RVC_UX_ENABLED, DEFAULT_RVC_UX_ENABLED);
-    }
-
-    @Override
-    public boolean getEnableRvcPostOtaNotification() {
-        return getEnableAdServicesSystemApi()
-                && getDeviceConfigFlag(
-                        FlagsConstants.KEY_RVC_POST_OTA_NOTIFICATION_ENABLED,
-                        DEFAULT_RVC_POST_OTA_NOTIFICATION_ENABLED);
-    }
-
-    @Override
     public boolean getEnableBackCompatInit() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_ENABLE_BACK_COMPAT_INIT, DEFAULT_ENABLE_BACK_COMPAT_INIT);
@@ -6069,10 +6055,6 @@ public final class PhFlags implements Flags {
                 FlagsConstants.KEY_RECORD_MANUAL_INTERACTION_ENABLED,
                 getRecordManualInteractionEnabled());
         uxMap.put(FlagsConstants.KEY_GA_UX_FEATURE_ENABLED, getGaUxFeatureEnabled());
-        uxMap.put(FlagsConstants.KEY_RVC_UX_ENABLED, getEnableRvcUx());
-        uxMap.put(
-                FlagsConstants.KEY_RVC_POST_OTA_NOTIFICATION_ENABLED,
-                getEnableRvcPostOtaNotification());
         uxMap.put(
                 FlagsConstants.KEY_UI_OTA_STRINGS_FEATURE_ENABLED, getUiOtaStringsFeatureEnabled());
         uxMap.put(
