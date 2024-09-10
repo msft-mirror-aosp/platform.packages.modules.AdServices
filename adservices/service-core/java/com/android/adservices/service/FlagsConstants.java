@@ -105,6 +105,8 @@ public final class FlagsConstants {
     public static final String KEY_TOPICS_ENCRYPTION_ENABLED = "topics_encryption_enabled";
     public static final String KEY_TOPICS_ENCRYPTION_METRICS_ENABLED =
             "topics_encryption_metrics_enabled";
+    public static final String KEY_TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_LOGGING_ENABLED =
+            "topics_epoch_job_battery_constraint_logging_enabled";
     public static final String KEY_TOPICS_DISABLE_PLAINTEXT_RESPONSE =
             "topics_disable_plaintext_response";
     public static final String KEY_TOPICS_TEST_ENCRYPTION_PUBLIC_KEY =

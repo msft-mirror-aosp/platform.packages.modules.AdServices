@@ -299,6 +299,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getTopicsEpochJobBatteryConstraintLoggingEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_LOGGING_ENABLED,
+                TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_LOGGING_ENABLED);
+    }
+
+    @Override
     public boolean getTopicsDisablePlaintextResponse() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_TOPICS_DISABLE_PLAINTEXT_RESPONSE,

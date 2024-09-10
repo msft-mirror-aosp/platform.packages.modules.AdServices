@@ -531,6 +531,7 @@ import static com.android.adservices.service.Flags.TOPICS_API_SDK_REQUEST_PERMIT
 import static com.android.adservices.service.Flags.TOPICS_COBALT_LOGGING_ENABLED;
 import static com.android.adservices.service.Flags.TOPICS_DISABLE_DIRECT_APP_CALLS;
 import static com.android.adservices.service.Flags.TOPICS_DISABLE_PLAINTEXT_RESPONSE;
+import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_LOGGING_ENABLED;
 import static com.android.adservices.service.Flags.TOPICS_ENCRYPTION_ENABLED;
 import static com.android.adservices.service.Flags.TOPICS_ENCRYPTION_METRICS_ENABLED;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_BATTERY_NOT_LOW_INSTEAD_OF_CHARGING;
@@ -1059,6 +1060,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_API_SDK_R
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_COBALT_LOGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_DISABLE_DIRECT_APP_CALLS;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_DISABLE_PLAINTEXT_RESPONSE;
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_LOGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_ENCRYPTION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_ENCRYPTION_METRICS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_BATTERY_NOT_LOW_INSTEAD_OF_CHARGING;
@@ -1175,6 +1177,14 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_TOPICS_ENCRYPTION_METRICS_ENABLED,
                 TOPICS_ENCRYPTION_METRICS_ENABLED,
                 Flags::getTopicsEncryptionMetricsEnabled);
+    }
+
+    @Test
+    public void testGetTopicsEpochJobBatteryConstraintLoggingEnabled() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_LOGGING_ENABLED,
+                TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_LOGGING_ENABLED,
+                Flags::getTopicsEpochJobBatteryConstraintLoggingEnabled);
     }
 
     @Test
