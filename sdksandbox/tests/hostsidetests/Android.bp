@@ -40,7 +40,7 @@ java_test_host {
         ":SdkSandboxTestSharedApp2",
     ],
     compile_multilib: "both",
-    jarjar_rules: ":test-jarjar-rules",
+    jarjar_rules: ":test-service-jarjar-rules",
 }
 
 java_test_host {
@@ -58,7 +58,7 @@ java_test_host {
         ":SdkSandboxTestApp",
         ":SdkSandboxTestDebuggableApp",
     ],
-    jarjar_rules: ":test-jarjar-rules",
+    jarjar_rules: ":test-service-jarjar-rules",
 }
 
 android_test_helper_app {
