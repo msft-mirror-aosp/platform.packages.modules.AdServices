@@ -68,7 +68,7 @@ public abstract class AbstractFlagsPreparerClassRule extends AbstractRule {
         try {
             base.evaluate();
         } finally {
-            if (modeBefore != null && set) {
+            if (set) {
                 safeSetSyncMode(modeBefore);
             }
         }

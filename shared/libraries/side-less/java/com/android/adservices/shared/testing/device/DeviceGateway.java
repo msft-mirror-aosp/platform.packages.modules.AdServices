@@ -15,20 +15,19 @@
  */
 package com.android.adservices.shared.testing.device;
 
-/** Side-agnostic abstraction to interact with the {@code DeviceConfig}. */
-public interface DeviceConfig {
+import com.android.adservices.shared.testing.AndroidSdk.Level;
+import com.android.adservices.shared.testing.Nullable;
 
-    /** Sets the synchronization mode. */
-    void setSyncDisabledMode(SyncDisabledModeForTest mode);
+import com.google.errorprone.annotations.FormatMethod;
+import com.google.errorprone.annotations.FormatString;
 
-    /** Gets the synchronization mode. */
-    SyncDisabledModeForTest getSyncDisabledMode();
+/** Generic device functionalitie3s that are not provided by other interfaces in this package. */
+public interface DeviceGateway {
 
-    /* Synchronization mode */
-    enum SyncDisabledModeForTest {
-        UNSUPPORTED,
-        NONE,
-        PERSISTENT,
-        UNTIL_REBOOT
-    }
+    /** Runs the given Shell command, returning its output. */
+    @FormatMethod
+    String runShellCommand(@FormatString String cmdFmt, @Nullable Object... cmdArgs);
+
+    /** Gets the SDK level of the device. */
+    Level getSdkLevel();
 }
