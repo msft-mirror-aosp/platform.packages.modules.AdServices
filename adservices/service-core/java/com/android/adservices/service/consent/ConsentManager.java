@@ -296,7 +296,7 @@ public class ConsentManager {
                                     TopicsWorker.getInstance(),
                                     appConsentDao,
                                     EnrollmentDao.getInstance(),
-                                    MeasurementImpl.getInstance(context),
+                                    MeasurementImpl.getInstance(),
                                     CustomAudienceDatabase.getInstance().customAudienceDao(),
                                     SharedStorageDatabase.getInstance().appInstallDao(),
                                     ProtectedSignalsDatabase.getInstance().protectedSignalsDao(),

@@ -60,6 +60,7 @@ import com.android.adservices.service.measurement.rollback.MeasurementRollbackCo
 import com.android.adservices.service.measurement.util.Applications;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.MeasurementWipeoutStats;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -126,11 +127,11 @@ public final class MeasurementImpl {
      * existing instance will be returned.
      */
     @NonNull
-    public static MeasurementImpl getInstance(Context context) {
+    public static MeasurementImpl getInstance() {
         if (sMeasurementImpl == null) {
             synchronized (MeasurementImpl.class) {
                 if (sMeasurementImpl == null) {
-                    sMeasurementImpl = new MeasurementImpl(context);
+                    sMeasurementImpl = new MeasurementImpl(ApplicationContextSingleton.get());
                 }
             }
         }

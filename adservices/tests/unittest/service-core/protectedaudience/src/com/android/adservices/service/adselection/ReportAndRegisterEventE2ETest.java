@@ -322,7 +322,7 @@ public final class ReportAndRegisterEventE2ETest extends AdServicesExtendedMocki
                                 mClickVerifierMock,
                                 mMeasurementDataDeleterMock,
                                 mContentResolverMock));
-        doReturn(mMeasurementImplSpy).when(() -> MeasurementImpl.getInstance(mContext));
+        doReturn(mMeasurementImplSpy).when(() -> MeasurementImpl.getInstance());
         doReturn(true)
                 .when(mClickVerifierMock)
                 .isInputEventVerifiable(any(), anyLong(), anyString());
