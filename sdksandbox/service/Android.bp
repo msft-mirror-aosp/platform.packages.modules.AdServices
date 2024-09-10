@@ -72,7 +72,7 @@ java_sdk_library {
     jarjar_rules: "jarjar_rules.txt",
     libs: [
         "androidx.annotation_annotation",
-        "framework-configinfrastructure",
+        "framework-configinfrastructure.stubs.module_lib",
         "framework-adservices.impl",
         "framework-sdksandbox.impl",
         "framework-statsd.stubs.module_lib",

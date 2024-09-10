@@ -33,7 +33,10 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregatableKeyValue;
 import com.android.adservices.service.measurement.aggregation.AggregatableValuesConfig;
+import com.android.adservices.service.measurement.aggregation.AggregateDebugReportData;
+import com.android.adservices.service.measurement.aggregation.AggregateDebugReporting;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
+import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONArray;
@@ -47,6 +50,8 @@ import org.mockito.junit.MockitoJUnitRunner;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -149,6 +154,8 @@ public class TriggerTest {
                         .setAggregatableFilteringIdMaxBytes(
                                 TriggerFixture.ValidTriggerParams
                                         .AGGREGATABLE_FILTERING_ID_MAX_BYTES)
+                        .setAggregateDebugReportingString(
+                                TriggerFixture.ValidTriggerParams.AGGREGATE_DEBUG_REPORT)
                         .build(),
                 TriggerFixture.getValidTriggerBuilder()
                         .setEnrollmentId("enrollment-id")
@@ -183,6 +190,8 @@ public class TriggerTest {
                         .setAggregatableFilteringIdMaxBytes(
                                 TriggerFixture.ValidTriggerParams
                                         .AGGREGATABLE_FILTERING_ID_MAX_BYTES)
+                        .setAggregateDebugReportingString(
+                                TriggerFixture.ValidTriggerParams.AGGREGATE_DEBUG_REPORT)
                         .build());
     }
 
@@ -340,6 +349,16 @@ public class TriggerTest {
                 TriggerFixture.getValidTriggerBuilder()
                         .setAggregatableFilteringIdMaxBytes(2)
                         .build());
+        assertThat(
+                        TriggerFixture.getValidTriggerBuilder()
+                                .setAggregateDebugReportingString(
+                                        "{\"budget\":1024,\"key_piece\":\"0x1\"}")
+                                .build())
+                .isNotEqualTo(
+                        TriggerFixture.getValidTriggerBuilder()
+                                .setAggregateDebugReportingString(
+                                        "{\"budget\":1024,\"key_piece\":\"0x2\"}")
+                                .build());
     }
 
     @Test
@@ -979,6 +998,79 @@ public class TriggerTest {
         // Values are not parsable and trigger is rejected.
         assertThat(trigger.getAggregatableAttributionTrigger(mFlags))
                 .isEqualTo(Optional.empty());
+    }
+
+    @Test
+    public void aggregateDebugReport_parsing_asExpected() throws JSONException {
+        // Setup
+        String aggregateDebugReport =
+                "{\"key_piece\":\"0x222\","
+                        + "\"debug_data\":["
+                        + "{"
+                        + "\"types\": [\"trigger-aggregate-insufficient-budget\", "
+                        + "\"trigger-aggregate-deduplicated\"],"
+                        + "\"key_piece\": \"0x333\","
+                        + "\"value\": 333"
+                        + "},"
+                        + "{"
+                        + "\"types\": [\"trigger-aggregate-report-window-passed\", "
+                        + "\"trigger-event-low-priority\"],"
+                        + "\"key_piece\": \"0x444\","
+                        + "\"value\": 444"
+                        + "},"
+                        + "{"
+                        + "\"types\": [\"default\"],"
+                        + "\"key_piece\": \"0x555\","
+                        + "\"value\": 555"
+                        + "}"
+                        + "],"
+                        + "\"aggregation_coordinator_origin\":\"https://aws.example\"}";
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setAggregateDebugReportingString(aggregateDebugReport)
+                        .build();
+
+        // Execution
+        AggregateDebugReportData debugData1 =
+                new AggregateDebugReportData.Builder(
+                                new HashSet<>(
+                                        Arrays.asList(
+                                                DebugReportApi.Type
+                                                        .TRIGGER_AGGREGATE_INSUFFICIENT_BUDGET
+                                                        .getValue(),
+                                                DebugReportApi.Type.TRIGGER_AGGREGATE_DEDUPLICATED
+                                                        .getValue())),
+                                new BigInteger("333", 16),
+                                333)
+                        .build();
+        AggregateDebugReportData debugData2 =
+                new AggregateDebugReportData.Builder(
+                                new HashSet<>(
+                                        Arrays.asList(
+                                                DebugReportApi.Type
+                                                        .TRIGGER_AGGREGATE_REPORT_WINDOW_PASSED
+                                                        .getValue(),
+                                                DebugReportApi.Type.TRIGGER_EVENT_LOW_PRIORITY
+                                                        .getValue())),
+                                new BigInteger("444", 16),
+                                444)
+                        .build();
+        AggregateDebugReportData debugData3 =
+                new AggregateDebugReportData.Builder(
+                                Collections.singleton(DebugReportApi.Type.DEFAULT.getValue()),
+                                new BigInteger("555", 16),
+                                555)
+                        .build();
+
+        // Assertion
+        assertThat(source.getAggregateDebugReportingObject())
+                .isEqualTo(
+                        new AggregateDebugReporting.Builder(
+                                        0,
+                                        new BigInteger("222", 16),
+                                        Arrays.asList(debugData1, debugData2, debugData3),
+                                        Uri.parse("https://aws.example"))
+                                .build());
     }
 
     private void assertInvalidTriggerArguments(

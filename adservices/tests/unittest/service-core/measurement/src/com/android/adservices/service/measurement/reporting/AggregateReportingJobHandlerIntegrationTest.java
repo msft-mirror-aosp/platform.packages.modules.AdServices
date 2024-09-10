@@ -17,6 +17,7 @@
 package com.android.adservices.service.measurement.reporting;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -33,6 +34,8 @@ import com.android.adservices.service.measurement.aggregation.AggregateEncryptio
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
+
+import com.google.android.libraries.mobiledatadownload.internal.AndroidTimeSource;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -109,11 +112,13 @@ public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbInteg
                                 mockKeyManager,
                                 FakeFlagsFactory.getFlagsForTest(),
                                 mLogger,
-                                sContext));
+                                sContext,
+                                new AndroidTimeSource()));
         try {
             Mockito.doReturn(returnCode)
                     .when(spyReportingService)
-                    .makeHttpPostRequest(Mockito.eq(Uri.parse(registration_origin)), any(), any());
+                    .makeHttpPostRequest(
+                            Mockito.eq(Uri.parse(registration_origin)), any(), any(), anyString());
         } catch (IOException e) {
             Assert.fail();
         }

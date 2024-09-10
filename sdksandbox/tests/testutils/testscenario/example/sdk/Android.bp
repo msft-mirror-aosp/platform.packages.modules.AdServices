@@ -25,5 +25,5 @@ android_test_helper_app {
         "src/**/*.java",
     ],
     static_libs: ["CtsSdkSandboxTestRunner"],
-    libs: ["android.test.base"],
+    libs: ["android.test.base.stubs.system"],
 }
