@@ -16,33 +16,65 @@
 
 package android.adservices.common;
 
+import android.annotation.FlaggedApi;
 import android.annotation.IntDef;
+import android.annotation.SystemApi;
+
+import com.android.adservices.flags.Flags;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 /**
- * Utility class containing module type.
+ * Represents AdServices Module type.
+ *
+ * <p>This class is used to identify the adservices feature that we want to turn on/off or set user
+ * consent.
  *
  * @hide
  */
-public class Module {
+@SystemApi
+@FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
+public final class Module {
+    /** Unknown module. */
     public static final int UNKNOWN = 0;
+
+    /** Measurement module. */
     public static final int MEASUREMENT = 1;
-    public static final int PA = 2;
-    public static final int PAS = 3;
-    public static final int TOPIC = 4;
-    public static final int ODP = 5;
+
+    /** Privacy Sandbox module. */
+    public static final int PROTECTED_AUDIENCE = 2;
+
+    /** Privacy Sandbox Attribution module. */
+    public static final int PROTECTED_APP_SIGNALS = 3;
+
+    /** Topics module. */
+    public static final int TOPICS = 4;
+
+    /** On-device Personalization(ODP) module. */
+    public static final int ON_DEVICE_PERSONALIZATION = 5;
+
+    /** ADID module. */
     public static final int ADID = 6;
 
+    /** Default Contractor, make it private so that it won't show in the system-current.txt */
+    private Module() {}
+
     /**
-     * Result codes that are common across various modules.
+     * ModuleCode IntDef.
      *
      * @hide
      */
     @IntDef(
-            prefix = {""},
-            value = {UNKNOWN, MEASUREMENT, PA, PAS, TOPIC, ODP, ADID})
+            value = {
+                UNKNOWN,
+                MEASUREMENT,
+                PROTECTED_AUDIENCE,
+                PROTECTED_APP_SIGNALS,
+                TOPICS,
+                ON_DEVICE_PERSONALIZATION,
+                ADID
+            })
     @Retention(RetentionPolicy.SOURCE)
     public @interface ModuleCode {}
 }
