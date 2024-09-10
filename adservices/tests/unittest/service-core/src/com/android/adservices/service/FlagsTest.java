@@ -31,7 +31,6 @@ import static com.android.adservices.service.Flags.DEFAULT_PAS_SCRIPT_DOWNLOAD_R
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SCRIPT_EXECUTION_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS;
-import static com.android.adservices.service.Flags.DEFAULT_RVC_UX_ENABLED;
 import static com.android.adservices.service.Flags.ENABLE_ADEXT_SERVICE_CONSENT_DATA;
 import static com.android.adservices.service.Flags.ENABLE_APPSEARCH_CONSENT_DATA;
 import static com.android.adservices.service.Flags.ENABLE_MIGRATION_FROM_ADEXT_SERVICE;
@@ -217,26 +216,6 @@ public final class FlagsTest extends AdServicesUnitTestCase {
         expect.withMessage("getEnableAdExtServiceConsentData()")
                 .that(mFlags.getEnableAdExtServiceConsentData())
                 .isEqualTo(expected);
-    }
-
-    @Test
-    @RequiresSdkRange(atMost = RVC, reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
-    public void testEnableRvcUx_isR() {
-        assertEnableRvcUx(true);
-    }
-
-    @Test
-    @RequiresSdkLevelAtLeastS(reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
-    public void testEnableRvcUx_isAtLeastS() {
-        assertEnableRvcUx(false);
-    }
-
-    private void assertEnableRvcUx(boolean expected) {
-        expect.withMessage("DEFAULT_RVC_UX_ENABLED")
-                .that(DEFAULT_RVC_UX_ENABLED)
-                .isEqualTo(expected);
-
-        expect.withMessage("getEnableRvcUx()").that(mFlags.getEnableRvcUx()).isEqualTo(expected);
     }
 
     @Test

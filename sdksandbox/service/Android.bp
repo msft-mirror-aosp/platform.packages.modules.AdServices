@@ -87,6 +87,7 @@ java_sdk_library {
         "modules-utils-shell-command-handler",
         "sdksandbox-service-proto-lite",
         "sdk_sandbox_flags_lib",
+        "adservices_flags_lib",
         "smali-dexlib2-device",
     ],
     defaults: [

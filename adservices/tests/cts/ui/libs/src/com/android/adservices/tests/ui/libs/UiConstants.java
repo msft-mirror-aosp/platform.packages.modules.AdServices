@@ -42,6 +42,5 @@ public class UiConstants {
         GA_UX,
         BETA_UX,
         U18_UX,
-        RVC_UX,
     }
 }

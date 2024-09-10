@@ -13,6 +13,6 @@
 // limitations under the License.
 
 filegroup {
-    name: "test-jarjar-rules",
-    srcs: ["test_jarjar_rules.txt"],
+    name: "test-service-jarjar-rules",
+    srcs: ["test_service_jarjar_rules.txt"],
 }

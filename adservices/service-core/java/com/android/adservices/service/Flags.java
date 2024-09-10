@@ -4473,22 +4473,6 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_U18_UX_ENABLED;
     }
 
-    /** Default RVC UX feature flag.. */
-    boolean DEFAULT_RVC_UX_ENABLED = SDK_INT == Build.VERSION_CODES.R;
-
-    /** RVC UX feature flag.. */
-    default boolean getEnableRvcUx() {
-        return DEFAULT_RVC_UX_ENABLED;
-    }
-
-    /** Default RVC NOTIFICATION feature flag.. */
-    boolean DEFAULT_RVC_POST_OTA_NOTIFICATION_ENABLED = false;
-
-    /** RVC Notification feature flag.. */
-    default boolean getEnableRvcPostOtaNotification() {
-        return DEFAULT_RVC_POST_OTA_NOTIFICATION_ENABLED;
-    }
-
     /** Default enableAdServices system API feature flag.. */
     boolean DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API = false;
 

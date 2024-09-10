@@ -1423,8 +1423,6 @@ public final class FlagsConstants {
 
     public static final String KEY_U18_UX_ENABLED = "u18_ux_enabled";
 
-    public static final String KEY_RVC_UX_ENABLED = "rvc_ux_enabled";
-
     public static final String KEY_RVC_POST_OTA_NOTIFICATION_ENABLED =
             "rvc_post_ota_notification_enabled";
 

@@ -18,7 +18,11 @@ package com.android.adservices.shared.testing;
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 
-/** Abstraction for classes that need to interact with the device. */
+/**
+ * @deprecated it's been moved to {@link com.android.adservices.shared.testing.device.DeviceGateway}
+ *     and side-specific implementations
+ */
+@Deprecated
 abstract class AbstractDeviceGateway {
 
     // TODO(b/294423183): need to refactor it (or implementation) so it doesn't ignore errors.

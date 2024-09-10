@@ -226,8 +226,8 @@ import java.util.stream.Collectors;
         ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX)
 @SmallTest
 public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase {
-    private static final int UX_TYPE_COUNT = 5;
-    private static final int ENROLLMENT_CHANNEL_COUNT = 22;
+    private static final int UX_TYPE_COUNT = PrivacySandboxUxCollection.values().length;
+    private static final int ENROLLMENT_CHANNEL_COUNT = 18;
 
     private AtomicFileDatastore mDatastore;
     private AtomicFileDatastore mConsentDatastore;
@@ -4607,40 +4607,6 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         getUxWithPpApiOnly(Flags.PPAPI_AND_ADEXT_SERVICE);
     }
 
-    @Test
-    public void testGetUx_ppapiAndAdExtDataServiceOnly_postRollback_u18Ux() throws RemoteException {
-        int consentSourceOfTruth = Flags.PPAPI_AND_ADEXT_SERVICE;
-        when(mMockFlags.getEnableAdExtServiceConsentData()).thenReturn(true);
-        when(mMockFlags.getU18UxEnabled()).thenReturn(true);
-        ConsentManager spyConsentManager =
-                getSpiedConsentManagerForMigrationTesting(
-                        /* isGiven */ false, consentSourceOfTruth);
-
-        when(mUxStatesDaoMock.getUx()).thenReturn(PrivacySandboxUxCollection.UNSUPPORTED_UX);
-        when(mAdServicesExtDataManagerMock.getIsU18Account()).thenReturn(true);
-        assertThat(spyConsentManager.getUx()).isEqualTo(PrivacySandboxUxCollection.U18_UX);
-
-        verify(mAdServicesExtDataManagerMock).getIsU18Account();
-    }
-
-    @Test
-    public void testGetUx_ppapiAndAdExtDataServiceOnly_postRollback_rvcUx() throws RemoteException {
-        int consentSourceOfTruth = Flags.PPAPI_AND_ADEXT_SERVICE;
-        when(mMockFlags.getEnableAdExtServiceConsentData()).thenReturn(true);
-        when(mMockFlags.getU18UxEnabled()).thenReturn(true);
-        ConsentManager spyConsentManager =
-                getSpiedConsentManagerForMigrationTesting(
-                        /* isGiven */ false, consentSourceOfTruth);
-
-        when(mUxStatesDaoMock.getUx()).thenReturn(PrivacySandboxUxCollection.UNSUPPORTED_UX);
-        when(mAdServicesExtDataManagerMock.getIsU18Account()).thenReturn(false);
-        when(mAdServicesExtDataManagerMock.getIsAdultAccount()).thenReturn(true);
-        assertThat(spyConsentManager.getUx()).isEqualTo(PrivacySandboxUxCollection.RVC_UX);
-
-        verify(mAdServicesExtDataManagerMock).getIsU18Account();
-        verify(mAdServicesExtDataManagerMock).getIsAdultAccount();
-    }
-
     private void getUxWithPpApiOnly(int consentSourceOfTruth) throws RemoteException {
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -4789,6 +4755,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
+    @SuppressWarnings("NewApi")
     public void getEnrollmentChannel_appSearchOnly() throws RemoteException {
         int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
         when(mMockFlags.getEnableAppsearchConsentData()).thenReturn(true);
@@ -5246,7 +5213,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         EnrollmentData data = EnrollmentData.deserialize("");
         AdServicesModuleState moduleState =
                 new AdServicesModuleState.Builder()
-                        .setModule(Module.TOPIC)
+                        .setModule(Module.TOPICS)
                         .setModuleState(AdServicesModuleState.MODULE_STATE_DISABLED)
                         .build();
         spyConsentManager.setModuleStates(List.of(moduleState));
@@ -5254,7 +5221,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
 
         moduleState =
                 new AdServicesModuleState.Builder()
-                        .setModule(Module.PA)
+                        .setModule(Module.PROTECTED_AUDIENCE)
                         .setModuleState(AdServicesModuleState.MODULE_STATE_ENABLED)
                         .build();
         spyConsentManager.setModuleStates(List.of(moduleState));
@@ -5278,19 +5245,20 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
 
         moduleState =
                 new AdServicesModuleState.Builder()
-                        .setModule(Module.PAS)
+                        .setModule(Module.PROTECTED_APP_SIGNALS)
                         .setModuleState(AdServicesModuleState.MODULE_STATE_ENABLED)
                         .build();
         spyConsentManager.setModuleStates(List.of(moduleState));
 
         AdServicesModuleUserChoice userChoicePa =
                 new AdServicesModuleUserChoice.Builder()
-                        .setModule(Module.PAS)
+                        .setModule(Module.PROTECTED_APP_SIGNALS)
                         .setUserChoice(AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN)
                         .build();
         spyConsentManager.setUserChoices(List.of(userChoicePa));
         data.putModuleState(moduleState);
-        data.putUserChoice(Module.PAS, AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN);
+        data.putUserChoice(
+                Module.PROTECTED_APP_SIGNALS, AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN);
 
         switch (consentSourceOfTruth) {
             case Flags.PPAPI_ONLY, Flags.PPAPI_AND_ADEXT_SERVICE:
@@ -5311,25 +5279,25 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                 break;
         }
 
-        assertThat(spyConsentManager.getModuleState(Module.ODP))
+        assertThat(spyConsentManager.getModuleState(Module.ON_DEVICE_PERSONALIZATION))
                 .isEqualTo(AdServicesModuleState.MODULE_STATE_UNKNOWN);
-        assertThat(spyConsentManager.getUserChoice(Module.ODP))
+        assertThat(spyConsentManager.getUserChoice(Module.ON_DEVICE_PERSONALIZATION))
                 .isEqualTo(AdServicesModuleUserChoice.USER_CHOICE_UNKNOWN);
-        assertThat(spyConsentManager.getModuleState(Module.TOPIC))
+        assertThat(spyConsentManager.getModuleState(Module.TOPICS))
                 .isEqualTo(AdServicesModuleState.MODULE_STATE_DISABLED);
-        assertThat(spyConsentManager.getUserChoice(Module.TOPIC))
+        assertThat(spyConsentManager.getUserChoice(Module.TOPICS))
                 .isEqualTo(AdServicesModuleUserChoice.USER_CHOICE_UNKNOWN);
-        assertThat(spyConsentManager.getModuleState(Module.PA))
+        assertThat(spyConsentManager.getModuleState(Module.PROTECTED_AUDIENCE))
                 .isEqualTo(AdServicesModuleState.MODULE_STATE_ENABLED);
-        assertThat(spyConsentManager.getUserChoice(Module.PA))
+        assertThat(spyConsentManager.getUserChoice(Module.PROTECTED_AUDIENCE))
                 .isEqualTo(AdServicesModuleUserChoice.USER_CHOICE_UNKNOWN);
         assertThat(spyConsentManager.getModuleState(Module.MEASUREMENT))
                 .isEqualTo(AdServicesModuleState.MODULE_STATE_ENABLED);
         assertThat(spyConsentManager.getUserChoice(Module.MEASUREMENT))
                 .isEqualTo(AdServicesModuleUserChoice.USER_CHOICE_OPTED_OUT);
-        assertThat(spyConsentManager.getModuleState(Module.PAS))
+        assertThat(spyConsentManager.getModuleState(Module.PROTECTED_APP_SIGNALS))
                 .isEqualTo(AdServicesModuleState.MODULE_STATE_ENABLED);
-        assertThat(spyConsentManager.getUserChoice(Module.PAS))
+        assertThat(spyConsentManager.getUserChoice(Module.PROTECTED_APP_SIGNALS))
                 .isEqualTo(AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN);
     }
 }
