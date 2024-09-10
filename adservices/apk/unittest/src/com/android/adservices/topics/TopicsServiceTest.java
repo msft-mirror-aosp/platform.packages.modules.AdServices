@@ -34,12 +34,9 @@ import android.os.IBinder;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.download.MddJob;
-import com.android.adservices.errorlogging.ErrorLogUtil;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -54,7 +51,6 @@ import com.android.adservices.service.topics.TopicsWorker;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 
@@ -72,19 +68,13 @@ import java.util.function.Supplier;
 @SpyStatic(EnrollmentDao.class)
 @SpyStatic(AppImportanceFilter.class)
 @SpyStatic(PackageChangedReceiver.class)
-@SpyStatic(ErrorLogUtil.class)
 public final class TopicsServiceTest extends AdServicesExtendedMockitoTestCase {
 
     @Mock private TopicsWorker mMockTopicsWorker;
     @Mock private ConsentManager mMockConsentManager;
     @Mock private EnrollmentDao mMockEnrollmentDao;
     @Mock private AppImportanceFilter mMockAppImportanceFilter;
-    @Mock private Flags mMockFlags;
     @Mock private AdServicesApiConsent mMockAdServicesApiConsent;
-
-    @Rule(order = 11)
-    public final AdServicesLoggingUsageRule errorLogUtilUsageRule =
-            AdServicesLoggingUsageRule.errorLogUtilUsageRule();
 
     @Test
     public void testBindableTopicsService_killswitchOff() {

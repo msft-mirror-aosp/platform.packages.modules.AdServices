@@ -19,7 +19,6 @@ import com.android.adservices.shared.testing.ConsoleLogger;
 import com.android.adservices.shared.testing.HostSideDeviceConfigHelper;
 import com.android.adservices.shared.testing.HostSideSystemPropertiesHelper;
 import com.android.adservices.shared.testing.TestDeviceHelper;
-import com.android.tradefed.device.ITestDevice;
 
 /** See {@link AbstractAdServicesFlagsSetterRule}. */
 public final class AdServicesHostSideFlagsSetterRule
@@ -41,12 +40,17 @@ public final class AdServicesHostSideFlagsSetterRule
     }
 
     @Override
-    protected int getDeviceSdk() {
-        return TestDeviceHelper.getApiLevel();
+    protected boolean isDeviceConfigAvailable() {
+        if (!TestDeviceHelper.isTestDeviceSet()) {
+            mLog.v("isDeviceConfigAvailable(): returning false because TestDevice is not set yet");
+            return false;
+        }
+        return true;
     }
 
-    public void setDevice(ITestDevice device) {
-        TestDeviceHelper.setTestDevice(device);
+    @Override
+    protected int getDeviceSdk() {
+        return TestDeviceHelper.getApiLevel();
     }
 
     private AdServicesHostSideFlagsSetterRule() {

@@ -30,7 +30,6 @@ android_test {
     static_libs: [
         "adservices-service-core",
         "adservices-assets",
-        "adservices-test-mockito-expectations",
         "adservices-test-utility",
         "androidx.fragment_fragment",
         "androidx.test.espresso.contrib",
@@ -42,7 +41,7 @@ android_test {
         "androidx.room_room-runtime",
     ],
     libs: [
-        "android.test.base",
+        "android.test.base.stubs.system",
         "android.test.mock.stubs",
         "framework-adservices.impl",
         "framework-annotations-lib",
@@ -69,7 +68,6 @@ android_test {
     static_libs: [
         "adservices-assets",
         "adservices-service-core",
-        "adservices-test-mockito-expectations",
         "adservices-test-utility",
         "androidx.fragment_fragment",
         "androidx.room_room-runtime",
@@ -82,7 +80,7 @@ android_test {
     ],
     libs: [
         "android.ext.adservices",
-        "android.test.base",
+        "android.test.base.stubs.system",
         "android.test.mock.stubs",
         "framework-annotations-lib",
     ],

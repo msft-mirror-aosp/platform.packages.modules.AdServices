@@ -51,11 +51,8 @@ import android.content.res.Resources;
 import android.content.res.XmlResourceParser;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
-import com.android.adservices.errorlogging.ErrorLogUtil;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.exception.XmlParseException;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
@@ -63,7 +60,6 @@ import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.verification.VerificationMode;
@@ -73,7 +69,6 @@ import org.mockito.verification.VerificationMode;
 @SpyStatic(AndroidManifestConfigParser.class)
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(SdkLevel.class)
-@SpyStatic(ErrorLogUtil.class)
 @SetErrorLogUtilDefaultParams(
         throwable = XmlParseException.class,
         errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_MANIFEST_CONFIG_PARSING_ERROR,
@@ -98,8 +93,6 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
     private static final boolean DOESNT_USE_SANDBOX_CHECK = false;
     private static final boolean CONTAINS_SDK = true;
     private static final boolean DOESNT_CONTAIN_SDK = false;
-    private static final boolean TOPICS_ALLOWED = true;
-    private static final boolean TOPICS_DISALLOWED = false;
     private static final boolean EXPECTED_ALLOWED = true;
     private static final boolean EXPECTED_DISALLOWED = false;
 
@@ -109,11 +102,6 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
     @Mock private AssetManager mMockAssetManager;
     @Mock private Resources mMockResources;
     @Mock private XmlResourceParser mMockParser;
-    @Mock private Flags mMockFlags;
-
-    @Rule(order = 11)
-    public final AdServicesLoggingUsageRule errorLogUtilUsageRule =
-            AdServicesLoggingUsageRule.errorLogUtilUsageRule();
 
     @Before
     public void setCommonExpectations() {
@@ -260,7 +248,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
     @RequiresSdkLevelAtLeastS(reason = "Uses PackageManager API not available on R")
     public void testIsAllowedTopicsAccessFromSandbox_allowed_sPlus() throws Exception {
         executeIsAllowedTopicAccessTest(
-                S_PLUS, USE_SANDBOX_CHECK, DOESNT_CONTAIN_SDK, TOPICS_ALLOWED, EXPECTED_ALLOWED);
+                S_PLUS, USE_SANDBOX_CHECK, DOESNT_CONTAIN_SDK, EXPECTED_ALLOWED);
     }
 
     @Test
@@ -270,7 +258,6 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
                 S_PLUS,
                 USE_SANDBOX_CHECK,
                 DOESNT_CONTAIN_SDK,
-                TOPICS_DISALLOWED,
                 EXPECTED_DISALLOWED);
     }
 
@@ -278,7 +265,7 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
     @RequiresSdkLevelAtLeastS(reason = "Uses PackageManager API not available on R")
     public void testIsAllowedTopicsAccessFromApp_allowed_sPlus() throws Exception {
         executeIsAllowedTopicAccessTest(
-                S_PLUS, DOESNT_USE_SANDBOX_CHECK, CONTAINS_SDK, TOPICS_ALLOWED, EXPECTED_ALLOWED);
+                S_PLUS, DOESNT_USE_SANDBOX_CHECK, CONTAINS_SDK, EXPECTED_ALLOWED);
     }
 
     @Test
@@ -288,7 +275,6 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
                 S_PLUS,
                 DOESNT_USE_SANDBOX_CHECK,
                 DOESNT_CONTAIN_SDK,
-                TOPICS_ALLOWED,
                 EXPECTED_DISALLOWED);
     }
 
@@ -300,14 +286,13 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
                 S_PLUS,
                 DOESNT_USE_SANDBOX_CHECK,
                 CONTAINS_SDK,
-                TOPICS_DISALLOWED,
                 EXPECTED_DISALLOWED);
     }
 
     @Test
     public void testIsAllowedTopicsAccessFromSandbox_allowed_rMinus() throws Exception {
         executeIsAllowedTopicAccessTest(
-                R_MINUS, USE_SANDBOX_CHECK, DOESNT_CONTAIN_SDK, TOPICS_ALLOWED, EXPECTED_ALLOWED);
+                R_MINUS, USE_SANDBOX_CHECK, DOESNT_CONTAIN_SDK, EXPECTED_ALLOWED);
     }
 
     @Test
@@ -316,14 +301,13 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
                 R_MINUS,
                 USE_SANDBOX_CHECK,
                 DOESNT_CONTAIN_SDK,
-                TOPICS_DISALLOWED,
                 EXPECTED_DISALLOWED);
     }
 
     @Test
     public void testIsAllowedTopicsAccessFromApp_allowed_rMinus() throws Exception {
         executeIsAllowedTopicAccessTest(
-                R_MINUS, DOESNT_USE_SANDBOX_CHECK, CONTAINS_SDK, TOPICS_ALLOWED, EXPECTED_ALLOWED);
+                R_MINUS, DOESNT_USE_SANDBOX_CHECK, CONTAINS_SDK, EXPECTED_ALLOWED);
     }
 
     @Test
@@ -332,7 +316,6 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
                 R_MINUS,
                 DOESNT_USE_SANDBOX_CHECK,
                 DOESNT_CONTAIN_SDK,
-                TOPICS_ALLOWED,
                 EXPECTED_DISALLOWED);
     }
 
@@ -343,7 +326,6 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
                 R_MINUS,
                 DOESNT_USE_SANDBOX_CHECK,
                 CONTAINS_SDK,
-                TOPICS_DISALLOWED,
                 EXPECTED_DISALLOWED);
     }
 
@@ -351,7 +333,6 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
             boolean isRMinus,
             boolean useSandboxCheck,
             boolean containsSdk,
-            boolean topicsAllowed,
             boolean expectedAllowed)
             throws Exception {
         if (isRMinus) {
@@ -483,12 +464,12 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
                 .thenThrow(new NameNotFoundException("A package has no name."));
     }
 
-    private void mockAppManifestConfigParserGetConfigSucceeds() throws Exception {
+    private void mockAppManifestConfigParserGetConfigSucceeds() {
         doReturn(mMockAppManifestConfig)
                 .when(() -> AppManifestConfigParser.getConfig(eq(mMockParser)));
     }
 
-    private XmlParseException mockAppManifestConfigParserGetConfigThrows() throws Exception {
+    private XmlParseException mockAppManifestConfigParserGetConfigThrows() {
         XmlParseException e = new XmlParseException("D'OH!");
         doThrow(e).when(() -> AppManifestConfigParser.getConfig(eq(mMockParser)));
         return e;

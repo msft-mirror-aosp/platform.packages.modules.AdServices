@@ -107,7 +107,7 @@ package android.adservices.common {
     method public int getUserChoice();
     method public void writeToParcel(@NonNull android.os.Parcel, int);
     field @NonNull public static final android.os.Parcelable.Creator<android.adservices.common.AdServicesModuleUserChoice> CREATOR;
-    field public static final int USER_CHOICE_OPTED_ID = 1; // 0x1
+    field public static final int USER_CHOICE_OPTED_IN = 1; // 0x1
     field public static final int USER_CHOICE_OPTED_OUT = 2; // 0x2
     field public static final int USER_CHOICE_UNKNOWN = 0; // 0x0
   }
@@ -158,6 +158,16 @@ package android.adservices.common {
     method public boolean isSuccess();
     method public void writeToParcel(@NonNull android.os.Parcel, int);
     field @NonNull public static final android.os.Parcelable.Creator<android.adservices.common.EnableAdServicesResponse> CREATOR;
+  }
+
+  @FlaggedApi("com.android.adservices.flags.adservices_enable_per_module_overrides_api") public final class Module {
+    field public static final int ADID = 6; // 0x6
+    field public static final int MEASUREMENT = 1; // 0x1
+    field public static final int ON_DEVICE_PERSONALIZATION = 5; // 0x5
+    field public static final int PROTECTED_APP_SIGNALS = 3; // 0x3
+    field public static final int PROTECTED_AUDIENCE = 2; // 0x2
+    field public static final int TOPICS = 4; // 0x4
+    field public static final int UNKNOWN = 0; // 0x0
   }
 
   @FlaggedApi("com.android.adservices.flags.adservices_enable_per_module_overrides_api") public final class NotificationTypeParams implements android.os.Parcelable {

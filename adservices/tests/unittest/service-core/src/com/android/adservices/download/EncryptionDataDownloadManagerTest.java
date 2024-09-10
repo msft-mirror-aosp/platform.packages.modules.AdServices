@@ -25,20 +25,19 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.DbTestUtil;
-import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.encryptionkey.EncryptionKeyTables;
 import com.android.adservices.data.shared.SharedDbHelper;
-import com.android.adservices.errorlogging.ErrorLogUtil;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.encryptionkey.EncryptionKey;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
@@ -53,7 +52,6 @@ import com.google.mobiledatadownload.ClientConfigProto;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 
@@ -63,7 +61,6 @@ import java.util.List;
 
 /** Tests for {@link EncryptionDataDownloadManager}. */
 @SpyStatic(FlagsFactory.class)
-@SpyStatic(ErrorLogUtil.class)
 @MockStatic(MobileDataDownloadFactory.class)
 @RequiresSdkLevelAtLeastS
 @SetErrorLogUtilDefaultParams(
@@ -83,12 +80,7 @@ public final class EncryptionDataDownloadManagerTest extends AdServicesExtendedM
     @Mock private ClientConfigProto.ClientFile mMockFile;
 
     @Mock private MobileDataDownload mMockMdd;
-    @Mock private Flags mMockFlags;
     @Mock private Clock mMockClock;
-
-    @Rule(order = 11)
-    public final AdServicesLoggingUsageRule errorLogUtilUsageRule =
-            AdServicesLoggingUsageRule.errorLogUtilUsageRule();
 
     @Before
     public void setup() {
@@ -117,11 +109,11 @@ public final class EncryptionDataDownloadManagerTest extends AdServicesExtendedM
 
     @Test
     public void testReadFileAndInsertIntoDatabaseSuccess() throws Exception {
-        doReturn(mMockFileStorage).when(() -> (MobileDataDownloadFactory.getFileStorage()));
+        doReturn(mMockFileStorage).when(MobileDataDownloadFactory::getFileStorage);
         // Returns 3 keys expiring on 1. April 24, 2023 2. April 25, 2023 3. April 26, 2023
         when(mMockFileStorage.open(any(), any()))
                 .thenReturn(
-                        sContext.getAssets()
+                        mContext.getAssets()
                                 .open(
                                         TEST_ENCRYPTION_DATA_FILE_DIR
                                                 + "/"
@@ -145,16 +137,16 @@ public final class EncryptionDataDownloadManagerTest extends AdServicesExtendedM
 
     @Test
     public void testReadFileAndInsertIntoDatabaseSuccess_keysUpdated() throws Exception {
-        doReturn(mMockFileStorage).when(() -> (MobileDataDownloadFactory.getFileStorage()));
+        doReturn(mMockFileStorage).when(MobileDataDownloadFactory::getFileStorage);
         // Returns 3 keys expiring on 1. April 24, 2023 2. April 25, 2023 3. April 26, 2023
         when(mMockFileStorage.open(any(), any()))
                 .thenReturn(
-                        sContext.getAssets()
+                        mContext.getAssets()
                                 .open(
                                         TEST_ENCRYPTION_DATA_FILE_DIR
                                                 + "/"
                                                 + DAY_0_JSON_KEY_FILE_NAME),
-                        sContext.getAssets()
+                        mContext.getAssets()
                                 .open(
                                         TEST_ENCRYPTION_DATA_FILE_DIR
                                                 + "/"
@@ -175,16 +167,21 @@ public final class EncryptionDataDownloadManagerTest extends AdServicesExtendedM
         // Verify there are 3 valid unexpired key in the database.
         List<EncryptionKey> databaseKeys = mEncryptionKeyDao.getAllEncryptionKeys();
         expect.that(databaseKeys).hasSize(3);
-        expect.that(
-                        mEncryptionKeyDao
-                                .getEncryptionKeyFromEnrollmentIdAndKeyCommitmentId("TEST0", 12345)
-                                .getExpiration())
-                .isEqualTo(1682343722000L);
+
+        EncryptionKey encryptionKey =
+                mEncryptionKeyDao.getEncryptionKeyFromEnrollmentIdAndKeyCommitmentId(
+                        "TEST0", 12345);
+        assertWithMessage("Day 1 encryption key").that(encryptionKey).isNotNull();
+        expect.that(encryptionKey.getExpiration()).isEqualTo(1682343722000L);
 
         // Run for Day 1.
         expect.that(mEncryptionDataDownloadManager.readAndInsertEncryptionDataFromMdd().get())
                 .isEqualTo(SUCCESS);
         // Verify same key has updated expiration now.
+        encryptionKey =
+                mEncryptionKeyDao.getEncryptionKeyFromEnrollmentIdAndKeyCommitmentId(
+                        "TEST0", 12345);
+        assertWithMessage("Day 1 encryption key").that(encryptionKey).isNotNull();
         expect.that(
                         mEncryptionKeyDao
                                 .getEncryptionKeyFromEnrollmentIdAndKeyCommitmentId("TEST0", 12345)
@@ -194,11 +191,11 @@ public final class EncryptionDataDownloadManagerTest extends AdServicesExtendedM
 
     @Test
     public void testReadFileAndInsertIntoDatabaseSuccess_deleteExpiredKeys() throws Exception {
-        doReturn(mMockFileStorage).when(() -> (MobileDataDownloadFactory.getFileStorage()));
+        doReturn(mMockFileStorage).when(MobileDataDownloadFactory::getFileStorage);
         // Returns 3 keys expiring on 1. April 24, 2023 2. April 25, 2023 3. April 26, 2023
         when(mMockFileStorage.open(any(), any()))
                 .thenReturn(
-                        sContext.getAssets()
+                        mContext.getAssets()
                                 .open(
                                         TEST_ENCRYPTION_DATA_FILE_DIR
                                                 + "/"
@@ -257,7 +254,7 @@ public final class EncryptionDataDownloadManagerTest extends AdServicesExtendedM
             errorCode =
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_FAILED_MDD_FILEGROUP)
     public void testReadFileAndInsertIntoDatabaseFailure_fileStorageIOException() throws Exception {
-        doReturn(mMockFileStorage).when(() -> (MobileDataDownloadFactory.getFileStorage()));
+        doReturn(mMockFileStorage).when(MobileDataDownloadFactory::getFileStorage);
         when(mMockMdd.getFileGroup(any())).thenReturn(Futures.immediateFuture(mMockFileGroup));
         when(mMockFileGroup.getFileList()).thenReturn(Collections.singletonList(mMockFile));
         when(mMockFile.getFileId()).thenReturn(DAY_0_JSON_KEY_FILE_NAME);
@@ -278,7 +275,7 @@ public final class EncryptionDataDownloadManagerTest extends AdServicesExtendedM
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENCRYPTION_KEYS_MDD_NO_FILE_AVAILABLE)
     public void testReadFileAndInsertIntoDatabaseFailure_fileGroupFutureInterruptedException()
             throws Exception {
-        doReturn(mMockFileStorage).when(() -> (MobileDataDownloadFactory.getFileStorage()));
+        doReturn(mMockFileStorage).when(MobileDataDownloadFactory::getFileStorage);
         when(mMockMdd.getFileGroup(any()))
                 .thenReturn(Futures.immediateFailedFuture(new InterruptedException()));
 

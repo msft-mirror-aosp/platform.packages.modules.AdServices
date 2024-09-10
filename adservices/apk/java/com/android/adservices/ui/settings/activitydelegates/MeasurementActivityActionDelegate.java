@@ -16,7 +16,6 @@
 package com.android.adservices.ui.settings.activitydelegates;
 
 import android.os.Build;
-import android.widget.Switch;
 import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
@@ -29,13 +28,11 @@ import com.android.adservices.ui.settings.DialogFragmentManager;
 import com.android.adservices.ui.settings.activities.MeasurementActivity;
 import com.android.adservices.ui.settings.viewmodels.MeasurementViewModel;
 import com.android.adservices.ui.settings.viewmodels.MeasurementViewModel.MeasurementViewModelUiEvent;
-import com.android.modules.utils.build.SdkLevel;
 import com.android.settingslib.widget.MainSwitchBar;
 
 /**
  * Delegate class that helps AdServices Settings fragments to respond to all view model/user events.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class MeasurementActivityActionDelegate extends BaseActionDelegate {
     private final MeasurementViewModel mMeasurementViewModel;
@@ -68,12 +65,7 @@ public class MeasurementActivityActionDelegate extends BaseActionDelegate {
     }
 
     private void configureSharedElements() {
-        // consent switch
-        if (SdkLevel.isAtLeastR() && !SdkLevel.isAtLeastS()) {
-            configureMeasurementConsentSwitchOnR();
-        } else {
-            configureMeasurementConsentSwitch();
-        }
+        configureMeasurementConsentSwitch();
 
         // reset msmt button
         configureElement(
@@ -90,14 +82,6 @@ public class MeasurementActivityActionDelegate extends BaseActionDelegate {
                         mMeasurementViewModel.consentSwitchClickHandler((MainSwitchBar) switchBar),
                 mMeasurementViewModel.getMeasurementConsent(),
                 switchBar -> ((MainSwitchBar) switchBar)::setChecked);
-    }
-
-    private void configureMeasurementConsentSwitchOnR() {
-        configureElement(
-                R.id.measurement_switch_bar,
-                switchBar -> mMeasurementViewModel.consentSwitchClickHandlerOnR((Switch) switchBar),
-                mMeasurementViewModel.getMeasurementConsent(),
-                switchBar -> ((Switch) switchBar)::setChecked);
     }
 
     private void listenToMeasurementViewModelUiEvents() {

@@ -40,6 +40,7 @@ import com.android.adservices.service.measurement.MeasurementHttpClient;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.TriggerSpecs;
 import com.android.adservices.service.measurement.XNetworkData;
+import com.android.adservices.service.measurement.aggregation.AggregatableValuesConfig.AggregatableValuesConfigContract;
 import com.android.adservices.service.measurement.ondevicepersonalization.IOdpDelegationWrapper;
 import com.android.adservices.service.measurement.ondevicepersonalization.NoOdpDelegationWrapper;
 import com.android.adservices.service.measurement.ondevicepersonalization.OdpDelegationWrapperImpl;
@@ -47,6 +48,7 @@ import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.Filter;
+import com.android.adservices.service.measurement.util.Filter.FilterContract;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
@@ -183,7 +185,11 @@ public class AsyncTriggerFetcher {
             registrationHeaderStr = field.get(0);
             boolean isValid =
                     parseValidateTrigger(
-                            registrationHeaderStr, asyncRegistration, builder, enrollmentId);
+                            registrationHeaderStr,
+                            asyncRegistration,
+                            builder,
+                            enrollmentId,
+                            asyncFetchStatus);
             if (!isValid) {
                 asyncFetchStatus.setEntityStatus(EntityStatus.VALIDATION_ERROR);
                 LoggerFactory.getMeasurementLogger()
@@ -411,7 +417,8 @@ public class AsyncTriggerFetcher {
             String registrationHeaderStr,
             AsyncRegistration asyncRegistration,
             Trigger.Builder builder,
-            String enrollmentId)
+            String enrollmentId,
+            AsyncFetchStatus asyncFetchStatus)
             throws JSONException {
         String eventTriggerData = new JSONArray().toString();
         JSONObject json = new JSONObject(registrationHeaderStr);
@@ -449,18 +456,36 @@ public class AsyncTriggerFetcher {
             builder.setAggregateTriggerData(validAggregateTriggerData.get());
         }
         if (!json.isNull(TriggerHeaderContract.AGGREGATABLE_VALUES)) {
-            if (!isValidAggregateValues(
-                    json.getJSONObject(TriggerHeaderContract.AGGREGATABLE_VALUES))) {
-                LoggerFactory.getMeasurementLogger()
-                        .e(
-                                String.format(
-                                        "AsyncTriggerFetcher: Invalid aggregate values in %s"
-                                                + " header",
-                                        TriggerHeaderContract
-                                                .HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER));
-                return false;
+            if (mFlags.getMeasurementEnableAggregateValueFilters()) {
+                Object aggregatableValues = json.get(TriggerHeaderContract.AGGREGATABLE_VALUES);
+                if (!isValidAggregatableValues(aggregatableValues)) {
+                    LoggerFactory.getMeasurementLogger()
+                            .e(
+                                    String.format(
+                                            "AsyncTriggerFetcher: Invalid aggregate values"
+                                                    + " in %s header",
+                                            TriggerHeaderContract
+                                                    .HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER));
+                    return false;
+                }
+                asyncFetchStatus.setIsTriggerAggregatableValueFiltersConfigured(true);
+                builder.setAggregateValuesString(
+                        json.getString(TriggerHeaderContract.AGGREGATABLE_VALUES));
+            } else {
+                if (!isValidAggregateValues(
+                        json.getJSONObject(TriggerHeaderContract.AGGREGATABLE_VALUES))) {
+                    LoggerFactory.getMeasurementLogger()
+                            .e(
+                                    String.format(
+                                            "AsyncTriggerFetcher: Invalid aggregate values in %s"
+                                                    + " header",
+                                            TriggerHeaderContract
+                                                    .HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER));
+                    return false;
+                }
+                builder.setAggregateValuesString(
+                        json.getString(TriggerHeaderContract.AGGREGATABLE_VALUES));
             }
-            builder.setAggregateValues(json.getString(TriggerHeaderContract.AGGREGATABLE_VALUES));
         }
         if (!json.isNull(TriggerHeaderContract.AGGREGATABLE_DEDUPLICATION_KEYS)) {
             Optional<String> validAggregateDeduplicationKeysString =
@@ -480,8 +505,8 @@ public class AsyncTriggerFetcher {
             builder.setAggregateDeduplicationKeys(validAggregateDeduplicationKeysString.get());
         }
         boolean shouldCheckFilterSize = !mFlags.getMeasurementEnableUpdateTriggerHeaderLimit();
-        if (!json.isNull(TriggerHeaderContract.FILTERS)) {
-            JSONArray filters = Filter.maybeWrapFilters(json, TriggerHeaderContract.FILTERS);
+        if (!json.isNull(FilterContract.FILTERS)) {
+            JSONArray filters = Filter.maybeWrapFilters(json, FilterContract.FILTERS);
             if (!FetcherUtil.areValidAttributionFilters(
                     filters, mFlags, true, shouldCheckFilterSize)) {
                 LoggerFactory.getMeasurementLogger()
@@ -495,8 +520,8 @@ public class AsyncTriggerFetcher {
             }
             builder.setFilters(filters.toString());
         }
-        if (!json.isNull(TriggerHeaderContract.NOT_FILTERS)) {
-            JSONArray notFilters = Filter.maybeWrapFilters(json, TriggerHeaderContract.NOT_FILTERS);
+        if (!json.isNull(FilterContract.NOT_FILTERS)) {
+            JSONArray notFilters = Filter.maybeWrapFilters(json, FilterContract.NOT_FILTERS);
             if (!FetcherUtil.areValidAttributionFilters(
                     notFilters, mFlags, true, shouldCheckFilterSize)) {
                 LoggerFactory.getMeasurementLogger()
@@ -619,7 +644,7 @@ public class AsyncTriggerFetcher {
                             TriggerHeaderContract.ATTRIBUTION_SCOPES,
                             Integer.MAX_VALUE,
                             Integer.MAX_VALUE);
-            if (attributionScopes.isEmpty() || attributionScopes.get().isEmpty()) {
+            if (attributionScopes.isEmpty()) {
                 LoggerFactory.getMeasurementLogger()
                         .e(
                                 String.format(
@@ -632,6 +657,21 @@ public class AsyncTriggerFetcher {
             builder.setAttributionScopesString(
                     json.getJSONArray(TriggerHeaderContract.ATTRIBUTION_SCOPES).toString());
         }
+
+        if (mFlags.getMeasurementEnableAggregateDebugReporting()
+                && !json.isNull(TriggerHeaderContract.AGGREGATABLE_DEBUG_REPORTING)) {
+            Optional<String> validAggregateDebugReporting =
+                    FetcherUtil.getValidAggregateDebugReportingString(
+                            json.getJSONObject(TriggerHeaderContract.AGGREGATABLE_DEBUG_REPORTING),
+                            mFlags);
+            if (!validAggregateDebugReporting.isPresent()) {
+                LoggerFactory.getMeasurementLogger()
+                        .d("parseTrigger: aggregatable debug reporting is invalid.");
+                return false;
+            }
+            builder.setAggregateDebugReportingString(validAggregateDebugReporting.get());
+        }
+
         return true;
     }
 
@@ -708,8 +748,9 @@ public class AsyncTriggerFetcher {
                 }
                 boolean shouldCheckFilterSize =
                         !mFlags.getMeasurementEnableUpdateTriggerHeaderLimit();
-                if (!eventTriggerDatum.isNull("filters")) {
-                    JSONArray filters = Filter.maybeWrapFilters(eventTriggerDatum, "filters");
+                if (!eventTriggerDatum.isNull(FilterContract.FILTERS)) {
+                    JSONArray filters =
+                            Filter.maybeWrapFilters(eventTriggerDatum, FilterContract.FILTERS);
                     if (!FetcherUtil.areValidAttributionFilters(
                             filters,
                             mFlags,
@@ -719,11 +760,11 @@ public class AsyncTriggerFetcher {
                                 .d("getValidEventTriggerData: filters are invalid.");
                         return Optional.empty();
                     }
-                    validEventTriggerDatum.put("filters", filters);
+                    validEventTriggerDatum.put(FilterContract.FILTERS, filters);
                 }
-                if (!eventTriggerDatum.isNull("not_filters")) {
+                if (!eventTriggerDatum.isNull(FilterContract.NOT_FILTERS)) {
                     JSONArray notFilters =
-                            Filter.maybeWrapFilters(eventTriggerDatum, "not_filters");
+                            Filter.maybeWrapFilters(eventTriggerDatum, FilterContract.NOT_FILTERS);
                     if (!FetcherUtil.areValidAttributionFilters(
                             notFilters,
                             mFlags,
@@ -733,7 +774,7 @@ public class AsyncTriggerFetcher {
                                 .d("getValidEventTriggerData: not-filters are invalid.");
                         return Optional.empty();
                     }
-                    validEventTriggerDatum.put("not_filters", notFilters);
+                    validEventTriggerDatum.put(FilterContract.NOT_FILTERS, notFilters);
                 }
                 validEventTriggerData.put(validEventTriggerDatum);
             } catch (JSONException e) {
@@ -750,6 +791,63 @@ public class AsyncTriggerFetcher {
             }
         }
         return Optional.of(validEventTriggerData.toString());
+    }
+
+    private boolean isValidAggregatableValues(Object aggregatableValues) throws JSONException {
+        boolean shouldCheckFilterSize = !mFlags.getMeasurementEnableUpdateTriggerHeaderLimit();
+        boolean isJSONObject = (aggregatableValues instanceof JSONObject);
+        boolean isJSONArray = (aggregatableValues instanceof JSONArray);
+        if (!isJSONObject && !isJSONArray) {
+            return false;
+        }
+        if (isJSONObject) {
+            return isValidAggregateValues((JSONObject) aggregatableValues);
+        } else {
+            JSONArray aggregatableValuesArr = (JSONArray) aggregatableValues;
+            for (int i = 0; i < aggregatableValuesArr.length(); i++) {
+                JSONObject aggregateValuesObj = aggregatableValuesArr.getJSONObject(i);
+                // validate values
+                if (aggregateValuesObj.isNull(AggregatableValuesConfigContract.VALUES)) {
+                    LoggerFactory.getMeasurementLogger().d("Aggregate value values do not exist.");
+                    return false;
+                }
+                if (!isValidAggregateValues(
+                        aggregateValuesObj.getJSONObject(
+                                AggregatableValuesConfigContract.VALUES))) {
+                    LoggerFactory.getMeasurementLogger().d("Aggregate value values are invalid.");
+                    return false;
+                }
+                // validate filters
+                if (!aggregateValuesObj.isNull(FilterContract.FILTERS)) {
+                    JSONArray filters =
+                            Filter.maybeWrapFilters(aggregateValuesObj, FilterContract.FILTERS);
+                    if (!FetcherUtil.areValidAttributionFilters(
+                            filters,
+                            mFlags,
+                            /* canIncludeLookbackWindow= */ true,
+                            shouldCheckFilterSize)) {
+                        LoggerFactory.getMeasurementLogger()
+                                .d("Aggregate value filters are invalid.");
+                        return false;
+                    }
+                }
+                // validate not_filters
+                if (!aggregateValuesObj.isNull(FilterContract.NOT_FILTERS)) {
+                    JSONArray not_filters =
+                            Filter.maybeWrapFilters(aggregateValuesObj, FilterContract.NOT_FILTERS);
+                    if (!FetcherUtil.areValidAttributionFilters(
+                            not_filters,
+                            mFlags,
+                            /* canIncludeLookbackWindow= */ true,
+                            shouldCheckFilterSize)) {
+                        LoggerFactory.getMeasurementLogger()
+                                .d("Aggregate value not_filters are invalid.");
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
     }
 
     private Optional<String> getValidAggregateTriggerData(JSONArray aggregateTriggerDataArr)
@@ -790,8 +888,9 @@ public class AsyncTriggerFetcher {
                     return Optional.empty();
                 }
             }
-            if (!aggregateTriggerData.isNull("filters")) {
-                JSONArray filters = Filter.maybeWrapFilters(aggregateTriggerData, "filters");
+            if (!aggregateTriggerData.isNull(FilterContract.FILTERS)) {
+                JSONArray filters =
+                        Filter.maybeWrapFilters(aggregateTriggerData, FilterContract.FILTERS);
                 if (!FetcherUtil.areValidAttributionFilters(
                         filters,
                         mFlags,
@@ -801,10 +900,11 @@ public class AsyncTriggerFetcher {
                             .d("Aggregate trigger data filters are invalid.");
                     return Optional.empty();
                 }
-                aggregateTriggerData.put("filters", filters);
+                aggregateTriggerData.put(FilterContract.FILTERS, filters);
             }
-            if (!aggregateTriggerData.isNull("not_filters")) {
-                JSONArray notFilters = Filter.maybeWrapFilters(aggregateTriggerData, "not_filters");
+            if (!aggregateTriggerData.isNull(FilterContract.NOT_FILTERS)) {
+                JSONArray notFilters =
+                        Filter.maybeWrapFilters(aggregateTriggerData, FilterContract.NOT_FILTERS);
                 if (!FetcherUtil.areValidAttributionFilters(
                         notFilters,
                         mFlags,
@@ -814,7 +914,7 @@ public class AsyncTriggerFetcher {
                             .d("Aggregate trigger data not-filters are invalid.");
                     return Optional.empty();
                 }
-                aggregateTriggerData.put("not_filters", notFilters);
+                aggregateTriggerData.put(FilterContract.NOT_FILTERS, notFilters);
             }
             if (!aggregateTriggerData.isNull("x_network_data")) {
                 JSONObject xNetworkDataJson = aggregateTriggerData.getJSONObject("x_network_data");
@@ -882,8 +982,9 @@ public class AsyncTriggerFetcher {
                 }
                 aggregateDedupKey.put("deduplication_key", maybeDedupKey.get().toString());
             }
-            if (!deduplicationKeyObj.isNull("filters")) {
-                JSONArray filters = Filter.maybeWrapFilters(deduplicationKeyObj, "filters");
+            if (!deduplicationKeyObj.isNull(FilterContract.FILTERS)) {
+                JSONArray filters =
+                        Filter.maybeWrapFilters(deduplicationKeyObj, FilterContract.FILTERS);
                 if (!FetcherUtil.areValidAttributionFilters(
                         filters,
                         mFlags,
@@ -893,10 +994,11 @@ public class AsyncTriggerFetcher {
                             .d("Aggregate deduplication key: " + i + " contains invalid filters.");
                     return Optional.empty();
                 }
-                aggregateDedupKey.put("filters", filters);
+                aggregateDedupKey.put(FilterContract.FILTERS, filters);
             }
-            if (!deduplicationKeyObj.isNull("not_filters")) {
-                JSONArray notFilters = Filter.maybeWrapFilters(deduplicationKeyObj, "not_filters");
+            if (!deduplicationKeyObj.isNull(FilterContract.NOT_FILTERS)) {
+                JSONArray notFilters =
+                        Filter.maybeWrapFilters(deduplicationKeyObj, FilterContract.NOT_FILTERS);
                 if (!FetcherUtil.areValidAttributionFilters(
                         notFilters,
                         mFlags,
@@ -909,7 +1011,7 @@ public class AsyncTriggerFetcher {
                                             + " contains invalid not filters.");
                     return Optional.empty();
                 }
-                aggregateDedupKey.put("not_filters", notFilters);
+                aggregateDedupKey.put(FilterContract.NOT_FILTERS, notFilters);
             }
             validAggregateDeduplicationKeys.put(aggregateDedupKey);
         }
@@ -941,8 +1043,8 @@ public class AsyncTriggerFetcher {
         return true;
     }
 
-    private static Uri getAttributionDestination(Uri destination,
-            AsyncRegistration.RegistrationType registrationType) {
+    private static Uri getAttributionDestination(
+            Uri destination, AsyncRegistration.RegistrationType registrationType) {
         return registrationType == AsyncRegistration.RegistrationType.APP_TRIGGER
                 ? BaseUriExtractor.getBaseUri(destination)
                 : destination;
@@ -975,8 +1077,6 @@ public class AsyncTriggerFetcher {
         String HEADER_ATTRIBUTION_REPORTING_INFO = "Attribution-Reporting-Info";
         String ATTRIBUTION_CONFIG = "attribution_config";
         String EVENT_TRIGGER_DATA = "event_trigger_data";
-        String FILTERS = "filters";
-        String NOT_FILTERS = "not_filters";
         String AGGREGATABLE_TRIGGER_DATA = "aggregatable_trigger_data";
         String AGGREGATABLE_VALUES = "aggregatable_values";
         String AGGREGATABLE_DEDUPLICATION_KEYS = "aggregatable_deduplication_keys";
@@ -989,6 +1089,7 @@ public class AsyncTriggerFetcher {
         String AGGREGATABLE_SOURCE_REGISTRATION_TIME = "aggregatable_source_registration_time";
         String TRIGGER_CONTEXT_ID = "trigger_context_id";
         String ATTRIBUTION_SCOPES = "attribution_scopes";
+        String AGGREGATABLE_DEBUG_REPORTING = "aggregatable_debug_reporting";
     }
 
     private interface OdpTriggerHeaderContract {

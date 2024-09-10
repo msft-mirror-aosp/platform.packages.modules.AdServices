@@ -16,6 +16,8 @@
 package com.android.adservices.cobalt;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_COBALT_LOGGER_EVENT_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_COBALT_LOGGER_EVENT_REPORTED__COBALT_LOGGING_EVENT__LOGGING_EVENT_OVER_EVENT_VECTOR_BUFFER_MAX;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_COBALT_LOGGER_EVENT_REPORTED__COBALT_LOGGING_EVENT__LOGGING_EVENT_OVER_MAX_VALUE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_COBALT_LOGGER_EVENT_REPORTED__COBALT_LOGGING_EVENT__LOGGING_EVENT_OVER_STRING_BUFFER_MAX;
 
 import com.android.adservices.service.stats.AdServicesStatsLog;
@@ -23,19 +25,63 @@ import com.android.cobalt.logging.CobaltOperationLogger;
 
 /** Implementation of Cobalt operational metrics logger. */
 public final class CobaltOperationLoggerImpl implements CobaltOperationLogger {
-    public CobaltOperationLoggerImpl() {}
+    private final boolean mLoggerEnabled;
+
+    public CobaltOperationLoggerImpl(boolean enabled) {
+        mLoggerEnabled = enabled;
+    }
 
     /**
-     * Log a Cobalt logging event exceeding string buffer max to Cobalt operational metric.
+     * Logs a Cobalt logging event exceeding string buffer max to Cobalt operational metric.
      *
      * @param metricId the Cobalt metric id of the event that is being logged
      * @param reportId the Cobalt report id of the event that is being logged
      */
     public void logStringBufferMaxExceeded(int metricId, int reportId) {
+        if (!mLoggerEnabled) {
+            return;
+        }
+
         AdServicesStatsLog.write(
                 AD_SERVICES_COBALT_LOGGER_EVENT_REPORTED,
                 metricId,
                 reportId,
                 AD_SERVICES_COBALT_LOGGER_EVENT_REPORTED__COBALT_LOGGING_EVENT__LOGGING_EVENT_OVER_STRING_BUFFER_MAX);
+    }
+
+    /**
+     * Logs a Cobalt logging event exceeding event vector buffer max to Cobalt operational metric.
+     *
+     * @param metricId the Cobalt metric id of the event that is being logged
+     * @param reportId the Cobalt report id of the event that is being logged
+     */
+    public void logEventVectorBufferMaxExceeded(int metricId, int reportId) {
+        if (!mLoggerEnabled) {
+            return;
+        }
+
+        AdServicesStatsLog.write(
+                AD_SERVICES_COBALT_LOGGER_EVENT_REPORTED,
+                metricId,
+                reportId,
+                AD_SERVICES_COBALT_LOGGER_EVENT_REPORTED__COBALT_LOGGING_EVENT__LOGGING_EVENT_OVER_EVENT_VECTOR_BUFFER_MAX);
+    }
+
+    /**
+     * Logs that a Cobalt logging event exceeds the max value to Cobalt operational metric.
+     *
+     * @param metricId the Cobalt metric id of the event that is being logged
+     * @param reportId the Cobalt report id of the event that is being logged
+     */
+    public void logMaxValueExceeded(int metricId, int reportId) {
+        if (!mLoggerEnabled) {
+            return;
+        }
+
+        AdServicesStatsLog.write(
+                AD_SERVICES_COBALT_LOGGER_EVENT_REPORTED,
+                metricId,
+                reportId,
+                AD_SERVICES_COBALT_LOGGER_EVENT_REPORTED__COBALT_LOGGING_EVENT__LOGGING_EVENT_OVER_MAX_VALUE);
     }
 }

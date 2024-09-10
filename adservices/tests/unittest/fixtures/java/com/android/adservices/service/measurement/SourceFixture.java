@@ -106,10 +106,14 @@ public final class SourceFixture {
                 .setDestinationLimitPriority(ValidSourceParams.DESTINATION_LIMIT_PRIORITY)
                 .setDestinationLimitAlgorithm(ValidSourceParams.DESTINATION_LIMIT_ALGORITHM)
                 .setAttributedTriggers(new ArrayList<>())
-                .setEventLevelEpsilon(ValidSourceParams.EVENT_LEVEL_EPSILON);
+                .setEventLevelEpsilon(ValidSourceParams.EVENT_LEVEL_EPSILON)
+                .setAggregateDebugReportingString(ValidSourceParams.AGGREGATE_DEBUG_REPORT)
+                .setAggregateDebugReportContributions(
+                        ValidSourceParams.AGGREGATE_DEBUG_REPORT_CONTRIBUTIONS);
     }
 
     public static class ValidSourceParams {
+
         public static final Long EXPIRY_TIME = 8640000010L;
         public static final Long PRIORITY = 100L;
         public static final UnsignedLong SOURCE_EVENT_ID = new UnsignedLong(1L);
@@ -148,6 +152,22 @@ public final class SourceFixture {
         public static final Source.DestinationLimitAlgorithm DESTINATION_LIMIT_ALGORITHM =
                 Source.DestinationLimitAlgorithm.FIFO;
         public static final Double EVENT_LEVEL_EPSILON = 12D;
+        public static final String AGGREGATE_DEBUG_REPORT =
+                "{\"budget\":1024,"
+                        + "\"key_piece\":\"0x100\","
+                        + "\"debug_data\":["
+                        + "{"
+                        + "\"types\": [\"source-destination-limit\"],"
+                        + "\"key_piece\": \"0x111\","
+                        + "\"value\": 111"
+                        + "},"
+                        + "{"
+                        + "\"types\": [\"default\"],"
+                        + "\"key_piece\": \"0x222\","
+                        + "\"value\": 222"
+                        + "}"
+                        + "]}";
+        public static final int AGGREGATE_DEBUG_REPORT_CONTRIBUTIONS = 100;
 
         public static final String buildAggregateSource() {
             try {
@@ -165,7 +185,8 @@ public final class SourceFixture {
         public static final String buildFilterDataString() {
             try {
                 JSONObject filterMap = new JSONObject();
-                filterMap.put("conversion_subdomain",
+                filterMap.put(
+                        "conversion_subdomain",
                         new JSONArray(Collections.singletonList("electronics.megastore")));
                 filterMap.put("product", new JSONArray(Arrays.asList("1234", "2345")));
                 return filterMap.toString();
@@ -184,9 +205,10 @@ public final class SourceFixture {
                             new FilterMap.Builder()
                                     .setAttributionFilterMap(
                                             Map.of(
-                                                    "product", List.of("1234", "4321"),
+                                                    "product",
+                                                    List.of("1234", "4321"),
                                                     "conversion_subdomain",
-                                                            List.of("electronics.megastore")))
+                                                    List.of("electronics.megastore")))
                                     .build())
                     .build();
         }
@@ -201,7 +223,7 @@ public final class SourceFixture {
                         + String.format(
                                 "\"end_times\": [%s, %s]}, ",
                                 TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(7))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2]}]";
         Source source =
                 getMinimalValidSourceBuilder()
@@ -221,7 +243,7 @@ public final class SourceFixture {
                         + "\"event_report_windows\": { "
                         + "\"start_time\": 0, "
                         + String.format("\"end_times\": [%s]}, ", TimeUnit.DAYS.toMillis(2))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1]}]";
         Source source = getMinimalValidSourceBuilder().build();
         TriggerSpecs triggerSpecs = new TriggerSpecs(
@@ -238,7 +260,7 @@ public final class SourceFixture {
                         + "\"event_report_windows\": { "
                         + "\"start_time\": 0, "
                         + String.format("\"end_times\": [%s]}, ", TimeUnit.DAYS.toMillis(2))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1]}]";
         Source source = getMinimalValidSourceBuilder().build();
         double mockFlipProbability = Combinatorics.getFlipProbability(5, 3);
@@ -362,7 +384,7 @@ public final class SourceFixture {
                         TimeUnit.DAYS.toMillis(2),
                         TimeUnit.DAYS.toMillis(7),
                         TimeUnit.DAYS.toMillis(30))
-                + "\"summary_window_operator\": \"count\", "
+                + "\"summary_operator\": \"count\", "
                 + "\"summary_buckets\": [1, 2, 3, 4]}]";
     }
 
@@ -382,7 +404,7 @@ public final class SourceFixture {
                 + String.format(
                         "\"end_times\": [%s, %s]}, ",
                         TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(7))
-                + "\"summary_window_operator\": \"value_sum\", "
+                + "\"summary_operator\": \"value_sum\", "
                 + "\"summary_buckets\": [10, 100]}]";
     }
 
@@ -405,13 +427,13 @@ public final class SourceFixture {
                                 TimeUnit.DAYS.toMillis(2),
                                 TimeUnit.DAYS.toMillis(7),
                                 TimeUnit.DAYS.toMillis(30))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3, 4]}, "
                         + "{\"trigger_data\": [4, 5, 6, 7],"
                         + "\"event_report_windows\": { "
                         + "\"start_time\": 0, "
                         + String.format("\"end_times\": [%s]}, ", TimeUnit.DAYS.toMillis(3))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1,5,7]} "
                         + "]");
     }

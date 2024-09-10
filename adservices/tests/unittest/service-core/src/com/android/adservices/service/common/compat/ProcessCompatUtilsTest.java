@@ -20,38 +20,22 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.os.Process;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
-import org.junit.After;
 import org.junit.Assume;
-import org.junit.Before;
 import org.junit.Test;
-import org.mockito.MockitoSession;
 
-public class ProcessCompatUtilsTest {
+@MockStatic(Process.class)
+@MockStatic(SdkLevel.class)
+public final class ProcessCompatUtilsTest extends AdServicesExtendedMockitoTestCase {
     private static final int UID = 100;
-
-    private MockitoSession mMockitoSession;
-
-    @Before
-    public void setUp() {
-        mMockitoSession =
-                ExtendedMockito.mockitoSession()
-                        .mockStatic(Process.class)
-                        .mockStatic(SdkLevel.class)
-                        .initMocks(this)
-                        .startMocking();
-    }
-
-    @After
-    public void tearDown() {
-        mMockitoSession.finishMocking();
-    }
 
     @Test
     public void testIsSdkSandboxUid_onSMinus_notSdkSandboxUid() {
-        ExtendedMockito.doReturn(false).when(SdkLevel::isAtLeastT);
+        mocker.mockIsAtLeastT(false);
         assertThat(ProcessCompatUtils.isSdkSandboxUid(UID)).isFalse();
     }
 

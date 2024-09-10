@@ -61,7 +61,7 @@ java_defaults {
         "device-tests",
         "general-tests",
     ],
-    min_sdk_version: "30",
+    min_sdk_version: "31",
 }
 
 android_test {

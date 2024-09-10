@@ -16,7 +16,8 @@
 
 package com.android.adservices.service.shell.customaudience;
 
-import static com.google.common.truth.Truth.assertThat;
+import static com.android.adservices.service.shell.customaudience.CustomAudienceHelper.IS_ELIGIBLE_FOR_ON_DEVICE_AUCTION;
+import static com.android.adservices.service.shell.customaudience.CustomAudienceHelper.IS_ELIGIBLE_FOR_SERVER_AUCTION;
 
 import static org.junit.Assert.assertThrows;
 
@@ -24,6 +25,7 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.common.DBAdDataFixture;
 import com.android.adservices.customaudience.DBCustomAudienceBackgroundFetchDataFixture;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
@@ -40,7 +42,7 @@ import org.junit.Test;
 
 import java.util.List;
 
-public class CustomAudienceHelperTest {
+public final class CustomAudienceHelperTest extends AdServicesUnitTestCase {
 
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("example.com");
     private static final DBCustomAudience.Builder CUSTOM_AUDIENCE_BUILDER =
@@ -48,6 +50,8 @@ public class CustomAudienceHelperTest {
     private static final DBCustomAudienceBackgroundFetchData.Builder
             CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA_BUILDER =
                     DBCustomAudienceBackgroundFetchDataFixture.getValidBuilderByBuyer(BUYER);
+    private static final CustomAudienceEligibilityInfo ELIGIBLE_FOR_ALL_AUCTIONS =
+            CustomAudienceEligibilityInfo.create(true, true);
 
     @Test
     public void testCustomAudienceFromJson_happyPath() throws JSONException {
@@ -83,23 +87,23 @@ public class CustomAudienceHelperTest {
         DBCustomAudience customAudience =
                 CustomAudienceHelper.getCustomAudienceFromJson(jsonObject);
 
-        assertThat(customAudience.getOwner()).isEqualTo(CustomAudienceFixture.VALID_OWNER);
-        assertThat(customAudience.getBuyer()).isEqualTo(BUYER);
-        assertThat(customAudience.getName()).isEqualTo(CustomAudienceFixture.VALID_NAME);
-        assertThat(customAudience.getActivationTime()).isNotNull();
-        assertThat(customAudience.getExpirationTime())
+        expect.that(customAudience.getOwner()).isEqualTo(CustomAudienceFixture.VALID_OWNER);
+        expect.that(customAudience.getBuyer()).isEqualTo(BUYER);
+        expect.that(customAudience.getName()).isEqualTo(CustomAudienceFixture.VALID_NAME);
+        expect.that(customAudience.getActivationTime()).isNotNull();
+        expect.that(customAudience.getExpirationTime())
                 .isEqualTo(CustomAudienceFixture.VALID_EXPIRATION_TIME);
-        assertThat(customAudience.getCreationTime())
+        expect.that(customAudience.getCreationTime())
                 .isEqualTo(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI);
-        assertThat(customAudience.getLastAdsAndBiddingDataUpdatedTime())
+        expect.that(customAudience.getLastAdsAndBiddingDataUpdatedTime())
                 .isEqualTo(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI);
-        assertThat(customAudience.getUserBiddingSignals())
+        expect.that(customAudience.getUserBiddingSignals())
                 .isEqualTo(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
-        assertThat(customAudience.getTrustedBiddingData())
+        expect.that(customAudience.getTrustedBiddingData())
                 .isEqualTo(DBTrustedBiddingDataFixture.getValidBuilderByBuyer(BUYER).build());
-        assertThat(customAudience.getBiddingLogicUri())
+        expect.that(customAudience.getBiddingLogicUri())
                 .isEqualTo(CustomAudienceFixture.getValidBiddingLogicUriByBuyer(BUYER));
-        assertThat(customAudience.getAds())
+        expect.that(customAudience.getAds())
                 .isEqualTo(DBAdDataFixture.getValidDbAdDataListByBuyer(BUYER));
     }
 
@@ -136,20 +140,20 @@ public class CustomAudienceHelperTest {
         DBCustomAudienceBackgroundFetchData customAudienceBackgroundFetchData =
                 CustomAudienceHelper.getCustomAudienceBackgroundFetchDataFromJson(jsonObject);
 
-        assertThat(customAudienceBackgroundFetchData.getOwner())
+        expect.that(customAudienceBackgroundFetchData.getOwner())
                 .isEqualTo(CustomAudienceFixture.VALID_OWNER);
-        assertThat(customAudienceBackgroundFetchData.getIsDebuggable()).isTrue();
-        assertThat(customAudienceBackgroundFetchData.getBuyer()).isEqualTo(BUYER);
-        assertThat(customAudienceBackgroundFetchData.getName())
+        expect.that(customAudienceBackgroundFetchData.getIsDebuggable()).isTrue();
+        expect.that(customAudienceBackgroundFetchData.getBuyer()).isEqualTo(BUYER);
+        expect.that(customAudienceBackgroundFetchData.getName())
                 .isEqualTo(CustomAudienceFixture.VALID_NAME);
-        assertThat(customAudienceBackgroundFetchData.getDailyUpdateUri())
+        expect.that(customAudienceBackgroundFetchData.getDailyUpdateUri())
                 .isEqualTo(CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER));
-        assertThat(customAudienceBackgroundFetchData.getEligibleUpdateTime())
+        expect.that(customAudienceBackgroundFetchData.getEligibleUpdateTime())
                 .isEqualTo(CommonFixture.FIXED_NEXT_ONE_DAY);
-        assertThat(customAudienceBackgroundFetchData.getNumTimeoutFailures())
+        expect.that(customAudienceBackgroundFetchData.getNumTimeoutFailures())
                 .isEqualTo(
                         DBCustomAudienceBackgroundFetchDataFixture.NUM_TIMEOUT_FAILURES_POSITIVE);
-        assertThat(customAudienceBackgroundFetchData.getNumValidationFailures())
+        expect.that(customAudienceBackgroundFetchData.getNumValidationFailures())
                 .isEqualTo(
                         DBCustomAudienceBackgroundFetchDataFixture
                                 .NUM_VALIDATION_FAILURES_POSITIVE);
@@ -178,11 +182,14 @@ public class CustomAudienceHelperTest {
                 CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA_BUILDER.build();
 
         JSONObject jsonObject =
-                CustomAudienceHelper.toJson(customAudience, customAudienceBackgroundFetchData);
+                CustomAudienceHelper.toJson(
+                        customAudience,
+                        customAudienceBackgroundFetchData,
+                        ELIGIBLE_FOR_ALL_AUCTIONS);
 
-        assertThat(customAudience)
+        expect.that(customAudience)
                 .isEqualTo(CustomAudienceHelper.getCustomAudienceFromJson(jsonObject));
-        assertThat(customAudienceBackgroundFetchData)
+        expect.that(customAudienceBackgroundFetchData)
                 .isEqualTo(
                         CustomAudienceHelper.getCustomAudienceBackgroundFetchDataFromJson(
                                 jsonObject));
@@ -196,9 +203,12 @@ public class CustomAudienceHelperTest {
                 CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA_BUILDER.build();
 
         JSONObject jsonObject =
-                CustomAudienceHelper.toJson(customAudience, customAudienceBackgroundFetchData);
+                CustomAudienceHelper.toJson(
+                        customAudience,
+                        customAudienceBackgroundFetchData,
+                        ELIGIBLE_FOR_ALL_AUCTIONS);
 
-        assertThat(jsonObject.isNull(CustomAudienceHelper.TRUSTED_BIDDING_DATA)).isTrue();
+        expect.that(jsonObject.isNull(CustomAudienceHelper.TRUSTED_BIDDING_DATA)).isTrue();
     }
 
     @Test
@@ -209,9 +219,12 @@ public class CustomAudienceHelperTest {
                 CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA_BUILDER.build();
 
         JSONObject jsonObject =
-                CustomAudienceHelper.toJson(customAudience, customAudienceBackgroundFetchData);
+                CustomAudienceHelper.toJson(
+                        customAudience,
+                        customAudienceBackgroundFetchData,
+                        ELIGIBLE_FOR_ALL_AUCTIONS);
 
-        assertThat(jsonObject.isNull(CustomAudienceHelper.USER_BIDDING_SIGNALS)).isTrue();
+        expect.that(jsonObject.isNull(CustomAudienceHelper.USER_BIDDING_SIGNALS)).isTrue();
     }
 
     @Test
@@ -221,9 +234,12 @@ public class CustomAudienceHelperTest {
                 CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA_BUILDER.build();
 
         JSONObject jsonObject =
-                CustomAudienceHelper.toJson(customAudience, customAudienceBackgroundFetchData);
+                CustomAudienceHelper.toJson(
+                        customAudience,
+                        customAudienceBackgroundFetchData,
+                        ELIGIBLE_FOR_ALL_AUCTIONS);
 
-        assertThat(jsonObject.getJSONArray(CustomAudienceHelper.ADS).length()).isEqualTo(0);
+        expect.that(jsonObject.getJSONArray(CustomAudienceHelper.ADS).length()).isEqualTo(0);
     }
 
     @Test
@@ -232,14 +248,65 @@ public class CustomAudienceHelperTest {
                 NullPointerException.class,
                 () ->
                         CustomAudienceHelper.toJson(
-                                null, CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA_BUILDER.build()));
+                                null,
+                                CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA_BUILDER.build(),
+                                ELIGIBLE_FOR_ALL_AUCTIONS));
     }
 
     @Test
     public void testToJson_withNullBackgroundFetchData_throwsNullPointerException() {
         assertThrows(
                 NullPointerException.class,
-                () -> CustomAudienceHelper.toJson(CUSTOM_AUDIENCE_BUILDER.build(), null));
+                () ->
+                        CustomAudienceHelper.toJson(
+                                CUSTOM_AUDIENCE_BUILDER.build(), null, ELIGIBLE_FOR_ALL_AUCTIONS));
+    }
+
+    @Test
+    public void testToJson_withEligibleForOnDeviceAuctions_correctOutput() throws JSONException {
+        DBCustomAudience customAudience = CUSTOM_AUDIENCE_BUILDER.build();
+        DBCustomAudienceBackgroundFetchData customAudienceBackgroundFetchData =
+                CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA_BUILDER.build();
+
+        JSONObject jsonObject =
+                CustomAudienceHelper.toJson(
+                        customAudience,
+                        customAudienceBackgroundFetchData,
+                        CustomAudienceEligibilityInfo.create(true, false));
+
+        expect.that(jsonObject.getBoolean(IS_ELIGIBLE_FOR_ON_DEVICE_AUCTION)).isEqualTo(true);
+        expect.that(jsonObject.getBoolean(IS_ELIGIBLE_FOR_SERVER_AUCTION)).isEqualTo(false);
+    }
+
+    @Test
+    public void testToJson_withEligibleForServerAuctions_correctOutput() throws JSONException {
+        DBCustomAudience customAudience = CUSTOM_AUDIENCE_BUILDER.build();
+        DBCustomAudienceBackgroundFetchData customAudienceBackgroundFetchData =
+                CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA_BUILDER.build();
+
+        JSONObject jsonObject =
+                CustomAudienceHelper.toJson(
+                        customAudience,
+                        customAudienceBackgroundFetchData,
+                        CustomAudienceEligibilityInfo.create(false, true));
+
+        expect.that(jsonObject.getBoolean(IS_ELIGIBLE_FOR_SERVER_AUCTION)).isEqualTo(true);
+    }
+
+    @Test
+    public void testToJson_withEligibleForNoAuctions_correctOutput() throws JSONException {
+        DBCustomAudience customAudience = CUSTOM_AUDIENCE_BUILDER.build();
+        DBCustomAudienceBackgroundFetchData customAudienceBackgroundFetchData =
+                CUSTOM_AUDIENCE_BACKGROUND_FETCH_DATA_BUILDER.build();
+
+        JSONObject jsonObject =
+                CustomAudienceHelper.toJson(
+                        customAudience,
+                        customAudienceBackgroundFetchData,
+                        CustomAudienceEligibilityInfo.create(false, false));
+
+        expect.that(jsonObject.getBoolean(IS_ELIGIBLE_FOR_ON_DEVICE_AUCTION)).isEqualTo(false);
+        expect.that(jsonObject.getBoolean(IS_ELIGIBLE_FOR_SERVER_AUCTION)).isEqualTo(false);
     }
 
     private static JSONArray getFakeAdsJson() throws JSONException {

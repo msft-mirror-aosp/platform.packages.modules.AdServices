@@ -27,9 +27,10 @@ android_test_helper_app {
         "androidx.concurrent_concurrent-futures",
         "compatibility-device-util-axt",
         "truth",
+        "adservices-shared-testing",
     ],
     libs: [
-        "android.test.base",
+        "android.test.base.stubs.system",
     ],
     platform_apis: true,
     min_sdk_version: "33",

@@ -19,9 +19,12 @@ import android.os.Handler;
 import android.os.Looper;
 
 import com.android.adservices.shared.testing.AndroidLogger;
+import com.android.adservices.shared.testing.Nullable;
 import com.android.adservices.shared.util.Preconditions;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.errorprone.annotations.FormatMethod;
+import com.google.errorprone.annotations.FormatString;
 
 import java.util.Objects;
 
@@ -41,12 +44,35 @@ public final class DeviceSideConcurrencyHelper {
     }
 
     /**
-     * Starts a new thread and runs {@code r} on it after {@code timeoutMs} ms.
+     * Starts a new thread and runs {@code r} on it after {@code delayMs} ms.
      *
      * @return the new thread.
      */
-    public static Thread runAsync(long timeoutMs, Runnable r) {
-        return getConcurrencyHelper().runAsync(timeoutMs, r);
+    public static Thread runAsync(long delayMs, Runnable r) {
+        return getConcurrencyHelper().runAsync(delayMs, r);
+    }
+
+    /**
+     * Sleeps for the given amount of time, logging the reason and catching the {@link
+     * InterruptedException} (if thrown while sleeping).
+     */
+    @FormatMethod
+    public static void sleep(
+            long timeMs, @FormatString String reasonFmt, @Nullable Object... reasonArgs) {
+        getConcurrencyHelper().sleep(timeMs, reasonFmt, reasonArgs);
+    }
+
+    /**
+     * Sleeps for the given amount of time, logging the reason.
+     *
+     * <p>Useful mostly on tests that must explicitly catch {@link InterruptedException} - in most
+     * cases, tests should call {@link #sleep(long, String, Object...)} instead.
+     */
+    @FormatMethod
+    public static void sleepOnly(
+            long timeMs, @FormatString String reasonFmt, @Nullable Object... reasonArgs)
+            throws InterruptedException {
+        getConcurrencyHelper().sleepOnly(timeMs, reasonFmt, reasonArgs);
     }
 
     /** Runs the given runnable in the main thread. */

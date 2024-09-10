@@ -16,9 +16,11 @@
 
 package com.android.adservices.service.js;
 
+
 import static com.android.adservices.service.js.JSScriptArgument.arrayArg;
 import static com.android.adservices.service.js.JSScriptArgument.jsonArg;
 import static com.android.adservices.service.js.JSScriptArgument.jsonArrayArg;
+import static com.android.adservices.service.js.JSScriptArgument.jsonArrayArgNoValidation;
 import static com.android.adservices.service.js.JSScriptArgument.numericArg;
 import static com.android.adservices.service.js.JSScriptArgument.recordArg;
 import static com.android.adservices.service.js.JSScriptArgument.stringArg;
@@ -31,6 +33,7 @@ import static org.junit.Assert.assertThrows;
 import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import org.json.JSONException;
 import org.junit.Rule;
@@ -42,26 +45,50 @@ public class JSScriptArgumentTest {
     @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
+    private static final String VALID_TEST_OBJECT_JSON_ARRAY =
+            "["
+                    + "{"
+                    + "\"name\":\"John\","
+                    + "\"age\":30,"
+                    + "\"city\":\"New York\""
+                    + "},"
+                    + "{"
+                    + "\"name\":\"Alice\","
+                    + "\"age\":25,"
+                    + "\"city\":\"Los Angeles\""
+                    + "},"
+                    + "{"
+                    + "\"name\":\"Bob\","
+                    + "\"age\":35,"
+                    + "\"city\":\"Chicago\""
+                    + "}]";
+
+    private static final ImmutableSet<TestObject> VALID_TEST_OBJECT_ARRAY =
+            ImmutableSet.of(
+                    new TestObject("John", 30, "New York"),
+                    new TestObject("Alice", 25, "Los Angeles"),
+                    new TestObject("Bob", 35, "Chicago"));
+
     @Test
-    public void testStringArg() {
+    public void test_stringArg_validString_returnsSuccess() {
         JSScriptArgument arg = stringArg("stringArg", "value");
         assertThat(arg.variableDeclaration()).isEqualTo("const stringArg = \"value\";");
     }
 
     @Test
-    public void testIntArg() {
+    public void test_numericArg_validInteger_returnsSuccess() {
         JSScriptArgument arg = numericArg("numericArg", 1);
         assertThat(arg.variableDeclaration()).isEqualTo("const numericArg = 1;");
     }
 
     @Test
-    public void testFloatArg() {
+    public void test_numericArg_validFloat_returnsSuccess() {
         JSScriptArgument arg = numericArg("numericArg", 1.001);
         assertThat(arg.variableDeclaration()).isEqualTo("const numericArg = 1.001;");
     }
 
     @Test
-    public void testJsonArg() throws JSONException {
+    public void test_jsonArg_validJson_returnsSuccess() throws JSONException {
         final String jsonValue = "{\"intField\": 123, \"stringField\": \"value\"}";
         JSScriptArgument arg = jsonArg("jsonArg", jsonValue);
         assertThat(arg.variableDeclaration())
@@ -69,39 +96,44 @@ public class JSScriptArgumentTest {
     }
 
     @Test
-    public void testJsonArrayArg() throws JSONException {
-        final String jsonArrayValue =
-                "[\n"
-                        + "    {\n"
-                        + "        \"name\": \"John\",\n"
-                        + "        \"age\": 30,\n"
-                        + "        \"city\": \"New York\"\n"
-                        + "    },\n"
-                        + "    {\n"
-                        + "        \"name\": \"Alice\",\n"
-                        + "        \"age\": 25,\n"
-                        + "        \"city\": \"Los Angeles\"\n"
-                        + "    },\n"
-                        + "    {\n"
-                        + "        \"name\": \"Bob\",\n"
-                        + "        \"age\": 35,\n"
-                        + "        \"city\": \"Chicago\"\n"
-                        + "    }\n"
-                        + "]";
-        JSScriptArgument arg = jsonArrayArg("jsonArrayArg", jsonArrayValue);
+    public void test_jsonArrayArg_validJsonArray_returnsSuccess() throws JSONException {
+        JSScriptArgument arg = jsonArrayArg("jsonArrayArg", VALID_TEST_OBJECT_JSON_ARRAY);
         assertThat(arg.variableDeclaration())
-                .isEqualTo(String.format("const jsonArrayArg = %s;", jsonArrayValue));
+                .isEqualTo(String.format("const jsonArrayArg = %s;", VALID_TEST_OBJECT_JSON_ARRAY));
     }
 
     @Test
-    public void testJsonArgFailsForInvalidJson() throws JSONException {
+    public void test_jsonArrayArg_invalidJsonArray_throwsException() {
+        final String jsonArrayValue = "this is an invalid json array";
+        assertThrows(JSONException.class, () -> jsonArrayArg("jsonArrayArg", jsonArrayValue));
+    }
+
+    @Test
+    public void test_jsonArrayArgNoValidation_emptyCollection_returnsEmptyJson() {
+        JSScriptArgument arg =
+                jsonArrayArgNoValidation(
+                        "jsonArrayArg", ImmutableSet.of(), TestObject::serializeEntryToJson);
+        assertThat(arg.variableDeclaration()).isEqualTo("const jsonArrayArg = [];");
+    }
+
+    @Test
+    public void test_jsonArrayArgNoValidation_testObjectMarshaling_returnsMarshalledJson() {
+        JSScriptArgument arg =
+                jsonArrayArgNoValidation(
+                        "jsonArrayArg", VALID_TEST_OBJECT_ARRAY, TestObject::serializeEntryToJson);
+        assertThat(arg.variableDeclaration())
+                .isEqualTo(String.format("const jsonArrayArg = %s;", VALID_TEST_OBJECT_JSON_ARRAY));
+    }
+
+    @Test
+    public void test_jsonArg_invalidJson_throwsException() throws JSONException {
         // Missing closing }
         final String jsonValue = "{\"intField\": 123, \"stringField\": \"value\"";
         assertThrows(JSONException.class, () -> jsonArg("jsonArg", jsonValue));
     }
 
     @Test
-    public void testArrayArg() throws JSONException {
+    public void test_arrayArg_validArray_returnsSuccess() throws JSONException {
         JSScriptArgument arg =
                 JSScriptArgument.arrayArg(
                         "arrayArg", stringArg("ignored", "value1"), stringArg("ignored", "value2"));
@@ -111,7 +143,7 @@ public class JSScriptArgumentTest {
     }
 
     @Test
-    public void testRecordArg() throws JSONException {
+    public void test_recordArg_validInput_returnsSuccess() throws JSONException {
         JSScriptArgument arg =
                 recordArg(
                         "recordArg",
@@ -127,7 +159,7 @@ public class JSScriptArgumentTest {
     }
 
     @Test
-    public void testStringMapToRecordArg() throws JSONException {
+    public void test_stringMapToRecordArg_validStringMap_returnsSuccess() throws JSONException {
         Map<String, String> signals =
                 ImmutableMap.of(
                         "key1",
@@ -140,9 +172,29 @@ public class JSScriptArgumentTest {
         assertThat(arg.variableDeclaration())
                 .isEqualTo(
                         "const stringMapToRecordArg = {\n"
-                            + "\"key1\": {\"signals\":1},\n"
-                            + "\"key2\": {\"signals\":2},\n"
-                            + "\"key3\": {\"signals\":3}\n"
-                            + "};");
+                                + "\"key1\": {\"signals\":1},\n"
+                                + "\"key2\": {\"signals\":2},\n"
+                                + "\"key3\": {\"signals\":3}\n"
+                                + "};");
+    }
+
+    private static class TestObject {
+        public String name;
+        public int age;
+        public String city;
+
+        TestObject(String name, int age, String city) {
+            this.name = name;
+            this.age = age;
+            this.city = city;
+        }
+
+        static void serializeEntryToJson(TestObject value, StringBuilder accumulator) {
+            accumulator.append("{");
+            accumulator.append("\"name\":\"").append(value.name).append("\",");
+            accumulator.append("\"age\":").append(value.age).append(",");
+            accumulator.append("\"city\":\"").append(value.city).append("\"");
+            accumulator.append("}");
+        }
     }
 }

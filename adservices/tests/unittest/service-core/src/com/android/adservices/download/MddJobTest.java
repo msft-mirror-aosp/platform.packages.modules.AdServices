@@ -51,8 +51,7 @@ import static org.mockito.Mockito.when;
 import android.app.job.JobScheduler;
 import android.os.PersistableBundle;
 
-import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.service.Flags;
+import com.android.adservices.common.AdServicesJobTestCase;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.shared.spe.framework.ExecutionResult;
 import com.android.adservices.shared.spe.framework.ExecutionRuntimeParameters;
@@ -82,7 +81,7 @@ import org.mockito.Mock;
 @SpyStatic(MddJob.class)
 @SpyStatic(MddJobService.class)
 @SpyStatic(MobileDataDownloadFactory.class)
-public final class MddJobTest extends AdServicesExtendedMockitoTestCase {
+public final class MddJobTest extends AdServicesJobTestCase {
     private static final com.google.android.libraries.mobiledatadownload.Flags sMddFlags =
             new com.google.android.libraries.mobiledatadownload.Flags() {};
 
@@ -94,7 +93,6 @@ public final class MddJobTest extends AdServicesExtendedMockitoTestCase {
     @Mock private EnrollmentDataDownloadManager mMockEnrollmentDataDownloadManager;
     @Mock private EncryptionDataDownloadManager mMockEncryptionDataDownloadManager;
     @Mock private ExecutionRuntimeParameters mMockParams;
-    @Mock private Flags mMockFlags;
     @Mock private JobScheduler mMockJobScheduler;
     @Mock private MddFlags mMockMddFlags;
 
@@ -146,7 +144,7 @@ public final class MddJobTest extends AdServicesExtendedMockitoTestCase {
         FutureSyncCallback<Void> encryptionCallBack = mockEncryptionReadFromMdd();
 
         ListenableFuture<ExecutionResult> unusedFuture =
-                mMddJob.getExecutionFuture(sContext, mMockParams);
+                mMddJob.getExecutionFuture(mContext, mMockParams);
         // Call it to suppress the linter.
         assertThat(unusedFuture.get()).isEqualTo(SUCCESS);
 

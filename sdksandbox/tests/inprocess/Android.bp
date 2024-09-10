@@ -28,8 +28,8 @@ android_test {
     ],
 
     libs: [
-        "android.test.base",
-        "android.test.runner",
+        "android.test.base.stubs.system",
+        "android.test.runner.stubs.system",
     ],
     static_libs: [
         "androidx.core_core",
@@ -40,7 +40,7 @@ android_test {
         "sdk_sandbox_flags_lib",
         "truth",
     ],
-    jarjar_rules: ":test-jarjar-rules",
+    jarjar_rules: ":test-service-jarjar-rules",
     test_suites: ["general-tests"],
     test_options: {
         extra_test_configs: ["AndroidTest_SdkInSandbox.xml"],
@@ -72,7 +72,7 @@ android_test {
         "truth",
         "SdkSandboxTestUtils",
     ],
-    jarjar_rules: ":test-jarjar-rules",
+    jarjar_rules: ":test-service-jarjar-rules",
     test_suites: ["general-tests"],
 }
 
@@ -102,5 +102,5 @@ android_test {
         "SdkSandboxTestUtils",
     ],
     test_suites: ["general-tests"],
-    jarjar_rules: ":test-jarjar-rules",
+    jarjar_rules: ":test-service-jarjar-rules",
 }

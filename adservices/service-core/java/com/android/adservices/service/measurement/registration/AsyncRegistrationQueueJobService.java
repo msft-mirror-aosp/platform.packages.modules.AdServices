@@ -35,6 +35,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueRunner.ProcessingResult;
+import com.android.adservices.service.measurement.reporting.DebugReportingJobService;
 import com.android.adservices.service.measurement.util.JobLockHolder;
 import com.android.adservices.spe.AdServicesJobInfo;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
@@ -117,6 +118,8 @@ public class AsyncRegistrationQueueJobService extends JobService {
                                             // scheduled
                                             jobFinished(params, /* wantsReschedule= */ true);
                                     }
+                                    DebugReportingJobService.scheduleIfNeeded(
+                                            getApplicationContext(), /*force schedule*/ false);
                                     Trace.endSection();
                                 });
         return true;
@@ -151,13 +154,14 @@ public class AsyncRegistrationQueueJobService extends JobService {
         jobScheduler.schedule(job);
     }
 
-    private static JobInfo buildJobInfo(Context context, Flags flags) {
+    @VisibleForTesting
+    static JobInfo buildJobInfo(Context context, Flags flags) {
         return new JobInfo.Builder(
                         MEASUREMENT_ASYNC_REGISTRATION_JOB_ID,
                         new ComponentName(context, AsyncRegistrationQueueJobService.class))
                 .addTriggerContentUri(
                         new JobInfo.TriggerContentUri(
-                                AsyncRegistrationContentProvider.TRIGGER_URI,
+                                AsyncRegistrationContentProvider.getTriggerUri(),
                                 JobInfo.TriggerContentUri.FLAG_NOTIFY_FOR_DESCENDANTS))
                 .setTriggerContentUpdateDelay(
                         flags.getMeasurementAsyncRegistrationJobTriggerMinDelayMs())

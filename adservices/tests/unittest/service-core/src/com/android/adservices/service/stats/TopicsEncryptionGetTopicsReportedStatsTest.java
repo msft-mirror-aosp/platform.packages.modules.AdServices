@@ -20,7 +20,7 @@ import com.android.adservices.common.AdServicesUnitTestCase;
 
 import org.junit.Test;
 
-public class TopicsEncryptionGetTopicsReportedStatsTest extends AdServicesUnitTestCase {
+public final class TopicsEncryptionGetTopicsReportedStatsTest extends AdServicesUnitTestCase {
     private static final int COUNT_OF_ENCRYPTED_TOPICS = 5;
     private static final int LATENCY_OF_READING_ENCRYPTED_TOPICS_FROM_DB_MS = 10;
 
