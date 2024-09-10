@@ -25,6 +25,7 @@ import static org.junit.Assert.assertThrows;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.utils.FledgeScenarioTest;
 import android.adservices.utils.ScenarioDispatcher;
+import android.adservices.utils.ScenarioDispatcherFactory;
 
 import com.android.compatibility.common.util.ShellUtils;
 
@@ -54,10 +55,11 @@ public class CustomAudienceBackgroundFetchTest extends FledgeScenarioTest {
     public void testAdSelection_withInvalidFields_backgroundJobUpdatesSuccessfully()
             throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-020.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
-        AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
+                setupDispatcher(
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-020.json"));
+        AdSelectionConfig adSelectionConfig =
+                makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
 
         try {
             joinCustomAudience(makeCustomAudience(CA_NAME).setAds(List.of()).build());
@@ -80,10 +82,11 @@ public class CustomAudienceBackgroundFetchTest extends FledgeScenarioTest {
     @Test
     public void testAdSelection_withInvalidAds_backgroundJobUpdateFails() throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-034.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
-        AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
+                setupDispatcher(
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-034.json"));
+        AdSelectionConfig adSelectionConfig =
+                makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
 
         try {
             joinCustomAudience(makeCustomAudience(CA_NAME).setAds(List.of()).build());
@@ -107,10 +110,11 @@ public class CustomAudienceBackgroundFetchTest extends FledgeScenarioTest {
     @Test
     public void testAdSelection_withHighLatencyBackend_backgroundJobFails() throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-030-032.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
-        AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
+                setupDispatcher(
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-030-032.json"));
+        AdSelectionConfig adSelectionConfig =
+                makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
 
         try {
             joinCustomAudience(makeCustomAudience(CA_NAME).setAds(List.of()).build());
@@ -137,10 +141,11 @@ public class CustomAudienceBackgroundFetchTest extends FledgeScenarioTest {
     @Test
     public void testAdSelection_withOverlyLargeDailyUpdate_backgroundJobFails() throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-033.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
-        AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
+                setupDispatcher(
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-033.json"));
+        AdSelectionConfig adSelectionConfig =
+                makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
 
         try {
             joinCustomAudience(makeCustomAudience(CA_NAME).setAds(List.of()).build());
@@ -164,10 +169,11 @@ public class CustomAudienceBackgroundFetchTest extends FledgeScenarioTest {
     @Test
     public void testAdSelection_withLongRunningJob_backgroundJobFails() throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-020.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
-        AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
+                setupDispatcher(
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-020.json"));
+        AdSelectionConfig adSelectionConfig =
+                makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
         int startBackgroundFetchTimeoutMs = getBackgroundFetchJobTimeout();
         int overrideBackgroundFetchTimeoutMs = 50;
 

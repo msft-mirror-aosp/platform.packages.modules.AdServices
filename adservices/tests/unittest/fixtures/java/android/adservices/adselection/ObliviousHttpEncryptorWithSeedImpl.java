@@ -33,6 +33,7 @@ import com.android.adservices.ohttp.algorithms.UnsupportedHpkeAlgorithmException
 import com.android.adservices.service.adselection.encryption.AdSelectionEncryptionKeyManager;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpRequestContextMarshaller;
+import com.android.adservices.service.devapi.DevContext;
 
 import com.google.common.util.concurrent.FluentFuture;
 
@@ -71,10 +72,12 @@ public class ObliviousHttpEncryptorWithSeedImpl implements ObliviousHttpEncrypto
             byte[] plainText,
             long contextId,
             long keyFetchTimeoutMs,
-            @Nullable Uri coordinatorUri) {
+            @Nullable Uri coordinatorUri,
+            DevContext devContext) {
 
         return mEncryptionKeyManager
-                .getLatestOhttpKeyConfigOfType(AUCTION, keyFetchTimeoutMs, coordinatorUri)
+                .getLatestOhttpKeyConfigOfType(
+                        AUCTION, keyFetchTimeoutMs, coordinatorUri, devContext)
                 .transform(
                         key -> createAndSerializeRequestWithSeed(key, plainText, contextId),
                         mLightweightExecutor);
@@ -107,7 +110,11 @@ public class ObliviousHttpEncryptorWithSeedImpl implements ObliviousHttpEncrypto
             ObliviousHttpClient client = ObliviousHttpClient.create(config);
 
             Objects.requireNonNull(client);
-            ObliviousHttpRequest request = client.createObliviousHttpRequest(plainText, mSeed);
+            ObliviousHttpRequest request =
+                    client.createObliviousHttpRequest(
+                            plainText,
+                            mSeed,
+                            ObliviousHttpKeyConfig.useFledgeAuctionServerMediaTypeChange(AUCTION));
 
             Objects.requireNonNull(request);
             mObliviousHttpRequestContextMarshaller.insertAuctionEncryptionContext(

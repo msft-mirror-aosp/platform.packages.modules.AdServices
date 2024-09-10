@@ -25,9 +25,9 @@ import android.net.Uri;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;

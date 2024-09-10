@@ -28,6 +28,7 @@ import java.util.Map;
 public class ProtectedSignalsFixture {
 
     private static final Instant NOW = CommonFixture.FIXED_NOW;
+    public static final String PACKAGE_NAME_PREFIX = "com.fake.package";
 
     /**
      * Generates a map of keys and List of {@link ProtectedSignal} where keys and values are base64
@@ -46,7 +47,7 @@ public class ProtectedSignalsFixture {
             for (int i = 1; i <= count; i++) {
                 protectedSignalsMap
                         .get(base64EncodedKey)
-                        .add(generateDBProtectedSignal(seed, new byte[] {(byte) i}));
+                        .add(generateProtectedSignal(seed, new byte[] {(byte) i}));
             }
         }
 
@@ -54,11 +55,11 @@ public class ProtectedSignalsFixture {
     }
 
     /**
-     * @return a DB Protected signal instance where the package name starts with the given {@code
+     * @return a Protected signal instance where the package name starts with the given {@code
      *     seed}, the creation time is the fixed {@code NOW} value and the signal value is the given
      *     value.
      */
-    public static ProtectedSignal generateDBProtectedSignal(String seed, byte[] value) {
+    public static ProtectedSignal generateProtectedSignal(String seed, byte[] value) {
         return ProtectedSignal.builder()
                 .setCreationTime(NOW)
                 .setBase64EncodedValue(Base64.getEncoder().encodeToString(value))
@@ -77,6 +78,6 @@ public class ProtectedSignalsFixture {
     }
 
     private static String generatePackageName(String seed) {
-        return "com.fake.package" + seed;
+        return PACKAGE_NAME_PREFIX + seed;
     }
 }

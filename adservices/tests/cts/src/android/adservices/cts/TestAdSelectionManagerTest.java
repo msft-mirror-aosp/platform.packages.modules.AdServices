@@ -16,6 +16,7 @@
 
 package android.adservices.cts;
 
+import static com.android.adservices.AdServicesCommon.BINDER_TIMEOUT_SYSTEM_PROPERTY_NAME;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED;
 import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE;
 import static com.android.adservices.service.FlagsConstants.KEY_ISOLATE_MAX_HEAP_SIZE_BYTES;
@@ -46,12 +47,14 @@ import android.os.Process;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.RequiresSdkLevelAtLeastS;
-import com.android.adservices.common.annotations.SetFlagDisabled;
-import com.android.adservices.common.annotations.SetFlagEnabled;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.annotations.SetLongDebugFlag;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -69,6 +72,9 @@ import java.util.concurrent.TimeUnit;
 @SetFlagEnabled(KEY_ENABLE_ENROLLMENT_TEST_SEED)
 @SetFlagDisabled(KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE)
 @SetFlagDisabled(KEY_ISOLATE_MAX_HEAP_SIZE_BYTES)
+// TODO (b/330324133): Short-term solution to allow test to extend binder timeout to
+// resolve the test flakiness.
+@SetLongDebugFlag(name = BINDER_TIMEOUT_SYSTEM_PROPERTY_NAME, value = 10_000)
 public final class TestAdSelectionManagerTest extends ForegroundCtsTestCase {
 
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -102,6 +108,13 @@ public final class TestAdSelectionManagerTest extends ForegroundCtsTestCase {
 
     private TestAdSelectionClient mTestAdSelectionClient;
     private boolean mIsDebugMode;
+
+    @Override
+    protected AdServicesFlagsSetterRule getAdServicesFlagsSetterRule() {
+        return AdServicesFlagsSetterRule.forAllApisEnabledTests()
+                .setCompatModeFlags()
+                .setPpapiAppAllowList(mPackageName);
+    }
 
     @Before
     public void setup() {

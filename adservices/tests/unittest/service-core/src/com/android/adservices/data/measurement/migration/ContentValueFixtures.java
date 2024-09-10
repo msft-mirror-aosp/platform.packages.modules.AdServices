@@ -145,6 +145,13 @@ public class ContentValueFixtures {
 
         // Added in V30
         public static final String TRIGGER_DATA_MATCHING = Source.TriggerDataMatching.EXACT.name();
+
+        // Added in V34
+        public static final long ATTRIBUTION_SCOPE_LIMIT = 10L;
+        public static final long MAX_EVENT_STATES = 1000L;
+
+        // Added in V36
+        public static final long REINSTALL_REATTRIBUTION_WINDOW = 841839879274L;
     }
 
     public static class SourceDestinationValues {
@@ -222,6 +229,12 @@ public class ContentValueFixtures {
         // Added in V32
         public static final String AGGREGATABLE_SOURCE_REGISTRATION_TIME =
                 Trigger.SourceRegistrationTimeConfig.INCLUDE.name();
+
+        // Added in V33
+        public static final String TRIGGER_CONTEXT_ID = "sample_trigger_context_id";
+
+        // Added in V33
+        public static final String ATTRIBUTION_SCOPE = "sample_attribution_scope";
     }
 
     public static class AttributionValues {
@@ -243,6 +256,9 @@ public class ContentValueFixtures {
 
         // Added in V29
         public static final int SCOPE = 0;
+
+        // Added in V34
+        public static final String REPORT_ID = "report_id";
     }
 
     public static class EventReportValues {
@@ -309,6 +325,9 @@ public class ContentValueFixtures {
 
         // Added in V27
         public static final int IS_FAKE_REPORT = 0;
+
+        // Added in V33
+        public static final String TRIGGER_CONTEXT_ID = "trigger_context_id";
     }
 
     public static class AggregateEncryptionKeyValues {
@@ -766,6 +785,41 @@ public class ContentValueFixtures {
         return values;
     }
 
+    /** Returns content values for source version 32 */
+    public static ContentValues generateSourceContentValuesV32() {
+        return generateSourceContentValuesV30();
+    }
+
+    /** Returns content values for source version 33 */
+    public static ContentValues generateSourceContentValuesV33() {
+        return generateSourceContentValuesV32();
+    }
+
+    /** Returns content values for source version 34 */
+    public static ContentValues generateSourceContentValuesV34() {
+        ContentValues values = generateSourceContentValuesV33();
+        values.put(
+                MeasurementTables.SourceContract.ATTRIBUTION_SCOPE_LIMIT,
+                SourceValues.ATTRIBUTION_SCOPE_LIMIT);
+        values.put(
+                MeasurementTables.SourceContract.MAX_EVENT_STATES, SourceValues.MAX_EVENT_STATES);
+        return values;
+    }
+
+    /** Returns content values for source version 35 */
+    public static ContentValues generateSourceContentValuesV35() {
+        return generateSourceContentValuesV34();
+    }
+
+    /** Returns content values for source version 36 */
+    public static ContentValues generateSourceContentValuesV36() {
+        ContentValues values = generateSourceContentValuesV35();
+        values.put(
+                MeasurementTables.SourceContract.REINSTALL_REATTRIBUTION_WINDOW,
+                SourceValues.REINSTALL_REATTRIBUTION_WINDOW);
+        return values;
+    }
+
     public static ContentValues generateSourceDestinationContentValuesV9() {
         ContentValues sourceDestination = new ContentValues();
 
@@ -981,11 +1035,30 @@ public class ContentValueFixtures {
 
     /** Get ContentValues for V32 */
     public static ContentValues generateTriggerContentValuesV32() {
-        ContentValues values = generateTriggerContentValuesV20();
+        ContentValues values = generateTriggerContentValuesV31();
         values.put(
                 MeasurementTables.TriggerContract.AGGREGATABLE_SOURCE_REGISTRATION_TIME_CONFIG,
                 TriggerValues.AGGREGATABLE_SOURCE_REGISTRATION_TIME);
 
+        return values;
+    }
+
+    /** Get ContentValues for V33 */
+    public static ContentValues generateTriggerContentValuesV33() {
+        ContentValues values = generateTriggerContentValuesV32();
+        values.put(
+                MeasurementTables.TriggerContract.TRIGGER_CONTEXT_ID,
+                TriggerValues.TRIGGER_CONTEXT_ID);
+
+        return values;
+    }
+
+    /** Get ContentValues for V33 */
+    public static ContentValues generateTriggerContentValuesV34() {
+        ContentValues values = generateTriggerContentValuesV33();
+        values.put(
+                MeasurementTables.TriggerContract.ATTRIBUTION_SCOPES,
+                TriggerValues.ATTRIBUTION_SCOPE);
         return values;
     }
 
@@ -1108,6 +1181,13 @@ public class ContentValueFixtures {
         values.put(
                 MeasurementTables.AttributionContract.SCOPE,
                 AttributionValues.SCOPE);
+        return values;
+    }
+
+    /** Get ContentValues for V34 */
+    public static ContentValues generateAttributionContentValuesV35() {
+        ContentValues values = generateAttributionContentValuesV29();
+        values.put(MeasurementTables.AttributionContract.REPORT_ID, AttributionValues.REPORT_ID);
         return values;
     }
 
@@ -1418,6 +1498,21 @@ public class ContentValueFixtures {
         values.put(
                 MeasurementTables.AggregateReport.IS_FAKE_REPORT,
                 AggregateReportValues.IS_FAKE_REPORT);
+        return values;
+    }
+
+    /** Returns content values for aggregate report version 32 */
+    public static ContentValues generateAggregateReportContentValuesV32() {
+        ContentValues values = generateAggregateReportContentValuesV27();
+        return values;
+    }
+
+    /** Returns content values for aggregate report version 33 */
+    public static ContentValues generateAggregateReportContentValuesV33() {
+        ContentValues values = generateAggregateReportContentValuesV32();
+        values.put(
+                MeasurementTables.AggregateReport.TRIGGER_CONTEXT_ID,
+                AggregateReportValues.TRIGGER_CONTEXT_ID);
         return values;
     }
 

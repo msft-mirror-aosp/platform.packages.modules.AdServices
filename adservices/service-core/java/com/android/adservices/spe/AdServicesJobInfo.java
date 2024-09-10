@@ -84,12 +84,17 @@ public enum AdServicesJobInfo {
     FLEDGE_KANON_SIGN_JOIN_BACKGROUND_JOB("FLEDGE_KANON_SIGN_JOIN_BACKGROUND_JOB", 31),
 
     SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB(
-            "SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB", 32);
+            "SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB", 32),
 
+    MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB(
+            "MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB", 33),
+
+    MEASUREMENT_REPORTING_JOB("MEASUREMENT_REPORTING_JOB", 34);
     private final String mJobServiceName;
     private final int mJobId;
 
     // The reverse mapping to get job name by job ID.
+    // Duplicated job ID leads to an IllegalStateException, referring to Collectors.toMap().
     private static final Map<Integer, String> JOB_ID_TO_NAME_MAP =
             Arrays.stream(AdServicesJobInfo.values())
                     .collect(

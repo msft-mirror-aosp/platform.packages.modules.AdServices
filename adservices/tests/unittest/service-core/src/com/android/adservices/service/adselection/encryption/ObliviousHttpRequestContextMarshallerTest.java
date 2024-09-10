@@ -25,7 +25,6 @@ import android.adservices.common.CommonFixture;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.DBEncryptionContext;
 import com.android.adservices.data.adselection.EncryptionContextDao;
@@ -33,6 +32,7 @@ import com.android.adservices.data.adselection.EncryptionKeyConstants;
 import com.android.adservices.ohttp.EncapsulatedSharedSecret;
 import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
 import com.android.adservices.ohttp.ObliviousHttpRequestContext;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.io.BaseEncoding;
 
@@ -66,6 +66,9 @@ public class ObliviousHttpRequestContextMarshallerTest {
     private static final byte[] SEED_BYTES =
             "6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c"
                     .getBytes(StandardCharsets.UTF_8);
+
+    private static final boolean HAS_MEDIA_TYPE_CHANGED = false;
+
     private EncryptionContextDao mEncryptionContextDao;
     private ObliviousHttpRequestContextMarshaller mObliviousHttpRequestContextMarshaller;
     private Clock mClock;
@@ -101,7 +104,8 @@ public class ObliviousHttpRequestContextMarshallerTest {
                         ObliviousHttpKeyConfig.fromSerializedKeyConfig(
                                 INPUT_KEY_CONFIG_WITH_MULTIPLE_ALGORITHMS_BYTES),
                         EncapsulatedSharedSecret.create(SHARED_SECRET_BYTES),
-                        SEED_BYTES);
+                        SEED_BYTES,
+                        HAS_MEDIA_TYPE_CHANGED);
 
         mObliviousHttpRequestContextMarshaller.insertAuctionEncryptionContext(
                 CONTEXT_ID_1, context);
@@ -138,6 +142,7 @@ public class ObliviousHttpRequestContextMarshallerTest {
                         .setKeyConfig(STORED_KEY_CONFIG_WITH_SINGLE_ALGORITHM_BYTES)
                         .setSharedSecret(SHARED_SECRET_BYTES)
                         .setSeed(SEED_BYTES)
+                        .setHasMediaTypeChanged(HAS_MEDIA_TYPE_CHANGED)
                         .build());
 
         ObliviousHttpRequestContext expectedOhttpContext =
@@ -152,6 +157,7 @@ public class ObliviousHttpRequestContextMarshallerTest {
         assertThat(expectedOhttpContext.encapsulatedSharedSecret())
                 .isEqualTo(EncapsulatedSharedSecret.create(SHARED_SECRET_BYTES));
         assertThat(expectedOhttpContext.seed()).isEqualTo(SEED_BYTES);
+        assertThat(expectedOhttpContext.hasMediaTypeChanged()).isEqualTo(HAS_MEDIA_TYPE_CHANGED);
     }
 
     /** Test to verify that a getContext call where context Id is absent throws an IAE. */

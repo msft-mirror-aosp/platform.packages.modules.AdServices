@@ -31,9 +31,6 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSEN
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
 import static com.android.adservices.service.common.AppManifestConfigCall.API_CUSTOM_AUDIENCES;
-import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE;
-import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_JOIN_CUSTOM_AUDIENCE;
-import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_LEAVE_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE;
@@ -67,11 +64,11 @@ import android.adservices.customaudience.CustomAudienceOverrideCallback;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceCallback;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceInput;
 import android.adservices.customaudience.ICustomAudienceCallback;
+import android.os.LimitExceededException;
 import android.os.Process;
 import android.os.RemoteException;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
@@ -84,13 +81,15 @@ import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
 import com.android.adservices.service.common.CustomAudienceServiceFilter;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
+import com.android.adservices.service.common.FledgeApiThrottleFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
-import com.android.adservices.service.common.Throttler;
+import com.android.adservices.service.common.FledgeConsentFilter;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
@@ -105,8 +104,9 @@ import org.mockito.Mockito;
 import org.mockito.quality.Strictness;
 
 import java.util.concurrent.ExecutorService;
+
 @RequiresSdkLevelAtLeastS()
-@MockStatic(BackgroundFetchJobService.class)
+@MockStatic(BackgroundFetchJob.class)
 public final class CustomAudienceServiceImplTest extends AdServicesExtendedMockitoTestCase {
 
     private static final ExecutorService DIRECT_EXECUTOR = MoreExecutors.newDirectExecutorService();
@@ -118,6 +118,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
     @Mock private FledgeAuthorizationFilter mFledgeAuthorizationFilterMock;
     @Mock private FledgeAllowListsFilter mFledgeAllowListsFilterMock;
     @Mock private ConsentManager mConsentManagerMock;
+    @Mock private FledgeConsentFilter mFledgeConsentFilterMock;
     @Mock private ICustomAudienceCallback mICustomAudienceCallbackMock;
     @Mock private FetchAndJoinCustomAudienceCallback mFetchAndJoinCustomAudienceCallbackMock;
     @Mock private CustomAudienceOverrideCallback mCustomAudienceOverrideCallbackMock;
@@ -128,7 +129,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
     @Mock DevContextFilter mDevContextFilterMock;
     private final AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
-    @Mock private Throttler mMockThrottler;
+    @Mock private FledgeApiThrottleFilter mFledgeApiThrottleFilterMock;
 
     private static final int MY_UID = Process.myUid();
 
@@ -156,26 +157,17 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
                                 sContext,
-                                mConsentManagerMock,
+                                mFledgeConsentFilterMock,
                                 mFlagsWithAllCheckEnabled,
                                 mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterMock,
-                                mMockThrottler),
+                                mFledgeApiThrottleFilterMock),
                         new AdFilteringFeatureFactory(
                                 mAppInstallDaoMock,
                                 mFrequencyCapDaoMock,
                                 mFlagsWithAllCheckEnabled));
 
-        Mockito.lenient()
-                .when(mMockThrottler.tryAcquire(eq(FLEDGE_API_JOIN_CUSTOM_AUDIENCE), anyString()))
-                .thenReturn(true);
-        Mockito.lenient()
-                .when(mMockThrottler.tryAcquire(eq(FLEDGE_API_FETCH_CUSTOM_AUDIENCE), anyString()))
-                .thenReturn(true);
-        Mockito.lenient()
-                .when(mMockThrottler.tryAcquire(eq(FLEDGE_API_LEAVE_CUSTOM_AUDIENCE), anyString()))
-                .thenReturn(true);
         Mockito.lenient()
                 .doReturn(DevContext.createForDevOptionsDisabled())
                 .when(mDevContextFilterMock)
@@ -190,7 +182,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
         verifyNoMoreInteractions(
                 mCustomAudienceImplMock,
                 mFledgeAuthorizationFilterMock,
-                staticMockMarker(BackgroundFetchJobService.class),
+                staticMockMarker(BackgroundFetchJob.class),
                 mFledgeAllowListsFilterMock,
                 mICustomAudienceCallbackMock,
                 mCustomAudienceOverrideCallbackMock,
@@ -226,10 +218,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         VALID_CUSTOM_AUDIENCE,
                         CustomAudienceFixture.VALID_OWNER,
                         DevContext.createForDevOptionsDisabled());
-        verify(
-                () ->
-                        BackgroundFetchJobService.scheduleIfNeeded(
-                                sContext, mFlagsWithAllCheckEnabled, false));
+        verify(() -> BackgroundFetchJob.schedule(mFlagsWithAllCheckEnabled));
         verify(mICustomAudienceCallbackMock).onSuccess();
         verify(mFledgeAuthorizationFilterMock)
                 .assertCallingPackageName(
@@ -320,12 +309,12 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         CallingAppUidSupplierFailureImpl.create(),
                         new CustomAudienceServiceFilter(
                                 sContext,
-                                mConsentManagerMock,
+                                mFledgeConsentFilterMock,
                                 mFlagsWithAllCheckEnabled,
                                 mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterMock,
-                                mMockThrottler),
+                                mFledgeApiThrottleFilterMock),
                         new AdFilteringFeatureFactory(
                                 mAppInstallDaoMock,
                                 mFrequencyCapDaoMock,
@@ -505,7 +494,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         VALID_CUSTOM_AUDIENCE,
                         CustomAudienceFixture.VALID_OWNER,
                         DevContext.createForDevOptionsDisabled());
-        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)));
+        verify(() -> BackgroundFetchJob.schedule(any()));
         verify(mICustomAudienceCallbackMock).onSuccess();
         verify(mFledgeAuthorizationFilterMock)
                 .assertCallingPackageName(
@@ -559,10 +548,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         VALID_CUSTOM_AUDIENCE,
                         CustomAudienceFixture.VALID_OWNER,
                         devContextEnabled);
-        verify(
-                () ->
-                        BackgroundFetchJobService.scheduleIfNeeded(
-                                sContext, mFlagsWithAllCheckEnabled, false));
+        verify(() -> BackgroundFetchJob.schedule(mFlagsWithAllCheckEnabled));
         verify(mICustomAudienceCallbackMock).onSuccess();
         verify(mFledgeAuthorizationFilterMock)
                 .assertCallingPackageName(
@@ -639,12 +625,12 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         CallingAppUidSupplierFailureImpl.create(),
                         new CustomAudienceServiceFilter(
                                 sContext,
-                                mConsentManagerMock,
+                                mFledgeConsentFilterMock,
                                 mFlagsWithAllCheckEnabled,
                                 mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterMock,
-                                mMockThrottler),
+                                mFledgeApiThrottleFilterMock),
                         new AdFilteringFeatureFactory(
                                 mAppInstallDaoMock,
                                 mFrequencyCapDaoMock,
@@ -782,12 +768,12 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         CallingAppUidSupplierFailureImpl.create(),
                         new CustomAudienceServiceFilter(
                                 sContext,
-                                mConsentManagerMock,
+                                mFledgeConsentFilterMock,
                                 mFlagsWithAllCheckEnabled,
                                 mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterMock,
-                                mMockThrottler),
+                                mFledgeApiThrottleFilterMock),
                         new AdFilteringFeatureFactory(
                                 mAppInstallDaoMock,
                                 mFrequencyCapDaoMock,
@@ -1064,12 +1050,12 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
                                 sContext,
-                                mConsentManagerMock,
+                                mFledgeConsentFilterMock,
                                 mFlagsWithForegroundCheckDisabled,
                                 mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterMock,
-                                mMockThrottler),
+                                mFledgeApiThrottleFilterMock),
                         new AdFilteringFeatureFactory(
                                 mAppInstallDaoMock,
                                 mFrequencyCapDaoMock,
@@ -1110,7 +1096,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         VALID_CUSTOM_AUDIENCE,
                         CustomAudienceFixture.VALID_OWNER,
                         DevContext.createForDevOptionsDisabled());
-        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)));
+        verify(() -> BackgroundFetchJob.schedule(any()));
         verify(mICustomAudienceCallbackMock).onSuccess();
         verifyLoggerMock(
                 AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
@@ -1168,12 +1154,12 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
                                 sContext,
-                                mConsentManagerMock,
+                                mFledgeConsentFilterMock,
                                 mFlagsWithForegroundCheckDisabled,
                                 mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterMock,
-                                mMockThrottler),
+                                mFledgeApiThrottleFilterMock),
                         new AdFilteringFeatureFactory(
                                 mAppInstallDaoMock,
                                 mFrequencyCapDaoMock,
@@ -1293,12 +1279,12 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
                                 sContext,
-                                mConsentManagerMock,
+                                mFledgeConsentFilterMock,
                                 mFlagsWithForegroundCheckDisabled,
                                 mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterMock,
-                                mMockThrottler),
+                                mFledgeApiThrottleFilterMock),
                         new AdFilteringFeatureFactory(
                                 mAppInstallDaoMock,
                                 mFrequencyCapDaoMock,
@@ -1402,12 +1388,12 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
                                 sContext,
-                                mConsentManagerMock,
+                                mFledgeConsentFilterMock,
                                 mFlagsWithForegroundCheckDisabled,
                                 mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterMock,
-                                mMockThrottler),
+                                mFledgeApiThrottleFilterMock),
                         new AdFilteringFeatureFactory(
                                 mAppInstallDaoMock,
                                 mFrequencyCapDaoMock,
@@ -1490,12 +1476,12 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
                                 sContext,
-                                mConsentManagerMock,
+                                mFledgeConsentFilterMock,
                                 mFlagsWithForegroundCheckDisabled,
                                 mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterMock,
-                                mMockThrottler),
+                                mFledgeApiThrottleFilterMock),
                         new AdFilteringFeatureFactory(
                                 mAppInstallDaoMock,
                                 mFrequencyCapDaoMock,
@@ -1722,12 +1708,12 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
                                 sContext,
-                                mConsentManagerMock,
+                                mFledgeConsentFilterMock,
                                 mFlagsWithEnrollmentCheckDisabled,
                                 mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterMock,
-                                mMockThrottler),
+                                mFledgeApiThrottleFilterMock),
                         new AdFilteringFeatureFactory(
                                 mAppInstallDaoMock,
                                 mFrequencyCapDaoMock,
@@ -1748,7 +1734,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         VALID_CUSTOM_AUDIENCE,
                         CustomAudienceFixture.VALID_OWNER,
                         DevContext.createForDevOptionsDisabled());
-        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)));
+        verify(() -> BackgroundFetchJob.schedule(any()));
         verify(mICustomAudienceCallbackMock).onSuccess();
         verify(mFledgeAuthorizationFilterMock)
                 .assertCallingPackageName(
@@ -1832,12 +1818,12 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
                                 sContext,
-                                mConsentManagerMock,
+                                mFledgeConsentFilterMock,
                                 mFlagsWithEnrollmentCheckDisabled,
                                 mAppImportanceFilterMock,
                                 mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterMock,
-                                mMockThrottler),
+                                mFledgeApiThrottleFilterMock),
                         new AdFilteringFeatureFactory(
                                 mAppInstallDaoMock,
                                 mFrequencyCapDaoMock,
@@ -1972,8 +1958,9 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
     @Test
     public void testJoinCustomAudience_throttledFailure() throws RemoteException {
         // Throttle Join Custom Audience
-        when(mMockThrottler.tryAcquire(eq(FLEDGE_API_JOIN_CUSTOM_AUDIENCE), anyString()))
-                .thenReturn(false);
+        doThrow(new LimitExceededException(RATE_LIMIT_REACHED_ERROR_MESSAGE))
+                .when(mFledgeApiThrottleFilterMock)
+                .assertCallerNotThrottled(anyString(), any(), anyInt());
 
         mService.joinCustomAudience(
                 VALID_CUSTOM_AUDIENCE,
@@ -2003,8 +1990,9 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
     @Test
     public void testLeaveCustomAudience_throttledFailure() throws RemoteException {
         // Throttle Leave Custom Audience
-        when(mMockThrottler.tryAcquire(eq(FLEDGE_API_LEAVE_CUSTOM_AUDIENCE), anyString()))
-                .thenReturn(false);
+        doThrow(new LimitExceededException(RATE_LIMIT_REACHED_ERROR_MESSAGE))
+                .when(mFledgeApiThrottleFilterMock)
+                .assertCallerNotThrottled(anyString(), any(), anyInt());
 
         mService.leaveCustomAudience(
                 CustomAudienceFixture.VALID_OWNER,

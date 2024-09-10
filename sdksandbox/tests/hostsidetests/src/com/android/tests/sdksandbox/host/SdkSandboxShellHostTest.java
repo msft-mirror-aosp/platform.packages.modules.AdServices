@@ -19,20 +19,26 @@ package com.android.tests.sdksandbox.host;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assume.assumeTrue;
+
+import android.app.sdksandbox.hosttestutils.AwaitUtils;
+import android.app.sdksandbox.hosttestutils.DeviceSupportHostUtils;
+
+import com.android.tradefed.invoker.TestInformation;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
+import com.android.tradefed.testtype.junit4.AfterClassWithInfo;
 import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
+import com.android.tradefed.testtype.junit4.BeforeClassWithInfo;
 import com.android.tradefed.util.CommandResult;
 import com.android.tradefed.util.CommandStatus;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.HashSet;
 
-@Ignore("b/242829515,b/242829475,b/242830221,b/242829965")
 @RunWith(DeviceJUnit4ClassRunner.class)
 public final class SdkSandboxShellHostTest extends BaseHostJUnit4Test {
 
@@ -45,22 +51,35 @@ public final class SdkSandboxShellHostTest extends BaseHostJUnit4Test {
     private static final String DEBUGGABLE_APP_SANDBOX_NAME = DEBUGGABLE_APP_PACKAGE
       + "_sdk_sandbox";
     private static final String APP_SANDBOX_NAME = APP_PACKAGE + "_sdk_sandbox";
+    private final DeviceSupportHostUtils mDeviceSupportUtils = new DeviceSupportHostUtils(this);
+    private final HashSet<Integer> mOriginalUsers = new HashSet<>();
 
-    private HashSet<Integer> mOriginalUsers;
+    /** Root device for all tests. */
+    @BeforeClassWithInfo
+    public static void beforeClassWithDevice(TestInformation testInfo) throws Exception {
+        assertThat(testInfo.getDevice().enableAdbRoot()).isTrue();
+    }
+
+    /** UnRoot device after all tests. */
+    @AfterClassWithInfo
+    public static void afterClassWithDevice(TestInformation testInfo) throws Exception {
+        testInfo.getDevice().disableAdbRoot();
+    }
 
     @Before
     public void setUp() throws Exception {
+        assumeTrue("Device supports SdkSandbox", mDeviceSupportUtils.isSdkSandboxSupported());
+
         assertThat(getBuild()).isNotNull();
         assertThat(getDevice()).isNotNull();
 
         // Ensure neither app is currently running
         for (String pkg : new String[]{APP_PACKAGE, DEBUGGABLE_APP_PACKAGE}) {
             clearProcess(pkg);
+            getDevice().executeShellV2Command(String.format("cmd deviceidle whitelist +%s", pkg));
         }
 
-        mOriginalUsers = new HashSet<>(getDevice().listUsers());
-
-        assertThat(getDevice().enableAdbRoot()).isTrue();
+        mOriginalUsers.addAll(getDevice().listUsers());
     }
 
     @After
@@ -70,7 +89,12 @@ public final class SdkSandboxShellHostTest extends BaseHostJUnit4Test {
                 getDevice().removeUser(userId);
             }
         }
-        getDevice().disableAdbRoot();
+        mOriginalUsers.clear();
+
+        // Ensure all apps are not in allowlist.
+        for (String pkg : new String[] {APP_PACKAGE, DEBUGGABLE_APP_PACKAGE}) {
+            getDevice().executeShellV2Command(String.format("cmd deviceidle whitelist -%s", pkg));
+        }
     }
 
     @Test
@@ -80,16 +104,14 @@ public final class SdkSandboxShellHostTest extends BaseHostJUnit4Test {
         assertThat(output.getStderr()).isEmpty();
         assertThat(output.getStatus()).isEqualTo(CommandStatus.SUCCESS);
 
-        String processDump = getDevice().executeShellCommand("ps -A");
-        assertThat(processDump).contains(DEBUGGABLE_APP_SANDBOX_NAME);
+        waitForProcessStart(DEBUGGABLE_APP_SANDBOX_NAME);
 
         output = getDevice().executeShellV2Command(
                 String.format("cmd sdk_sandbox stop %s", DEBUGGABLE_APP_PACKAGE));
         assertThat(output.getStderr()).isEmpty();
         assertThat(output.getStatus()).isEqualTo(CommandStatus.SUCCESS);
 
-        processDump = getDevice().executeShellCommand("ps -A");
-        assertThat(processDump).doesNotContain(DEBUGGABLE_APP_SANDBOX_NAME);
+        waitForProcessDeath(DEBUGGABLE_APP_SANDBOX_NAME);
     }
 
     @Test
@@ -117,14 +139,14 @@ public final class SdkSandboxShellHostTest extends BaseHostJUnit4Test {
     @Test
     public void testStopSdkSandboxSucceedsForRunningDebuggableApp() throws Exception {
         startActivity(DEBUGGABLE_APP_PACKAGE, DEBUGGABLE_APP_ACTIVITY);
+        waitForProcessStart(DEBUGGABLE_APP_SANDBOX_NAME);
 
         CommandResult output = getDevice().executeShellV2Command(
                 String.format("cmd sdk_sandbox stop %s", DEBUGGABLE_APP_PACKAGE));
         assertThat(output.getStderr()).isEmpty();
         assertThat(output.getStatus()).isEqualTo(CommandStatus.SUCCESS);
 
-        String processDump = getDevice().executeShellCommand("ps -A");
-        assertThat(processDump).doesNotContain(DEBUGGABLE_APP_SANDBOX_NAME);
+        waitForProcessDeath(DEBUGGABLE_APP_SANDBOX_NAME);
     }
 
     @Test
@@ -138,6 +160,7 @@ public final class SdkSandboxShellHostTest extends BaseHostJUnit4Test {
     @Test
     public void testStopSdkSandboxFailsForNonDebuggableApp() throws Exception {
         startActivity(APP_PACKAGE, APP_ACTIVITY);
+        waitForProcessStart(APP_SANDBOX_NAME);
 
         CommandResult output = getDevice().executeShellV2Command(
                 String.format("cmd sdk_sandbox stop %s", APP_PACKAGE));
@@ -150,6 +173,7 @@ public final class SdkSandboxShellHostTest extends BaseHostJUnit4Test {
     @Test
     public void testStopSdkSandboxFailsForIncorrectUser() throws Exception {
         startActivity(DEBUGGABLE_APP_PACKAGE, DEBUGGABLE_APP_ACTIVITY);
+        waitForProcessStart(DEBUGGABLE_APP_SANDBOX_NAME);
 
         int otherUserId = getDevice().createUser("TestUser_" + System.currentTimeMillis());
         CommandResult output = getDevice().executeShellV2Command(String.format(
@@ -166,5 +190,23 @@ public final class SdkSandboxShellHostTest extends BaseHostJUnit4Test {
 
     private void startActivity(String pkg, String activity) throws Exception {
         getDevice().executeShellCommand(String.format("am start -W -n %s/.%s", pkg, activity));
+    }
+
+    private void waitForProcessStart(String processName) throws Exception {
+        AwaitUtils.waitFor(
+                () -> {
+                    String processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
+                    return processDump.contains(processName);
+                },
+                "Process " + processName + " has not started.");
+    }
+
+    private void waitForProcessDeath(String processName) throws Exception {
+        AwaitUtils.waitFor(
+                () -> {
+                    String processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
+                    return !processDump.contains(processName);
+                },
+                "Process " + processName + " has not died.");
     }
 }

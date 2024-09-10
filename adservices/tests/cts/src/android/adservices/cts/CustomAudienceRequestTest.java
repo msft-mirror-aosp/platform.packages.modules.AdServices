@@ -28,7 +28,7 @@ import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.JoinCustomAudienceRequest;
 import android.adservices.customaudience.LeaveCustomAudienceRequest;
 
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Rule;
 import org.junit.Test;

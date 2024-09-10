@@ -8,7 +8,6 @@
       {
         "registration_request": {
           "registrant": "com.example1",
-          "attribution_src_url": "https://adtech.test",
           "source_type": "event"
         },
         "responses": [
@@ -40,7 +39,6 @@
       {
         "registration_request": {
           "registrant": "com.example3",
-          "attribution_src_url": "https://adtech.test",
           "source_type": "navigation"
         },
         "responses": [
@@ -74,7 +72,6 @@
       {
         "registration_request": {
           "registrant": "com.example1",
-          "attribution_src_url": "https://adtech.test",
           "source_type": "navigation"
         },
         "responses": [
@@ -98,7 +95,6 @@
       {
         "registration_request": {
           "registrant": "com.example1",
-          "attribution_src_url": "https://adtech.test",
           "source_type": "navigation"
         },
         "responses": [
@@ -129,7 +125,6 @@
       // Trigger is registered October 5 and attributed to the source from September 17
       {
         "registration_request": {
-          "attribution_src_url": "https://adtech.test",
           "registrant": "com.example2"
         },
         "responses": [
@@ -159,7 +154,6 @@
       // Trigger is matched with the source from October 23
       {
         "registration_request": {
-          "attribution_src_url": "https://adtech.test",
           "registrant": "com.example4"
         },
         "responses": [
@@ -198,24 +192,24 @@
         "payload": {
           "attribution_destination": "android-app://com.example4",
           "randomized_trigger_rate": 0.0001372,
-          "scheduled_report_time": "1699771071",
+          "scheduled_report_time": "1699767471",
           "source_event_id": "17091290883952873966",
           "source_type": "navigation",
           "trigger_data": "0"
         },
-        "report_time": "1699771071065",
+        "report_time": "1699767471065",
         "report_url": "https://adtech.test/.well-known/attribution-reporting/report-event-attribution"
       },
       {
         "payload": {
           "attribution_destination": "android-app://com.example2",
-          "scheduled_report_time": "1697249711",
+          "scheduled_report_time": "1697246111",
           "source_event_id": "17091290776578691566",
           "trigger_data": "1",
           "source_type": "navigation",
           "randomized_trigger_rate": 0.0024263
         },
-        "report_time": "1697249711408",
+        "report_time": "1697246111408",
         "report_url": "https://adtech.test/.well-known/attribution-reporting/report-event-attribution"
       }
     ]

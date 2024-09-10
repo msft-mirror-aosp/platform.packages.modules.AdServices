@@ -35,13 +35,11 @@ import java.util.stream.Stream;
 public class UxUtil {
 
     /** Returns whether the device is an EEA device. */
-    public static boolean isEeaDevice(FragmentActivity fragmentActivity, Context context) {
+    public static boolean isEeaDevice(FragmentActivity fragmentActivity) {
         return FlagsFactory.getFlags().getConsentNotificationActivityDebugMode()
                 ? fragmentActivity
                         .getIntent()
-                        .getBooleanExtra(
-                                  "isEUDevice",
-                                  UxStatesManager.getInstance().isEeaDevice())
+                        .getBooleanExtra("isEUDevice", UxStatesManager.getInstance().isEeaDevice())
                 : !ConsentManager.getInstance().isAdIdEnabled()
                         || UxStatesManager.getInstance().isEeaDevice();
     }

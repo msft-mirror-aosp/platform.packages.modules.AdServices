@@ -30,9 +30,9 @@ android_test {
         "adservices-test-utility",
     ],
     libs: [
-        "android.test.base",
-        "android.test.mock",
-        "android.test.runner",
+        "android.test.base.stubs.system",
+        "android.test.mock.stubs.system",
+        "android.test.runner.stubs.system",
         "framework-adservices.impl",
         "framework-sdksandbox.impl",
         "framework-annotations-lib",
@@ -45,6 +45,10 @@ android_test {
         "mts-adservices",
     ],
     instrumentation_for: "AdServicesApk",
+    lint: {
+        extra_check_modules: ["AdServicesTestLintChecker"],
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
 }
 
 android_test {
@@ -62,9 +66,9 @@ android_test {
     ],
     libs: [
         "android.ext.adservices",
-        "android.test.base",
-        "android.test.mock",
-        "android.test.runner",
+        "android.test.base.stubs.system",
+        "android.test.mock.stubs.system",
+        "android.test.runner.stubs.system",
         "framework-annotations-lib",
         "framework-sdksandbox.impl",
     ],
@@ -77,4 +81,9 @@ android_test {
     ],
     test_config: "AndroidTest.ExtServices.xml",
     instrumentation_for: "ExtServices-sminus",
+    lint: {
+        extra_check_modules: ["AdServicesTestLintChecker"],
+        baseline_filename: "lint-baseline-adextservices.xml",
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
 }

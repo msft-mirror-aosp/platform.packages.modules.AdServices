@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.measurement.reporting;
 
-import static com.android.adservices.common.JobServiceTestHelper.createJobFinishedCallback;
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdServicesJobServiceLogger;
 import static com.android.adservices.mockito.MockitoExpectations.getSpiedAdServicesJobServiceLogger;
 import static com.android.adservices.service.measurement.reporting.VerboseDebugReportingJobService.VERBOSE_DEBUG_REPORT_JOB_ID;
@@ -48,33 +47,38 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.JobServiceCallback;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
+import com.android.adservices.shared.testing.concurrency.JobServiceCallback;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.internal.stubbing.answers.AnswersWithDelay;
 import org.mockito.internal.stubbing.answers.CallsRealMethods;
-import org.mockito.quality.Strictness;
 
 import java.util.Optional;
-import java.util.concurrent.CountDownLatch;
 
 /** Unit test for {@link VerboseDebugReportingJobService} */
-public class VerboseDebugReportingJobServiceTest {
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
+@SpyStatic(AdServicesConfig.class)
+@SpyStatic(DatastoreManagerFactory.class)
+@SpyStatic(EnrollmentDao.class)
+@SpyStatic(VerboseDebugReportingJobService.class)
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(AdServicesJobServiceLogger.class)
+@MockStatic(ServiceCompatUtils.class)
+public final class VerboseDebugReportingJobServiceTest extends AdServicesExtendedMockitoTestCase {
     private static final int MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB_ID =
             MEASUREMENT_VERBOSE_DEBUG_REPORT_JOB.getJobId();
 
@@ -87,19 +91,6 @@ public class VerboseDebugReportingJobServiceTest {
     private Flags mMockFlags;
     private AdServicesJobServiceLogger mSpyLogger;
 
-    @Rule
-    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder(this)
-                    .spyStatic(AdServicesConfig.class)
-                    .spyStatic(DatastoreManagerFactory.class)
-                    .spyStatic(EnrollmentDao.class)
-                    .spyStatic(VerboseDebugReportingJobService.class)
-                    .spyStatic(FlagsFactory.class)
-                    .spyStatic(AdServicesJobServiceLogger.class)
-                    .mockStatic(ServiceCompatUtils.class)
-                    .setStrictness(Strictness.LENIENT)
-                    .build();
-
     @Before
     public void setUp() {
         mSpyService = spy(new VerboseDebugReportingJobService());
@@ -108,7 +99,7 @@ public class VerboseDebugReportingJobServiceTest {
         mJobParameters = mock(JobParameters.class);
 
         mMockFlags = mock(Flags.class);
-        mSpyLogger = getSpiedAdServicesJobServiceLogger(CONTEXT, mMockFlags);
+        mSpyLogger = getSpiedAdServicesJobServiceLogger(sContext, mMockFlags);
     }
 
     @Test
@@ -118,7 +109,8 @@ public class VerboseDebugReportingJobServiceTest {
                     // Setup
                     enableKillSwitch();
 
-                    JobServiceCallback callback = createJobFinishedCallback(mSpyService);
+                    JobServiceCallback callback =
+                            new JobServiceCallback().expectJobFinished(mSpyService);
 
                     // Execute
                     boolean result = mSpyService.onStartJob(mock(JobParameters.class));
@@ -150,7 +142,8 @@ public class VerboseDebugReportingJobServiceTest {
                             .when(mSpyLogger)
                             .recordJobFinished(anyInt(), anyBoolean(), anyBoolean());
 
-                    JobServiceCallback callback = createJobFinishedCallback(mSpyService);
+                    JobServiceCallback callback =
+                            new JobServiceCallback().expectJobFinished(mSpyService);
 
                     // Execute
                     boolean result = mSpyService.onStartJob(mock(JobParameters.class));
@@ -182,7 +175,8 @@ public class VerboseDebugReportingJobServiceTest {
                             .when(mSpyLogger)
                             .recordJobFinished(anyInt(), anyBoolean(), anyBoolean());
 
-                    JobServiceCallback callback = createJobFinishedCallback(mSpyService);
+                    JobServiceCallback callback =
+                            new JobServiceCallback().expectJobFinished(mSpyService);
 
                     // Execute
                     boolean result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
@@ -190,7 +184,8 @@ public class VerboseDebugReportingJobServiceTest {
 
                     assertTrue(result);
 
-                    JobServiceCallback secondCallback = createJobFinishedCallback(mSpyService);
+                    JobServiceCallback secondCallback =
+                            new JobServiceCallback().expectJobFinished(mSpyService);
                     verify(mSpyService, timeout(WAIT_IN_MILLIS).times(1))
                             .jobFinished(any(), anyBoolean());
 
@@ -220,7 +215,8 @@ public class VerboseDebugReportingJobServiceTest {
                                             ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
                                                     any(Context.class)));
 
-                    JobServiceCallback callback = createJobFinishedCallback(mSpyService);
+                    JobServiceCallback callback =
+                            new JobServiceCallback().expectJobFinished(mSpyService);
 
                     // Execute
                     boolean result = mSpyService.onStartJob(mock(JobParameters.class));
@@ -420,8 +416,7 @@ public class VerboseDebugReportingJobServiceTest {
         doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
         doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
         doReturn(Mockito.mock(Context.class)).when(mSpyService).getApplicationContext();
-        ExtendedMockito.doReturn(mock(EnrollmentDao.class))
-                .when(() -> EnrollmentDao.getInstance(any()));
+        ExtendedMockito.doReturn(mock(EnrollmentDao.class)).when(() -> EnrollmentDao.getInstance());
         ExtendedMockito.doReturn(mMockDatastoreManager)
                 .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
         ExtendedMockito.doNothing()
@@ -441,20 +436,9 @@ public class VerboseDebugReportingJobServiceTest {
     }
 
     private void toggleKillSwitch(boolean value) {
-        adServicesExtendedMockitoRule.mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
         when(mMockFlags.getMeasurementJobVerboseDebugReportingKillSwitch()).thenReturn(value);
         when(mMockFlags.getMeasurementVerboseDebugReportingJobRequiredNetworkType())
                 .thenReturn(JobInfo.NETWORK_TYPE_ANY);
-    }
-
-    private CountDownLatch createCountDownLatch() {
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
-        doAnswer(i -> countDown(countDownLatch)).when(mSpyService).jobFinished(any(), anyBoolean());
-        return countDownLatch;
-    }
-
-    private Object countDown(CountDownLatch countDownLatch) {
-        countDownLatch.countDown();
-        return null;
     }
 }

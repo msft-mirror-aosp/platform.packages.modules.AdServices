@@ -41,4 +41,5 @@ interface ICtsSdkProviderApi {
     void waitForStateChangeDetection(int expectedForegroundValue, int expectedBackgroundValue);
     void unregisterSdkSandboxClientImportanceListener();
     int getLauncherActivityCount();
+    int requestAudioFocus();
 }

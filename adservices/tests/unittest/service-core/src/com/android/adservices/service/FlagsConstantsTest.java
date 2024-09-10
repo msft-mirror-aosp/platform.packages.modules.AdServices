@@ -16,7 +16,7 @@
 package com.android.adservices.service;
 
 import static com.android.adservices.flags.Flags.FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED;
-import static com.android.adservices.flags.Flags.FLAG_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
+import static com.android.adservices.flags.Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED;
 import static com.android.adservices.flags.Flags.FLAG_FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_ID_ENABLED;
 import static com.android.adservices.flags.Flags.FLAG_FLEDGE_CUSTOM_AUDIENCE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED;
 import static com.android.adservices.flags.Flags.FLAG_FLEDGE_SERVER_AUCTION_MULTI_CLOUD_ENABLED;
@@ -37,10 +37,24 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+// NOTE: when making changes on com.android.adservices.flags.Flags, you need to install the new
+// apex - just running atest wouldn't affect the test result
 public final class FlagsConstantsTest extends AdServicesUnitTestCase {
 
     private static final String ACONFIG_PREFIX = "com.android.adservices.flags.";
 
+    private static final String HOW_TO_FIX_IT_MESSAGE =
+            "If this is expected, you might need to change MISSING_FLAGS_ALLOWLIST or"
+                    + " NON_CANONICAL_FLAGS (on this file).";
+
+    /**
+     * List used by {@link #testAllAconfigFlagsAreMapped()}, it contains the name of flags that are
+     * present in the {@code aconfig} file but are missing on {@link FlagsConstants}.
+     *
+     * <p>Add more entries in the bottom, either explaining the reason or using a TODO(b/BUG) that
+     * will add the missing {@link com.android.adservices.service.PhFlags} / {@link
+     * com.android.adservices.service.FlagsConstants} counterpart.
+     */
     private static final List<String> MISSING_FLAGS_ALLOWLIST =
             List.of(
                     // FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED guards APIs that are overloaded
@@ -48,32 +62,48 @@ public final class FlagsConstantsTest extends AdServicesUnitTestCase {
                     // android.os.OutcomeReceiver) and hence don't need to be checked at runtime.
                     FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED,
 
-                    // TODO(b/323888604): fix it
-                    FLAG_FLEDGE_SERVER_AUCTION_MULTI_CLOUD_ENABLED,
-
-                    // TODO(b/323297322): fix it
-                    FLAG_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED,
-
-                    // TODO(b/323397060);
+                    // TODO(b/323397060): Remove from this allowlist after implementing feature and
+                    //  adding matching DeviceConfig flag
                     FLAG_FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_ID_ENABLED,
 
-                    // TODO(b/320786372): fix it
-                    FLAG_FLEDGE_CUSTOM_AUDIENCE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED
+                    // The DeviceConfig flag guarding this feature is intentionally named
+                    // differently so that it is not scoped to the Custom Audience API.
+                    FLAG_FLEDGE_CUSTOM_AUDIENCE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED,
 
-                    // Add more flags below, either explaining to reason or using a TODO(b/BUG) that
-                    // will
-                    // add the PhFlags / FlagsConstant counterpart
-                    );
+                    // There used to be a matching DeviceConfig flag, but it guarded too many
+                    // features.  Because the feature APIs are unhidden and published already, they
+                    // cannot be changed.  The old DeviceConfig flag has instead been removed and
+                    // split into individual feature flags to allow each feature to launch
+                    // independently.
+                    FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED);
 
+    /**
+     * Map used by {@link #testAllAconfigFlagsAreMapped()} - key is the {@code aconfig} flag name,
+     * value is the {@link com.android.adservices.service.FlagsConstants} counterpart (i.e, the
+     * value defined by the constant, which is the key to a {@link android.provider.DeviceConfig}
+     * flag).
+     *
+     * <p>Flag names on {@link com.android.adservices.service.FlagsConstants} are expect to have the
+     * same name (minus prefix) as the {@code aconfig} counterpart, but there are a few exceptions
+     * like:
+     *
+     * <ul>
+     *   <li>{@link android.provider.DeviceConfig} flag already pushed to production.
+     *   <li>Same {@link android.provider.DeviceConfig} flag is guarding multiple APIs using
+     *       different {@code aconfig} flags on their <code>@FlaggedApi</code> annotations.
+     * </ul>
+     *
+     * <p>Add more entries in the bottom, either explaining the reason or using a TODO(b/BUG) that
+     * will add the missing {@link com.android.adservices.service.PhFlags} / {@link
+     * com.android.adservices.service.FlagsConstants} counterpart.
+     */
     private static final Map<String, String> NON_CANONICAL_FLAGS =
-            // Flag names on FlagsConstants are expect to have the same name (minus prefix) as the
-            // aconfig counterpart, but there are a few exceptions like:
-            // - DeviceConfig flag already pushed to production
-            // - Same DeviceConfig flag is guarding multiple APIs using different @FlaggedApi
             Map.of(
-                    // Add more flags below, either explaining to reason or using a TODO(b/BUG) that
-                    // will add the PhFlags / FlagsConstant counterpart
-                    );
+                    // DeviceConfig flags for PA/FLEDGE are named "auction_server" instead of
+                    // "server_auction."  This API has already been released, and the aconfig flag
+                    // cannot be renamed, so this mismatch is intentional.
+                    FLAG_FLEDGE_SERVER_AUCTION_MULTI_CLOUD_ENABLED,
+                    FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED);
 
     @Test
     public void testNoFlagHasTheAConfigPrefix() throws Exception {
@@ -117,7 +147,9 @@ public final class FlagsConstantsTest extends AdServicesUnitTestCase {
                 Log.d(mTag, "Found mapping: " + constantName + "->" + serviceConstant);
             }
         }
-        expect.withMessage("aconfig flags missing counterpart on FlagsConstants")
+        expect.withMessage(
+                        "aconfig flags missing counterpart on FlagsConstants. %s",
+                        HOW_TO_FIX_IT_MESSAGE)
                 .that(missingFlags)
                 .isEmpty();
     }

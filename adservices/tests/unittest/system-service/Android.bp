@@ -39,10 +39,10 @@ android_test {
         "service-sdksandbox.impl",
     ],
     libs: [
-        "android.test.base",
-        "android.test.mock",
-        "android.test.runner",
-        "framework-configinfrastructure",
+        "android.test.base.stubs.system",
+        "android.test.mock.stubs.system",
+        "android.test.runner.stubs.system",
+        "framework-configinfrastructure.stubs.module_lib",
         "modules-utils-shell-command-handler",
     ],
     sdk_version: "module_current",
@@ -52,4 +52,8 @@ android_test {
         "general-tests",
         "mts-adservices",
     ],
+    lint: {
+        extra_check_modules: ["AdServicesTestLintChecker"],
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
 }

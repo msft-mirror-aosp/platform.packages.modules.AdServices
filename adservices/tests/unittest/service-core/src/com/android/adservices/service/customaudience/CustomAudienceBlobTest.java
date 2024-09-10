@@ -49,9 +49,9 @@ import android.adservices.customaudience.TrustedBiddingData;
 import android.net.Uri;
 
 import com.android.adservices.common.DBAdDataFixture;
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
 import com.android.adservices.data.customaudience.DBPartialCustomAudience;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.collect.ImmutableList;
 
@@ -196,7 +196,7 @@ public class CustomAudienceBlobTest {
     @Test
     public void testOverrideFromJSONObject_validValuesWithAuctionServerRequestFlagsEnabled()
             throws JSONException {
-        CustomAudienceBlob blob = new CustomAudienceBlob(true, true, 12L, true);
+        CustomAudienceBlob blob = new CustomAudienceBlob(true, true, true, 12L, true);
 
         JSONObject jsonObject =
                 CustomAudienceBlobFixture.asJSONObject(
@@ -240,7 +240,7 @@ public class CustomAudienceBlobTest {
     @Test
     public void testOverrideFromJSONObject_invalidValuesWithAuctionServerRequestFlagsEnabled()
             throws JSONException {
-        CustomAudienceBlob blob = new CustomAudienceBlob(true, true, 12L, true);
+        CustomAudienceBlob blob = new CustomAudienceBlob(true, true, true, 12L, true);
 
         JSONObject jsonObject =
                 CustomAudienceBlobFixture.asJSONObject(
@@ -286,7 +286,7 @@ public class CustomAudienceBlobTest {
     @Test
     public void testOverrideFromJSONObject_UnexpectedValuesWithAuctionServerRequestFlagsEnabled()
             throws JSONException {
-        CustomAudienceBlob blob = new CustomAudienceBlob(true, true, 12L, true);
+        CustomAudienceBlob blob = new CustomAudienceBlob(true, true, true, 12L, true);
 
         JSONObject jsonObject =
                 CustomAudienceBlobFixture.asJSONObject(

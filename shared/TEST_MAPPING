@@ -1,12 +1,33 @@
 {
-  "postsubmit": [
+  "adservices-mainline-presubmit": [
     {
+      // This is the unit test and shared library code, which should NOT have any module apex
+      // dependency. Per suggestion from mainline Eng team, it still uses ad/ext services' tag to
+      // allow it to run on R+.
       "name": "AdServicesSharedLibrariesUnitTests",
       "options": [
         {
           "exclude-annotation": "androidx.test.filters.FlakyTest"
         }
       ]
+    }
+  ],
+  "extservices-mainline-presubmit": [
+    {
+      // This is the unit test and shared library code, which should NOT have any module apex
+      // dependency. Per suggestion from mainline Eng team, it still uses ad/ext services' tag to
+      // allow it to run on R+.
+      "name": "AdServicesSharedLibrariesUnitTests",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    }
+  ],
+  "imports": [
+    {
+      "path": "packages/modules/AdServices/adservices"
     }
   ]
 }

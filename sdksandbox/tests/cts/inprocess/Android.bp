@@ -28,8 +28,8 @@ android_test {
     ],
 
     libs: [
-        "android.test.base",
-        "android.test.runner",
+        "android.test.base.stubs.system",
+        "android.test.runner.stubs.system",
         "framework-adservices.impl",
     ],
     static_libs: [
@@ -40,6 +40,10 @@ android_test {
         "truth",
         "modules-utils-build",
         "SdkSandboxTestUtils",
+    ],
+    data: [
+        ":SocketApp",
+        ":SocketSdkProvider",
     ],
     test_suites: [
         "cts",

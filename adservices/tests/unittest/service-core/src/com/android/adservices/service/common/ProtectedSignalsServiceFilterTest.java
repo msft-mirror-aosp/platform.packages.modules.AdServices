@@ -16,16 +16,17 @@
 
 package com.android.adservices.service.common;
 
+import static android.adservices.common.AdServicesStatusUtils.RATE_LIMIT_REACHED_ERROR_MESSAGE;
 import static android.adservices.customaudience.CustomAudienceFixture.getValidFetchUriByBuyer;
 
 import static com.android.adservices.service.common.AppManifestConfigCall.API_PROTECTED_SIGNALS;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyString;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -39,8 +40,8 @@ import android.os.Process;
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -56,9 +57,9 @@ public final class ProtectedSignalsServiceFilterTest extends AdServicesMockitoTe
 
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
 
-    private static final Flags TEST_FLAGS = FlagsFactory.getFlagsForTest();
+    private static final Flags TEST_FLAGS = FakeFlagsFactory.getFlagsForTest();
 
-    @Mock private ConsentManager mConsentManagerMock;
+    @Mock private FledgeConsentFilter mFledgeConsentFilterMock;
 
     @Mock AppImportanceFilter mAppImportanceFilter;
 
@@ -77,7 +78,7 @@ public final class ProtectedSignalsServiceFilterTest extends AdServicesMockitoTe
                             mSpyContext, DbTestUtil.getSharedDbHelperForTest(), TEST_FLAGS),
                     mAdServicesLoggerMock);
 
-    @Mock private Throttler mMockThrottler;
+    @Mock private FledgeApiThrottleFilter mFledgeApiThrottleFilterMock;
 
     private ProtectedSignalsServiceFilter mProtectedSignalsServiceFilter;
 
@@ -93,14 +94,12 @@ public final class ProtectedSignalsServiceFilterTest extends AdServicesMockitoTe
         mProtectedSignalsServiceFilter =
                 new ProtectedSignalsServiceFilter(
                         mSpyContext,
-                        mConsentManagerMock,
+                        mFledgeConsentFilterMock,
                         TEST_FLAGS,
                         mAppImportanceFilter,
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy,
-                        mMockThrottler);
-
-        when(mMockThrottler.tryAcquire(eq(Throttler.ApiKey.UNKNOWN), anyString())).thenReturn(true);
+                        mFledgeApiThrottleFilterMock);
     }
 
     @Test
@@ -122,8 +121,9 @@ public final class ProtectedSignalsServiceFilterTest extends AdServicesMockitoTe
 
     @Test
     public void testFilterRequestAndExtractIdentifier_throttled_throws() {
-        when(mMockThrottler.tryAcquire(eq(Throttler.ApiKey.UNKNOWN), anyString()))
-                .thenReturn(false);
+        doThrow(new LimitExceededException(RATE_LIMIT_REACHED_ERROR_MESSAGE))
+                .when(mFledgeApiThrottleFilterMock)
+                .assertCallerNotThrottled(anyString(), any(), anyInt());
 
         assertThrows(
                 LimitExceededException.class,
@@ -293,10 +293,6 @@ public final class ProtectedSignalsServiceFilterTest extends AdServicesMockitoTe
                         API_NAME,
                         API_PROTECTED_SIGNALS);
 
-        doReturn(false)
-                .when(mConsentManagerMock)
-                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(CALLER_PACKAGE_NAME);
-
         mProtectedSignalsServiceFilter.filterRequestAndExtractIdentifier(
                 getValidFetchUriByBuyer(SELLER_VALID),
                 CALLER_PACKAGE_NAME,
@@ -320,9 +316,9 @@ public final class ProtectedSignalsServiceFilterTest extends AdServicesMockitoTe
                         API_NAME,
                         API_PROTECTED_SIGNALS);
 
-        doReturn(true)
-                .when(mConsentManagerMock)
-                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(CALLER_PACKAGE_NAME);
+        doThrow(new ConsentManager.RevokedConsentException())
+                .when(mFledgeConsentFilterMock)
+                .assertAndPersistCallerHasUserConsentForApp(anyString(), anyInt());
 
         assertThrows(
                 ConsentManager.RevokedConsentException.class,
@@ -350,9 +346,9 @@ public final class ProtectedSignalsServiceFilterTest extends AdServicesMockitoTe
                         API_NAME,
                         API_PROTECTED_SIGNALS);
 
-        doReturn(true)
-                .when(mConsentManagerMock)
-                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(CALLER_PACKAGE_NAME);
+        doThrow(new ConsentManager.RevokedConsentException())
+                .when(mFledgeConsentFilterMock)
+                .assertAndPersistCallerHasUserConsentForApp(anyString(), anyInt());
 
         mProtectedSignalsServiceFilter.filterRequestAndExtractIdentifier(
                 getValidFetchUriByBuyer(SELLER_VALID),

@@ -88,6 +88,8 @@ filegroup {
     name: "adservices-service-core-flags-constants-sources",
     srcs: [
         "java/com/android/adservices/cobalt/CobaltConstants.java",
+        "java/com/android/adservices/service/CommonFlagsConstants.java",
+        "java/com/android/adservices/service/DebugFlagsConstants.java",
         "java/com/android/adservices/service/FlagsConstants.java",
     ],
     path: "java",
@@ -102,9 +104,9 @@ filegroup {
 filegroup {
     name: "adservices-service-common-flags-sources",
     srcs: [
-        "java/com/android/adservices/service/CommonFlags.java",
+        "java/com/android/adservices/service/CommonDebugFlags.java",
         "java/com/android/adservices/service/CommonFlagsConstants.java",
-        "java/com/android/adservices/service/CommonPhFlags.java",
+        "java/com/android/adservices/service/DeviceConfigFlagsHelper.java",
     ],
     path: "java",
     visibility: [
@@ -120,6 +122,7 @@ filegroup {
         "java/com/android/adservices/service/Flags.java",
         "java/com/android/adservices/service/FlagsFactory.java",
         "java/com/android/adservices/service/PhFlags.java",
+        "java/com/android/adservices/service/DebugFlags.java",
     ],
     path: "java",
     visibility: [
@@ -152,8 +155,9 @@ android_library {
         "androidx.room_room-runtime",
         "framework-annotations-lib", // For @SystemApi, etc
         "framework-adservices.impl",
-        "framework-configinfrastructure",
+        "framework-configinfrastructure.stubs.module_lib",
         "framework-sdksandbox.impl",
+        "framework-ondevicepersonalization",
         "framework-statsd.stubs.module_lib", // For WW logging
         "jsr305",
         "auto_value_annotations",
@@ -186,7 +190,7 @@ android_library {
         "com.android.extservices",
     ],
     lint: {
-        extra_check_modules: ["BackCompatLintChecker"],
+        extra_check_modules: ["AdServicesProdLintChecker"],
         baseline_filename: "lint-baseline.xml",
 
     },

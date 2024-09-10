@@ -15,16 +15,18 @@
  */
 package com.android.adservices.ui.notifications;
 
-import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_DEBUG_UX;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_AD_SERVICES_SYSTEM_API;
 import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_U18_UX_ENABLED;
+import static com.android.adservices.ui.util.ApkTestUtil.getString;
 import static com.android.adservices.ui.util.NotificationActivityTestUtil.WINDOW_LAUNCH_TIMEOUT;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiObject2;
 import androidx.test.uiautomator.Until;
 
@@ -46,8 +48,8 @@ public final class NotificationActivityRvcUxSelectorUiAutomatorTest extends AdSe
     public final AdServicesFlagsSetterRule flags =
             AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
                     .setCompatModeFlags()
+                    .setDebugFlag(KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE, true)
                     .setFlag(KEY_ENABLE_AD_SERVICES_SYSTEM_API, true)
-                    .setFlag(KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE, true)
                     .setFlag(KEY_GA_UX_FEATURE_ENABLED, true)
                     .setFlag(KEY_U18_UX_ENABLED, true)
                     .setFlag(KEY_DEBUG_UX, "RVC_UX");
@@ -79,7 +81,11 @@ public final class NotificationActivityRvcUxSelectorUiAutomatorTest extends AdSe
                 ApkTestUtil.getElement(
                         mDevice,
                         R.string.notificationUI_u18_right_control_button_text);
-        rightControlButton.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
+        rightControlButton.click();
+        mDevice.wait(
+                Until.gone(
+                        By.text(getString(R.string.notificationUI_u18_right_control_button_text))),
+                WINDOW_LAUNCH_TIMEOUT);
 
         // Retrieve a new instance to avoid android.support.test.uiautomator.StaleObjectException.
         u18NotificationTitle =
@@ -101,7 +107,11 @@ public final class NotificationActivityRvcUxSelectorUiAutomatorTest extends AdSe
                         R.string.notificationUI_u18_right_control_button_text);
         assertThat(rightControlButton).isNotNull();
 
-        leftControlButton.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
+        leftControlButton.click();
+        mDevice.wait(
+                Until.gone(
+                        By.text(getString(R.string.notificationUI_u18_left_control_button_text))),
+                WINDOW_LAUNCH_TIMEOUT);
 
         // make sure it goes to u18 page rather than GA page
         UiObject2 topicTitle = ApkTestUtil.getElement(mDevice, R.string.settingsUI_topics_ga_title);

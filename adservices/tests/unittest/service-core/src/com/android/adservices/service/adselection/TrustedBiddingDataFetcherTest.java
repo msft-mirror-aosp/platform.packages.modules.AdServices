@@ -18,7 +18,7 @@ package com.android.adservices.service.adselection;
 
 import static android.adservices.adselection.CustomAudienceBiddingInfoFixture.DATA_VERSION_1;
 
-import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_BIDDING_KEY;
+import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_KEY;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -34,7 +34,6 @@ import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.net.Uri;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
@@ -42,6 +41,7 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpClientResp
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -401,7 +401,7 @@ public class TrustedBiddingDataFetcherTest {
                                                         .toString())
                                         .setResponseHeaders(
                                                 ImmutableMap.of(
-                                                        DATA_VERSION_HEADER_BIDDING_KEY,
+                                                        DATA_VERSION_HEADER_KEY,
                                                         List.of(Integer.toString(DATA_VERSION_1))))
                                         .build()));
 
@@ -424,10 +424,7 @@ public class TrustedBiddingDataFetcherTest {
                 result.get(PATH_1).getBody().toString());
         assertEquals(
                 Integer.toString(DATA_VERSION_1),
-                result.get(PATH_1)
-                        .getHeaders()
-                        .getJSONArray(DATA_VERSION_HEADER_BIDDING_KEY)
-                        .get(0));
+                result.get(PATH_1).getHeaders().getJSONArray(DATA_VERSION_HEADER_KEY).get(0));
     }
 
     @Test
@@ -444,7 +441,7 @@ public class TrustedBiddingDataFetcherTest {
                                                         .toString())
                                         .setResponseHeaders(
                                                 ImmutableMap.of(
-                                                        DATA_VERSION_HEADER_BIDDING_KEY,
+                                                        DATA_VERSION_HEADER_KEY,
                                                         List.of(Integer.toString(DATA_VERSION_1))))
                                         .build()));
 

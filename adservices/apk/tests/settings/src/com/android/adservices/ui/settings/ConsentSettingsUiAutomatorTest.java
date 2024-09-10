@@ -131,7 +131,7 @@ public class ConsentSettingsUiAutomatorTest extends AdServicesUiTestCase {
 
     private void consentTest(boolean dialogsOn) {
         ShellUtils.runShellCommand(
-                "device_config put adservices consent_notification_activity_debug_mode true");
+                "setprop debug.adservices.consent_notification_activity_debug_mode true");
         ShellUtils.runShellCommand("device_config put adservices debug_ux BETA_UX");
 
         ApkTestUtil.launchSettingViewGivenUx(mDevice, LAUNCH_TIMEOUT, "BETA_UX");

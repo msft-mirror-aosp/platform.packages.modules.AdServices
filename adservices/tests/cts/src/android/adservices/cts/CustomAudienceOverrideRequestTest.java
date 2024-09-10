@@ -23,7 +23,7 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.AddCustomAudienceOverrideRequest;
 import android.adservices.customaudience.RemoveCustomAudienceOverrideRequest;
 
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -32,6 +32,7 @@ public class CustomAudienceOverrideRequestTest {
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("buyer");
     private static final String NAME = "name";
     private static final String BIDDING_LOGIC_JS = "function test() { return \"hello world\"; }";
+    private static final long BIDDING_LOGIC_JS_VERSION = 2L;
     private static final AdSelectionSignals TRUSTED_BIDDING_DATA =
             AdSelectionSignals.fromString("{\"trusted_bidding_data\":1}");
 
@@ -39,7 +40,7 @@ public class CustomAudienceOverrideRequestTest {
     public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
-    public void testCreateAddCustomAudienceOverrideRequestSuccess() {
+    public void testCreateAddCustomAudienceOverrideRequest_withoutBiddingLogicVersion_Success() {
         AddCustomAudienceOverrideRequest request =
                 new AddCustomAudienceOverrideRequest(
                         BUYER, NAME, BIDDING_LOGIC_JS, TRUSTED_BIDDING_DATA);
@@ -47,6 +48,7 @@ public class CustomAudienceOverrideRequestTest {
         assertEquals(request.getBuyer(), BUYER);
         assertEquals(request.getName(), NAME);
         assertEquals(request.getBiddingLogicJs(), BIDDING_LOGIC_JS);
+        assertEquals(request.getBiddingLogicJsVersion(), 0L);
         assertEquals(request.getTrustedBiddingSignals(), TRUSTED_BIDDING_DATA);
     }
 
@@ -63,6 +65,25 @@ public class CustomAudienceOverrideRequestTest {
         assertEquals(request.getBuyer(), BUYER);
         assertEquals(request.getName(), NAME);
         assertEquals(request.getBiddingLogicJs(), BIDDING_LOGIC_JS);
+        assertEquals(request.getBiddingLogicJsVersion(), 0L);
+        assertEquals(request.getTrustedBiddingSignals(), TRUSTED_BIDDING_DATA);
+    }
+
+    @Test
+    public void testBuildAddCustomAudienceOverrideRequest_Success() {
+        AddCustomAudienceOverrideRequest request =
+                new AddCustomAudienceOverrideRequest.Builder()
+                        .setBuyer(BUYER)
+                        .setName(NAME)
+                        .setBiddingLogicJs(BIDDING_LOGIC_JS)
+                        .setBiddingLogicJsVersion(BIDDING_LOGIC_JS_VERSION)
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_DATA)
+                        .build();
+
+        assertEquals(request.getBuyer(), BUYER);
+        assertEquals(request.getName(), NAME);
+        assertEquals(request.getBiddingLogicJs(), BIDDING_LOGIC_JS);
+        assertEquals(request.getBiddingLogicJsVersion(), BIDDING_LOGIC_JS_VERSION);
         assertEquals(request.getTrustedBiddingSignals(), TRUSTED_BIDDING_DATA);
     }
 

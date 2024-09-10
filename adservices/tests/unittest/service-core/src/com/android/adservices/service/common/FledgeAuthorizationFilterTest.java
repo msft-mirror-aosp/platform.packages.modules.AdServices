@@ -18,7 +18,9 @@ package com.android.adservices.service.common;
 
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE;
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_PROTECTED_SIGNALS;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_ENROLLMENT_BLOCKLISTED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_ENROLLMENT_MATCH_NOT_FOUND;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 
@@ -50,7 +52,6 @@ import android.net.Uri;
 import android.util.Pair;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.RequiresSdkLevelAtLeastS;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -60,6 +61,7 @@ import com.android.adservices.service.enrollment.EnrollmentUtil;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
@@ -101,7 +103,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
 
     @Before
     public void setup() {
-        extendedMockito.mockGetFlags(mFlags);
+        mocker.mockGetFlags(mFlags);
 
         mChecker =
                 new FledgeAuthorizationFilter(
@@ -677,7 +679,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                 .logFledgeApiCallStats(
                         eq(API_NAME_LOGGING_ID),
                         eq(PACKAGE_NAME),
-                        eq(STATUS_CALLER_NOT_ALLOWED),
+                        eq(STATUS_CALLER_NOT_ALLOWED_ENROLLMENT_MATCH_NOT_FOUND),
                         anyInt());
         verify(mEnrollmentUtilMock)
                 .logEnrollmentFailedStats(
@@ -727,7 +729,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                 .logFledgeApiCallStats(
                         eq(API_NAME_LOGGING_ID),
                         eq(PACKAGE_NAME),
-                        eq(STATUS_CALLER_NOT_ALLOWED),
+                        eq(STATUS_CALLER_NOT_ALLOWED_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION),
                         anyInt());
         verify(mEnrollmentUtilMock)
                 .logEnrollmentFailedStats(
@@ -773,7 +775,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                 .logFledgeApiCallStats(
                         eq(API_NAME_LOGGING_ID),
                         eq(PACKAGE_NAME),
-                        eq(STATUS_CALLER_NOT_ALLOWED),
+                        eq(STATUS_CALLER_NOT_ALLOWED_ENROLLMENT_BLOCKLISTED),
                         anyInt());
         verify(mEnrollmentUtilMock)
                 .logEnrollmentFailedStats(
@@ -852,7 +854,9 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
         verify(mEnrollmentDaoMock).getEnrollmentRecordCountForLogging();
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        eq(API_NAME_LOGGING_ID), eq(STATUS_CALLER_NOT_ALLOWED), anyInt());
+                        eq(API_NAME_LOGGING_ID),
+                        eq(STATUS_CALLER_NOT_ALLOWED_ENROLLMENT_MATCH_NOT_FOUND),
+                        anyInt());
         verify(mEnrollmentUtilMock)
                 .logEnrollmentFailedStats(
                         eq(mAdServicesLoggerMock),
@@ -952,7 +956,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                 .logFledgeApiCallStats(
                         eq(API_NAME_LOGGING_ID),
                         eq(PACKAGE_NAME),
-                        eq(STATUS_CALLER_NOT_ALLOWED),
+                        eq(STATUS_CALLER_NOT_ALLOWED_ENROLLMENT_MATCH_NOT_FOUND),
                         anyInt());
         verify(mEnrollmentUtilMock)
                 .logEnrollmentFailedStats(
@@ -1005,7 +1009,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                 .logFledgeApiCallStats(
                         eq(API_NAME_LOGGING_ID),
                         eq(PACKAGE_NAME),
-                        eq(STATUS_CALLER_NOT_ALLOWED),
+                        eq(STATUS_CALLER_NOT_ALLOWED_MANIFEST_ADSERVICES_CONFIG_NO_PERMISSION),
                         anyInt());
         verify(mEnrollmentUtilMock)
                 .logEnrollmentFailedStats(
@@ -1057,7 +1061,7 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
                 .logFledgeApiCallStats(
                         eq(API_NAME_LOGGING_ID),
                         eq(PACKAGE_NAME),
-                        eq(STATUS_CALLER_NOT_ALLOWED),
+                        eq(STATUS_CALLER_NOT_ALLOWED_ENROLLMENT_BLOCKLISTED),
                         anyInt());
         verify(mEnrollmentUtilMock)
                 .logEnrollmentFailedStats(

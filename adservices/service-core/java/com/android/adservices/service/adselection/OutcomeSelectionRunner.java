@@ -18,7 +18,7 @@ package com.android.adservices.service.adselection;
 
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS_FROM_OUTCOMES;
 
 import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionFromOutcomesConfig;
@@ -56,7 +56,7 @@ import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
-import com.android.adservices.service.stats.AdServicesStatsLog;
+import com.android.adservices.service.stats.SelectAdsFromOutcomesExecutionLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
@@ -81,7 +81,6 @@ import java.util.stream.Collectors;
  *
  * <p>Class takes in an executor on which it runs the OutcomeSelection logic
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class OutcomeSelectionRunner {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -139,7 +138,8 @@ public class OutcomeSelectionRunner {
             @NonNull final AdCounterKeyCopier adCounterKeyCopier,
             final int callerUid,
             boolean shouldUseUnifiedTables,
-            @NonNull final RetryStrategy retryStrategy) {
+            @NonNull final RetryStrategy retryStrategy,
+            boolean consoleMessageInLogsEnabled) {
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(lightweightExecutorService);
@@ -166,13 +166,13 @@ public class OutcomeSelectionRunner {
         mAdOutcomeSelector =
                 new AdOutcomeSelectorImpl(
                         new AdSelectionScriptEngine(
-                                mContext,
                                 flags::getEnforceIsolateMaxHeapSize,
                                 flags::getIsolateMaxHeapSizeBytes,
                                 adCounterKeyCopier,
                                 new DebugReportingScriptDisabledStrategy(),
                                 cpcBillingEnabled,
-                                retryStrategy),
+                                retryStrategy,
+                                () -> consoleMessageInLogsEnabled),
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -239,9 +239,11 @@ public class OutcomeSelectionRunner {
      */
     public void runOutcomeSelection(
             @NonNull AdSelectionFromOutcomesInput inputParams,
-            @NonNull AdSelectionCallback callback) {
+            @NonNull AdSelectionCallback callback,
+            @NonNull SelectAdsFromOutcomesExecutionLogger selectAdsFromOutcomesExecutionLogger) {
         Objects.requireNonNull(inputParams);
         Objects.requireNonNull(callback);
+        Objects.requireNonNull(selectAdsFromOutcomesExecutionLogger);
         AdSelectionFromOutcomesConfig adSelectionFromOutcomesConfig =
                 inputParams.getAdSelectionFromOutcomesConfig();
         try {
@@ -258,8 +260,7 @@ public class OutcomeSelectionRunner {
                                                     .getEnforceForegroundStatusForFledgeRunAdSelection(),
                                             true,
                                             mCallerUid,
-                                            AdServicesStatsLog
-                                                    .AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                                            AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS_FROM_OUTCOMES,
                                             Throttler.ApiKey.FLEDGE_API_SELECT_ADS,
                                             mDevContext);
                                     validateAdSelectionFromOutcomesConfig(inputParams);
@@ -276,7 +277,8 @@ public class OutcomeSelectionRunner {
                                     ignoredVoid ->
                                             orchestrateOutcomeSelection(
                                                     inputParams.getAdSelectionFromOutcomesConfig(),
-                                                    inputParams.getCallerPackageName()),
+                                                    inputParams.getCallerPackageName(),
+                                                    selectAdsFromOutcomesExecutionLogger),
                                     mLightweightExecutorService);
             Futures.addCallback(
                     adSelectionOutcomeFuture,
@@ -285,6 +287,8 @@ public class OutcomeSelectionRunner {
                         public void onSuccess(AdSelectionOutcome result) {
                             notifySuccessToCaller(
                                     inputParams.getCallerPackageName(), result, callback);
+                            selectAdsFromOutcomesExecutionLogger
+                                    .logSelectAdsFromOutcomesApiCalledStats();
                         }
 
                         @Override
@@ -299,6 +303,8 @@ public class OutcomeSelectionRunner {
                                 // Fail Silently by notifying success to caller
                                 notifyEmptySuccessToCaller(callback);
                             } else {
+                                selectAdsFromOutcomesExecutionLogger
+                                        .logSelectAdsFromOutcomesApiCalledStats();
                                 if (t.getCause() instanceof AdServicesException) {
                                     notifyFailureToCaller(
                                             inputParams.getCallerPackageName(),
@@ -320,13 +326,17 @@ public class OutcomeSelectionRunner {
     }
 
     private ListenableFuture<AdSelectionOutcome> orchestrateOutcomeSelection(
-            AdSelectionFromOutcomesConfig config, String callerPackageName) {
-        validateExistenceOfAdSelectionIds(config, callerPackageName);
+            AdSelectionFromOutcomesConfig config,
+            String callerPackageName,
+            SelectAdsFromOutcomesExecutionLogger selectAdsFromOutcomesExecutionLogger) {
+        validateExistenceOfAdSelectionIds(
+                config, callerPackageName, selectAdsFromOutcomesExecutionLogger);
         return retrieveAdSelectionIdWithBidList(config.getAdSelectionIds(), callerPackageName)
                 .transform(
                         outcomes -> {
                             FluentFuture<Long> selectedIdFuture =
-                                    mAdOutcomeSelector.runAdOutcomeSelector(outcomes, config);
+                                    mAdOutcomeSelector.runAdOutcomeSelector(
+                                            outcomes, config, selectAdsFromOutcomesExecutionLogger);
                             return Pair.create(outcomes, selectedIdFuture);
                         },
                         mLightweightExecutorService)
@@ -358,10 +368,10 @@ public class OutcomeSelectionRunner {
         try {
             // Note: Success is logged before the callback to ensure deterministic testing.
             mAdServicesLogger.logFledgeApiCallStats(
-                    AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                    AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS_FROM_OUTCOMES,
                     callerAppPackageName,
                     STATUS_SUCCESS,
-                    /*latencyMs=*/ 0);
+                    /* latencyMs= */ 0);
             if (result == null) {
                 callback.onSuccess(null);
             } else {
@@ -405,10 +415,10 @@ public class OutcomeSelectionRunner {
             // Note: Failure is logged before the callback to ensure deterministic testing.
             if (!(t instanceof FilterException)) {
                 mAdServicesLogger.logFledgeApiCallStats(
-                        AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                        AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS_FROM_OUTCOMES,
                         callerAppPackageName,
                         resultCode,
-                        /*latencyMs=*/ 0);
+                        /* latencyMs= */ 0);
             }
 
             FledgeErrorResponse selectionFailureResponse =
@@ -461,10 +471,12 @@ public class OutcomeSelectionRunner {
     }
 
     private void validateExistenceOfAdSelectionIds(
-            AdSelectionFromOutcomesConfig config, String callerPackageName) {
+            AdSelectionFromOutcomesConfig config,
+            String callerPackageName,
+            SelectAdsFromOutcomesExecutionLogger selectAdsFromOutcomesExecutionLogger) {
         Objects.requireNonNull(config.getAdSelectionIds());
 
-        ImmutableList.Builder<Long> notExistingIds = new ImmutableList.Builder<>();
+        ImmutableList.Builder<Long> notExistingIdsBuilder = new ImmutableList.Builder<>();
         List<Long> existingIds;
         if (mShouldUseUnifiedTables) {
             existingIds =
@@ -481,17 +493,19 @@ public class OutcomeSelectionRunner {
         }
         config.getAdSelectionIds().stream()
                 .filter(e -> !existingIds.contains(e))
-                .forEach(notExistingIds::add);
+                .forEach(notExistingIdsBuilder::add);
 
         // TODO(b/258912806): Current behavior is to fail if any ad selection ids are absent in the
         //  db or owned by another caller package. Investigate if this behavior needs changing due
         //  to security reasons.
-        if (!notExistingIds.build().isEmpty()) {
+        selectAdsFromOutcomesExecutionLogger.setCountIds(config.getAdSelectionIds().size());
+        List<Long> notExistingIds = notExistingIdsBuilder.build();
+        selectAdsFromOutcomesExecutionLogger.setCountNonExistingIds(notExistingIds.size());
+        if (!notExistingIds.isEmpty()) {
             String err =
                     String.format(
-                            "Ad selection ids: %s don't exists or owned by the calling "
-                                    + "package",
-                            notExistingIds.build());
+                            "Ad selection ids: %s don't exists or owned by the calling package",
+                            notExistingIds);
             sLogger.e(err);
             throw new IllegalArgumentException(err);
         }

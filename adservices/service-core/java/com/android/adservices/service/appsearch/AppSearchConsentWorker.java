@@ -536,7 +536,7 @@ class AppSearchConsentWorker {
      * S- device, it removes the "ext." substring from the package name.
      */
     public static String getAdServicesPackageName(Context context) {
-        Intent serviceIntent = new Intent(AdServicesCommon.ACTION_TOPICS_SERVICE);
+        Intent serviceIntent = new Intent(AdServicesCommon.ACTION_MEASUREMENT_SERVICE);
         List<ResolveInfo> resolveInfos =
                 context.getPackageManager()
                         .queryIntentServices(
@@ -793,6 +793,72 @@ class AppSearchConsentWorker {
             dao.setEnrollmentChannel(enrollmentChannel.toString());
             dao.writeData(mUxStatesSearchSession, mPackageIdentifiers, mExecutor);
             LogUtil.d("Wrote PrivacySandboxUx to AppSearch: " + dao);
+        } finally {
+            READ_WRITE_LOCK.writeLock().unlock();
+        }
+    }
+
+    /** Returns whether isMeasurementDataReset bit is true. */
+    boolean isMeasurementDataReset() {
+        READ_WRITE_LOCK.readLock().lock();
+        try {
+            return AppSearchUxStatesDao.readIsMeasurementDataReset(
+                    mGlobalSearchSession, mExecutor, mUid, mAdservicesPackageName);
+        } finally {
+            READ_WRITE_LOCK.readLock().unlock();
+        }
+    }
+
+    /** Saves the isMeasurementDataReset bit in app search. */
+    void setMeasurementDataReset(boolean isMeasurementDataReset) {
+        READ_WRITE_LOCK.writeLock().lock();
+        try {
+            AppSearchUxStatesDao dao =
+                    AppSearchUxStatesDao.readData(
+                            mGlobalSearchSession, mExecutor, mUid, mAdservicesPackageName);
+            if (dao == null) {
+                dao =
+                        new AppSearchUxStatesDao(
+                                AppSearchUxStatesDao.getRowId(mUid),
+                                mUid,
+                                AppSearchUxStatesDao.NAMESPACE);
+            }
+            dao.setMeasurementDataReset(isMeasurementDataReset);
+            dao.writeData(mUxStatesSearchSession, mPackageIdentifiers, mExecutor);
+            LogUtil.d("Wrote the isMeasurementDataReset bit to AppSearch: " + dao);
+        } finally {
+            READ_WRITE_LOCK.writeLock().unlock();
+        }
+    }
+
+    /** Returns whether isPaDataReset bit is true. */
+    boolean isPaDataReset() {
+        READ_WRITE_LOCK.readLock().lock();
+        try {
+            return AppSearchUxStatesDao.readIsPaDataReset(
+                    mGlobalSearchSession, mExecutor, mUid, mAdservicesPackageName);
+        } finally {
+            READ_WRITE_LOCK.readLock().unlock();
+        }
+    }
+
+    /** Saves the isPaDataReset bit in app search. */
+    void setPaDataReset(boolean isPaDataReset) {
+        READ_WRITE_LOCK.writeLock().lock();
+        try {
+            AppSearchUxStatesDao dao =
+                    AppSearchUxStatesDao.readData(
+                            mGlobalSearchSession, mExecutor, mUid, mAdservicesPackageName);
+            if (dao == null) {
+                dao =
+                        new AppSearchUxStatesDao(
+                                AppSearchUxStatesDao.getRowId(mUid),
+                                mUid,
+                                AppSearchUxStatesDao.NAMESPACE);
+            }
+            dao.setPaDataReset(isPaDataReset);
+            dao.writeData(mUxStatesSearchSession, mPackageIdentifiers, mExecutor);
+            LogUtil.d("Wrote the isPaDataReset bit to AppSearch: " + dao);
         } finally {
             READ_WRITE_LOCK.writeLock().unlock();
         }

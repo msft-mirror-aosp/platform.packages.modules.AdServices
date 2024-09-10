@@ -25,11 +25,13 @@ import android.os.Binder;
 import android.os.ParcelFileDescriptor;
 import android.os.Process;
 import android.os.UserHandle;
+import android.util.ArraySet;
 import android.util.Log;
 
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.BasicShellCommandHandler;
 import com.android.sdksandbox.ISdkSandboxService;
+import com.android.server.sdksandbox.SdkSandboxManagerService.LocalImpl;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -105,6 +107,15 @@ class SdkSandboxShellCommand extends BasicShellCommandHandler {
                     case ADSERVICES_CMD:
                         result = runAdServicesShellCommand();
                         break;
+                    case "append-test-allowlist":
+                        result = runAppendTestAllowlistComponent();
+                        break;
+                    case "clear-test-allowlists":
+                        result = runClearTestAllowlists();
+                        break;
+                    case "get-test-allowlist":
+                        result = getTestAllowlist();
+                        break;
                     default:
                         result = handleDefaultCommands(cmd);
                 }
@@ -113,6 +124,44 @@ class SdkSandboxShellCommand extends BasicShellCommandHandler {
             Binder.restoreCallingIdentity(token);
         }
         return result;
+    }
+
+    private int runAppendTestAllowlistComponent() {
+        LocalImpl localManager = (LocalImpl) mService.getLocalManager();
+        String allowlistType = getNextArgRequired();
+        if (allowlistType.equals("content-provider")) {
+            localManager.appendTestContentProviderAllowlist(peekRemainingArgs());
+        } else if (allowlistType.equals("send-broadcast")) {
+            localManager.appendTestSendBroadcastAllowlist(peekRemainingArgs());
+        } else {
+            throw new IllegalArgumentException(
+                    "Unknown argument provided to SDK sandbox shell command");
+        }
+
+        return 0;
+    }
+
+    private int getTestAllowlist() {
+        LocalImpl localManager = (LocalImpl) mService.getLocalManager();
+        String allowlistType = getNextArgRequired();
+        ArraySet<String> allowlist;
+        if (allowlistType.equals("content-provider")) {
+            allowlist = localManager.getTestContentProviderAllowlist();
+        } else if (allowlistType.equals("send-broadcast")) {
+            allowlist = localManager.getTestSendBroadcastAllowlist();
+        } else {
+            throw new IllegalArgumentException(
+                    "Unknown argument provided to SDK sandbox shell command");
+        }
+
+        getOutPrintWriter().println(String.join(" ", allowlist));
+        return 0;
+    }
+
+    private int runClearTestAllowlists() {
+        LocalImpl localManager = (LocalImpl) mService.getLocalManager();
+        localManager.clearTestAllowlists();
+        return 0;
     }
 
     /* Delegates the shell command and args to adservice manager, executes the shell
