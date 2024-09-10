@@ -349,8 +349,7 @@ public final class ReportAndRegisterEventE2ETest extends AdServicesExtendedMocki
 
         initializeReportingArtifacts();
 
-        doReturn(mDatastoreManagerSpy)
-                .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
+        doReturn(mDatastoreManagerSpy).when(() -> DatastoreManagerFactory.getDatastoreManager());
 
         mAsyncRegistrationQueueRunnerSpy =
                 spy(

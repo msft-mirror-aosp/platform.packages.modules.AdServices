@@ -437,7 +437,7 @@ public final class EventReportingJobServiceTest
         doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
         doReturn(Mockito.mock(Context.class)).when(mSpyService).getApplicationContext();
         ExtendedMockito.doReturn(mMockDatastoreManager)
-                .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
+                .when(() -> DatastoreManagerFactory.getDatastoreManager());
         ExtendedMockito.doNothing().when(() -> EventReportingJobService.schedule(any(), any()));
         mockGetAdServicesJobServiceLogger(mSpyLogger);
 

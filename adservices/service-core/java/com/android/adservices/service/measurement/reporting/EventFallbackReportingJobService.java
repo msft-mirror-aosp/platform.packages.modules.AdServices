@@ -111,8 +111,7 @@ public final class EventFallbackReportingJobService extends JobService {
                             long eventMainReportingJobPeriodMs =
                                     AdServicesConfig.getMeasurementEventMainReportingJobPeriodMs();
                             new EventReportingJobHandler(
-                                            DatastoreManagerFactory.getDatastoreManager(
-                                                    getApplicationContext()),
+                                            DatastoreManagerFactory.getDatastoreManager(),
                                             FlagsFactory.getFlags(),
                                             AdServicesLoggerImpl.getInstance(),
                                             ReportingStatus.ReportType.EVENT,

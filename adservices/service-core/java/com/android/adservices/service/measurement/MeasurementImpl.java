@@ -95,7 +95,7 @@ public final class MeasurementImpl {
     @VisibleForTesting
     MeasurementImpl(Context context) {
         mContext = context;
-        mDatastoreManager = DatastoreManagerFactory.getDatastoreManager(context);
+        mDatastoreManager = DatastoreManagerFactory.getDatastoreManager();
         mClickVerifier = new ClickVerifier(context);
         mFlags = FlagsFactory.getFlags();
         mMeasurementDataDeleter = new MeasurementDataDeleter(mDatastoreManager, mFlags);

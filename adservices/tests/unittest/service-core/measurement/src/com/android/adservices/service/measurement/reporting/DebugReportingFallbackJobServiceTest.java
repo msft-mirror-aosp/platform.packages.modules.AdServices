@@ -423,7 +423,7 @@ public final class DebugReportingFallbackJobServiceTest
         ExtendedMockito.doNothing()
                 .when(() -> DebugReportingFallbackJobService.schedule(any(), any()));
         ExtendedMockito.doReturn(mMockDatastoreManager)
-                .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
+                .when(() -> DatastoreManagerFactory.getDatastoreManager());
         ExtendedMockito.doReturn(false)
                 .when(
                         () ->

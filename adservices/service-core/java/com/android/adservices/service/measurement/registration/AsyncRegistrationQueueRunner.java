@@ -81,7 +81,7 @@ public class AsyncRegistrationQueueRunner {
 
     private AsyncRegistrationQueueRunner(Context context) {
         mContext = context;
-        mDatastoreManager = DatastoreManagerFactory.getDatastoreManager(context);
+        mDatastoreManager = DatastoreManagerFactory.getDatastoreManager();
         mAsyncSourceFetcher = new AsyncSourceFetcher(context);
         mAsyncTriggerFetcher = new AsyncTriggerFetcher(context);
         mContentResolver = context.getContentResolver();
