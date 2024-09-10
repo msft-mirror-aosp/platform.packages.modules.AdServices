@@ -109,6 +109,7 @@ import com.google.mockwebserver.Dispatcher;
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.RecordedRequest;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -194,6 +195,7 @@ public final class TriggerEncodingCommandE2ETest extends AdServicesExtendedMocki
         AdservicesTestHelper.killAdservicesProcess(mContext);
         ProtectedSignalsDatabase protectedSignalsDatabase =
                 Room.inMemoryDatabaseBuilder(mContext, ProtectedSignalsDatabase.class).build();
+        Throttler.destroyExistingThrottler();
         AdServicesLogger logger = new NoOpLoggerImpl();
         mEncodedPayloadDao = protectedSignalsDatabase.getEncodedPayloadDao();
         mProtectedSignalsDao = protectedSignalsDatabase.protectedSignalsDao();
@@ -243,7 +245,6 @@ public final class TriggerEncodingCommandE2ETest extends AdServicesExtendedMocki
                                 logger, Clock.getInstance(), EnrollmentDao.getInstance()),
                         new EncodingJobRunStatsLoggerImpl(logger, EncodingJobRunStats.builder()),
                         mEncoderLogicMetadataDao);
-
         mProtectedSignalsService =
                 new ProtectedSignalsServiceImpl(
                         mContext,
@@ -295,6 +296,11 @@ public final class TriggerEncodingCommandE2ETest extends AdServicesExtendedMocki
         when(mMockFlags.getDisableFledgeEnrollmentCheck()).thenReturn(true);
         when(mMockFlags.getPasAppAllowList()).thenReturn("*");
         when(mMockFlags.getPpapiAppAllowList()).thenReturn("*");
+    }
+
+    @After
+    public void resetThrottler() {
+        Throttler.destroyExistingThrottler();
     }
 
     @Test

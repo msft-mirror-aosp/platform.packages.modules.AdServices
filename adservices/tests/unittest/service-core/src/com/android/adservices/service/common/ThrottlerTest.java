@@ -36,6 +36,12 @@ import org.junit.Test;
 
 /** Unit tests for {@link Throttler}. */
 public final class ThrottlerTest extends AdServicesMockitoTestCase {
+
+    @Test
+    public void testNewInstance_null() {
+        assertThrows(NullPointerException.class, () -> Throttler.newInstance(null));
+    }
+
     @Test
     public void testTryAcquire_skdName() throws InterruptedException {
         // Create a throttler with 1 permit per second.
@@ -122,7 +128,7 @@ public final class ThrottlerTest extends AdServicesMockitoTestCase {
         doReturn(7F).when(mMockFlags).getMeasurementRegisterWebTriggerRequestPermitsPerSecond();
         doReturn(8F).when(mMockFlags).getMeasurementRegisterSourcesRequestPermitsPerSecond();
 
-        Throttler throttler = new Throttler(mMockFlags);
+        Throttler throttler = Throttler.newInstance(mMockFlags);
 
         // Default ApiKey configured with 1 request per second
         assertAcquireSeveralTimes(throttler, UNKNOWN, 1);
@@ -188,7 +194,7 @@ public final class ThrottlerTest extends AdServicesMockitoTestCase {
 
     private Throttler createThrottler(float permitsPerSecond) {
         mockFlags(permitsPerSecond);
-        return new Throttler(mMockFlags);
+        return Throttler.newInstance(mMockFlags);
     }
 
     private void mockFlags(float permitsPerSecond) {
