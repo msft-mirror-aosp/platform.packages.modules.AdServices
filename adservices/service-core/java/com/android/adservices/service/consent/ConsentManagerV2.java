@@ -324,7 +324,7 @@ public class ConsentManagerV2 {
                                     adServicesManager,
                                     datastore,
                                     appSearchConsentStorageManager,
-                                    UserProfileIdManager.getInstance(context),
+                                    UserProfileIdManager.getInstance(),
                                     // TODO(b/260601944): Remove Flag Instance.
                                     mAppConsentForRStorageManager,
                                     FlagsFactory.getFlags(),

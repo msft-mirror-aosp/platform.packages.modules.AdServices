@@ -304,7 +304,7 @@ public class ConsentManager {
                                     adServicesManager,
                                     datastore,
                                     appSearchConsentManager,
-                                    UserProfileIdManager.getInstance(context),
+                                    UserProfileIdManager.getInstance(),
                                     // TODO(b/260601944): Remove Flag Instance.
                                     UxStatesDao.getInstance(),
                                     adServicesExtDataManager,

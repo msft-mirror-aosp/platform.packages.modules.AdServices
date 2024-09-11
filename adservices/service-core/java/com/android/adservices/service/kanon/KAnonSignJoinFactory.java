@@ -18,7 +18,6 @@ package com.android.adservices.service.kanon;
 
 import static com.android.adservices.service.common.httpclient.AdServicesHttpsClient.DEFAULT_MAX_BYTES;
 
-import android.annotation.NonNull;
 import android.annotation.RequiresApi;
 import android.content.Context;
 import android.os.Build;
@@ -32,7 +31,6 @@ import com.android.adservices.service.common.bhttp.BinaryHttpMessageDeserializer
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 
-
 import java.time.Clock;
 
 /** A factory class used to create an instance of {@link KAnonSignJoinManager}. */
@@ -45,7 +43,7 @@ public class KAnonSignJoinFactory {
      * KAnonSignJoinFactory#getKAnonSignJoinManager()} to create an instance of {@link
      * KAnonSignJoinManager}
      */
-    public KAnonSignJoinFactory(@NonNull Context context) {
+    public KAnonSignJoinFactory(Context context) {
         mContext = context;
     }
 
@@ -59,7 +57,7 @@ public class KAnonSignJoinFactory {
                         DEFAULT_MAX_BYTES);
         KAnonMessageManager kAnonMessageManager =
                 new KAnonMessageManager(
-                        KAnonDatabase.getInstance(mContext).kAnonMessageDao(),
+                        KAnonDatabase.getInstance().kAnonMessageDao(),
                         FlagsFactory.getFlags(),
                         Clock.systemUTC());
         KeyAttestationFactory keyAttestationFactory = new KeyAttestationFactory(mContext);
@@ -69,9 +67,9 @@ public class KAnonSignJoinFactory {
                         AdServicesExecutors.getBackgroundExecutor(),
                         new AnonymousCountingTokensImpl(),
                         adServicesHttpsClient,
-                        KAnonDatabase.getInstance(mContext).clientParametersDao(),
-                        KAnonDatabase.getInstance(mContext).serverParametersDao(),
-                        UserProfileIdManager.getInstance(mContext),
+                        KAnonDatabase.getInstance().clientParametersDao(),
+                        KAnonDatabase.getInstance().serverParametersDao(),
+                        UserProfileIdManager.getInstance(),
                         new BinaryHttpMessageDeserializer(),
                         FlagsFactory.getFlags(),
                         kAnonMessageManager,
