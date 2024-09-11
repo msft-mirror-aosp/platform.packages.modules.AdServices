@@ -244,4 +244,8 @@ public class NoOpLoggerImpl implements AdServicesLogger {
     @Override
     public void logUpdateSignalsProcessReportedStats(
             UpdateSignalsProcessReportedStats reportedStats) {}
+
+    @Override
+    public void logTopicsScheduleEpochJobSettingReportedStats(
+            TopicsScheduleEpochJobSettingReportedStats stats) {}
 }

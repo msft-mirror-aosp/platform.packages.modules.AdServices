@@ -226,8 +226,8 @@ import java.util.stream.Collectors;
         ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX)
 @SmallTest
 public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase {
-    private static final int UX_TYPE_COUNT = 5;
-    private static final int ENROLLMENT_CHANNEL_COUNT = 22;
+    private static final int UX_TYPE_COUNT = PrivacySandboxUxCollection.values().length;
+    private static final int ENROLLMENT_CHANNEL_COUNT = 18;
 
     private AtomicFileDatastore mDatastore;
     private AtomicFileDatastore mConsentDatastore;
@@ -4607,40 +4607,6 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         getUxWithPpApiOnly(Flags.PPAPI_AND_ADEXT_SERVICE);
     }
 
-    @Test
-    public void testGetUx_ppapiAndAdExtDataServiceOnly_postRollback_u18Ux() throws RemoteException {
-        int consentSourceOfTruth = Flags.PPAPI_AND_ADEXT_SERVICE;
-        when(mMockFlags.getEnableAdExtServiceConsentData()).thenReturn(true);
-        when(mMockFlags.getU18UxEnabled()).thenReturn(true);
-        ConsentManager spyConsentManager =
-                getSpiedConsentManagerForMigrationTesting(
-                        /* isGiven */ false, consentSourceOfTruth);
-
-        when(mUxStatesDaoMock.getUx()).thenReturn(PrivacySandboxUxCollection.UNSUPPORTED_UX);
-        when(mAdServicesExtDataManagerMock.getIsU18Account()).thenReturn(true);
-        assertThat(spyConsentManager.getUx()).isEqualTo(PrivacySandboxUxCollection.U18_UX);
-
-        verify(mAdServicesExtDataManagerMock).getIsU18Account();
-    }
-
-    @Test
-    public void testGetUx_ppapiAndAdExtDataServiceOnly_postRollback_rvcUx() throws RemoteException {
-        int consentSourceOfTruth = Flags.PPAPI_AND_ADEXT_SERVICE;
-        when(mMockFlags.getEnableAdExtServiceConsentData()).thenReturn(true);
-        when(mMockFlags.getU18UxEnabled()).thenReturn(true);
-        ConsentManager spyConsentManager =
-                getSpiedConsentManagerForMigrationTesting(
-                        /* isGiven */ false, consentSourceOfTruth);
-
-        when(mUxStatesDaoMock.getUx()).thenReturn(PrivacySandboxUxCollection.UNSUPPORTED_UX);
-        when(mAdServicesExtDataManagerMock.getIsU18Account()).thenReturn(false);
-        when(mAdServicesExtDataManagerMock.getIsAdultAccount()).thenReturn(true);
-        assertThat(spyConsentManager.getUx()).isEqualTo(PrivacySandboxUxCollection.RVC_UX);
-
-        verify(mAdServicesExtDataManagerMock).getIsU18Account();
-        verify(mAdServicesExtDataManagerMock).getIsAdultAccount();
-    }
-
     private void getUxWithPpApiOnly(int consentSourceOfTruth) throws RemoteException {
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -4789,6 +4755,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
+    @SuppressWarnings("NewApi")
     public void getEnrollmentChannel_appSearchOnly() throws RemoteException {
         int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
         when(mMockFlags.getEnableAppsearchConsentData()).thenReturn(true);
