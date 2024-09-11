@@ -390,7 +390,7 @@ public class PackageChangedReceiver extends BroadcastReceiver {
     @VisibleForTesting
     CustomAudienceDatabase getCustomAudienceDatabase(@NonNull Context context) {
         Objects.requireNonNull(context);
-        return CustomAudienceDatabase.getInstance(context);
+        return CustomAudienceDatabase.getInstance();
     }
 
     /**
@@ -402,7 +402,7 @@ public class PackageChangedReceiver extends BroadcastReceiver {
     @VisibleForTesting
     SharedStorageDatabase getSharedStorageDatabase(@NonNull Context context) {
         Objects.requireNonNull(context);
-        return SharedStorageDatabase.getInstance(context);
+        return SharedStorageDatabase.getInstance();
     }
 
     private void logWipeoutStats(WipeoutStatus wipeoutStatus, String appPackageName) {
