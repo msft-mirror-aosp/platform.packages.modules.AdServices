@@ -150,8 +150,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                         new FledgeAllowListsFilter(
                                 FlagsFactory.getFlags(), AdServicesLoggerImpl.getInstance()),
                         new FledgeApiThrottleFilter(
-                                Throttler.getInstance(FlagsFactory.getFlags()),
-                                AdServicesLoggerImpl.getInstance())),
+                                Throttler.getInstance(), AdServicesLoggerImpl.getInstance())),
                 EnrollmentDao.getInstance(),
                 FlagsFactory.getFlags().getPasProductMetricsV1Enabled()
                         ? new UpdateSignalsProcessReportedLoggerImpl(

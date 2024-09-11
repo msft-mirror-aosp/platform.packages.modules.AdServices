@@ -127,18 +127,9 @@ public final class Throttler {
 
     /** Returns the singleton instance of the Throttler. */
     public static Throttler getInstance() {
-        // TODO(b/365833970): move logic here / remove deprecated method
-        return getInstance(FlagsFactory.getFlags());
-    }
-
-    /**
-     * @deprecated use {@link #getInstance()} on production code or {@link #newInstance(Flags)} on
-     *     unit tests.
-     */
-    @Deprecated
-    public static Throttler getInstance(Flags flags) {
         synchronized (sLock) {
             if (sSingleton == null) {
+                Flags flags = FlagsFactory.getFlags();
                 Log.v(TAG, "Initializing singleton with " + flags);
                 // Clearing calling identity to check device config permission read by flags on the
                 // local process and not on the process called. Once the device configs are read,

@@ -134,8 +134,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                         new FledgeAllowListsFilter(
                                 FlagsFactory.getFlags(), AdServicesLoggerImpl.getInstance()),
                         new FledgeApiThrottleFilter(
-                                Throttler.getInstance(FlagsFactory.getFlags()),
-                                AdServicesLoggerImpl.getInstance())),
+                                Throttler.getInstance(), AdServicesLoggerImpl.getInstance())),
                 new AdFilteringFeatureFactory(
                         SharedStorageDatabase.getInstance().appInstallDao(),
                         SharedStorageDatabase.getInstance().frequencyCapDao(),

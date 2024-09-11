@@ -168,11 +168,6 @@ public final class ThrottlerTest extends AdServicesMockitoTestCase {
         assertAcquireSeveralTimes(throttler, MEASUREMENT_API_REGISTER_TRIGGER, 1);
     }
 
-    @Test
-    public void testGetInstance_onEmptyFlags_throwNullPointerException() {
-        assertThrows(NullPointerException.class, () -> Throttler.getInstance(null));
-    }
-
     private void assertAcquireSeveralTimes(
             Throttler throttler, Throttler.ApiKey apiKey, int validTimes) {
         String defaultRequester = "requester";
