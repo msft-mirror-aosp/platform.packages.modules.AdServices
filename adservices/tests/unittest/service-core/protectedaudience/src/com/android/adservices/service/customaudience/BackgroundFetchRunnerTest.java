@@ -335,7 +335,8 @@ public final class BackgroundFetchRunnerTest extends AdServicesExtendedMockitoTe
                                 CommonFixture.FIXED_NOW,
                                 CommonFixture.VALID_BUYER_1,
                                 mFetchUri,
-                                DevContext.createForDevOptionsDisabled().getDevOptionsEnabled())
+                                DevContext.createForDevOptionsDisabled()
+                                        .getDeviceDevOptionsEnabled())
                         .get();
 
         assertEquals(expectedUpdatableData, updatableData);
@@ -363,7 +364,8 @@ public final class BackgroundFetchRunnerTest extends AdServicesExtendedMockitoTe
                                 CommonFixture.FIXED_NOW,
                                 CommonFixture.VALID_BUYER_1,
                                 mFetchUri,
-                                DevContext.createForDevOptionsDisabled().getDevOptionsEnabled())
+                                DevContext.createForDevOptionsDisabled()
+                                        .getDeviceDevOptionsEnabled())
                         .get();
 
         assertEquals(expectedUpdatableData, updatableData);
@@ -425,7 +427,8 @@ public final class BackgroundFetchRunnerTest extends AdServicesExtendedMockitoTe
                                 CommonFixture.FIXED_NOW,
                                 CommonFixture.VALID_BUYER_1,
                                 mFetchUri,
-                                DevContext.createForDevOptionsDisabled().getDevOptionsEnabled())
+                                DevContext.createForDevOptionsDisabled()
+                                        .getDeviceDevOptionsEnabled())
                         .get();
 
         assertEquals(expectedUpdatableData, updatableData);
@@ -485,7 +488,8 @@ public final class BackgroundFetchRunnerTest extends AdServicesExtendedMockitoTe
                                 CommonFixture.FIXED_NOW,
                                 CommonFixture.VALID_BUYER_1,
                                 mFetchUri,
-                                DevContext.createForDevOptionsDisabled().getDevOptionsEnabled())
+                                DevContext.createForDevOptionsDisabled()
+                                        .getDeviceDevOptionsEnabled())
                         .get();
 
         assertEquals(expectedUpdatableData, updatableData);
@@ -552,7 +556,8 @@ public final class BackgroundFetchRunnerTest extends AdServicesExtendedMockitoTe
                                 CommonFixture.FIXED_NOW,
                                 CommonFixture.VALID_BUYER_1,
                                 mFetchUri,
-                                DevContext.createForDevOptionsDisabled().getDevOptionsEnabled())
+                                DevContext.createForDevOptionsDisabled()
+                                        .getDeviceDevOptionsEnabled())
                         .get();
 
         assertTrue(responseLatch.await(150, TimeUnit.MILLISECONDS));
@@ -584,7 +589,8 @@ public final class BackgroundFetchRunnerTest extends AdServicesExtendedMockitoTe
                                 CommonFixture.FIXED_NOW,
                                 CommonFixture.VALID_BUYER_1,
                                 invalidFetchUri,
-                                DevContext.createForDevOptionsDisabled().getDevOptionsEnabled())
+                                DevContext.createForDevOptionsDisabled()
+                                        .getDeviceDevOptionsEnabled())
                         .get();
 
         assertEquals(expectedUpdatableData, updatableData);
@@ -629,7 +635,8 @@ public final class BackgroundFetchRunnerTest extends AdServicesExtendedMockitoTe
                                 CommonFixture.FIXED_NOW,
                                 CommonFixture.VALID_BUYER_1,
                                 mFetchUri,
-                                DevContext.createForDevOptionsDisabled().getDevOptionsEnabled())
+                                DevContext.createForDevOptionsDisabled()
+                                        .getDeviceDevOptionsEnabled())
                         .get();
 
         assertEquals(expectedUpdatableData, updatableData);

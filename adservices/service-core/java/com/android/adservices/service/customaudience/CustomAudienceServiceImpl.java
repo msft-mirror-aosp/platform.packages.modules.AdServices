@@ -568,7 +568,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
 
         DevContext devContext = mDevContextFilter.createDevContext();
 
-        if (!devContext.getDevOptionsEnabled()) {
+        if (!devContext.getDeviceDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
                     apiName,
                     devContext.getCallingAppPackageName(),
@@ -635,7 +635,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
 
         DevContext devContext = mDevContextFilter.createDevContext();
 
-        if (!devContext.getDevOptionsEnabled()) {
+        if (!devContext.getDeviceDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
                     apiName,
                     devContext.getCallingAppPackageName(),
@@ -690,7 +690,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
 
         DevContext devContext = mDevContextFilter.createDevContext();
 
-        if (!devContext.getDevOptionsEnabled()) {
+        if (!devContext.getDeviceDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
                     apiName,
                     devContext.getCallingAppPackageName(),

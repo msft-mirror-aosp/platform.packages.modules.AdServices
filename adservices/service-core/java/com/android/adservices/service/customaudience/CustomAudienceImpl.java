@@ -143,7 +143,7 @@ public class CustomAudienceImpl {
                         appInstallFilteringEnabled,
                         adRenderIdEnabled);
 
-        boolean isDebuggableCustomAudience = devContext.getDevOptionsEnabled();
+        boolean isDebuggableCustomAudience = devContext.getDeviceDevOptionsEnabled();
         sLogger.v("Is debuggable custom audience: %b", isDebuggableCustomAudience);
 
         Duration customAudienceDefaultExpireIn =

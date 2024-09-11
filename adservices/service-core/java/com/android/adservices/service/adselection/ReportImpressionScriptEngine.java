@@ -353,7 +353,8 @@ public class ReportImpressionScriptEngine {
         IsolateSettings isolateSettings =
                 IsolateSettings.builder()
                         .setMaxHeapSizeBytes(mMaxHeapSizeBytesSupplier.get())
-                        .setIsolateConsoleMessageInLogsEnabled(mDevContext.getDevOptionsEnabled())
+                        .setIsolateConsoleMessageInLogsEnabled(
+                                mDevContext.getDeviceDevOptionsEnabled())
                         .build();
         return mJsEngine.evaluate(jsScript, args, functionName, isolateSettings, mRetryStrategy);
     }

@@ -75,7 +75,7 @@ public class ObliviousHttpEncryptorImplTest extends AdServicesExtendedMockitoTes
                 new ObliviousHttpEncryptorImpl(
                         mEncryptionKeyManagerMock, mEncryptionContextDao, mLightweightExecutor);
 
-        mDevContext = DevContext.builder(mPackageName).setDevOptionsEnabled(true).build();
+        mDevContext = DevContext.builder(mPackageName).setDeviceDevOptionsEnabled(true).build();
 
         mocker.mockGetFlags(mMockFlags);
     }

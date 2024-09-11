@@ -1333,6 +1333,6 @@ public final class ReportImpressionScriptEngineTest extends AdServicesMockitoTes
                 mIsolateSettings::getMaxHeapSizeBytes,
                 registerAdBeaconScriptEngineHelper,
                 new NoOpRetryStrategyImpl(),
-                DevContext.builder(mPackageName).setDevOptionsEnabled(true).build());
+                DevContext.builder(mPackageName).setDeviceDevOptionsEnabled(true).build());
     }
 }
