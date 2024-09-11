@@ -178,6 +178,7 @@ android_library {
         "adservices-proto-lite",
         "adservices-grpclib-lite",
         "adservices-shared-common",
+        "adservices-shared-datastore",
         "adservices-shared-error-logging",
         "adservices-shared-spe",
         "adservices-shared-storage",
