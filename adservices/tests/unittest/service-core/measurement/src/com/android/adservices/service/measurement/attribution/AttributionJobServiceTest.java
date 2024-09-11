@@ -666,7 +666,7 @@ public final class AttributionJobServiceTest
         doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
         doReturn(Mockito.mock(Context.class)).when(mSpyService).getApplicationContext();
         ExtendedMockito.doReturn(mMockDatastoreManager)
-                .when(() -> DatastoreManagerFactory.getDatastoreManager());
+                .when(DatastoreManagerFactory::getDatastoreManager);
         ExtendedMockito.doNothing().when(() -> AttributionJobService.schedule(any(), any()));
         ExtendedMockito.doNothing()
                 .when(() -> DebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
