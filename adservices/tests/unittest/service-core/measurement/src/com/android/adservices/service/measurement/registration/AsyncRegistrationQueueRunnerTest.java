@@ -2958,7 +2958,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         any(), anyInt(), any(), any(), anyLong(), anyLong());
         // this check occurs after global destination limit check
         verify(mMeasurementDao, never())
-                .countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
+                .countDistinctRegOriginPerPublisherXEnrollmentExclRegOrigin(
                         any(), any(), anyInt(), anyString(), anyLong(), anyLong());
         verify(mDebugReportApi)
                 .scheduleSourceReport(
@@ -3055,7 +3055,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         any(), anyInt(), any(), any(), anyLong(), anyLong());
         // this check occurs after global destination limit check
         verify(mMeasurementDao, never())
-                .countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
+                .countDistinctRegOriginPerPublisherXEnrollmentExclRegOrigin(
                         any(), any(), anyInt(), anyString(), anyLong(), anyLong());
         verify(mDebugReportApi)
                 .scheduleSourceReport(
@@ -3395,7 +3395,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 getSpyAsyncRegistrationQueueRunner();
 
         // Execution
-        when(mMeasurementDao.countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
+        when(mMeasurementDao.countDistinctRegOriginPerPublisherXEnrollmentExclRegOrigin(
                         any(), any(), anyInt(), any(), anyLong(), anyLong()))
                 .thenReturn(3);
 
@@ -3410,7 +3410,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                                 mAsyncFetchStatus)
                         .isAllowed());
         verify(mMeasurementDao, times(1))
-                .countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
+                .countDistinctRegOriginPerPublisherXEnrollmentExclRegOrigin(
                         any(), any(), anyInt(), any(), anyLong(), anyLong());
         // verify global destination rate limit before publisher per enrollment
         verify(mMeasurementDao, times(2))
@@ -3464,7 +3464,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 .countDistinctDestinationsPerPublisherPerRateLimitWindow(
                         any(), anyInt(), anyList(), anyInt(), anyLong(), anyLong());
         verify(mMeasurementDao, never())
-                .countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
+                .countDistinctRegOriginPerPublisherXEnrollmentExclRegOrigin(
                         any(), any(), anyInt(), anyString(), anyLong(), anyLong());
     }
 
@@ -4392,7 +4392,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
                         any(), anyInt(), any(), any(), anyLong(), anyLong()))
                 .thenReturn(0);
-        when(mMeasurementDao.countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
+        when(mMeasurementDao.countDistinctRegOriginPerPublisherXEnrollmentExclRegOrigin(
                         any(Uri.class),
                         any(Uri.class),
                         anyInt(),
@@ -4477,7 +4477,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
                         any(), anyInt(), any(), any(), anyLong(), anyLong()))
                 .thenReturn(0);
-        when(mMeasurementDao.countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
+        when(mMeasurementDao.countDistinctRegOriginPerPublisherXEnrollmentExclRegOrigin(
                         any(Uri.class),
                         any(Uri.class),
                         anyInt(),
@@ -4558,7 +4558,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
                         any(), anyInt(), any(), any(), anyLong(), anyLong()))
                 .thenReturn(0);
-        when(mMeasurementDao.countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
+        when(mMeasurementDao.countDistinctRegOriginPerPublisherXEnrollmentExclRegOrigin(
                         any(Uri.class),
                         any(Uri.class),
                         anyInt(),
@@ -4667,7 +4667,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
                         any(), anyInt(), any(), any(), anyLong(), anyLong()))
                 .thenReturn(0);
-        when(mMeasurementDao.countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
+        when(mMeasurementDao.countDistinctRegOriginPerPublisherXEnrollmentExclRegOrigin(
                         any(Uri.class),
                         any(Uri.class),
                         anyInt(),
@@ -4789,7 +4789,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
                         any(), anyInt(), any(), any(), anyLong(), anyLong()))
                 .thenReturn(0);
-        when(mMeasurementDao.countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
+        when(mMeasurementDao.countDistinctRegOriginPerPublisherXEnrollmentExclRegOrigin(
                         any(Uri.class),
                         any(Uri.class),
                         anyInt(),
@@ -4832,7 +4832,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
                         any(), anyInt(), any(), any(), anyLong(), anyLong()))
                 .thenReturn(0);
-        when(mMeasurementDao.countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
+        when(mMeasurementDao.countDistinctRegOriginPerPublisherXEnrollmentExclRegOrigin(
                         any(Uri.class),
                         any(Uri.class),
                         anyInt(),
@@ -4899,7 +4899,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
                         any(), anyInt(), any(), any(), anyLong(), anyLong()))
                 .thenReturn(0);
-        when(mMeasurementDao.countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
+        when(mMeasurementDao.countDistinctRegOriginPerPublisherXEnrollmentExclRegOrigin(
                         any(Uri.class),
                         any(Uri.class),
                         anyInt(),
@@ -4965,7 +4965,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         when(mMeasurementDao.countDistinctReportingOriginsPerPublisherXDestinationInSource(
                         any(), anyInt(), any(), any(), anyLong(), anyLong()))
                 .thenReturn(0);
-        when(mMeasurementDao.countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
+        when(mMeasurementDao.countDistinctRegOriginPerPublisherXEnrollmentExclRegOrigin(
                         any(Uri.class),
                         any(Uri.class),
                         anyInt(),
