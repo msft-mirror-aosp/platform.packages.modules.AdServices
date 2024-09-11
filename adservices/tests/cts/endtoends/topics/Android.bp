@@ -30,8 +30,8 @@ java_defaults {
         "framework-adservices-lib",
     ],
     libs: [
-        "android.test.base",
-        "framework-adservices",
+        "android.test.base.stubs.system",
+        "framework-adservices.stubs.module_lib",
         "framework-sdksandbox.impl",
     ],
     sdk_version: "module_current",

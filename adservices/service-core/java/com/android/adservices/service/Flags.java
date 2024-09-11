@@ -129,6 +129,15 @@ public interface Flags extends ModuleSharedFlags {
         return TOPICS_ENCRYPTION_METRICS_ENABLED;
     }
 
+    /** Flag to enable Topics epoch job battery constraint logging for Topics API. */
+    @FeatureFlag boolean TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_LOGGING_ENABLED = false;
+
+    /** Returns the feature flag to enable Topics epoch job battery constraint logging
+     * for Topics API. */
+    default boolean getTopicsEpochJobBatteryConstraintLoggingEnabled() {
+        return TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_LOGGING_ENABLED;
+    }
+
     /** Flag to disable plaintext Topics for Topics API response. */
     boolean TOPICS_DISABLE_PLAINTEXT_RESPONSE = false;
 
@@ -2655,18 +2664,6 @@ public interface Flags extends ModuleSharedFlags {
         return getLegacyMeasurementKillSwitch() || MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH;
     }
 
-    /** Flag for storing Measurement Rollback data in External Storage for Android R. */
-    boolean MEASUREMENT_ROLLBACK_DELETION_R_ENABLED = !SdkLevel.isAtLeastS();
-
-    /**
-     * Returns whether storing Measurement rollback deletion handling data in AdServices external
-     * storage is enabled. Rollback deletion handling on Android R will be disabled if this value is
-     * false.
-     */
-    default boolean getMeasurementRollbackDeletionREnabled() {
-        return MEASUREMENT_ROLLBACK_DELETION_R_ENABLED;
-    }
-
     /**
      * Kill Switch for storing Measurement Rollback data in App Search for Android S. The default
      * value is false which means storing the rollback handling data in App Search is enabled. This
@@ -4485,22 +4482,6 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_U18_UX_ENABLED;
     }
 
-    /** Default RVC UX feature flag.. */
-    boolean DEFAULT_RVC_UX_ENABLED = SDK_INT == Build.VERSION_CODES.R;
-
-    /** RVC UX feature flag.. */
-    default boolean getEnableRvcUx() {
-        return DEFAULT_RVC_UX_ENABLED;
-    }
-
-    /** Default RVC NOTIFICATION feature flag.. */
-    boolean DEFAULT_RVC_POST_OTA_NOTIFICATION_ENABLED = false;
-
-    /** RVC Notification feature flag.. */
-    default boolean getEnableRvcPostOtaNotification() {
-        return DEFAULT_RVC_POST_OTA_NOTIFICATION_ENABLED;
-    }
-
     /** Default enableAdServices system API feature flag.. */
     boolean DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API = false;
 
@@ -5026,6 +5007,13 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_ADR_BUDGET_WINDOW_LENGTH_MILLIS;
     }
 
+    @ConfigFlag int MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE = 5;
+
+    /** Returns maximum number of aggregatable debug reports allowed per source. */
+    default int getMeasurementMaxAdrCountPerSource() {
+        return MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE;
+    }
+
     /**
      * Default whether to limit logging for enrollment metrics to avoid performance issues. This
      * includes not logging data that requires database queries and downloading MDD files.
@@ -5037,10 +5025,16 @@ public interface Flags extends ModuleSharedFlags {
         return ENROLLMENT_ENABLE_LIMITED_LOGGING;
     }
 
-    @ConfigFlag int MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES = 8;
+    @ConfigFlag int MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES = 1;
 
     default int getMeasurementDefaultFilteringIdMaxBytes() {
         return MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES;
+    }
+
+    @ConfigFlag int MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES = 8;
+
+    default int getMeasurementMaxFilteringIdMaxBytes() {
+        return MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES;
     }
 
     @FeatureFlag boolean MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING = false;
