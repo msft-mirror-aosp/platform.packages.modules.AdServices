@@ -2038,6 +2038,7 @@ public final class FetcherUtilTest {
     @Test
     public void getValidAggregateDebugReportingString_defaultReportType_succeeds()
             throws JSONException {
+        // Setup
         when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
         when(mFlags.getMeasurementAggregationCoordinatorOriginList())
                 .thenReturn("https://cloud.coordination.test");
@@ -2052,34 +2053,43 @@ public final class FetcherUtilTest {
         dataObj2.put("key_piece", "0x3");
         dataObj2.put("value", 65536);
         JSONArray types1 = new JSONArray(Arrays.asList("source-noised"));
-        JSONArray types2 = new JSONArray(Arrays.asList("source-max-event-states-limit", "default"));
+        JSONArray types2 =
+                new JSONArray(Arrays.asList("source-max-event-states-limit", "unspecified"));
         dataObj1.put("types", types1);
         dataObj2.put("types", types2);
         obj.put("debug_data", new JSONArray(Arrays.asList(dataObj1, dataObj2)));
+
+        // Execution
         String aggregateDebugReportingString =
                 FetcherUtil.getValidAggregateDebugReportingString(obj, mFlags).get();
         AggregateDebugReporting aggregateDebugReporting =
                 new AggregateDebugReporting.Builder(new JSONObject(aggregateDebugReportingString))
                         .build();
+
+        // Assertion
         assertThat(new BigInteger("3", 16)).isEqualTo(aggregateDebugReporting.getKeyPiece());
         assertThat(aggregateDebugReporting.getBudget()).isEqualTo(65536);
         assertThat(Uri.parse("https://cloud.coordination.test"))
                 .isEqualTo(aggregateDebugReporting.getAggregationCoordinatorOrigin());
-        AggregateDebugReportData validDebugData1 =
+        AggregateDebugReportData expectedDebugData1 =
                 new AggregateDebugReportData.Builder(
                                 /* reportType= */ new HashSet<>(Arrays.asList("source-noised")),
                                 /* keyPiece= */ new BigInteger("3", 16),
                                 /* value= */ 65536)
                         .build();
-        AggregateDebugReportData validDebugData2 =
+        AggregateDebugReportData expectedDebugData2 =
                 new AggregateDebugReportData.Builder(
                                 /* reportType= */ new HashSet<>(
-                                        Arrays.asList("source-max-event-states-limit", "default")),
+                                        Arrays.asList(
+                                                "source-max-event-states-limit", "unspecified")),
                                 /* keyPiece= */ new BigInteger("3", 16),
                                 /* value= */ 65536)
                         .build();
-        assertThat(Arrays.asList(validDebugData1, validDebugData2))
-                .isEqualTo(aggregateDebugReporting.getAggregateDebugReportDataList());
+
+        assertThat(expectedDebugData1)
+                .isEqualTo(aggregateDebugReporting.getAggregateDebugReportDataList().get(0));
+        assertThat(expectedDebugData2)
+                .isEqualTo(aggregateDebugReporting.getAggregateDebugReportDataList().get(1));
     }
 
     @Test

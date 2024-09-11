@@ -1068,6 +1068,10 @@ public final class FlagsConstants {
     // App/SDK AllowList/DenyList keys that have access to the web registration APIs
     public static final String KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST = "web_context_client_allow_list";
 
+    // If the developer session feature is enabled.
+    public static final String KEY_DEVELOPER_MODE_FEATURE_ENABLED =
+            "CommonInfra__enable_developer_mode";
+
     // Max response payload size allowed per source/trigger registration
     public static final String KEY_MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES =
             "max_response_based_registration_size_bytes";
@@ -1414,6 +1418,9 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_ADR_BUDGET_WINDOW_LENGTH_MS =
             "Measurement__adr_budget_window_length_ms";
+
+    public static final String KEY_MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE =
+            "Measurement__max_adr_count_per_source";
 
     // Database Schema Version Flags
     public static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_8 =

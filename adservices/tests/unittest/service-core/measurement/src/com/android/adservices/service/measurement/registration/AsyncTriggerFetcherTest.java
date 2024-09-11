@@ -70,6 +70,7 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.TriggerSpecs;
+import com.android.adservices.service.measurement.aggregation.AggregateDebugReportData;
 import com.android.adservices.service.measurement.aggregation.AggregateDebugReporting;
 import com.android.adservices.service.measurement.ondevicepersonalization.NoOdpDelegationWrapper;
 import com.android.adservices.service.measurement.ondevicepersonalization.OdpDelegationWrapperImpl;
@@ -96,6 +97,7 @@ import org.mockito.Mock;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -104,6 +106,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -8041,8 +8044,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     }
 
     @Test
-    public void fetchTrigger_aggregateDebugReportingEnabled_invalidAggregateDebugReportingFields()
-            throws Exception {
+    public void fetchTrigger_adrHasInvalidDebugData_acceptsTrigger() throws Exception {
         when(mMockFlags.getMeasurementEnableAggregateDebugReporting()).thenReturn(true);
         when(mMockFlags.getMeasurementAggregationCoordinatorOriginList())
                 .thenReturn("https://cloud.coordination.test");
@@ -8073,16 +8075,35 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
 
+        Set<String> dataTypes1 = new HashSet<>();
+        dataTypes1.add(DebugReportApi.Type.TRIGGER_EVENT_DEDUPLICATED.getValue());
+        AggregateDebugReportData debugData1 =
+                new AggregateDebugReportData.Builder(dataTypes1, new BigInteger("123", 16), 123)
+                        .build();
+
+        Set<String> dataTypes2 = new HashSet<>();
+        dataTypes2.add(DebugReportApi.Type.TRIGGER_EVENT_NO_MATCHING_CONFIGURATIONS.getValue());
+        AggregateDebugReportData debugData2 =
+                new AggregateDebugReportData.Builder(dataTypes2, new BigInteger("789", 16), 789)
+                        .build();
+
+        AggregateDebugReporting adrObject =
+                new AggregateDebugReporting.Builder(
+                                1024,
+                                new BigInteger("1", 16),
+                                new ArrayList<>(List.of(debugData1, debugData2)),
+                                Uri.parse("https://cloud.coordination.test"))
+                        .build();
+
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
         // Assertion
+        verify(mUrlConnection).setRequestMethod("POST");
         assertThat(asyncFetchStatus.getResponseStatus())
                 .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
-        assertThat(fetch.isPresent()).isFalse();
-        assertThat(asyncFetchStatus.getEntityStatus())
-                .isEqualTo(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
-        verify(mUrlConnection).setRequestMethod("POST");
+        assertThat(fetch.isPresent()).isTrue();
+        assertThat(fetch.get().getAggregateDebugReportingObject()).isEqualTo(adrObject);
     }
 
     @Test
