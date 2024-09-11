@@ -96,8 +96,7 @@ public class FledgeMaintenanceTasksWorker {
         mAdSelectionEntryDao = AdSelectionDatabase.getInstance().adSelectionEntryDao();
         mFrequencyCapDao = SharedStorageDatabase.getInstance().frequencyCapDao();
         mEnrollmentDao = EnrollmentDao.getInstance();
-        mEncryptionContextDao =
-                AdSelectionServerDatabase.getInstance(context).encryptionContextDao();
+        mEncryptionContextDao = AdSelectionServerDatabase.getInstance().encryptionContextDao();
         mClock = Clock.systemUTC();
         mAdSelectionDebugReportDao =
                 AdSelectionDebugReportingDatabase.getInstance().getAdSelectionDebugReportDao();
