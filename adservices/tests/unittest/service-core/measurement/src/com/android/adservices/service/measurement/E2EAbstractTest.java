@@ -26,6 +26,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEFA
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_AGGREGATE_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_EVENT_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
 import static com.android.adservices.service.measurement.reporting.AggregateReportingJobHandler.AGGREGATE_ATTRIBUTION_REPORT_URI_PATH;
+import static com.android.adservices.service.measurement.reporting.AggregateReportingJobHandler.AGGREGATE_DEBUG_REPORT_URI_PATH;
 import static com.android.adservices.service.measurement.reporting.AggregateReportingJobHandler.DEBUG_AGGREGATE_ATTRIBUTION_REPORT_URI_PATH;
 import static com.android.adservices.service.measurement.reporting.DebugReportSender.DEBUG_REPORT_URI_PATH;
 import static com.android.adservices.service.measurement.reporting.EventReportSender.DEBUG_EVENT_ATTRIBUTION_REPORT_URI_PATH;
@@ -1508,6 +1509,7 @@ public abstract class E2EAbstractTest extends AdServicesUnitTestCase {
             String[] debugAggregateUrlTokens =
                 DEBUG_AGGREGATE_ATTRIBUTION_REPORT_URI_PATH.split("/");
             String[] debugUrlTokens = DEBUG_REPORT_URI_PATH.split("/");
+            String[] adrUrlTokens = AGGREGATE_DEBUG_REPORT_URI_PATH.split("/");
 
             JSONArray reportsObjectsArray = output.getJSONArray(
                     TestFormatJsonMapping.REPORTS_OBJECTS_KEY);
@@ -1536,6 +1538,9 @@ public abstract class E2EAbstractTest extends AdServicesUnitTestCase {
                     } else {
                         aggregateReportObjects.add(obj);
                     }
+                } else if (urlTokens[urlTokens.length - 1].equals(
+                        adrUrlTokens[debugUrlTokens.length - 1])) {
+                    debugAggregateReportObjects.add(obj);
                 }
             }
         }

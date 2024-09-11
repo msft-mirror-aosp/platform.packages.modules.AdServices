@@ -952,7 +952,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                         + "\"value\": 111"
                         + "},"
                         + "{"
-                        + "\"types\": [\"default\"],"
+                        + "\"types\": [\"unspecified\"],"
                         + "\"key_piece\": \"0x222\","
                         + "\"value\": 222"
                         + "}"
