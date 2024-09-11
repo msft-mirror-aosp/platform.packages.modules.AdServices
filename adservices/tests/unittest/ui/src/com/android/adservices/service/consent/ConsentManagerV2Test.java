@@ -216,8 +216,8 @@ import java.util.stream.Collectors;
         ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX)
 @SmallTest
 public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCase {
-    public static final int UX_TYPE_COUNT = 5;
-    public static final int ENROLLMENT_CHANNEL_COUNT = 22;
+    public static final int UX_TYPE_COUNT = PrivacySandboxUxCollection.values().length;
+    public static final int ENROLLMENT_CHANNEL_COUNT = 18;
 
     private AtomicFileDatastore mDatastore;
     private AtomicFileDatastore mConsentDatastore;
@@ -4392,6 +4392,7 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
     }
 
     @Test
+    @SuppressWarnings("NewApi")
     public void getEnrollmentChannel_appSearchOnly() throws RemoteException {
         int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
         when(mMockFlags.getEnableAppsearchConsentData()).thenReturn(true);

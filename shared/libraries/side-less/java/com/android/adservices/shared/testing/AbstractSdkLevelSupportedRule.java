@@ -303,7 +303,7 @@ public abstract class AbstractSdkLevelSupportedRule implements TestRule {
     }
 
     /**
-     * Gets the "real" devcie API level (as {@code getDeviceApiLevel()} could use the level injected
+     * Gets the "real" device API level (as {@code getDeviceApiLevel()} could use the level injected
      * for tests.
      */
     public abstract Level getRawDeviceApiLevel();

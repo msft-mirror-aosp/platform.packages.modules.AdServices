@@ -316,83 +316,122 @@ public final class FetcherUtilTest {
 
     @Test
     public void extractIntegralValue_posIntegralNumber_success() throws Exception {
-        JSONObject obj = new JSONObject().put(KEY, 123);
+        JSONObject jsonObj = new JSONObject().put(KEY, 123);
         assertWithMessage("extractValueOfValidPositiveIntegralNumber")
-                .that(FetcherUtil.extractIntegralValue(obj, KEY))
+                .that(FetcherUtil.extractIntegralValue(jsonObj, KEY))
+                .isEqualTo(Optional.of(new BigDecimal(123)));
+        Object obj = jsonObj.get(KEY);
+        assertWithMessage("extractValueOfValidPositiveIntegralNumber")
+                .that(FetcherUtil.extractIntegralValue(obj))
                 .isEqualTo(Optional.of(new BigDecimal(123)));
     }
 
     @Test
     public void extractIntegralValue_negativeIntegralNumber_success() throws Exception {
-        JSONObject obj = new JSONObject().put(KEY, -123);
+        JSONObject jsonObj = new JSONObject().put(KEY, -123);
         assertWithMessage("extractValueOfValidNegativeIntegralNumber")
-                .that(FetcherUtil.extractIntegralValue(obj, KEY))
+                .that(FetcherUtil.extractIntegralValue(jsonObj, KEY))
+                .isEqualTo(Optional.of(new BigDecimal(-123)));
+        Object obj = jsonObj.get(KEY);
+        assertWithMessage("extractValueOfValidNegativeIntegralNumber")
+                .that(FetcherUtil.extractIntegralValue(obj))
                 .isEqualTo(Optional.of(new BigDecimal(-123)));
     }
 
     @Test
     public void extractIntegralValue_zeroInput_success() throws Exception {
-        JSONObject obj = new JSONObject().put(KEY, 0);
+        JSONObject jsonObj = new JSONObject().put(KEY, 0);
         assertWithMessage("extractValueOfZero")
-                .that(FetcherUtil.extractIntegralValue(obj, KEY))
+                .that(FetcherUtil.extractIntegralValue(jsonObj, KEY))
+                .isEqualTo(Optional.of(new BigDecimal(0)));
+        Object obj = jsonObj.get(KEY);
+        assertWithMessage("extractValueOfZero")
+                .that(FetcherUtil.extractIntegralValue(obj))
                 .isEqualTo(Optional.of(new BigDecimal(0)));
     }
 
     @Test
     public void extractIntegralValue_posNumWithDecimalZero_success() throws Exception {
-        JSONObject obj = new JSONObject().put(KEY, 12.0);
+        JSONObject jsonObj = new JSONObject().put(KEY, 12.0);
         assertWithMessage("extractValueOfValidPosNumberWithDecimalOfZero")
                 .that(
-                        FetcherUtil.extractIntegralValue(obj, KEY)
+                        FetcherUtil.extractIntegralValue(jsonObj, KEY)
                                 .get()
                                 .compareTo(new BigDecimal(12.0)))
+                .isEqualTo(0);
+        Object obj = jsonObj.get(KEY);
+        assertWithMessage("extractValueOfValidPosNumberWithDecimalOfZero")
+                .that(FetcherUtil.extractIntegralValue(obj).get().compareTo(new BigDecimal(12.0)))
                 .isEqualTo(0);
     }
 
     @Test
     public void extractIntegralValue_negNumWithDecimalZero_success() throws Exception {
-        JSONObject obj = new JSONObject().put(KEY, -12.0);
+        JSONObject jsonObj = new JSONObject().put(KEY, -12.0);
         assertWithMessage("extractValueOfValidNegNumberWithDecimalOfZero")
                 .that(
-                        FetcherUtil.extractIntegralValue(obj, KEY)
+                        FetcherUtil.extractIntegralValue(jsonObj, KEY)
                                 .get()
                                 .compareTo(new BigDecimal(-12.0)))
+                .isEqualTo(0);
+        Object obj = jsonObj.get(KEY);
+        assertWithMessage("extractValueOfValidNegNumberWithDecimalOfZero")
+                .that(FetcherUtil.extractIntegralValue(obj).get().compareTo(new BigDecimal(-12.0)))
                 .isEqualTo(0);
     }
 
     @Test
     public void extractIntegralValue_posNumWithDecimalNonZero_fails() throws Exception {
-        JSONObject obj = new JSONObject().put(KEY, 3.4);
+        JSONObject jsonObj = new JSONObject().put(KEY, 3.4);
         assertWithMessage("extractValueOfValidPosNumberWithDecimalNonZero")
-                .that(FetcherUtil.extractIntegralValue(obj, KEY))
+                .that(FetcherUtil.extractIntegralValue(jsonObj, KEY))
+                .isEqualTo(Optional.empty());
+        Object obj = jsonObj.get(KEY);
+        assertWithMessage("extractValueOfValidPosNumberWithDecimalNonZero")
+                .that(FetcherUtil.extractIntegralValue(obj))
                 .isEqualTo(Optional.empty());
     }
 
     @Test
     public void extractIntegralValue_negNumWithDecimalNonZero_fails() throws Exception {
-        JSONObject obj = new JSONObject().put(KEY, -5.6);
+        JSONObject jsonObj = new JSONObject().put(KEY, -5.6);
         assertWithMessage("extractValueOfValidNegNumberWithDecimalNonZero")
-                .that(FetcherUtil.extractIntegralValue(obj, KEY))
+                .that(FetcherUtil.extractIntegralValue(jsonObj, KEY))
+                .isEqualTo(Optional.empty());
+        Object obj = jsonObj.get(KEY);
+        assertWithMessage("extractValueOfValidNegNumberWithDecimalNonZero")
+                .that(FetcherUtil.extractIntegralValue(obj))
                 .isEqualTo(Optional.empty());
     }
 
     @Test
     public void extractIntegralValue_posIntegralSciNotation_success() throws Exception {
-        JSONObject obj = new JSONObject().put(KEY, 1.23e3);
+        JSONObject jsonObj = new JSONObject().put(KEY, 1.23e3);
         assertWithMessage("extractValueOfPosSciNotation")
                 .that(
-                        FetcherUtil.extractIntegralValue(obj, KEY)
+                        FetcherUtil.extractIntegralValue(jsonObj, KEY)
                                 .get()
                                 .compareTo(new BigDecimal(1230.0)))
+                .isEqualTo(0);
+        Object obj = jsonObj.get(KEY);
+        assertWithMessage("extractValueOfPosSciNotation")
+                .that(FetcherUtil.extractIntegralValue(obj).get().compareTo(new BigDecimal(1230.0)))
                 .isEqualTo(0);
     }
 
     @Test
     public void extractIntegralValue_negIntegralSciNotation_success() throws Exception {
-        JSONObject obj = new JSONObject().put(KEY, -3.456e3);
+        JSONObject jsonObj = new JSONObject().put(KEY, -3.456e3);
         assertWithMessage("extractValueOfNegSciNotation")
                 .that(
-                        FetcherUtil.extractIntegralValue(obj, KEY)
+                        FetcherUtil.extractIntegralValue(jsonObj, KEY)
+                                .get()
+                                .compareTo(new BigDecimal(-3456.0)))
+                .isEqualTo(0);
+        Object obj = jsonObj.get(KEY);
+        assertWithMessage("extractValueOfNegSciNotation")
+                .that(
+                        FetcherUtil.extractIntegralValue(obj)
                                 .get()
                                 .compareTo(new BigDecimal(-3456.0)))
                 .isEqualTo(0);
@@ -400,25 +439,37 @@ public final class FetcherUtilTest {
 
     @Test
     public void extractIntegralValue_posNonIntegralSciNotation_fails() throws Exception {
-        JSONObject obj = new JSONObject().put(KEY, 1.23e1);
+        JSONObject jsonObj = new JSONObject().put(KEY, 1.23e1);
         assertWithMessage("extractValueOfPosNonIntegralSciNotation")
-                .that(FetcherUtil.extractIntegralValue(obj, KEY))
+                .that(FetcherUtil.extractIntegralValue(jsonObj, KEY))
+                .isEqualTo(Optional.empty());
+        Object obj = jsonObj.get(KEY);
+        assertWithMessage("extractValueOfPosNonIntegralSciNotation")
+                .that(FetcherUtil.extractIntegralValue(obj))
                 .isEqualTo(Optional.empty());
     }
 
     @Test
     public void extractIntegralValue_negNonIntegralSciNotation_fails() throws Exception {
-        JSONObject obj = new JSONObject().put(KEY, -0.345e2);
+        JSONObject jsonObj = new JSONObject().put(KEY, -0.345e2);
         assertWithMessage("extractValueOfNegNonIntegralSciNotation")
-                .that(FetcherUtil.extractIntegralValue(obj, KEY))
+                .that(FetcherUtil.extractIntegralValue(jsonObj, KEY))
+                .isEqualTo(Optional.empty());
+        Object obj = jsonObj.get(KEY);
+        assertWithMessage("extractValueOfNegNonIntegralSciNotation")
+                .that(FetcherUtil.extractIntegralValue(obj))
                 .isEqualTo(Optional.empty());
     }
 
     @Test
     public void extractIntegralValue_nonNumericInput_fails() throws Exception {
-        JSONObject obj = new JSONObject().put(KEY, "78");
+        JSONObject jsonObj = new JSONObject().put(KEY, "78");
         assertWithMessage("extractValueOfNonNumericInput")
-                .that(FetcherUtil.extractIntegralValue(obj, KEY))
+                .that(FetcherUtil.extractIntegralValue(jsonObj, KEY))
+                .isEqualTo(Optional.empty());
+        Object obj = jsonObj.get(KEY);
+        assertWithMessage("extractValueOfNonNumericInput")
+                .that(FetcherUtil.extractIntegralValue(obj))
                 .isEqualTo(Optional.empty());
     }
 
@@ -1987,6 +2038,7 @@ public final class FetcherUtilTest {
     @Test
     public void getValidAggregateDebugReportingString_defaultReportType_succeeds()
             throws JSONException {
+        // Setup
         when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
         when(mFlags.getMeasurementAggregationCoordinatorOriginList())
                 .thenReturn("https://cloud.coordination.test");
@@ -2001,34 +2053,43 @@ public final class FetcherUtilTest {
         dataObj2.put("key_piece", "0x3");
         dataObj2.put("value", 65536);
         JSONArray types1 = new JSONArray(Arrays.asList("source-noised"));
-        JSONArray types2 = new JSONArray(Arrays.asList("source-max-event-states-limit", "default"));
+        JSONArray types2 =
+                new JSONArray(Arrays.asList("source-max-event-states-limit", "unspecified"));
         dataObj1.put("types", types1);
         dataObj2.put("types", types2);
         obj.put("debug_data", new JSONArray(Arrays.asList(dataObj1, dataObj2)));
+
+        // Execution
         String aggregateDebugReportingString =
                 FetcherUtil.getValidAggregateDebugReportingString(obj, mFlags).get();
         AggregateDebugReporting aggregateDebugReporting =
                 new AggregateDebugReporting.Builder(new JSONObject(aggregateDebugReportingString))
                         .build();
+
+        // Assertion
         assertThat(new BigInteger("3", 16)).isEqualTo(aggregateDebugReporting.getKeyPiece());
         assertThat(aggregateDebugReporting.getBudget()).isEqualTo(65536);
         assertThat(Uri.parse("https://cloud.coordination.test"))
                 .isEqualTo(aggregateDebugReporting.getAggregationCoordinatorOrigin());
-        AggregateDebugReportData validDebugData1 =
+        AggregateDebugReportData expectedDebugData1 =
                 new AggregateDebugReportData.Builder(
                                 /* reportType= */ new HashSet<>(Arrays.asList("source-noised")),
                                 /* keyPiece= */ new BigInteger("3", 16),
                                 /* value= */ 65536)
                         .build();
-        AggregateDebugReportData validDebugData2 =
+        AggregateDebugReportData expectedDebugData2 =
                 new AggregateDebugReportData.Builder(
                                 /* reportType= */ new HashSet<>(
-                                        Arrays.asList("source-max-event-states-limit", "default")),
+                                        Arrays.asList(
+                                                "source-max-event-states-limit", "unspecified")),
                                 /* keyPiece= */ new BigInteger("3", 16),
                                 /* value= */ 65536)
                         .build();
-        assertThat(Arrays.asList(validDebugData1, validDebugData2))
-                .isEqualTo(aggregateDebugReporting.getAggregateDebugReportDataList());
+
+        assertThat(expectedDebugData1)
+                .isEqualTo(aggregateDebugReporting.getAggregateDebugReportDataList().get(0));
+        assertThat(expectedDebugData2)
+                .isEqualTo(aggregateDebugReporting.getAggregateDebugReportDataList().get(1));
     }
 
     @Test

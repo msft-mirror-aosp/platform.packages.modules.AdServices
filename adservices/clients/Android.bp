@@ -40,10 +40,10 @@ java_library {
     ],
     libs: [
         "framework-adservices-lib",
-        "framework-sdksandbox",
+        "framework-sdksandbox.stubs.module_lib",
         "framework-annotations-lib", // For @SystemApi, etc
         "unsupportedappusage", // for android.compat.annotation.UnsupportedAppUsage
-        "framework-adservices", // To access non-API members in this module.
+        "framework-adservices.stubs.module_lib", // To access non-API members in this module.
         "jsr305",
         "auto_value_annotations",
     ],

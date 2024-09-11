@@ -299,6 +299,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getTopicsEpochJobBatteryConstraintLoggingEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_LOGGING_ENABLED,
+                TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_LOGGING_ENABLED);
+    }
+
+    @Override
     public boolean getTopicsDisablePlaintextResponse() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_TOPICS_DISABLE_PLAINTEXT_RESPONSE,
@@ -1815,19 +1822,6 @@ public final class PhFlags implements Flags {
                                 /* name= */ FlagsConstants
                                         .KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH,
                                 defaultValue));
-    }
-
-    @Override
-    @SuppressWarnings("AvoidSystemPropertiesUsage")
-    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
-    public boolean getMeasurementRollbackDeletionREnabled() {
-        String flagName = FlagsConstants.KEY_MEASUREMENT_ROLLBACK_DELETION_R_ENABLED;
-        return !getGlobalKillSwitch()
-                && !getLegacyMeasurementKillSwitch()
-                && SystemProperties.getBoolean(
-                        getSystemPropertyName(flagName),
-                        /* def= */ getDeviceConfigFlag(
-                                flagName, MEASUREMENT_ROLLBACK_DELETION_R_ENABLED));
     }
 
     @Override
@@ -3515,6 +3509,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public int getMeasurementMaxFilteringIdMaxBytes() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES,
+                MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES);
+    }
+
+    @Override
     public boolean getMeasurementEnableFlexibleContributionFiltering() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING,
@@ -4553,6 +4554,26 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATE_DEBUG_REPORTING
                         + " = "
                         + getMeasurementEnableAggregateDebugReporting());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ADR_BUDGET_PER_ORIGIN_PUBLISHER_WINDOW
+                        + " = "
+                        + getMeasurementAdrBudgetOriginXPublisherXWindow());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ADR_BUDGET_PER_PUBLISHER_WINDOW
+                        + " = "
+                        + getMeasurementAdrBudgetPublisherXWindow());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ADR_BUDGET_WINDOW_LENGTH_MS
+                        + " = "
+                        + getMeasurementAdrBudgetWindowLengthMillis());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE
+                        + " = "
+                        + getMeasurementMaxAdrCountPerSource());
 
         writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
         writer.println(
@@ -6024,20 +6045,6 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getEnableRvcUx() {
-        return getEnableAdServicesSystemApi()
-                && getDeviceConfigFlag(FlagsConstants.KEY_RVC_UX_ENABLED, DEFAULT_RVC_UX_ENABLED);
-    }
-
-    @Override
-    public boolean getEnableRvcPostOtaNotification() {
-        return getEnableAdServicesSystemApi()
-                && getDeviceConfigFlag(
-                        FlagsConstants.KEY_RVC_POST_OTA_NOTIFICATION_ENABLED,
-                        DEFAULT_RVC_POST_OTA_NOTIFICATION_ENABLED);
-    }
-
-    @Override
     public boolean getEnableBackCompatInit() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_ENABLE_BACK_COMPAT_INIT, DEFAULT_ENABLE_BACK_COMPAT_INIT);
@@ -6082,10 +6089,6 @@ public final class PhFlags implements Flags {
                 FlagsConstants.KEY_RECORD_MANUAL_INTERACTION_ENABLED,
                 getRecordManualInteractionEnabled());
         uxMap.put(FlagsConstants.KEY_GA_UX_FEATURE_ENABLED, getGaUxFeatureEnabled());
-        uxMap.put(FlagsConstants.KEY_RVC_UX_ENABLED, getEnableRvcUx());
-        uxMap.put(
-                FlagsConstants.KEY_RVC_POST_OTA_NOTIFICATION_ENABLED,
-                getEnableRvcPostOtaNotification());
         uxMap.put(
                 FlagsConstants.KEY_UI_OTA_STRINGS_FEATURE_ENABLED, getUiOtaStringsFeatureEnabled());
         uxMap.put(
@@ -6761,6 +6764,13 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_ADR_BUDGET_WINDOW_LENGTH_MS,
                 MEASUREMENT_ADR_BUDGET_WINDOW_LENGTH_MILLIS);
+    }
+
+    @Override
+    public int getMeasurementMaxAdrCountPerSource() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE,
+                MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE);
     }
 
     @Override

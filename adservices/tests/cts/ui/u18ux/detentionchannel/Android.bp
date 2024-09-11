@@ -30,7 +30,7 @@ android_test {
         "adservices-ui-cts-root-test-lib",
     ],
     libs: [
-        "android.test.base",
+        "android.test.base.stubs.system",
         "framework-adservices-lib",
     ],
     test_suites: [

@@ -1372,6 +1372,104 @@ public class AttributionJobHandlerTest {
         captureAndAssertNullAggregateReportsWithRealReport(trigger, expectedAggregateReport);
     }
 
+    @Test
+    public void shouldDoSimpleAttributionWithAggregateReport_bumpedApiVersion()
+            throws JSONException, DatastoreException {
+        JSONArray triggerData = getAggregateTriggerData();
+
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("triggerId1")
+                        .setTriggerTime(TRIGGER_TIME)
+                        .setStatus(Trigger.Status.PENDING)
+                        .setEventTriggers(getEventTriggers())
+                        .setAggregateTriggerData(triggerData.toString())
+                        .setAggregateValuesString("{\"campaignCounts\":32768,\"geoValue\":1644}")
+                        .build();
+
+        Source source = getAggregateSource();
+
+        AggregateReport expectedAggregateReport =
+                new AggregateReport.Builder()
+                        .setApiVersion("1.0")
+                        .setAttributionDestination(trigger.getAttributionDestination())
+                        .setDebugCleartextPayload(
+                                "{\"operation\":\"histogram\","
+                                        + "\"data\":[{\"bucket\":\"1369\",\"value\":32768},"
+                                        + "{\"bucket\":\"2693\",\"value\":1644}]}")
+                        .setEnrollmentId(source.getEnrollmentId())
+                        .setPublisher(source.getRegistrant())
+                        .setSourceId(source.getId())
+                        .setTriggerId(trigger.getId())
+                        .setRegistrationOrigin(REGISTRATION_URI)
+                        .setAggregateAttributionData(
+                                new AggregateAttributionData.Builder()
+                                        .setContributions(
+                                                Arrays.asList(
+                                                        new AggregateHistogramContribution.Builder()
+                                                                .setKey(new BigInteger("1369"))
+                                                                .setValue(32768)
+                                                                .build(),
+                                                        new AggregateHistogramContribution.Builder()
+                                                                .setKey(new BigInteger("2693"))
+                                                                .setValue(1644)
+                                                                .build()))
+                                        .build())
+                        .setSourceRegistrationTime(SOURCE_TIME)
+                        .setApi(API)
+                        .build();
+
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        List<Source> matchingSourceList = new ArrayList<>();
+        matchingSourceList.add(source);
+        when(mFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
+        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(
+                anyInt(), any(), any())).thenReturn(5L);
+        when(mMeasurementDao.getSourceDestinations(source.getId()))
+                .thenReturn(Pair.create(
+                        source.getAppDestinations(),
+                        source.getWebDestinations()));
+
+        mHandler.performPendingAttributions();
+        ArgumentCaptor<Source> sourceArg = ArgumentCaptor.forClass(Source.class);
+        verify(mMeasurementDao).updateSourceAggregateContributions(sourceArg.capture());
+        ArgumentCaptor<AggregateReport> aggregateReportCaptor =
+                ArgumentCaptor.forClass(AggregateReport.class);
+        verify(mMeasurementDao).insertAggregateReport(aggregateReportCaptor.capture());
+        assertAggregateReportsEqual(expectedAggregateReport, aggregateReportCaptor.getValue());
+    }
+
+    @Test
+    public void shouldDoSimpleAttributionWithNullReports_bumpedApiVersion()
+            throws DatastoreException, JSONException {
+        when(mFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
+        JSONArray triggerData = getAggregateTriggerData();
+
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("triggerId1")
+                        .setTriggerTime(TRIGGER_TIME)
+                        .setStatus(Trigger.Status.PENDING)
+                        .setEventTriggers(getEventTriggers())
+                        .setAggregateTriggerData(triggerData.toString())
+                        .setAggregateValuesString("{\"campaignCounts\":32768,\"geoValue\":1644}")
+                        .build();
+
+        Source source = getAggregateSource();
+
+        AggregateReport expectedAggregateReport =
+                getExpectedAggregateReportBuilderV1(trigger, source).build();
+
+        setupTestForNullAggregateReport(trigger, source);
+
+        mHandler.performPendingAttributions();
+
+        captureAndAssertNullAggregateReportsWithRealReport(trigger, expectedAggregateReport);
+    }
+
     private void captureAndAssertNullAggregateReportsWithRealReport(
             Trigger trigger, AggregateReport expectedAggregateReport) throws DatastoreException {
         ArgumentCaptor<AggregateReport> aggregateReportCaptor =
@@ -4547,7 +4645,9 @@ public class AttributionJobHandlerTest {
                 .thenReturn(numEventReportPerDestination);
         when(mMeasurementDao.getSourceDestinations(source.getId()))
                 .thenReturn(Pair.create(source.getAppDestinations(), source.getWebDestinations()));
-        when(mMeasurementDao.getNumAggregateReportsPerSource(source.getId())).thenReturn(21);
+        when(mMeasurementDao.countNumAggregateReportsPerSource(
+                        eq(source.getId()), eq(AttributionJobHandler.API)))
+                .thenReturn(21);
 
         // Execution
         mHandler.performPendingAttributions();
@@ -4753,6 +4853,8 @@ public class AttributionJobHandlerTest {
         verify(mMeasurementDao, never()).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
+        verify(mDebugReportApi)
+                .scheduleNullDebugReport(eq(source), eq(trigger), eq(mMeasurementDao));
     }
 
     @Test
@@ -8675,6 +8777,41 @@ public class AttributionJobHandlerTest {
                                 .build())
                 .setIsFakeReport(false)
                 .setApi(API);
+    }
+
+    private static AggregateReport.Builder getExpectedAggregateReportBuilderV1(
+            Trigger trigger, Source source) {
+        return new AggregateReport.Builder()
+                .setApiVersion("1.0")
+                .setAttributionDestination(trigger.getAttributionDestination())
+                .setDebugCleartextPayload(
+                        "{\"operation\":\"histogram\","
+                                + "\"data\":[{\"bucket\":\"1369\",\"value\":32768},"
+                                + "{\"bucket\":\"2693\",\"value\":1644}]}")
+                .setEnrollmentId(source.getEnrollmentId())
+                .setPublisher(source.getRegistrant())
+                .setSourceId(source.getId())
+                .setTriggerDebugKey(trigger.getDebugKey())
+                .setSourceDebugKey(source.getDebugKey())
+                .setTriggerId(trigger.getId())
+                .setRegistrationOrigin(REGISTRATION_URI)
+                .setSourceRegistrationTime(source.getEventTime())
+                .setAggregateAttributionData(
+                        new AggregateAttributionData.Builder()
+                                .setContributions(
+                                        Arrays.asList(
+                                                new AggregateHistogramContribution.Builder()
+                                                        .setKey(new BigInteger("1369"))
+                                                        .setValue(32768)
+                                                        .build(),
+                                                new AggregateHistogramContribution.Builder()
+                                                        .setKey(new BigInteger("2693"))
+                                                        .setValue(1644)
+                                                        .build()))
+                                .build())
+                .setIsFakeReport(false)
+                .setApi(API);
+
     }
 
     private static JSONArray getAggregateTriggerData() throws JSONException {
