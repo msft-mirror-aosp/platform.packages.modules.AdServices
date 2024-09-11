@@ -2024,6 +2024,15 @@ public interface Flags extends ModuleSharedFlags {
         return ADSERVICES_ENABLED;
     }
 
+    @FeatureFlag boolean DEFAULT_DEVELOPER_MODE_FEATURE_ENABLED = false;
+
+    /**
+     * @return {@code true} if the developer mode feature is enabled on this device.
+     */
+    default boolean getDeveloperModeFeatureEnabled() {
+        return DEFAULT_DEVELOPER_MODE_FEATURE_ENABLED;
+    }
+
     /**
      * The number of epoch to look back to do garbage collection for old epoch data. Assume current
      * Epoch is T, then any epoch data of (T-NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY-1) (inclusive)
@@ -5005,6 +5014,13 @@ public interface Flags extends ModuleSharedFlags {
      */
     default long getMeasurementAdrBudgetWindowLengthMillis() {
         return MEASUREMENT_ADR_BUDGET_WINDOW_LENGTH_MILLIS;
+    }
+
+    @ConfigFlag int MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE = 5;
+
+    /** Returns maximum number of aggregatable debug reports allowed per source. */
+    default int getMeasurementMaxAdrCountPerSource() {
+        return MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE;
     }
 
     /**

@@ -137,8 +137,8 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                                 Throttler.getInstance(FlagsFactory.getFlags()),
                                 AdServicesLoggerImpl.getInstance())),
                 new AdFilteringFeatureFactory(
-                        SharedStorageDatabase.getInstance(context).appInstallDao(),
-                        SharedStorageDatabase.getInstance(context).frequencyCapDao(),
+                        SharedStorageDatabase.getInstance().appInstallDao(),
+                        SharedStorageDatabase.getInstance().frequencyCapDao(),
                         FlagsFactory.getFlags()));
     }
 

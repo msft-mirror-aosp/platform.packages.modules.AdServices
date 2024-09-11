@@ -18,7 +18,6 @@ package com.android.adservices.data.customaudience;
 
 import android.content.Context;
 
-import androidx.annotation.NonNull;
 import androidx.room.AutoMigration;
 import androidx.room.Database;
 import androidx.room.RenameColumn;
@@ -33,9 +32,10 @@ import com.android.adservices.data.common.FledgeRoomConverters;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.BinderFlagReader;
 import com.android.adservices.service.common.compat.FileCompatUtils;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 
-import java.util.Objects;
+import com.google.errorprone.annotations.concurrent.GuardedBy;
 
 /** Room based database for custom audience. */
 @Database(
@@ -96,13 +96,13 @@ public abstract class CustomAudienceDatabase extends RoomDatabase {
                 }
             };
 
+    @GuardedBy("SINGLETON_LOCK")
     private static volatile CustomAudienceDatabase sSingleton;
 
     // TODO: How we want handle synchronized situation (b/228101878).
 
     /** Returns an instance of the CustomAudienceDatabase given a context. */
-    public static CustomAudienceDatabase getInstance(@NonNull Context context) {
-        Objects.requireNonNull(context, "Context must be provided.");
+    public static CustomAudienceDatabase getInstance() {
         // Initialization pattern recommended on page 334 of "Effective Java" 3rd edition
         CustomAudienceDatabase singleReadResult = sSingleton;
         if (singleReadResult != null) {
@@ -110,6 +110,7 @@ public abstract class CustomAudienceDatabase extends RoomDatabase {
         }
         synchronized (SINGLETON_LOCK) {
             if (sSingleton == null) {
+                Context context = ApplicationContextSingleton.get();
                 DBCustomAudience.Converters converters =
                         new DBCustomAudience.Converters(
                                 BinderFlagReader.readFlag(

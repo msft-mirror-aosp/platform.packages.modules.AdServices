@@ -123,9 +123,8 @@ public class CustomAudienceValidator implements Validator<CustomAudience> {
                                 Clock.systemUTC(),
                                 flags,
                                 new AdFilteringFeatureFactory(
-                                                SharedStorageDatabase.getInstance(context)
-                                                        .appInstallDao(),
-                                                SharedStorageDatabase.getInstance(context)
+                                                SharedStorageDatabase.getInstance().appInstallDao(),
+                                                SharedStorageDatabase.getInstance()
                                                         .frequencyCapDao(),
                                                 flags)
                                         .getFrequencyCapAdDataValidator(),

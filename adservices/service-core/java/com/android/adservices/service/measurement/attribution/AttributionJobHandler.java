@@ -54,6 +54,7 @@ import com.android.adservices.service.measurement.aggregation.AggregatableAttrib
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregatableValuesConfig;
 import com.android.adservices.service.measurement.aggregation.AggregateAttributionData;
+import com.android.adservices.service.measurement.aggregation.AggregateDebugReporting;
 import com.android.adservices.service.measurement.aggregation.AggregateDeduplicationKey;
 import com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution;
 import com.android.adservices.service.measurement.aggregation.AggregatePayloadGenerator;
@@ -97,7 +98,7 @@ import java.util.stream.Collectors;
 
 class AttributionJobHandler {
 
-    private static final String API = "attribution-reporting";
+    @VisibleForTesting static final String API = "attribution-reporting";
     private static final String API_VERSION = "0.1";
     private static final String AGGREGATE_REPORT_DELAY_DELIMITER = ",";
     private final DatastoreManager mDatastoreManager;
@@ -466,7 +467,7 @@ class AttributionJobHandler {
             return TriggeringStatus.DROPPED;
         }
 
-        if (measurementDao.getNumAggregateReportsPerSource(source.getId())
+        if (measurementDao.countNumAggregateReportsPerSource(source.getId(), API)
                 >= mFlags.getMeasurementMaxAggregateReportsPerSource()) {
             LoggerFactory.getMeasurementLogger()
                     .d(
@@ -600,6 +601,7 @@ class AttributionJobHandler {
             finalizeAggregateReportCreation(
                     source, aggregateDeduplicationKeyOptional, aggregateReport, measurementDao);
             incrementAggregateReportCountBy(attributionStatus, 1);
+            mDebugReportApi.scheduleNullDebugReport(source, trigger, measurementDao);
             if (aggregateReport.getDebugReportStatus()
                     == AggregateReport.DebugReportStatus.PENDING) {
                 incrementAggregateDebugReportCountBy(attributionStatus, 1);
@@ -1644,13 +1646,17 @@ class AttributionJobHandler {
             Source source,
             Trigger trigger,
             IMeasurementDao measurementDao)
-            throws DatastoreException {
+            throws DatastoreException, JSONException {
         int newAggregateContributions = source.getAggregateContributions();
+        int adrAllocatedBudget =
+                Optional.ofNullable(source.getAggregateDebugReportingObject())
+                        .map(AggregateDebugReporting::getBudget)
+                        .orElse(0);
         for (AggregateHistogramContribution contribution : contributions) {
             try {
                 newAggregateContributions =
                         Math.addExact(newAggregateContributions, contribution.getValue());
-                if (newAggregateContributions
+                if (newAggregateContributions + adrAllocatedBudget
                         > PrivacyParams.MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE) {
                     // When histogram value is >= 65536 (aggregatable_budget_per_source),
                     // generate verbose debug report, record the actual histogram value.
@@ -1660,9 +1666,6 @@ class AttributionJobHandler {
                             String.valueOf(PrivacyParams.MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE),
                             measurementDao,
                             DebugReportApi.Type.TRIGGER_AGGREGATE_INSUFFICIENT_BUDGET);
-                }
-                if (newAggregateContributions
-                        > PrivacyParams.MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE) {
                     return OptionalInt.empty();
                 }
             } catch (ArithmeticException e) {

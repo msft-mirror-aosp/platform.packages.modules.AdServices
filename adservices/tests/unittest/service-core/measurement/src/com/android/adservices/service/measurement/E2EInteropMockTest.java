@@ -69,6 +69,7 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                         "aggregatable_debug_reports.json",
                         "aggregatable_debug_reports_limits.json",
                         "aggregatable_debug_reports_with_filtering_ids.json",
+                        "source_destination_limit_aggregatable_debug.json",
                         "aggregatable_dedup_key.json",
                         "aggregatable_large_key.json",
                         "aggregatable_report_source_registration_time.json",
@@ -256,10 +257,15 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                     entry(
                             FlagsConstants.KEY_MEASUREMENT_ENABLE_EVENT_LEVEL_EPSILON_IN_SOURCE,
                             "true"),
-                    entry(FlagsConstants
-                            .KEY_MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT,
+                    entry(
+                            FlagsConstants
+                                    .KEY_MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT,
                             "true"),
-                    entry(FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATE_VALUE_FILTERS, "true"));
+                    entry(FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATE_VALUE_FILTERS, "true"),
+                    entry(FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATE_DEBUG_REPORTING, "true"),
+                    entry(
+                            FlagsConstants.KEY_MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING,
+                            "true"));
 
     @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> getData() throws IOException, JSONException {
@@ -321,6 +327,7 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
         }
         mAsyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
         processActualDebugReportApiJob(sourceRegistration.mTimestamp);
+        processActualDebugReportJob(sourceRegistration.mTimestamp, 0L);
     }
 
     @Override

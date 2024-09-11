@@ -288,11 +288,11 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     /** Creates an instance of {@link AdSelectionServiceImpl} to be used. */
     private AdSelectionServiceImpl(@NonNull Context context) {
         this(
-                AdSelectionDatabase.getInstance(context).adSelectionEntryDao(),
-                SharedStorageDatabase.getInstance(context).appInstallDao(),
-                CustomAudienceDatabase.getInstance(context).customAudienceDao(),
+                AdSelectionDatabase.getInstance().adSelectionEntryDao(),
+                SharedStorageDatabase.getInstance().appInstallDao(),
+                CustomAudienceDatabase.getInstance().customAudienceDao(),
                 ProtectedSignalsDatabase.getInstance().getEncodedPayloadDao(),
-                SharedStorageDatabase.getInstance(context).frequencyCapDao(),
+                SharedStorageDatabase.getInstance().frequencyCapDao(),
                 EncryptionKeyDao.getInstance(),
                 EnrollmentDao.getInstance(),
                 new AdServicesHttpsClient(
@@ -325,8 +325,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                 Throttler.getInstance(FlagsFactory.getFlags()),
                                 AdServicesLoggerImpl.getInstance())),
                 new AdFilteringFeatureFactory(
-                        SharedStorageDatabase.getInstance(context).appInstallDao(),
-                        SharedStorageDatabase.getInstance(context).frequencyCapDao(),
+                        SharedStorageDatabase.getInstance().appInstallDao(),
+                        SharedStorageDatabase.getInstance().frequencyCapDao(),
                         FlagsFactory.getFlags()),
                 ConsentManager.getInstance(),
                 MultiCloudSupportStrategyFactory.getStrategy(
@@ -352,7 +352,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                 () ->
                                         DebugFlags.getInstance()
                                                 .getFledgeAuctionServerConsentedDebuggingEnabled()),
-                        AdSelectionDatabase.getInstance(context).consentedDebugConfigurationDao()),
+                        AdSelectionDatabase.getInstance().consentedDebugConfigurationDao()),
                 EgressConfigurationGenerator.createInstance(
                         BinderFlagReader.readFlag(
                                 () ->

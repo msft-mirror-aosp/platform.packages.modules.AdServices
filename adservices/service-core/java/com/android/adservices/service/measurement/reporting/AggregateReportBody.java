@@ -35,8 +35,6 @@ import org.json.JSONObject;
  * Class for constructing the report body of an aggregate report.
  */
 public class AggregateReportBody {
-    // "0" is the convention for indicating an excluded source registration time.
-    public static final String EXCLUDED_SOURCE_REGISTRATION_TIME = "0";
     private String mAttributionDestination;
     private String mSourceRegistrationTime;
     private String mScheduledReportTime;
@@ -51,8 +49,6 @@ public class AggregateReportBody {
 
     private Uri mAggregationCoordinatorOrigin;
     @Nullable private String mTriggerContextId;
-
-    private static final String API_NAME = "attribution-reporting";
 
     @VisibleForTesting
     interface PayloadBodyKeys {
@@ -104,7 +100,7 @@ public class AggregateReportBody {
     public JSONObject toJson(AggregateEncryptionKey key, Flags flags) throws JSONException {
         JSONObject aggregateBodyJson = new JSONObject();
 
-        final String sharedInfo = sharedInfoToJson(flags).toString();
+        final String sharedInfo = sharedInfoToJson().toString();
         aggregateBodyJson.put(PayloadBodyKeys.SHARED_INFO, sharedInfo);
         aggregateBodyJson.put(
                 PayloadBodyKeys.AGGREGATION_SERVICE_PAYLOADS,
@@ -130,7 +126,7 @@ public class AggregateReportBody {
 
     /** Generate the JSON serialization of the shared_info field of the aggregate report. */
     @VisibleForTesting
-    JSONObject sharedInfoToJson(Flags flags) throws JSONException {
+    JSONObject sharedInfoToJson() throws JSONException {
         JSONObject sharedInfoJson = new JSONObject();
 
         sharedInfoJson.put(SharedInfoKeys.API_NAME, mApi);
@@ -140,14 +136,6 @@ public class AggregateReportBody {
         sharedInfoJson.put(SharedInfoKeys.SCHEDULED_REPORT_TIME, mScheduledReportTime);
 
         String sourceRegistrationTime = mSourceRegistrationTime;
-        // A null source registration time implies the source registration time was not set. We
-        // normally include this in the JSON serialization anyway, but when the feature flag for
-        // making source registration time optional is enabled, send a value indicating exclusion.
-        if (flags.getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled()
-                && mSourceRegistrationTime == null) {
-            sourceRegistrationTime = EXCLUDED_SOURCE_REGISTRATION_TIME;
-        }
-
         sharedInfoJson.put(SharedInfoKeys.SOURCE_REGISTRATION_TIME, sourceRegistrationTime);
         sharedInfoJson.put(SharedInfoKeys.API_VERSION, mApiVersion);
 

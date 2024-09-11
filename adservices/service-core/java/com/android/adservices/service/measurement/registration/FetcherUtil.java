@@ -432,14 +432,16 @@ public class FetcherUtil {
         }
         validAggregateDebugReporting.put(AggregateDebugReportingHeaderContract.KEY_PIECE, keyPiece);
         if (!aggregateDebugReporting.isNull(AggregateDebugReportingHeaderContract.BUDGET)) {
-            if (!(aggregateDebugReporting.get(AggregateDebugReportingHeaderContract.BUDGET)
-                    instanceof Integer)) {
+            Optional<BigDecimal> optionalBudget =
+                    extractIntegralValue(
+                            aggregateDebugReporting, AggregateDebugReportingHeaderContract.BUDGET);
+            if (optionalBudget.isEmpty()) {
                 LoggerFactory.getMeasurementLogger()
-                        .d("Aggregate debug reporting budget is must be an integer.");
+                        .d("Aggregate debug reporting budget is invalid.");
                 return Optional.empty();
             }
-            int budget =
-                    aggregateDebugReporting.getInt(AggregateDebugReportingHeaderContract.BUDGET);
+            int budget = optionalBudget.get().intValue();
+
             if (budget <= 0 || budget > flags.getMeasurementMaxSumOfAggregateValuesPerSource()) {
                 LoggerFactory.getMeasurementLogger()
                         .d("Aggregate debug reporting budget is invalid.");
@@ -470,7 +472,7 @@ public class FetcherUtil {
                                     AggregateDebugReportingHeaderContract.DEBUG_DATA),
                             existingReportTypes,
                             flags);
-            if (!maybeValidDebugDataArr.isPresent()) {
+            if (maybeValidDebugDataArr.isEmpty()) {
                 return Optional.empty();
             }
             validAggregateDebugReporting.put(
@@ -504,13 +506,14 @@ public class FetcherUtil {
             validDebugDataObj.put(
                     AggregateDebugReportDataHeaderContract.KEY_PIECE, debugDatakeyPiece);
 
-            if (!(debugDataObj.get(AggregateDebugReportDataHeaderContract.VALUE)
-                    instanceof Integer)) {
-                LoggerFactory.getMeasurementLogger()
-                        .d("Aggregate debug reporting value is must be an integer.");
+            Optional<BigDecimal> optionalValue =
+                    extractIntegralValue(
+                            debugDataObj, AggregateDebugReportDataHeaderContract.VALUE);
+            if (optionalValue.isEmpty()) {
+                LoggerFactory.getMeasurementLogger().d("Aggregate debug data value is invalid.");
                 return Optional.empty();
             }
-            int value = debugDataObj.getInt(AggregateDebugReportDataHeaderContract.VALUE);
+            int value = optionalValue.get().intValue();
             if (value <= 0 || value > flags.getMeasurementMaxSumOfAggregateValuesPerSource()) {
                 LoggerFactory.getMeasurementLogger()
                         .d("Aggregate debug reporting data value is invalid.");
@@ -534,22 +537,19 @@ public class FetcherUtil {
             for (String debugDataType : debugDataTypesList) {
                 Optional<DebugReportApi.Type> maybeType =
                         DebugReportApi.Type.findByValue(debugDataType);
-                if (!maybeType.isPresent()) {
-                    LoggerFactory.getMeasurementLogger()
-                            .d("Aggregate debug reporting data type is invalid.");
-                    return Optional.empty();
+                // Ignore the type if not recognized
+                if (maybeType.isPresent()) {
+                    if (existingReportTypes.contains(maybeType.get().getValue())) {
+                        LoggerFactory.getMeasurementLogger()
+                                .d(
+                                        "duplicate aggregate debug reporting data types within the"
+                                                + " same object or across multiple objects are not"
+                                                + " allowed.");
+                        return Optional.empty();
+                    }
+                    validDebugDataTypes.add(maybeType.get().getValue());
+                    existingReportTypes.add(maybeType.get().getValue());
                 }
-                DebugReportApi.Type type = maybeType.get();
-                if (existingReportTypes.contains(type.getValue())) {
-                    LoggerFactory.getMeasurementLogger()
-                            .d(
-                                    "duplicate aggregate debug reporting data types within the"
-                                            + " same object or across multiple objects are not"
-                                            + " allowed.");
-                    return Optional.empty();
-                }
-                validDebugDataTypes.add(type.getValue());
-                existingReportTypes.add(type.getValue());
             }
             validDebugDataObj.put(
                     AggregateDebugReportDataHeaderContract.TYPES,

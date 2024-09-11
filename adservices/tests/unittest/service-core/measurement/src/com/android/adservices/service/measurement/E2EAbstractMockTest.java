@@ -84,15 +84,6 @@ import com.android.adservices.service.measurement.reporting.EventReportingJobHan
 import com.android.adservices.service.stats.NoOpLoggerImpl;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 
-import co.nstant.in.cbor.CborDecoder;
-import co.nstant.in.cbor.CborException;
-import co.nstant.in.cbor.model.Array;
-import co.nstant.in.cbor.model.ByteString;
-import co.nstant.in.cbor.model.DataItem;
-import co.nstant.in.cbor.model.UnicodeString;
-
-import com.google.android.libraries.mobiledatadownload.internal.AndroidTimeSource;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -118,6 +109,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import javax.net.ssl.HttpsURLConnection;
+
+import co.nstant.in.cbor.CborDecoder;
+import co.nstant.in.cbor.CborException;
+import co.nstant.in.cbor.model.Array;
+import co.nstant.in.cbor.model.ByteString;
+import co.nstant.in.cbor.model.DataItem;
+import co.nstant.in.cbor.model.UnicodeString;
 
 /**
  * End-to-end test from source and trigger registration to attribution reporting, using mocked HTTP
@@ -212,7 +210,7 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
                         mFlags,
                         new EventReportWindowCalcDelegate(mFlags),
                         new SourceNoiseHandler(mFlags),
-                        new AggregateDebugReportApi(mFlags, new AndroidTimeSource()));
+                        new AggregateDebugReportApi(mFlags));
 
         mImpressionNoiseUtil = spy(new ImpressionNoiseUtil());
 
@@ -260,8 +258,7 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
                 .when(mImpressionNoiseUtil).getReportConfigsForSequenceIndex(any(), anyLong());
         Mockito.doReturn(fakeReportConfigs)
                 .when(mImpressionNoiseUtil)
-                        .selectFlexEventReportRandomStateAndGenerateReportConfigs(
-                                any(), anyInt(), any());
+                .selectFlexEventReportRandomStateAndGenerateReportConfigs(any(), anyInt(), any());
         Mockito.doReturn(fakeReportConfigs == null ? 2.0D : 0.0D).when(mSourceNoiseHandler)
                 .getRandomDouble(any());
     }
@@ -384,6 +381,7 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
                         sourceRegistration.mTimestamp));
         mAsyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
         processActualDebugReportApiJob(sourceRegistration.mTimestamp);
+        processActualDebugReportJob(sourceRegistration.mTimestamp, 0L);
     }
 
     @Override
@@ -651,10 +649,12 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
                                     TestFormatJsonMapping.REPORT_TIME_KEY,
                                     String.valueOf(
                                             aggregateReports.get(i).getScheduledReportTime()
-                                                // Debug aggregate reports have the same scheduled
-                                                // report time as regular aggregate reports but are
-                                                // sent without delay.
-                                                - reportDelay))
+                                                    // Debug aggregate reports have the same
+                                                    // scheduled
+                                                    // report time as regular aggregate reports
+                                                    // but are
+                                                    // sent without delay.
+                                                    - reportDelay))
                             .put(
                                     TestFormatJsonMapping.REPORT_TO_KEY,
                                     destinations.get(i).toString())

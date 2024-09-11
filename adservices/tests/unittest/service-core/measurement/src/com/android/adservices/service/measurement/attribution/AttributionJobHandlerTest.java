@@ -4645,7 +4645,9 @@ public class AttributionJobHandlerTest {
                 .thenReturn(numEventReportPerDestination);
         when(mMeasurementDao.getSourceDestinations(source.getId()))
                 .thenReturn(Pair.create(source.getAppDestinations(), source.getWebDestinations()));
-        when(mMeasurementDao.getNumAggregateReportsPerSource(source.getId())).thenReturn(21);
+        when(mMeasurementDao.countNumAggregateReportsPerSource(
+                        eq(source.getId()), eq(AttributionJobHandler.API)))
+                .thenReturn(21);
 
         // Execution
         mHandler.performPendingAttributions();
@@ -4851,6 +4853,8 @@ public class AttributionJobHandlerTest {
         verify(mMeasurementDao, never()).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
+        verify(mDebugReportApi)
+                .scheduleNullDebugReport(eq(source), eq(trigger), eq(mMeasurementDao));
     }
 
     @Test

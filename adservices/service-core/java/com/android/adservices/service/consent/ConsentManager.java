@@ -297,10 +297,10 @@ public class ConsentManager {
                                     appConsentDao,
                                     EnrollmentDao.getInstance(),
                                     MeasurementImpl.getInstance(context),
-                                    CustomAudienceDatabase.getInstance(context).customAudienceDao(),
-                                    SharedStorageDatabase.getInstance(context).appInstallDao(),
+                                    CustomAudienceDatabase.getInstance().customAudienceDao(),
+                                    SharedStorageDatabase.getInstance().appInstallDao(),
                                     ProtectedSignalsDatabase.getInstance().protectedSignalsDao(),
-                                    SharedStorageDatabase.getInstance(context).frequencyCapDao(),
+                                    SharedStorageDatabase.getInstance().frequencyCapDao(),
                                     adServicesManager,
                                     datastore,
                                     appSearchConsentManager,
@@ -2426,7 +2426,7 @@ public class ConsentManager {
      */
     @ModuleStateCode
     public int getModuleState(@ModuleCode int module) {
-        EnrollmentData data = EnrollmentData.deserializeFromBase64(getModuleEnrollmentState());
+        EnrollmentData data = EnrollmentData.deserialize(getModuleEnrollmentState());
         return data.getModuleState(module);
     }
 
@@ -2436,11 +2436,11 @@ public class ConsentManager {
      * @param moduleState object to set
      */
     public void setModuleStates(List<AdServicesModuleState> moduleStates) {
-        EnrollmentData data = EnrollmentData.deserializeFromBase64(getModuleEnrollmentState());
+        EnrollmentData data = EnrollmentData.deserialize(getModuleEnrollmentState());
         for (AdServicesModuleState moduleState : moduleStates) {
             data.putModuleState(moduleState);
         }
-        setModuleEnrollmentData(EnrollmentData.serializeBase64(data));
+        setModuleEnrollmentData(EnrollmentData.serialize(data));
     }
 
     /**
@@ -2451,7 +2451,7 @@ public class ConsentManager {
      */
     @ModuleUserChoiceCode
     public int getUserChoice(@ModuleCode int module) {
-        EnrollmentData data = EnrollmentData.deserializeFromBase64(getModuleEnrollmentState());
+        EnrollmentData data = EnrollmentData.deserialize(getModuleEnrollmentState());
         return data.getUserChoice(module);
     }
 
@@ -2462,11 +2462,11 @@ public class ConsentManager {
      * @param userChoices User choices to store
      */
     public void setUserChoices(List<AdServicesModuleUserChoice> userChoices) {
-        EnrollmentData data = EnrollmentData.deserializeFromBase64(getModuleEnrollmentState());
+        EnrollmentData data = EnrollmentData.deserialize(getModuleEnrollmentState());
         for (AdServicesModuleUserChoice userChoice : userChoices) {
             data.putUserChoice(userChoice);
         }
-        setModuleEnrollmentData(EnrollmentData.serializeBase64(data));
+        setModuleEnrollmentData(EnrollmentData.serialize(data));
     }
 
     /** Set module enrollment data to storage based on consent_source_of_truth. */

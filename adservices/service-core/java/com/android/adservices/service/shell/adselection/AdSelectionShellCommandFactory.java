@@ -95,12 +95,10 @@ public class AdSelectionShellCommandFactory implements ShellCommandFactory {
                                         ShellCommand::getCommandName, Function.identity()));
     }
 
-    /**
-     * @return an instance of the {@link AdSelectionShellCommandFactory}.
-     */
-    public static AdSelectionShellCommandFactory getInstance(
+    /** Gets a new {@link AdSelectionShellCommandFactory} instance. */
+    public static AdSelectionShellCommandFactory newInstance(
             DebugFlags debugFlags, Flags flags, Context context) {
-        SharedStorageDatabase sharedStorageDatabase = SharedStorageDatabase.getInstance(context);
+        SharedStorageDatabase sharedStorageDatabase = SharedStorageDatabase.getInstance();
         AuctionServerDataCompressor auctionServerDataCompressor =
                 AuctionServerDataCompressorFactory.getDataCompressor(
                         flags.getFledgeAuctionServerCompressionAlgorithmVersion());
@@ -118,7 +116,7 @@ public class AdSelectionShellCommandFactory implements ShellCommandFactory {
                         compressedBuyerInputCreatorHelper,
                         dataCompressor,
                         flags.getFledgeGetAdSelectionDataSellerConfigurationEnabled(),
-                        CustomAudienceDatabase.getInstance(context).customAudienceDao(),
+                        CustomAudienceDatabase.getInstance().customAudienceDao(),
                         ProtectedSignalsDatabase.getInstance().getEncodedPayloadDao(),
                         CompressedBuyerInputCreatorNoOptimizations.VERSION,
                         flags.getFledgeGetAdSelectionDataMaxNumEntirePayloadCompressions(),
@@ -138,7 +136,7 @@ public class AdSelectionShellCommandFactory implements ShellCommandFactory {
                                         flags)
                                 .getAppInstallAdFilterer(),
                         compressedBuyerInputCreatorFactory);
-        AdSelectionDatabase adSelectionDatabase = AdSelectionDatabase.getInstance(context);
+        AdSelectionDatabase adSelectionDatabase = AdSelectionDatabase.getInstance();
         ConsentedDebugConfigurationDao consentedDebugConfigurationDao =
                 adSelectionDatabase.consentedDebugConfigurationDao();
         AdSelectionEntryDao adSelectionEntryDao = adSelectionDatabase.adSelectionEntryDao();

@@ -78,18 +78,16 @@ public class CustomAudienceShellCommandFactory implements ShellCommandFactory {
                                         ShellCommand::getCommandName, Function.identity()));
     }
 
-    /**
-     * @return an instance of the {@link CustomAudienceShellCommandFactory}.
-     */
-    public static ShellCommandFactory getInstance(
+    /** Gets a new {@link CustomAudienceShellCommandFactory} instance . */
+    public static ShellCommandFactory newInstance(
             DebugFlags debugFlags, Flags flags, Context context) {
         CustomAudienceDao customAudienceDao =
-                CustomAudienceDatabase.getInstance(context).customAudienceDao();
+                CustomAudienceDatabase.getInstance().customAudienceDao();
         return new CustomAudienceShellCommandFactory(
                 debugFlags.getFledgeCustomAudienceCLIEnabledStatus(),
                 new BackgroundFetchRunner(
                         customAudienceDao,
-                        SharedStorageDatabase.getInstance(context).appInstallDao(),
+                        SharedStorageDatabase.getInstance().appInstallDao(),
                         ApplicationContextSingleton.get().getPackageManager(),
                         EnrollmentDao.getInstance(),
                         flags,

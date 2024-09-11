@@ -92,6 +92,7 @@ import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.aggregation.AggregateReportFixture;
 import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.registration.AsyncRegistration;
+import com.android.adservices.service.measurement.reporting.AggregateDebugReportApi;
 import com.android.adservices.service.measurement.reporting.DebugReport;
 import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -3902,11 +3903,35 @@ public class MeasurementDaoTest {
         List<AggregateReport> reports =
                 Arrays.asList(
                         generateMockAggregateReport(
-                                WebUtil.validUrl("https://destination-1.test"), 1, "source1"),
+                                WebUtil.validUrl("https://destination-1.test"),
+                                1,
+                                "source1",
+                                AggregateReportFixture.ValidAggregateReportParams.API),
                         generateMockAggregateReport(
-                                WebUtil.validUrl("https://destination-1.test"), 2, "source1"),
+                                WebUtil.validUrl("https://destination-1.test"),
+                                2,
+                                "source1",
+                                AggregateReportFixture.ValidAggregateReportParams.API),
                         generateMockAggregateReport(
-                                WebUtil.validUrl("https://destination-2.test"), 3, "source2"));
+                                WebUtil.validUrl("https://destination-2.test"),
+                                3,
+                                "source2",
+                                AggregateReportFixture.ValidAggregateReportParams.API),
+                        generateMockAggregateReport(
+                                WebUtil.validUrl("https://destination-1.test"),
+                                4,
+                                "source3",
+                                AggregateDebugReportApi.AGGREGATE_DEBUG_REPORT_API),
+                        generateMockAggregateReport(
+                                WebUtil.validUrl("https://destination-1.test"),
+                                5,
+                                "source3",
+                                AggregateDebugReportApi.AGGREGATE_DEBUG_REPORT_API),
+                        generateMockAggregateReport(
+                                WebUtil.validUrl("https://destination-2.test"),
+                                6,
+                                "source3",
+                                AggregateDebugReportApi.AGGREGATE_DEBUG_REPORT_API));
 
         SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         Objects.requireNonNull(db);
@@ -3921,18 +3946,43 @@ public class MeasurementDaoTest {
                     values.put(
                             MeasurementTables.AggregateReport.ATTRIBUTION_DESTINATION,
                             aggregateReport.getAttributionDestination().toString());
+                    values.put(MeasurementTables.AggregateReport.API, aggregateReport.getApi());
                     db.insert(MeasurementTables.AggregateReport.TABLE, null, values);
                 };
         reports.forEach(aggregateReportConsumer);
 
         mDatastoreManager.runInTransaction(
                 measurementDao -> {
-                    assertThat(measurementDao.getNumAggregateReportsPerSource("source1"))
+                    assertThat(
+                                    measurementDao.countNumAggregateReportsPerSource(
+                                            "source1",
+                                            AggregateReportFixture.ValidAggregateReportParams.API))
                             .isEqualTo(2);
-                    assertThat(measurementDao.getNumAggregateReportsPerSource("source2"))
+                    assertThat(
+                                    measurementDao.countNumAggregateReportsPerSource(
+                                            "source2",
+                                            AggregateReportFixture.ValidAggregateReportParams.API))
                             .isEqualTo(1);
-                    assertThat(measurementDao.getNumAggregateReportsPerSource("source3"))
+                    assertThat(
+                                    measurementDao.countNumAggregateReportsPerSource(
+                                            "source3",
+                                            AggregateReportFixture.ValidAggregateReportParams.API))
                             .isEqualTo(0);
+                    assertThat(
+                                    measurementDao.countNumAggregateReportsPerSource(
+                                            "source1",
+                                            AggregateDebugReportApi.AGGREGATE_DEBUG_REPORT_API))
+                            .isEqualTo(0);
+                    assertThat(
+                                    measurementDao.countNumAggregateReportsPerSource(
+                                            "source2",
+                                            AggregateDebugReportApi.AGGREGATE_DEBUG_REPORT_API))
+                            .isEqualTo(0);
+                    assertThat(
+                                    measurementDao.countNumAggregateReportsPerSource(
+                                            "source3",
+                                            AggregateDebugReportApi.AGGREGATE_DEBUG_REPORT_API))
+                            .isEqualTo(3);
                 });
     }
 
@@ -4502,13 +4552,15 @@ public class MeasurementDaoTest {
                         .build());
         Source originalSource = sourceList.get(0);
         insertAttributedTrigger(originalSource.getTriggerSpecs(), eventReportList.get(0));
-        mDatastoreManager.runInTransaction(
-                measurementDao -> {
-                    Source newSource = measurementDao.getSource(originalSource.getId());
-                    assertNotEquals(originalSource, newSource);
-                    assertEquals(
-                            0, newSource.getTriggerSpecs().getAttributedTriggers().size());
-                });
+        Optional<Source> newSource =
+                mDatastoreManager.runInTransactionWithResult(
+                        measurementDao -> measurementDao.getSource(originalSource.getId()));
+        assertTrue(newSource.isPresent());
+
+        assertNotEquals(newSource.get(), originalSource);
+        newSource.get().buildTriggerSpecs();
+        assertEquals(0, newSource.get().getTriggerSpecs().getAttributedTriggers().size());
+
         mDatastoreManager.runInTransaction(
                 measurementDao ->
                         measurementDao.updateSourceAttributedTriggers(
@@ -4517,8 +4569,11 @@ public class MeasurementDaoTest {
 
         mDatastoreManager.runInTransaction(
                 measurementDao -> {
-                    Source newSource = measurementDao.getSource(originalSource.getId());
-                    assertEquals(originalSource, newSource);
+                    assertEquals(
+                            originalSource.attributedTriggersToJsonFlexApi(),
+                            measurementDao
+                                    .getSource(originalSource.getId())
+                                    .getEventAttributionStatus());
                 });
     }
 
@@ -13463,11 +13518,12 @@ public class MeasurementDaoTest {
     }
 
     private AggregateReport generateMockAggregateReport(
-            String attributionDestination, int id, String sourceId) {
+            String attributionDestination, int id, String sourceId, String api) {
         return new AggregateReport.Builder()
                 .setId(String.valueOf(id))
                 .setSourceId(sourceId)
                 .setAttributionDestination(Uri.parse(attributionDestination))
+                .setApi(api)
                 .build();
     }
 

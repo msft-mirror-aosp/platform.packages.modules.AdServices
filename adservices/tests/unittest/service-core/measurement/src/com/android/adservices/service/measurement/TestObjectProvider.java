@@ -38,8 +38,6 @@ import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 
-import com.google.android.libraries.mobiledatadownload.internal.AndroidTimeSource;
-
 class TestObjectProvider {
     static AttributionJobHandlerWrapper getAttributionJobHandler(
             DatastoreManager datastoreManager, Flags flags) {
@@ -51,7 +49,7 @@ class TestObjectProvider {
                         flags,
                         new EventReportWindowCalcDelegate(flags),
                         new SourceNoiseHandler(flags),
-                        new AggregateDebugReportApi(flags, new AndroidTimeSource())),
+                        new AggregateDebugReportApi(flags)),
                 new EventReportWindowCalcDelegate(flags),
                 new SourceNoiseHandler(flags),
                 AdServicesLoggerImpl.getInstance());

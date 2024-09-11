@@ -61,7 +61,6 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.isA;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.mock;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.spy;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
@@ -7514,7 +7513,10 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
             }
         }
 
-        Throttler.destroyExistingThrottler();
+        // NOTE: used to call Throttler.destroyExistingThrottler(), but constructor below doesn't
+        // actually set a Throttler - the "real" constructor uses the Throttler when instantiating
+        // the FledgeApiThrottleFilter (which in turn is passed to the constructor of
+        // AdSelectionServiceFilter)
         Flags throttlingFlags = new FlagsWithThrottling();
         AdSelectionServiceImpl adSelectionServiceWithThrottling =
                 new AdSelectionServiceImpl(
@@ -7629,19 +7631,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         AdSelectionRunner.AD_SELECTION_ERROR_PATTERN,
                         AdSelectionRunner.ERROR_AD_SELECTION_FAILURE,
                         RATE_LIMIT_REACHED_ERROR_MESSAGE));
-        resetThrottlerToNoRateLimits();
-    }
-
-    /**
-     * Given Throttler is singleton, & shared across tests, this method should be invoked after
-     * tests that impose restrictive rate limits.
-     */
-    private void resetThrottlerToNoRateLimits() {
-        Throttler.destroyExistingThrottler();
-        final float noRateLimit = -1;
-        Flags mockNoRateLimitFlags = mock(Flags.class);
-        doReturn(noRateLimit).when(mockNoRateLimitFlags).getSdkRequestPermitsPerSecond();
-        Throttler.getInstance(mockNoRateLimitFlags);
     }
 
     @Test

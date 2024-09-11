@@ -554,6 +554,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getDeveloperModeFeatureEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_DEVELOPER_MODE_FEATURE_ENABLED,
+                DEFAULT_DEVELOPER_MODE_FEATURE_ENABLED);
+    }
+
+    @Override
     public int getEncryptionKeyNetworkConnectTimeoutMs() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_ENCRYPTION_KEY_NETWORK_CONNECT_TIMEOUT_MS,
@@ -4554,6 +4561,26 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATE_DEBUG_REPORTING
                         + " = "
                         + getMeasurementEnableAggregateDebugReporting());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ADR_BUDGET_PER_ORIGIN_PUBLISHER_WINDOW
+                        + " = "
+                        + getMeasurementAdrBudgetOriginXPublisherXWindow());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ADR_BUDGET_PER_PUBLISHER_WINDOW
+                        + " = "
+                        + getMeasurementAdrBudgetPublisherXWindow());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ADR_BUDGET_WINDOW_LENGTH_MS
+                        + " = "
+                        + getMeasurementAdrBudgetWindowLengthMillis());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE
+                        + " = "
+                        + getMeasurementMaxAdrCountPerSource());
 
         writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
         writer.println(
@@ -6744,6 +6771,13 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_ADR_BUDGET_WINDOW_LENGTH_MS,
                 MEASUREMENT_ADR_BUDGET_WINDOW_LENGTH_MILLIS);
+    }
+
+    @Override
+    public int getMeasurementMaxAdrCountPerSource() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE,
+                MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE);
     }
 
     @Override
