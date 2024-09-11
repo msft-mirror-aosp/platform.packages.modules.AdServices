@@ -156,26 +156,16 @@ public final class ThrottlerTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void testGetInstance_withOnePermitPerSecond() {
-        // Reset throttler state. There is no guarantee another class has initialized the Throttler
-        // using getInstance, therefore destroying the throttler before testing. This is the only
-        // method using getInstance while the others are using the constructor, therefore there is
-        // no need to add this to the setup and tear down test phase.
-        Throttler.destroyExistingThrottler();
-
+    public void testThrottler_withOnePermitPerSecond() {
         // Create a throttler with 1 permit per second from getInstance.
         mockFlags(1F);
-        Throttler throttler = Throttler.getInstance(mMockFlags);
+        Throttler throttler = Throttler.newInstance(mMockFlags);
 
         // tryAcquire should return false after 1 permit
         assertAcquireSeveralTimes(throttler, MEASUREMENT_API_REGISTER_SOURCE, 1);
 
         // Calling a different API. tryAcquire should return false after 1 permit
         assertAcquireSeveralTimes(throttler, MEASUREMENT_API_REGISTER_TRIGGER, 1);
-
-        // Reset throttler state.
-        // If another class calls getInstance, it can be initialized to its original state
-        Throttler.destroyExistingThrottler();
     }
 
     @Test

@@ -166,22 +166,6 @@ public final class Throttler {
     }
 
     /**
-     * The throttler is a Singleton and does not allow changing the rate limits once initialised,
-     * therefore it is not feasible to test different throttling policies across tests without
-     * destroying the previous instance. Intended to be used in test cases only.
-     *
-     * @deprecated tests should not use singleton, but {@link #newInstance(Flags)}
-     */
-    @Deprecated
-    @VisibleForTesting
-    public static void destroyExistingThrottler() {
-        synchronized (sLock) {
-            Log.v(TAG, "destroyExistingThrottler(): removing reference to " + sSingleton);
-            sSingleton = null;
-        }
-    }
-
-    /**
      * Acquires a permit for an API and a Requester if it can be acquired immediately without delay.
      * Example: {@code tryAcquire(TOPICS_API, "SomeSdkName") }
      *
