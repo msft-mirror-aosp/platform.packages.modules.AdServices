@@ -234,7 +234,7 @@ public class ConsentManager {
                             createAndInitializeDataStore(
                                     context, AdServicesErrorLoggerImpl.getInstance());
                     AdServicesManager adServicesManager = AdServicesManager.getInstance(context);
-                    AppConsentDao appConsentDao = AppConsentDao.getInstance(context);
+                    AppConsentDao appConsentDao = AppConsentDao.getInstance();
 
                     // It is possible that the old value of the flag lingers after OTA until the
                     // first
@@ -268,7 +268,7 @@ public class ConsentManager {
                             FlagsFactory.getFlags().getEnableAdExtServiceConsentData();
                     if (enableAdExtServiceConsentData) {
                         adServicesExtDataManager =
-                                AdServicesExtDataStorageServiceManager.getInstance(context);
+                                AdServicesExtDataStorageServiceManager.getInstance();
                         // NOTE: To disable migration from AdExtService to AppSearch on 2024 M03-
                         // builds, use the deprecated flag
                         // enable_adext_service_to_appsearch_migration.
@@ -306,7 +306,7 @@ public class ConsentManager {
                                     appSearchConsentManager,
                                     UserProfileIdManager.getInstance(context),
                                     // TODO(b/260601944): Remove Flag Instance.
-                                    UxStatesDao.getInstance(context),
+                                    UxStatesDao.getInstance(),
                                     adServicesExtDataManager,
                                     FlagsFactory.getFlags(),
                                     consentSourceOfTruth,
