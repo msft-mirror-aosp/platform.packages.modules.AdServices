@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.common;
 
-import android.os.Binder;
 import android.util.Log;
 import android.util.Pair;
 
@@ -25,7 +24,6 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.RateLimiter;
-import com.google.errorprone.annotations.concurrent.GuardedBy;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -36,8 +34,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class Throttler {
 
     private static final String TAG = Throttler.class.getSimpleName();
-
-    private static final Object sLock = new Object();
 
     // Enum for each PP API or entry point that will be throttled.
     public enum ApiKey {
@@ -108,9 +104,6 @@ public final class Throttler {
         TOPICS_API_SDK_NAME,
     }
 
-    @GuardedBy("sLock")
-    private static volatile Throttler sSingleton;
-
     private static final double DEFAULT_RATE_LIMIT = 1d;
 
     // A Map from a Pair<ApiKey, Requester> to its RateLimiter.
@@ -125,27 +118,25 @@ public final class Throttler {
     // - MEASUREMENT_API_REGISTER_SOURCE, 5 requests per second
     private final Map<ApiKey, Double> mRateLimitPerApiMap = new HashMap<>();
 
-    /** Returns the singleton instance of the Throttler. */
-    public static Throttler getInstance() {
-        synchronized (sLock) {
-            if (sSingleton == null) {
-                Flags flags = FlagsFactory.getFlags();
-                Log.v(TAG, "Initializing singleton with " + flags);
-                // Clearing calling identity to check device config permission read by flags on the
-                // local process and not on the process called. Once the device configs are read,
-                // restore calling identity.
-                long token = Binder.clearCallingIdentity();
-                try {
-                    sSingleton = new Throttler(flags);
-                } finally {
-                    Binder.restoreCallingIdentity(token);
-                }
-            }
-            return sSingleton;
+    // Lazy initialization holder class idiom for static fields as described in Effective Java Item
+    // 83 - this is needed because otherwise the singleton would be initialized in unit tests, even
+    // when they (correctly) call newInstance() instead of getInstance().
+    private static final class FieldHolder {
+        private static final Throttler sSingleton;
+
+        static {
+            Flags flags = FlagsFactory.getFlags();
+            Log.v(TAG, "Initializing singleton with " + flags);
+            sSingleton = new Throttler(flags);
         }
     }
 
-    /** Factory method. */
+    /** Returns the singleton instance of the Throttler. */
+    public static Throttler getInstance() {
+        return FieldHolder.sSingleton;
+    }
+
+    /** Factory method - should only be used for tests. */
     @VisibleForTesting
     public static Throttler newInstance(Flags flags) {
         return new Throttler(flags);
