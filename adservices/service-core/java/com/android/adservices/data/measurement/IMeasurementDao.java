@@ -139,9 +139,11 @@ public interface IMeasurementDao {
      * Fetches the count of aggregate reports for the provided source id.
      *
      * @param sourceId source id
-     * @return number of aggregate reports in the database attributed to the provided source id.
+     * @param api aggregate report API
+     * @return number of aggregate reports in the database attributed to the provided source id and
+     *     with provided api value.
      */
-    int getNumAggregateReportsPerSource(@NonNull String sourceId) throws DatastoreException;
+    int countNumAggregateReportsPerSource(String sourceId, String api) throws DatastoreException;
 
     /**
      * Fetches the count of event reports for the provided destination.
