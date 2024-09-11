@@ -723,7 +723,7 @@ public final class AsyncRegistrationQueueJobServiceTest
         ExtendedMockito.doReturn(mock(AdServicesLoggerImpl.class))
                 .when(AdServicesLoggerImpl::getInstance);
         ExtendedMockito.doReturn(mMockDatastoreManager)
-                .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
+                .when(() -> DatastoreManagerFactory.getDatastoreManager());
         ExtendedMockito.doReturn(mMockJobInfo)
                 .when(() -> AsyncRegistrationQueueJobService.buildJobInfo(any(), any()));
         mockGetAdServicesJobServiceLogger(mSpyLogger);

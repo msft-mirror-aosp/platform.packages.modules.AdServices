@@ -358,7 +358,7 @@ public final class DeleteExpiredJobServiceTest
         doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
         doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
         ExtendedMockito.doReturn(mMockDatastoreManager)
-                .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
+                .when(() -> DatastoreManagerFactory.getDatastoreManager());
         ExtendedMockito.doNothing().when(() -> DeleteExpiredJobService.schedule(any(), any()));
         mockGetAdServicesJobServiceLogger(mSpyLogger);
 

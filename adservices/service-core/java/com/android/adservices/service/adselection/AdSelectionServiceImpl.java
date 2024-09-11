@@ -1017,7 +1017,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         MeasurementImpl measurementService;
         final long token = Binder.clearCallingIdentity();
         try {
-            measurementService = MeasurementImpl.getInstance(mContext);
+            measurementService = MeasurementImpl.getInstance();
         } finally {
             Binder.restoreCallingIdentity(token);
         }

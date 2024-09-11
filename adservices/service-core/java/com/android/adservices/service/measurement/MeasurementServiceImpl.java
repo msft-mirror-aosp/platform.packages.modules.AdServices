@@ -131,7 +131,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             @NonNull CachedFlags flags,
             @NonNull AppImportanceFilter appImportanceFilter) {
         this(
-                MeasurementImpl.getInstance(context),
+                MeasurementImpl.getInstance(),
                 context,
                 clock,
                 consentManager,
