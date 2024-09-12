@@ -93,14 +93,14 @@ public final class BackgroundFetchJobTest extends AdServicesJobTestCase {
     }
 
     @Test
-    @SuppressWarnings("unused")
     public void testGetExecutionFuture() throws Exception {
         ListenableFuture<ExecutionResult> executionFuture =
-                mBackgroundFetchJob.getExecutionFuture(sContext, mMockParams);
+                mBackgroundFetchJob.getExecutionFuture(mContext, mMockParams);
 
         assertWithMessage("testGetExecutionFuture().get()")
                 .that(executionFuture.get())
                 .isEqualTo(SUCCESS);
+        @SuppressWarnings("unused")
         FluentFuture<Void> unusedFuture = verify(mMockBackgroundFetchWorker).runBackgroundFetch();
     }
 

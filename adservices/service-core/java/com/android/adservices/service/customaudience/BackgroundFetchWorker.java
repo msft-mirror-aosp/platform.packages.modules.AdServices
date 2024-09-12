@@ -109,6 +109,7 @@ public final class BackgroundFetchWorker {
                             SharedStorageDatabase.getInstance().appInstallDao();
                     CustomAudienceLoggerFactory customAudienceLoggerFactory =
                             CustomAudienceLoggerFactory.getInstance();
+                    Context context = ApplicationContextSingleton.get();
                     Flags flags = FlagsFactory.getFlags();
                     sBackgroundFetchWorker =
                             new BackgroundFetchWorker(
