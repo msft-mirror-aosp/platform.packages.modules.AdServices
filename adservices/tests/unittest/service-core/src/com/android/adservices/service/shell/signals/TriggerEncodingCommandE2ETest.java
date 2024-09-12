@@ -243,7 +243,6 @@ public final class TriggerEncodingCommandE2ETest extends AdServicesExtendedMocki
                                 logger, Clock.getInstance(), EnrollmentDao.getInstance()),
                         new EncodingJobRunStatsLoggerImpl(logger, EncodingJobRunStats.builder()),
                         mEncoderLogicMetadataDao);
-
         mProtectedSignalsService =
                 new ProtectedSignalsServiceImpl(
                         mContext,
@@ -284,7 +283,7 @@ public final class TriggerEncodingCommandE2ETest extends AdServicesExtendedMocki
                                 FledgeAuthorizationFilter.create(mContext, logger),
                                 new FledgeAllowListsFilter(mMockFlags, logger),
                                 new FledgeApiThrottleFilter(
-                                        Throttler.getInstance(mMockFlags), logger)),
+                                        Throttler.newInstance(mMockFlags), logger)),
                         EnrollmentDao.getInstance(),
                         mUpdateSignalsProcessReportedLoggerMock);
         when(mConsentManagerMock.isPasFledgeConsentGiven()).thenReturn(true);

@@ -16,14 +16,16 @@
 
 package com.android.adservices.service.common;
 
-import android.annotation.NonNull;
 import android.os.Binder;
+import android.util.Log;
 import android.util.Pair;
 
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.RateLimiter;
+import com.google.errorprone.annotations.concurrent.GuardedBy;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,7 +33,12 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 /** Class to throttle PPAPI requests. */
-public class Throttler {
+public final class Throttler {
+
+    private static final String TAG = Throttler.class.getSimpleName();
+
+    private static final Object sLock = new Object();
+
     // Enum for each PP API or entry point that will be throttled.
     public enum ApiKey {
         UNKNOWN,
@@ -101,7 +108,9 @@ public class Throttler {
         TOPICS_API_SDK_NAME,
     }
 
+    @GuardedBy("sLock")
     private static volatile Throttler sSingleton;
+
     private static final double DEFAULT_RATE_LIMIT = 1d;
 
     // A Map from a Pair<ApiKey, Requester> to its RateLimiter.
@@ -117,24 +126,42 @@ public class Throttler {
     private final Map<ApiKey, Double> mRateLimitPerApiMap = new HashMap<>();
 
     /** Returns the singleton instance of the Throttler. */
-    @NonNull
-    public static Throttler getInstance(@NonNull Flags flags) {
-        Objects.requireNonNull(flags);
-        synchronized (Throttler.class) {
-            if (null == sSingleton) {
+    public static Throttler getInstance() {
+        // TODO(b/365833970): move logic here / remove deprecated method
+        return getInstance(FlagsFactory.getFlags());
+    }
+
+    /**
+     * @deprecated use {@link #getInstance()} on production code or {@link #newInstance(Flags)} on
+     *     unit tests.
+     */
+    @Deprecated
+    public static Throttler getInstance(Flags flags) {
+        synchronized (sLock) {
+            if (sSingleton == null) {
+                Log.v(TAG, "Initializing singleton with " + flags);
                 // Clearing calling identity to check device config permission read by flags on the
                 // local process and not on the process called. Once the device configs are read,
                 // restore calling identity.
-                final long token = Binder.clearCallingIdentity();
-                sSingleton = new Throttler(flags);
-                Binder.restoreCallingIdentity(token);
+                long token = Binder.clearCallingIdentity();
+                try {
+                    sSingleton = new Throttler(flags);
+                } finally {
+                    Binder.restoreCallingIdentity(token);
+                }
             }
             return sSingleton;
         }
     }
 
+    /** Factory method. */
     @VisibleForTesting
-    Throttler(Flags flags) {
+    public static Throttler newInstance(Flags flags) {
+        return new Throttler(flags);
+    }
+
+    private Throttler(Flags flags) {
+        Objects.requireNonNull(flags, "flags cannot be null");
         setRateLimitPerApiMap(flags);
     }
 
@@ -142,10 +169,16 @@ public class Throttler {
      * The throttler is a Singleton and does not allow changing the rate limits once initialised,
      * therefore it is not feasible to test different throttling policies across tests without
      * destroying the previous instance. Intended to be used in test cases only.
+     *
+     * @deprecated tests should not use singleton, but {@link #newInstance(Flags)}
      */
+    @Deprecated
     @VisibleForTesting
     public static void destroyExistingThrottler() {
-        sSingleton = null;
+        synchronized (sLock) {
+            Log.v(TAG, "destroyExistingThrottler(): removing reference to " + sSingleton);
+            sSingleton = null;
+        }
     }
 
     /**
