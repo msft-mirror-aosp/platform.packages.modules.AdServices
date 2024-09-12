@@ -7914,7 +7914,10 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
         mockCreateDevContextForDevOptionsDisabled();
 
-        Throttler.destroyExistingThrottler();
+        // NOTE: used to call Throttler.destroyExistingThrottler(), but AdSelectionServiceImpl
+        // constructor doesn't actually set a Throttler - the "real" constructor uses the Throttler
+        // when instantiating the FledgeApiThrottleFilter (which in turn is passed to the
+        // constructor of AdSelectionServiceFilter)
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
@@ -7992,7 +7995,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
         assertEquals(
                 callbackSubsequentCall.mFledgeErrorResponse.getErrorMessage(),
                 RATE_LIMIT_REACHED_ERROR_MESSAGE);
-        resetThrottlerToNoRateLimits();
     }
 
     @Test
@@ -9905,7 +9907,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     @Ignore("b/271652362")
     @Test
     public void testReportEvent_callbackErrorReported() throws Exception {
-        doReturn(mMeasurementServiceMock).when(() -> MeasurementImpl.getInstance(any()));
+        doReturn(mMeasurementServiceMock).when(MeasurementImpl::getInstance);
 
         Uri biddingLogicUri = (mMockWebServerRule.uriForPath(mFetchJavaScriptPathBuyer));
 
@@ -9962,7 +9964,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testReportEvent_disabled_failsFast() throws Exception {
-        doReturn(mMeasurementServiceMock).when(() -> MeasurementImpl.getInstance(any()));
+        doReturn(mMeasurementServiceMock).when(MeasurementImpl::getInstance);
 
         // Generate service instance with feature disabled.
         mFakeFlags =
@@ -10022,7 +10024,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         .setReportingDestinations(FLAG_REPORTING_DESTINATION_BUYER)
                         .build();
 
-        doReturn(mMeasurementServiceMock).when(() -> MeasurementImpl.getInstance(any()));
+        doReturn(mMeasurementServiceMock).when(MeasurementImpl::getInstance);
 
         // Count down callback + log interaction.
         ReportInteractionTestCallback callback =
@@ -10588,18 +10590,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                             .build();
             mAdSelectionEntryDao.persistAdSelection(dbAdSelectionEntry);
         }
-    }
-
-    /**
-     * Given Throttler is singleton, & shared across tests, this method should be invoked after
-     * tests that impose restrictive rate limits.
-     */
-    private void resetThrottlerToNoRateLimits() {
-        Throttler.destroyExistingThrottler();
-        final float noRateLimit = -1;
-        Flags mockNoRateLimitFlags = mock(Flags.class);
-        doReturn(noRateLimit).when(mockNoRateLimitFlags).getSdkRequestPermitsPerSecond();
-        Throttler.getInstance(mockNoRateLimitFlags);
     }
 
     private AdSelectionOverrideTestCallback callAddOverrideForSelectAds(

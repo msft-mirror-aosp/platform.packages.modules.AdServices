@@ -75,7 +75,7 @@ public final class DeleteUninstalledJobService extends JobService {
         LoggerFactory.getMeasurementLogger().d("DeleteUninstalledJobService.onStartJob");
         sBackgroundExecutor.execute(
                 () -> {
-                    MeasurementImpl.getInstance(this).deleteAllUninstalledMeasurementData();
+                    MeasurementImpl.getInstance().deleteAllUninstalledMeasurementData();
 
                     boolean shouldRetry = false;
                     AdServicesJobServiceLogger.getInstance()

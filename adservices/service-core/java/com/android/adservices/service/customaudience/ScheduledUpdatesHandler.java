@@ -200,7 +200,7 @@ public class ScheduledUpdatesHandler {
 
     public ScheduledUpdatesHandler(@NonNull Context context) {
         this(
-                CustomAudienceDatabase.getInstance(context).customAudienceDao(),
+                CustomAudienceDatabase.getInstance().customAudienceDao(),
                 new AdServicesHttpsClient(
                         AdServicesExecutors.getBlockingExecutor(),
                         CacheProviderFactory.createNoOpCache()),
@@ -209,8 +209,8 @@ public class ScheduledUpdatesHandler {
                 AdServicesExecutors.getBackgroundExecutor(),
                 AdServicesExecutors.getLightWeightExecutor(),
                 new AdFilteringFeatureFactory(
-                                SharedStorageDatabase.getInstance(context).appInstallDao(),
-                                SharedStorageDatabase.getInstance(context).frequencyCapDao(),
+                                SharedStorageDatabase.getInstance().appInstallDao(),
+                                SharedStorageDatabase.getInstance().frequencyCapDao(),
                                 FlagsFactory.getFlags())
                         .getFrequencyCapAdDataValidator(),
                 AdRenderIdValidator.createInstance(FlagsFactory.getFlags()),
@@ -220,7 +220,7 @@ public class ScheduledUpdatesHandler {
                         FlagsFactory.getFlags().getFledgeAuctionServerAdRenderIdEnabled()),
                 CustomAudienceImpl.getInstance(context),
                 new CustomAudienceQuantityChecker(
-                        CustomAudienceDatabase.getInstance(context).customAudienceDao(),
+                        CustomAudienceDatabase.getInstance().customAudienceDao(),
                         FlagsFactory.getFlags()));
     }
 

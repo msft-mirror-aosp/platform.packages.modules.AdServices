@@ -322,7 +322,7 @@ public final class ReportAndRegisterEventE2ETest extends AdServicesExtendedMocki
                                 mClickVerifierMock,
                                 mMeasurementDataDeleterMock,
                                 mContentResolverMock));
-        doReturn(mMeasurementImplSpy).when(() -> MeasurementImpl.getInstance(mContext));
+        doReturn(mMeasurementImplSpy).when(() -> MeasurementImpl.getInstance());
         doReturn(true)
                 .when(mClickVerifierMock)
                 .isInputEventVerifiable(any(), anyLong(), anyString());
@@ -349,8 +349,7 @@ public final class ReportAndRegisterEventE2ETest extends AdServicesExtendedMocki
 
         initializeReportingArtifacts();
 
-        doReturn(mDatastoreManagerSpy)
-                .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
+        doReturn(mDatastoreManagerSpy).when(() -> DatastoreManagerFactory.getDatastoreManager());
 
         mAsyncRegistrationQueueRunnerSpy =
                 spy(
