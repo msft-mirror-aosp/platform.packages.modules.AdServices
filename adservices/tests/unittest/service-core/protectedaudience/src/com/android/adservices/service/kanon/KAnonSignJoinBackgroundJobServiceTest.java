@@ -101,7 +101,7 @@ public final class KAnonSignJoinBackgroundJobServiceTest extends AdServicesJobSe
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
         doReturn(mKAnonSignJoinBackgroundJobWorkerMock)
-                .when(() -> KAnonSignJoinBackgroundJobWorker.getInstance(any()));
+                .when(KAnonSignJoinBackgroundJobWorker::getInstance);
         doReturn(false).when(() -> ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(any()));
         doReturn(FluentFuture.from(immediateFuture(null)))
                 .when(mKAnonSignJoinBackgroundJobWorkerMock)
@@ -187,7 +187,7 @@ public final class KAnonSignJoinBackgroundJobServiceTest extends AdServicesJobSe
                 new KAnonSignJoinBackgroundJobServiceTestFlags(10000, false, true);
         doReturn(testFlags).when(() -> FlagsFactory.getFlags());
         doReturn(mKAnonSignJoinBackgroundJobWorkerMock)
-                .when(() -> KAnonSignJoinBackgroundJobWorker.getInstance(mContext));
+                .when(KAnonSignJoinBackgroundJobWorker::getInstance);
 
         KAnonSignJoinBackgroundJobService.scheduleIfNeeded(mContext, false);
 

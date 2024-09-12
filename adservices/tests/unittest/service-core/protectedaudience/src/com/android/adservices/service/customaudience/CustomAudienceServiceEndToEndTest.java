@@ -50,7 +50,6 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.mock;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.spy;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
@@ -3532,96 +3531,73 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                 .when(mConsentManagerMock)
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
 
-        Throttler.destroyExistingThrottler();
-        try {
-            CustomAudienceServiceImpl customAudienceService =
-                    mService =
-                            new CustomAudienceServiceImpl(
-                                    mContext,
-                                    new CustomAudienceImpl(
-                                            mCustomAudienceDao,
-                                            mCustomAudienceQuantityCheckerMock,
-                                            mCustomAudienceValidatorMock,
-                                            CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                                            flagsWithLowRateLimit),
-                                    new FledgeAuthorizationFilter(
-                                            mContext.getPackageManager(),
-                                            EnrollmentDao.getInstance(),
-                                            mAdServicesLoggerMock),
-                                    mConsentManagerMock,
-                                    mDevContextFilter,
-                                    MoreExecutors.newDirectExecutorService(),
-                                    mAdServicesLoggerMock,
-                                    mAppImportanceFilter,
-                                    flagsWithLowRateLimit,
-                                    CallingAppUidSupplierProcessImpl.create(),
-                                    new CustomAudienceServiceFilter(
-                                            mContext,
-                                            mFledgeConsentFilterMock,
-                                            flagsWithLowRateLimit,
-                                            mAppImportanceFilter,
-                                            new FledgeAuthorizationFilter(
-                                                    mContext.getPackageManager(),
-                                                    EnrollmentDao.getInstance(),
-                                                    mAdServicesLoggerMock),
-                                            new FledgeAllowListsFilter(
-                                                    flagsWithLowRateLimit, mAdServicesLoggerMock),
-                                            new FledgeApiThrottleFilter(
-                                                    Throttler.getInstance(flagsWithLowRateLimit),
-                                                    mAdServicesLoggerMock)),
-                                    new AdFilteringFeatureFactory(
-                                            mAppInstallDao,
-                                            mFrequencyCapDao,
-                                            flagsWithLowRateLimit));
+        CustomAudienceServiceImpl customAudienceService =
+                mService =
+                        new CustomAudienceServiceImpl(
+                                mContext,
+                                new CustomAudienceImpl(
+                                        mCustomAudienceDao,
+                                        mCustomAudienceQuantityCheckerMock,
+                                        mCustomAudienceValidatorMock,
+                                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
+                                        flagsWithLowRateLimit),
+                                new FledgeAuthorizationFilter(
+                                        mContext.getPackageManager(),
+                                        EnrollmentDao.getInstance(),
+                                        mAdServicesLoggerMock),
+                                mConsentManagerMock,
+                                mDevContextFilter,
+                                MoreExecutors.newDirectExecutorService(),
+                                mAdServicesLoggerMock,
+                                mAppImportanceFilter,
+                                flagsWithLowRateLimit,
+                                CallingAppUidSupplierProcessImpl.create(),
+                                new CustomAudienceServiceFilter(
+                                        mContext,
+                                        mFledgeConsentFilterMock,
+                                        flagsWithLowRateLimit,
+                                        mAppImportanceFilter,
+                                        new FledgeAuthorizationFilter(
+                                                mContext.getPackageManager(),
+                                                EnrollmentDao.getInstance(),
+                                                mAdServicesLoggerMock),
+                                        new FledgeAllowListsFilter(
+                                                flagsWithLowRateLimit, mAdServicesLoggerMock),
+                                        new FledgeApiThrottleFilter(
+                                                Throttler.newInstance(flagsWithLowRateLimit),
+                                                mAdServicesLoggerMock)),
+                                new AdFilteringFeatureFactory(
+                                        mAppInstallDao, mFrequencyCapDao, flagsWithLowRateLimit));
 
-            // The first call should succeed
-            ResultCapturingCallback callbackFirstCall = new ResultCapturingCallback();
-            customAudienceService.joinCustomAudience(
-                    CUSTOM_AUDIENCE_PK1_1, CustomAudienceFixture.VALID_OWNER, callbackFirstCall);
+        // The first call should succeed
+        ResultCapturingCallback callbackFirstCall = new ResultCapturingCallback();
+        customAudienceService.joinCustomAudience(
+                CUSTOM_AUDIENCE_PK1_1, CustomAudienceFixture.VALID_OWNER, callbackFirstCall);
 
-            // The immediate subsequent call should be throttled
-            ResultCapturingCallback callbackSubsequentCall = new ResultCapturingCallback();
-            customAudienceService.joinCustomAudience(
-                    CUSTOM_AUDIENCE_PK1_1,
-                    CustomAudienceFixture.VALID_OWNER,
-                    callbackSubsequentCall);
+        // The immediate subsequent call should be throttled
+        ResultCapturingCallback callbackSubsequentCall = new ResultCapturingCallback();
+        customAudienceService.joinCustomAudience(
+                CUSTOM_AUDIENCE_PK1_1, CustomAudienceFixture.VALID_OWNER, callbackSubsequentCall);
 
-            assertWithMessage("First callback success")
-                    .that(callbackFirstCall.isSuccess())
-                    .isTrue();
-            assertWithMessage("Inserted CA")
-                    .that(
-                            mCustomAudienceDao.getCustomAudienceByPrimaryKey(
-                                    CustomAudienceFixture.VALID_OWNER,
-                                    CommonFixture.VALID_BUYER_1,
-                                    VALID_NAME))
-                    .isEqualTo(DB_CUSTOM_AUDIENCE_PK1_1);
+        assertWithMessage("First callback success").that(callbackFirstCall.isSuccess()).isTrue();
+        assertWithMessage("Inserted CA")
+                .that(
+                        mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                                CustomAudienceFixture.VALID_OWNER,
+                                CommonFixture.VALID_BUYER_1,
+                                VALID_NAME))
+                .isEqualTo(DB_CUSTOM_AUDIENCE_PK1_1);
 
-            assertWithMessage("Second callback success")
-                    .that(callbackSubsequentCall.isSuccess())
-                    .isFalse();
-            assertWithMessage("Second callback exception")
-                    .that(callbackSubsequentCall.getException())
-                    .isInstanceOf(LimitExceededException.class);
-            assertWithMessage("Second callback exception")
-                    .that(callbackSubsequentCall.getException())
-                    .hasMessageThat()
-                    .isEqualTo(AdServicesStatusUtils.RATE_LIMIT_REACHED_ERROR_MESSAGE);
-        } finally {
-            resetThrottlerToNoRateLimits();
-        }
-    }
-
-    /**
-     * Given Throttler is singleton, & shared across tests, this method should be invoked after
-     * tests that impose restrictive rate limits.
-     */
-    private void resetThrottlerToNoRateLimits() {
-        Throttler.destroyExistingThrottler();
-        final float noRateLimit = -1;
-        Flags mockNoRateLimitFlags = mock(Flags.class);
-        doReturn(noRateLimit).when(mockNoRateLimitFlags).getSdkRequestPermitsPerSecond();
-        Throttler.getInstance(mockNoRateLimitFlags);
+        assertWithMessage("Second callback success")
+                .that(callbackSubsequentCall.isSuccess())
+                .isFalse();
+        assertWithMessage("Second callback exception")
+                .that(callbackSubsequentCall.getException())
+                .isInstanceOf(LimitExceededException.class);
+        assertWithMessage("Second callback exception")
+                .that(callbackSubsequentCall.getException())
+                .hasMessageThat()
+                .isEqualTo(AdServicesStatusUtils.RATE_LIMIT_REACHED_ERROR_MESSAGE);
     }
 
     private void verifyFCapFiltersNotNull(DBCustomAudience dbCustomAudience) {

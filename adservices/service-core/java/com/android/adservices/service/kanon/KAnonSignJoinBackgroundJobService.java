@@ -112,7 +112,7 @@ public class KAnonSignJoinBackgroundJobService extends JobService {
     public boolean onStopJob(JobParameters params) {
         AdServicesJobServiceLogger.getInstance()
                 .recordOnStopJob(params, FLEDGE_KANON_SIGN_JOIN_BACKGROUND_JOB.getJobId(), false);
-        KAnonSignJoinBackgroundJobWorker.getInstance(this).stopWork();
+        KAnonSignJoinBackgroundJobWorker.getInstance().stopWork();
         return false;
     }
 
@@ -171,6 +171,6 @@ public class KAnonSignJoinBackgroundJobService extends JobService {
     }
 
     private FluentFuture<Void> doSignJoinBackgroundJob() {
-        return KAnonSignJoinBackgroundJobWorker.getInstance(this).runSignJoinBackgroundProcess();
+        return KAnonSignJoinBackgroundJobWorker.getInstance().runSignJoinBackgroundProcess();
     }
 }

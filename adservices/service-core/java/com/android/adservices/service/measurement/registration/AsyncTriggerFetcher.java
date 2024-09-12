@@ -94,7 +94,7 @@ public class AsyncTriggerFetcher {
                 EnrollmentDao.getInstance(),
                 FlagsFactory.getFlags(),
                 getOdpDelegationManager(context, FlagsFactory.getFlags()),
-                DatastoreManagerFactory.getDatastoreManager(context),
+                DatastoreManagerFactory.getDatastoreManager(),
                 new DebugReportApi(context, FlagsFactory.getFlags()));
     }
 

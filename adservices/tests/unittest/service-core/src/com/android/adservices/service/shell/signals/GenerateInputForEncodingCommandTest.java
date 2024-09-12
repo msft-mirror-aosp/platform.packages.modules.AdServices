@@ -117,7 +117,7 @@ public final class GenerateInputForEncodingCommandTest
     public void killAndRecreateJavascriptSandboxIsolate()
             throws ExecutionException, InterruptedException, TimeoutException {
         if (mJSScriptEngine == null) {
-            mJSScriptEngine = JSScriptEngine.getInstance(mContext, sLogger);
+            mJSScriptEngine = JSScriptEngine.getInstance(sLogger);
         }
         // Kill the JSScriptEngine to ensure it re-creates the JavascriptEngine isolate.
         mJSScriptEngine.shutdown().get(JS_SCRIPT_ENGINE_TIMEOUT_SEC, TimeUnit.SECONDS);

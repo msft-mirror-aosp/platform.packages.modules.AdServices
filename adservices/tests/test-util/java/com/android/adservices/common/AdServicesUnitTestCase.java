@@ -15,8 +15,12 @@
  */
 package com.android.adservices.common;
 
+import android.annotation.CallSuper;
+import android.content.Context;
+
 import com.android.adservices.shared.testing.common.ApplicationContextSingletonRule;
 
+import org.junit.Before;
 import org.junit.Rule;
 
 /**
@@ -29,8 +33,30 @@ import org.junit.Rule;
  */
 public abstract class AdServicesUnitTestCase extends AdServicesTestCase {
 
+    private static final String APP_CONTEXT_MSG = "should use existing mAppContext instead";
+
     @Rule(order = 5)
     public final ApplicationContextSingletonRule appContext =
             new ApplicationContextSingletonRule(/* restoreAfter= */ false);
 
+    /**
+     * Reference to the application context of this test's instrumentation package (as defined by
+     * {@link android.app.Instrumentation#getContext()}.
+     *
+     * <p>In other words, it's the same as {@code mContext.getApplicationContext()}.
+     */
+    protected Context mAppContext;
+
+    @Before
+    public final void setAdServicesUnitTestCaseFixtures() {
+        mAppContext = mContext.getApplicationContext();
+    }
+
+    @CallSuper
+    @Override
+    protected void assertValidTestCaseFixtures() throws Exception {
+        assertTestClassHasNoFieldsFromSuperclass(AdServicesUnitTestCase.class, "mAppContext");
+        assertTestClassHasNoSuchField("APPLICATION_CONTEXT", APP_CONTEXT_MSG);
+        assertTestClassHasNoSuchField("mApplicationContext", APP_CONTEXT_MSG);
+    }
 }

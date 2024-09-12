@@ -62,7 +62,7 @@ import javax.annotation.concurrent.GuardedBy;
  * <p>The class is re-entrant, for best performance when using it on multiple thread is better to
  * have every thread using its own instance.
  */
-public class JSScriptEngine {
+public final class JSScriptEngine {
 
     @VisibleForTesting public static final String TAG = JSScriptEngine.class.getSimpleName();
 
@@ -98,7 +98,7 @@ public class JSScriptEngine {
      * current version of the WebView
      */
     @VisibleForTesting
-    static class JavaScriptSandboxProvider {
+    static final class JavaScriptSandboxProvider {
         private final Object mSandboxLock = new Object();
         private StopWatch mSandboxInitStopWatch;
         private final Profiler mProfiler;
@@ -250,22 +250,16 @@ public class JSScriptEngine {
         }
     }
 
+    // TODO(b/365833970): should not take any argument
     /**
      * @return JSScriptEngine instance
      */
     public static JSScriptEngine getInstance(LoggerFactory.Logger logger) {
-        return getInstance(ApplicationContextSingleton.get(), logger);
-    }
-
-    /**
-     * @return JSScriptEngine instance
-     */
-    @VisibleForTesting
-    public static JSScriptEngine getInstance(Context context, LoggerFactory.Logger logger) {
         synchronized (sJSScriptEngineLock) {
             if (sSingleton == null) {
                 logger.d("Creating new instance for JSScriptEngine");
                 Profiler profiler = Profiler.createNoOpInstance(TAG);
+                Context context = ApplicationContextSingleton.get();
                 sSingleton =
                         new JSScriptEngine(
                                 context,
@@ -286,7 +280,7 @@ public class JSScriptEngine {
      */
     @VisibleForTesting
     public static JSScriptEngine getInstanceForTesting(
-            Context context, Profiler profiler, LoggerFactory.Logger logger) {
+            Profiler profiler, LoggerFactory.Logger logger) {
         synchronized (sJSScriptEngineLock) {
             // If there is no instance already created or the instance was shutdown
             if (sSingleton != null) {
@@ -294,6 +288,7 @@ public class JSScriptEngine {
                         "Unable to initialize test JSScriptEngine multiple times using"
                                 + "the real JavaScriptSandboxProvider.");
             }
+            Context context = ApplicationContextSingleton.get();
             logger.d("Creating new instance for JSScriptEngine");
             sSingleton =
                     new JSScriptEngine(

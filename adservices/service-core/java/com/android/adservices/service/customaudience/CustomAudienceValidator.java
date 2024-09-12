@@ -20,10 +20,10 @@ import android.adservices.common.AdData;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudience;
 import android.annotation.NonNull;
-import android.content.Context;
 
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
 import com.android.adservices.service.common.AdDataValidator;
 import com.android.adservices.service.common.AdRenderIdValidator;
@@ -111,13 +111,10 @@ public class CustomAudienceValidator implements Validator<CustomAudience> {
      * <p>If no instance has been initialized yet, a new one will be created. Otherwise, the
      * existing instance will be returned.
      */
-    @NonNull
-    public static CustomAudienceValidator getInstance(
-            @NonNull Context context, @NonNull Flags flags) {
-        Objects.requireNonNull(context, "Context must be provided.");
-        Objects.requireNonNull(flags, "Flags must be provided.");
+    public static CustomAudienceValidator getInstance() {
         synchronized (SINGLETON_LOCK) {
             if (sSingleton == null) {
+                Flags flags = FlagsFactory.getFlags();
                 sSingleton =
                         new CustomAudienceValidator(
                                 Clock.systemUTC(),

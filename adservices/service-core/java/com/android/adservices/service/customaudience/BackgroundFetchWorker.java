@@ -37,6 +37,7 @@ import com.android.adservices.service.common.SingletonRunner;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
 import com.android.adservices.service.stats.BackgroundFetchExecutionLogger;
 import com.android.adservices.service.stats.CustomAudienceLoggerFactory;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
@@ -46,6 +47,7 @@ import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.errorprone.annotations.concurrent.GuardedBy;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -56,10 +58,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 /** Worker instance for updating custom audiences in the background. */
-public class BackgroundFetchWorker {
+public final class BackgroundFetchWorker {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     public static final String JOB_DESCRIPTION = "FLEDGE background fetch";
     private static final Object SINGLETON_LOCK = new Object();
+
+    @GuardedBy("SINGLETON_LOCK")
     private static volatile BackgroundFetchWorker sBackgroundFetchWorker;
 
     private final CustomAudienceDao mCustomAudienceDao;
@@ -94,13 +98,11 @@ public class BackgroundFetchWorker {
      *
      * <p>If an instance hasn't been initialized, a new singleton will be created and returned.
      */
-    @NonNull
-    public static BackgroundFetchWorker getInstance(@NonNull Context context) {
-        Objects.requireNonNull(context);
-
+    public static BackgroundFetchWorker getInstance() {
         if (sBackgroundFetchWorker == null) {
             synchronized (SINGLETON_LOCK) {
                 if (sBackgroundFetchWorker == null) {
+                    Context context = ApplicationContextSingleton.get();
                     CustomAudienceDao customAudienceDao =
                             CustomAudienceDatabase.getInstance().customAudienceDao();
                     AppInstallDao appInstallDao =

@@ -109,10 +109,9 @@ public final class AdServicesExtDataStorageServiceManagerTest
         doReturn(INVOCATION_TIMEOUT).when(mMockFlags).getAdExtWriteTimeoutMs();
         mocker.mockGetFlags(mMockFlags);
 
-        doReturn(mMockWorker)
-                .when(() -> AdServicesExtDataStorageServiceWorker.getInstance(mContext));
+        doReturn(mMockWorker).when(AdServicesExtDataStorageServiceWorker::getInstance);
         doReturn(mAdServicesLogger).when(AdServicesLoggerImpl::getInstance);
-        mManager = AdServicesExtDataStorageServiceManager.getInstance(mContext);
+        mManager = AdServicesExtDataStorageServiceManager.getInstance();
 
         mocker.mockAllCobaltLoggingFlags(false);
     }

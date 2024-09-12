@@ -148,7 +148,7 @@ public final class AttributionJobService extends JobService {
     @VisibleForTesting
     ProcessingResult processPendingAttributions() {
         return new AttributionJobHandler(
-                        DatastoreManagerFactory.getDatastoreManager(getApplicationContext()),
+                        DatastoreManagerFactory.getDatastoreManager(),
                         new DebugReportApi(getApplicationContext(), FlagsFactory.getFlags()))
                 .performPendingAttributions();
     }

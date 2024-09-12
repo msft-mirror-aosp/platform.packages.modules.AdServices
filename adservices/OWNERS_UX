@@ -1,5 +1,4 @@
 # Bug component: 1159752
-set noparent
 
 albertkong@google.com
 ardroid@google.com
@@ -7,5 +6,4 @@ bozhaobz@google.com
 chenjiahui@google.com
 tccyp@google.com
 
-per-file AdExtServicesManifest.xml = set noparent
 per-file AdExtServicesManifest.xml = file: platform/packages/modules/AdServices:/adservices/OWNERS_AD_EXT_SERVICES

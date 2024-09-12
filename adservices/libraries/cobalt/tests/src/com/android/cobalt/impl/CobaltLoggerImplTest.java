@@ -35,6 +35,7 @@ import com.android.cobalt.data.StringHashEntity;
 import com.android.cobalt.data.TestOnlyDao;
 import com.android.cobalt.data.TestOnlyDao.AggregateStoreTableRow;
 import com.android.cobalt.domain.Project;
+import com.android.cobalt.domain.ReportIdentifier;
 import com.android.cobalt.logging.CobaltOperationLogger;
 import com.android.cobalt.system.SystemData;
 import com.android.cobalt.testing.logging.FakeCobaltOperationLogger;
@@ -191,6 +192,7 @@ public class CobaltLoggerImplTest {
                         mSystemData,
                         sExecutor,
                         mClock,
+                        /* reportsToIgnore= */ List.of(),
                         /* enabled= */ true);
     }
 
@@ -465,6 +467,7 @@ public class CobaltLoggerImplTest {
                         mSystemData,
                         sExecutor,
                         mClock,
+                        /* reportsToIgnore= */ List.of(),
                         /* enabled= */ false);
 
         // Log some data.
@@ -507,6 +510,7 @@ public class CobaltLoggerImplTest {
                         mSystemData,
                         sExecutor,
                         mClock,
+                        /* reportsToIgnore= */ List.of(),
                         /* enabled= */ true);
 
         // Log some data.
@@ -548,6 +552,7 @@ public class CobaltLoggerImplTest {
                         mSystemData,
                         sExecutor,
                         mClock,
+                        /* reportsToIgnore= */ List.of(),
                         /* enabled= */ true);
 
         // Log some data.
@@ -850,6 +855,7 @@ public class CobaltLoggerImplTest {
                         mSystemData,
                         sExecutor,
                         mClock,
+                        /* reportsToIgnore= */ List.of(),
                         /* enabled= */ false);
 
         // Log some data.
@@ -892,6 +898,7 @@ public class CobaltLoggerImplTest {
                         mSystemData,
                         sExecutor,
                         mClock,
+                        /* reportsToIgnore= */ List.of(),
                         /* enabled= */ true);
 
         // Log some data.
@@ -934,6 +941,7 @@ public class CobaltLoggerImplTest {
                         mSystemData,
                         sExecutor,
                         mClock,
+                        /* reportsToIgnore= */ List.of(),
                         /* enabled= */ true);
 
         // Log some data.
@@ -944,6 +952,63 @@ public class CobaltLoggerImplTest {
                 .get();
 
         // Check that no report data was added to the DB.
+        assertThat(mTestOnlyDao.getStringHashes()).isEmpty();
+        assertThat(mTestOnlyDao.getAllAggregates()).isEmpty();
+    }
+
+    @Test
+    public void testLogOccurrence_reportsToIgnore_notLoggedTo() throws Exception {
+        CobaltLogger logger =
+                new CobaltLoggerImpl(
+                        COBALT_REGISTRY,
+                        ReleaseStage.DEBUG,
+                        mDataService,
+                        mSystemData,
+                        sExecutor,
+                        mClock,
+                        List.of(
+                                ReportIdentifier.create(
+                                        (int) ONE_REPORT.customerId(),
+                                        (int) ONE_REPORT.projectId(),
+                                        (int) ONE_REPORT.metricId(),
+                                        (int) ONE_REPORT.reportId())),
+                        /* enabled= */ true);
+
+        // Log some data.
+        logger.logOccurrence(
+                        ONE_REPORT.metricId(),
+                        /* count= */ 1,
+                        /* eventCodes= */ ImmutableList.of(1, 2))
+                .get();
+
+        assertThat(mTestOnlyDao.getAllAggregates()).isEmpty();
+    }
+
+    @Test
+    public void testLogString_reportsToIgnore_notLoggedTo() throws Exception {
+        CobaltLogger logger =
+                new CobaltLoggerImpl(
+                        COBALT_REGISTRY,
+                        ReleaseStage.DEBUG,
+                        mDataService,
+                        mSystemData,
+                        sExecutor,
+                        mClock,
+                        List.of(
+                                ReportIdentifier.create(
+                                        (int) STRING_REPORT.customerId(),
+                                        (int) STRING_REPORT.projectId(),
+                                        (int) STRING_REPORT.metricId(),
+                                        (int) STRING_REPORT.reportId())),
+                        /* enabled= */ true);
+
+        // Log some data.
+        logger.logString(
+                        STRING_REPORT.metricId(),
+                        /* stringValue= */ "STRING",
+                        /* eventCodes= */ ImmutableList.of(1, 2))
+                .get();
+
         assertThat(mTestOnlyDao.getStringHashes()).isEmpty();
         assertThat(mTestOnlyDao.getAllAggregates()).isEmpty();
     }

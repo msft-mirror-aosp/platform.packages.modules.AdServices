@@ -98,7 +98,7 @@ public class ScheduleCustomAudienceUpdateJobService extends JobService {
         }
 
         ScheduleCustomAudienceUpdateWorker updateWorker =
-                ScheduleCustomAudienceUpdateWorker.getInstance(this);
+                ScheduleCustomAudienceUpdateWorker.getInstance();
         updateWorker
                 .updateCustomAudience()
                 .addCallback(
@@ -139,7 +139,7 @@ public class ScheduleCustomAudienceUpdateJobService extends JobService {
     @Override
     public boolean onStopJob(JobParameters params) {
         LoggerFactory.getFledgeLogger().d("ScheduleCustomAudienceUpdateJobService.onStopJob");
-        ScheduleCustomAudienceUpdateWorker.getInstance(this).stopWork();
+        ScheduleCustomAudienceUpdateWorker.getInstance().stopWork();
 
         boolean shouldRetry = true;
         AdServicesJobServiceLogger.getInstance()

@@ -166,8 +166,7 @@ public final class VerboseDebugReportingJobService extends JobService {
                         "VerboseDebugReportingJobService",
                         () -> {
                             DatastoreManager datastoreManager =
-                                    DatastoreManagerFactory.getDatastoreManager(
-                                            getApplicationContext());
+                                    DatastoreManagerFactory.getDatastoreManager();
                             new DebugReportingJobHandler(
                                             datastoreManager,
                                             FlagsFactory.getFlags(),

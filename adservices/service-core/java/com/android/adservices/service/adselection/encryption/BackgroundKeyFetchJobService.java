@@ -109,7 +109,7 @@ public class BackgroundKeyFetchJobService extends JobService {
         LoggerFactory.getFledgeLogger()
                 .d("Starting FLEDGE key fetch job at %s", jobStartTime.toString());
 
-        BackgroundKeyFetchWorker.getInstance(this)
+        BackgroundKeyFetchWorker.getInstance()
                 .runBackgroundKeyFetch()
                 .addCallback(
                         new FutureCallback<Void>() {
@@ -171,7 +171,7 @@ public class BackgroundKeyFetchJobService extends JobService {
     @Override
     public boolean onStopJob(JobParameters params) {
         LoggerFactory.getFledgeLogger().d("BackgroundKeyFetchJobService.onStopJob");
-        BackgroundKeyFetchWorker.getInstance(this).stopWork();
+        BackgroundKeyFetchWorker.getInstance().stopWork();
 
         boolean shouldRetry = true;
 

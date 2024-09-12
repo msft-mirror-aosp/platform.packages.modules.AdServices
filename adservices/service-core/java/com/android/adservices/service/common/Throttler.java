@@ -16,11 +16,11 @@
 
 package com.android.adservices.service.common;
 
-import android.annotation.NonNull;
-import android.os.Binder;
+import android.util.Log;
 import android.util.Pair;
 
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.RateLimiter;
@@ -31,7 +31,10 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 /** Class to throttle PPAPI requests. */
-public class Throttler {
+public final class Throttler {
+
+    private static final String TAG = Throttler.class.getSimpleName();
+
     // Enum for each PP API or entry point that will be throttled.
     public enum ApiKey {
         UNKNOWN,
@@ -101,7 +104,6 @@ public class Throttler {
         TOPICS_API_SDK_NAME,
     }
 
-    private static volatile Throttler sSingleton;
     private static final double DEFAULT_RATE_LIMIT = 1d;
 
     // A Map from a Pair<ApiKey, Requester> to its RateLimiter.
@@ -116,36 +118,33 @@ public class Throttler {
     // - MEASUREMENT_API_REGISTER_SOURCE, 5 requests per second
     private final Map<ApiKey, Double> mRateLimitPerApiMap = new HashMap<>();
 
-    /** Returns the singleton instance of the Throttler. */
-    @NonNull
-    public static Throttler getInstance(@NonNull Flags flags) {
-        Objects.requireNonNull(flags);
-        synchronized (Throttler.class) {
-            if (null == sSingleton) {
-                // Clearing calling identity to check device config permission read by flags on the
-                // local process and not on the process called. Once the device configs are read,
-                // restore calling identity.
-                final long token = Binder.clearCallingIdentity();
-                sSingleton = new Throttler(flags);
-                Binder.restoreCallingIdentity(token);
-            }
-            return sSingleton;
+    // Lazy initialization holder class idiom for static fields as described in Effective Java Item
+    // 83 - this is needed because otherwise the singleton would be initialized in unit tests, even
+    // when they (correctly) call newInstance() instead of getInstance().
+    private static final class FieldHolder {
+        private static final Throttler sSingleton;
+
+        static {
+            Flags flags = FlagsFactory.getFlags();
+            Log.v(TAG, "Initializing singleton with " + flags);
+            sSingleton = new Throttler(flags);
         }
     }
 
-    @VisibleForTesting
-    Throttler(Flags flags) {
-        setRateLimitPerApiMap(flags);
+    /** Returns the singleton instance of the Throttler. */
+    public static Throttler getInstance() {
+        return FieldHolder.sSingleton;
     }
 
-    /**
-     * The throttler is a Singleton and does not allow changing the rate limits once initialised,
-     * therefore it is not feasible to test different throttling policies across tests without
-     * destroying the previous instance. Intended to be used in test cases only.
-     */
+    /** Factory method - should only be used for tests. */
     @VisibleForTesting
-    public static void destroyExistingThrottler() {
-        sSingleton = null;
+    public static Throttler newInstance(Flags flags) {
+        return new Throttler(flags);
+    }
+
+    private Throttler(Flags flags) {
+        Objects.requireNonNull(flags, "flags cannot be null");
+        setRateLimitPerApiMap(flags);
     }
 
     /**

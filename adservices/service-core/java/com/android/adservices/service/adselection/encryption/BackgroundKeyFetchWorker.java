@@ -42,6 +42,7 @@ import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
 import com.android.adservices.service.stats.FetchProcessLogger;
 import com.android.adservices.service.stats.ServerAuctionBackgroundKeyFetchScheduledStats;
 import com.android.adservices.service.stats.ServerAuctionKeyFetchExecutionLoggerFactory;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.base.Strings;
@@ -49,6 +50,7 @@ import com.google.common.util.concurrent.ExecutionSequencer;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.errorprone.annotations.concurrent.GuardedBy;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -62,11 +64,14 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /** Worker instance for fetching encryption keys and persisting to DB. */
-public class BackgroundKeyFetchWorker {
+public final class BackgroundKeyFetchWorker {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     public static final String JOB_DESCRIPTION = "Ad selection data encryption key fetch job";
     private static final Object SINGLETON_LOCK = new Object();
+
+    @GuardedBy("SINGLETON_LOCK")
     private static volatile BackgroundKeyFetchWorker sBackgroundKeyFetchWorker;
+
     private final ProtectedServersEncryptionConfigManagerBase mKeyConfigManager;
     private final DevContext mDevContext;
     private final Flags mFlags;
@@ -99,12 +104,11 @@ public class BackgroundKeyFetchWorker {
      * initialized, a new singleton will be created and returned.
      */
     @NonNull
-    public static BackgroundKeyFetchWorker getInstance(@NonNull Context context) {
-        Objects.requireNonNull(context);
-
+    public static BackgroundKeyFetchWorker getInstance() {
         if (sBackgroundKeyFetchWorker == null) {
             synchronized (SINGLETON_LOCK) {
                 if (sBackgroundKeyFetchWorker == null) {
+                    Context context = ApplicationContextSingleton.get();
                     Flags flags = FlagsFactory.getFlags();
                     AdServicesHttpsClient adServicesHttpsClient =
                             new AdServicesHttpsClient(

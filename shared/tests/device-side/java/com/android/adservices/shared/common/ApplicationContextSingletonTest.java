@@ -38,7 +38,7 @@ public final class ApplicationContextSingletonTest extends SharedMockitoTestCase
     @Before
     @After
     public void resetState() {
-        ApplicationContextSingleton.setForTests(/* context= */ null);
+        ApplicationContextSingleton.setAsIs(/* context= */ null);
     }
 
     @Test
@@ -101,10 +101,14 @@ public final class ApplicationContextSingletonTest extends SharedMockitoTestCase
     }
 
     @Test
-    public void testSetForTests() {
-        ApplicationContextSingleton.setForTests(mMockContext);
+    public void testSetAsIs() {
+        Context returnedContext = ApplicationContextSingleton.setAsIs(mMockContext);
 
-        assertWithMessage("get()")
+        expect.withMessage("value returned by setAsIs()")
+                .that(returnedContext)
+                .isSameInstanceAs(mMockContext);
+
+        expect.withMessage("get()")
                 .that(ApplicationContextSingleton.get())
                 .isSameInstanceAs(mMockContext);
     }

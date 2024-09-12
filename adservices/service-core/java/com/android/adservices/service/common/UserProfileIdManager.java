@@ -16,9 +16,7 @@
 
 package com.android.adservices.service.common;
 
-import android.annotation.NonNull;
 import android.annotation.Nullable;
-import android.content.Context;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.common.UserProfileIdDao;
@@ -31,7 +29,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 /** Manager of user profile id. */
-public class UserProfileIdManager {
+public final class UserProfileIdManager {
     private static final LoggerFactory.Logger LOGGER = LoggerFactory.getFledgeLogger();
 
     private static final Object SINGLETON_LOCK = new Object();
@@ -45,8 +43,7 @@ public class UserProfileIdManager {
     @VisibleForTesting static final long MILLISECONDS_IN_DAY = 1000 * 60 * 60 * 24;
 
     @VisibleForTesting
-    public UserProfileIdManager(
-            @NonNull final UserProfileIdDao userProfileIdDao, @NonNull Clock clock) {
+    public UserProfileIdManager(final UserProfileIdDao userProfileIdDao, Clock clock) {
         Objects.requireNonNull(userProfileIdDao);
         Objects.requireNonNull(clock);
 
@@ -55,13 +52,12 @@ public class UserProfileIdManager {
     }
 
     /** Returns the singleton instance of the {@link UserProfileIdManager} */
-    public static UserProfileIdManager getInstance(@NonNull final Context context) {
-        Objects.requireNonNull(context, "Context must be provided.");
+    public static UserProfileIdManager getInstance() {
         synchronized (SINGLETON_LOCK) {
             if (sUserProfileIdManager == null) {
                 sUserProfileIdManager =
                         new UserProfileIdManager(
-                                UserProfileIdDaoSharedPreferencesImpl.getInstance(context),
+                                UserProfileIdDaoSharedPreferencesImpl.getInstance(),
                                 Clock.getInstance());
             }
             return sUserProfileIdManager;

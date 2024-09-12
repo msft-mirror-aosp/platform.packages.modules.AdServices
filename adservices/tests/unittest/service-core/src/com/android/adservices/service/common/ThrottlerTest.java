@@ -36,6 +36,12 @@ import org.junit.Test;
 
 /** Unit tests for {@link Throttler}. */
 public final class ThrottlerTest extends AdServicesMockitoTestCase {
+
+    @Test
+    public void testNewInstance_null() {
+        assertThrows(NullPointerException.class, () -> Throttler.newInstance(null));
+    }
+
     @Test
     public void testTryAcquire_skdName() throws InterruptedException {
         // Create a throttler with 1 permit per second.
@@ -122,7 +128,7 @@ public final class ThrottlerTest extends AdServicesMockitoTestCase {
         doReturn(7F).when(mMockFlags).getMeasurementRegisterWebTriggerRequestPermitsPerSecond();
         doReturn(8F).when(mMockFlags).getMeasurementRegisterSourcesRequestPermitsPerSecond();
 
-        Throttler throttler = new Throttler(mMockFlags);
+        Throttler throttler = Throttler.newInstance(mMockFlags);
 
         // Default ApiKey configured with 1 request per second
         assertAcquireSeveralTimes(throttler, UNKNOWN, 1);
@@ -150,31 +156,16 @@ public final class ThrottlerTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void testGetInstance_withOnePermitPerSecond() {
-        // Reset throttler state. There is no guarantee another class has initialized the Throttler
-        // using getInstance, therefore destroying the throttler before testing. This is the only
-        // method using getInstance while the others are using the constructor, therefore there is
-        // no need to add this to the setup and tear down test phase.
-        Throttler.destroyExistingThrottler();
-
+    public void testThrottler_withOnePermitPerSecond() {
         // Create a throttler with 1 permit per second from getInstance.
         mockFlags(1F);
-        Throttler throttler = Throttler.getInstance(mMockFlags);
+        Throttler throttler = Throttler.newInstance(mMockFlags);
 
         // tryAcquire should return false after 1 permit
         assertAcquireSeveralTimes(throttler, MEASUREMENT_API_REGISTER_SOURCE, 1);
 
         // Calling a different API. tryAcquire should return false after 1 permit
         assertAcquireSeveralTimes(throttler, MEASUREMENT_API_REGISTER_TRIGGER, 1);
-
-        // Reset throttler state.
-        // If another class calls getInstance, it can be initialized to its original state
-        Throttler.destroyExistingThrottler();
-    }
-
-    @Test
-    public void testGetInstance_onEmptyFlags_throwNullPointerException() {
-        assertThrows(NullPointerException.class, () -> Throttler.getInstance(null));
     }
 
     private void assertAcquireSeveralTimes(
@@ -188,7 +179,7 @@ public final class ThrottlerTest extends AdServicesMockitoTestCase {
 
     private Throttler createThrottler(float permitsPerSecond) {
         mockFlags(permitsPerSecond);
-        return new Throttler(mMockFlags);
+        return Throttler.newInstance(mMockFlags);
     }
 
     private void mockFlags(float permitsPerSecond) {
