@@ -98,20 +98,17 @@ public final class ApplicationContextSingleton {
         return context;
     }
 
+    // TODO(b/285300419): make it package protected so it's only accessed by rule
     /**
-     * Sets the application context singleton as the given {@code context} "as is", without doing
-     * any check.
+     * Sets the application context singleton as the given {@code context}, without doing any check.
      *
-     * <p>Should only be used on unit tests or some exceptional cases (like from {@code
-     * SystemServer}) - most production code should call {@link #set(Context)} instead.
-     *
-     * @return the same context
+     * <p>Should only be used on unit tests - production code should call {@link #set(Context)
+     * instead.
      */
     @VisibleForTesting
-    public static Context setAsIs(Context context) {
-        LogUtil.i("setAsIs(): from %s to %s.", sContext.get(), context);
+    public static void setForTests(Context context) {
+        LogUtil.i("setForTests(): from %s to %s.", sContext.get(), context);
         sContext.set(context);
-        return context;
     }
 
     private ApplicationContextSingleton() {
