@@ -205,7 +205,7 @@ public final class TriggerEncodingCommandE2ETest extends AdServicesExtendedMocki
                         CacheProviderFactory.createNoOpCache());
         EncoderLogicHandler encoderLogicHandler =
                 new EncoderLogicHandler(
-                        EncoderPersistenceDao.getInstance(mContext),
+                        EncoderPersistenceDao.getInstance(),
                         mEncoderEndpointDao,
                         mEncoderLogicMetadataDao,
                         mProtectedSignalsDao,

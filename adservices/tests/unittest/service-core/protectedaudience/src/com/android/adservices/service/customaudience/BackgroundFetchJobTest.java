@@ -87,7 +87,7 @@ public final class BackgroundFetchJobTest extends AdServicesJobTestCase {
         when(mMockConsentManager.getConsent(FLEDGE)).thenReturn(GIVEN);
 
         // Mock BackgroundFetchWorker.
-        doReturn(mMockBackgroundFetchWorker).when(() -> BackgroundFetchWorker.getInstance(any()));
+        doReturn(mMockBackgroundFetchWorker).when(BackgroundFetchWorker::getInstance);
         when(mMockBackgroundFetchWorker.runBackgroundFetch())
                 .thenReturn(FluentFuture.from(Futures.immediateVoidFuture()));
     }
