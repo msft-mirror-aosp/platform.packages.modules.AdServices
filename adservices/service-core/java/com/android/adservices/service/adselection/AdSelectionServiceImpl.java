@@ -322,8 +322,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         new FledgeAllowListsFilter(
                                 FlagsFactory.getFlags(), AdServicesLoggerImpl.getInstance()),
                         new FledgeApiThrottleFilter(
-                                Throttler.getInstance(FlagsFactory.getFlags()),
-                                AdServicesLoggerImpl.getInstance())),
+                                Throttler.getInstance(), AdServicesLoggerImpl.getInstance())),
                 new AdFilteringFeatureFactory(
                         SharedStorageDatabase.getInstance().appInstallDao(),
                         SharedStorageDatabase.getInstance().frequencyCapDao(),
@@ -1017,7 +1016,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         MeasurementImpl measurementService;
         final long token = Binder.clearCallingIdentity();
         try {
-            measurementService = MeasurementImpl.getInstance(mContext);
+            measurementService = MeasurementImpl.getInstance();
         } finally {
             Binder.restoreCallingIdentity(token);
         }

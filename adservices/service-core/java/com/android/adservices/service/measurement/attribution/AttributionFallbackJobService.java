@@ -120,8 +120,7 @@ public final class AttributionFallbackJobService extends JobService {
                         "AttributionFallbackJobService",
                         () -> {
                             new AttributionJobHandler(
-                                            DatastoreManagerFactory.getDatastoreManager(
-                                                    getApplicationContext()),
+                                            DatastoreManagerFactory.getDatastoreManager(),
                                             new DebugReportApi(
                                                     getApplicationContext(),
                                                     FlagsFactory.getFlags()))

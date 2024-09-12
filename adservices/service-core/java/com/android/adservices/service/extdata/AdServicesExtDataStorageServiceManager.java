@@ -43,8 +43,6 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.extdata.AdServicesExtDataParams;
 import android.adservices.extdata.AdServicesExtDataStorageService;
-import android.annotation.NonNull;
-import android.content.Context;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.errorlogging.ErrorLogUtil;
@@ -53,6 +51,7 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.ApiCallStats;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.adservices.shared.util.Clock;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -99,9 +98,9 @@ public final class AdServicesExtDataStorageServiceManager {
     private final String mPackageName;
 
     private AdServicesExtDataStorageServiceManager(
-            @NonNull AdServicesExtDataStorageServiceWorker dataWorker,
-            @NonNull AdServicesLogger adServicesLogger,
-            @NonNull String packageName) {
+            AdServicesExtDataStorageServiceWorker dataWorker,
+            AdServicesLogger adServicesLogger,
+            String packageName) {
         mDataWorker = Objects.requireNonNull(dataWorker);
         mAdServicesLogger = Objects.requireNonNull(adServicesLogger);
         mPackageName = Objects.requireNonNull(packageName);
@@ -109,13 +108,11 @@ public final class AdServicesExtDataStorageServiceManager {
     }
 
     /** Init {@link AdServicesExtDataStorageServiceManager}. */
-    @NonNull
-    public static AdServicesExtDataStorageServiceManager getInstance(@NonNull Context context) {
-        Objects.requireNonNull(context);
+    public static AdServicesExtDataStorageServiceManager getInstance() {
         return new AdServicesExtDataStorageServiceManager(
-                AdServicesExtDataStorageServiceWorker.getInstance(context),
+                AdServicesExtDataStorageServiceWorker.getInstance(),
                 AdServicesLoggerImpl.getInstance(),
-                context.getPackageName());
+                ApplicationContextSingleton.get().getPackageName());
     }
 
     /**
@@ -123,7 +120,6 @@ public final class AdServicesExtDataStorageServiceManager {
      *
      * @return {@link AdServicesExtDataParams} data object with the current state of AdExt data.
      */
-    @NonNull
     public AdServicesExtDataParams getAdServicesExtData() {
         long startServiceTime = mClock.elapsedRealtime();
         CountDownLatch latch = new CountDownLatch(1);
@@ -152,7 +148,7 @@ public final class AdServicesExtDataStorageServiceManager {
                     }
 
                     @Override
-                    public void onError(@NonNull Exception e) {
+                    public void onError(Exception e) {
                         LogUtil.e(e, "Error when getting AdExt data! Returning default values.");
                         ErrorLogUtil.e(
                                 e,
@@ -212,8 +208,7 @@ public final class AdServicesExtDataStorageServiceManager {
      * @return true if update is successful; false otherwise.
      */
     public boolean setAdServicesExtData(
-            @NonNull AdServicesExtDataParams params,
-            @NonNull @AdServicesExtDataFieldId int[] fieldsToUpdate) {
+            AdServicesExtDataParams params, @AdServicesExtDataFieldId int[] fieldsToUpdate) {
         Objects.requireNonNull(params);
         Objects.requireNonNull(fieldsToUpdate);
 
@@ -240,7 +235,7 @@ public final class AdServicesExtDataStorageServiceManager {
                     }
 
                     @Override
-                    public void onError(@NonNull Exception e) {
+                    public void onError(Exception e) {
                         LogUtil.e(e, "Exception when updating AdExt data!");
                         ErrorLogUtil.e(
                                 e,
@@ -418,7 +413,7 @@ public final class AdServicesExtDataStorageServiceManager {
                     }
 
                     @Override
-                    public void onError(@NonNull Exception e) {
+                    public void onError(Exception e) {
                         // TODO (b/301163895) Add logging to capture deletion failure.
                         LogUtil.e(e, "Exception when clearing AdExt data!");
                     }

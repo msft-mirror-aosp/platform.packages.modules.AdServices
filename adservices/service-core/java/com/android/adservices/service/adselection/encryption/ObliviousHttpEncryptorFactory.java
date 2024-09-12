@@ -40,7 +40,7 @@ public class ObliviousHttpEncryptorFactory {
                         CacheProviderFactory.create(mContext, FlagsFactory.getFlags()));
         AdSelectionEncryptionKeyManager encryptionKeyManager =
                 new AdSelectionEncryptionKeyManager(
-                        AdSelectionServerDatabase.getInstance(mContext).encryptionKeyDao(),
+                        AdSelectionServerDatabase.getInstance().encryptionKeyDao(),
                         FlagsFactory.getFlags(),
                         adServicesHttpsClient,
                         AdServicesExecutors.getLightWeightExecutor(),

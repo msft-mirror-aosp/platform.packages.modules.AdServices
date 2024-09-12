@@ -9907,7 +9907,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     @Ignore("b/271652362")
     @Test
     public void testReportEvent_callbackErrorReported() throws Exception {
-        doReturn(mMeasurementServiceMock).when(() -> MeasurementImpl.getInstance(any()));
+        doReturn(mMeasurementServiceMock).when(MeasurementImpl::getInstance);
 
         Uri biddingLogicUri = (mMockWebServerRule.uriForPath(mFetchJavaScriptPathBuyer));
 
@@ -9964,7 +9964,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testReportEvent_disabled_failsFast() throws Exception {
-        doReturn(mMeasurementServiceMock).when(() -> MeasurementImpl.getInstance(any()));
+        doReturn(mMeasurementServiceMock).when(MeasurementImpl::getInstance);
 
         // Generate service instance with feature disabled.
         mFakeFlags =
@@ -10024,7 +10024,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         .setReportingDestinations(FLAG_REPORTING_DESTINATION_BUYER)
                         .build();
 
-        doReturn(mMeasurementServiceMock).when(() -> MeasurementImpl.getInstance(any()));
+        doReturn(mMeasurementServiceMock).when(MeasurementImpl::getInstance);
 
         // Count down callback + log interaction.
         ReportInteractionTestCallback callback =
