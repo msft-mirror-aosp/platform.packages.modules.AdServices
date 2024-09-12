@@ -42,6 +42,7 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.attribution.TriggerContentProvider;
 import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
+import com.android.adservices.service.measurement.reporting.AggregateDebugReportApi;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.util.Applications;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
@@ -74,6 +75,7 @@ public class AsyncRegistrationQueueRunner {
     private final AsyncTriggerFetcher mAsyncTriggerFetcher;
     private final ContentResolver mContentResolver;
     private final DebugReportApi mDebugReportApi;
+    private final AggregateDebugReportApi mAdrApi;
     private final SourceNoiseHandler mSourceNoiseHandler;
     private final Flags mFlags;
     private final AdServicesLogger mLogger;
@@ -87,6 +89,7 @@ public class AsyncRegistrationQueueRunner {
         mContentResolver = context.getContentResolver();
         mFlags = FlagsFactory.getFlags();
         mDebugReportApi = new DebugReportApi(context, mFlags);
+        mAdrApi = new AggregateDebugReportApi(mFlags);
         mSourceNoiseHandler = new SourceNoiseHandler(mFlags);
         mLogger = AdServicesLoggerImpl.getInstance();
     }
@@ -99,6 +102,7 @@ public class AsyncRegistrationQueueRunner {
             AsyncTriggerFetcher asyncTriggerFetcher,
             DatastoreManager datastoreManager,
             DebugReportApi debugReportApi,
+            AggregateDebugReportApi adrApi,
             SourceNoiseHandler sourceNoiseHandler,
             Flags flags) {
         this(
@@ -108,6 +112,7 @@ public class AsyncRegistrationQueueRunner {
                 asyncTriggerFetcher,
                 datastoreManager,
                 debugReportApi,
+                adrApi,
                 sourceNoiseHandler,
                 flags,
                 AdServicesLoggerImpl.getInstance());
@@ -121,6 +126,7 @@ public class AsyncRegistrationQueueRunner {
             AsyncTriggerFetcher asyncTriggerFetcher,
             DatastoreManager datastoreManager,
             DebugReportApi debugReportApi,
+            AggregateDebugReportApi adrApi,
             SourceNoiseHandler sourceNoiseHandler,
             Flags flags,
             AdServicesLogger logger) {
@@ -130,6 +136,7 @@ public class AsyncRegistrationQueueRunner {
         mDatastoreManager = datastoreManager;
         mContentResolver = contentResolver;
         mDebugReportApi = debugReportApi;
+        mAdrApi = adrApi;
         mSourceNoiseHandler = sourceNoiseHandler;
         mFlags = flags;
         mLogger = logger;
@@ -302,16 +309,19 @@ public class AsyncRegistrationQueueRunner {
                 asyncRegistration.getType() == AsyncRegistration.RegistrationType.WEB_SOURCE
                         ? EventSurfaceType.WEB
                         : EventSurfaceType.APP;
+        Set<DebugReportApi.Type> adrTypes = new HashSet<>();
         // Build and validate privacy parameters before creating the source's noised status.
-        if (!areValidSourcePrivacyParameters(source, mDebugReportApi, dao, mFlags)) {
+        if (!areValidSourcePrivacyParameters(source, dao, mFlags, adrTypes)) {
+            mAdrApi.scheduleSourceRegistrationDebugReport(source, adrTypes, dao);
             return;
         }
-        // Create the source's noised status so it's available to ascertain debug report types.
+        // Create the source's noised status, so it's available to ascertain debug report types.
         List<Source.FakeReport> fakeReports =
                 mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(source);
         // TODO(b/336403550) : Refactor isSourceAllowedToInsert out of this class
         InsertSourcePermission sourceAllowedToInsert =
-                isSourceAllowedToInsert(source, topOrigin, publisherType, dao, asyncFetchStatus);
+                isSourceAllowedToInsert(
+                        source, topOrigin, publisherType, dao, asyncFetchStatus, adrTypes);
         if (sourceAllowedToInsert.isAllowed()) {
             // If preinstall check is enabled and any app destinations are already installed,
             // mark the source for deletion. Note the source is persisted so that the fake event
@@ -322,42 +332,46 @@ public class AsyncRegistrationQueueRunner {
                     && Applications.anyAppsInstalled(mContext, source.getAppDestinations())) {
                 source.setStatus(Source.Status.MARKED_TO_DELETE);
             }
-            DebugReportApi.Type adrType = DebugReportApi.Type.SOURCE_SUCCESS;
             Map<String, String> additionalDebugReportParams = null;
             if (mFlags.getMeasurementEnableSourceDestinationLimitPriority()
                     && InsertSourcePermission.ALLOWED_FIFO_SUCCESS.equals(sourceAllowedToInsert)) {
                 int limit = mFlags.getMeasurementMaxDistinctDestinationsInActiveSource();
-                adrType = DebugReportApi.Type.SOURCE_DESTINATION_LIMIT_REPLACED;
                 additionalDebugReportParams =
                         Map.of(DebugReportApi.Body.SOURCE_DESTINATION_LIMIT, String.valueOf(limit));
             }
-            insertSourceFromTransaction(source, fakeReports, dao, additionalDebugReportParams);
-            scheduleSourceSuccessOrNoisedDebugReport(
-                    source, dao, additionalDebugReportParams, adrType);
+            insertSourceFromTransaction(source, fakeReports, dao, adrTypes);
+            DebugReportApi.Type type =
+                    scheduleSourceSuccessOrNoisedDebugReport(
+                            source, dao, additionalDebugReportParams);
+            adrTypes.add(type);
         }
+
+        mAdrApi.scheduleSourceRegistrationDebugReport(source, adrTypes, dao);
     }
 
     @VisibleForTesting
     boolean areValidSourcePrivacyParameters(
-            Source source, DebugReportApi debugReportApi, IMeasurementDao dao, Flags flags)
+            Source source, IMeasurementDao dao, Flags flags, Set<DebugReportApi.Type> adrTypes)
             throws DatastoreException {
         try {
             if (!source.validateAndSetNumReportStates(flags)
                     || !source.hasValidInformationGain(flags)) {
-                debugReportApi.scheduleSourceReport(
+                mDebugReportApi.scheduleSourceReport(
                         source,
                         DebugReportApi.Type.SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR,
                         /* additionalBodyParams= */ null,
-                        dao,
-                        /* differentReportTypeForAdr= */ null);
+                        dao);
+                adrTypes.add(DebugReportApi.Type.SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR);
                 return false;
             }
             if (flags.getMeasurementEnableAttributionScope()) {
                 Source.AttributionScopeValidationResult attributionScopeValidationResult =
                         source.validateAttributionScopeValues(flags);
                 if (!attributionScopeValidationResult.isValid()) {
-                    debugReportApi.scheduleAttributionScopeDebugReport(
-                            source, attributionScopeValidationResult, dao);
+                    DebugReportApi.Type type =
+                            mDebugReportApi.scheduleAttributionScopeDebugReport(
+                                    source, attributionScopeValidationResult, dao);
+                    adrTypes.add(type);
                     return false;
                 }
 
@@ -377,12 +391,12 @@ public class AsyncRegistrationQueueRunner {
         } catch (ArithmeticException e) {
             LoggerFactory.getMeasurementLogger()
                     .e(e, "Calculating the number of report states overflowed.");
-            debugReportApi.scheduleSourceReport(
+            mDebugReportApi.scheduleSourceReport(
                     source,
                     DebugReportApi.Type.SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR,
                     /* additionalBodyParams= */ null,
-                    dao,
-                    /* differentReportTypeForAdr= */ null);
+                    dao);
+            adrTypes.add(DebugReportApi.Type.SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR);
             return false;
         }
 
@@ -457,7 +471,8 @@ public class AsyncRegistrationQueueRunner {
             Uri topOrigin,
             @EventSurfaceType int publisherType,
             IMeasurementDao dao,
-            AsyncFetchStatus asyncFetchStatus)
+            AsyncFetchStatus asyncFetchStatus,
+            Set<DebugReportApi.Type> adrTypes)
             throws DatastoreException {
         // Do not persist the navigation source if the same reporting origin has been registered
         // for the registration.
@@ -484,8 +499,8 @@ public class AsyncRegistrationQueueRunner {
                     source,
                     DebugReportApi.Type.SOURCE_STORAGE_LIMIT,
                     Map.of(DebugReportApi.Body.LIMIT, String.valueOf(numOfSourcesPerPublisher)),
-                    dao,
-                    /* differentReportTypeForAdr= */ null);
+                    dao);
+            adrTypes.add(DebugReportApi.Type.SOURCE_STORAGE_LIMIT);
             return InsertSourcePermission.NOT_ALLOWED;
         }
 
@@ -503,6 +518,7 @@ public class AsyncRegistrationQueueRunner {
                         dao)) {
             mDebugReportApi.scheduleSourceDestinationPerMinuteRateLimitDebugReport(
                     source, String.valueOf(destinationsPerMinuteRateLimit), dao);
+            adrTypes.add(DebugReportApi.Type.SOURCE_DESTINATION_RATE_LIMIT);
             return InsertSourcePermission.NOT_ALLOWED;
         }
 
@@ -526,6 +542,7 @@ public class AsyncRegistrationQueueRunner {
                         dao)) {
             mDebugReportApi.scheduleSourceDestinationPerDayRateLimitDebugReport(
                     source, String.valueOf(destinationsPerDayRateLimit), dao);
+            adrTypes.add(DebugReportApi.Type.SOURCE_DESTINATION_PER_DAY_RATE_LIMIT);
             return InsertSourcePermission.NOT_ALLOWED;
         }
 
@@ -540,7 +557,8 @@ public class AsyncRegistrationQueueRunner {
                         EventSurfaceType.APP,
                         windowStartTime,
                         source.getEventTime(),
-                        dao)) {
+                        dao,
+                        adrTypes)) {
             return InsertSourcePermission.NOT_ALLOWED;
         }
 
@@ -555,7 +573,8 @@ public class AsyncRegistrationQueueRunner {
                         EventSurfaceType.WEB,
                         windowStartTime,
                         source.getEventTime(),
-                        dao)) {
+                        dao,
+                        adrTypes)) {
             return InsertSourcePermission.NOT_ALLOWED;
         }
 
@@ -581,6 +600,7 @@ public class AsyncRegistrationQueueRunner {
                         String.valueOf(
                                 mFlags.getMeasurementMaxDistinctDestinationsInActiveSource()),
                         dao);
+                adrTypes.add(DebugReportApi.Type.SOURCE_DESTINATION_LIMIT);
                 return InsertSourcePermission.NOT_ALLOWED;
             }
             InsertSourcePermission webDestSourceAllowedToInsert =
@@ -599,6 +619,7 @@ public class AsyncRegistrationQueueRunner {
                         String.valueOf(
                                 mFlags.getMeasurementMaxDistinctDestinationsInActiveSource()),
                         dao);
+                adrTypes.add(DebugReportApi.Type.SOURCE_DESTINATION_LIMIT);
                 return InsertSourcePermission.NOT_ALLOWED;
             }
 
@@ -609,6 +630,7 @@ public class AsyncRegistrationQueueRunner {
                 additionalDebugReportParams =
                         Map.of(DebugReportApi.Body.SOURCE_DESTINATION_LIMIT, String.valueOf(limit));
                 result = InsertSourcePermission.ALLOWED_FIFO_SUCCESS;
+                adrTypes.add(DebugReportApi.Type.SOURCE_DESTINATION_LIMIT_REPLACED);
             }
         }
 
@@ -616,11 +638,8 @@ public class AsyncRegistrationQueueRunner {
         if (destinationExceedsGlobalRateLimit) {
             // Source won't be inserted, yet we produce a success to debug report to avoid side
             // channel leakage of cross site data
-            scheduleSourceSuccessOrNoisedDebugReport(
-                    source,
-                    dao,
-                    additionalDebugReportParams,
-                    DebugReportApi.Type.SOURCE_DESTINATION_GLOBAL_RATE_LIMIT);
+            scheduleSourceSuccessOrNoisedDebugReport(source, dao, additionalDebugReportParams);
+            adrTypes.add(DebugReportApi.Type.SOURCE_DESTINATION_GLOBAL_RATE_LIMIT);
             return InsertSourcePermission.NOT_ALLOWED;
         }
 
@@ -634,11 +653,8 @@ public class AsyncRegistrationQueueRunner {
                         mFlags.getMeasurementMinReportingOriginUpdateWindow());
         if (numOfOriginExcludingRegistrationOrigin
                 >= mFlags.getMeasurementMaxReportingOriginsPerSourceReportingSitePerWindow()) {
-            scheduleSourceSuccessOrNoisedDebugReport(
-                    source,
-                    dao,
-                    additionalDebugReportParams,
-                    DebugReportApi.Type.SOURCE_REPORTING_ORIGIN_PER_SITE_LIMIT);
+            scheduleSourceSuccessOrNoisedDebugReport(source, dao, additionalDebugReportParams);
+            adrTypes.add(DebugReportApi.Type.SOURCE_REPORTING_ORIGIN_PER_SITE_LIMIT);
             LoggerFactory.getMeasurementLogger()
                     .d(
                             "insertSources: Max limit of 1 reporting origin for publisher - %s and"
@@ -804,7 +820,8 @@ public class AsyncRegistrationQueueRunner {
             @EventSurfaceType int destinationType,
             long windowStartTime,
             long requestTime,
-            IMeasurementDao dao)
+            IMeasurementDao dao,
+            Set<DebugReportApi.Type> adrTypes)
             throws DatastoreException {
         Flags flags = FlagsFactory.getFlags();
 
@@ -844,6 +861,7 @@ public class AsyncRegistrationQueueRunner {
                                         + "PerPublisherXEnrollmentInActiveSource");
                 debugReportApi.scheduleSourceDestinationLimitDebugReport(
                         source, String.valueOf(maxDistinctDestinations), dao);
+                adrTypes.add(DebugReportApi.Type.SOURCE_DESTINATION_LIMIT);
                 return true;
             }
         }
@@ -858,8 +876,8 @@ public class AsyncRegistrationQueueRunner {
                         requestTime);
         if (distinctReportingOriginCount
                 >= flags.getMeasurementMaxDistinctRepOrigPerPublXDestInSource()) {
-            scheduleSourceSuccessOrNoisedDebugReport(
-                    source, dao, null, DebugReportApi.Type.SOURCE_SUCCESS);
+            scheduleSourceSuccessOrNoisedDebugReport(source, dao, null);
+            adrTypes.add(DebugReportApi.Type.SOURCE_REPORTING_ORIGIN_LIMIT);
             LoggerFactory.getMeasurementLogger()
                     .d(
                             "AsyncRegistrationQueueRunner: "
@@ -990,9 +1008,9 @@ public class AsyncRegistrationQueueRunner {
             Source source,
             List<Source.FakeReport> fakeReports,
             IMeasurementDao dao,
-            Map<String, String> additionalDebugReportParams)
+            Set<DebugReportApi.Type> adrTypes)
             throws DatastoreException {
-        final String sourceId = insertSource(source, dao);
+        final String sourceId = insertSource(source, dao, adrTypes);
         if (sourceId == null) {
             // Source was not saved due to DB size restrictions
             return;
@@ -1046,7 +1064,9 @@ public class AsyncRegistrationQueueRunner {
                                 flags.getMeasurementDefaultSourceDestinationLimitAlgorithm()]);
     }
 
-    private String insertSource(Source source, IMeasurementDao dao) throws DatastoreException {
+    private String insertSource(
+            Source source, IMeasurementDao dao, Set<DebugReportApi.Type> adrTypes)
+            throws DatastoreException {
         try {
             return dao.insertSource(source);
         } catch (DatastoreException e) {
@@ -1054,8 +1074,8 @@ public class AsyncRegistrationQueueRunner {
                     source,
                     DebugReportApi.Type.SOURCE_UNKNOWN_ERROR,
                     /* additionalBodyParams= */ null,
-                    dao,
-                    /* differentReportTypeForAdr= */ null);
+                    dao);
+            adrTypes.add(DebugReportApi.Type.SOURCE_UNKNOWN_ERROR);
             LoggerFactory.getMeasurementLogger()
                     .e(e, "Insert source to DB error, generate source-unknown-error report");
             throw new DatastoreException(
@@ -1178,19 +1198,15 @@ public class AsyncRegistrationQueueRunner {
         return request.getRegistrant();
     }
 
-    private void scheduleSourceSuccessOrNoisedDebugReport(
-            Source source,
-            IMeasurementDao dao,
-            Map<String, String> additionalDebugReportParams,
-            DebugReportApi.Type adrReportType) {
+    private DebugReportApi.Type scheduleSourceSuccessOrNoisedDebugReport(
+            Source source, IMeasurementDao dao, Map<String, String> additionalDebugReportParams) {
         DebugReportApi.Type type = DebugReportApi.Type.SOURCE_SUCCESS;
         if (source.getAttributionMode() != Source.AttributionMode.TRUTHFULLY) {
             type = DebugReportApi.Type.SOURCE_NOISED;
-            adrReportType = null;
         }
 
-        mDebugReportApi.scheduleSourceReport(
-                source, type, additionalDebugReportParams, dao, adrReportType);
+        mDebugReportApi.scheduleSourceReport(source, type, additionalDebugReportParams, dao);
+        return type;
     }
 
     private void notifyTriggerContentProvider() {
