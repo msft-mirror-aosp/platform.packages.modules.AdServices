@@ -149,6 +149,30 @@ public class AdFilteringFeatureFactoryTest {
     }
 
     @Test
+    public void testGetFrequencyCapDataClearerFilteringEnabled() {
+        AdFilteringFeatureFactory adFilteringFeatureFactory =
+                new AdFilteringFeatureFactory(
+                        mAppInstallDao,
+                        mFrequencyCapDao,
+                        new FlagsWithFrequencyCapFilteringEnabled());
+
+        assertThat(adFilteringFeatureFactory.getFrequencyCapDataClearer())
+                .isInstanceOf(FrequencyCapDataClearerImpl.class);
+    }
+
+    @Test
+    public void testGetFrequencyCapDataClearerFilteringDisabled() {
+        AdFilteringFeatureFactory adFilteringFeatureFactory =
+                new AdFilteringFeatureFactory(
+                        mAppInstallDao,
+                        mFrequencyCapDao,
+                        new FlagsWithFrequencyCapFilteringDisabled());
+
+        assertThat(adFilteringFeatureFactory.getFrequencyCapDataClearer())
+                .isInstanceOf(FrequencyCapDataClearerNoOp.class);
+    }
+
+    @Test
     public void testGetAdCounterHistogramUpdaterFilteringEnabled() {
         AdFilteringFeatureFactory adFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(
