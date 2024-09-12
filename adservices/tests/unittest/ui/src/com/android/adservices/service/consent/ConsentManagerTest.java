@@ -5265,13 +5265,13 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                 verify(mMockIAdServicesManager, never()).setModuleEnrollmentState(anyString());
                 break;
             case Flags.SYSTEM_SERVER_ONLY, Flags.PPAPI_AND_SYSTEM_SERVER:
-                doReturn(EnrollmentData.serializeBase64(data))
+                doReturn(EnrollmentData.serialize(data))
                         .when(mMockIAdServicesManager)
                         .getModuleEnrollmentState();
                 verify(mMockIAdServicesManager, times(6)).setModuleEnrollmentState(anyString());
                 break;
             case Flags.APPSEARCH_ONLY:
-                doReturn(EnrollmentData.serializeBase64(data))
+                doReturn(EnrollmentData.serialize(data))
                         .when(mAppSearchConsentManagerMock)
                         .getModuleEnrollmentState();
                 verify(mAppSearchConsentManagerMock, times(6))

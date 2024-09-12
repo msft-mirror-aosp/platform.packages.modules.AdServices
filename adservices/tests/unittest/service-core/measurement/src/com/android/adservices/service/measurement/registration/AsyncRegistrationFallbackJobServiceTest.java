@@ -454,8 +454,7 @@ public class AsyncRegistrationFallbackJobServiceTest
         doReturn(mock(AdServicesLoggerImpl.class)).when(AdServicesLoggerImpl::getInstance);
         ExtendedMockito.doNothing()
                 .when(() -> AsyncRegistrationFallbackJobService.schedule(any(), any()));
-        doReturn(mMockDatastoreManager)
-                .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
+        doReturn(mMockDatastoreManager).when(() -> DatastoreManagerFactory.getDatastoreManager());
         doReturn(false)
                 .when(
                         () ->

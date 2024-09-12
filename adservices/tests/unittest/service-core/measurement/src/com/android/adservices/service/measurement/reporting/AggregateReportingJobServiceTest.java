@@ -439,7 +439,7 @@ public final class AggregateReportingJobServiceTest
         doReturn(mMockContext).when(mSpyService).getApplicationContext();
         ExtendedMockito.doReturn(mock(EnrollmentDao.class)).when(() -> EnrollmentDao.getInstance());
         ExtendedMockito.doReturn(mMockDatastoreManager)
-                .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
+                .when(() -> DatastoreManagerFactory.getDatastoreManager());
         ExtendedMockito.doNothing().when(() -> AggregateReportingJobService.schedule(any(), any()));
         mockGetAdServicesJobServiceLogger(mSpyLogger);
 

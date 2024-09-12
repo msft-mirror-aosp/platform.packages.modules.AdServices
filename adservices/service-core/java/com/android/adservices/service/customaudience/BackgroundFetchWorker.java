@@ -102,9 +102,9 @@ public class BackgroundFetchWorker {
             synchronized (SINGLETON_LOCK) {
                 if (sBackgroundFetchWorker == null) {
                     CustomAudienceDao customAudienceDao =
-                            CustomAudienceDatabase.getInstance(context).customAudienceDao();
+                            CustomAudienceDatabase.getInstance().customAudienceDao();
                     AppInstallDao appInstallDao =
-                            SharedStorageDatabase.getInstance(context).appInstallDao();
+                            SharedStorageDatabase.getInstance().appInstallDao();
                     CustomAudienceLoggerFactory customAudienceLoggerFactory =
                             CustomAudienceLoggerFactory.getInstance();
                     Flags flags = FlagsFactory.getFlags();

@@ -836,6 +836,12 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetDeveloperModeFeatureEnabled() {
+        testFeatureFlag(
+                "DEFAULT_DEVELOPER_MODE_FEATURE_ENABLED", Flags::getDeveloperModeFeatureEnabled);
+    }
+
+    @Test
     public void testGetMeasurementMaxReinstallReattributionWindowSeconds() {
         testFlag(
                 "getMeasurementMaxReinstallReattributionWindowSeconds",
