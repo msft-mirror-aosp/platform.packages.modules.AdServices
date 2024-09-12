@@ -229,6 +229,7 @@ public class ConsentManagerV2 {
      * existing instance will be returned.
      */
     @NonNull
+    // TODO: apply the lazy initialization to this class b/366283605
     public static ConsentManagerV2 getInstance() {
         Context context = ApplicationContextSingleton.get();
 

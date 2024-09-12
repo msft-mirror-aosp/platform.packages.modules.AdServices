@@ -175,6 +175,7 @@ import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 
 import org.junit.After;
@@ -256,6 +257,10 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     @Mock private UxStatesDao mUxStatesDaoMock;
     @Mock private StatsdAdServicesLogger mStatsdAdServicesLoggerMock;
     @Mock private AdServicesErrorLogger mMockAdServicesErrorLogger;
+    @Mock private Supplier<TopicsWorker> mTopicsWorksSupplierMock;
+    @Mock private Supplier<AppConsentDao> mAppConsentDaoSupplierMock;
+    @Mock private Supplier<EnrollmentDao> mEnrollmentDaoSupplierMock;
+    @Mock private Supplier<MeasurementImpl> mMeasurementImplSupplierMock;
 
     @Before
     public void setup() throws IOException {
@@ -337,6 +342,10 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         doNothing().when(() -> UiStatsLogger.logOptOutSelected(any()));
         // The consent_source_of_truth=APPSEARCH_ONLY value is overridden on T+, so ignore level.
         doReturn(false).when(() -> SdkLevel.isAtLeastT());
+        doReturn(mTopicsWorkerMock).when(mTopicsWorksSupplierMock).get();
+        doReturn(mAppConsentDaoSpy).when(mAppConsentDaoSupplierMock).get();
+        doReturn(mEnrollmentDaoSpy).when(mEnrollmentDaoSupplierMock).get();
+        doReturn(mMeasurementImplMock).when(mMeasurementImplSupplierMock).get();
     }
 
     @After
@@ -3125,13 +3134,14 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                                 mBlockedTopicsManagerMock,
                                 mAppUpdateManagerMock,
                                 mMockFlags));
+        doReturn(topicsWorker).when(mTopicsWorksSupplierMock).get();
 
         ConsentManager consentManager =
                 new ConsentManager(
-                        topicsWorker,
-                        mAppConsentDaoSpy,
-                        mEnrollmentDaoSpy,
-                        mMeasurementImplMock,
+                        mTopicsWorksSupplierMock,
+                        mAppConsentDaoSupplierMock,
+                        mEnrollmentDaoSupplierMock,
+                        mMeasurementImplSupplierMock,
                         mCustomAudienceDaoMock,
                         mAppInstallDaoMock,
                         mProtectedSignalsDaoMock,
@@ -3782,10 +3792,10 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     // Note this method needs to be invoked after other private variables are initialized.
     private ConsentManager getConsentManagerByConsentSourceOfTruth(int consentSourceOfTruth) {
         return new ConsentManager(
-                mTopicsWorkerMock,
-                mAppConsentDaoSpy,
-                mEnrollmentDaoSpy,
-                mMeasurementImplMock,
+                mTopicsWorksSupplierMock,
+                mAppConsentDaoSupplierMock,
+                mEnrollmentDaoSupplierMock,
+                mMeasurementImplSupplierMock,
                 mCustomAudienceDaoMock,
                 mAppInstallDaoMock,
                 mProtectedSignalsDaoMock,
