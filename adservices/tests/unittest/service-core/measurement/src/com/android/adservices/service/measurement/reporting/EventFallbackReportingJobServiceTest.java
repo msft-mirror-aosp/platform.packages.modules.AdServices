@@ -462,7 +462,7 @@ public final class EventFallbackReportingJobServiceTest
         doReturn(Mockito.mock(Context.class)).when(mSpyService).getApplicationContext();
         ExtendedMockito.doReturn(mock(EnrollmentDao.class)).when(() -> EnrollmentDao.getInstance());
         ExtendedMockito.doReturn(mMockDatastoreManager)
-                .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
+                .when(() -> DatastoreManagerFactory.getDatastoreManager());
         ExtendedMockito.doNothing()
                 .when(() -> EventFallbackReportingJobService.schedule(any(), any()));
         mockGetAdServicesJobServiceLogger(mSpyLogger);

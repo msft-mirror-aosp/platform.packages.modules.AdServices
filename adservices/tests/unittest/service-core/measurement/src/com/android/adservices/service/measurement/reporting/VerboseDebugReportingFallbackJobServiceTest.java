@@ -438,7 +438,7 @@ public class VerboseDebugReportingFallbackJobServiceTest
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingFallbackJobService.schedule(any(), any()));
         ExtendedMockito.doReturn(mMockDatastoreManager)
-                .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
+                .when(() -> DatastoreManagerFactory.getDatastoreManager());
         ExtendedMockito.doReturn(false)
                 .when(
                         () ->
