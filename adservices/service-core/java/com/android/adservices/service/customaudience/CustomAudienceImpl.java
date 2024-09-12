@@ -98,7 +98,7 @@ public class CustomAudienceImpl {
             if (sSingleton == null) {
                 Flags flags = FlagsFactory.getFlags();
                 CustomAudienceDao customAudienceDao =
-                        CustomAudienceDatabase.getInstance(context).customAudienceDao();
+                        CustomAudienceDatabase.getInstance().customAudienceDao();
                 sSingleton =
                         new CustomAudienceImpl(
                                 customAudienceDao,

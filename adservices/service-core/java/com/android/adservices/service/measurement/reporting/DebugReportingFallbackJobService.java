@@ -192,8 +192,7 @@ public class DebugReportingFallbackJobService extends JobService {
                         "DebugReportingFallbackJobService",
                         () -> {
                             DatastoreManager datastoreManager =
-                                    DatastoreManagerFactory.getDatastoreManager(
-                                            getApplicationContext());
+                                    DatastoreManagerFactory.getDatastoreManager();
                             AndroidTimeSource timeSource = new AndroidTimeSource();
                             new EventReportingJobHandler(
                                             datastoreManager,

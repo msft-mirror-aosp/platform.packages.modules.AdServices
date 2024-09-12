@@ -234,7 +234,7 @@ public class ConsentManager {
                             createAndInitializeDataStore(
                                     context, AdServicesErrorLoggerImpl.getInstance());
                     AdServicesManager adServicesManager = AdServicesManager.getInstance(context);
-                    AppConsentDao appConsentDao = AppConsentDao.getInstance(context);
+                    AppConsentDao appConsentDao = AppConsentDao.getInstance();
 
                     // It is possible that the old value of the flag lingers after OTA until the
                     // first
@@ -268,7 +268,7 @@ public class ConsentManager {
                             FlagsFactory.getFlags().getEnableAdExtServiceConsentData();
                     if (enableAdExtServiceConsentData) {
                         adServicesExtDataManager =
-                                AdServicesExtDataStorageServiceManager.getInstance(context);
+                                AdServicesExtDataStorageServiceManager.getInstance();
                         // NOTE: To disable migration from AdExtService to AppSearch on 2024 M03-
                         // builds, use the deprecated flag
                         // enable_adext_service_to_appsearch_migration.
@@ -296,17 +296,17 @@ public class ConsentManager {
                                     TopicsWorker.getInstance(),
                                     appConsentDao,
                                     EnrollmentDao.getInstance(),
-                                    MeasurementImpl.getInstance(context),
-                                    CustomAudienceDatabase.getInstance(context).customAudienceDao(),
-                                    SharedStorageDatabase.getInstance(context).appInstallDao(),
+                                    MeasurementImpl.getInstance(),
+                                    CustomAudienceDatabase.getInstance().customAudienceDao(),
+                                    SharedStorageDatabase.getInstance().appInstallDao(),
                                     ProtectedSignalsDatabase.getInstance().protectedSignalsDao(),
-                                    SharedStorageDatabase.getInstance(context).frequencyCapDao(),
+                                    SharedStorageDatabase.getInstance().frequencyCapDao(),
                                     adServicesManager,
                                     datastore,
                                     appSearchConsentManager,
                                     UserProfileIdManager.getInstance(context),
                                     // TODO(b/260601944): Remove Flag Instance.
-                                    UxStatesDao.getInstance(context),
+                                    UxStatesDao.getInstance(),
                                     adServicesExtDataManager,
                                     FlagsFactory.getFlags(),
                                     consentSourceOfTruth,
@@ -2426,7 +2426,7 @@ public class ConsentManager {
      */
     @ModuleStateCode
     public int getModuleState(@ModuleCode int module) {
-        EnrollmentData data = EnrollmentData.deserializeFromBase64(getModuleEnrollmentState());
+        EnrollmentData data = EnrollmentData.deserialize(getModuleEnrollmentState());
         return data.getModuleState(module);
     }
 
@@ -2436,11 +2436,11 @@ public class ConsentManager {
      * @param moduleState object to set
      */
     public void setModuleStates(List<AdServicesModuleState> moduleStates) {
-        EnrollmentData data = EnrollmentData.deserializeFromBase64(getModuleEnrollmentState());
+        EnrollmentData data = EnrollmentData.deserialize(getModuleEnrollmentState());
         for (AdServicesModuleState moduleState : moduleStates) {
             data.putModuleState(moduleState);
         }
-        setModuleEnrollmentData(EnrollmentData.serializeBase64(data));
+        setModuleEnrollmentData(EnrollmentData.serialize(data));
     }
 
     /**
@@ -2451,7 +2451,7 @@ public class ConsentManager {
      */
     @ModuleUserChoiceCode
     public int getUserChoice(@ModuleCode int module) {
-        EnrollmentData data = EnrollmentData.deserializeFromBase64(getModuleEnrollmentState());
+        EnrollmentData data = EnrollmentData.deserialize(getModuleEnrollmentState());
         return data.getUserChoice(module);
     }
 
@@ -2462,11 +2462,11 @@ public class ConsentManager {
      * @param userChoices User choices to store
      */
     public void setUserChoices(List<AdServicesModuleUserChoice> userChoices) {
-        EnrollmentData data = EnrollmentData.deserializeFromBase64(getModuleEnrollmentState());
+        EnrollmentData data = EnrollmentData.deserialize(getModuleEnrollmentState());
         for (AdServicesModuleUserChoice userChoice : userChoices) {
             data.putUserChoice(userChoice);
         }
-        setModuleEnrollmentData(EnrollmentData.serializeBase64(data));
+        setModuleEnrollmentData(EnrollmentData.serialize(data));
     }
 
     /** Set module enrollment data to storage based on consent_source_of_truth. */

@@ -243,7 +243,7 @@ public class ConsentManagerV2 {
                     AdServicesStorageManager adServicesManager =
                             AdServicesStorageManager.getInstance(
                                     AdServicesManager.getInstance(context));
-                    AppConsentDao appConsentDao = AppConsentDao.getInstance(context);
+                    AppConsentDao appConsentDao = AppConsentDao.getInstance();
 
                     // It is possible that the old value of the flag lingers after OTA until the
                     // first PH sync. In that case, we should not use the stale value, but use the
@@ -269,7 +269,7 @@ public class ConsentManagerV2 {
                                 adServicesManager,
                                 statsdAdServicesLogger);
                     }
-                    UxStatesDao uxStatesDao = UxStatesDao.getInstance(context);
+                    UxStatesDao uxStatesDao = UxStatesDao.getInstance();
                     AppConsentForRStorageManager mAppConsentForRStorageManager = null;
                     // Flag enable_adext_service_consent_data is true on R and S+ only when
                     // we want to use AdServicesExtDataStorageService to write to or read from.
@@ -277,7 +277,7 @@ public class ConsentManagerV2 {
                             FlagsFactory.getFlags().getEnableAdExtServiceConsentData();
                     if (enableAdExtServiceConsentData) {
                         AdServicesExtDataStorageServiceManager adServicesExtDataManager =
-                                AdServicesExtDataStorageServiceManager.getInstance(context);
+                                AdServicesExtDataStorageServiceManager.getInstance();
                         // TODO(b/324273438): Support R->T+ consent migration for Consent Manager
                         //  V2 project.
                         // NOTE: To disable migration from AdExtService to AppSearch on 2024 M03-
@@ -315,12 +315,12 @@ public class ConsentManagerV2 {
                                     TopicsWorker.getInstance(),
                                     appConsentDao,
                                     EnrollmentDao.getInstance(),
-                                    MeasurementImpl.getInstance(context),
-                                    CustomAudienceDatabase.getInstance(context).customAudienceDao(),
+                                    MeasurementImpl.getInstance(),
+                                    CustomAudienceDatabase.getInstance().customAudienceDao(),
                                     appConsentStorageManager,
-                                    SharedStorageDatabase.getInstance(context).appInstallDao(),
+                                    SharedStorageDatabase.getInstance().appInstallDao(),
                                     ProtectedSignalsDatabase.getInstance().protectedSignalsDao(),
-                                    SharedStorageDatabase.getInstance(context).frequencyCapDao(),
+                                    SharedStorageDatabase.getInstance().frequencyCapDao(),
                                     adServicesManager,
                                     datastore,
                                     appSearchConsentStorageManager,
