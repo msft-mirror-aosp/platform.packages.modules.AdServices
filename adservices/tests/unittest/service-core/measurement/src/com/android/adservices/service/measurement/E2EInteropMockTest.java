@@ -205,7 +205,13 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                     entry(
                             "max_trigger_state_cardinality",
                             FlagsConstants
-                                    .KEY_MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION));
+                                    .KEY_MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION),
+                    entry(
+                            "max_aggregatable_debug_reports_per_source",
+                            FlagsConstants.KEY_MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE),
+                    entry(
+                            "max_aggregatable_debug_budget_per_context_site",
+                            FlagsConstants.KEY_MEASUREMENT_ADR_BUDGET_PER_PUBLISHER_WINDOW));
 
     private static String preprocessor(String json) {
         // In a header response provided in string format, .test could also be surrounded by escaped
@@ -262,10 +268,7 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                                     .KEY_MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT,
                             "true"),
                     entry(FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATE_VALUE_FILTERS, "true"),
-                    entry(FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATE_DEBUG_REPORTING, "true"),
-                    entry(
-                            FlagsConstants.KEY_MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING,
-                            "true"));
+                    entry(FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATE_DEBUG_REPORTING, "true"));
 
     @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> getData() throws IOException, JSONException {
@@ -306,6 +309,7 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                         mAsyncSourceFetcher,
                         mAsyncTriggerFetcher,
                         mDebugReportApi,
+                        mAggregateDebugReportApi,
                         mFlags);
     }
 
