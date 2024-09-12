@@ -48,7 +48,10 @@ import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
+
+import com.google.errorprone.annotations.concurrent.GuardedBy;
 
 import java.util.HashSet;
 import java.util.List;
@@ -60,7 +63,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 /** Runner for servicing queued registration requests */
-public class AsyncRegistrationQueueRunner {
+public final class AsyncRegistrationQueueRunner {
     /**
      * Single attribution entry is created for possibly multiple fake reports generated per source.
      * Setting a value to such attributions will help identify them that they are associated to fake
@@ -68,7 +71,11 @@ public class AsyncRegistrationQueueRunner {
      */
     @VisibleForTesting static final String ATTRIBUTION_FAKE_REPORT_ID = "-1";
 
+    private static final Object LOCK = new Object();
+
+    @GuardedBy("LOCK")
     private static AsyncRegistrationQueueRunner sAsyncRegistrationQueueRunner;
+
     private final DatastoreManager mDatastoreManager;
     private final AsyncSourceFetcher mAsyncSourceFetcher;
     private final AsyncTriggerFetcher mAsyncTriggerFetcher;
@@ -162,12 +169,14 @@ public class AsyncRegistrationQueueRunner {
      *
      * @param context the current {@link Context}.
      */
-    public static synchronized AsyncRegistrationQueueRunner getInstance(Context context) {
-        Objects.requireNonNull(context);
-        if (sAsyncRegistrationQueueRunner == null) {
-            sAsyncRegistrationQueueRunner = new AsyncRegistrationQueueRunner(context);
+    public static synchronized AsyncRegistrationQueueRunner getInstance() {
+        synchronized (LOCK) {
+            if (sAsyncRegistrationQueueRunner == null) {
+                Context context = ApplicationContextSingleton.get();
+                sAsyncRegistrationQueueRunner = new AsyncRegistrationQueueRunner(context);
+            }
+            return sAsyncRegistrationQueueRunner;
         }
-        return sAsyncRegistrationQueueRunner;
     }
 
     /** Processes records in the AsyncRegistration Queue table. */
