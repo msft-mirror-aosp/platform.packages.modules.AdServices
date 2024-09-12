@@ -151,20 +151,20 @@
     <string name="settingsUI_topics_view_info_text1" msgid="1837427989556474858">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="3814232857139974524">"Android жарнамасындағы құпиялық (бета нұсқасы) бағдарламасы қолданбалар сізге ұнайды деген жарнамаларды көрсетуге пайдалана алатын жаңа функцияларды ұсынады. Бұл технологиялар құрылғы идентификаторларын пайдаланбайды.\n\nAndroid сізге қызық деген жарнама түрлерін анықтап, бұл мәліметті құрылғыңызда уақытша сақтайды. Соның нәтижесінде қолданбалар басқа әзірлеушілердің веб-сайттары мен қолданбаларында жасаған әрекеттеріңізді бақыламай, сізге сәйкес жарнамаларды көрсетеді."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="2592506251182454751">"Сізде блокталған қызығушылықтар жоқ"</string>
-    <string name="settingsUI_no_blocked_topics_ga_text" msgid="3571887649896533532">"Блокталған тақырыптар жоқ."</string>
-    <string name="settingsUI_view_blocked_topics_title" msgid="6524865577585338530">"Блокталған тақырыптарды көру"</string>
+    <string name="settingsUI_no_blocked_topics_ga_text" msgid="3571887649896533532">"Бөгелген тақырыптар жоқ."</string>
+    <string name="settingsUI_view_blocked_topics_title" msgid="6524865577585338530">"Бөгелген тақырыптарды көру"</string>
     <string name="settingsUI_topics_are_reset" msgid="7474478586324962685">"Қызығушылықтар қайтарылды."</string>
     <string name="settingsUI_topics_are_reset_ga" msgid="1862215340606433752">"Тақырыптар қайтарылды."</string>
     <string name="settingsUI_apps_view_subtitle" msgid="4320154274829130809">"Қолданбалар қызығушылықтарыңызды бағалап, оларды уақытша Android-та сақтай алады. Содан кейін осы қызығушылыққа қарай басқа қолданба сізге марафондарға қатысты жарнама көрсете алады.\n\nҚолданбаны бөгесеңіз, ол бұдан былай қызығушылықтарды бағаламайды. Қолданбаны бөгеуден алмайынша, ол қолданбалар тізіміне қайта қосылмайды. Қолданба бағалап қойған қызығушылықтар жойылады, бірақ оған қатысты кейбір жарнамалар көрсетіле беруі мүмкін."</string>
     <string name="settingsUI_blocked_apps_title" msgid="2912819231721312960">"Сіз бөгеген қолданбалар"</string>
-    <string name="settingsUI_view_blocked_apps_title" msgid="7095922654201180593">"Блокталған қолданбаларды көру"</string>
+    <string name="settingsUI_view_blocked_apps_title" msgid="7095922654201180593">"Бөгелген қолданбаларды көру"</string>
     <string name="settingsUI_reset_apps_title" msgid="3102875782600625477">"Қолданбалар бағалаған қызығушылықтарды бастапқы күйге қайтару"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="5821437091309568626">"Қазір қолданбалар қызығушылықтарыңызды бағалап жатқан жоқ"</string>
     <string name="settingsUI_apps_view_no_apps_ga_text" msgid="827670084273365802">"Дәл қазір көрсететін қолданба жоқ. \n"<a href="https://support.google.com/android?p=ad_privacy">"Қолданба ұсынатын жарнамалар"</a>" туралы толық ақпарат алыңыз."</string>
     <string name="settingsUI_apps_view_info_text1" msgid="8524518056879001890">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="6191835773793395323">"Android жарнамасындағы құпиялық (бета нұсқасы) бағдарламасы қолданбалар сізге ұнайды деген жарнамаларды көрсетуге пайдалана алатын жаңа функцияларды ұсынады. Бұл технологиялар құрылғы идентификаторларын пайдаланбайды.\n\nAndroid сізге қызық деген жарнама түрлерін анықтап, бұл мәліметті құрылғыңызда уақытша сақтайды. Соның нәтижесінде қолданбалар басқа әзірлеушілердің веб-сайттары мен қолданбаларында жасаған әрекеттеріңізді бақыламай, сізге сәйкес жарнамаларды көрсетеді."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="6386103688779633888">"Сізде блокталған қолданбалар жоқ"</string>
-    <string name="settingsUI_no_blocked_apps_ga_text" msgid="5715916198159277202">"Блокталған қолданбалар жоқ."</string>
+    <string name="settingsUI_no_blocked_apps_ga_text" msgid="5715916198159277202">"Бөгелген қолданбалар жоқ."</string>
     <string name="settingsUI_measurement_switch_title" msgid="2111625410373329760">"Жарнама көрсеткіштерін өлшеуге рұқсат ету"</string>
     <string name="settingsUI_measurement_view_intro_text" msgid="2780083472100004780">"Қолданбалар мен жарнама берушілер Android жүйесінен тиісті жарнамалардың өнімділігін анықтауға көмектесетін ақпаратты сұрауы мүмкін.\n\nЖарнама көрсеткіштерін анықтау деректері құрылғыңыздан тұрақты негізде жойылып отырады."</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="518549441454274773">"Көрсеткіштерді өлшеу әрекетін қайта орнату"</string>
