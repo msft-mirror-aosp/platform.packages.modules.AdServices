@@ -22,6 +22,7 @@ import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.mockito.ArgumentMatchers.any;
 
+import android.app.adservices.AdServicesManager;
 import android.content.Context;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
@@ -69,5 +70,16 @@ public final class AdServicesInternalProviderTest extends AdServicesExtendedMock
         String dump = dump(pw -> mProvider.dump(/* fd= */ null, pw, /* args= */ null));
 
         assertWithMessage("content of dump()").that(dump).contains(amcmDump);
+    }
+
+    @Test
+    @SpyStatic(AdServicesManager.class)
+    public void testDump_includesAdservicesManagerDump() throws Exception {
+        String mgrDump = "A Manager dumps no Name";
+        mockDump(() -> AdServicesManager.dump(any()), /* pwArgIndex= */ 0, mgrDump);
+
+        String dump = dump(pw -> mProvider.dump(/* fd= */ null, pw, /* args= */ null));
+
+        assertWithMessage("content of dump()").that(dump).contains(mgrDump);
     }
 }
