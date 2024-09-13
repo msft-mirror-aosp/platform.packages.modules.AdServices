@@ -56,7 +56,7 @@ public final class WebViewSupportUtil {
             throws ExecutionException, InterruptedException, TimeoutException {
         boolean isJSSandboxAvailable =
                 JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable()
-                        && JSScriptEngine.getInstance(context, LoggerFactory.getLogger())
+                        && JSScriptEngine.getInstance(LoggerFactory.getLogger())
                                 .isConfigurableHeapSizeSupported()
                                 .get(JS_SANDBOX_TIMEOUT_MS, TimeUnit.MILLISECONDS);
         Log.d(TAG, String.format("isJSSandboxAvailable: %s", isJSSandboxAvailable));
@@ -70,7 +70,7 @@ public final class WebViewSupportUtil {
             throws ExecutionException, InterruptedException, TimeoutException {
         boolean isJSIsolateConsoleCallbackAvailable =
                 isJSSandboxAvailable(context)
-                        && JSScriptEngine.getInstance(context, LoggerFactory.getLogger())
+                        && JSScriptEngine.getInstance(LoggerFactory.getLogger())
                                 .isConsoleCallbackSupported()
                                 .get(JS_SANDBOX_TIMEOUT_MS, TimeUnit.MILLISECONDS);
         Log.d(
@@ -88,7 +88,7 @@ public final class WebViewSupportUtil {
             throws ExecutionException, InterruptedException, TimeoutException {
         boolean isWasmSupportAvailable =
                 JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable()
-                        && JSScriptEngine.getInstance(context, LoggerFactory.getLogger())
+                        && JSScriptEngine.getInstance(LoggerFactory.getLogger())
                                 .isWasmSupported()
                                 .get(JS_SANDBOX_TIMEOUT_MS, TimeUnit.MILLISECONDS);
         Log.d(TAG, String.format("isWasmSupportAvailable: %s", isWasmSupportAvailable));
@@ -103,7 +103,7 @@ public final class WebViewSupportUtil {
             throws ExecutionException, InterruptedException, TimeoutException {
         boolean isEvaluationWithoutTransactionLimitSupportAvailable =
                 isJSSandboxAvailable(context)
-                        && JSScriptEngine.getInstance(context, LoggerFactory.getLogger())
+                        && JSScriptEngine.getInstance(LoggerFactory.getLogger())
                                 .isLargeTransactionsSupported()
                                 .get(JS_SANDBOX_TIMEOUT_MS, TimeUnit.MILLISECONDS);
         Log.d(

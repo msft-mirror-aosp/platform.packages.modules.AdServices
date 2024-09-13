@@ -461,9 +461,9 @@ public final class AggregateFallbackReportingJobServiceTest
                 .when(AdServicesConfig::getMeasurementAggregateMainReportingJobPeriodMs);
         ExtendedMockito.doReturn(TimeUnit.HOURS.toMillis(24))
                 .when(AdServicesConfig::getMeasurementAggregateFallbackReportingJobPeriodMs);
-        ExtendedMockito.doReturn(mock(EnrollmentDao.class)).when(() -> EnrollmentDao.getInstance());
+        ExtendedMockito.doReturn(mock(EnrollmentDao.class)).when(EnrollmentDao::getInstance);
         ExtendedMockito.doReturn(mMockDatastoreManager)
-                .when(() -> DatastoreManagerFactory.getDatastoreManager());
+                .when(DatastoreManagerFactory::getDatastoreManager);
         ExtendedMockito.doNothing()
                 .when(() -> AggregateFallbackReportingJobService.schedule(any(), any()));
         mockGetAdServicesJobServiceLogger(mSpyLogger);

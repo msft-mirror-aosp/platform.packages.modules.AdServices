@@ -157,7 +157,7 @@ android_library {
         "framework-adservices.impl",
         "framework-configinfrastructure.stubs.module_lib",
         "framework-sdksandbox.impl",
-        "framework-ondevicepersonalization",
+        "framework-ondevicepersonalization.stubs.module_lib",
         "framework-statsd.stubs.module_lib", // For WW logging
         "jsr305",
         "auto_value_annotations",

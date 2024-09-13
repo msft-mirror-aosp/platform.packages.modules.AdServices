@@ -96,13 +96,12 @@ public class FledgeMaintenanceTasksWorker {
         mAdSelectionEntryDao = AdSelectionDatabase.getInstance().adSelectionEntryDao();
         mFrequencyCapDao = SharedStorageDatabase.getInstance().frequencyCapDao();
         mEnrollmentDao = EnrollmentDao.getInstance();
-        mEncryptionContextDao =
-                AdSelectionServerDatabase.getInstance(context).encryptionContextDao();
+        mEncryptionContextDao = AdSelectionServerDatabase.getInstance().encryptionContextDao();
         mClock = Clock.systemUTC();
         mAdSelectionDebugReportDao =
                 AdSelectionDebugReportingDatabase.getInstance().getAdSelectionDebugReportDao();
         mAdServicesLogger = StatsdAdServicesLogger.getInstance();
-        mKAnonMessageDao = KAnonDatabase.getInstance(context).kAnonMessageDao();
+        mKAnonMessageDao = KAnonDatabase.getInstance().kAnonMessageDao();
     }
 
     /** Creates a new instance of {@link FledgeMaintenanceTasksWorker}. */
