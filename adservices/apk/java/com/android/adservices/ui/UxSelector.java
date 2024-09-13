@@ -35,7 +35,6 @@ public interface UxSelector {
         UNKNOWN,
         GA,
         U18,
-        RVC,
         GA_WITH_PAS
     }
 
@@ -68,7 +67,6 @@ public interface UxSelector {
                 initGaUxWithPas();
                 break;
             case U18:
-            case RVC:
                 initU18();
                 break;
             default:
@@ -105,8 +103,6 @@ public interface UxSelector {
                     return EndUserUx.GA_WITH_PAS;
                 }
                 return EndUserUx.GA;
-            case RVC_UX:
-                return EndUserUx.RVC;
             default:
                 // TODO: log some warning or error
                 return EndUserUx.GA;

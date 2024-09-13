@@ -35,25 +35,23 @@ import android.adservices.extdata.AdServicesExtDataParams;
 import android.adservices.extdata.GetAdServicesExtDataResult;
 import android.adservices.extdata.IAdServicesExtDataStorageService;
 import android.adservices.extdata.IGetAdServicesExtDataCallback;
-import android.content.Context;
 import android.os.RemoteException;
 
-import androidx.test.core.app.ApplicationProvider;
-
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
-
-import com.google.common.truth.Expect;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 
-public class AdServicesExtDataStorageServiceWorkerTest {
+@MockStatic(FlagsFactory.class)
+@SpyStatic(AdServicesExtDataStorageServiceDebugProxy.class)
+public final class AdServicesExtDataStorageServiceWorkerTest
+        extends AdServicesExtendedMockitoTestCase {
     private static final long NO_APEX_VALUE = -1L;
     private static final String TEST_EXCEPTION_MESSAGE = "Test Exception!";
     private static final AdServicesExtDataParams TEST_PARAMS =
@@ -69,39 +67,22 @@ public class AdServicesExtDataStorageServiceWorkerTest {
         FIELD_IS_MEASUREMENT_CONSENTED, FIELD_IS_NOTIFICATION_DISPLAYED
     };
 
-    @Rule public final Expect expect = Expect.create();
-
     private AdServicesExtDataStorageServiceWorker mSpyWorker;
-
-    @Mock private Flags mFlags;
-
-    @Rule
-    public final AdServicesExtendedMockitoRule mockitoRule =
-            new AdServicesExtendedMockitoRule.Builder(this)
-                    .mockStatic(FlagsFactory.class)
-                    .spyStatic(AdServicesExtDataStorageServiceDebugProxy.class)
-                    .build();
 
     @Mock private AdServicesExtDataStorageServiceDebugProxy mDebugProxy;
 
     @Before
     public void setup() {
-        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mMockFlags);
         ExtendedMockito.doReturn(mDebugProxy)
-                .when(
-                        () ->
-                                AdServicesExtDataStorageServiceDebugProxy.getInstance(
-                                        any(Context.class)));
-        mSpyWorker =
-                spy(
-                        AdServicesExtDataStorageServiceWorker.getInstance(
-                                ApplicationProvider.getApplicationContext()));
+                .when(() -> AdServicesExtDataStorageServiceDebugProxy.newInstance(any()));
+        mSpyWorker = spy(AdServicesExtDataStorageServiceWorker.getInstance());
     }
 
     @Test
     public void testGetAdServicesExtData_serviceNotFound_resultsInOnErrorSet() throws Exception {
         doReturn(null).when(mSpyWorker).getService();
-        when(mFlags.getEnableAdExtServiceDebugProxy()).thenReturn(false);
+        when(mMockFlags.getEnableAdExtServiceDebugProxy()).thenReturn(false);
         AdServicesOutcomeReceiverForTests<AdServicesExtDataParams> receiver =
                 new AdServicesOutcomeReceiverForTests<>();
         mSpyWorker.getAdServicesExtData(receiver);
@@ -114,7 +95,7 @@ public class AdServicesExtDataStorageServiceWorkerTest {
     @Test
     public void testGetAdServicesExtData_onResultSet() throws Exception {
         doReturn(getMockService(/* isSuccess */ true)).when(mSpyWorker).getService();
-        when(mFlags.getEnableAdExtServiceDebugProxy()).thenReturn(false);
+        when(mMockFlags.getEnableAdExtServiceDebugProxy()).thenReturn(false);
         AdServicesOutcomeReceiverForTests<AdServicesExtDataParams> receiver =
                 new AdServicesOutcomeReceiverForTests<>();
         mSpyWorker.getAdServicesExtData(receiver);
@@ -127,7 +108,7 @@ public class AdServicesExtDataStorageServiceWorkerTest {
     @Test
     public void testGetAdServicesExtData_onErrorSet() throws Exception {
         doReturn(getMockService(/* isSuccess */ false)).when(mSpyWorker).getService();
-        when(mFlags.getEnableAdExtServiceDebugProxy()).thenReturn(false);
+        when(mMockFlags.getEnableAdExtServiceDebugProxy()).thenReturn(false);
         AdServicesOutcomeReceiverForTests<AdServicesExtDataParams> receiver =
                 new AdServicesOutcomeReceiverForTests<>();
         mSpyWorker.getAdServicesExtData(receiver);
@@ -140,7 +121,7 @@ public class AdServicesExtDataStorageServiceWorkerTest {
     @Test
     public void testSetAdServicesExtData_serviceNotFound_resultsInOnErrorSet() throws Exception {
         doReturn(null).when(mSpyWorker).getService();
-        when(mFlags.getEnableAdExtServiceDebugProxy()).thenReturn(false);
+        when(mMockFlags.getEnableAdExtServiceDebugProxy()).thenReturn(false);
         AdServicesOutcomeReceiverForTests<AdServicesExtDataParams> receiver =
                 new AdServicesOutcomeReceiverForTests<>();
         mSpyWorker.setAdServicesExtData(TEST_PARAMS, TEST_FIELD_LIST, receiver);
@@ -153,7 +134,7 @@ public class AdServicesExtDataStorageServiceWorkerTest {
     @Test
     public void testSetAdServicesExtData_onResultSet() throws Exception {
         doReturn(getMockService(/* isSuccess */ true)).when(mSpyWorker).getService();
-        when(mFlags.getEnableAdExtServiceDebugProxy()).thenReturn(false);
+        when(mMockFlags.getEnableAdExtServiceDebugProxy()).thenReturn(false);
         AdServicesOutcomeReceiverForTests<AdServicesExtDataParams> receiver =
                 new AdServicesOutcomeReceiverForTests<>();
         mSpyWorker.setAdServicesExtData(TEST_PARAMS, TEST_FIELD_LIST, receiver);
@@ -166,7 +147,7 @@ public class AdServicesExtDataStorageServiceWorkerTest {
     @Test
     public void testSetAdServicesExtData_onErrorSet() throws Exception {
         doReturn(getMockService(/* isSuccess */ false)).when(mSpyWorker).getService();
-        when(mFlags.getEnableAdExtServiceDebugProxy()).thenReturn(false);
+        when(mMockFlags.getEnableAdExtServiceDebugProxy()).thenReturn(false);
         AdServicesOutcomeReceiverForTests<AdServicesExtDataParams> receiver =
                 new AdServicesOutcomeReceiverForTests<>();
         mSpyWorker.setAdServicesExtData(TEST_PARAMS, TEST_FIELD_LIST, receiver);
@@ -178,7 +159,7 @@ public class AdServicesExtDataStorageServiceWorkerTest {
 
     @Test
     public void testSetAdServicesExtData_serviceNotFound_useProxy() throws Exception {
-        when(mFlags.getEnableAdExtServiceDebugProxy()).thenReturn(true);
+        when(mMockFlags.getEnableAdExtServiceDebugProxy()).thenReturn(true);
         doReturn(null).when(mSpyWorker).getService();
         doNothing().when(mDebugProxy).setAdServicesExtData(any(), any(), any());
         mSpyWorker.setProxy(mDebugProxy);
@@ -191,7 +172,7 @@ public class AdServicesExtDataStorageServiceWorkerTest {
 
     @Test
     public void testGetAdServicesExtData_serviceNotFound_useProxy() throws Exception {
-        when(mFlags.getEnableAdExtServiceDebugProxy()).thenReturn(true);
+        when(mMockFlags.getEnableAdExtServiceDebugProxy()).thenReturn(true);
         doReturn(null).when(mSpyWorker).getService();
         doNothing().when(mDebugProxy).getAdServicesExtData(any());
         mSpyWorker.setProxy(mDebugProxy);

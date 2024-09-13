@@ -28,11 +28,12 @@ android_test {
         "truth",
         "SdkSandboxTestUtils",
         "adservices-test-utility",
+        "adservices-shared-testing",
     ],
     libs: [
-        "android.test.base",
-        "android.test.mock",
-        "android.test.runner",
+        "android.test.base.stubs.system",
+        "android.test.mock.stubs.system",
+        "android.test.runner.stubs.system",
     ],
     data: [
         ":AppSetIdSdk",

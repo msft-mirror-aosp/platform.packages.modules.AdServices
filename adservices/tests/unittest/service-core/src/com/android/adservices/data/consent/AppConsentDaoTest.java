@@ -31,24 +31,24 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.spy;
 
-import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 
 import androidx.annotation.NonNull;
-import androidx.test.core.app.ApplicationProvider;
 import androidx.test.core.content.pm.ApplicationInfoBuilder;
 
-import com.android.adservices.data.common.BooleanFileDatastore;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.data.common.AtomicFileDatastore;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.MockitoSession;
-import org.mockito.Spy;
+import org.mockito.Mock;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -56,30 +56,29 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
-public class AppConsentDaoTest {
-    private final Context mContext = ApplicationProvider.getApplicationContext();
+@SpyStatic(PackageManagerCompatUtils.class)
+public final class AppConsentDaoTest extends AdServicesExtendedMockitoTestCase {
     private AppConsentDao mAppConsentDao;
 
-    @Spy
-    private BooleanFileDatastore mDatastoreSpy =
-            new BooleanFileDatastore(mContext, AppConsentDaoFixture.TEST_DATASTORE_NAME, 1);
+    @Mock private AdServicesErrorLogger mMockAdServicesErrorLogger;
 
-    private MockitoSession mMockitoSession;
+    private AtomicFileDatastore mDatastoreSpy;
 
     @Before
     public void setup() throws IOException {
-        mMockitoSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(PackageManagerCompatUtils.class)
-                        .initMocks(this)
-                        .startMocking();
+        mDatastoreSpy =
+                spy(
+                        new AtomicFileDatastore(
+                                mContext,
+                                AppConsentDaoFixture.TEST_DATASTORE_NAME,
+                                1,
+                                mMockAdServicesErrorLogger));
         mAppConsentDao = new AppConsentDao(mDatastoreSpy, mContext.getPackageManager());
     }
 
     @After
     public void teardown() throws IOException {
-        mDatastoreSpy.clear();
-        mMockitoSession.finishMocking();
+        mDatastoreSpy.tearDownForTesting();
     }
 
     @Test
@@ -95,8 +94,8 @@ public class AppConsentDaoTest {
 
     @Test
     public void testGetUidForInstalledPackageNameWithRealTestNameSuccess() {
-        int expectedUid = mContext.getApplicationInfo().uid;
-        int testUid = mAppConsentDao.getUidForInstalledPackageName(mContext.getPackageName());
+        int expectedUid = mSpyContext.getApplicationInfo().uid;
+        int testUid = mAppConsentDao.getUidForInstalledPackageName(mSpyContext.getPackageName());
         assertEquals(expectedUid, testUid);
     }
 
@@ -202,18 +201,18 @@ public class AppConsentDaoTest {
         mockPackageUid(AppConsentDaoFixture.APP10_PACKAGE_NAME, AppConsentDaoFixture.APP10_UID);
         mockPackageUid(AppConsentDaoFixture.APP20_PACKAGE_NAME, AppConsentDaoFixture.APP20_UID);
 
-        assertNull(mDatastoreSpy.get(AppConsentDaoFixture.APP10_DATASTORE_KEY));
-        assertNull(mDatastoreSpy.get(AppConsentDaoFixture.APP20_DATASTORE_KEY));
+        assertNull(mDatastoreSpy.getBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY));
+        assertNull(mDatastoreSpy.getBoolean(AppConsentDaoFixture.APP20_DATASTORE_KEY));
 
         mAppConsentDao.setConsentForApp(AppConsentDaoFixture.APP10_PACKAGE_NAME, true);
 
-        assertEquals(true, mDatastoreSpy.get(AppConsentDaoFixture.APP10_DATASTORE_KEY));
-        assertNull(mDatastoreSpy.get(AppConsentDaoFixture.APP20_DATASTORE_KEY));
+        assertEquals(true, mDatastoreSpy.getBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY));
+        assertNull(mDatastoreSpy.getBoolean(AppConsentDaoFixture.APP20_DATASTORE_KEY));
 
         mAppConsentDao.setConsentForApp(AppConsentDaoFixture.APP20_PACKAGE_NAME, false);
 
-        assertEquals(true, mDatastoreSpy.get(AppConsentDaoFixture.APP10_DATASTORE_KEY));
-        assertEquals(false, mDatastoreSpy.get(AppConsentDaoFixture.APP20_DATASTORE_KEY));
+        assertEquals(true, mDatastoreSpy.getBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY));
+        assertEquals(false, mDatastoreSpy.getBoolean(AppConsentDaoFixture.APP20_DATASTORE_KEY));
 
         verify(mDatastoreSpy).initialize();
     }
@@ -235,22 +234,22 @@ public class AppConsentDaoTest {
         mockPackageUid(AppConsentDaoFixture.APP10_PACKAGE_NAME, AppConsentDaoFixture.APP10_UID);
         mockPackageUid(AppConsentDaoFixture.APP20_PACKAGE_NAME, AppConsentDaoFixture.APP20_UID);
 
-        assertNull(mDatastoreSpy.get(AppConsentDaoFixture.APP10_DATASTORE_KEY));
-        assertNull(mDatastoreSpy.get(AppConsentDaoFixture.APP20_DATASTORE_KEY));
+        assertNull(mDatastoreSpy.getBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY));
+        assertNull(mDatastoreSpy.getBoolean(AppConsentDaoFixture.APP20_DATASTORE_KEY));
 
         assertTrue(
                 mAppConsentDao.setConsentForAppIfNew(
                         AppConsentDaoFixture.APP10_PACKAGE_NAME, true));
 
-        assertEquals(true, mDatastoreSpy.get(AppConsentDaoFixture.APP10_DATASTORE_KEY));
-        assertNull(mDatastoreSpy.get(AppConsentDaoFixture.APP20_DATASTORE_KEY));
+        assertEquals(true, mDatastoreSpy.getBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY));
+        assertNull(mDatastoreSpy.getBoolean(AppConsentDaoFixture.APP20_DATASTORE_KEY));
 
         assertFalse(
                 mAppConsentDao.setConsentForAppIfNew(
                         AppConsentDaoFixture.APP20_PACKAGE_NAME, false));
 
-        assertEquals(true, mDatastoreSpy.get(AppConsentDaoFixture.APP10_DATASTORE_KEY));
-        assertEquals(false, mDatastoreSpy.get(AppConsentDaoFixture.APP20_DATASTORE_KEY));
+        assertEquals(true, mDatastoreSpy.getBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY));
+        assertEquals(false, mDatastoreSpy.getBoolean(AppConsentDaoFixture.APP20_DATASTORE_KEY));
 
         verify(mDatastoreSpy).initialize();
     }
@@ -260,11 +259,11 @@ public class AppConsentDaoTest {
         mockPackageUid(AppConsentDaoFixture.APP10_PACKAGE_NAME, AppConsentDaoFixture.APP10_UID);
         mockPackageUid(AppConsentDaoFixture.APP20_PACKAGE_NAME, AppConsentDaoFixture.APP20_UID);
 
-        mDatastoreSpy.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
-        mDatastoreSpy.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
+        mDatastoreSpy.putBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
+        mDatastoreSpy.putBoolean(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
 
-        assertEquals(false, mDatastoreSpy.get(AppConsentDaoFixture.APP10_DATASTORE_KEY));
-        assertEquals(true, mDatastoreSpy.get(AppConsentDaoFixture.APP20_DATASTORE_KEY));
+        assertEquals(false, mDatastoreSpy.getBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY));
+        assertEquals(true, mDatastoreSpy.getBoolean(AppConsentDaoFixture.APP20_DATASTORE_KEY));
 
         assertFalse(
                 mAppConsentDao.setConsentForAppIfNew(
@@ -273,8 +272,8 @@ public class AppConsentDaoTest {
                 mAppConsentDao.setConsentForAppIfNew(
                         AppConsentDaoFixture.APP20_PACKAGE_NAME, false));
 
-        assertEquals(false, mDatastoreSpy.get(AppConsentDaoFixture.APP10_DATASTORE_KEY));
-        assertEquals(true, mDatastoreSpy.get(AppConsentDaoFixture.APP20_DATASTORE_KEY));
+        assertEquals(false, mDatastoreSpy.getBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY));
+        assertEquals(true, mDatastoreSpy.getBoolean(AppConsentDaoFixture.APP20_DATASTORE_KEY));
 
         verify(mDatastoreSpy).initialize();
     }
@@ -296,23 +295,23 @@ public class AppConsentDaoTest {
         mockPackageUid(AppConsentDaoFixture.APP10_PACKAGE_NAME, AppConsentDaoFixture.APP10_UID);
         mockPackageUid(AppConsentDaoFixture.APP20_PACKAGE_NAME, AppConsentDaoFixture.APP20_UID);
 
-        assertNull(mDatastoreSpy.get(AppConsentDaoFixture.APP10_DATASTORE_KEY));
+        assertNull(mDatastoreSpy.getBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY));
         assertFalse(mAppConsentDao.isConsentRevokedForApp(AppConsentDaoFixture.APP10_PACKAGE_NAME));
-        assertNull(mDatastoreSpy.get(AppConsentDaoFixture.APP20_DATASTORE_KEY));
+        assertNull(mDatastoreSpy.getBoolean(AppConsentDaoFixture.APP20_DATASTORE_KEY));
         assertFalse(mAppConsentDao.isConsentRevokedForApp(AppConsentDaoFixture.APP20_PACKAGE_NAME));
 
-        mDatastoreSpy.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, true);
+        mDatastoreSpy.putBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY, true);
 
-        assertEquals(true, mDatastoreSpy.get(AppConsentDaoFixture.APP10_DATASTORE_KEY));
+        assertEquals(true, mDatastoreSpy.getBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY));
         assertTrue(mAppConsentDao.isConsentRevokedForApp(AppConsentDaoFixture.APP10_PACKAGE_NAME));
-        assertNull(mDatastoreSpy.get(AppConsentDaoFixture.APP20_DATASTORE_KEY));
+        assertNull(mDatastoreSpy.getBoolean(AppConsentDaoFixture.APP20_DATASTORE_KEY));
         assertFalse(mAppConsentDao.isConsentRevokedForApp(AppConsentDaoFixture.APP20_PACKAGE_NAME));
 
-        mDatastoreSpy.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, false);
+        mDatastoreSpy.putBoolean(AppConsentDaoFixture.APP20_DATASTORE_KEY, false);
 
-        assertEquals(true, mDatastoreSpy.get(AppConsentDaoFixture.APP10_DATASTORE_KEY));
+        assertEquals(true, mDatastoreSpy.getBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY));
         assertTrue(mAppConsentDao.isConsentRevokedForApp(AppConsentDaoFixture.APP10_PACKAGE_NAME));
-        assertEquals(false, mDatastoreSpy.get(AppConsentDaoFixture.APP20_DATASTORE_KEY));
+        assertEquals(false, mDatastoreSpy.getBoolean(AppConsentDaoFixture.APP20_DATASTORE_KEY));
         assertFalse(mAppConsentDao.isConsentRevokedForApp(AppConsentDaoFixture.APP20_PACKAGE_NAME));
 
         verify(mDatastoreSpy).initialize();
@@ -332,9 +331,9 @@ public class AppConsentDaoTest {
 
     @Test
     public void testGetKnownAppsWithConsent() throws IOException {
-        mDatastoreSpy.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
-        mDatastoreSpy.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, false);
-        mDatastoreSpy.put(AppConsentDaoFixture.APP30_DATASTORE_KEY, true);
+        mDatastoreSpy.putBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
+        mDatastoreSpy.putBoolean(AppConsentDaoFixture.APP20_DATASTORE_KEY, false);
+        mDatastoreSpy.putBoolean(AppConsentDaoFixture.APP30_DATASTORE_KEY, true);
         List<ApplicationInfo> applicationsInstalled =
                 Arrays.asList(
                         ApplicationInfoBuilder.newBuilder()
@@ -364,7 +363,7 @@ public class AppConsentDaoTest {
 
     @Test
     public void testGetKnownAppsWithConsentNotExistentApp() throws IOException {
-        mDatastoreSpy.put(AppConsentDaoFixture.APP30_DATASTORE_KEY, true);
+        mDatastoreSpy.putBoolean(AppConsentDaoFixture.APP30_DATASTORE_KEY, true);
         List<ApplicationInfo> applicationsInstalled = new ArrayList<>();
         doReturn(applicationsInstalled)
                 .when(() -> PackageManagerCompatUtils.getInstalledApplications(any(), anyInt()));
@@ -378,9 +377,9 @@ public class AppConsentDaoTest {
 
     @Test
     public void testGetAppsWithRevokedConsent() throws IOException {
-        mDatastoreSpy.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, true);
-        mDatastoreSpy.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
-        mDatastoreSpy.put(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
+        mDatastoreSpy.putBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY, true);
+        mDatastoreSpy.putBoolean(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
+        mDatastoreSpy.putBoolean(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
         List<ApplicationInfo> applicationsInstalled =
                 Arrays.asList(
                         ApplicationInfoBuilder.newBuilder()
@@ -410,7 +409,7 @@ public class AppConsentDaoTest {
 
     @Test
     public void testGetAppsWithRevokedConsentNonExistentApp() throws IOException {
-        mDatastoreSpy.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, true);
+        mDatastoreSpy.putBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY, true);
         List<ApplicationInfo> applicationsInstalled = new ArrayList<>();
         doReturn(applicationsInstalled)
                 .when(() -> PackageManagerCompatUtils.getInstalledApplications(any(), anyInt()));
@@ -424,24 +423,24 @@ public class AppConsentDaoTest {
 
     @Test
     public void testClearAllConsentData() throws IOException {
-        mDatastoreSpy.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, true);
-        mDatastoreSpy.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
-        mDatastoreSpy.put(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
+        mDatastoreSpy.putBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY, true);
+        mDatastoreSpy.putBoolean(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
+        mDatastoreSpy.putBoolean(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
 
         mAppConsentDao.clearAllConsentData();
 
-        assertNull(mDatastoreSpy.get(AppConsentDaoFixture.APP10_DATASTORE_KEY));
-        assertNull(mDatastoreSpy.get(AppConsentDaoFixture.APP20_DATASTORE_KEY));
-        assertNull(mDatastoreSpy.get(AppConsentDaoFixture.APP30_DATASTORE_KEY));
+        assertNull(mDatastoreSpy.getBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY));
+        assertNull(mDatastoreSpy.getBoolean(AppConsentDaoFixture.APP20_DATASTORE_KEY));
+        assertNull(mDatastoreSpy.getBoolean(AppConsentDaoFixture.APP30_DATASTORE_KEY));
 
         verify(mDatastoreSpy).initialize();
     }
 
     @Test
     public void testClearKnownAppsWithConsent() throws IOException {
-        mDatastoreSpy.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, true);
-        mDatastoreSpy.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
-        mDatastoreSpy.put(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
+        mDatastoreSpy.putBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY, true);
+        mDatastoreSpy.putBoolean(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
+        mDatastoreSpy.putBoolean(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
         List<ApplicationInfo> applicationsInstalled =
                 Arrays.asList(
                         ApplicationInfoBuilder.newBuilder()
@@ -458,9 +457,9 @@ public class AppConsentDaoTest {
 
         mAppConsentDao.clearKnownAppsWithConsent();
 
-        assertNotNull(mDatastoreSpy.get(AppConsentDaoFixture.APP10_DATASTORE_KEY));
-        assertNotNull(mDatastoreSpy.get(AppConsentDaoFixture.APP20_DATASTORE_KEY));
-        assertNull(mDatastoreSpy.get(AppConsentDaoFixture.APP30_DATASTORE_KEY));
+        assertNotNull(mDatastoreSpy.getBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY));
+        assertNotNull(mDatastoreSpy.getBoolean(AppConsentDaoFixture.APP20_DATASTORE_KEY));
+        assertNull(mDatastoreSpy.getBoolean(AppConsentDaoFixture.APP30_DATASTORE_KEY));
 
         assertTrue(mAppConsentDao.getKnownAppsWithConsent().isEmpty());
         assertFalse(mAppConsentDao.getAppsWithRevokedConsent().isEmpty());
@@ -470,16 +469,16 @@ public class AppConsentDaoTest {
 
     @Test
     public void testClearConsentForUninstalledApp() throws IOException {
-        mDatastoreSpy.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, true);
-        mDatastoreSpy.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
-        mDatastoreSpy.put(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
+        mDatastoreSpy.putBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY, true);
+        mDatastoreSpy.putBoolean(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
+        mDatastoreSpy.putBoolean(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
 
         mAppConsentDao.clearConsentForUninstalledApp(
                 AppConsentDaoFixture.APP20_PACKAGE_NAME, AppConsentDaoFixture.APP20_UID);
 
-        assertNotNull(mDatastoreSpy.get(AppConsentDaoFixture.APP10_DATASTORE_KEY));
-        assertNull(mDatastoreSpy.get(AppConsentDaoFixture.APP20_DATASTORE_KEY));
-        assertNotNull(mDatastoreSpy.get(AppConsentDaoFixture.APP30_DATASTORE_KEY));
+        assertNotNull(mDatastoreSpy.getBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY));
+        assertNull(mDatastoreSpy.getBoolean(AppConsentDaoFixture.APP20_DATASTORE_KEY));
+        assertNotNull(mDatastoreSpy.getBoolean(AppConsentDaoFixture.APP30_DATASTORE_KEY));
 
         verify(mDatastoreSpy).initialize();
     }
@@ -520,19 +519,19 @@ public class AppConsentDaoTest {
                         + DATASTORE_KEY_SEPARATOR
                         + AppConsentDaoFixture.APP10_UID;
 
-        mDatastoreSpy.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, true);
-        mDatastoreSpy.put(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
-        mDatastoreSpy.put(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
-        mDatastoreSpy.put(app20User10PackageName, false);
-        mDatastoreSpy.put(app20PackageNameAsPrefix, true);
+        mDatastoreSpy.putBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY, true);
+        mDatastoreSpy.putBoolean(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
+        mDatastoreSpy.putBoolean(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
+        mDatastoreSpy.putBoolean(app20User10PackageName, false);
+        mDatastoreSpy.putBoolean(app20PackageNameAsPrefix, true);
 
         mAppConsentDao.clearConsentForUninstalledApp(AppConsentDaoFixture.APP20_PACKAGE_NAME);
 
-        assertNotNull(mDatastoreSpy.get(AppConsentDaoFixture.APP10_DATASTORE_KEY));
-        assertNull(mDatastoreSpy.get(AppConsentDaoFixture.APP20_DATASTORE_KEY));
-        assertNotNull(mDatastoreSpy.get(AppConsentDaoFixture.APP30_DATASTORE_KEY));
-        assertNull(mDatastoreSpy.get(app20User10PackageName));
-        assertNotNull(mDatastoreSpy.get(app20PackageNameAsPrefix));
+        assertNotNull(mDatastoreSpy.getBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY));
+        assertNull(mDatastoreSpy.getBoolean(AppConsentDaoFixture.APP20_DATASTORE_KEY));
+        assertNotNull(mDatastoreSpy.getBoolean(AppConsentDaoFixture.APP30_DATASTORE_KEY));
+        assertNull(mDatastoreSpy.getBoolean(app20User10PackageName));
+        assertNotNull(mDatastoreSpy.getBoolean(app20PackageNameAsPrefix));
 
         verify(mDatastoreSpy).initialize();
         verify(mDatastoreSpy).removeByPrefix(any());

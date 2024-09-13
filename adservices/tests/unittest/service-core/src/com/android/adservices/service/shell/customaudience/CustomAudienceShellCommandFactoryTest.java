@@ -16,6 +16,10 @@
 
 package com.android.adservices.service.shell.customaudience;
 
+import static android.adservices.customaudience.CustomAudienceFixture.CUSTOM_AUDIENCE_ACTIVE_FETCH_WINDOW_MS;
+
+import static com.google.common.truth.Truth.assertThat;
+
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
@@ -24,11 +28,12 @@ import com.android.adservices.service.shell.ShellCommand;
 import com.android.adservices.service.shell.ShellCommandFactory;
 
 import com.google.common.collect.Sets;
-import com.google.common.truth.Truth;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+
+import java.time.Clock;
 
 public final class CustomAudienceShellCommandFactoryTest extends AdServicesMockitoTestCase {
     private static final boolean CUSTOM_AUDIENCE_CLI_ENABLED = true;
@@ -40,70 +45,86 @@ public final class CustomAudienceShellCommandFactoryTest extends AdServicesMocki
     public void setup() {
         mFactory =
                 new CustomAudienceShellCommandFactory(
-                        CUSTOM_AUDIENCE_CLI_ENABLED, mBackgroundFetchRunner, mCustomAudienceDao);
+                        CUSTOM_AUDIENCE_CLI_ENABLED,
+                        mBackgroundFetchRunner,
+                        mCustomAudienceDao,
+                        Clock.systemUTC(),
+                        CUSTOM_AUDIENCE_ACTIVE_FETCH_WINDOW_MS);
     }
 
     @Test
     public void test_viewCmd() {
         ShellCommand shellCommand = mFactory.getShellCommand(CustomAudienceViewCommand.CMD);
-        Truth.assertThat(shellCommand).isInstanceOf(CustomAudienceViewCommand.class);
+        assertThat(shellCommand).isInstanceOf(CustomAudienceViewCommand.class);
     }
 
     @Test
     public void test_listCmd() {
         ShellCommand shellCommand = mFactory.getShellCommand(CustomAudienceListCommand.CMD);
-        Truth.assertThat(shellCommand).isInstanceOf(CustomAudienceListCommand.class);
+        assertThat(shellCommand).isInstanceOf(CustomAudienceListCommand.class);
     }
 
     @Test
     public void test_refreshCmd() {
         ShellCommand shellCommand = mFactory.getShellCommand(CustomAudienceRefreshCommand.CMD);
-        Truth.assertThat(shellCommand).isInstanceOf(CustomAudienceRefreshCommand.class);
+        assertThat(shellCommand).isInstanceOf(CustomAudienceRefreshCommand.class);
     }
 
     @Test
     public void test_invalidCmd() {
         ShellCommand shellCommand = mFactory.getShellCommand("invalid");
-        Truth.assertThat(shellCommand).isNull();
+        assertThat(shellCommand).isNull();
     }
 
     @Test
     public void test_nullCmd() {
         ShellCommand shellCommand = mFactory.getShellCommand(null);
-        Truth.assertThat(shellCommand).isNull();
+        assertThat(shellCommand).isNull();
     }
 
     @Test
     public void test_emptyCmd() {
         ShellCommand shellCommand = mFactory.getShellCommand("");
-        Truth.assertThat(shellCommand).isNull();
+        assertThat(shellCommand).isNull();
     }
 
     @Test
     public void test_cliDisabled() {
         mFactory =
                 new CustomAudienceShellCommandFactory(
-                        false, mBackgroundFetchRunner, mCustomAudienceDao);
+                        false,
+                        mBackgroundFetchRunner,
+                        mCustomAudienceDao,
+                        Clock.systemUTC(),
+                        CUSTOM_AUDIENCE_ACTIVE_FETCH_WINDOW_MS);
         ShellCommand shellCommand = mFactory.getShellCommand(CustomAudienceListCommand.CMD);
-        Truth.assertThat(shellCommand).isInstanceOf(NoOpShellCommand.class);
+        assertThat(shellCommand).isInstanceOf(NoOpShellCommand.class);
     }
 
     @Test
     public void test_invalidCmdCLIDisabled() {
         mFactory =
                 new CustomAudienceShellCommandFactory(
-                        false, mBackgroundFetchRunner, mCustomAudienceDao);
+                        false,
+                        mBackgroundFetchRunner,
+                        mCustomAudienceDao,
+                        Clock.systemUTC(),
+                        CUSTOM_AUDIENCE_ACTIVE_FETCH_WINDOW_MS);
         ShellCommand shellCommand = mFactory.getShellCommand("invalid");
-        Truth.assertThat(shellCommand).isNull();
+        assertThat(shellCommand).isNull();
     }
 
     @Test
     public void test_getAllCommandsHelp() {
         mFactory =
                 new CustomAudienceShellCommandFactory(
-                        CUSTOM_AUDIENCE_CLI_ENABLED, mBackgroundFetchRunner, mCustomAudienceDao);
+                        CUSTOM_AUDIENCE_CLI_ENABLED,
+                        mBackgroundFetchRunner,
+                        mCustomAudienceDao,
+                        Clock.systemUTC(),
+                        CUSTOM_AUDIENCE_ACTIVE_FETCH_WINDOW_MS);
 
-        Truth.assertThat(Sets.newHashSet(mFactory.getAllCommandsHelp()))
+        assertThat(Sets.newHashSet(mFactory.getAllCommandsHelp()))
                 .containsExactlyElementsIn(
                         Sets.newHashSet(
                                 CustomAudienceListCommand.HELP,

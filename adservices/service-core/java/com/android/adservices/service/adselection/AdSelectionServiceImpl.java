@@ -288,11 +288,11 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     /** Creates an instance of {@link AdSelectionServiceImpl} to be used. */
     private AdSelectionServiceImpl(@NonNull Context context) {
         this(
-                AdSelectionDatabase.getInstance(context).adSelectionEntryDao(),
-                SharedStorageDatabase.getInstance(context).appInstallDao(),
-                CustomAudienceDatabase.getInstance(context).customAudienceDao(),
+                AdSelectionDatabase.getInstance().adSelectionEntryDao(),
+                SharedStorageDatabase.getInstance().appInstallDao(),
+                CustomAudienceDatabase.getInstance().customAudienceDao(),
                 ProtectedSignalsDatabase.getInstance().getEncodedPayloadDao(),
-                SharedStorageDatabase.getInstance(context).frequencyCapDao(),
+                SharedStorageDatabase.getInstance().frequencyCapDao(),
                 EncryptionKeyDao.getInstance(),
                 EnrollmentDao.getInstance(),
                 new AdServicesHttpsClient(
@@ -322,18 +322,16 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         new FledgeAllowListsFilter(
                                 FlagsFactory.getFlags(), AdServicesLoggerImpl.getInstance()),
                         new FledgeApiThrottleFilter(
-                                Throttler.getInstance(FlagsFactory.getFlags()),
-                                AdServicesLoggerImpl.getInstance())),
+                                Throttler.getInstance(), AdServicesLoggerImpl.getInstance())),
                 new AdFilteringFeatureFactory(
-                        SharedStorageDatabase.getInstance(context).appInstallDao(),
-                        SharedStorageDatabase.getInstance(context).frequencyCapDao(),
+                        SharedStorageDatabase.getInstance().appInstallDao(),
+                        SharedStorageDatabase.getInstance().frequencyCapDao(),
                         FlagsFactory.getFlags()),
                 ConsentManager.getInstance(),
                 MultiCloudSupportStrategyFactory.getStrategy(
                         FlagsFactory.getFlags().getFledgeAuctionServerMultiCloudEnabled(),
                         FlagsFactory.getFlags().getFledgeAuctionServerCoordinatorUrlAllowlist()),
-                AdSelectionDebugReportingDatabase.getInstance(context)
-                        .getAdSelectionDebugReportDao(),
+                AdSelectionDebugReportingDatabase.getInstance().getAdSelectionDebugReportDao(),
                 new AdIdFetcher(
                         context,
                         AdIdWorker.getInstance(),
@@ -353,7 +351,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                 () ->
                                         DebugFlags.getInstance()
                                                 .getFledgeAuctionServerConsentedDebuggingEnabled()),
-                        AdSelectionDatabase.getInstance(context).consentedDebugConfigurationDao()),
+                        AdSelectionDatabase.getInstance().consentedDebugConfigurationDao()),
                 EgressConfigurationGenerator.createInstance(
                         BinderFlagReader.readFlag(
                                 () ->
@@ -382,6 +380,9 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             GetAdSelectionDataCallback callback)
             throws RemoteException {
         int e2eTraceCookie = Tracing.beginAsyncSection(Tracing.GET_AD_SELECTION_DATA);
+        int onBinderThreadTraceCookie =
+                Tracing.beginAsyncSection(Tracing.GET_AD_SELECTION_ON_DATA_BINDER_THREAD);
+
         int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA;
 
         AdsRelevanceExecutionLoggerFactory adsRelevanceExecutionLoggerFactory =
@@ -425,6 +426,9 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         int callingUid = getCallingUid(apiName);
         final DevContext devContext = mDevContextFilter.createDevContext();
+        Tracing.endAsyncSection(
+                Tracing.GET_AD_SELECTION_ON_DATA_BINDER_THREAD, onBinderThreadTraceCookie);
+
         mLightweightExecutor.execute(
                 () -> {
                     runGetAdSelectionData(
@@ -619,6 +623,9 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             DevContext devContext,
             AdsRelevanceExecutionLogger adsRelevanceExecutionLogger,
             int e2eTraceCookie) {
+        int offBinderThreadTraceCookie =
+                Tracing.beginAsyncSection(Tracing.GET_AD_SELECTION_DATA_OFF_BINDER_THREAD);
+
         ListenableFuture<AuctionServerDebugReporting> auctionServerDebugReportingFuture =
                 AuctionServerDebugReporting.createInstance(
                         mFlags,
@@ -664,6 +671,9 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                                 mEgressConfigurationGenerator,
                                                 mAdFilteringFeatureFactory
                                                         .getAppInstallAdFilterer());
+                                Tracing.endAsyncSection(
+                                        Tracing.GET_AD_SELECTION_DATA_OFF_BINDER_THREAD,
+                                        offBinderThreadTraceCookie);
                                 runner.run(inputParams, callback);
                             }
 
@@ -701,6 +711,9 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                                 mEgressConfigurationGenerator,
                                                 mAdFilteringFeatureFactory
                                                         .getAppInstallAdFilterer());
+                                Tracing.endAsyncSection(
+                                        Tracing.GET_AD_SELECTION_DATA_OFF_BINDER_THREAD,
+                                        offBinderThreadTraceCookie);
                                 runner.run(inputParams, callback);
                             }
                         },
@@ -1003,7 +1016,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         MeasurementImpl measurementService;
         final long token = Binder.clearCallingIdentity();
         try {
-            measurementService = MeasurementImpl.getInstance(mContext);
+            measurementService = MeasurementImpl.getInstance();
         } finally {
             Binder.restoreCallingIdentity(token);
         }

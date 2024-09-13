@@ -66,10 +66,13 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.SERVER_AUC
 import static com.android.adservices.service.stats.AdServicesStatsLog.SIGNATURE_VERIFICATION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.TOPICS_ENCRYPTION_EPOCH_COMPUTATION_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.TOPICS_ENCRYPTION_GET_TOPICS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.TOPICS_SCHEDULE_EPOCH_JOB_SETTING_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.UPDATE_CUSTOM_AUDIENCE_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.UPDATE_SIGNALS_API_CALLED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.UPDATE_SIGNALS_PROCESS_REPORTED;
 
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.util.proto.ProtoOutputStream;
 
 import com.android.adservices.service.Flags;
@@ -88,6 +91,7 @@ import com.android.adservices.service.stats.pas.EncodingJobRunStats;
 import com.android.adservices.service.stats.pas.EncodingJsExecutionStats;
 import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedStats;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
@@ -135,7 +139,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
     }
 
     /** log method for measurement reporting. */
-    public void logMeasurementReports(MeasurementReportsStats measurementReportsStats) {
+    public void logMeasurementReports(
+            MeasurementReportsStats measurementReportsStats, @Nullable String enrollmentId) {
         AdServicesStatsLog.write(
                 measurementReportsStats.getCode(),
                 measurementReportsStats.getType(),
@@ -206,7 +211,7 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
 
     @Override
     public void logMeasurementRegistrationsResponseSize(
-            MeasurementRegistrationResponseStats stats) {
+            MeasurementRegistrationResponseStats stats, @Nullable String enrollmentId) {
         AdServicesStatsLog.write(
                 stats.getCode(),
                 stats.getRegistrationType(),
@@ -223,7 +228,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 stats.isRedirectOnly(),
                 stats.isPARequest(),
                 stats.getNumDeletedEntities(),
-                stats.isEventLevelEpsilonEnabled());
+                stats.isEventLevelEpsilonEnabled(),
+                stats.isTriggerAggregatableValueFiltersConfigured());
     }
 
     @Override
@@ -432,7 +438,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
 
     /** log method for measurement attribution. */
     public void logMeasurementAttributionStats(
-            MeasurementAttributionStats measurementAttributionStats) {
+            MeasurementAttributionStats measurementAttributionStats,
+            @Nullable String enrollmentId) {
         AdServicesStatsLog.write(
                 measurementAttributionStats.getCode(),
                 measurementAttributionStats.getSourceType(),
@@ -941,6 +948,33 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 stats.getReportResultSellerAdditionalSignalsContainedDataVersion(),
                 stats.getReportWinJsScriptResultCode(),
                 stats.getReportResultJsScriptResultCode());
+    }
+
+    @Override
+    public void logUpdateSignalsProcessReportedStats(UpdateSignalsProcessReportedStats stats) {
+        AdServicesStatsLog.write(
+                UPDATE_SIGNALS_PROCESS_REPORTED,
+                stats.getUpdateSignalsProcessLatencyMillis(),
+                stats.getAdservicesApiStatusCode(),
+                stats.getSignalsWrittenCount(),
+                stats.getKeysStoredCount(),
+                stats.getValuesStoredCount(),
+                stats.getEvictionRulesCount(),
+                stats.getPerBuyerSignalSize(),
+                stats.getMeanRawProtectedSignalsSizeBytes(),
+                stats.getMaxRawProtectedSignalsSizeBytes(),
+                stats.getMinRawProtectedSignalsSizeBytes());
+    }
+
+    @Override
+    public void logTopicsScheduleEpochJobSettingReportedStats(
+            TopicsScheduleEpochJobSettingReportedStats stats) {
+        AdServicesStatsLog.write(
+                TOPICS_SCHEDULE_EPOCH_JOB_SETTING_REPORTED,
+                stats.getRescheduleEpochJobStatus(),
+                stats.getPreviousEpochJobSetting(),
+                stats.getCurrentEpochJobSetting(),
+                stats.getScheduleIfNeededEpochJobStatus());
     }
 
     @NonNull

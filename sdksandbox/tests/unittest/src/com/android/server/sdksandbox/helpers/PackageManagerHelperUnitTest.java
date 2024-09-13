@@ -29,6 +29,8 @@ import android.os.Process;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -37,7 +39,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class PackageManagerHelperUnitTest {
+public class PackageManagerHelperUnitTest extends DeviceSupportedBaseTest {
     private static final String TEST_PACKAGE = "com.android.server.sdksandbox.tests";
     private static final ArrayList<String> SDK_NAMES =
             new ArrayList<>(

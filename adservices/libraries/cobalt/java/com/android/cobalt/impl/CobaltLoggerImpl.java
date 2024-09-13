@@ -18,7 +18,6 @@ package com.android.cobalt.impl;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-import android.annotation.NonNull;
 import android.util.Log;
 
 import com.android.cobalt.CobaltLogger;
@@ -26,6 +25,7 @@ import com.android.cobalt.data.DataService;
 import com.android.cobalt.data.EventVector;
 import com.android.cobalt.data.ReportKey;
 import com.android.cobalt.domain.Project;
+import com.android.cobalt.domain.ReportIdentifier;
 import com.android.cobalt.system.CobaltClock;
 import com.android.cobalt.system.SystemClock;
 import com.android.cobalt.system.SystemData;
@@ -36,6 +36,7 @@ import com.google.cobalt.ReleaseStage;
 import com.google.cobalt.ReportDefinition;
 import com.google.cobalt.ReportDefinition.ReportType;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -44,6 +45,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 
 /** Implementation of the logging of metrics for Cobalt. */
@@ -56,15 +58,17 @@ public final class CobaltLoggerImpl implements CobaltLogger {
     private final SystemData mSystemData;
     private final ExecutorService mExecutor;
     private final SystemClock mSystemClock;
+    private final ImmutableSet<ReportIdentifier> mReportsToIgnore;
     private final boolean mEnabled;
 
     public CobaltLoggerImpl(
-            @NonNull Project project,
-            @NonNull ReleaseStage releaseStage,
-            @NonNull DataService dataService,
-            @NonNull SystemData systemData,
-            @NonNull ExecutorService executor,
-            @NonNull SystemClock systemClock,
+            Project project,
+            ReleaseStage releaseStage,
+            DataService dataService,
+            SystemData systemData,
+            ExecutorService executor,
+            SystemClock systemClock,
+            Iterable<ReportIdentifier> reportsToIgnore,
             boolean enabled) {
         mProject = Objects.requireNonNull(project);
         mReleaseStage = Objects.requireNonNull(releaseStage);
@@ -72,6 +76,7 @@ public final class CobaltLoggerImpl implements CobaltLogger {
         mSystemData = Objects.requireNonNull(systemData);
         mExecutor = Objects.requireNonNull(executor);
         mSystemClock = Objects.requireNonNull(systemClock);
+        mReportsToIgnore = ImmutableSet.copyOf(reportsToIgnore);
         mEnabled = enabled;
     }
 
@@ -127,40 +132,52 @@ public final class CobaltLoggerImpl implements CobaltLogger {
     }
 
     private ListenableFuture<Void> loggerEnabledLogOccurrence(
-            MetricDefinition metric, long count, List<Integer> eventCodes, long currentTimeMillis) {
+            Optional<MetricDefinition> metric,
+            long count,
+            List<Integer> eventCodes,
+            long currentTimeMillis) {
+        if (!metric.isPresent()) {
+            return Futures.immediateFuture(null);
+        }
+
         EventVector eventVector = EventVector.create(eventCodes);
-        if (mReleaseStage.getNumber() > metric.getMetaData().getMaxReleaseStageValue()) {
+        if (mReleaseStage.getNumber() > metric.get().getMetaData().getMaxReleaseStageValue()) {
             // Don't log a metric that is not enabled for the current release stage.
             return Futures.immediateFuture(null);
         }
         return FluentFuture.from(
                         Futures.allAsList(
-                                logNumberToReports(metric, count, eventVector, currentTimeMillis)))
+                                logNumberToReports(
+                                        metric.get(), count, eventVector, currentTimeMillis)))
                 .transform(this::recordSuccess, mExecutor)
                 .catching(
                         RuntimeException.class,
-                        x -> recordFailureAndRethrow(metric.getId(), x),
+                        x -> recordFailureAndRethrow(metric.get().getId(), x),
                         mExecutor);
     }
 
     private ListenableFuture<Void> loggerEnabledLogString(
-            MetricDefinition metric,
+            Optional<MetricDefinition> metric,
             String stringValue,
             List<Integer> eventCodes,
             long currentTimeMillis) {
+        if (!metric.isPresent()) {
+            return Futures.immediateFuture(null);
+        }
+
         EventVector eventVector = EventVector.create(eventCodes);
-        if (mReleaseStage.getNumber() > metric.getMetaData().getMaxReleaseStageValue()) {
+        if (mReleaseStage.getNumber() > metric.get().getMetaData().getMaxReleaseStageValue()) {
             // Don't log a metric that is not enabled for the current release stage.
             return Futures.immediateFuture(null);
         }
         return FluentFuture.from(
                         Futures.allAsList(
                                 logStringToReports(
-                                        metric, stringValue, eventVector, currentTimeMillis)))
+                                        metric.get(), stringValue, eventVector, currentTimeMillis)))
                 .transform(this::recordSuccess, mExecutor)
                 .catching(
                         RuntimeException.class,
-                        x -> recordFailureAndRethrow(metric.getId(), x),
+                        x -> recordFailureAndRethrow(metric.get().getId(), x),
                         mExecutor);
     }
 
@@ -199,6 +216,15 @@ public final class CobaltLoggerImpl implements CobaltLogger {
                 // Don't log a report that is not enabled for the current release stage.
                 continue;
             }
+            if (mReportsToIgnore.contains(
+                    ReportIdentifier.create(
+                            mProject.getCustomerId(),
+                            mProject.getProjectId(),
+                            metric.getId(),
+                            report.getId()))) {
+                continue;
+            }
+
             ReportKey reportKey =
                     ReportKey.create(
                             mProject.getCustomerId(),
@@ -236,6 +262,15 @@ public final class CobaltLoggerImpl implements CobaltLogger {
                 // Don't log a report that is not enabled for the current release stage.
                 continue;
             }
+            if (mReportsToIgnore.contains(
+                    ReportIdentifier.create(
+                            mProject.getCustomerId(),
+                            mProject.getProjectId(),
+                            metric.getId(),
+                            report.getId()))) {
+                continue;
+            }
+
             ReportKey reportKey =
                     ReportKey.create(
                             mProject.getCustomerId(),
@@ -259,7 +294,7 @@ public final class CobaltLoggerImpl implements CobaltLogger {
         return dbWrites.build();
     }
 
-    private MetricDefinition validateEventAndGetMetric(
+    private Optional<MetricDefinition> validateEventAndGetMetric(
             MetricType metricType, long metricId, List<Integer> eventCodes) {
         for (int eventCode : eventCodes) {
             checkArgument(eventCode >= 0, "event vectors can't contain negative event codes");
@@ -273,7 +308,13 @@ public final class CobaltLoggerImpl implements CobaltLogger {
             }
         }
 
-        checkArgument(foundMetric != null, "failed to find metric with ID: %s", metricId);
+        if (foundMetric == null) {
+            if (Log.isLoggable(LOG_TAG, Log.INFO)) {
+                Log.i(LOG_TAG, String.format("failed to find metric with ID: %s", metricId));
+            }
+            return Optional.empty();
+        }
+
         MetricType foundMetricType = foundMetric.getMetricType();
         checkArgument(
                 foundMetricType == metricType,
@@ -281,6 +322,6 @@ public final class CobaltLoggerImpl implements CobaltLogger {
                 metricType,
                 foundMetricType);
 
-        return foundMetric;
+        return Optional.of(foundMetric);
     }
 }

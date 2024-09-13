@@ -16,7 +16,6 @@
 
 package com.android.cobalt.crypto;
 
-import androidx.annotation.NonNull;
 
 /** The API for providing Hybrid Public Key Encryption (HPKE) to Cobalt. */
 public interface HpkeEncrypt {
@@ -29,6 +28,5 @@ public interface HpkeEncrypt {
      * @param contextInfo the HPKE associated data
      * @return the encrypted ciphertext
      */
-    byte[] encrypt(
-            @NonNull byte[] publicKey, @NonNull byte[] plainText, @NonNull byte[] contextInfo);
+    byte[] encrypt(byte[] publicKey, byte[] plainText, byte[] contextInfo);
 }

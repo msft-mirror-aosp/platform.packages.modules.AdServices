@@ -43,8 +43,6 @@ import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import android.content.Context;
-
 import androidx.annotation.NonNull;
 import androidx.javascriptengine.IsolateStartupParameters;
 import androidx.javascriptengine.JavaScriptConsoleCallback;
@@ -53,9 +51,9 @@ import androidx.javascriptengine.JavaScriptSandbox;
 import androidx.javascriptengine.MemoryLimitExceededException;
 import androidx.javascriptengine.SandboxDeadException;
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.SmallTest;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.common.NoOpRetryStrategyImpl;
 import com.android.adservices.service.common.RetryStrategy;
 import com.android.adservices.service.common.RetryStrategyImpl;
@@ -63,9 +61,10 @@ import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.profiling.JSScriptEngineLogConstants;
 import com.android.adservices.service.profiling.Profiler;
 import com.android.adservices.service.profiling.StopWatch;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
@@ -78,14 +77,10 @@ import com.google.common.util.concurrent.MoreExecutors;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.function.ThrowingRunnable;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -102,8 +97,9 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
-@SmallTest
-public class JSScriptEngineTest {
+// NOTE: must use the Application context, not the Instrumentation context from sContext
+@RequiresSdkLevelAtLeastS()
+public final class JSScriptEngineTest extends AdServicesExtendedMockitoTestCase {
 
     /**
      * functions in simple_test_functions.wasm:
@@ -118,7 +114,6 @@ public class JSScriptEngineTest {
      */
     public static final String WASM_MODULE = "simple_test_functions.wasm";
 
-    protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Profiler sMockProfiler = mock(Profiler.class);
     private static final StopWatch sSandboxInitWatch = mock(StopWatch.class);
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -127,17 +122,13 @@ public class JSScriptEngineTest {
     private static JSScriptEngine sJSScriptEngine;
     private static boolean sIsConfigurableHeapSizeSupported = false;
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     private final ExecutorService mExecutorService = Executors.newFixedThreadPool(10);
     private final boolean mDefaultIsolateConsoleMessageInLogs = false;
     private final IsolateSettings mDefaultIsolateSettings =
             IsolateSettings.forMaxHeapSizeEnforcementEnabled(mDefaultIsolateConsoleMessageInLogs);
     private final RetryStrategy mNoOpRetryStrategy = new NoOpRetryStrategyImpl();
 
-
-    @Mock JSScriptEngine.JavaScriptSandboxProvider mMockSandboxProvider;
+    @Mock private JSScriptEngine.JavaScriptSandboxProvider mMockSandboxProvider;
     @Mock private StopWatch mIsolateCreateWatch;
     @Mock private StopWatch mJavaExecutionWatch;
     @Mock private JavaScriptSandbox mMockedSandbox;
@@ -149,8 +140,7 @@ public class JSScriptEngineTest {
                 .thenReturn(sSandboxInitWatch);
         doNothing().when(sSandboxInitWatch).stop();
         if (JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable()) {
-            sJSScriptEngine =
-                    JSScriptEngine.getInstanceForTesting(sContext, sMockProfiler, sLogger);
+            sJSScriptEngine = JSScriptEngine.getInstanceForTesting(sMockProfiler, sLogger);
             sIsConfigurableHeapSizeSupported =
                     sJSScriptEngine
                             .isConfigurableHeapSizeSupported()
@@ -163,7 +153,6 @@ public class JSScriptEngineTest {
         Assume.assumeTrue(
                 "JSSandbox does not support configurable heap size",
                 sIsConfigurableHeapSizeSupported);
-        MockitoAnnotations.initMocks(this);
 
         reset(sMockProfiler);
         when(sMockProfiler.start(JSScriptEngineLogConstants.ISOLATE_CREATE_TIME))
@@ -173,76 +162,50 @@ public class JSScriptEngineTest {
 
         FluentFuture<JavaScriptSandbox> futureInstance =
                 FluentFuture.from(Futures.immediateFuture(mMockedSandbox));
-        when(mMockSandboxProvider.getFutureInstance(sContext)).thenReturn(futureInstance);
+        when(mMockSandboxProvider.getFutureInstance(mAppContext)).thenReturn(futureInstance);
     }
 
     @Test
+    @SpyStatic(JavaScriptSandbox.class)
     public void testProviderFailsIfJSSandboxNotAvailableInWebViewVersion() {
-        MockitoSession staticMockSessionLocal = null;
-
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(JavaScriptSandbox.class)
-                            .strictness(Strictness.LENIENT)
-                            .initMocks(this)
-                            .startMocking();
             ExtendedMockito.doReturn(false).when(JavaScriptSandbox::isSupported);
 
-            ThrowingRunnable getFutureInstance =
-                    () ->
-                            new JSScriptEngine.JavaScriptSandboxProvider(sMockProfiler, sLogger)
-                                    .getFutureInstance(sContext)
-                                    .get();
+        ThrowingRunnable getFutureInstance =
+                () ->
+                        new JSScriptEngine.JavaScriptSandboxProvider(sMockProfiler, sLogger)
+                                .getFutureInstance(mAppContext)
+                                .get();
 
             Exception futureException = assertThrows(ExecutionException.class, getFutureInstance);
             assertThat(futureException)
                     .hasCauseThat()
                     .isInstanceOf(JSSandboxIsNotAvailableException.class);
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
     }
 
     @Test
+    @SpyStatic(JavaScriptSandbox.class)
     public void testEngineFailsIfJSSandboxNotAvailableInWebViewVersion() {
-        MockitoSession staticMockSessionLocal = null;
-
-        try {
-            staticMockSessionLocal =
-                    ExtendedMockito.mockitoSession()
-                            .spyStatic(JavaScriptSandbox.class)
-                            .strictness(Strictness.LENIENT)
-                            .initMocks(this)
-                            .startMocking();
             ExtendedMockito.doReturn(false).when(JavaScriptSandbox::isSupported);
 
-            ThrowingRunnable getFutureInstance =
-                    () ->
-                            callJSEngine(
-                                    JSScriptEngine.createNewInstanceForTesting(
-                                            sContext,
-                                            new JSScriptEngine.JavaScriptSandboxProvider(
-                                                    sMockProfiler, sLogger),
-                                            sMockProfiler,
-                                            sLogger),
-                                    "function test() { return \"hello world\"; }",
-                                    ImmutableList.of(),
-                                    "test",
-                                    mDefaultIsolateSettings,
-                                    mNoOpRetryStrategy);
+        ThrowingRunnable getFutureInstance =
+                () ->
+                        callJSEngine(
+                                JSScriptEngine.createNewInstanceForTesting(
+                                        mAppContext,
+                                        new JSScriptEngine.JavaScriptSandboxProvider(
+                                                sMockProfiler, sLogger),
+                                        sMockProfiler,
+                                        sLogger),
+                                "function test() { return \"hello world\"; }",
+                                ImmutableList.of(),
+                                "test",
+                                mDefaultIsolateSettings,
+                                mNoOpRetryStrategy);
 
             Exception futureException = assertThrows(ExecutionException.class, getFutureInstance);
             assertThat(futureException)
                     .hasCauseThat()
                     .isInstanceOf(JSSandboxIsNotAvailableException.class);
-        } finally {
-            if (staticMockSessionLocal != null) {
-                staticMockSessionLocal.finishMocking();
-            }
-        }
     }
 
     @Test
@@ -978,7 +941,7 @@ public class JSScriptEngineTest {
 
         JSScriptEngine engine =
                 JSScriptEngine.createNewInstanceForTesting(
-                        sContext, mMockSandboxProvider, sMockProfiler, sLogger);
+                        mAppContext, mMockSandboxProvider, sMockProfiler, sLogger);
         ListenableFuture<String> jsExecutionFuture =
                 engine.evaluate(
                         "function test() { return \"hello world\"; }",
@@ -1282,7 +1245,7 @@ public class JSScriptEngineTest {
     }
 
     private byte[] readBinaryAsset(@NonNull String assetName) throws IOException {
-        InputStream inputStream = sContext.getAssets().open(assetName);
+        InputStream inputStream = mAppContext.getAssets().open(assetName);
         return SdkLevel.isAtLeastT()
                 ? inputStream.readAllBytes()
                 : ByteStreams.toByteArray(inputStream);

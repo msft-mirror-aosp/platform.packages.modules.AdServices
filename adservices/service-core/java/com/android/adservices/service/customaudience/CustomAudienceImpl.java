@@ -19,7 +19,6 @@ package com.android.adservices.service.customaudience;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudience;
 import android.annotation.NonNull;
-import android.content.Context;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.customaudience.AdDataConversionStrategy;
@@ -46,7 +45,7 @@ import java.util.Objects;
  *
  * <p>This class is thread safe.
  */
-public class CustomAudienceImpl {
+public final class CustomAudienceImpl {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private static final Object SINGLETON_LOCK = new Object();
 
@@ -92,18 +91,17 @@ public class CustomAudienceImpl {
      * <p>If no instance has been initialized yet, a new one will be created. Otherwise, the
      * existing instance will be returned.
      */
-    public static CustomAudienceImpl getInstance(@NonNull Context context) {
-        Objects.requireNonNull(context, "Context must be provided.");
+    public static CustomAudienceImpl getInstance() {
         synchronized (SINGLETON_LOCK) {
             if (sSingleton == null) {
                 Flags flags = FlagsFactory.getFlags();
                 CustomAudienceDao customAudienceDao =
-                        CustomAudienceDatabase.getInstance(context).customAudienceDao();
+                        CustomAudienceDatabase.getInstance().customAudienceDao();
                 sSingleton =
                         new CustomAudienceImpl(
                                 customAudienceDao,
                                 new CustomAudienceQuantityChecker(customAudienceDao, flags),
-                                CustomAudienceValidator.getInstance(context, flags),
+                                CustomAudienceValidator.getInstance(),
                                 Clock.systemUTC(),
                                 flags);
             }

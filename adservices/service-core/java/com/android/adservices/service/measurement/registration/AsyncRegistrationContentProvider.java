@@ -21,18 +21,28 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
 
+import com.android.adservices.LogUtil;
 import com.android.modules.utils.build.SdkLevel;
 
 /** ContentProvider for monitoring changes to {@link AsyncRegistration}. */
-public class AsyncRegistrationContentProvider extends ContentProvider {
-    public static final String AUTHORITY =
-            SdkLevel.isAtLeastT()
-                    ? "com.android.adservices.provider.asyncregistration"
-                    : "com.android.ext.adservices.provider.asyncregistration";
-    public static final Uri TRIGGER_URI = Uri.parse("content://" + AUTHORITY);
+public final class AsyncRegistrationContentProvider extends ContentProvider {
+
+    /**
+     * Gets the Trigger URI of this content provider
+     *
+     * @return the trigger uri, which can be different based on the Android version (S- vs. T+)
+     */
+    public static Uri getTriggerUri() {
+        String authority =
+                SdkLevel.isAtLeastT()
+                        ? "com.android.adservices.provider.asyncregistration"
+                        : "com.android.ext.adservices.provider.asyncregistration";
+        return Uri.parse("content://" + authority);
+    }
 
     @Override
     public boolean onCreate() {
+        LogUtil.d("AsyncRegistrationContentProvider.onCreate()");
         return true;
     }
 
@@ -55,14 +65,16 @@ public class AsyncRegistrationContentProvider extends ContentProvider {
     public Uri insert(Uri uri, ContentValues values) {
         // 1) Call ContentProvider after insert in DAO
         // Sample Code:
+        // Uri triggerUri = AsyncRegistrationContentProvider.getTriggerUri();
         // ContentProviderClient contentProviderClient = ctx.getContentResolver()
-        //        .acquireContentProviderClient(AsyncRegistrationContentProvider.TRIGGER_URI)
-        //        .insert(TRIGGER_URI, null);
+        //        .acquireContentProviderClient(triggerUri)
+        //        .insert(triggerUri, null);
         // 2) Call ContentProvider for inserting during registration and call DAO from here.
         // Sample Code:
         // MeasurementDAO.getInstance(getContext()).insertAsyncRegistration(asyncReg);
-        getContext().getContentResolver().notifyChange(TRIGGER_URI, null);
-        return TRIGGER_URI;
+        Uri triggerUri = getTriggerUri();
+        getContext().getContentResolver().notifyChange(triggerUri, null);
+        return triggerUri;
     }
 
     @Override

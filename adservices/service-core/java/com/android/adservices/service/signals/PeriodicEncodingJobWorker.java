@@ -16,18 +16,13 @@
 
 package com.android.adservices.service.signals;
 
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OTHER_FAILURE;
-import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_SUCCESS;
-
 import android.adservices.common.AdTechIdentifier;
 import android.content.Context;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.enrollment.EnrollmentDao;
-import com.android.adservices.data.signals.DBEncodedPayload;
 import com.android.adservices.data.signals.DBEncoderLogicMetadata;
-import com.android.adservices.data.signals.DBSignalsUpdateMetadata;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.EncoderLogicHandler;
 import com.android.adservices.data.signals.EncoderLogicMetadataDao;
@@ -40,6 +35,7 @@ import com.android.adservices.service.common.RetryStrategy;
 import com.android.adservices.service.common.RetryStrategyFactory;
 import com.android.adservices.service.common.SingletonRunner;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.pas.EncodingExecutionLogHelper;
@@ -61,8 +57,6 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -79,16 +73,12 @@ public final class PeriodicEncodingJobWorker {
     public static final String PAYLOAD_PERSISTENCE_ERROR_MSG = "Failed to persist encoded payload";
 
     private final int mPerBuyerEncodingTimeoutMs;
-
     private final int mEncodedPayLoadMaxSizeBytes;
-    private final int mEncoderLogicMaximumFailure;
 
     private final EncoderLogicHandler mEncoderLogicHandler;
     private final EncoderLogicMetadataDao mEncoderLogicMetadataDao;
     private final EncodedPayloadDao mEncodedPayloadDao;
-    private final SignalsProvider mSignalsProvider;
-    private final ProtectedSignalsDao mProtectedSignalsDao;
-    private final SignalsScriptEngine mScriptEngine;
+
     private final ListeningExecutorService mBackgroundExecutor;
     private final ListeningExecutorService mLightWeightExecutor;
     private final EnrollmentDao mEnrollmentDao;
@@ -98,13 +88,13 @@ public final class PeriodicEncodingJobWorker {
             new SingletonRunner<>(JOB_DESCRIPTION, this::doRun);
 
     private final Flags mFlags;
+    private final PeriodicEncodingJobRunner mPeriodicEncodingJobRunner;
 
     @VisibleForTesting
     public PeriodicEncodingJobWorker(
             EncoderLogicHandler encoderLogicHandler,
             EncoderLogicMetadataDao encoderLogicMetadataDao,
             EncodedPayloadDao encodedPayloadDao,
-            SignalsProviderImpl signalStorageManager,
             ProtectedSignalsDao protectedSignalsDao,
             SignalsScriptEngine scriptEngine,
             ListeningExecutorService backgroundExecutor,
@@ -116,19 +106,26 @@ public final class PeriodicEncodingJobWorker {
         mEncoderLogicHandler = encoderLogicHandler;
         mEncoderLogicMetadataDao = encoderLogicMetadataDao;
         mEncodedPayloadDao = encodedPayloadDao;
-        mSignalsProvider = signalStorageManager;
-        mProtectedSignalsDao = protectedSignalsDao;
-        mScriptEngine = scriptEngine;
         mBackgroundExecutor = backgroundExecutor;
         mLightWeightExecutor = lightWeightExecutor;
         mFlags = flags;
         mEncodedPayLoadMaxSizeBytes = mFlags.getProtectedSignalsEncodedPayloadMaxSizeBytes();
-        mEncoderLogicMaximumFailure =
-                mFlags.getProtectedSignalsMaxJsFailureExecutionOnCertainVersionBeforeStop();
         mEnrollmentDao = enrollmentDao;
         mClock = clock;
         mAdServicesLogger = adServicesLogger;
         mPerBuyerEncodingTimeoutMs = mFlags.getPasScriptExecutionTimeoutMs();
+        mPeriodicEncodingJobRunner =
+                new PeriodicEncodingJobRunner(
+                        new SignalsProviderAndArgumentFactory(
+                                protectedSignalsDao, flags.getPasEncodingJobImprovementsEnabled()),
+                        protectedSignalsDao,
+                        scriptEngine,
+                        mFlags.getProtectedSignalsMaxJsFailureExecutionOnCertainVersionBeforeStop(),
+                        mEncodedPayLoadMaxSizeBytes,
+                        mEncoderLogicHandler,
+                        mEncodedPayloadDao,
+                        mBackgroundExecutor,
+                        mLightWeightExecutor);
     }
 
     /**
@@ -157,7 +154,6 @@ public final class PeriodicEncodingJobWorker {
                     new EncoderLogicHandler(context),
                     signalsDatabase.getEncoderLogicMetadataDao(),
                     signalsDatabase.getEncodedPayloadDao(),
-                    new SignalsProviderImpl(signalsDatabase.protectedSignalsDao()),
                     signalsDatabase.protectedSignalsDao(),
                     new SignalsScriptEngine(
                             flags::getIsolateMaxHeapSizeBytes,
@@ -190,6 +186,8 @@ public final class PeriodicEncodingJobWorker {
      * encoders for buyers that have the previous encoders downloaded outside the refresh window
      */
     private FluentFuture<Void> doRun(Supplier<Boolean> shouldStop) {
+        int traceCookie = Tracing.beginAsyncSection(Tracing.RUN_WORKER);
+
         boolean pasExtendedMetricsEnabled = mFlags.getPasExtendedMetricsEnabled();
         EncodingJobRunStatsLogger encodingJobRunStatsLogger =
                 pasExtendedMetricsEnabled
@@ -229,15 +227,22 @@ public final class PeriodicEncodingJobWorker {
                     encodingJobRunStatsLogger.logEncodingJobRunStats();
 
                     return buyersWithEncodersReadyForRefresh.transformAsync(
-                            b -> doUpdateEncodersForBuyers(b), mBackgroundExecutor);
+                            this::doUpdateEncodersForBuyers, mBackgroundExecutor);
                 },
-                mLightWeightExecutor);
+                mLightWeightExecutor)
+        .transform(
+                ignored -> {
+                    Tracing.endAsyncSection(Tracing.RUN_WORKER, traceCookie);
+                    return null;
+                },
+                mBackgroundExecutor);
     }
 
     private FluentFuture<Void> doEncodingForRegisteredBuyers(
             List<DBEncoderLogicMetadata> encoderLogicMetadataList,
             boolean extendedLoggingEnabled,
             EncodingJobRunStatsLogger encodingJobRunStatsLogger) {
+        int traceCookie = Tracing.beginAsyncSection(Tracing.DO_ENCODING_FOR_REGISTERED_BUYERS);
 
         List<ListenableFuture<Void>> buyerEncodings =
                 encoderLogicMetadataList.stream()
@@ -250,7 +255,13 @@ public final class PeriodicEncodingJobWorker {
                         .collect(Collectors.toList());
         encodingJobRunStatsLogger.setSizeOfFilteredBuyerEncodingList(buyerEncodings.size());
         return FluentFuture.from(Futures.successfulAsList(buyerEncodings))
-                .transform(ignored -> null, mLightWeightExecutor);
+                .transform(
+                        ignored -> {
+                            Tracing.endAsyncSection(
+                                    Tracing.DO_ENCODING_FOR_REGISTERED_BUYERS, traceCookie);
+                            return null;
+                        },
+                        mLightWeightExecutor);
     }
 
     private FluentFuture<Void> pickLoggerAndRunEncodingPerBuyer(
@@ -265,7 +276,8 @@ public final class PeriodicEncodingJobWorker {
             logHelper = new EncodingExecutionLogHelperNoOpImpl();
         }
         int timeoutSeconds = mPerBuyerEncodingTimeoutMs / 1000;
-        return runEncodingPerBuyer(metadata, timeoutSeconds, logHelper, encodingJobRunStatsLogger)
+        return mPeriodicEncodingJobRunner
+                .runEncodingPerBuyer(metadata, timeoutSeconds, logHelper, encodingJobRunStatsLogger)
                 .catching(
                         Exception.class,
                         (e) -> {
@@ -277,7 +289,9 @@ public final class PeriodicEncodingJobWorker {
     }
 
     // TODO(b/294900119) We should do the update of encoding logic in a separate job, & remove this
-    private FluentFuture<Void> doUpdateEncodersForBuyers(List<AdTechIdentifier> buyers) {
+    FluentFuture<Void> doUpdateEncodersForBuyers(List<AdTechIdentifier> buyers) {
+        int traceCookie = Tracing.beginAsyncSection(Tracing.UPDATE_ENCODERS_FOR_BUYERS);
+
         List<ListenableFuture<Boolean>> encoderUpdates =
                 buyers.stream()
                         .map(
@@ -286,103 +300,17 @@ public final class PeriodicEncodingJobWorker {
                                                 buyer, DevContext.createForDevOptionsDisabled()))
                         .collect(Collectors.toList());
         return FluentFuture.from(Futures.successfulAsList(encoderUpdates))
-                .transform(ignored -> null, mLightWeightExecutor);
-    }
-
-    @VisibleForTesting
-    FluentFuture<Void> runEncodingPerBuyer(
-            DBEncoderLogicMetadata encoderLogicMetadata,
-            int timeout,
-            EncodingExecutionLogHelper logHelper,
-            EncodingJobRunStatsLogger encodingJobRunStatsLogger) {
-        AdTechIdentifier buyer = encoderLogicMetadata.getBuyer();
-        Map<String, List<ProtectedSignal>> signals = mSignalsProvider.getSignals(buyer);
-        if (signals.isEmpty()) {
-            mEncoderLogicHandler.deleteEncoderForBuyer(buyer);
-            return FluentFuture.from(Futures.immediateFuture(null));
-        }
-
-        DBSignalsUpdateMetadata signalsUpdateMetadata =
-                mProtectedSignalsDao.getSignalsUpdateMetadata(buyer);
-        DBEncodedPayload existingPayload = mEncodedPayloadDao.getEncodedPayload(buyer);
-        if (signalsUpdateMetadata != null && existingPayload != null) {
-            boolean isNoNewSignalUpdateAfterLastEncoding =
-                    signalsUpdateMetadata
-                            .getLastSignalsUpdatedTime()
-                            .isBefore(existingPayload.getCreationTime());
-            boolean isEncoderLogicNotUpdatedAfterLastEncoding =
-                    encoderLogicMetadata
-                            .getCreationTime()
-                            .isBefore(existingPayload.getCreationTime());
-            if (isNoNewSignalUpdateAfterLastEncoding && isEncoderLogicNotUpdatedAfterLastEncoding) {
-                encodingJobRunStatsLogger.addOneSignalEncodingSkips();
-                return FluentFuture.from(Futures.immediateFuture(null));
-            }
-        }
-
-        int failedCount = encoderLogicMetadata.getFailedEncodingCount();
-        if (failedCount >= mEncoderLogicMaximumFailure) {
-            return FluentFuture.from(Futures.immediateFuture(null));
-        }
-        String encodingLogic = mEncoderLogicHandler.getEncoder(buyer);
-        int version = encoderLogicMetadata.getVersion();
-
-        logHelper.setAdtech(buyer);
-
-        return FluentFuture.from(
-                        mScriptEngine.encodeSignals(
-                                encodingLogic, signals, mEncodedPayLoadMaxSizeBytes, logHelper))
                 .transform(
-                        encodedPayload -> {
-                            validateAndPersistPayload(
-                                    encoderLogicMetadata, encodedPayload, version);
-                            logHelper.setStatus(JS_RUN_STATUS_SUCCESS);
-                            logHelper.finish();
-                            return (Void) null;
+                        ignored -> {
+                            Tracing.endAsyncSection(
+                                    Tracing.UPDATE_ENCODERS_FOR_BUYERS, traceCookie);
+                            return null;
                         },
-                        mBackgroundExecutor)
-                .catching(
-                        Exception.class,
-                        e -> {
-                            sLogger.e(
-                                    e,
-                                    "Exception trying to validate and persist encoded payload for"
-                                            + " buyer: %s",
-                                    buyer);
-                            logHelper.setStatus(JS_RUN_STATUS_OTHER_FAILURE);
-                            logHelper.finish();
-                            throw new IllegalStateException(PAYLOAD_PERSISTENCE_ERROR_MSG, e);
-                        },
-                        mLightWeightExecutor)
-                .withTimeout(timeout, TimeUnit.SECONDS, AdServicesExecutors.getScheduler());
+                        mLightWeightExecutor);
     }
 
     private void handleFailedPerBuyerEncoding(DBEncoderLogicMetadata logic) {
         mEncoderLogicHandler.updateEncoderFailedCount(
                 logic.getBuyer(), logic.getFailedEncodingCount() + 1);
-    }
-
-    @VisibleForTesting
-    void validateAndPersistPayload(
-            DBEncoderLogicMetadata encoderLogicMetadata, byte[] encodedBytes, int version) {
-        AdTechIdentifier buyer = encoderLogicMetadata.getBuyer();
-        if (encodedBytes.length > mEncodedPayLoadMaxSizeBytes) {
-            // Do not persist encoded payload if the encoding logic violates the size constraints
-            sLogger.e("Buyer:%s encoded payload exceeded max size limit", buyer);
-            throw new IllegalArgumentException("Payload size exceeds limits.");
-        }
-
-        DBEncodedPayload dbEncodedPayload =
-                DBEncodedPayload.builder()
-                        .setBuyer(buyer)
-                        .setCreationTime(Instant.now())
-                        .setVersion(version)
-                        .setEncodedPayload(encodedBytes)
-                        .build();
-        sLogger.v("Persisting encoded payload for buyer: %s", buyer);
-        mEncodedPayloadDao.persistEncodedPayload(dbEncodedPayload);
-        if (encoderLogicMetadata.getFailedEncodingCount() > 0) {
-            mEncoderLogicHandler.updateEncoderFailedCount(buyer, 0);
-        }
     }
 }

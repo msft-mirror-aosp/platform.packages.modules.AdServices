@@ -41,6 +41,7 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.android.libraries.mobiledatadownload.internal.AndroidTimeSource;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.time.Clock;
@@ -186,38 +187,36 @@ public class DebugReportingFallbackJobService extends JobService {
 
     @VisibleForTesting
     void sendReports() {
-        final JobLockHolder lock = JobLockHolder.getInstance(DEBUG_REPORTING);
-        if (lock.tryLock()) {
-            try {
-                DatastoreManager datastoreManager =
-                        DatastoreManagerFactory.getDatastoreManager(getApplicationContext());
-                new EventReportingJobHandler(
-                                datastoreManager,
-                                FlagsFactory.getFlags(),
-                                AdServicesLoggerImpl.getInstance(),
-                                ReportingStatus.ReportType.DEBUG_EVENT,
-                                ReportingStatus.UploadMethod.FALLBACK,
-                                getApplicationContext())
-                        .setIsDebugInstance(true)
-                        .performScheduledPendingReportsInWindow(0, 0);
-                new AggregateReportingJobHandler(
-                                datastoreManager,
-                                new AggregateEncryptionKeyManager(
-                                        datastoreManager, getApplicationContext()),
-                                FlagsFactory.getFlags(),
-                                AdServicesLoggerImpl.getInstance(),
-                                ReportingStatus.ReportType.DEBUG_AGGREGATE,
-                                ReportingStatus.UploadMethod.FALLBACK,
-                                getApplicationContext())
-                        .setIsDebugInstance(true)
-                        .performScheduledPendingReportsInWindow(0, 0);
-                return;
-            } finally {
-                lock.unlock();
-            }
-        }
-        LoggerFactory.getMeasurementLogger()
-                .d("DebugReportingFallbackJobService did not acquire the lock");
+        JobLockHolder.getInstance(DEBUG_REPORTING)
+                .runWithLock(
+                        "DebugReportingFallbackJobService",
+                        () -> {
+                            DatastoreManager datastoreManager =
+                                    DatastoreManagerFactory.getDatastoreManager();
+                            AndroidTimeSource timeSource = new AndroidTimeSource();
+                            new EventReportingJobHandler(
+                                            datastoreManager,
+                                            FlagsFactory.getFlags(),
+                                            AdServicesLoggerImpl.getInstance(),
+                                            ReportingStatus.ReportType.DEBUG_EVENT,
+                                            ReportingStatus.UploadMethod.FALLBACK,
+                                            getApplicationContext(),
+                                            timeSource)
+                                    .setIsDebugInstance(true)
+                                    .performScheduledPendingReportsInWindow(0, 0);
+                            new AggregateReportingJobHandler(
+                                            datastoreManager,
+                                            new AggregateEncryptionKeyManager(
+                                                    datastoreManager, getApplicationContext()),
+                                            FlagsFactory.getFlags(),
+                                            AdServicesLoggerImpl.getInstance(),
+                                            ReportingStatus.ReportType.DEBUG_AGGREGATE,
+                                            ReportingStatus.UploadMethod.FALLBACK,
+                                            getApplicationContext(),
+                                            timeSource)
+                                    .setIsDebugInstance(true)
+                                    .performScheduledPendingReportsInWindow(0, 0);
+                        });
     }
 
     @VisibleForTesting

@@ -17,53 +17,97 @@ package com.android.adservices.shared.testing.concurrency;
 
 import com.android.adservices.shared.testing.Logger;
 import com.android.adservices.shared.testing.Logger.RealLogger;
+import com.android.adservices.shared.testing.Nullable;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.errorprone.annotations.FormatMethod;
+import com.google.errorprone.annotations.FormatString;
 
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
-// TODO(b/I343510637): add unit tests / javadoc
-public final class ConcurrencyHelper {
+/**
+ * Helper class for concurrency-related needs.
+ *
+ * <p><b>Note:</b>this class is not directly visible to tests, they should use static methods from
+ * {@link com.android.adservices.shared.testing.concurrency.DeviceSideConcurrencyHelper} instead.
+ */
+final class ConcurrencyHelper {
 
     private static final AtomicInteger sThreadId = new AtomicInteger();
 
     private final Logger mLogger;
+    private final Sleeper mSleeper;
 
-    public ConcurrencyHelper(RealLogger realLogger) {
+    ConcurrencyHelper(RealLogger realLogger) {
+        this(realLogger, napTimeMs -> Thread.sleep(napTimeMs));
+    }
+
+    @VisibleForTesting
+    ConcurrencyHelper(RealLogger realLogger, Sleeper sleeper) {
         mLogger = new Logger(realLogger, ConcurrencyHelper.class);
+        mSleeper = sleeper;
     }
 
-    /**
-     * Starts a new thread and runs {@code r} on it after {@code timeoutMs} ms.
-     *
-     * @return the new thread.
-     */
-    public Thread runAsync(long timeoutMs, Runnable r) {
-        Objects.requireNonNull(r);
-        Runnable sleepingBeauty =
-                () -> {
-                    String threadName = Thread.currentThread().getName();
-                    mLogger.v("Sleeping %d ms on %s", timeoutMs, threadName);
-                    try {
-                        Thread.sleep(timeoutMs);
-                        mLogger.v("Woke up. Running %s", r);
-                        r.run();
-                        mLogger.v("Done");
-                    } catch (InterruptedException e) {
-                        mLogger.e(
-                                e, "%s interrupted while sleeping - NOT running %s", threadName, r);
-                        return;
-                    }
-                };
-        return startNewThread(sleepingBeauty);
+    Thread runAsync(long delayMs, Runnable r) {
+        Objects.requireNonNull(r, "Runnable cannot be null");
+        return startNewThread(() -> sleep(delayMs, r, "runAsync() call"));
     }
 
-    /** Starts a new thread to run the given runnable. */
-    public Thread startNewThread(Runnable r) {
-        Objects.requireNonNull(r);
+    Thread startNewThread(Runnable r) {
+        Objects.requireNonNull(r, "Runnable cannot be null");
         String threadName = "ConcurrencyHelper-runLaterThread-" + sThreadId.incrementAndGet();
         Thread thread = new Thread(r, threadName);
         mLogger.v("Starting new thread (%s) to run %s", threadName, r);
         thread.start();
         return thread;
+    }
+
+    @FormatMethod
+    void sleep(long timeMs, @FormatString String reasonFmt, @Nullable Object... reasonArgs) {
+        sleep(timeMs, /* postSleepRunnable= */ null, reasonFmt, reasonArgs);
+    }
+
+    @FormatMethod
+    void sleepOnly(long timeMs, @FormatString String reasonFmt, @Nullable Object... reasonArgs)
+            throws InterruptedException {
+        sleepAndLog(timeMs, reasonFmt, reasonArgs);
+    }
+
+    @FormatMethod
+    private void sleepAndLog(
+            long timeMs, @FormatString String reasonFmt, @Nullable Object... reasonArgs)
+            throws InterruptedException {
+        String reason =
+                String.format(
+                        Objects.requireNonNull(reasonFmt, "reasonFmt cannot be null"), reasonArgs);
+
+        mLogger.i(
+                "Napping %dms on thread %s. Reason: %s",
+                timeMs, Thread.currentThread().toString(), reason);
+        mSleeper.sleep(timeMs);
+        mLogger.i("Little Suzie woke up!");
+    }
+
+    @FormatMethod
+    private void sleep(
+            long timeMs,
+            @Nullable Runnable postSleepRunnable,
+            @FormatString String reasonFmt,
+            @Nullable Object... reasonArgs) {
+        try {
+            sleepAndLog(timeMs, reasonFmt, reasonArgs);
+            if (postSleepRunnable != null) {
+                postSleepRunnable.run();
+            }
+        } catch (InterruptedException e) {
+            mLogger.e(e, "Thread %s interrupted while sleeping", Thread.currentThread().toString());
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    /** Abstraction used to test runAsync() when interrupted */
+    interface Sleeper {
+        void sleep(long napTimeMs) throws InterruptedException;
     }
 }

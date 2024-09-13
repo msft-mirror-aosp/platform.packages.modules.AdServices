@@ -33,7 +33,9 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.shared.storage.BooleanFileDatastore;
+import com.android.adservices.common.AdServicesMockitoTestCase;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
+import com.android.adservices.shared.storage.AtomicFileDatastore;
 import com.android.server.adservices.feature.PrivacySandboxEnrollmentChannelCollection;
 import com.android.server.adservices.feature.PrivacySandboxFeatureType;
 import com.android.server.adservices.feature.PrivacySandboxUxCollection;
@@ -42,6 +44,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 
 import java.io.File;
 import java.io.IOException;
@@ -51,20 +54,23 @@ import java.nio.file.Paths;
 import java.util.stream.Stream;
 
 /** Tests for {@link ConsentManager} */
-public class ConsentManagerTest {
+public final class ConsentManagerTest extends AdServicesMockitoTestCase {
     private static final Context PPAPI_CONTEXT = ApplicationProvider.getApplicationContext();
     private static final String BASE_DIR = PPAPI_CONTEXT.getFilesDir().getAbsolutePath();
 
-    private BooleanFileDatastore mDatastore;
+    @Mock private AdServicesErrorLogger mMockAdServicesErrorLogger;
+
+    private AtomicFileDatastore mDatastore;
 
     @Before
     public void setup() {
         mDatastore =
-                new BooleanFileDatastore(
+                new AtomicFileDatastore(
                         PPAPI_CONTEXT.getFilesDir().getAbsolutePath(),
                         STORAGE_XML_IDENTIFIER,
                         STORAGE_VERSION,
-                        VERSION_KEY);
+                        VERSION_KEY,
+                        mMockAdServicesErrorLogger);
     }
 
     @After
@@ -90,17 +96,17 @@ public class ConsentManagerTest {
     }
 
     @Test
-    public void testCreateAndInitBooleanFileDatastore() {
-        BooleanFileDatastore datastore = null;
+    public void testCreateAndInitAtomicFileDatastore() {
+        AtomicFileDatastore datastore = null;
         try {
-            datastore = ConsentManager.createAndInitBooleanFileDatastore(BASE_DIR);
+            datastore = ConsentManager.createAndInitAtomicFileDatastore(BASE_DIR);
         } catch (IOException e) {
             Assert.fail("Fail to create the DataStore");
         }
 
         // Assert that the DataStore is created and initialized with NOTIFICATION_DISPLAYED_ONCE
         // is false.
-        assertThat(datastore.get(NOTIFICATION_DISPLAYED_ONCE)).isFalse();
+        assertThat(datastore.getBoolean(NOTIFICATION_DISPLAYED_ONCE)).isFalse();
     }
 
     @Test

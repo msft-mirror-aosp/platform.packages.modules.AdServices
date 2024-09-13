@@ -20,6 +20,7 @@ import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCOD
 
 import android.adservices.common.AdTechIdentifier;
 import android.content.Context;
+import android.os.Trace;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
@@ -32,6 +33,7 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequ
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.FetchProcessLogger;
@@ -119,7 +121,7 @@ public class EncoderLogicHandler {
 
     public EncoderLogicHandler(@NonNull Context context) {
         this(
-                EncoderPersistenceDao.getInstance(context),
+                EncoderPersistenceDao.getInstance(),
                 ProtectedSignalsDatabase.getInstance().getEncoderEndpointsDao(),
                 ProtectedSignalsDatabase.getInstance().getEncoderLogicMetadataDao(),
                 ProtectedSignalsDatabase.getInstance().protectedSignalsDao(),
@@ -155,6 +157,8 @@ public class EncoderLogicHandler {
     public FluentFuture<Boolean> downloadAndUpdate(
             @NonNull AdTechIdentifier buyer, @NonNull DevContext devContext) {
         Objects.requireNonNull(buyer);
+        int traceCookie = Tracing.beginAsyncSection(Tracing.DOWNLOAD_AND_UPDATE_ENCODER);
+
         EncodingFetchStats.Builder encodingJsFetchStatsBuilder = EncodingFetchStats.builder();
         FetchProcessLogger fetchProcessLogger =
                 getEncodingJsFetchStatsLogger(mFlags, encodingJsFetchStatsBuilder);
@@ -170,6 +174,7 @@ public class EncoderLogicHandler {
                             buyer));
 
             fetchProcessLogger.logEncodingJsFetchStats(ENCODING_FETCH_STATUS_OTHER_FAILURE);
+            Tracing.endAsyncSection(Tracing.DOWNLOAD_AND_UPDATE_ENCODER, traceCookie);
 
             return FluentFuture.from(Futures.immediateFuture(false));
         }
@@ -190,18 +195,23 @@ public class EncoderLogicHandler {
                                 downloadRequest, fetchProcessLogger));
 
         return response.transform(
-                r -> extractAndPersistEncoder(buyer, r), mBackgroundExecutorService);
+                r -> {
+                    boolean result = extractAndPersistEncoder(buyer, r);
+                    Tracing.endAsyncSection(Tracing.DOWNLOAD_AND_UPDATE_ENCODER, traceCookie);
+                    return result;
+                },
+                mBackgroundExecutorService);
     }
 
     @VisibleForTesting
     protected boolean extractAndPersistEncoder(
             AdTechIdentifier buyer, AdServicesHttpClientResponse response) {
-
         if (response == null || response.getResponseBody().isEmpty()) {
             sLogger.e("Empty response from from client for downloading encoder");
             return false;
         }
 
+        Trace.beginSection(Tracing.SAVE_BUYERS_ENCODER);
         String encoderLogicBody = response.getResponseBody();
 
         int version = FALLBACK_VERSION;
@@ -242,7 +252,11 @@ public class EncoderLogicHandler {
                                 + " entry");
             }
             buyerLock.unlock();
+        } else {
+            sLogger.v("Failed to acquire lock for buyer: %s", buyer);
         }
+        Trace.endSection();
+        sLogger.v("Encoder update succeeded: %b", updateSucceeded);
         return updateSucceeded;
     }
 
@@ -267,12 +281,18 @@ public class EncoderLogicHandler {
 
     /** Returns all registered encoding logic metadata. */
     public List<DBEncoderLogicMetadata> getAllRegisteredEncoders() {
-        return mEncoderLogicMetadataDao.getAllRegisteredEncoders();
+        Trace.beginSection(Tracing.GET_ALL_ENCODERS);
+        List<DBEncoderLogicMetadata> result = mEncoderLogicMetadataDao.getAllRegisteredEncoders();
+        Trace.endSection();
+        return result;
     }
 
     /** Returns the encoding logic for the given buyer. */
     public String getEncoder(AdTechIdentifier buyer) {
-        return mEncoderPersistenceDao.getEncoder(buyer);
+        Trace.beginSection(Tracing.GET_ENCODER_FOR_BUYER);
+        String result = mEncoderPersistenceDao.getEncoder(buyer);
+        Trace.endSection();
+        return result;
     }
 
     /** Returns the encoder metadata for the given buyer. */
@@ -282,7 +302,9 @@ public class EncoderLogicHandler {
 
     /** Update the failed count for a buyer */
     public void updateEncoderFailedCount(AdTechIdentifier adTechIdentifier, int count) {
+        Trace.beginSection(Tracing.UPDATE_FAILED_ENCODING);
         mEncoderLogicMetadataDao.updateEncoderFailedCount(adTechIdentifier, count);
+        Trace.endSection();
     }
 
     /**

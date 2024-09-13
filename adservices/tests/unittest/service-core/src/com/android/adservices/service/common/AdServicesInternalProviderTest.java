@@ -15,8 +15,8 @@
  */
 package com.android.adservices.service.common;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockDump;
 import static com.android.adservices.shared.testing.common.DumpHelper.dump;
+import static com.android.adservices.shared.testing.common.DumpHelper.mockDump;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
@@ -36,7 +36,7 @@ public final class AdServicesInternalProviderTest extends AdServicesExtendedMock
 
     @Test
     public void testDump_appContextSingletonNotSet() throws Exception {
-        ApplicationContextSingleton.setForTests(/* context=*/ null);
+        ApplicationContextSingleton.setAsIs(/* context= */ null);
 
         String dump = dump(pw -> mProvider.dump(/* fd= */ null, pw, /* args= */ null));
 

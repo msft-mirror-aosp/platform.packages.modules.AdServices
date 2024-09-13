@@ -31,10 +31,10 @@ android_test {
         "RestrictionsSdkApi",
     ],
     libs: [
-        "android.test.base",
-        "android.test.mock",
-        "android.test.runner",
-        "framework-configinfrastructure",
+        "android.test.base.stubs.system",
+        "android.test.mock.stubs.system",
+        "android.test.runner.stubs.system",
+        "framework-configinfrastructure.stubs.module_lib",
     ],
     manifest: "SdkSandboxRestrictionsManifest.xml",
     test_config: "SdkSandboxRestrictionsTest.xml",
@@ -47,5 +47,5 @@ android_test {
         "mts-adservices",
         "general-tests",
     ],
-    jarjar_rules: ":test-jarjar-rules",
+    jarjar_rules: ":test-service-jarjar-rules",
 }

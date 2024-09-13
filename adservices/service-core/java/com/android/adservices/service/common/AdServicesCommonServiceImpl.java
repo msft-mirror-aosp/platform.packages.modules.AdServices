@@ -25,7 +25,6 @@ import static android.adservices.common.AdServicesPermissions.UPDATE_PRIVILEGED_
 import static android.adservices.common.AdServicesStatusUtils.STATUS_ADSERVICES_ACTIVITY_DISABLED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 import static android.adservices.common.ConsentStatus.SERVICE_NOT_ENABLED;
@@ -51,6 +50,7 @@ import static com.android.adservices.service.ui.constants.DebugMessages.SET_AD_S
 import static com.android.adservices.service.ui.constants.DebugMessages.UNAUTHORIZED_CALLER_MESSAGE;
 
 import android.adservices.adid.AdId;
+import android.adservices.common.AdServicesCommonResponse;
 import android.adservices.common.AdServicesCommonStates;
 import android.adservices.common.AdServicesCommonStatesResponse;
 import android.adservices.common.AdServicesModuleState;
@@ -386,12 +386,6 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
         sBackgroundExecutor.execute(
                 () -> {
                     try {
-                        if (!mFlags.getAdIdCacheEnabled()) {
-                            LogUtil.w("notifyAdIdChange() is disabled.");
-                            callback.onFailure(STATUS_KILLSWITCH_ENABLED);
-                            return;
-                        }
-
                         if (!authorizedCaller) {
                             LogUtil.w(
                                     "Caller %d is not authorized to update AdId Cache!", callerUid);
@@ -516,21 +510,74 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
 
     /** Sets AdServices feature states. */
     @Override
-    @RequiresPermission(anyOf = {ACCESS_ADSERVICES_STATE, ACCESS_ADSERVICES_STATE_COMPAT})
+    @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
     public void setAdServicesModuleOverrides(
             List<AdServicesModuleState> adServicesModuleStateList,
             NotificationTypeParams notificationType,
             ISetAdServicesModuleOverridesCallback callback) {
-        // TODO: Add implementation
+
+        boolean authorizedCaller = PermissionHelper.hasModifyAdServicesStatePermission(mContext);
+        sBackgroundExecutor.execute(
+                () -> {
+                    try {
+                        if (!authorizedCaller) {
+                            callback.onFailure(STATUS_UNAUTHORIZED);
+                            LogUtil.d(UNAUTHORIZED_CALLER_MESSAGE);
+                            return;
+                        }
+                        ConsentManager consentManager = ConsentManager.getInstance();
+                        consentManager.setModuleStates(adServicesModuleStateList);
+                        callback.onResult(
+                                new AdServicesCommonResponse.Builder()
+                                        .setStatusCode(STATUS_SUCCESS)
+                                        .build());
+
+                        // TODO(361411984): Add the notification trigger logic
+
+                    } catch (Exception e) {
+                        LogUtil.e(
+                                "setAdServicesModuleOverrides() failed to complete: "
+                                        + e.getMessage());
+                        try {
+                            callback.onFailure(STATUS_INTERNAL_ERROR);
+                        } catch (RemoteException ex) {
+                            LogUtil.e("Unable to send result to the callback " + ex.getMessage());
+                        }
+                    }
+                });
     }
 
     /** Sets AdServices feature user choices. */
     @Override
-    @RequiresPermission(anyOf = {ACCESS_ADSERVICES_STATE, ACCESS_ADSERVICES_STATE_COMPAT})
+    @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
     public void setAdServicesModuleUserChoices(
             List<AdServicesModuleUserChoice> adServicesFeatureUserChoiceList,
             ISetAdServicesModuleUserChoicesCallback callback) {
-        // TODO: Add implementation
+
+        boolean authorizedCaller = PermissionHelper.hasModifyAdServicesStatePermission(mContext);
+
+        sBackgroundExecutor.execute(
+                () -> {
+                    try {
+                        if (!authorizedCaller) {
+                            callback.onFailure(STATUS_UNAUTHORIZED);
+                            LogUtil.d(UNAUTHORIZED_CALLER_MESSAGE);
+                            return;
+                        }
+                        ConsentManager consentManager = ConsentManager.getInstance();
+                        consentManager.setUserChoices(adServicesFeatureUserChoiceList);
+                        LogUtil.i("setAdServicesModuleUserChoices");
+                        callback.onResult(
+                                new AdServicesCommonResponse.Builder()
+                                        .setStatusCode(STATUS_SUCCESS)
+                                        .build());
+
+                    } catch (Exception e) {
+                        LogUtil.e(
+                                "setAdServicesModuleUserChoices() failed to complete: "
+                                        + e.getMessage());
+                    }
+                });
     }
 
     private int getLatency(CallerMetadata metadata, long serviceStartTime) {
@@ -538,7 +585,13 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
         long serviceLatency = mClock.elapsedRealtime() - serviceStartTime;
         // Double it to simulate the return binder time is same to call binder time
         long binderLatency = (serviceStartTime - binderCallStartTimeMillis) * 2;
-
+        LogUtil.v(
+                "binder call start time "
+                        + binderCallStartTimeMillis
+                        + ", servicve Start time "
+                        + serviceStartTime
+                        + ", service latency "
+                        + serviceLatency);
         return (int) (serviceLatency + binderLatency);
     }
 

@@ -28,13 +28,12 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 import android.content.Context;
 import android.database.DatabaseUtils;
-import android.net.wifi.WifiManager;
 import android.os.SystemClock;
 
 import androidx.annotation.NonNull;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.encryptionkey.EncryptionKeyTables;
 import com.android.adservices.data.enrollment.EnrollmentDao;
@@ -50,6 +49,7 @@ import com.android.adservices.service.topics.classifier.CommonClassifierHelper;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.adservices.shared.testing.network.NetworkConnectionHelper;
 import com.android.adservices.shared.util.Clock;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -155,6 +155,9 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/3156"
                     + "/9d9d99be0c6dc71fc329f5c02a0fac48d3b06e73";
 
+    private static final String MDD_PACKAGE_DENY_MANIFEST_FILE_URL =
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-package-deny-list/6424"
+                    + "/1d22cb7e5e7b0ca9a7e1cc16c0354781f8b8ba55";
     private static final int PTB_ENROLLMENT_ENTRIES = 6;
 
     private static final int PTB_OLD_ENROLLMENT_ENTRIES = 4;
@@ -170,23 +173,24 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
     public static final String ENROLLMENT_PROTO_FILE_GROUP_NAME = "adtech_enrollment_proto_data";
     public static final String UI_OTA_STRINGS_FILE_GROUP_NAME = "ui-ota-strings";
     public static final String COBALT_REGISTRY_FILE_GROUP_NAME = "rubidium-registry";
+    public static final String PACKAGE_DENY_FILE_GROUP_NAME = "package-deny";
+
     private SynchronousFileStorage mFileStorage;
     private FileDownloader mFileDownloader;
     private SharedDbHelper mDbHelper;
     private MobileDataDownload mMdd;
-    private WifiManager mWifiManager;
 
-    @Mock Flags mMockFlags;
-    @Mock ConsentManager mConsentManager;
-    @Mock UxStatesManager mUxStatesManager;
-    @Mock Clock mMockClock;
+    @Mock private ConsentManager mConsentManager;
+    @Mock private UxStatesManager mUxStatesManager;
+    @Mock private Clock mMockClock;
 
     @Before
     public void setUp() throws Exception {
-        mWifiManager = mContext.getSystemService(WifiManager.class);
         // The MDD integration tests require wifi connection. If the running device is not
         // connected to the Wifi, tests should be skipped.
-        Assume.assumeTrue("Device must have wifi connection", mWifiManager.isWifiEnabled());
+        Assume.assumeTrue(
+                "Device must have wifi connection",
+                NetworkConnectionHelper.isWifiConnected(mContext));
 
         mockMddFlags();
 
@@ -197,8 +201,8 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
 
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
         // Mock static method ConsentManager.getInstance() to return test ConsentManager
-        doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
-        doReturn(mUxStatesManager).when(() -> UxStatesManager.getInstance());
+        doReturn(mConsentManager).when(ConsentManager::getInstance);
+        doReturn(mUxStatesManager).when(UxStatesManager::getInstance);
         overridingMddLoggingLevel("VERBOSE");
     }
 
@@ -248,11 +252,11 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
                         .get();
 
         // Verify the downloaded DataFileGroup.
-        assertThat(clientFileGroup.getGroupName()).isEqualTo(FILE_GROUP_NAME_1);
-        assertThat(clientFileGroup.getOwnerPackage()).isEqualTo(mContext.getPackageName());
-        assertThat(clientFileGroup.getVersionNumber()).isEqualTo(5);
-        assertThat(clientFileGroup.getFileCount()).isEqualTo(2);
-        assertThat(clientFileGroup.hasAccount()).isFalse();
+        expect.that(clientFileGroup.getGroupName()).isEqualTo(FILE_GROUP_NAME_1);
+        expect.that(clientFileGroup.getOwnerPackage()).isEqualTo(mContext.getPackageName());
+        expect.that(clientFileGroup.getVersionNumber()).isEqualTo(5);
+        expect.that(clientFileGroup.getFileCount()).isEqualTo(2);
+        expect.that(clientFileGroup.hasAccount()).isFalse();
     }
 
     @Test
@@ -292,13 +296,14 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
                         .get();
 
         // Verify topics file group.
-        assertThat(clientFileGroup.getGroupName()).isEqualTo(TEST_TOPIC_FILE_GROUP_NAME);
-        assertThat(clientFileGroup.getOwnerPackage()).isEqualTo(mContext.getPackageName());
-        assertThat(clientFileGroup.getVersionNumber())
+        expect.that(clientFileGroup.getGroupName()).isEqualTo(TEST_TOPIC_FILE_GROUP_NAME);
+        expect.that(clientFileGroup.getOwnerPackage()).isEqualTo(mContext.getPackageName());
+        expect.that(clientFileGroup.getVersionNumber())
                 .isEqualTo(/* Test filegroup version number */ 0);
-        assertThat(clientFileGroup.getFileCount()).isEqualTo(6);
-        assertThat(clientFileGroup.getStatus()).isEqualTo(ClientFileGroup.Status.DOWNLOADED);
-        assertThat(clientFileGroup.getBuildId()).isEqualTo(/* BuildID generated by Ingress */ 1986);
+        expect.that(clientFileGroup.getFileCount()).isEqualTo(6);
+        expect.that(clientFileGroup.getStatus()).isEqualTo(ClientFileGroup.Status.DOWNLOADED);
+        expect.that(clientFileGroup.getBuildId())
+                .isEqualTo(/* BuildID generated by Ingress */ 1986);
     }
 
     /**
@@ -635,11 +640,12 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
                         .get();
 
         // Verify UI file group.
-        assertThat(clientFileGroup.getGroupName()).isEqualTo(UI_OTA_STRINGS_FILE_GROUP_NAME);
-        assertThat(clientFileGroup.getOwnerPackage()).isEqualTo(mContext.getPackageName());
-        assertThat(clientFileGroup.getFileCount()).isEqualTo(1);
-        assertThat(clientFileGroup.getStatus()).isEqualTo(ClientFileGroup.Status.DOWNLOADED);
-        assertThat(clientFileGroup.getBuildId()).isEqualTo(/* BuildID generated by Ingress */ 1360);
+        expect.that(clientFileGroup.getGroupName()).isEqualTo(UI_OTA_STRINGS_FILE_GROUP_NAME);
+        expect.that(clientFileGroup.getOwnerPackage()).isEqualTo(mContext.getPackageName());
+        expect.that(clientFileGroup.getFileCount()).isEqualTo(1);
+        expect.that(clientFileGroup.getStatus()).isEqualTo(ClientFileGroup.Status.DOWNLOADED);
+        expect.that(clientFileGroup.getBuildId())
+                .isEqualTo(/* BuildID generated by Ingress */ 1360);
     }
 
     /**
@@ -663,11 +669,12 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
                         .get();
 
         // Verify UI file group.
-        assertThat(clientFileGroup.getGroupName()).isEqualTo(UI_OTA_STRINGS_FILE_GROUP_NAME);
-        assertThat(clientFileGroup.getOwnerPackage()).isEqualTo(mContext.getPackageName());
-        assertThat(clientFileGroup.getFileCount()).isEqualTo(1);
-        assertThat(clientFileGroup.getStatus()).isEqualTo(ClientFileGroup.Status.DOWNLOADED);
-        assertThat(clientFileGroup.getBuildId()).isEqualTo(/* BuildID generated by Ingress */ 3150);
+        expect.that(clientFileGroup.getGroupName()).isEqualTo(UI_OTA_STRINGS_FILE_GROUP_NAME);
+        expect.that(clientFileGroup.getOwnerPackage()).isEqualTo(mContext.getPackageName());
+        expect.that(clientFileGroup.getFileCount()).isEqualTo(1);
+        expect.that(clientFileGroup.getStatus()).isEqualTo(ClientFileGroup.Status.DOWNLOADED);
+        expect.that(clientFileGroup.getBuildId())
+                .isEqualTo(/* BuildID generated by Ingress */ 3150);
     }
 
     /**
@@ -690,11 +697,12 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
                         .get();
 
         // Verify Cobalt registry file group.
-        assertThat(clientFileGroup.getGroupName()).isEqualTo(COBALT_REGISTRY_FILE_GROUP_NAME);
-        assertThat(clientFileGroup.getOwnerPackage()).isEqualTo(mContext.getPackageName());
-        assertThat(clientFileGroup.getFileCount()).isEqualTo(1);
-        assertThat(clientFileGroup.getStatus()).isEqualTo(ClientFileGroup.Status.DOWNLOADED);
-        assertThat(clientFileGroup.getBuildId()).isEqualTo(/* BuildID generated by Ingress */ 5132);
+        expect.that(clientFileGroup.getGroupName()).isEqualTo(COBALT_REGISTRY_FILE_GROUP_NAME);
+        expect.that(clientFileGroup.getOwnerPackage()).isEqualTo(mContext.getPackageName());
+        expect.that(clientFileGroup.getFileCount()).isEqualTo(1);
+        expect.that(clientFileGroup.getStatus()).isEqualTo(ClientFileGroup.Status.DOWNLOADED);
+        expect.that(clientFileGroup.getBuildId())
+                .isEqualTo(/* BuildID generated by Ingress */ 5132);
     }
 
     /**
@@ -713,6 +721,54 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
                 mMdd.getFileGroup(
                                 GetFileGroupRequest.newBuilder()
                                         .setGroupName(COBALT_REGISTRY_FILE_GROUP_NAME)
+                                        .build())
+                        .get();
+
+        assertThat(clientFileGroup).isNull();
+    }
+
+    /**
+     * Tests package deny registry file group download successfully when package deny mdd feature is
+     * enabled.
+     */
+    @Test
+    public void testPackageDenyManifestFileGroupPopulator_featureEnabled() throws Exception {
+        when(mMockFlags.getEnablePackageDenyMdd()).thenReturn(true);
+        when(mMockFlags.getMddPackageDenyRegistryManifestFileUrl())
+                .thenReturn(MDD_PACKAGE_DENY_MANIFEST_FILE_URL);
+
+        createMddForPackageDenyRegistry();
+
+        ClientFileGroup clientFileGroup =
+                mMdd.getFileGroup(
+                                GetFileGroupRequest.newBuilder()
+                                        .setGroupName(PACKAGE_DENY_FILE_GROUP_NAME)
+                                        .build())
+                        .get();
+
+        // Verify package deny registry file group.
+        expect.that(clientFileGroup.getGroupName()).isEqualTo(PACKAGE_DENY_FILE_GROUP_NAME);
+        expect.that(clientFileGroup.getOwnerPackage()).isEqualTo(mContext.getPackageName());
+        expect.that(clientFileGroup.getFileCount()).isEqualTo(1);
+        expect.that(clientFileGroup.getStatus()).isEqualTo(ClientFileGroup.Status.DOWNLOADED);
+        expect.that(clientFileGroup.getBuildId())
+                .isEqualTo(/* BuildID generated by Ingress */ 6424);
+    }
+
+    /**
+     * Tests no package registry file group downloaded when package deny mdd feature is disabled.
+     */
+    @Test
+    public void testPackageDenyManifestFileGroupPopulator_featureDisabled() throws Exception {
+        when(mMockFlags.getMddPackageDenyRegistryManifestFileUrl())
+                .thenReturn(MDD_PACKAGE_DENY_MANIFEST_FILE_URL);
+
+        createMddForPackageDenyRegistry();
+
+        ClientFileGroup clientFileGroup =
+                mMdd.getFileGroup(
+                                GetFileGroupRequest.newBuilder()
+                                        .setGroupName(PACKAGE_DENY_FILE_GROUP_NAME)
                                         .build())
                         .get();
 
@@ -917,6 +973,26 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
                 .get(MAX_HANDLE_TASK_WAIT_TIME_SECS, SECONDS);
     }
 
+    // Returns MobileDataDownload using passed in deny package registry manifest url.
+    private void createMddForPackageDenyRegistry() throws Exception {
+        FileGroupPopulator fileGroupPopulator =
+                MobileDataDownloadFactory.getDenyPackageManifestPopulator(
+                        mMockFlags, mFileStorage, mFileDownloader);
+
+        mMdd =
+                getMddForTesting(
+                        mContext,
+                        mMockFlags,
+                        // List of FileGroupPopulator that contains deny package FileGroupPopulator
+                        // only.
+                        ImmutableList.of(fileGroupPopulator));
+
+        // Calling handleTask directly to trigger the MDD's background download on wifi. This should
+        // be done in tests only.
+        mMdd.handleTask(TaskScheduler.WIFI_CHARGING_PERIODIC_TASK)
+                .get(MAX_HANDLE_TASK_WAIT_TIME_SECS, SECONDS);
+    }
+
     private long getNumEntriesInEncryptionKeysTable() {
         return DatabaseUtils.queryNumEntries(
                 mDbHelper.getReadableDatabase(),
@@ -960,16 +1036,16 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
 
     private void verifyEnrollmentMddDownloadStatus(
             ClientFileGroup clientFileGroup, int fileGroupVersion) {
-        assertThat(clientFileGroup.getGroupName()).isEqualTo(ENROLLMENT_FILE_GROUP_NAME);
-        assertThat(clientFileGroup.getOwnerPackage()).isEqualTo(mContext.getPackageName());
-        assertThat(clientFileGroup.getFileCount()).isEqualTo(1);
-        assertThat(clientFileGroup.getStatus()).isEqualTo(ClientFileGroup.Status.DOWNLOADED);
-        assertThat(clientFileGroup.getVersionNumber()).isEqualTo(fileGroupVersion);
+        expect.that(clientFileGroup.getGroupName()).isEqualTo(ENROLLMENT_FILE_GROUP_NAME);
+        expect.that(clientFileGroup.getOwnerPackage()).isEqualTo(mContext.getPackageName());
+        expect.that(clientFileGroup.getFileCount()).isEqualTo(1);
+        expect.that(clientFileGroup.getStatus()).isEqualTo(ClientFileGroup.Status.DOWNLOADED);
+        expect.that(clientFileGroup.getVersionNumber()).isEqualTo(fileGroupVersion);
     }
 
     private EnrollmentDao setupEnrollmentDaoForTest() {
         EnrollmentDao enrollmentDao = new EnrollmentDao(mContext, mDbHelper, mMockFlags);
-        doReturn(enrollmentDao).when(() -> EnrollmentDao.getInstance());
+        doReturn(enrollmentDao).when(EnrollmentDao::getInstance);
         return enrollmentDao;
     }
 
@@ -1015,11 +1091,11 @@ public final class MobileDataDownloadTest extends AdServicesExtendedMockitoTestC
                 setupEnrollmentDownloadManagerForTest();
         // Verify enrollment data file read from MDD and insert the data into the enrollment
         // database.
-        assertThat(enrollmentDataDownloadManager.readAndInsertEnrollmentDataFromMdd().get())
+        expect.that(enrollmentDataDownloadManager.readAndInsertEnrollmentDataFromMdd().get())
                 .isEqualTo(SUCCESS);
-        assertThat(getNumEntriesInEnrollmentTable()).isEqualTo(enrollmentEntries);
+        expect.that(getNumEntriesInEnrollmentTable()).isEqualTo(enrollmentEntries);
         if (clearDownloadedData) {
-            assertThat(enrollmentDao.deleteAll()).isTrue();
+            expect.that(enrollmentDao.deleteAll()).isTrue();
         }
     }
 

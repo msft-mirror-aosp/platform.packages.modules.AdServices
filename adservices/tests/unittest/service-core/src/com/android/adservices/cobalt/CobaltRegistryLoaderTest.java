@@ -58,8 +58,7 @@ public final class CobaltRegistryLoaderTest extends AdServicesUnitTestCase {
 
         for (MetricDefinition metric : registry.getMetrics()) {
             for (ReportDefinition report : metric.getReportsList()) {
-                assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
-                        .isTrue();
+                assertThat(RegistryValidator.isValid(metric, report)).isTrue();
                 if (report.getReportName().endsWith(REPORT_NAME_DOGFOOD_SUFFIX)) {
                     assertThat(report.getMaxReleaseStage()).isEqualTo(DOGFOOD);
                 }

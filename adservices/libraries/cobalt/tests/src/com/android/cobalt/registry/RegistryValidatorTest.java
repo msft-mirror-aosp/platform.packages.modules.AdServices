@@ -41,27 +41,95 @@ import com.android.adservices.common.AdServicesUnitTestCase;
 
 import com.google.cobalt.IntegerBuckets;
 import com.google.cobalt.MetricDefinition;
+import com.google.cobalt.MetricDefinition.Metadata;
 import com.google.cobalt.MetricDefinition.MetricDimension;
 import com.google.cobalt.MetricDefinition.MetricType;
+import com.google.cobalt.ReleaseStage;
 import com.google.cobalt.ReportDefinition;
 import com.google.cobalt.ReportDefinition.LocalAggregationProcedure;
 import com.google.cobalt.ReportDefinition.PrivacyMechanism;
 import com.google.cobalt.ReportDefinition.ReportType;
 import com.google.cobalt.ReportDefinition.ReportingInterval;
+import com.google.cobalt.ReportDefinition.ShuffledDifferentialPrivacyConfig;
+import com.google.cobalt.ReportDefinition.ShuffledDifferentialPrivacyConfig.DevicePrivacyDependencySet;
 import com.google.cobalt.StringSketchParameters;
 import com.google.cobalt.SystemProfileField;
 import com.google.cobalt.SystemProfileSelectionPolicy;
 import com.google.cobalt.WindowSize;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
 import java.util.List;
 import java.util.function.BiPredicate;
 
-@RunWith(JUnit4.class)
 public final class RegistryValidatorTest extends AdServicesUnitTestCase {
+
+    @Test
+    public void testDimensionsAreEquivalent_emptyDimensions() {
+        assertThat(RegistryValidator.dimensionsAreEquivalent(List.of(), List.of())).isTrue();
+    }
+
+    @Test
+    public void testDimensionsAreEquivalent_sameMaxEventCodes() {
+        assertThat(
+                        RegistryValidator.dimensionsAreEquivalent(
+                                List.of(getMetricDimension(1), getMetricDimension(2)),
+                                List.of(getMetricDimension(1), getMetricDimension(2))))
+                .isTrue();
+    }
+
+    @Test
+    public void testDimensionsAreEquivalent_differentMaxEventCodes() {
+        assertThat(
+                        RegistryValidator.dimensionsAreEquivalent(
+                                List.of(getMetricDimension(1), getMetricDimension(2)),
+                                List.of(getMetricDimension(2), getMetricDimension(1))))
+                .isFalse();
+    }
+
+    @Test
+    public void testDimensionsAreEquivalent_differentMaxEventCodesSize() {
+        assertThat(
+                        RegistryValidator.dimensionsAreEquivalent(
+                                List.of(getMetricDimension(1), getMetricDimension(2)),
+                                List.of(getMetricDimension(1))))
+                .isFalse();
+    }
+
+    @Test
+    public void testDimensionsAreEquivalent_sameEnumeratedDimensions() {
+        assertThat(
+                        RegistryValidator.dimensionsAreEquivalent(
+                                List.of(getMetricDimension(List.of(1, 2))),
+                                List.of(getMetricDimension(List.of(1, 2)))))
+                .isTrue();
+    }
+
+    @Test
+    public void testDimensionsAreEquivalent_sameEnumeratedDimensions_differentEventCodeOrder() {
+        assertThat(
+                        RegistryValidator.dimensionsAreEquivalent(
+                                List.of(getMetricDimension(List.of(1, 2))),
+                                List.of(getMetricDimension(List.of(2, 1)))))
+                .isTrue();
+    }
+
+    @Test
+    public void testDimensionsAreEquivalent_differentEnumeratedDimensionsSize() {
+        assertThat(
+                        RegistryValidator.dimensionsAreEquivalent(
+                                List.of(getMetricDimension(List.of(1, 2))), List.of()))
+                .isFalse();
+    }
+
+    @Test
+    public void testDimensionsAreEquivalent_enumeratedDimensions_oneIsSubset() {
+        assertThat(
+                        RegistryValidator.dimensionsAreEquivalent(
+                                List.of(getMetricDimension(List.of(1, 2, 3))),
+                                List.of(getMetricDimension(List.of(1, 2)))))
+                .isFalse();
+    }
 
     @Test
     public void testValidateReportType_occurrenceMetric_onlySupportsFleetwideOccurrenceCounts() {
@@ -537,6 +605,170 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testValidateMaxReleaseStages_reportNotSetSupported() {
+        assertThat(
+                        RegistryValidator.validateMaxReleaseStages(
+                                /* metricMaxReleaseStage= */ ReleaseStage.GA,
+                                /* reportMaxReleaseStage= */ ReleaseStage.RELEASE_STAGE_NOT_SET))
+                .isTrue();
+    }
+
+    @Test
+    public void testValidateMaxReleaseStages_metricGreaterThanReportPasses() {
+        expect.withMessage("validateMaxReleaseStages(GA, OPEN_BETA)")
+                .that(
+                        RegistryValidator.validateMaxReleaseStages(
+                                /* metricMaxReleaseStage= */ ReleaseStage.GA,
+                                /* reportMaxReleaseStage= */ ReleaseStage.OPEN_BETA))
+                .isTrue();
+        expect.withMessage("validateMaxReleaseStages(OPEN_BETA, DOGFOOD)")
+                .that(
+                        RegistryValidator.validateMaxReleaseStages(
+                                /* metricMaxReleaseStage= */ ReleaseStage.OPEN_BETA,
+                                /* reportMaxReleaseStage= */ ReleaseStage.DOGFOOD))
+                .isTrue();
+        expect.withMessage("validateMaxReleaseStages(DOGFOOD, FISHFOOD)")
+                .that(
+                        RegistryValidator.validateMaxReleaseStages(
+                                /* metricMaxReleaseStage= */ ReleaseStage.DOGFOOD,
+                                /* reportMaxReleaseStage= */ ReleaseStage.FISHFOOD))
+                .isTrue();
+        expect.withMessage("validateMaxReleaseStages(FISHFOOD, DEBUG)")
+                .that(
+                        RegistryValidator.validateMaxReleaseStages(
+                                /* metricMaxReleaseStage= */ ReleaseStage.FISHFOOD,
+                                /* reportMaxReleaseStage= */ ReleaseStage.DEBUG))
+                .isTrue();
+    }
+
+    @Test
+    public void testValidateMaxReleaseStages_metricEqualToReportPasses() {
+        expect.withMessage("validateMaxReleaseStages(GA, GA)")
+                .that(
+                        RegistryValidator.validateMaxReleaseStages(
+                                /* metricMaxReleaseStage= */ ReleaseStage.GA,
+                                /* reportMaxReleaseStage= */ ReleaseStage.GA))
+                .isTrue();
+        expect.withMessage("validateMaxReleaseStages(OPEN_BETA, OPEN_BETA)")
+                .that(
+                        RegistryValidator.validateMaxReleaseStages(
+                                /* metricMaxReleaseStage= */ ReleaseStage.OPEN_BETA,
+                                /* reportMaxReleaseStage= */ ReleaseStage.OPEN_BETA))
+                .isTrue();
+        expect.withMessage("validateMaxReleaseStages(DOGFOOD, DOGFOOD)")
+                .that(
+                        RegistryValidator.validateMaxReleaseStages(
+                                /* metricMaxReleaseStage= */ ReleaseStage.DOGFOOD,
+                                /* reportMaxReleaseStage= */ ReleaseStage.DOGFOOD))
+                .isTrue();
+        expect.withMessage("validateMaxReleaseStages(FISHFOOD, FISHFOOD)")
+                .that(
+                        RegistryValidator.validateMaxReleaseStages(
+                                /* metricMaxReleaseStage= */ ReleaseStage.FISHFOOD,
+                                /* reportMaxReleaseStage= */ ReleaseStage.FISHFOOD))
+                .isTrue();
+        expect.withMessage("validateMaxReleaseStages(DEBUG, DEBUG)")
+                .that(
+                        RegistryValidator.validateMaxReleaseStages(
+                                /* metricMaxReleaseStage= */ ReleaseStage.DEBUG,
+                                /* reportMaxReleaseStage= */ ReleaseStage.DEBUG))
+                .isTrue();
+    }
+
+    @Test
+    public void testValidateMaxReleaseStages_metricLessThanReportFails() {
+        expect.withMessage("validateMaxReleaseStages(OPEN_BETA, GA)")
+                .that(
+                        RegistryValidator.validateMaxReleaseStages(
+                                /* metricMaxReleaseStage= */ ReleaseStage.OPEN_BETA,
+                                /* reportMaxReleaseStage= */ ReleaseStage.GA))
+                .isFalse();
+        expect.withMessage("validateMaxReleaseStages(DOGFOOD, OPEN_BETA)")
+                .that(
+                        RegistryValidator.validateMaxReleaseStages(
+                                /* metricMaxReleaseStage= */ ReleaseStage.DOGFOOD,
+                                /* reportMaxReleaseStage= */ ReleaseStage.OPEN_BETA))
+                .isFalse();
+        expect.withMessage("validateMaxReleaseStages(FISHFOOD, DOGFOOD)")
+                .that(
+                        RegistryValidator.validateMaxReleaseStages(
+                                /* metricMaxReleaseStage= */ ReleaseStage.FISHFOOD,
+                                /* reportMaxReleaseStage= */ ReleaseStage.DOGFOOD))
+                .isFalse();
+        expect.withMessage("validateMaxReleaseStages(DEBUG, FISHFOOD)")
+                .that(
+                        RegistryValidator.validateMaxReleaseStages(
+                                /* metricMaxReleaseStage= */ ReleaseStage.DEBUG,
+                                /* reportMaxReleaseStage= */ ReleaseStage.FISHFOOD))
+                .isFalse();
+        expect.withMessage("validateMaxReleaseStages(RELEASE_STAGE_NOT_SET, DEBUG)")
+                .that(
+                        RegistryValidator.validateMaxReleaseStages(
+                                /* metricMaxReleaseStage= */ ReleaseStage.RELEASE_STAGE_NOT_SET,
+                                /* reportMaxReleaseStage= */ ReleaseStage.DEBUG))
+                .isFalse();
+    }
+
+    @Test
+    public void testValidateShuffledDp_deIdentifiedReport() {
+        assertThat(
+                        RegistryValidator.validateShuffledDp(
+                                DE_IDENTIFICATION,
+                                ShuffledDifferentialPrivacyConfig.getDefaultInstance()))
+                .isTrue();
+    }
+
+    @Test
+    public void testValidateShuffledDp() {
+        assertThat(
+                        RegistryValidator.validateShuffledDp(
+                                DE_IDENTIFICATION,
+                                ShuffledDifferentialPrivacyConfig.newBuilder()
+                                        .setPoissonMean(0.1)
+                                        .setDevicePrivacyDependencySet(
+                                                DevicePrivacyDependencySet.V1)
+                                        .build()))
+                .isTrue();
+    }
+
+    @Test
+    public void testValidateShuffledDp_negativePoissonMeanFails() {
+        assertThat(
+                        RegistryValidator.validateShuffledDp(
+                                SHUFFLED_DIFFERENTIAL_PRIVACY,
+                                ShuffledDifferentialPrivacyConfig.newBuilder()
+                                        .setPoissonMean(-0.1)
+                                        .setDevicePrivacyDependencySet(
+                                                DevicePrivacyDependencySet.V1)
+                                        .build()))
+                .isFalse();
+    }
+
+    @Test
+    public void testValidateShuffledDp_zeroPoissonMeanFails() {
+        assertThat(
+                        RegistryValidator.validateShuffledDp(
+                                SHUFFLED_DIFFERENTIAL_PRIVACY,
+                                ShuffledDifferentialPrivacyConfig.newBuilder()
+                                        .setPoissonMean(0.0)
+                                        .setDevicePrivacyDependencySet(
+                                                DevicePrivacyDependencySet.V1)
+                                        .build()))
+                .isFalse();
+    }
+
+    @Test
+    public void testValidateShuffledDp_unsetPrivacyDependencySetFails() {
+        assertThat(
+                        RegistryValidator.validateShuffledDp(
+                                SHUFFLED_DIFFERENTIAL_PRIVACY,
+                                ShuffledDifferentialPrivacyConfig.newBuilder()
+                                        .setPoissonMean(0.1)
+                                        .build()))
+                .isFalse();
+    }
+
+    @Test
     public void testIsValidReportTypeAndPrivacyMechanism_privateFleetwideOccurrenceCounts() {
         MetricDefinition metric = getMetricDefinition(OCCURRENCE);
         ReportDefinition report =
@@ -546,7 +778,7 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                         .setMinValue(1L)
                         .setMaxValue(2L)
                         .build();
-        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report)).isTrue();
+        assertThat(RegistryValidator.isValid(metric, report)).isTrue();
     }
 
     @Test
@@ -554,14 +786,14 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
         MetricDefinition metric = getMetricDefinition(OCCURRENCE);
         ReportDefinition report =
                 getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, DE_IDENTIFICATION);
-        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report)).isTrue();
+        assertThat(RegistryValidator.isValid(metric, report)).isTrue();
     }
 
     @Test
     public void testIsValidReportTypeAndPrivacyMechanism_deIdStringCounts() {
         MetricDefinition metric = getMetricDefinition(STRING);
         ReportDefinition report = getReportDefinition(STRING_COUNTS, DE_IDENTIFICATION);
-        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report)).isTrue();
+        assertThat(RegistryValidator.isValid(metric, report)).isTrue();
     }
 
     @Test
@@ -570,10 +802,9 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
         MetricDefinition metric = getMetricDefinition(OCCURRENCE);
         ReportDefinition report =
                 getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, DE_IDENTIFICATION);
-        expect.that(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
-                .isTrue();
+        expect.that(RegistryValidator.isValid(metric, report)).isTrue();
         expect.that(
-                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                        RegistryValidator.isValid(
                                 metric,
                                 report.toBuilder()
                                         .setIntBuckets(
@@ -588,10 +819,9 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
     public void testIsValidReportTypeAndPrivacyMechanism_stringCounts_defaultIntegerBuckets() {
         MetricDefinition metric = getMetricDefinition(STRING);
         ReportDefinition report = getReportDefinition(STRING_COUNTS, DE_IDENTIFICATION);
-        expect.that(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
-                .isTrue();
+        expect.that(RegistryValidator.isValid(metric, report)).isTrue();
         expect.that(
-                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                        RegistryValidator.isValid(
                                 metric,
                                 report.toBuilder()
                                         .setIntBuckets(
@@ -609,7 +839,7 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                 getReportDefinition(STRING_COUNTS, DE_IDENTIFICATION).toBuilder()
                         .setSystemProfileSelection(REPORT_ALL)
                         .build();
-        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report)).isTrue();
+        assertThat(RegistryValidator.isValid(metric, report)).isTrue();
     }
 
     @Test
@@ -619,8 +849,7 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                 getReportDefinition(STRING_COUNTS, DE_IDENTIFICATION).toBuilder()
                         .setSystemProfileSelection(SELECT_FIRST)
                         .build();
-        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
-                .isFalse();
+        assertThat(RegistryValidator.isValid(metric, report)).isFalse();
     }
 
     @Test
@@ -630,7 +859,7 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                 getReportDefinition(STRING_COUNTS, DE_IDENTIFICATION).toBuilder()
                         .addSystemProfileField(APP_VERSION)
                         .build();
-        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report)).isTrue();
+        assertThat(RegistryValidator.isValid(metric, report)).isTrue();
     }
 
     @Test
@@ -640,8 +869,7 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                 getReportDefinition(STRING_COUNTS, DE_IDENTIFICATION).toBuilder()
                         .addSystemProfileField(CHANNEL)
                         .build();
-        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
-                .isFalse();
+        assertThat(RegistryValidator.isValid(metric, report)).isFalse();
     }
 
     @Test
@@ -651,8 +879,7 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                 getReportDefinition(STRING_COUNTS, DE_IDENTIFICATION).toBuilder()
                         .addExperimentId(1L)
                         .build();
-        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
-                .isFalse();
+        assertThat(RegistryValidator.isValid(metric, report)).isFalse();
     }
 
     @Test
@@ -666,7 +893,7 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                         .setMinValue(1)
                         .setMaxValue(2)
                         .build();
-        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report)).isTrue();
+        assertThat(RegistryValidator.isValid(metric, report)).isTrue();
     }
 
     @Test
@@ -680,8 +907,7 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                         .setMinValue(1)
                         .setMaxValue(2)
                         .build();
-        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
-                .isFalse();
+        assertThat(RegistryValidator.isValid(metric, report)).isFalse();
     }
 
     @Test
@@ -696,8 +922,7 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                         .setMaxValue(2)
                         .setStringSketchParams(StringSketchParameters.newBuilder().setNumHashes(1))
                         .build();
-        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
-                .isFalse();
+        assertThat(RegistryValidator.isValid(metric, report)).isFalse();
     }
 
     @Test
@@ -707,10 +932,9 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                 getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, DE_IDENTIFICATION);
 
         // De-identified reports must have minValue == maxValue == 0
-        expect.that(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
-                .isTrue();
+        expect.that(RegistryValidator.isValid(metric, report)).isTrue();
         expect.that(
-                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                        RegistryValidator.isValid(
                                 metric, report.toBuilder().setMinValue(1).setMaxValue(2).build()))
                 .isFalse();
 
@@ -721,10 +945,9 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                         .build();
 
         // Private reports must have 0 < minValue <= maxValue
-        expect.that(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
-                .isFalse();
+        expect.that(RegistryValidator.isValid(metric, report)).isFalse();
         expect.that(
-                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                        RegistryValidator.isValid(
                                 metric, report.toBuilder().setMinValue(1).setMaxValue(2).build()))
                 .isTrue();
     }
@@ -735,10 +958,9 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
         ReportDefinition report = getReportDefinition(STRING_COUNTS, DE_IDENTIFICATION);
 
         // Reports must have minValue == maxValue == 0
-        expect.that(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
-                .isTrue();
+        expect.that(RegistryValidator.isValid(metric, report)).isTrue();
         expect.that(
-                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                        RegistryValidator.isValid(
                                 metric, report.toBuilder().setMinValue(1).setMaxValue(2).build()))
                 .isFalse();
     }
@@ -750,17 +972,14 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                 getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, DE_IDENTIFICATION);
 
         // De-identified reports must have minValue == maxValue == 0
-        expect.that(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
-                .isTrue();
-        expect.that(
-                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
-                                metric, report.toBuilder().setMaxCount(2).build()))
+        expect.that(RegistryValidator.isValid(metric, report)).isTrue();
+        expect.that(RegistryValidator.isValid(metric, report.toBuilder().setMaxCount(2).build()))
                 .isFalse();
 
         report = getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, SHUFFLED_DIFFERENTIAL_PRIVACY);
 
         expect.that(
-                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                        RegistryValidator.isValid(
                                 metric,
                                 report.toBuilder()
                                         .setMinValue(1)
@@ -776,10 +995,9 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
         ReportDefinition report = getReportDefinition(STRING_COUNTS, DE_IDENTIFICATION);
 
         // Reports must have minValue == maxValue == 0
-        expect.that(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
-                .isTrue();
+        expect.that(RegistryValidator.isValid(metric, report)).isTrue();
         expect.that(
-                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                        RegistryValidator.isValid(
                                 metric, report.toBuilder().setMinValue(1).setMaxValue(2).build()))
                 .isFalse();
     }
@@ -791,26 +1009,26 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                 getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, DE_IDENTIFICATION);
 
         expect.that(
-                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                        RegistryValidator.isValid(
                                 metric,
                                 report.toBuilder().setLocalAggregationPeriod(WINDOW_1_DAY).build()))
                 .isFalse();
         expect.that(
-                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                        RegistryValidator.isValid(
                                 metric,
                                 report.toBuilder()
                                         .setLocalAggregationPeriod(WINDOW_7_DAYS)
                                         .build()))
                 .isFalse();
         expect.that(
-                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                        RegistryValidator.isValid(
                                 metric,
                                 report.toBuilder()
                                         .setLocalAggregationPeriod(WINDOW_28_DAYS)
                                         .build()))
                 .isFalse();
         expect.that(
-                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                        RegistryValidator.isValid(
                                 metric,
                                 report.toBuilder()
                                         .setLocalAggregationPeriod(WINDOW_30_DAYS)
@@ -825,8 +1043,7 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                 getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, DE_IDENTIFICATION).toBuilder()
                         .setLocalAggregationProcedure(SUM_PROCEDURE)
                         .build();
-        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
-                .isFalse();
+        assertThat(RegistryValidator.isValid(metric, report)).isFalse();
     }
 
     @Test
@@ -836,8 +1053,7 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                 getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, DE_IDENTIFICATION).toBuilder()
                         .setLocalAggregationProcedurePercentileN(1)
                         .build();
-        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
-                .isFalse();
+        assertThat(RegistryValidator.isValid(metric, report)).isFalse();
     }
 
     @Test
@@ -847,8 +1063,7 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                 getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, DE_IDENTIFICATION).toBuilder()
                         .setExpeditedSending(true)
                         .build();
-        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
-                .isFalse();
+        assertThat(RegistryValidator.isValid(metric, report)).isFalse();
     }
 
     @Test
@@ -858,18 +1073,18 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                 getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, DE_IDENTIFICATION);
 
         expect.that(
-                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                        RegistryValidator.isValid(
                                 metric,
                                 report.toBuilder()
                                         .setReportingInterval(REPORTING_INTERVAL_UNSET)
                                         .build()))
                 .isFalse();
         expect.that(
-                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                        RegistryValidator.isValid(
                                 metric, report.toBuilder().setReportingInterval(HOURS_1).build()))
                 .isFalse();
         expect.that(
-                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                        RegistryValidator.isValid(
                                 metric, report.toBuilder().setReportingInterval(DAYS_1).build()))
                 .isTrue();
     }
@@ -880,10 +1095,9 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
         ReportDefinition report =
                 getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, DE_IDENTIFICATION);
 
-        expect.that(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
-                .isTrue();
+        expect.that(RegistryValidator.isValid(metric, report)).isTrue();
         expect.that(
-                        RegistryValidator.isValidReportTypeAndPrivacyMechanism(
+                        RegistryValidator.isValid(
                                 metric, report.toBuilder().setExemptFromConsent(true).build()))
                 .isFalse();
     }
@@ -904,25 +1118,122 @@ public final class RegistryValidatorTest extends AdServicesUnitTestCase {
                         .build();
 
         // Fails because 1000 * Integer.MAX_VALUE / 10 > Integer.MAX_VALUE
-        assertThat(RegistryValidator.isValidReportTypeAndPrivacyMechanism(metric, report))
-                .isFalse();
+        assertThat(RegistryValidator.isValid(metric, report)).isFalse();
+    }
+
+    @Test
+    public void testIsValidReportTypeAndPrivacyMechanism_reportReleaseStageNotSetSupported() {
+        MetricDefinition metric =
+                getMetricDefinition(OCCURRENCE).toBuilder()
+                        .addMetricDimensions(getMetricDimension(999))
+                        .build();
+        ReportDefinition report =
+                getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, DE_IDENTIFICATION).toBuilder()
+                        .setMaxReleaseStage(ReleaseStage.RELEASE_STAGE_NOT_SET)
+                        .build();
+
+        assertThat(RegistryValidator.isValid(metric, report)).isTrue();
+    }
+
+    @Test
+    public void testIsValidReportTypeAndPrivacyMechanism_metricReleaseStageGreaterSupported() {
+        MetricDefinition metric =
+                getMetricDefinition(OCCURRENCE).toBuilder()
+                        .setMetaData(
+                                MetricDefinition.Metadata.newBuilder()
+                                        .setMaxReleaseStage(ReleaseStage.GA))
+                        .build();
+        ReportDefinition report =
+                getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, DE_IDENTIFICATION).toBuilder()
+                        .setMaxReleaseStage(ReleaseStage.DEBUG)
+                        .build();
+
+        assertThat(RegistryValidator.isValid(metric, report)).isTrue();
+    }
+
+    @Test
+    public void testIsValidReportTypeAndPrivacyMechanism_metricReleaseStageEqualSupported() {
+        MetricDefinition metric =
+                getMetricDefinition(OCCURRENCE).toBuilder()
+                        .setMetaData(
+                                MetricDefinition.Metadata.newBuilder()
+                                        .setMaxReleaseStage(ReleaseStage.GA))
+                        .build();
+        ReportDefinition report =
+                getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, DE_IDENTIFICATION).toBuilder()
+                        .setMaxReleaseStage(ReleaseStage.GA)
+                        .build();
+
+        assertThat(RegistryValidator.isValid(metric, report)).isTrue();
+    }
+
+    @Test
+    public void testIsValidReportTypeAndPrivacyMechanism_metricReleaseStageLessFails() {
+        MetricDefinition metric =
+                getMetricDefinition(OCCURRENCE).toBuilder()
+                        .setMetaData(
+                                MetricDefinition.Metadata.newBuilder()
+                                        .setMaxReleaseStage(ReleaseStage.DEBUG))
+                        .build();
+        ReportDefinition report =
+                getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, DE_IDENTIFICATION).toBuilder()
+                        .setMaxReleaseStage(ReleaseStage.GA)
+                        .build();
+
+        assertThat(RegistryValidator.isValid(metric, report)).isFalse();
+    }
+
+    @Test
+    public void testIsValidReportTypeAndPrivacyMechanism_invalidShuffledDpConfigFails() {
+        MetricDefinition metric = getMetricDefinition(OCCURRENCE).toBuilder().build();
+        ReportDefinition report =
+                getReportDefinition(FLEETWIDE_OCCURRENCE_COUNTS, SHUFFLED_DIFFERENTIAL_PRIVACY)
+                        .toBuilder()
+                        .setShuffledDp(
+                                ShuffledDifferentialPrivacyConfig.newBuilder()
+                                        .setPoissonMean(-0.1)
+                                        .setDevicePrivacyDependencySet(
+                                                DevicePrivacyDependencySet.V1)
+                                        .build())
+                        .build();
+
+        assertThat(RegistryValidator.isValid(metric, report)).isFalse();
     }
 
     private static MetricDefinition getMetricDefinition(MetricType metricType) {
-        return MetricDefinition.newBuilder().setMetricType(metricType).build();
+        return MetricDefinition.newBuilder()
+                .setMetricType(metricType)
+                .setMetaData(Metadata.newBuilder().setMaxReleaseStage(ReleaseStage.GA))
+                .build();
     }
 
     private static ReportDefinition getReportDefinition(
             ReportType reportType, PrivacyMechanism privacyMechanism) {
-        return ReportDefinition.newBuilder()
-                .setReportType(reportType)
-                .setPrivacyMechanism(privacyMechanism)
-                .setReportingInterval(DAYS_1)
-                .setSystemProfileSelection(REPORT_ALL)
-                .build();
+        ReportDefinition.Builder report =
+                ReportDefinition.newBuilder()
+                        .setReportType(reportType)
+                        .setPrivacyMechanism(privacyMechanism)
+                        .setReportingInterval(DAYS_1)
+                        .setSystemProfileSelection(REPORT_ALL)
+                        .setMaxReleaseStage(ReleaseStage.DEBUG);
+        if (privacyMechanism.equals(SHUFFLED_DIFFERENTIAL_PRIVACY)) {
+            report.setShuffledDp(
+                    ShuffledDifferentialPrivacyConfig.newBuilder()
+                            .setPoissonMean(0.1)
+                            .setDevicePrivacyDependencySet(DevicePrivacyDependencySet.V1));
+        }
+        return report.build();
     }
 
     private static MetricDimension getMetricDimension(int maxEventCode) {
         return MetricDimension.newBuilder().setMaxEventCode(maxEventCode).build();
+    }
+
+    private static MetricDimension getMetricDimension(Iterable<Integer> eventCodes) {
+        MetricDimension.Builder dimension = MetricDimension.newBuilder();
+        for (Integer eventCode : eventCodes) {
+            dimension.putEventCodes(eventCode, "UNUSED");
+        }
+        return dimension.build();
     }
 }

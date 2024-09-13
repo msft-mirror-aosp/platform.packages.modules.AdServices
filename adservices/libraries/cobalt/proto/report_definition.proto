@@ -672,6 +672,44 @@ message ReportDefinition {
     // TODO(b/295053509): update this comment once the field is auto populated by
     // the registry parser.
     double poisson_mean = 4;
+
+    // If true, skip validating the |poisson_mean| value. This is meant to be used only
+    // in end-to-end tests where the traffic volume would not allow a reasonable |poisson_mean|.
+    bool skip_poisson_mean_validation_test_only = 5;
+
+
+    // The report fields that affect how a device participates in a private
+    // report.
+    //
+    // Note, this field is populated by the registry parser and must not be set
+    // manually.
+    DevicePrivacyDependencySet device_privacy_dependency_set = 6;
+
+    // Captures the report fields a device _must_ use in order to properly
+    // make contributions, real and fabricated, to a report.
+    //
+    // Any report field that changes how observations are encoded or noise is
+    // fabricated must result in a new value.
+    enum DevicePrivacyDependencySet {
+      DEVICE_PRIVACY_DEPENDENCY_SET_UNSET = 0;
+
+      // Captures:
+      // - Fields that affect index points include:
+      //  * metric dimensions
+      //  * num_index_points
+      //  * string_sketch_params
+      //  * min_value
+      //  * max_value
+      //  * max_count
+      //  * int_buckets
+      //
+      // - Fields that affect sparsity are:
+      //  * event_vector_buffer_max
+      //  * string_buffer_max
+      //
+      // - poisson_mean
+      V1 = 1;
+    }
   }
 
   // If privacy_mechanism is SHUFFLED_DIFFERENTIAL_PRIVACY then privacy_config
