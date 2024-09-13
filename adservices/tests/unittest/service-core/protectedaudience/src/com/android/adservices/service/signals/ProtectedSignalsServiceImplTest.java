@@ -128,7 +128,7 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
                         mEnrollmentDaoMock,
                         mUpdateSignalsProcessReportedLoggerMock);
 
-        mDevContext = DevContext.builder(PACKAGE).setDevOptionsEnabled(false).build();
+        mDevContext = DevContext.builder(PACKAGE).setDeviceDevOptionsEnabled(false).build();
         mInput = new UpdateSignalsInput.Builder(URI, PACKAGE).build();
 
         // Set up the mocks for a success flow -- individual tests that want a failure can overwrite
