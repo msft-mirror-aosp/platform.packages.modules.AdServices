@@ -18,6 +18,13 @@ package com.android.adservices.service.topics;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_REQUIRES_BATTERY_NOT_LOW;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_REQUIRES_CHARGING;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_RESCHEDULE_SUCCESS;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_SKIP_RESCHEDULE_EMPTY_JOB_SCHEDULER;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_SKIP_RESCHEDULE_EMPTY_PENDING_JOB;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_UNSET;
 import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_SKIPPED;
 import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_SUCCESSFUL;
 import static com.android.adservices.spe.AdServicesJobInfo.TOPICS_EPOCH_JOB;
@@ -30,6 +37,8 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
@@ -45,6 +54,10 @@ import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.TopicsScheduleEpochJobSettingReportedStats;
+import com.android.adservices.service.stats.TopicsScheduleEpochJobSettingReportedStatsLogger;
+import com.android.adservices.shared.testing.AnswerSyncCallback;
 import com.android.adservices.shared.testing.HandlerIdleSyncCallback;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
@@ -61,6 +74,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
+import java.util.List;
+
 /** Unit tests for {@link EpochJobService} */
 @SuppressWarnings("ConstantConditions")
 @SpyStatic(AdServicesJobScheduler.class)
@@ -69,6 +84,7 @@ import org.mockito.Spy;
 @SpyStatic(FlagsFactory.class)
 @MockStatic(ServiceCompatUtils.class)
 @SpyStatic(TopicsWorker.class)
+@SpyStatic(TopicsScheduleEpochJobSettingReportedStatsLogger.class)
 @RequiresSdkLevelAtLeastS
 @SetErrorLogUtilDefaultParams(ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS)
 public class EpochJobServiceTest extends AdServicesJobServiceTestCase {
@@ -80,6 +96,7 @@ public class EpochJobServiceTest extends AdServicesJobServiceTestCase {
     private final JobScheduler mJobScheduler = mContext.getSystemService(JobScheduler.class);
 
     @Spy private EpochJobService mSpyEpochJobService;
+    @Spy private AdServicesLoggerImpl mSpyAdServicesLogger;
     @Mock private TopicsWorker mMockTopicsWorker;
     @Mock private JobParameters mMockJobParameters;
     @Mock private JobScheduler mMockJobScheduler;
@@ -163,6 +180,78 @@ public class EpochJobServiceTest extends AdServicesJobServiceTestCase {
     }
 
     @Test
+    public void testRescheduleEpochJobEnabled_withLogging() throws Exception {
+        // Initializes the argumentCaptor to collect topics epoch job setting metrics.
+        ArgumentCaptor<TopicsScheduleEpochJobSettingReportedStats> argumentCaptor =
+                ArgumentCaptor.forClass(TopicsScheduleEpochJobSettingReportedStats.class);
+        when(mMockFlags.getTopicsEpochJobBatteryConstraintLoggingEnabled()).thenReturn(true);
+
+        when(mMockFlags.getTopicsKillSwitch()).thenReturn(false);
+        when(mMockFlags.getTopicsEpochJobPeriodMs())
+                .thenReturn(TEST_FLAGS.getTopicsEpochJobPeriodMs());
+        when(mMockFlags.getTopicsEpochJobFlexMs()).thenReturn(TEST_FLAGS.getTopicsEpochJobFlexMs());
+
+        AnswerSyncCallback<Void> callback = AnswerSyncCallback.forMultipleVoidAnswers(2);
+        doAnswer(callback).when(mSpyAdServicesLogger)
+                .logTopicsScheduleEpochJobSettingReportedStats(any());
+
+        // The first invocation of scheduleIfNeededCalledFromRescheduleEpochJob() schedules the job
+        // with requires charging setting.
+        assertThat(
+                EpochJobService.scheduleIfNeededCalledFromRescheduleEpochJob(
+                        /* forceSchedule */ false,
+                        new TopicsScheduleEpochJobSettingReportedStatsLogger(
+                                mSpyAdServicesLogger, mMockFlags)))
+                .isEqualTo(SCHEDULING_RESULT_CODE_SUCCESSFUL);
+        JobInfo pendingJobInfo1 = mJobScheduler.getPendingJob(TOPICS_EPOCH_JOB_ID);
+        assertThat(pendingJobInfo1).isNotNull();
+        assertThat(pendingJobInfo1.isRequireCharging()).isTrue();
+
+        // Then disable requires charging setting and verify the job is rescheduled in onStartJob.
+        when(mMockFlags.getTopicsEpochJobBatteryNotLowInsteadOfCharging()).thenReturn(true);
+        when(mMockFlags.getTopicsJobSchedulerRescheduleEnabled()).thenReturn(true);
+
+        // The second invocation of scheduleIfNeededCalledFromRescheduleEpochJob() schedules the job
+        // with requires battery not low setting.
+        assertThat(
+                EpochJobService.scheduleIfNeededCalledFromRescheduleEpochJob(
+                        /* forceSchedule */ false,
+                        new TopicsScheduleEpochJobSettingReportedStatsLogger(
+                                mSpyAdServicesLogger, mMockFlags)))
+                .isEqualTo(SCHEDULING_RESULT_CODE_SUCCESSFUL);
+        JobInfo pendingJobInfo2 = mJobScheduler.getPendingJob(TOPICS_EPOCH_JOB_ID);
+        assertThat(pendingJobInfo2).isNotNull();
+        assertThat(pendingJobInfo2.isRequireCharging()).isFalse();
+        assertThat(pendingJobInfo2.isRequireBatteryNotLow()).isTrue();
+        callback.assertCalled();
+
+        // Verifies the topics epoch job setting metric is logged 2 times.
+        verify(mSpyAdServicesLogger, times(2))
+                .logTopicsScheduleEpochJobSettingReportedStats(argumentCaptor.capture());
+        List<TopicsScheduleEpochJobSettingReportedStats> stats = argumentCaptor.getAllValues();
+
+        TopicsScheduleEpochJobSettingReportedStats firstScheduledEpochJobStats = stats.get(0);
+        assertThat(firstScheduledEpochJobStats.getRescheduleEpochJobStatus())
+                .isEqualTo(TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_UNSET);
+        assertThat(firstScheduledEpochJobStats.getPreviousEpochJobSetting())
+                .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING);
+        assertThat(firstScheduledEpochJobStats.getCurrentEpochJobSetting())
+                .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING);
+        assertThat(firstScheduledEpochJobStats.getScheduleIfNeededEpochJobStatus())
+                .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_REQUIRES_CHARGING);
+
+        TopicsScheduleEpochJobSettingReportedStats secondScheduledEpochJobStats = stats.get(1);
+        assertThat(secondScheduledEpochJobStats.getRescheduleEpochJobStatus())
+                .isEqualTo(TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_UNSET);
+        assertThat(secondScheduledEpochJobStats.getPreviousEpochJobSetting())
+                .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING);
+        assertThat(secondScheduledEpochJobStats.getCurrentEpochJobSetting())
+                .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING);
+        assertThat(secondScheduledEpochJobStats.getScheduleIfNeededEpochJobStatus())
+                .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_REQUIRES_BATTERY_NOT_LOW);
+    }
+
+    @Test
     public void testOnStopJob_withLogging() throws Exception {
         JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
 
@@ -189,6 +278,45 @@ public class EpochJobServiceTest extends AdServicesJobServiceTestCase {
         // The first invocation of scheduleIfNeeded() schedules the job.
         assertThat(EpochJobService.scheduleIfNeeded(/* forceSchedule= */ false))
                 .isEqualTo(SCHEDULING_RESULT_CODE_SUCCESSFUL);
+    }
+
+    @Test
+    public void testScheduleIfNeededCalledFromRescheduleEpochJob_RequiresBatteryNotLow_Success()
+            throws InterruptedException {
+        // Initializes the argumentCaptor to collect topics epoch job setting metrics.
+        ArgumentCaptor<TopicsScheduleEpochJobSettingReportedStats> argumentCaptor =
+                ArgumentCaptor.forClass(TopicsScheduleEpochJobSettingReportedStats.class);
+        when(mMockFlags.getTopicsEpochJobBatteryConstraintLoggingEnabled()).thenReturn(true);
+
+        when(mMockFlags.getGlobalKillSwitch()).thenReturn(false);
+        when(mMockFlags.getTopicsJobSchedulerRescheduleEnabled()).thenReturn(true);
+        when(mMockFlags.getTopicsEpochJobBatteryNotLowInsteadOfCharging()).thenReturn(true);
+
+        AnswerSyncCallback<Void> callback = AnswerSyncCallback.forSingleVoidAnswer();
+        doAnswer(callback).when(mSpyAdServicesLogger)
+                .logTopicsScheduleEpochJobSettingReportedStats(any());
+
+        // The first invocation of scheduleIfNeededCalledFromRescheduleEpochJob() schedules the job.
+        assertThat(
+                EpochJobService.scheduleIfNeededCalledFromRescheduleEpochJob(
+                        /* forceSchedule= */ false,
+                        new TopicsScheduleEpochJobSettingReportedStatsLogger(
+                                mSpyAdServicesLogger, mMockFlags)))
+                .isEqualTo(SCHEDULING_RESULT_CODE_SUCCESSFUL);
+        callback.assertCalled();
+
+        // Verifies the topics epoch job setting metric is logged.
+        verify(mSpyAdServicesLogger)
+                .logTopicsScheduleEpochJobSettingReportedStats(argumentCaptor.capture());
+        TopicsScheduleEpochJobSettingReportedStats stats = argumentCaptor.getValue();
+        assertThat(stats.getRescheduleEpochJobStatus())
+                .isEqualTo(TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_UNSET);
+        assertThat(stats.getPreviousEpochJobSetting())
+                .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING);
+        assertThat(stats.getCurrentEpochJobSetting())
+                .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING);
+        assertThat(stats.getScheduleIfNeededEpochJobStatus())
+                .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_REQUIRES_BATTERY_NOT_LOW);
     }
 
     @Test
@@ -388,6 +516,133 @@ public class EpochJobServiceTest extends AdServicesJobServiceTestCase {
         // Verify logging has not happened even though logging is enabled because this field is not
         // logged
         verifyLoggingNotHappened(mSpyLogger);
+    }
+
+    @Test
+    public void testRescheduleEpochJob_skipReschedule_emptyJobScheduler()
+            throws InterruptedException {
+        // Initializes the argumentCaptor to collect topics epoch job setting metrics.
+        ArgumentCaptor<TopicsScheduleEpochJobSettingReportedStats> argumentCaptor =
+                ArgumentCaptor.forClass(TopicsScheduleEpochJobSettingReportedStats.class);
+        when(mMockFlags.getTopicsEpochJobBatteryConstraintLoggingEnabled()).thenReturn(true);
+
+        when(mMockFlags.getGlobalKillSwitch()).thenReturn(false);
+        when(mMockFlags.getTopicsJobSchedulerRescheduleEnabled()).thenReturn(true);
+        when(mMockFlags.getTopicsEpochJobBatteryNotLowInsteadOfCharging()).thenReturn(true);
+
+        AnswerSyncCallback<Void> callback = AnswerSyncCallback.forSingleVoidAnswer();
+        doAnswer(callback).when(mSpyAdServicesLogger)
+                .logTopicsScheduleEpochJobSettingReportedStats(any());
+
+        appContext.set(mMockContext);
+        when(mMockContext.getSystemService(JobScheduler.class)).thenReturn(null);
+
+        doReturn(new TopicsScheduleEpochJobSettingReportedStatsLogger(
+                mSpyAdServicesLogger, mMockFlags))
+                .when(TopicsScheduleEpochJobSettingReportedStatsLogger::getInstance);
+
+        EpochJobService.rescheduleEpochJob();
+        callback.assertCalled();
+
+        // Verifies the topics epoch job setting metric is logged.
+        verify(mSpyAdServicesLogger)
+                .logTopicsScheduleEpochJobSettingReportedStats(argumentCaptor.capture());
+        TopicsScheduleEpochJobSettingReportedStats stats = argumentCaptor.getValue();
+        assertThat(stats.getRescheduleEpochJobStatus())
+                .isEqualTo(TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_SKIP_RESCHEDULE_EMPTY_JOB_SCHEDULER);
+        assertThat(stats.getPreviousEpochJobSetting())
+                .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING);
+        assertThat(stats.getCurrentEpochJobSetting())
+                .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING);
+        assertThat(stats.getScheduleIfNeededEpochJobStatus())
+                .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING);
+    }
+
+    @Test
+    public void testRescheduleEpochJob_skipReschedule_emptyPendingJob()
+            throws InterruptedException {
+        // Initializes the argumentCaptor to collect topics epoch job setting metrics.
+        ArgumentCaptor<TopicsScheduleEpochJobSettingReportedStats> argumentCaptor =
+                ArgumentCaptor.forClass(TopicsScheduleEpochJobSettingReportedStats.class);
+        when(mMockFlags.getTopicsEpochJobBatteryConstraintLoggingEnabled()).thenReturn(true);
+
+        when(mMockFlags.getGlobalKillSwitch()).thenReturn(false);
+        when(mMockFlags.getTopicsJobSchedulerRescheduleEnabled()).thenReturn(true);
+        when(mMockFlags.getTopicsEpochJobBatteryNotLowInsteadOfCharging()).thenReturn(true);
+
+        AnswerSyncCallback<Void> callback = AnswerSyncCallback.forSingleVoidAnswer();
+        doAnswer(callback).when(mSpyAdServicesLogger)
+                .logTopicsScheduleEpochJobSettingReportedStats(any());
+
+        appContext.set(mMockContext);
+        when(mMockContext.getSystemService(JobScheduler.class)).thenReturn(mMockJobScheduler);
+        when(mMockJobScheduler.getPendingJob(TOPICS_EPOCH_JOB_ID)).thenReturn(null);
+        doReturn(new TopicsScheduleEpochJobSettingReportedStatsLogger(
+                mSpyAdServicesLogger, mMockFlags))
+                .when(TopicsScheduleEpochJobSettingReportedStatsLogger::getInstance);
+
+        EpochJobService.rescheduleEpochJob();
+        callback.assertCalled();
+
+        // Verifies the topics epoch job setting metric is logged.
+        verify(mSpyAdServicesLogger)
+                .logTopicsScheduleEpochJobSettingReportedStats(argumentCaptor.capture());
+        TopicsScheduleEpochJobSettingReportedStats stats = argumentCaptor.getValue();
+        assertThat(stats.getRescheduleEpochJobStatus())
+                .isEqualTo(TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_SKIP_RESCHEDULE_EMPTY_PENDING_JOB);
+        assertThat(stats.getPreviousEpochJobSetting())
+                .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING);
+        assertThat(stats.getCurrentEpochJobSetting())
+                .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING);
+        assertThat(stats.getScheduleIfNeededEpochJobStatus())
+                .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING);
+    }
+
+    @Test
+    public void testRescheduleEpochJob_rescheduleBatteryNotLow_success()
+            throws InterruptedException {
+        // Initializes the argumentCaptor to collect topics epoch job setting metrics.
+        ArgumentCaptor<TopicsScheduleEpochJobSettingReportedStats> argumentCaptor =
+                ArgumentCaptor.forClass(TopicsScheduleEpochJobSettingReportedStats.class);
+        when(mMockFlags.getTopicsEpochJobBatteryConstraintLoggingEnabled()).thenReturn(true);
+
+        when(mMockFlags.getGlobalKillSwitch()).thenReturn(false);
+        when(mMockFlags.getTopicsJobSchedulerRescheduleEnabled()).thenReturn(true);
+        when(mMockFlags.getTopicsEpochJobBatteryNotLowInsteadOfCharging()).thenReturn(true);
+
+        AnswerSyncCallback<Void> callback = AnswerSyncCallback.forSingleVoidAnswer();
+        doAnswer(callback).when(mSpyAdServicesLogger)
+                .logTopicsScheduleEpochJobSettingReportedStats(any());
+
+        appContext.set(mMockContext);
+        JobInfo existingJobInfo =
+                new JobInfo.Builder(
+                        TOPICS_EPOCH_JOB_ID,
+                        new ComponentName(mMockContext, EpochJobService.class))
+                        .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
+                        .setRequiresCharging(true)
+                        .build();
+        when(mMockContext.getSystemService(JobScheduler.class)).thenReturn(mMockJobScheduler);
+        when(mMockJobScheduler.getPendingJob(TOPICS_EPOCH_JOB_ID)).thenReturn(existingJobInfo);
+        doReturn(new TopicsScheduleEpochJobSettingReportedStatsLogger(
+                mSpyAdServicesLogger, mMockFlags))
+                .when(TopicsScheduleEpochJobSettingReportedStatsLogger::getInstance);
+
+        EpochJobService.rescheduleEpochJob();
+        callback.assertCalled();
+
+        // Verifies the topics epoch job setting metric is logged.
+        verify(mSpyAdServicesLogger)
+                .logTopicsScheduleEpochJobSettingReportedStats(argumentCaptor.capture());
+        TopicsScheduleEpochJobSettingReportedStats stats = argumentCaptor.getValue();
+        assertThat(stats.getRescheduleEpochJobStatus())
+                .isEqualTo(TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_RESCHEDULE_SUCCESS);
+        assertThat(stats.getPreviousEpochJobSetting())
+                .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_REQUIRES_CHARGING);
+        assertThat(stats.getCurrentEpochJobSetting())
+                .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_REQUIRES_BATTERY_NOT_LOW);
+        assertThat(stats.getScheduleIfNeededEpochJobStatus())
+                .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_REQUIRES_BATTERY_NOT_LOW);
     }
 
     // Verify that when the Job starts, it will unschedule itself.
