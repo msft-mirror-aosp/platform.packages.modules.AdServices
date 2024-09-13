@@ -6763,7 +6763,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     @Test
     public void testCloseJSScriptEngineConnectionAtShutDown() {
         JSScriptEngine jsScriptEngineMock = mock(JSScriptEngine.class);
-        doReturn(jsScriptEngineMock).when(() -> JSScriptEngine.getInstance(any()));
+        doReturn(jsScriptEngineMock).when(JSScriptEngine::getInstance);
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -6804,8 +6804,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     @Test
     public void testJSScriptEngineConnectionExceptionAtShutDown() {
         JSScriptEngine jsScriptEngineMock = mock(JSScriptEngine.class);
-        doThrow(JSSandboxIsNotAvailableException.class)
-                .when(() -> JSScriptEngine.getInstance(any()));
+        doThrow(JSSandboxIsNotAvailableException.class).when(JSScriptEngine::getInstance);
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(

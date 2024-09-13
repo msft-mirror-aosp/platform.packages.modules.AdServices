@@ -173,7 +173,7 @@ public class ReportImpressionScriptEngine {
             RegisterAdBeaconScriptEngineHelper registerAdBeaconScriptEngineHelper,
             RetryStrategy retryStrategy,
             DevContext devContext) {
-        mJsEngine = JSScriptEngine.getInstance(sLogger);
+        mJsEngine = JSScriptEngine.getInstance();
         mMaxHeapSizeBytesSupplier = maxHeapSizeBytesSupplier;
         mRegisterAdBeaconScriptEngineHelper = registerAdBeaconScriptEngineHelper;
         mRetryStrategy = retryStrategy;

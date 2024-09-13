@@ -19,7 +19,6 @@ package com.android.adservices.common;
 import android.content.Context;
 import android.util.Log;
 
-import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
 
@@ -56,7 +55,7 @@ public final class WebViewSupportUtil {
             throws ExecutionException, InterruptedException, TimeoutException {
         boolean isJSSandboxAvailable =
                 JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable()
-                        && JSScriptEngine.getInstance(LoggerFactory.getLogger())
+                        && JSScriptEngine.getInstance()
                                 .isConfigurableHeapSizeSupported()
                                 .get(JS_SANDBOX_TIMEOUT_MS, TimeUnit.MILLISECONDS);
         Log.d(TAG, String.format("isJSSandboxAvailable: %s", isJSSandboxAvailable));
@@ -70,7 +69,7 @@ public final class WebViewSupportUtil {
             throws ExecutionException, InterruptedException, TimeoutException {
         boolean isJSIsolateConsoleCallbackAvailable =
                 isJSSandboxAvailable(context)
-                        && JSScriptEngine.getInstance(LoggerFactory.getLogger())
+                        && JSScriptEngine.getInstance()
                                 .isConsoleCallbackSupported()
                                 .get(JS_SANDBOX_TIMEOUT_MS, TimeUnit.MILLISECONDS);
         Log.d(
@@ -88,7 +87,7 @@ public final class WebViewSupportUtil {
             throws ExecutionException, InterruptedException, TimeoutException {
         boolean isWasmSupportAvailable =
                 JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable()
-                        && JSScriptEngine.getInstance(LoggerFactory.getLogger())
+                        && JSScriptEngine.getInstance()
                                 .isWasmSupported()
                                 .get(JS_SANDBOX_TIMEOUT_MS, TimeUnit.MILLISECONDS);
         Log.d(TAG, String.format("isWasmSupportAvailable: %s", isWasmSupportAvailable));
@@ -103,7 +102,7 @@ public final class WebViewSupportUtil {
             throws ExecutionException, InterruptedException, TimeoutException {
         boolean isEvaluationWithoutTransactionLimitSupportAvailable =
                 isJSSandboxAvailable(context)
-                        && JSScriptEngine.getInstance(LoggerFactory.getLogger())
+                        && JSScriptEngine.getInstance()
                                 .isLargeTransactionsSupported()
                                 .get(JS_SANDBOX_TIMEOUT_MS, TimeUnit.MILLISECONDS);
         Log.d(
