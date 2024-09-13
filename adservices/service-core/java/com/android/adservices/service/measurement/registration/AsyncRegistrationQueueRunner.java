@@ -624,15 +624,15 @@ public class AsyncRegistrationQueueRunner {
             return InsertSourcePermission.NOT_ALLOWED;
         }
 
-        int numOfOriginExcludingRegistrationOrigin =
-                dao.countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
+        int numOfDistinctOriginExcludingRegistrationOrigin =
+                dao.countDistinctRegOriginPerPublisherXEnrollmentExclRegOrigin(
                         source.getRegistrationOrigin(),
                         publisher.get(),
                         publisherType,
                         source.getEnrollmentId(),
                         source.getEventTime(),
                         mFlags.getMeasurementMinReportingOriginUpdateWindow());
-        if (numOfOriginExcludingRegistrationOrigin
+        if (numOfDistinctOriginExcludingRegistrationOrigin
                 >= mFlags.getMeasurementMaxReportingOriginsPerSourceReportingSitePerWindow()) {
             scheduleSourceSuccessOrNoisedDebugReport(
                     source,

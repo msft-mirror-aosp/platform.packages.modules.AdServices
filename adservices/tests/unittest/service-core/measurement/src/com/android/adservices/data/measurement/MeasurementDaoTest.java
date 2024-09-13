@@ -2196,13 +2196,14 @@ public class MeasurementDaoTest {
                 measurementDao -> {
                     assertEquals(
                             Integer.valueOf(0),
-                            measurementDao.countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
-                                    REGISTRATION_ORIGIN,
-                                    appPublisher,
-                                    EventSurfaceType.APP,
-                                    SourceFixture.ValidSourceParams.ENROLLMENT_ID,
-                                    System.currentTimeMillis(),
-                                    MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
+                            measurementDao
+                                    .countDistinctRegOriginPerPublisherXEnrollmentExclRegOrigin(
+                                            REGISTRATION_ORIGIN,
+                                            appPublisher,
+                                            EventSurfaceType.APP,
+                                            SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                                            System.currentTimeMillis(),
+                                            MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
                 });
     }
 
@@ -2229,13 +2230,14 @@ public class MeasurementDaoTest {
                 measurementDao -> {
                     assertEquals(
                             Integer.valueOf(0),
-                            measurementDao.countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
-                                    REGISTRATION_ORIGIN_2,
-                                    appPublisher2,
-                                    EventSurfaceType.APP,
-                                    SourceFixture.ValidSourceParams.ENROLLMENT_ID,
-                                    System.currentTimeMillis(),
-                                    MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
+                            measurementDao
+                                    .countDistinctRegOriginPerPublisherXEnrollmentExclRegOrigin(
+                                            REGISTRATION_ORIGIN_2,
+                                            appPublisher2,
+                                            EventSurfaceType.APP,
+                                            SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                                            System.currentTimeMillis(),
+                                            MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
                 });
     }
 
@@ -2262,13 +2264,14 @@ public class MeasurementDaoTest {
                 measurementDao -> {
                     assertEquals(
                             Integer.valueOf(0),
-                            measurementDao.countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
-                                    REGISTRATION_ORIGIN_2,
-                                    publisher2,
-                                    EventSurfaceType.WEB,
-                                    SourceFixture.ValidSourceParams.ENROLLMENT_ID,
-                                    System.currentTimeMillis(),
-                                    MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
+                            measurementDao
+                                    .countDistinctRegOriginPerPublisherXEnrollmentExclRegOrigin(
+                                            REGISTRATION_ORIGIN_2,
+                                            publisher2,
+                                            EventSurfaceType.WEB,
+                                            SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                                            System.currentTimeMillis(),
+                                            MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
                 });
     }
 
@@ -2296,13 +2299,14 @@ public class MeasurementDaoTest {
                 measurementDao -> {
                     assertEquals(
                             Integer.valueOf(0),
-                            measurementDao.countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
-                                    differentSite,
-                                    appPublisher,
-                                    EventSurfaceType.APP,
-                                    differentEnrollment,
-                                    System.currentTimeMillis(),
-                                    MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
+                            measurementDao
+                                    .countDistinctRegOriginPerPublisherXEnrollmentExclRegOrigin(
+                                            differentSite,
+                                            appPublisher,
+                                            EventSurfaceType.APP,
+                                            differentEnrollment,
+                                            System.currentTimeMillis(),
+                                            MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
                 });
     }
 
@@ -2329,13 +2333,14 @@ public class MeasurementDaoTest {
                 measurementDao -> {
                     assertEquals(
                             Integer.valueOf(0),
-                            measurementDao.countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
-                                    REGISTRATION_ORIGIN_2,
-                                    appPublisher,
-                                    EventSurfaceType.APP,
-                                    SourceFixture.ValidSourceParams.ENROLLMENT_ID,
-                                    System.currentTimeMillis(),
-                                    MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
+                            measurementDao
+                                    .countDistinctRegOriginPerPublisherXEnrollmentExclRegOrigin(
+                                            REGISTRATION_ORIGIN_2,
+                                            appPublisher,
+                                            EventSurfaceType.APP,
+                                            SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                                            System.currentTimeMillis(),
+                                            MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
                 });
     }
 
@@ -2361,14 +2366,15 @@ public class MeasurementDaoTest {
         mDatastoreManager.runInTransaction(
                 measurementDao -> {
                     assertEquals(
-                            Integer.valueOf(5),
-                            measurementDao.countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
-                                    REGISTRATION_ORIGIN_2,
-                                    appPublisher,
-                                    EventSurfaceType.APP,
-                                    SourceFixture.ValidSourceParams.ENROLLMENT_ID,
-                                    System.currentTimeMillis(),
-                                    MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
+                            Integer.valueOf(1),
+                            measurementDao
+                                    .countDistinctRegOriginPerPublisherXEnrollmentExclRegOrigin(
+                                            REGISTRATION_ORIGIN_2,
+                                            appPublisher,
+                                            EventSurfaceType.APP,
+                                            SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                                            System.currentTimeMillis(),
+                                            MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
                 });
     }
 

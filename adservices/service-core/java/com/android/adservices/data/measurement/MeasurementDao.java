@@ -1842,7 +1842,7 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public Integer countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
+    public Integer countDistinctRegOriginPerPublisherXEnrollmentExclRegOrigin(
             Uri registrationOrigin,
             Uri publisher,
             @EventSurfaceType int publisherType,
@@ -1854,16 +1854,16 @@ class MeasurementDao implements IMeasurementDao {
         String query =
                 String.format(
                         Locale.ENGLISH,
-                        "SELECT COUNT (*) FROM %1$s "
-                                + "WHERE %2$s AND "
-                                + "%3$s = ? AND "
-                                + "%4$s != ? AND "
+                        "SELECT COUNT (DISTINCT %1$s) FROM %2$s "
+                                + "WHERE %3$s AND "
+                                + "%4$s = ? AND "
+                                + "%1$s != ? AND "
                                 + "%5$s > ?",
+                        SourceContract.REGISTRATION_ORIGIN,
                         SourceContract.TABLE,
                         getPublisherWhereStatement(
                                 publisher, publisherType, SourceContract.PUBLISHER),
                         SourceContract.ENROLLMENT_ID,
-                        SourceContract.REGISTRATION_ORIGIN,
                         SourceContract.EVENT_TIME);
 
         return (int)

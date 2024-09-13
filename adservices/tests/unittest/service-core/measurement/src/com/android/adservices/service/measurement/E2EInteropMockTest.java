@@ -108,7 +108,6 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                         "os_debug_reports.json",
                         "preferred_platform.json",
                         "rate_limit_max_attributions.json",
-                        "rate_limit_max_distinct_reporting_origins_per_source_reporting_site.json",
                         "rate_limit_max_reporting_origins_per_source_reporting_site.json",
                         "redirect_source_trigger.json",
                         "source_destination_limit_fifo.json",
