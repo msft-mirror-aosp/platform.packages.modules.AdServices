@@ -12875,9 +12875,9 @@ public class MeasurementDaoTest {
                                         dao.sumAggregateDebugReportBudgetXPublisherXWindow(
                                                 /* publisher= */ TOP_LEVEL_REGISTRANT_1,
                                                 /* publisherType= */ EventSurfaceType.APP,
-                                                /* windowEndTime= */ 1000L))
+                                                /* windowStartTime= */ 1000L))
                         .get();
-        assertThat(budget1).isEqualTo((9 + 16 + 25 + 36));
+        assertThat(budget1).isEqualTo((16 + 25 + 36));
 
         // test case 2
         int budget2 =
@@ -12887,7 +12887,7 @@ public class MeasurementDaoTest {
                                         dao.sumAggregateDebugReportBudgetXPublisherXWindow(
                                                 /* publisher= */ TOP_LEVEL_REGISTRANT_1,
                                                 /* publisherType= */ EventSurfaceType.APP,
-                                                /* windowEndTime= */ 1001L))
+                                                /* windowStartTime= */ 1001L))
                         .get();
         assertThat(budget2).isEqualTo((16 + 25 + 36));
 
@@ -12901,7 +12901,7 @@ public class MeasurementDaoTest {
                                                 /* publisherType= */ EventSurfaceType.APP,
                                                 /* origin= */ Uri.parse(
                                                         "https://destination4.test"),
-                                                /* windowEndTime= */ 1001L))
+                                                /* windowStartTime= */ 1001L))
                         .get();
         assertThat(budget3).isEqualTo((49 + 64));
     }

@@ -146,6 +146,7 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
     private final Set<String> mSeenUris = new HashSet<>();
     private final Map<String, String> mUriToEnrollmentId = new HashMap<>();
     protected DebugReportApi mDebugReportApi;
+    protected AggregateDebugReportApi mAggregateDebugReportApi;
 
     @Rule(order = 11)
     public final AdServicesExtendedMockitoRule extendedMockito;
@@ -209,8 +210,8 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
                         ApplicationProvider.getApplicationContext(),
                         mFlags,
                         new EventReportWindowCalcDelegate(mFlags),
-                        new SourceNoiseHandler(mFlags),
-                        new AggregateDebugReportApi(mFlags));
+                        new SourceNoiseHandler(mFlags));
+        mAggregateDebugReportApi = new AggregateDebugReportApi(mFlags);
 
         mImpressionNoiseUtil = spy(new ImpressionNoiseUtil());
 

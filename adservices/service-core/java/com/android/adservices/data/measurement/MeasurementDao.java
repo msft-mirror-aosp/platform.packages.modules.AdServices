@@ -3931,7 +3931,7 @@ class MeasurementDao implements IMeasurementDao {
         String query =
                 String.format(
                         Locale.ENGLISH,
-                        "SELECT SUM(%2$s) FROM %1$s WHERE %3$s AND %4$s >= ?",
+                        "SELECT SUM(%2$s) FROM %1$s WHERE %3$s AND %4$s > ?",
                         AggregatableDebugReportBudgetTrackerContract.TABLE,
                         AggregatableDebugReportBudgetTrackerContract.CONTRIBUTIONS,
                         getPublisherWhereStatement(
