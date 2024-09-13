@@ -32,10 +32,11 @@ import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.util.UxEngineUtil;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 
 /* UxEngine for coordinating UX components such as UXs, enrollment channels, and modes. */
 @RequiresApi(Build.VERSION_CODES.S)
-public class UxEngine {
+public final class UxEngine {
     private final ConsentManager mConsentManager;
     private final UxStatesManager mUxStatesManager;
     private final UxEngineUtil mUxEngineUtil;
@@ -57,10 +58,10 @@ public class UxEngine {
      * Returns an instance of the UxEngine. This method should only be invoked by the common
      * manager.
      */
-    public static UxEngine getInstance(Context context) {
+    public static UxEngine getInstance() {
         LogUtil.d("UxEngine getInstance called.");
         return new UxEngine(
-                context,
+                ApplicationContextSingleton.get(),
                 ConsentManager.getInstance(),
                 UxStatesManager.getInstance(),
                 UxEngineUtil.getInstance());
