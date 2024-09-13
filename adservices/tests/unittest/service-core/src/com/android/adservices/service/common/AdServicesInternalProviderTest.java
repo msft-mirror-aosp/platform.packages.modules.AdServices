@@ -36,7 +36,7 @@ public final class AdServicesInternalProviderTest extends AdServicesExtendedMock
 
     @Test
     public void testDump_appContextSingletonNotSet() throws Exception {
-        ApplicationContextSingleton.setAsIs(/* context= */ null);
+        ApplicationContextSingleton.setForTests(/* context= */ null);
 
         String dump = dump(pw -> mProvider.dump(/* fd= */ null, pw, /* args= */ null));
 
