@@ -113,7 +113,7 @@ public class BackgroundFetchJobService extends JobService {
         LoggerFactory.getFledgeLogger()
                 .d("Starting FLEDGE background fetch job at %s", jobStartTime.toString());
 
-        BackgroundFetchWorker.getInstance(this)
+        BackgroundFetchWorker.getInstance()
                 .runBackgroundFetch()
                 .addCallback(
                         new FutureCallback<Void>() {
@@ -191,7 +191,7 @@ public class BackgroundFetchJobService extends JobService {
     @Override
     public boolean onStopJob(JobParameters params) {
         LoggerFactory.getFledgeLogger().d("BackgroundFetchJobService.onStopJob");
-        BackgroundFetchWorker.getInstance(this).stopWork();
+        BackgroundFetchWorker.getInstance().stopWork();
 
         boolean shouldRetry = true;
 

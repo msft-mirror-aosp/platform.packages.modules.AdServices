@@ -39,8 +39,6 @@ import android.adservices.http.MockWebServerRule;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 
-import androidx.test.filters.FlakyTest;
-
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
@@ -495,15 +493,9 @@ public final class BackgroundFetchRunnerTest extends AdServicesExtendedMockitoTe
         assertEquals(mFetchPath, fetchRequest.getPath());
     }
 
-    @FlakyTest(bugId = 322167446)
     @Test
     public void testFetchAndValidateCustomAudienceUpdatableDataNetworkTimeout() throws Exception {
         class FlagsWithSmallLimits implements Flags {
-            @Override
-            public int getFledgeBackgroundFetchNetworkConnectTimeoutMs() {
-                return 30;
-            }
-
             @Override
             public int getFledgeBackgroundFetchNetworkReadTimeoutMs() {
                 return 50;

@@ -218,7 +218,7 @@ public class ScheduledUpdatesHandler {
                         FlagsFactory.getFlags().getFledgeFrequencyCapFilteringEnabled(),
                         FlagsFactory.getFlags().getFledgeAppInstallFilteringEnabled(),
                         FlagsFactory.getFlags().getFledgeAuctionServerAdRenderIdEnabled()),
-                CustomAudienceImpl.getInstance(context),
+                CustomAudienceImpl.getInstance(),
                 new CustomAudienceQuantityChecker(
                         CustomAudienceDatabase.getInstance().customAudienceDao(),
                         FlagsFactory.getFlags()));
