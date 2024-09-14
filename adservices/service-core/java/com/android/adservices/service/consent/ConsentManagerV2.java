@@ -58,7 +58,6 @@ import com.android.adservices.service.common.BackgroundJobsManager;
 import com.android.adservices.service.common.UserProfileIdManager;
 import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.adservices.service.common.feature.PrivacySandboxFeatureType;
-import com.android.adservices.service.extdata.AdServicesExtDataStorageServiceManager;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.measurement.WipeoutStatus;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -100,7 +99,6 @@ import java.util.stream.Collectors;
  *   <li>PPAPI_AND_SYSTEM_SERVER: Write consent to both PPAPI and system server. Read consent from
  *       system server only.
  *   <li>APPSEARCH_ONLY: Write and read consent from appSearch only for back compat.
- *   <li>PPAPI_AND_ADEXT_SERVICE: Write and read consent from PPAPI and AdExt service..
  * </ul>
  *
  * IMPORTANT: Until ConsentManagerV2 is launched, keep in sync with ConsentManager.
@@ -131,8 +129,6 @@ public class ConsentManagerV2 {
     private final AppSearchConsentStorageManager mAppSearchConsentStorageManager;
     private final UserProfileIdManager mUserProfileIdManager;
 
-    private final AppConsentForRStorageManager mAppConsentForRStorageManager;
-
     private static final Object LOCK = new Object();
 
     private ConsentCompositeStorage mConsentCompositeStorage;
@@ -153,11 +149,9 @@ public class ConsentManagerV2 {
             @NonNull AtomicFileDatastore atomicFileDatastore,
             @NonNull AppSearchConsentStorageManager appSearchConsentStorageManager,
             @NonNull UserProfileIdManager userProfileIdManager,
-            @NonNull AppConsentForRStorageManager appConsentForRStorageManager,
             @NonNull Flags flags,
             @Flags.ConsentSourceOfTruth int consentSourceOfTruth,
-            boolean enableAppsearchConsentData,
-            boolean enableAdExtServiceConsentData) {
+            boolean enableAppsearchConsentData) {
         Objects.requireNonNull(topicsWorker);
         Objects.requireNonNull(appConsentDao);
         Objects.requireNonNull(measurementImpl);
@@ -177,10 +171,6 @@ public class ConsentManagerV2 {
             Objects.requireNonNull(appSearchConsentStorageManager);
         }
 
-        if (enableAdExtServiceConsentData) {
-            Objects.requireNonNull(appConsentForRStorageManager);
-        }
-
         mAdServicesStorageManager = adServicesStorageManager;
         mTopicsWorker = topicsWorker;
         mDatastore = atomicFileDatastore;
@@ -196,7 +186,6 @@ public class ConsentManagerV2 {
 
         mFlags = flags;
         mAppConsentStorageManager = appConsentStorageManager;
-        mAppConsentForRStorageManager = appConsentForRStorageManager;
 
         mConsentCompositeStorage =
                 new ConsentCompositeStorage(getStorageListBySourceOfTruth(consentSourceOfTruth));
@@ -214,8 +203,6 @@ public class ConsentManagerV2 {
                 return ImmutableList.of(mAdServicesStorageManager, mAppConsentStorageManager);
             case Flags.APPSEARCH_ONLY:
                 return ImmutableList.of(mAppSearchConsentStorageManager);
-            case Flags.PPAPI_AND_ADEXT_SERVICE:
-                return ImmutableList.of(mAppConsentForRStorageManager);
             default:
                 LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
                 return ImmutableList.of();
@@ -229,6 +216,7 @@ public class ConsentManagerV2 {
      * existing instance will be returned.
      */
     @NonNull
+    // TODO: apply the lazy initialization to this class b/366283605
     public static ConsentManagerV2 getInstance() {
         Context context = ApplicationContextSingleton.get();
 
@@ -270,35 +258,6 @@ public class ConsentManagerV2 {
                                 statsdAdServicesLogger);
                     }
                     UxStatesDao uxStatesDao = UxStatesDao.getInstance();
-                    AppConsentForRStorageManager mAppConsentForRStorageManager = null;
-                    // Flag enable_adext_service_consent_data is true on R and S+ only when
-                    // we want to use AdServicesExtDataStorageService to write to or read from.
-                    boolean enableAdExtServiceConsentData =
-                            FlagsFactory.getFlags().getEnableAdExtServiceConsentData();
-                    if (enableAdExtServiceConsentData) {
-                        AdServicesExtDataStorageServiceManager adServicesExtDataManager =
-                                AdServicesExtDataStorageServiceManager.getInstance();
-                        // TODO(b/324273438): Support R->T+ consent migration for Consent Manager
-                        //  V2 project.
-                        // NOTE: To disable migration from AdExtService to AppSearch on 2024 M03-
-                        // builds, use the deprecated flag
-                        // enable_adext_service_to_appsearch_migration.
-                        if (FlagsFactory.getFlags().getEnableMigrationFromAdExtService()) {
-                            AdExtDataConsentMigrationUtilsV2
-                                    .handleConsentMigrationFromAdExtDataIfNeededV2(
-                                            context,
-                                            appSearchConsentStorageManager,
-                                            adServicesExtDataManager,
-                                            statsdAdServicesLogger,
-                                            adServicesManager);
-                        }
-                        mAppConsentForRStorageManager =
-                                new AppConsentForRStorageManager(
-                                        datastore,
-                                        appConsentDao,
-                                        uxStatesDao,
-                                        adServicesExtDataManager);
-                    }
 
                     // Attempt to migrate consent data from PPAPI to System server if needed.
                     handleConsentMigrationIfNeeded(
@@ -326,11 +285,9 @@ public class ConsentManagerV2 {
                                     appSearchConsentStorageManager,
                                     UserProfileIdManager.getInstance(),
                                     // TODO(b/260601944): Remove Flag Instance.
-                                    mAppConsentForRStorageManager,
                                     FlagsFactory.getFlags(),
                                     consentSourceOfTruth,
-                                    enableAppsearchConsentData,
-                                    enableAdExtServiceConsentData);
+                                    enableAppsearchConsentData);
                 }
             }
         }
@@ -507,16 +464,8 @@ public class ConsentManagerV2 {
      * @return true if user is adult user who OTA from R, otherwise false.
      */
     public boolean isOtaAdultUserFromRvc() {
-        if (mFlags.getConsentManagerOTADebugMode()) {
-            return true;
-        }
-        // TODO(313672368) clean up getRvcPostOtaNotifAgeCheck flag after u18 is qualified on R/S
-        return mAppConsentForRStorageManager != null
-                && mAppConsentForRStorageManager.wasU18NotificationDisplayed()
-                && (mFlags.getRvcPostOtaNotifAgeCheck()
-                        ? !mAppConsentForRStorageManager.isU18Account()
-                                && mAppConsentForRStorageManager.isAdultAccount()
-                        : true);
+        // TODO: b/364295966 REMOVE
+        return false;
     }
 
     /**
@@ -874,7 +823,6 @@ public class ConsentManagerV2 {
             @NonNull StatsdAdServicesLogger statsdAdServicesLogger,
             @Flags.ConsentSourceOfTruth int consentSourceOfTruth) {
         Objects.requireNonNull(context);
-        // On R/S, handleConsentMigrationIfNeeded should never be executed.
         // It is a T+ feature. On T+, this function should only execute if it's within the
         // AdServices
         // APK and not ExtServices. So check if it's within ExtServices, and bail out if that's the

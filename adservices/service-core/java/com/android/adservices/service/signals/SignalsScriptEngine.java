@@ -71,7 +71,7 @@ public final class SignalsScriptEngine {
         mMaxHeapSizeBytesSupplier = maxHeapSizeBytesSupplier;
         mRetryStrategy = retryStrategy;
         mIsolateConsoleMessageInLogsEnabled = isolateConsoleMessageInLogsEnabled;
-        mJsEngine = JSScriptEngine.getInstance(sLogger);
+        mJsEngine = JSScriptEngine.getInstance();
     }
 
     /**

@@ -28,6 +28,8 @@ import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -56,6 +58,16 @@ public final class AppConsentDao {
     private static volatile AppConsentDao sAppConsentDao;
 
     private volatile boolean mInitialized;
+    // Using supplier here to lazy initialize the AppConsentDao Singleton.
+    private static volatile Supplier<AppConsentDao> sAppConsentDaoSupplier =
+            Suppliers.memoize(
+                    () -> {
+                        Context context = ApplicationContextSingleton.get();
+                        AtomicFileDatastore datastore =
+                                new AtomicFileDatastore(context, DATASTORE_NAME, DATASTORE_VERSION);
+                        PackageManager packageManager = context.getPackageManager();
+                        return new AppConsentDao(datastore, packageManager);
+                    });
 
     /**
      * The {@link AtomicFileDatastore} will store {@code true} if an app has had its consent revoked
@@ -76,21 +88,23 @@ public final class AppConsentDao {
         mPackageManager = packageManager;
     }
 
-    /** Gets the singleton instance of the {@link AppConsentDao}. */
+    /** Get the singleton instance of the {@link AppConsentDao} */
     public static AppConsentDao getInstance() {
         if (sAppConsentDao == null) {
             synchronized (SINGLETON_LOCK) {
                 if (sAppConsentDao == null) {
-                    Context context = ApplicationContextSingleton.get();
-                    AtomicFileDatastore datastore =
-                            new AtomicFileDatastore(context, DATASTORE_NAME, DATASTORE_VERSION);
-                    PackageManager packageManager = context.getPackageManager();
-                    sAppConsentDao = new AppConsentDao(datastore, packageManager);
+                    sAppConsentDao = sAppConsentDaoSupplier.get();
                 }
             }
         }
-
         return sAppConsentDao;
+    }
+
+    /**
+     * @return the singleton supplier of the {@link AppConsentDao}
+     */
+    public static Supplier<AppConsentDao> getSingletonSupplier() {
+        return sAppConsentDaoSupplier;
     }
 
     /**
