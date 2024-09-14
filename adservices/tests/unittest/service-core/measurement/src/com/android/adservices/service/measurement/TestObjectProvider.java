@@ -48,11 +48,11 @@ class TestObjectProvider {
                         ApplicationProvider.getApplicationContext(),
                         flags,
                         new EventReportWindowCalcDelegate(flags),
-                        new SourceNoiseHandler(flags),
-                        new AggregateDebugReportApi(flags)),
+                        new SourceNoiseHandler(flags)),
                 new EventReportWindowCalcDelegate(flags),
                 new SourceNoiseHandler(flags),
-                AdServicesLoggerImpl.getInstance());
+                AdServicesLoggerImpl.getInstance(),
+                new AggregateDebugReportApi(flags));
     }
 
     static MeasurementImpl getMeasurementImpl(
@@ -76,6 +76,7 @@ class TestObjectProvider {
             AsyncSourceFetcher asyncSourceFetcher,
             AsyncTriggerFetcher asyncTriggerFetcher,
             DebugReportApi debugReportApi,
+            AggregateDebugReportApi aggregateDebugReportApi,
             Flags flags) {
         return new AsyncRegistrationQueueRunner(
                 ApplicationProvider.getApplicationContext(),
@@ -84,6 +85,7 @@ class TestObjectProvider {
                 asyncTriggerFetcher,
                 datastoreManager,
                 debugReportApi,
+                aggregateDebugReportApi,
                 sourceNoiseHandler,
                 flags);
     }

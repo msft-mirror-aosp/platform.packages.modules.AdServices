@@ -474,7 +474,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder(CommonFixture.TEST_PACKAGE_NAME)
-                                .setDevOptionsEnabled(true)
+                                .setDeviceDevOptionsEnabled(true)
                                 .build());
 
         CustomAudience customAudience1 =
@@ -532,7 +532,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder(CommonFixture.TEST_PACKAGE_NAME)
-                                .setDevOptionsEnabled(true)
+                                .setDeviceDevOptionsEnabled(true)
                                 .build());
 
         CustomAudience customAudience1 =
@@ -596,7 +596,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder(CommonFixture.TEST_PACKAGE_NAME)
-                                .setDevOptionsEnabled(true)
+                                .setDeviceDevOptionsEnabled(true)
                                 .build());
 
         CustomAudience customAudience1 =
@@ -938,7 +938,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder(CommonFixture.TEST_PACKAGE_NAME)
-                                .setDevOptionsEnabled(true)
+                                .setDeviceDevOptionsEnabled(true)
                                 .build());
 
         CustomAudience customAudience1 =
@@ -1001,7 +1001,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder(CommonFixture.TEST_PACKAGE_NAME)
-                                .setDevOptionsEnabled(true)
+                                .setDeviceDevOptionsEnabled(true)
                                 .build());
 
         CustomAudience customAudience1 =
@@ -1071,7 +1071,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder(CommonFixture.TEST_PACKAGE_NAME)
-                                .setDevOptionsEnabled(true)
+                                .setDeviceDevOptionsEnabled(true)
                                 .build());
 
         CustomAudience customAudience1 =
@@ -1137,7 +1137,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder(CommonFixture.TEST_PACKAGE_NAME)
-                                .setDevOptionsEnabled(true)
+                                .setDeviceDevOptionsEnabled(true)
                                 .build());
 
         CustomAudience customAudience1 =
@@ -1289,7 +1289,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder(CommonFixture.TEST_PACKAGE_NAME)
-                                .setDevOptionsEnabled(true)
+                                .setDeviceDevOptionsEnabled(true)
                                 .build());
 
         CustomAudience customAudience1 = createCustomAudience(BUYER_DOMAIN_1, BIDS_FOR_BUYER_1);
@@ -1411,7 +1411,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder(CommonFixture.TEST_PACKAGE_NAME)
-                                .setDevOptionsEnabled(true)
+                                .setDeviceDevOptionsEnabled(true)
                                 .build());
 
         CustomAudience customAudience1 = createCustomAudience(BUYER_DOMAIN_1, BIDS_FOR_BUYER_1);
@@ -1481,7 +1481,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder(CommonFixture.TEST_PACKAGE_NAME)
-                                .setDevOptionsEnabled(true)
+                                .setDeviceDevOptionsEnabled(true)
                                 .build());
 
         CustomAudience customAudience1 =
@@ -1563,7 +1563,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder(CommonFixture.TEST_PACKAGE_NAME)
-                                .setDevOptionsEnabled(true)
+                                .setDeviceDevOptionsEnabled(true)
                                 .build());
 
         CustomAudience customAudience1 =
@@ -1692,7 +1692,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder(CommonFixture.TEST_PACKAGE_NAME)
-                                .setDevOptionsEnabled(true)
+                                .setDeviceDevOptionsEnabled(true)
                                 .build());
 
         CustomAudience customAudience1 = createCustomAudience(BUYER_DOMAIN_1, INVALID_BIDS);

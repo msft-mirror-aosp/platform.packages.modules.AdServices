@@ -35,6 +35,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.reporting.AggregateDebugReportApi;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.DebugReportingJobService;
 import com.android.adservices.service.measurement.reporting.ImmediateAggregateReportingJobService;
@@ -123,7 +124,8 @@ public final class AttributionFallbackJobService extends JobService {
                                             DatastoreManagerFactory.getDatastoreManager(),
                                             new DebugReportApi(
                                                     getApplicationContext(),
-                                                    FlagsFactory.getFlags()))
+                                                    FlagsFactory.getFlags()),
+                                            new AggregateDebugReportApi(FlagsFactory.getFlags()))
                                     .performPendingAttributions();
                         });
     }

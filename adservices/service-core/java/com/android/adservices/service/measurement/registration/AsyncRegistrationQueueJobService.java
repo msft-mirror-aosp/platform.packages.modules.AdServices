@@ -131,7 +131,7 @@ public class AsyncRegistrationQueueJobService extends JobService {
                 .callWithLock(
                         "AsyncRegistrationQueueJobService",
                         () ->
-                                AsyncRegistrationQueueRunner.getInstance(getApplicationContext())
+                                AsyncRegistrationQueueRunner.getInstance()
                                         .runAsyncRegistrationQueueWorker(),
                         // Another thread is already processingasync registrations.
                         ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED);

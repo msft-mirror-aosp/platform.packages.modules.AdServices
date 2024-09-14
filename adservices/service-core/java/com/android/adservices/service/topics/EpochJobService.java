@@ -21,6 +21,8 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_FETCH_JOB_SCHEDULER_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_HANDLE_JOB_SERVICE_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_SKIP_RESCHEDULE_EMPTY_JOB_SCHEDULER;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_SKIP_RESCHEDULE_EMPTY_PENDING_JOB;
 import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_FAILED;
 import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_SKIPPED;
 import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_SUCCESSFUL;
@@ -45,6 +47,7 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
+import com.android.adservices.service.stats.TopicsScheduleEpochJobSettingReportedStatsLogger;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.adservices.shared.spe.JobServiceConstants.JobSchedulingResultCode;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
@@ -135,7 +138,7 @@ public final class EpochJobService extends JobService {
 
         if (FlagsFactory.getFlags().getTopicsJobSchedulerRescheduleEnabled()) {
             // Reschedule Topics Epoch job if the charging setting of previous epoch job is changed.
-            rescheduleEpochJob(params);
+            rescheduleEpochJob();
         }
 
         // Reschedule jobs with SPE if it's enabled. Note scheduled jobs by this EpochJobService
@@ -208,6 +211,24 @@ public final class EpochJobService extends JobService {
      */
     @JobSchedulingResultCode
     public static int scheduleIfNeeded(boolean forceSchedule) {
+        return scheduleIfNeededCalledFromRescheduleEpochJob(
+                forceSchedule,
+                TopicsScheduleEpochJobSettingReportedStatsLogger.getInstance());
+    }
+
+    /**
+     * Schedule Epoch Job Service if needed: there is no scheduled job with same job parameters.
+     *
+     * @param forceSchedule a flag to indicate whether to force rescheduling the job.
+     * @param topicsScheduleEpochJobSettingReportedStatsLogger a class for Topics schedule epoch job
+     *                                                         setting logger.
+     * @return a {@code boolean} to indicate if the service job is actually scheduled.
+     */
+    @JobSchedulingResultCode
+    public static int scheduleIfNeededCalledFromRescheduleEpochJob(
+            boolean forceSchedule,
+            TopicsScheduleEpochJobSettingReportedStatsLogger
+                    topicsScheduleEpochJobSettingReportedStatsLogger) {
         Context context = ApplicationContextSingleton.get();
 
         if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
@@ -252,6 +273,8 @@ public final class EpochJobService extends JobService {
             }
         }
 
+        topicsScheduleEpochJobSettingReportedStatsLogger.logScheduleIfNeeded();
+
         schedule(
                 context,
                 jobScheduler,
@@ -281,17 +304,26 @@ public final class EpochJobService extends JobService {
         return false;
     }
 
-    private void rescheduleEpochJob(final JobParameters params) {
-        JobScheduler jobScheduler = this.getSystemService(JobScheduler.class);
+    @VisibleForTesting
+    static void rescheduleEpochJob() {
+        JobScheduler jobScheduler =
+                ApplicationContextSingleton.get().getSystemService(JobScheduler.class);
         JobInfo previousEpochJobInfo = null;
         // The default EpochJob doesn't require battery not low, but requires charging.
         boolean isScheduledEpochJobRequireBatteryNotLow = false;
+
+        TopicsScheduleEpochJobSettingReportedStatsLogger
+                topicsScheduleEpochJobSettingReportedStatsLogger =
+                TopicsScheduleEpochJobSettingReportedStatsLogger.getInstance();
 
         if (jobScheduler != null) {
             previousEpochJobInfo = jobScheduler.getPendingJob(TOPICS_EPOCH_JOB_ID);
         } else {
             LoggerFactory.getTopicsLogger().d(
                     "There is no existing JobScheduler, skip rescheduleEpochJob.");
+            topicsScheduleEpochJobSettingReportedStatsLogger
+                    .logSkipRescheduleEpochJob(
+                            TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_SKIP_RESCHEDULE_EMPTY_JOB_SCHEDULER);
             return;
         }
 
@@ -303,7 +335,10 @@ public final class EpochJobService extends JobService {
             // the EpochJob should be rescheduled.
             if (isScheduledEpochJobRequireBatteryNotLow
                     != flagTopicsEpochJobBatteryNotLowInsteadOfCharging) {
-                scheduleIfNeeded(true);
+                topicsScheduleEpochJobSettingReportedStatsLogger
+                        .setPreviousEpochJobStatus(isScheduledEpochJobRequireBatteryNotLow);
+                scheduleIfNeededCalledFromRescheduleEpochJob(
+                        true, topicsScheduleEpochJobSettingReportedStatsLogger);
                 LoggerFactory.getTopicsLogger().d(
                         "Rescheduled EpochJobService because requires "
                                 + "battery not low is changed to: "
@@ -312,7 +347,9 @@ public final class EpochJobService extends JobService {
         } else {
             LoggerFactory.getTopicsLogger().d(
                     "There is no existing pending epoch job, skip rescheduleEpochJob.");
-            return;
+            topicsScheduleEpochJobSettingReportedStatsLogger
+                    .logSkipRescheduleEpochJob(
+                            TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_SKIP_RESCHEDULE_EMPTY_PENDING_JOB);
         }
     }
 }

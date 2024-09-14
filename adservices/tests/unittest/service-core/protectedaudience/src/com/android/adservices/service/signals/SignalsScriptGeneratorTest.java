@@ -20,7 +20,6 @@ import static org.junit.Assert.assertThrows;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.LoggerFactory;
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.service.common.NoOpRetryStrategyImpl;
@@ -63,7 +62,7 @@ public class SignalsScriptGeneratorTest extends AdServicesUnitTestCase {
 
     @Before
     public void setUp() {
-        this.mJSScriptEngine = JSScriptEngine.getInstance(LoggerFactory.getFledgeLogger());
+        this.mJSScriptEngine = JSScriptEngine.getInstance();
     }
 
     @Test

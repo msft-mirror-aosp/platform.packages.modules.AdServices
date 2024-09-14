@@ -166,6 +166,15 @@ public final class JSScriptEngineTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
+    public void testGetInstanceForTesting_failsIfCalledTwice() {
+        assumeTrue("sJSScriptEngine not set on @BeforeClass", sJSScriptEngine != null);
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> JSScriptEngine.getInstanceForTesting(sMockProfiler, sLogger));
+    }
+
+    @Test
     @SpyStatic(JavaScriptSandbox.class)
     public void testProviderFailsIfJSSandboxNotAvailableInWebViewVersion() {
             ExtendedMockito.doReturn(false).when(JavaScriptSandbox::isSupported);

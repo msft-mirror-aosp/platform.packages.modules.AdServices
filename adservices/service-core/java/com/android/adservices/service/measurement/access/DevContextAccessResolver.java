@@ -39,9 +39,10 @@ public class DevContextAccessResolver implements IAccessResolver {
     public DevContextAccessResolver(
             @NonNull DevContext devContext,
             @NonNull RegistrationRequest registrationRequest) {
-        mIsAllowed = WebAddresses.isLocalhost(registrationRequest.getRegistrationUri())
-                ? devContext.getDevOptionsEnabled()
-                : true;
+        mIsAllowed =
+                WebAddresses.isLocalhost(registrationRequest.getRegistrationUri())
+                        ? devContext.getDeviceDevOptionsEnabled()
+                        : true;
     }
 
     public DevContextAccessResolver(
@@ -54,7 +55,7 @@ public class DevContextAccessResolver implements IAccessResolver {
                 break;
             }
         }
-        mIsAllowed = hasLocalhost ? devContext.getDevOptionsEnabled() : true;
+        mIsAllowed = hasLocalhost ? devContext.getDeviceDevOptionsEnabled() : true;
     }
 
     public DevContextAccessResolver(
@@ -67,7 +68,7 @@ public class DevContextAccessResolver implements IAccessResolver {
                 break;
             }
         }
-        mIsAllowed = hasLocalhost ? devContext.getDevOptionsEnabled() : true;
+        mIsAllowed = hasLocalhost ? devContext.getDeviceDevOptionsEnabled() : true;
     }
 
     public DevContextAccessResolver(
@@ -80,7 +81,7 @@ public class DevContextAccessResolver implements IAccessResolver {
                 break;
             }
         }
-        mIsAllowed = hasLocalhost ? devContext.getDevOptionsEnabled() : true;
+        mIsAllowed = hasLocalhost ? devContext.getDeviceDevOptionsEnabled() : true;
     }
 
     @Override

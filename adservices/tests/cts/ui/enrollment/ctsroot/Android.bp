@@ -32,8 +32,8 @@ java_defaults {
         "truth",
     ],
     libs: [
-        "android.test.base",
-        "android.test.runner",
+        "android.test.base.stubs.system",
+        "android.test.runner.stubs.system",
         "framework-adservices-lib",
     ],
     test_suites: [

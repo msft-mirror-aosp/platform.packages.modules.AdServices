@@ -104,15 +104,15 @@ public class AdSelectionDevOverridesHelper {
 
     /**
      * Looks for an override for the given {@link AdSelectionConfig}. Will return {@code null} if
-     * {@link DevContext#getDevOptionsEnabled()} returns null for the {@link DevContext} passed in
-     * the constructor or if there is no override created by the app with package name specified in
-     * {@link DevContext#getCallingAppPackageName()}.
+     * {@link DevContext#getDeviceDevOptionsEnabled()} returns null for the {@link DevContext}
+     * passed in the constructor or if there is no override created by the app with package name
+     * specified in {@link DevContext#getCallingAppPackageName()}.
      */
     @Nullable
     public String getDecisionLogicOverride(@NonNull AdSelectionConfig adSelectionConfig) {
         Objects.requireNonNull(adSelectionConfig);
 
-        if (!mDevContext.getDevOptionsEnabled()) {
+        if (!mDevContext.getDeviceDevOptionsEnabled()) {
             return null;
         }
         return mAdSelectionEntryDao.getDecisionLogicOverride(
@@ -122,16 +122,16 @@ public class AdSelectionDevOverridesHelper {
 
     /**
      * Looks for an override for the given {@link AdSelectionConfig}. Will return {@code null} if
-     * {@link DevContext#getDevOptionsEnabled()} returns null for the {@link DevContext} passed in
-     * the constructor or if there is no override created by the app with package name specified in
-     * {@link DevContext#getCallingAppPackageName()}.
+     * {@link DevContext#getDeviceDevOptionsEnabled()} returns null for the {@link DevContext}
+     * passed in the constructor or if there is no override created by the app with package name
+     * specified in {@link DevContext#getCallingAppPackageName()}.
      */
     @Nullable
     public Map<AdTechIdentifier, String> getPerBuyerDecisionLogicOverride(
             @NonNull AdSelectionConfig adSelectionConfig) {
         Objects.requireNonNull(adSelectionConfig);
 
-        if (!mDevContext.getDevOptionsEnabled()) {
+        if (!mDevContext.getDeviceDevOptionsEnabled()) {
             return null;
         }
         return mAdSelectionEntryDao
@@ -147,16 +147,16 @@ public class AdSelectionDevOverridesHelper {
 
     /**
      * Looks for an override for the given {@link AdSelectionConfig}. Will return {@code null} if
-     * {@link DevContext#getDevOptionsEnabled()} returns false for the {@link DevContext} passed in
-     * the constructor or if there is no override created by the app with package name specified in
-     * {@link DevContext#getCallingAppPackageName()}.
+     * {@link DevContext#getDeviceDevOptionsEnabled()} returns false for the {@link DevContext}
+     * passed in the constructor or if there is no override created by the app with package name
+     * specified in {@link DevContext#getCallingAppPackageName()}.
      */
     @Nullable
     public AdSelectionSignals getTrustedScoringSignalsOverride(
             @NonNull AdSelectionConfig adSelectionConfig) {
         Objects.requireNonNull(adSelectionConfig);
 
-        if (!mDevContext.getDevOptionsEnabled()) {
+        if (!mDevContext.getDeviceDevOptionsEnabled()) {
             return null;
         }
         String overrideSignals =
@@ -170,8 +170,8 @@ public class AdSelectionDevOverridesHelper {
      * Adds an override of the {@code decisionLogicJS} along with {@link
      * DevContext#getCallingAppPackageName()} for the given {@link AdSelectionConfig}.
      *
-     * @throws SecurityException if{@link DevContext#getDevOptionsEnabled()} returns false for the
-     *     {@link DevContext}
+     * @throws SecurityException if{@link DevContext#getDeviceDevOptionsEnabled()} returns false for
+     *     the {@link DevContext}
      */
     public void addAdSelectionSellerOverride(
             @NonNull AdSelectionConfig adSelectionConfig,
@@ -181,7 +181,7 @@ public class AdSelectionDevOverridesHelper {
         Objects.requireNonNull(adSelectionConfig);
         Objects.requireNonNull(decisionLogicJS);
 
-        if (!mDevContext.getDevOptionsEnabled()) {
+        if (!mDevContext.getDeviceDevOptionsEnabled()) {
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
         final String adSelectionConfigId = calculateAdSelectionConfigId(adSelectionConfig);
@@ -211,13 +211,13 @@ public class AdSelectionDevOverridesHelper {
     /**
      * Removes an override for the given {@link AdSelectionConfig}.
      *
-     * @throws SecurityException if{@link DevContext#getDevOptionsEnabled()} returns false for the
-     *     {@link DevContext}
+     * @throws SecurityException if{@link DevContext#getDeviceDevOptionsEnabled()} returns false for
+     *     the {@link DevContext}
      */
     public void removeAdSelectionSellerOverride(@NonNull AdSelectionConfig adSelectionConfig) {
         Objects.requireNonNull(adSelectionConfig);
 
-        if (!mDevContext.getDevOptionsEnabled()) {
+        if (!mDevContext.getDeviceDevOptionsEnabled()) {
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
@@ -233,11 +233,11 @@ public class AdSelectionDevOverridesHelper {
     /**
      * Removes all ad selection overrides that match {@link DevContext#getCallingAppPackageName()}.
      *
-     * @throws SecurityException if{@link DevContext#getDevOptionsEnabled()} returns false for the
-     *     {@link DevContext}
+     * @throws SecurityException if{@link DevContext#getDeviceDevOptionsEnabled()} returns false for
+     *     the {@link DevContext}
      */
     public void removeAllDecisionLogicOverrides() {
-        if (!mDevContext.getDevOptionsEnabled()) {
+        if (!mDevContext.getDeviceDevOptionsEnabled()) {
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
@@ -248,15 +248,15 @@ public class AdSelectionDevOverridesHelper {
 
     /**
      * Looks for an override for the given {@link AdSelectionFromOutcomesConfig}. Will return {@code
-     * null} if {@link DevContext#getDevOptionsEnabled()} returns false for the {@link DevContext}
-     * passed in the constructor or if there is no override created by the app with package name
-     * specified in {@link DevContext#getCallingAppPackageName()}.
+     * null} if {@link DevContext#getDeviceDevOptionsEnabled()} returns false for the {@link
+     * DevContext} passed in the constructor or if there is no override created by the app with
+     * package name specified in {@link DevContext#getCallingAppPackageName()}.
      */
     @Nullable
     public String getSelectionLogicOverride(@NonNull AdSelectionFromOutcomesConfig config) {
         Objects.requireNonNull(config);
 
-        if (!mDevContext.getDevOptionsEnabled()) {
+        if (!mDevContext.getDeviceDevOptionsEnabled()) {
             return null;
         }
         return mAdSelectionEntryDao.getSelectionLogicOverride(
@@ -266,16 +266,16 @@ public class AdSelectionDevOverridesHelper {
 
     /**
      * Looks for an override for the given {@link AdSelectionFromOutcomesConfig}. Will return {@code
-     * null} if {@link DevContext#getDevOptionsEnabled()} returns false for the {@link DevContext}
-     * passed in the constructor or if there is no override created by the app with package name
-     * specified in {@link DevContext#getCallingAppPackageName()}.
+     * null} if {@link DevContext#getDeviceDevOptionsEnabled()} returns false for the {@link
+     * DevContext} passed in the constructor or if there is no override created by the app with
+     * package name specified in {@link DevContext#getCallingAppPackageName()}.
      */
     @Nullable
     public AdSelectionSignals getSelectionSignalsOverride(
             @NonNull AdSelectionFromOutcomesConfig config) {
         Objects.requireNonNull(config);
 
-        if (!mDevContext.getDevOptionsEnabled()) {
+        if (!mDevContext.getDeviceDevOptionsEnabled()) {
             return null;
         }
         String overrideSignals =
@@ -289,8 +289,8 @@ public class AdSelectionDevOverridesHelper {
      * Adds an override of the {@code decisionLogicJS} along with {@link
      * DevContext#getCallingAppPackageName()} for the given {@link AdSelectionConfig}.
      *
-     * @throws SecurityException if{@link DevContext#getDevOptionsEnabled()} returns false for the
-     *     {@link DevContext}
+     * @throws SecurityException if{@link DevContext#getDeviceDevOptionsEnabled()} returns false for
+     *     the {@link DevContext}
      */
     public void addAdSelectionOutcomeSelectorOverride(
             @NonNull AdSelectionFromOutcomesConfig adSelectionFromOutcomesConfig,
@@ -300,7 +300,7 @@ public class AdSelectionDevOverridesHelper {
         Objects.requireNonNull(selectionLogicJs);
         Objects.requireNonNull(selectionSignals);
 
-        if (!mDevContext.getDevOptionsEnabled()) {
+        if (!mDevContext.getDeviceDevOptionsEnabled()) {
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
         mAdSelectionEntryDao.persistAdSelectionFromOutcomesOverride(
@@ -317,14 +317,14 @@ public class AdSelectionDevOverridesHelper {
     /**
      * Removes an override for the given {@link AdSelectionFromOutcomesConfig}.
      *
-     * @throws SecurityException if{@link DevContext#getDevOptionsEnabled()} returns false for the
-     *     {@link DevContext}
+     * @throws SecurityException if{@link DevContext#getDeviceDevOptionsEnabled()} returns false for
+     *     the {@link DevContext}
      */
     public void removeAdSelectionOutcomeSelectorOverride(
             @NonNull AdSelectionFromOutcomesConfig config) {
         Objects.requireNonNull(config);
 
-        if (!mDevContext.getDevOptionsEnabled()) {
+        if (!mDevContext.getDeviceDevOptionsEnabled()) {
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
@@ -339,11 +339,11 @@ public class AdSelectionDevOverridesHelper {
      * Removes all ad selection from outcomes overrides that match {@link DevContext
      * #getCallingAppPackageName()}.
      *
-     * @throws SecurityException if{@link DevContext#getDevOptionsEnabled()} returns false for the
-     *     {@link DevContext}
+     * @throws SecurityException if{@link DevContext#getDeviceDevOptionsEnabled()} returns false for
+     *     the {@link DevContext}
      */
     public void removeAllSelectionLogicOverrides() {
-        if (!mDevContext.getDevOptionsEnabled()) {
+        if (!mDevContext.getDeviceDevOptionsEnabled()) {
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 

@@ -1136,7 +1136,7 @@ public final class AdsScoreGeneratorImplTest extends AdServicesMockitoTestCase {
                         .build();
         mAdSelectionEntryDao.persistPerBuyerDecisionLogicOverride(
                 ImmutableList.of(buyerDecisionOverride));
-        mDevContext = DevContext.builder(myAppPackageName).setDevOptionsEnabled(true).build();
+        mDevContext = DevContext.builder(myAppPackageName).setDeviceDevOptionsEnabled(true).build();
 
         adsWithBid.addAll(contextualBidAds);
         Answer<ListenableFuture<List<ScoreAdResult>>> loggerAnswer =
@@ -1436,7 +1436,7 @@ public final class AdsScoreGeneratorImplTest extends AdServicesMockitoTestCase {
         mAdSelectionEntryDao.persistAdSelectionOverride(adSelectionOverride);
 
         // Resetting Generator to use new dev context
-        mDevContext = DevContext.builder(myAppPackageName).setDevOptionsEnabled(true).build();
+        mDevContext = DevContext.builder(myAppPackageName).setDeviceDevOptionsEnabled(true).build();
 
         boolean dataVersionHeaderEnabled = false;
         mAdsScoreGenerator = initAdScoreGenerator(mFakeFlags, dataVersionHeaderEnabled);

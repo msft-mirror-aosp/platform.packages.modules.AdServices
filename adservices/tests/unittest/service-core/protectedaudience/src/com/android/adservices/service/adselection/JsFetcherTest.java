@@ -107,7 +107,7 @@ public final class JsFetcherTest extends AdServicesExtendedMockitoTestCase {
                     .setTrustedBiddingData(TRUSTED_BIDDING_OVERRIDE_DATA)
                     .build();
     private DevContext mDevContext =
-            DevContext.builder(APP_PACKAGE_NAME).setDevOptionsEnabled(false).build();
+            DevContext.builder(APP_PACKAGE_NAME).setDeviceDevOptionsEnabled(false).build();
 
     private CustomAudienceDao mCustomAudienceDao;
     private AdSelectionEntryDao mAdSelectionEntryDao;
@@ -184,7 +184,7 @@ public final class JsFetcherTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testSuccessfulGetBuyerLogicWithOverride() throws Exception {
-        mDevContext = DevContext.builder(APP_PACKAGE_NAME).setDevOptionsEnabled(true).build();
+        mDevContext = DevContext.builder(APP_PACKAGE_NAME).setDeviceDevOptionsEnabled(true).build();
         mCustomAudienceDao.persistCustomAudienceOverride(DB_CUSTOM_AUDIENCE_OVERRIDE);
         mCustomAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
@@ -200,7 +200,7 @@ public final class JsFetcherTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testSuccessfulGetBuyerLogicWithOverrideWithLogger() throws Exception {
-        mDevContext = DevContext.builder(APP_PACKAGE_NAME).setDevOptionsEnabled(true).build();
+        mDevContext = DevContext.builder(APP_PACKAGE_NAME).setDeviceDevOptionsEnabled(true).build();
         mCustomAudienceDao.persistCustomAudienceOverride(DB_CUSTOM_AUDIENCE_OVERRIDE);
         mCustomAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);

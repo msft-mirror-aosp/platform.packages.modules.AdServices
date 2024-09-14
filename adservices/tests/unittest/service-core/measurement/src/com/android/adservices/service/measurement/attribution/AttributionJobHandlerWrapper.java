@@ -24,6 +24,7 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.actions.UriConfig;
 import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
+import com.android.adservices.service.measurement.reporting.AggregateDebugReportApi;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -44,16 +45,19 @@ public class AttributionJobHandlerWrapper {
             DebugReportApi debugReportApi,
             EventReportWindowCalcDelegate eventReportWindowCalcDelegate,
             SourceNoiseHandler sourceNoiseHandler,
-            AdServicesLogger logger) {
+            AdServicesLogger logger,
+            AggregateDebugReportApi adrApi) {
         this.mAttributionJobHandler =
-                spy(new AttributionJobHandler(
-                        datastoreManager,
-                        flags,
-                        debugReportApi,
-                        eventReportWindowCalcDelegate,
-                        sourceNoiseHandler,
-                        logger,
-                        new XnaSourceCreator(flags)));
+                spy(
+                        new AttributionJobHandler(
+                                datastoreManager,
+                                flags,
+                                debugReportApi,
+                                eventReportWindowCalcDelegate,
+                                sourceNoiseHandler,
+                                logger,
+                                new XnaSourceCreator(flags),
+                                adrApi));
     }
 
     /** Perform attribution. */

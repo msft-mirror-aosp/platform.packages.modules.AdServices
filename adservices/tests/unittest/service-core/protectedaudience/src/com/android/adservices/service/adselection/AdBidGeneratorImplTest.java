@@ -2134,7 +2134,7 @@ public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
         mCustomAudienceDao.persistCustomAudienceOverride(dbCustomAudienceOverride);
 
         // Setting dev context to allow overrides
-        mDevContext = DevContext.builder(APP_PACKAGE_NAME).setDevOptionsEnabled(true).build();
+        mDevContext = DevContext.builder(APP_PACKAGE_NAME).setDeviceDevOptionsEnabled(true).build();
 
         // Resetting adBidGenerator to use the new dev context
         CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper =
@@ -2253,7 +2253,7 @@ public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
         mCustomAudienceDao.persistCustomAudienceOverride(dbCustomAudienceOverride);
 
         // Setting dev context to allow overrides
-        mDevContext = DevContext.builder(myAppPackageName).setDevOptionsEnabled(true).build();
+        mDevContext = DevContext.builder(myAppPackageName).setDeviceDevOptionsEnabled(true).build();
 
         // Resetting adBidGenerator to use the new dev context
         CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper =

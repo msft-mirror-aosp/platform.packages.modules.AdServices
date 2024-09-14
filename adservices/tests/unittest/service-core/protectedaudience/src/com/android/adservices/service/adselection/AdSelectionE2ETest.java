@@ -3206,7 +3206,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
-                        DevContext.builder(MY_APP_PACKAGE_NAME).setDevOptionsEnabled(true).build());
+                        DevContext.builder(MY_APP_PACKAGE_NAME)
+                                .setDeviceDevOptionsEnabled(true)
+                                .build());
 
         // Creating new instance of service with new DevContextFilter
         mAdSelectionService =
@@ -4623,7 +4625,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
-                        DevContext.builder(MY_APP_PACKAGE_NAME).setDevOptionsEnabled(true).build());
+                        DevContext.builder(MY_APP_PACKAGE_NAME)
+                                .setDeviceDevOptionsEnabled(true)
+                                .build());
 
         // Creating new instance of service with new DevContextFilter
         mAdSelectionService =
@@ -4764,7 +4768,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
-                        DevContext.builder(MY_APP_PACKAGE_NAME).setDevOptionsEnabled(true).build());
+                        DevContext.builder(MY_APP_PACKAGE_NAME)
+                                .setDeviceDevOptionsEnabled(true)
+                                .build());
 
         // Creating new instance of service with new DevContextFilter
         mAdSelectionService =

@@ -122,7 +122,7 @@ public final class AsyncRegistrationFallbackJob implements JobWorker {
                 .runWithLock(
                         "AsyncRegistrationFallbackJob",
                         () ->
-                                AsyncRegistrationQueueRunner.getInstance(context)
+                                AsyncRegistrationQueueRunner.getInstance()
                                         .runAsyncRegistrationQueueWorker());
     }
 }

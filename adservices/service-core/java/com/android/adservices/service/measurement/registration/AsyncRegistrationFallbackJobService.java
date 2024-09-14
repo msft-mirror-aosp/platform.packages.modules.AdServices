@@ -126,7 +126,7 @@ public class AsyncRegistrationFallbackJobService extends JobService {
                 .runWithLock(
                         "AsyncRegistrationFallbackQueueJobService",
                         () ->
-                                AsyncRegistrationQueueRunner.getInstance(getApplicationContext())
+                                AsyncRegistrationQueueRunner.getInstance()
                                         .runAsyncRegistrationQueueWorker());
     }
 

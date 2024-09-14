@@ -19,6 +19,7 @@ package com.android.adservices.service.measurement.attribution;
 import static com.android.adservices.service.Flags.MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_DESTINATION;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
+import static com.android.adservices.service.measurement.reporting.DebugReportApi.Type;
 import static com.android.adservices.service.measurement.util.Time.roundDownToDay;
 
 import static org.junit.Assert.assertEquals;
@@ -67,6 +68,7 @@ import com.android.adservices.service.measurement.aggregation.AggregateAttributi
 import com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
+import com.android.adservices.service.measurement.reporting.AggregateDebugReportApi;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -169,6 +171,7 @@ public class AttributionJobHandlerTest {
     @Mock AdServicesLogger mLogger;
     @Mock AdServicesErrorLogger mErrorLogger;
     @Mock DebugReportApi mDebugReportApi;
+    @Mock AggregateDebugReportApi mAdrApi;
 
     class FakeDatastoreManager extends DatastoreManager {
 
@@ -206,7 +209,8 @@ public class AttributionJobHandlerTest {
                         mEventReportWindowCalcDelegate,
                         mSourceNoiseHandler,
                         mLogger,
-                        new XnaSourceCreator(mFlags));
+                        new XnaSourceCreator(mFlags),
+                        mAdrApi);
         when(mFlags.getMeasurementEnableXNA()).thenReturn(false);
         when(mFlags.getMeasurementMaxEventAttributionPerRateLimitWindow())
                 .thenReturn(Flags.MEASUREMENT_MAX_EVENT_ATTRIBUTION_PER_RATE_LIMIT_WINDOW);
@@ -272,6 +276,10 @@ public class AttributionJobHandlerTest {
         verify(mMeasurementDao, never()).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
+        verify(mDebugReportApi)
+                .scheduleTriggerNoMatchingSourceDebugReport(
+                        trigger, mMeasurementDao, Type.TRIGGER_NO_MATCHING_SOURCE);
+        verify(mAdrApi).scheduleTriggerNoMatchingSourceDebugReport(trigger, mMeasurementDao);
     }
 
     @Test
@@ -4582,11 +4590,13 @@ public class AttributionJobHandlerTest {
         verify(mMeasurementDao, never()).insertAggregateReport(any());
         verify(mDebugReportApi)
                 .scheduleTriggerDebugReport(
-                        any(),
-                        any(),
-                        eq("1024"),
-                        any(),
-                        eq(DebugReportApi.Type.TRIGGER_AGGREGATE_STORAGE_LIMIT));
+                        any(), any(), eq("1024"), any(), eq(Type.TRIGGER_AGGREGATE_STORAGE_LIMIT));
+        verify(mAdrApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(Collections.singletonList(Type.TRIGGER_AGGREGATE_STORAGE_LIMIT)),
+                        eq(mMeasurementDao));
         verify(mMeasurementDao).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
@@ -4664,7 +4674,13 @@ public class AttributionJobHandlerTest {
                         any(),
                         eq("20"),
                         any(),
-                        eq(DebugReportApi.Type.TRIGGER_AGGREGATE_EXCESSIVE_REPORTS));
+                        eq(Type.TRIGGER_AGGREGATE_EXCESSIVE_REPORTS));
+        verify(mAdrApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(Collections.singletonList(Type.TRIGGER_AGGREGATE_EXCESSIVE_REPORTS)),
+                        eq(mMeasurementDao));
         verify(mMeasurementDao).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
@@ -4706,7 +4722,15 @@ public class AttributionJobHandlerTest {
                         any(),
                         any(),
                         any(),
-                        eq(DebugReportApi.Type.TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT));
+                        eq(Type.TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT));
+        verify(mAdrApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(
+                                Collections.singletonList(
+                                        Type.TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT)),
+                        eq(mMeasurementDao));
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
     }
@@ -4747,9 +4771,15 @@ public class AttributionJobHandlerTest {
                         any(),
                         any(),
                         any(),
-                        eq(
-                                DebugReportApi.Type
-                                        .TRIGGER_EVENT_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT));
+                        eq(Type.TRIGGER_EVENT_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT));
+        verify(mAdrApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(Collections.singletonList(
+                                Type.TRIGGER_EVENT_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT)),
+                        eq(mMeasurementDao));
+
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
     }
@@ -4783,10 +4813,15 @@ public class AttributionJobHandlerTest {
         mHandler.performPendingAttributions();
 
         // Assertion
-        DebugReportApi.Type reportType =
-                DebugReportApi.Type.TRIGGER_AGGREGATE_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT;
+        Type reportType = Type.TRIGGER_AGGREGATE_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT;
         verify(mDebugReportApi)
                 .scheduleTriggerDebugReport(any(), any(), any(), any(), eq(reportType));
+        verify(mAdrApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(Collections.singletonList(reportType)),
+                        eq(mMeasurementDao));
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
     }
@@ -4853,8 +4888,89 @@ public class AttributionJobHandlerTest {
         verify(mMeasurementDao, never()).insertEventReport(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
-        verify(mDebugReportApi)
-                .scheduleNullDebugReport(eq(source), eq(trigger), eq(mMeasurementDao));
+        verify(mAdrApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(Collections.singletonList(Type.TRIGGER_EVENT_REPORT_WINDOW_PASSED)),
+                        eq(mMeasurementDao));
+    }
+
+    @Test
+    public void performAttribution_bothReportsExceedLimit_doesNotInsertReport()
+            throws DatastoreException, JSONException {
+        // Setup
+        long triggerTime = 234324L;
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("triggerId1")
+                        .setStatus(Trigger.Status.PENDING)
+                        .setEventTriggers(getEventTriggers())
+                        .setFilters(
+                                "[{"
+                                        + "  \"key_1\": [\"value_1\", \"value_2\"],"
+                                        + "  \"key_2\": [\"value_1\", \"value_2\"]"
+                                        + "}]")
+                        .setTriggerTime(triggerTime)
+                        .setAggregateTriggerData(buildAggregateTriggerData().toString())
+                        .setAggregateValuesString("{\"campaignCounts\":32768,\"geoValue\":1644}")
+                        .build();
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId("S1")
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setAggregateSource(
+                                "{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}")
+                        .setFilterDataString(
+                                "{"
+                                        + "  \"key_1\": [\"value_1\", \"value_2\"],"
+                                        + "  \"key_2\": [\"value_1\", \"value_2\"]"
+                                        + "}")
+                        .setEventReportWindow(triggerTime + 1L)
+                        .setAggregatableReportWindow(triggerTime + 1L)
+                        .build();
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        List<Source> matchingSourceList = new ArrayList<>();
+        matchingSourceList.add(source);
+        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(anyInt(), any(), any()))
+                .thenReturn(5L);
+        when(mMeasurementDao.getSourceEventReports(any())).thenReturn(new ArrayList<>());
+        int numAggregateReportPerDestination = 1024;
+        int numEventReportPerDestination = 1024;
+        when(mMeasurementDao.getNumAggregateReportsPerDestination(
+                        trigger.getAttributionDestination(), trigger.getDestinationType()))
+                .thenReturn(numAggregateReportPerDestination);
+        when(mMeasurementDao.getNumEventReportsPerDestination(
+                        trigger.getAttributionDestination(), trigger.getDestinationType()))
+                .thenReturn(numEventReportPerDestination);
+        doReturn(new Pair<>(Collections.singletonList(APP_DESTINATION), null))
+                .when(mMeasurementDao)
+                .getSourceDestinations(anyString());
+        doReturn(EventReportWindowCalcDelegate.MomentPlacement.WITHIN)
+                .when(mEventReportWindowCalcDelegate)
+                .fallsWithinWindow(any(Source.class), any(Trigger.class), any(UnsignedLong.class));
+
+        // Execution
+        mHandler.performPendingAttributions();
+
+        // Assertion
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(Collections.singletonList(trigger.getId())), eq(Trigger.Status.IGNORED));
+        verify(mMeasurementDao, never()).insertAggregateReport(any());
+        verify(mMeasurementDao, never()).insertEventReport(any());
+        verify(mAdrApi)
+                .scheduleTriggerAttributionErrorWithSourceDebugReport(
+                        eq(source),
+                        eq(trigger),
+                        eq(
+                                Arrays.asList(
+                                        Type.TRIGGER_AGGREGATE_STORAGE_LIMIT,
+                                        Type.TRIGGER_EVENT_STORAGE_LIMIT)),
+                        eq(mMeasurementDao));
     }
 
     @Test

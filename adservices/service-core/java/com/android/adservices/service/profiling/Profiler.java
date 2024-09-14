@@ -17,9 +17,9 @@
 package com.android.adservices.service.profiling;
 
 /** Profiler class for timing/benchmarking classes. */
-public class Profiler {
+public final class Profiler {
     private final String mTag;
-    private boolean mIsTestEnv;
+    private final boolean mIsTestEnv;
 
     /** For use in test environments. */
     public static Profiler createInstance(String tag) {
@@ -39,5 +39,10 @@ public class Profiler {
     /** @param name name of the metric being measured */
     public StopWatch start(String name) {
         return mIsTestEnv ? new FakeStopWatch() : new LogcatStopWatch(mTag, name);
+    }
+
+    @Override
+    public String toString() {
+        return "Profiler[mTag=" + mTag + ", mIsTestEnv=" + mIsTestEnv + "]";
     }
 }

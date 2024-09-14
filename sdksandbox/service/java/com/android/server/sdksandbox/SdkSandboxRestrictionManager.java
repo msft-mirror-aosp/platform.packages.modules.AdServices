@@ -110,6 +110,12 @@ class SdkSandboxRestrictionManager {
         }
     }
 
+    public void clearEffectiveTargetSdkVersion(int appUid) {
+        synchronized (mLock) {
+            mEffectiveTargetSdkVersions.remove(appUid);
+        }
+    }
+
     private int getEffectiveTargetSdkVersion(
             String packageName, PackageManagerHelper packageManagerHelper)
             throws PackageManager.NameNotFoundException {

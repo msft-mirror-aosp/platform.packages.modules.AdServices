@@ -107,7 +107,7 @@ public final class AdSelectionDevOverridesHelperTest extends AdServicesUnitTestC
                 ImmutableList.of(DB_BUYER_DECISION_OVERRIDE));
 
         DevContext devContext =
-                DevContext.builder(APP_PACKAGE_NAME).setDevOptionsEnabled(true).build();
+                DevContext.builder(APP_PACKAGE_NAME).setDeviceDevOptionsEnabled(true).build();
 
         AdSelectionDevOverridesHelper helper =
                 new AdSelectionDevOverridesHelper(devContext, mAdSelectionEntryDao);
@@ -145,7 +145,7 @@ public final class AdSelectionDevOverridesHelperTest extends AdServicesUnitTestC
 
         DevContext devContext =
                 DevContext.builder(APP_PACKAGE_NAME + ".different")
-                        .setDevOptionsEnabled(true)
+                        .setDeviceDevOptionsEnabled(true)
                         .build();
 
         AdSelectionDevOverridesHelper helper =

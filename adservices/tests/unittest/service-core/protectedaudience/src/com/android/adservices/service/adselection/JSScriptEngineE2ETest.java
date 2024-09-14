@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.adselection;
 
+import static org.mockito.Mockito.verify;
+
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.common.WebViewSupportUtil;
@@ -35,48 +37,50 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 @RequiresSdkLevelAtLeastS
 public class JSScriptEngineE2ETest extends AdServicesMockitoTestCase {
-    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
-
     @Rule(order = 15)
     public final SupportedByConditionRule mJSSandboxSupportedRule =
             WebViewSupportUtil.createJSSandboxAvailableRule(mContext);
 
-    @Mock private static LoggerFactory.Logger sMockLogger;
+    @Mock private LoggerFactory.Logger mMockLogger;
+
     private JSScriptEngine mJSScriptEngine;
 
     @Before
-    public void setup() throws ExecutionException, InterruptedException, TimeoutException {
-        sLogger.v(
+    public void setup() throws Exception {
+        mLog.v(
                 "Checking if the WebView version installed on the device supports console"
                         + " callback");
         Assume.assumeTrue(
                 "ConsoleCallback is not supported by the installed WebView version",
                 WebViewSupportUtil.isJSIsolateConsoleCallbackAvailable(mSpyContext));
         // Destroy any existing JSScriptEngine and JavascriptSandbox
-        sLogger.v("Destroy any existing JSScriptEngine and JavascriptSandbox");
-        JSScriptEngine.getInstance(sMockLogger).shutdown().get(1, TimeUnit.SECONDS);
+        mLog.v("Destroy any existing JSScriptEngine and JavascriptSandbox");
+        JSScriptEngine previousEngine = JSScriptEngine.getInstance();
+        previousEngine.shutdown().get(1, TimeUnit.SECONDS);
+
+        mJSScriptEngine = JSScriptEngine.updateSingletonForE2ETest(mMockLogger);
+        mLog.v("Changed JSScriptEngine singleton from %s to %s", previousEngine, mJSScriptEngine);
     }
 
     @After
-    public void cleanup() throws ExecutionException, InterruptedException, TimeoutException {
-        // Destroy mJSScriptEngine as part of cleanup
-        sLogger.v("Destroy mJSScriptEngine as part of cleanup");
-        if (mJSScriptEngine != null) {
-            mJSScriptEngine.shutdown().get(1, TimeUnit.SECONDS);
+    public void cleanup() throws Exception {
+        if (mJSScriptEngine == null) {
+            mLog.v("mJSScriptEngine not set, clean-up not needed");
+            return;
         }
+        mLog.v("Destroy mJSScriptEngine as part of cleanup");
+        mJSScriptEngine.shutdown().get(1, TimeUnit.SECONDS);
+        JSScriptEngine.resetSingletonForE2ETest();
     }
 
     @Test
-    public void testJSScriptEngineLogsConsoleLogMessages() throws InterruptedException {
+    public void testJSScriptEngineLogsConsoleLogMessages() throws Exception {
         String scriptWithConsoleLog =
                 """
                 function test() {
@@ -87,12 +91,11 @@ public class JSScriptEngineE2ETest extends AdServicesMockitoTestCase {
         callAndVerifyJSScriptEngine(scriptWithConsoleLog);
 
         Thread.sleep(1000); // wait for the console callback to happen.
-        Mockito.verify(sMockLogger)
-                .v("Javascript Console Message: %s", "L <expression>:2:13: Hello Log");
+        verify(mMockLogger).v("Javascript Console Message: %s", "L <expression>:2:13: Hello Log");
     }
 
     @Test
-    public void testJSScriptEngineLogsConsoleDebugMessages() throws InterruptedException {
+    public void testJSScriptEngineLogsConsoleDebugMessages() throws Exception {
         String scriptWithConsoleDebug =
                 """
                 function test() {
@@ -103,12 +106,11 @@ public class JSScriptEngineE2ETest extends AdServicesMockitoTestCase {
         callAndVerifyJSScriptEngine(scriptWithConsoleDebug);
 
         Thread.sleep(1000); // wait for the console callback to happen.
-        Mockito.verify(sMockLogger)
-                .v("Javascript Console Message: %s", "D <expression>:2:13: Hello Debug");
+        verify(mMockLogger).v("Javascript Console Message: %s", "D <expression>:2:13: Hello Debug");
     }
 
     @Test
-    public void testJSScriptEngineLogsConsoleInfoMessages() throws InterruptedException {
+    public void testJSScriptEngineLogsConsoleInfoMessages() throws Exception {
         String scriptWithConsoleInfo =
                 """
                 function test() {
@@ -119,12 +121,11 @@ public class JSScriptEngineE2ETest extends AdServicesMockitoTestCase {
         callAndVerifyJSScriptEngine(scriptWithConsoleInfo);
 
         Thread.sleep(1000); // wait for the console callback to happen.
-        Mockito.verify(sMockLogger)
-                .v("Javascript Console Message: %s", "I <expression>:2:13: Hello Info");
+        verify(mMockLogger).v("Javascript Console Message: %s", "I <expression>:2:13: Hello Info");
     }
 
     @Test
-    public void testJSScriptEngineLogsConsoleWarningMessages() throws InterruptedException {
+    public void testJSScriptEngineLogsConsoleWarningMessages() throws Exception {
         String scriptWithConsoleWarning =
                 """
                 function test() {
@@ -135,12 +136,12 @@ public class JSScriptEngineE2ETest extends AdServicesMockitoTestCase {
         callAndVerifyJSScriptEngine(scriptWithConsoleWarning);
 
         Thread.sleep(1000); // wait for the console callback to happen.
-        Mockito.verify(sMockLogger)
+        verify(mMockLogger)
                 .v("Javascript Console Message: %s", "W <expression>:2:13: Hello Warning");
     }
 
     @Test
-    public void testJSScriptEngineLogsConsoleErrorMessages() throws InterruptedException {
+    public void testJSScriptEngineLogsConsoleErrorMessages() throws Exception {
         String scriptWithConsoleError =
                 """
                 function test() {
@@ -151,13 +152,11 @@ public class JSScriptEngineE2ETest extends AdServicesMockitoTestCase {
         callAndVerifyJSScriptEngine(scriptWithConsoleError);
 
         Thread.sleep(1000); // wait for the console callback to happen.
-        Mockito.verify(sMockLogger)
-                .v("Javascript Console Message: %s", "E <expression>:2:13: Hello Error");
+        verify(mMockLogger).v("Javascript Console Message: %s", "E <expression>:2:13: Hello Error");
     }
 
-    private void callAndVerifyJSScriptEngine(String jsScript) throws InterruptedException {
-        sLogger.v("callAndVerifyJSScriptEngine called with script\n%s", jsScript);
-        mJSScriptEngine = JSScriptEngine.getInstance(sMockLogger);
+    private void callAndVerifyJSScriptEngine(String jsScript) throws Exception {
+        mLog.v("callAndVerifyJSScriptEngine called with script\n%s", jsScript);
 
         boolean consoleMessagesInLogEnabled = true;
         IsolateSettings isolateSettings =
@@ -176,6 +175,7 @@ public class JSScriptEngineE2ETest extends AdServicesMockitoTestCase {
                 .addCallback(jsStringFutureSyncCallback, Runnable::run);
 
         jsStringFutureSyncCallback.assertResultReceived();
-        sLogger.v("callAndVerifyJSScriptEngine completed successfully");
+        mLog.v("callAndVerifyJSScriptEngine completed successfully");
     }
+
 }

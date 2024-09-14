@@ -183,7 +183,7 @@ public class AdServicesHttpsClient {
         urlConnection.setReadTimeout(mReadTimeoutMs);
         // Setting true explicitly to follow redirects
         Uri uri = Uri.parse(url.toString());
-        if (WebAddresses.isLocalhost(uri) && devContext.getDevOptionsEnabled()) {
+        if (WebAddresses.isLocalhost(uri) && devContext.getDeviceDevOptionsEnabled()) {
             LogUtil.v("Using unsafe HTTPS for url %s", url.toString());
             urlConnection.setSSLSocketFactory(getUnsafeSslSocketFactory());
         } else if (WebAddresses.isLocalhost(uri)) {
@@ -191,7 +191,7 @@ public class AdServicesHttpsClient {
                     String.format(
                             "Using normal HTTPS without unsafe SSL socket factory for a localhost"
                                     + " address, DevOptionsEnabled: %s, CallingPackageName: %s",
-                            devContext.getDevOptionsEnabled(),
+                            devContext.getDeviceDevOptionsEnabled(),
                             devContext.getCallingAppPackageName()));
         }
         urlConnection.setInstanceFollowRedirects(true);
@@ -324,7 +324,7 @@ public class AdServicesHttpsClient {
                                 + " use cache: "
                                 + request.getUseCache()
                                 + " dev context: "
-                                + request.getDevContext().getDevOptionsEnabled());
+                                + request.getDevContext().getDeviceDevOptionsEnabled());
         if (request.getRequestProperties() != null) {
             logBuilder
                     .append(" request properties: ")
@@ -522,7 +522,7 @@ public class AdServicesHttpsClient {
             throws IOException, AdServicesNetworkException {
         LogUtil.v(
                 "doGetAndReadNothing to: \"%s\", dev context: %s",
-                url.toString(), devContext.getDevOptionsEnabled());
+                url.toString(), devContext.getDeviceDevOptionsEnabled());
         HttpsURLConnection urlConnection;
 
         try {

@@ -585,7 +585,13 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
         long serviceLatency = mClock.elapsedRealtime() - serviceStartTime;
         // Double it to simulate the return binder time is same to call binder time
         long binderLatency = (serviceStartTime - binderCallStartTimeMillis) * 2;
-
+        LogUtil.v(
+                "binder call start time "
+                        + binderCallStartTimeMillis
+                        + ", servicve Start time "
+                        + serviceStartTime
+                        + ", service latency "
+                        + serviceLatency);
         return (int) (serviceLatency + binderLatency);
     }
 
