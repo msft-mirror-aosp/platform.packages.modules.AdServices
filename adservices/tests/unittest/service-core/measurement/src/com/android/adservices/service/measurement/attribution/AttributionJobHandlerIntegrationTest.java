@@ -23,6 +23,7 @@ import com.android.adservices.data.measurement.DbState;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
+import com.android.adservices.service.measurement.reporting.AggregateDebugReportApi;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -81,7 +82,8 @@ public class AttributionJobHandlerIntegrationTest extends AbstractDbIntegrationT
                                 new EventReportWindowCalcDelegate(FlagsFactory.getFlags()),
                                 new SourceNoiseHandler(FlagsFactory.getFlags()),
                                 mLogger,
-                                new XnaSourceCreator(FlagsFactory.getFlags()))
+                                new XnaSourceCreator(FlagsFactory.getFlags()),
+                                new AggregateDebugReportApi(FlagsFactory.getFlags()))
                         .performPendingAttributions()));
     }
 }

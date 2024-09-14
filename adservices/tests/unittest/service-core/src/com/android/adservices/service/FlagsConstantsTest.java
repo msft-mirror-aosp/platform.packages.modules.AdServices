@@ -21,6 +21,7 @@ import static com.android.adservices.flags.Flags.FLAG_FLEDGE_AD_SELECTION_FILTER
 import static com.android.adservices.flags.Flags.FLAG_FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_ID_ENABLED;
 import static com.android.adservices.flags.Flags.FLAG_FLEDGE_CUSTOM_AUDIENCE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED;
 import static com.android.adservices.flags.Flags.FLAG_FLEDGE_SERVER_AUCTION_MULTI_CLOUD_ENABLED;
+import static com.android.adservices.flags.Flags.FLAG_SDKSANDBOX_INVALIDATE_EFFECTIVE_TARGET_SDK_VERSION_CACHE;
 
 import android.util.Log;
 import android.util.Pair;
@@ -80,7 +81,12 @@ public final class FlagsConstantsTest extends AdServicesUnitTestCase {
                     // cannot be changed.  The old DeviceConfig flag has instead been removed and
                     // split into individual feature flags to allow each feature to launch
                     // independently.
-                    FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED);
+                    FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED,
+
+                    // This flag is to guard a feature for trunk stable purpose. The flag guards the
+                    // invalidation of the effective target SDK version cache. If any regression is
+                    // observed, this feature can be rolled back
+                    FLAG_SDKSANDBOX_INVALIDATE_EFFECTIVE_TARGET_SDK_VERSION_CACHE);
 
     /**
      * Map used by {@link #testAllAconfigFlagsAreMapped()} - key is the {@code aconfig} flag name,

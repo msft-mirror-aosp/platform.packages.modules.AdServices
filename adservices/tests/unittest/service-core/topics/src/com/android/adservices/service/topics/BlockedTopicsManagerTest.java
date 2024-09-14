@@ -207,25 +207,6 @@ public class BlockedTopicsManagerTest extends AdServicesExtendedMockitoTestCase 
     @ExpectErrorLogUtilWithExceptionCall(
             errorCode =
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_RECORD_BLOCKED_TOPICS_FAILURE)
-    public void testBlockTopic_withPpapiAndAdExtDataServiceOnly_throwsException() throws Exception {
-        BlockedTopicsManager blockedTopicsManager =
-                getSpiedBlockedTopicsManager(
-                        Flags.PPAPI_AND_ADEXT_SERVICE, /* enableAppSearchConsent= */ true);
-
-        Exception e =
-                assertThrows(RuntimeException.class, () -> blockedTopicsManager.blockTopic(TOPIC));
-        assertThat(e).hasCauseThat().isNotNull();
-        assertThat(e).hasCauseThat().isInstanceOf(IllegalStateException.class);
-        assertThat(e)
-                .hasCauseThat()
-                .hasMessageThat()
-                .startsWith("Invalid state: Attempting to block topic");
-    }
-
-    @Test
-    @ExpectErrorLogUtilWithExceptionCall(
-            errorCode =
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_RECORD_BLOCKED_TOPICS_FAILURE)
     public void testBlockTopic_withAppSearchOnly_throwsException() throws Exception {
         Exception thrown = new IllegalStateException("test");
         ExtendedMockito.doThrow(thrown).when(mAppSearchConsentManager).blockTopic(any());
@@ -236,26 +217,6 @@ public class BlockedTopicsManagerTest extends AdServicesExtendedMockitoTestCase 
         Exception e =
                 assertThrows(RuntimeException.class, () -> blockedTopicsManager.blockTopic(TOPIC));
         assertThat(e).hasCauseThat().isSameInstanceAs(thrown);
-    }
-
-    @Test
-    @ExpectErrorLogUtilWithExceptionCall(
-            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_REMOVE_BLOCKED_TOPIC_FAILURE)
-    public void testUnblockTopic_withPpapiAndAdExtDataServiceOnly_throwsException()
-            throws Exception {
-        BlockedTopicsManager blockedTopicsManager =
-                getSpiedBlockedTopicsManager(
-                        Flags.PPAPI_AND_ADEXT_SERVICE, /* enableAppSearchConsent= */ true);
-
-        Exception e =
-                assertThrows(
-                        RuntimeException.class, () -> blockedTopicsManager.unblockTopic(TOPIC));
-        assertThat(e).hasCauseThat().isNotNull();
-        assertThat(e).hasCauseThat().isInstanceOf(IllegalStateException.class);
-        assertThat(e)
-                .hasCauseThat()
-                .hasMessageThat()
-                .startsWith("Invalid state: Attempting to unblock topic");
     }
 
     @Test
@@ -277,26 +238,6 @@ public class BlockedTopicsManagerTest extends AdServicesExtendedMockitoTestCase 
     @Test
     @ExpectErrorLogUtilWithExceptionCall(
             errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_GET_BLOCKED_TOPIC_FAILURE)
-    public void testRetrieveAllBlockedTopics_withPpapiAndAdExtDataServiceOnly_throwsException()
-            throws Exception {
-        BlockedTopicsManager blockedTopicsManager =
-                getSpiedBlockedTopicsManager(
-                        Flags.PPAPI_AND_ADEXT_SERVICE, /* enableAppSearchConsent= */ true);
-
-        Exception e =
-                assertThrows(
-                        RuntimeException.class, blockedTopicsManager::retrieveAllBlockedTopics);
-        assertThat(e).hasCauseThat().isNotNull();
-        assertThat(e).hasCauseThat().isInstanceOf(IllegalStateException.class);
-        assertThat(e)
-                .hasCauseThat()
-                .hasMessageThat()
-                .startsWith("Invalid state: Attempting to retrieve blocked topics");
-    }
-
-    @Test
-    @ExpectErrorLogUtilWithExceptionCall(
-            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_GET_BLOCKED_TOPIC_FAILURE)
     public void testRetrieveAllBlockedTopics_withAppSearchOnly_throwsException() throws Exception {
         Exception thrown = new IllegalStateException("test");
         ExtendedMockito.doThrow(thrown).when(mAppSearchConsentManager).retrieveAllBlockedTopics();
@@ -308,26 +249,6 @@ public class BlockedTopicsManagerTest extends AdServicesExtendedMockitoTestCase 
                 assertThrows(
                         RuntimeException.class, blockedTopicsManager::retrieveAllBlockedTopics);
         assertThat(e).hasCauseThat().isSameInstanceAs(thrown);
-    }
-
-    @Test
-    @ExpectErrorLogUtilWithExceptionCall(
-            errorCode =
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_CLEAR_ALL_BLOCKED_TOPICS_IN_SYSTEM_SERVER_FAILURE)
-    public void testClearAllBlockedTopics_withPpapiAndAdExtDataServiceOnly_throwsException()
-            throws Exception {
-        BlockedTopicsManager blockedTopicsManager =
-                getSpiedBlockedTopicsManager(
-                        Flags.PPAPI_AND_ADEXT_SERVICE, /* enableAppSearchConsent= */ true);
-
-        Exception e =
-                assertThrows(RuntimeException.class, blockedTopicsManager::clearAllBlockedTopics);
-        assertThat(e).hasCauseThat().isNotNull();
-        assertThat(e).hasCauseThat().isInstanceOf(IllegalStateException.class);
-        assertThat(e)
-                .hasCauseThat()
-                .hasMessageThat()
-                .startsWith("Invalid state: Attempting to clear blocked topics");
     }
 
     @Test

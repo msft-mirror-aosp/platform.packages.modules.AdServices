@@ -64,6 +64,9 @@ import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
 
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
+
 import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.List;
@@ -85,6 +88,8 @@ import javax.annotation.concurrent.ThreadSafe;
 public final class MeasurementImpl {
     private static final String ANDROID_APP_SCHEME = "android-app";
     private static volatile MeasurementImpl sMeasurementImpl;
+    private static volatile Supplier<MeasurementImpl> sMeasurementImplSupplier =
+            Suppliers.memoize(() -> new MeasurementImpl(ApplicationContextSingleton.get()));
     private final Context mContext;
     private final ReadWriteLock mReadWriteLock = new ReentrantReadWriteLock();
     private final DatastoreManager mDatastoreManager;
@@ -131,11 +136,17 @@ public final class MeasurementImpl {
         if (sMeasurementImpl == null) {
             synchronized (MeasurementImpl.class) {
                 if (sMeasurementImpl == null) {
-                    sMeasurementImpl = new MeasurementImpl(ApplicationContextSingleton.get());
+                    sMeasurementImpl = sMeasurementImplSupplier.get();
                 }
             }
         }
         return sMeasurementImpl;
+    }
+
+    /** Gets an supplier of MeasurementImpl to be used. */
+    @NonNull
+    public static Supplier<MeasurementImpl> getSingletonSupplier() {
+        return sMeasurementImplSupplier;
     }
 
     /**
