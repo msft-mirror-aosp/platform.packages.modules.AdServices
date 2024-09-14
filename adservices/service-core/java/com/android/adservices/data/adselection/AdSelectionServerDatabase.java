@@ -18,7 +18,6 @@ package com.android.adservices.data.adselection;
 
 import android.content.Context;
 
-import androidx.annotation.NonNull;
 import androidx.room.AutoMigration;
 import androidx.room.Database;
 import androidx.room.RoomDatabase;
@@ -26,6 +25,7 @@ import androidx.room.TypeConverters;
 
 import com.android.adservices.data.common.FledgeRoomConverters;
 import com.android.adservices.service.common.compat.FileCompatUtils;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.GuardedBy;
 
 import java.util.Objects;
@@ -56,13 +56,13 @@ public abstract class AdSelectionServerDatabase extends RoomDatabase {
     private static final Object SINGLETON_LOCK = new Object();
 
     @GuardedBy("SINGLETON_LOCK")
-    private static AdSelectionServerDatabase sSingleton = null;
+    private static AdSelectionServerDatabase sSingleton;
 
     /** Returns an instance of the AdSelectionEncryptionDatabase given a context. */
-    public static AdSelectionServerDatabase getInstance(@NonNull Context context) {
-        Objects.requireNonNull(context, "Context must be present.");
+    public static AdSelectionServerDatabase getInstance() {
         synchronized (SINGLETON_LOCK) {
             if (Objects.isNull(sSingleton)) {
+                Context context = ApplicationContextSingleton.get();
                 sSingleton =
                         FileCompatUtils.roomDatabaseBuilderHelper(
                                         context, AdSelectionServerDatabase.class, DATABASE_NAME)

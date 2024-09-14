@@ -107,6 +107,14 @@ flag {
 }
 
 flag {
+    name: "sdksandbox_invalidate_effective_target_sdk_version_cache"
+    namespace: "adservices_aconfig"
+    description: "Invalidate the effective target SDK version cache"
+    bug: "328202544"
+    is_fixed_read_only: true
+}
+
+flag {
     name: "topics_encryption_enabled"
     namespace: "adservices"
     bug: "303727027"

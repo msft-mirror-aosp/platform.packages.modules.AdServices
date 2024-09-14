@@ -28,8 +28,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_GET_ADSERVICES_C
 import static com.android.adservices.service.FlagsConstants.KEY_IS_EEA_DEVICE;
 import static com.android.adservices.service.FlagsConstants.KEY_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_UX_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_RVC_POST_OTA_NOTIFICATION_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_RVC_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_U18_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_OTA_STRINGS_FEATURE_ENABLED;
 import static com.android.adservices.tests.ui.libs.UiConstants.SYSTEM_UI_NAME;
@@ -112,21 +110,6 @@ public class UiUtils {
     /** Sets the flag to enable GA UX */
     public static void enableGa(AdServicesFlagsSetterRule flags) throws Exception {
         flags.setFlag(KEY_GA_UX_FEATURE_ENABLED, true);
-    }
-
-    /** Overrides flag rvc_ux_enabled in tests to true */
-    public static void enableRvc(AdServicesFlagsSetterRule flags) {
-        flags.setFlag(KEY_RVC_UX_ENABLED, true);
-    }
-
-    /** Overrides flag rvc_post_ota_notification_enabled in tests to true */
-    public static void enableRvcNotification(AdServicesFlagsSetterRule flags) {
-        flags.setFlag(KEY_RVC_POST_OTA_NOTIFICATION_ENABLED, true);
-    }
-
-    /** Overrides flag rvc_ux_enabled in tests to false */
-    public static void disableRvc(AdServicesFlagsSetterRule flags) {
-        flags.setFlag(KEY_RVC_UX_ENABLED, false);
     }
 
     /** Enables the enableAdServices system API. */
@@ -272,7 +255,6 @@ public class UiUtils {
     public static void gentleSwipe(UiDevice device) {
         UiObject2 scrollView =
                 device.findObject(By.scrollable(true).clazz(ANDROID_WIDGET_SCROLLVIEW));
-        // Some devices on R is not scrollable
         if (scrollView != null) {
                 scrollView.scroll(Direction.DOWN, /* percent */ 0.25F);
         }

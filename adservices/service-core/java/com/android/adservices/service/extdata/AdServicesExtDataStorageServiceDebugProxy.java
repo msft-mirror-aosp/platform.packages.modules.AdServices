@@ -30,7 +30,6 @@ import static com.android.adservices.service.measurement.rollback.MeasurementRol
 import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.extdata.AdServicesExtDataParams;
 import android.adservices.extdata.AdServicesExtDataStorageService;
-import android.annotation.NonNull;
 import android.content.Context;
 import android.content.SharedPreferences;
 
@@ -67,7 +66,7 @@ public final class AdServicesExtDataStorageServiceDebugProxy {
     }
 
     /** Gets a instance of {@link AdServicesExtDataStorageServiceDebugProxy}. */
-    public static AdServicesExtDataStorageServiceDebugProxy getInstance(Context context) {
+    public static AdServicesExtDataStorageServiceDebugProxy newInstance(Context context) {
         return new AdServicesExtDataStorageServiceDebugProxy(context);
     }
 
@@ -80,9 +79,9 @@ public final class AdServicesExtDataStorageServiceDebugProxy {
      * @param callback callback to return result for confirming status of operation.
      */
     public void setAdServicesExtData(
-            @NonNull AdServicesExtDataParams params,
-            @NonNull @AdServicesExtDataStorageService.AdServicesExtDataFieldId int[] fieldsToUpdate,
-            @NonNull AdServicesOutcomeReceiver<AdServicesExtDataParams, Exception> callback) {
+            AdServicesExtDataParams params,
+            @AdServicesExtDataStorageService.AdServicesExtDataFieldId int[] fieldsToUpdate,
+            AdServicesOutcomeReceiver<AdServicesExtDataParams, Exception> callback) {
         Objects.requireNonNull(params);
         Objects.requireNonNull(fieldsToUpdate);
         Objects.requireNonNull(callback);
@@ -124,7 +123,7 @@ public final class AdServicesExtDataStorageServiceDebugProxy {
      * @param callback to return result.
      */
     public void getAdServicesExtData(
-            @NonNull AdServicesOutcomeReceiver<AdServicesExtDataParams, Exception> callback) {
+            AdServicesOutcomeReceiver<AdServicesExtDataParams, Exception> callback) {
         Objects.requireNonNull(callback);
         try {
             AdServicesExtDataParams adServicesExtDataParams =

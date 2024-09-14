@@ -20,24 +20,26 @@ import android.annotation.RequiresApi;
 import android.content.Context;
 import android.os.Build;
 
-import androidx.annotation.NonNull;
-
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.SingletonRunner;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
+import com.google.errorprone.annotations.concurrent.GuardedBy;
 
 import java.util.Objects;
 import java.util.function.Supplier;
 
 @RequiresApi(Build.VERSION_CODES.S)
-public class KAnonSignJoinBackgroundJobWorker {
+public final class KAnonSignJoinBackgroundJobWorker {
     public static final String JOB_DESCRIPTION = "FLEDGE KAnon Sign Join Background Job";
     private static final Object SINGLETON_LOCK = new Object();
+
+    @GuardedBy("SINGLETON_LOCK")
     private static volatile KAnonSignJoinBackgroundJobWorker sKAnonSignJoinBackgroundJobWorker;
 
     private final KAnonSignJoinManager mKAnonSignJoinManager;
@@ -49,10 +51,11 @@ public class KAnonSignJoinBackgroundJobWorker {
      * Gets an instance of a {@link KAnonSignJoinBackgroundJobWorker}. If an instance hasn't been
      * initialized, a new singleton will be created and returned.
      */
-    public static KAnonSignJoinBackgroundJobWorker getInstance(@NonNull Context context) {
-        Objects.requireNonNull(context);
+    public static KAnonSignJoinBackgroundJobWorker getInstance() {
         if (sKAnonSignJoinBackgroundJobWorker == null) {
             synchronized (SINGLETON_LOCK) {
+                Context context = ApplicationContextSingleton.get();
+
                 sKAnonSignJoinBackgroundJobWorker =
                         new KAnonSignJoinBackgroundJobWorker(
                                 context,
@@ -65,9 +68,7 @@ public class KAnonSignJoinBackgroundJobWorker {
 
     @VisibleForTesting
     public KAnonSignJoinBackgroundJobWorker(
-            @NonNull Context context,
-            @NonNull Flags flags,
-            @NonNull KAnonSignJoinManager kAnonSignJoinManager) {
+            Context context, Flags flags, KAnonSignJoinManager kAnonSignJoinManager) {
         Objects.requireNonNull(kAnonSignJoinManager);
         Objects.requireNonNull(flags);
         Objects.requireNonNull(context);
@@ -85,7 +86,7 @@ public class KAnonSignJoinBackgroundJobWorker {
         return mSingletonRunner.runSingleInstance();
     }
 
-    private FluentFuture<Void> doRun(@NonNull Supplier<Boolean> shouldStop) {
+    private FluentFuture<Void> doRun(Supplier<Boolean> shouldStop) {
         if (shouldStop.get() || !mFlags.getFledgeKAnonBackgroundProcessEnabled()) {
             return FluentFuture.from(Futures.immediateVoidFuture());
         }

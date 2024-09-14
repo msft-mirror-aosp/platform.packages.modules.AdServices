@@ -63,7 +63,7 @@ public class KAnonObliviousHttpEncryptorImplTest extends AdServicesExtendedMocki
         mKAnonObliviousHttpEncryptor =
                 new KAnonObliviousHttpEncryptorImpl(
                         mEncryptionKeyManagerMock, mLightweightExecutor);
-        mDevContext = DevContext.builder(mPackageName).setDevOptionsEnabled(true).build();
+        mDevContext = DevContext.builder(mPackageName).setDeviceDevOptionsEnabled(true).build();
 
         mocker.mockGetFlags(mMockFlags);
     }

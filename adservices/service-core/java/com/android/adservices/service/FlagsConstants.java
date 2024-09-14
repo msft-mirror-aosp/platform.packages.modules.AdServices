@@ -105,6 +105,8 @@ public final class FlagsConstants {
     public static final String KEY_TOPICS_ENCRYPTION_ENABLED = "topics_encryption_enabled";
     public static final String KEY_TOPICS_ENCRYPTION_METRICS_ENABLED =
             "topics_encryption_metrics_enabled";
+    public static final String KEY_TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_LOGGING_ENABLED =
+            "topics_epoch_job_battery_constraint_logging_enabled";
     public static final String KEY_TOPICS_DISABLE_PLAINTEXT_RESPONSE =
             "topics_disable_plaintext_response";
     public static final String KEY_TOPICS_TEST_ENCRYPTION_PUBLIC_KEY =
@@ -925,8 +927,6 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH =
             "measurement_rollback_deletion_app_search_kill_switch";
-    public static final String KEY_MEASUREMENT_ROLLBACK_DELETION_R_ENABLED =
-            "measurement_rollback_deletion_r_enabled";
     public static final String KEY_TOPICS_KILL_SWITCH = "topics_kill_switch";
     public static final String KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH =
             "topics_on_device_classifier_kill_switch";
@@ -1067,6 +1067,10 @@ public final class FlagsConstants {
 
     // App/SDK AllowList/DenyList keys that have access to the web registration APIs
     public static final String KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST = "web_context_client_allow_list";
+
+    // If the developer session feature is enabled.
+    public static final String KEY_DEVELOPER_MODE_FEATURE_ENABLED =
+            "CommonInfra__enable_developer_mode";
 
     // Max response payload size allowed per source/trigger registration
     public static final String KEY_MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES =
@@ -1397,6 +1401,9 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES =
             "measurement_default_filtering_id_max_bytes";
 
+    public static final String KEY_MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES =
+            "Measurement__max_filtering_id_max_bytes";
+
     public static final String KEY_MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING =
             "measurement_enable_flexible_contribution_filtering";
 
@@ -1412,6 +1419,9 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_ADR_BUDGET_WINDOW_LENGTH_MS =
             "Measurement__adr_budget_window_length_ms";
 
+    public static final String KEY_MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE =
+            "Measurement__max_adr_count_per_source";
+
     // Database Schema Version Flags
     public static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_8 =
             "enable_database_schema_version_8";
@@ -1424,8 +1434,6 @@ public final class FlagsConstants {
             "notification_dmsmissed_on_click";
 
     public static final String KEY_U18_UX_ENABLED = "u18_ux_enabled";
-
-    public static final String KEY_RVC_UX_ENABLED = "rvc_ux_enabled";
 
     public static final String KEY_RVC_POST_OTA_NOTIFICATION_ENABLED =
             "rvc_post_ota_notification_enabled";

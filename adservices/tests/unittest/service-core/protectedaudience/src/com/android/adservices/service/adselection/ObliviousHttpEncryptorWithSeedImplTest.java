@@ -71,7 +71,7 @@ public final class ObliviousHttpEncryptorWithSeedImplTest
                 Room.inMemoryDatabaseBuilder(mContext, AdSelectionServerDatabase.class)
                         .build()
                         .encryptionContextDao();
-        mDevContext = DevContext.builder(mPackageName).setDevOptionsEnabled(true).build();
+        mDevContext = DevContext.builder(mPackageName).setDeviceDevOptionsEnabled(true).build();
 
         mocker.mockGetFlags(mMockFlags);
     }

@@ -560,7 +560,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
 
         // Mock static method MeasurementImpl.getInstance that executes on a separate thread
         MeasurementImpl mockMeasurementImpl = mock(MeasurementImpl.class);
-        doReturn(mockMeasurementImpl).when(() -> MeasurementImpl.getInstance(any()));
+        doReturn(mockMeasurementImpl).when(MeasurementImpl::getInstance);
 
         // Initialize package receiver meant for Measurement
         PackageChangedReceiver spyReceiver = createSpyPackageReceiverForMeasurement();
@@ -587,7 +587,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
 
         // Mock static method MeasurementImpl.getInstance that executes on a separate thread
         MeasurementImpl mockMeasurementImpl = mock(MeasurementImpl.class);
-        doReturn(mockMeasurementImpl).when(() -> MeasurementImpl.getInstance(any()));
+        doReturn(mockMeasurementImpl).when(MeasurementImpl::getInstance);
 
         // Initialize package receiver meant for Measurement
         PackageChangedReceiver spyReceiver = createSpyPackageReceiverForMeasurement();
@@ -776,7 +776,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
 
         // Mock static method MeasurementImpl.getInstance that executes on a separate thread
         MeasurementImpl mockMeasurementImpl = mock(MeasurementImpl.class);
-        doReturn(mockMeasurementImpl).when(() -> MeasurementImpl.getInstance(any()));
+        doReturn(mockMeasurementImpl).when(MeasurementImpl::getInstance);
 
         // Initialize package receiver meant for Measurement
         PackageChangedReceiver spyReceiver = createSpyPackageReceiverForMeasurement();
@@ -803,7 +803,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
 
         // Mock static method MeasurementImpl.getInstance that executes on a separate thread
         MeasurementImpl mockMeasurementImpl = mock(MeasurementImpl.class);
-        doReturn(mockMeasurementImpl).when(() -> MeasurementImpl.getInstance(any()));
+        doReturn(mockMeasurementImpl).when(MeasurementImpl::getInstance);
 
         // Initialize package receiver meant for Measurement
         PackageChangedReceiver spyReceiver = createSpyPackageReceiverForMeasurement();
@@ -830,7 +830,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
 
         // Mock static method MeasurementImpl.getInstance that executes on a separate thread
         MeasurementImpl mockMeasurementImpl = mock(MeasurementImpl.class);
-        doReturn(mockMeasurementImpl).when(() -> MeasurementImpl.getInstance(any()));
+        doReturn(mockMeasurementImpl).when(MeasurementImpl::getInstance);
 
         // Initialize package receiver meant for Measurement
         PackageChangedReceiver spyReceiver = createSpyPackageReceiverForMeasurement();
@@ -857,7 +857,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
 
         // Mock static method MeasurementImpl.getInstance that executes on a separate thread
         MeasurementImpl mockMeasurementImpl = mock(MeasurementImpl.class);
-        doReturn(mockMeasurementImpl).when(() -> MeasurementImpl.getInstance(any()));
+        doReturn(mockMeasurementImpl).when(MeasurementImpl::getInstance);
 
         // Initialize package receiver meant for Measurement
         PackageChangedReceiver spyReceiver = createSpyPackageReceiverForMeasurement();
@@ -1053,7 +1053,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
 
         // Mock static method MeasurementImpl.getInstance that executes on a separate thread
         MeasurementImpl mockMeasurementImpl = mock(MeasurementImpl.class);
-        doReturn(mockMeasurementImpl).when(() -> MeasurementImpl.getInstance(any()));
+        doReturn(mockMeasurementImpl).when(MeasurementImpl::getInstance);
 
         // Initialize package receiver meant for Measurement
         PackageChangedReceiver spyReceiver = createSpyPackageReceiverForMeasurement();

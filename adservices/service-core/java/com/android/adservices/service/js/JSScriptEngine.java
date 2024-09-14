@@ -62,7 +62,7 @@ import javax.annotation.concurrent.GuardedBy;
  * <p>The class is re-entrant, for best performance when using it on multiple thread is better to
  * have every thread using its own instance.
  */
-public class JSScriptEngine {
+public final class JSScriptEngine {
 
     @VisibleForTesting public static final String TAG = JSScriptEngine.class.getSimpleName();
 
@@ -76,6 +76,9 @@ public class JSScriptEngine {
     public static final Set<Class<? extends Exception>> RETRYABLE_EXCEPTIONS_FROM_JS_ENGINE =
             Set.of(JSScriptEngineConnectionException.class);
     private static final Object sJSScriptEngineLock = new Object();
+
+    // TODO(b/366228321): should not need a sLogger and mLogger, but it's used on initialization
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getLogger();
 
     @SuppressLint("StaticFieldLeak")
     @GuardedBy("sJSScriptEngineLock")
@@ -98,7 +101,7 @@ public class JSScriptEngine {
      * current version of the WebView
      */
     @VisibleForTesting
-    static class JavaScriptSandboxProvider {
+    static final class JavaScriptSandboxProvider {
         private final Object mSandboxLock = new Object();
         private StopWatch mSandboxInitStopWatch;
         private final Profiler mProfiler;
@@ -250,30 +253,21 @@ public class JSScriptEngine {
         }
     }
 
-    /**
-     * @return JSScriptEngine instance
-     */
-    public static JSScriptEngine getInstance(LoggerFactory.Logger logger) {
-        return getInstance(ApplicationContextSingleton.get(), logger);
-    }
-
-    /**
-     * @return JSScriptEngine instance
-     */
-    @VisibleForTesting
-    public static JSScriptEngine getInstance(Context context, LoggerFactory.Logger logger) {
+    /** Gets the singleton instance. */
+    public static JSScriptEngine getInstance() {
         synchronized (sJSScriptEngineLock) {
             if (sSingleton == null) {
-                logger.d("Creating new instance for JSScriptEngine");
                 Profiler profiler = Profiler.createNoOpInstance(TAG);
+                Context context = ApplicationContextSingleton.get();
+                sLogger.i("Creating JSScriptEngine singleton using default logger (%s)", sLogger);
                 sSingleton =
                         new JSScriptEngine(
                                 context,
-                                new JavaScriptSandboxProvider(profiler, logger),
+                                new JavaScriptSandboxProvider(profiler, sLogger),
                                 profiler,
                                 // There is no blocking call or IO code in the service logic
                                 AdServicesExecutors.getLightWeightExecutor(),
-                                logger);
+                                sLogger);
             }
 
             return sSingleton;
@@ -281,20 +275,24 @@ public class JSScriptEngine {
     }
 
     /**
-     * @return a singleton JSScriptEngine instance with the given profiler
+     * @return a singleton JSScriptEngine instance with the given profiler and logger
      * @throws IllegalStateException if an existing instance exists
      */
     @VisibleForTesting
     public static JSScriptEngine getInstanceForTesting(
-            Context context, Profiler profiler, LoggerFactory.Logger logger) {
+            Profiler profiler, LoggerFactory.Logger logger) {
         synchronized (sJSScriptEngineLock) {
             // If there is no instance already created or the instance was shutdown
             if (sSingleton != null) {
                 throw new IllegalStateException(
                         "Unable to initialize test JSScriptEngine multiple times using"
-                                + "the real JavaScriptSandboxProvider.");
+                                + " the real JavaScriptSandboxProvider.");
             }
-            logger.d("Creating new instance for JSScriptEngine");
+            Context context = ApplicationContextSingleton.get();
+            sLogger.d(
+                    "Creating new instance for JSScriptEngine for tests using profiler %s and"
+                            + " logger %s",
+                    profiler, logger);
             sSingleton =
                     new JSScriptEngine(
                             context,
@@ -302,9 +300,46 @@ public class JSScriptEngine {
                             profiler,
                             AdServicesExecutors.getLightWeightExecutor(),
                             logger);
+            return sSingleton;
         }
+    }
 
-        return sSingleton;
+    /**
+     * @deprecated TODO(b/366228321): used only by JSScriptEngineE2ETest because it needs to update
+     *     the singleton with a mockLogger
+     */
+    @Deprecated
+    @VisibleForTesting
+    public static JSScriptEngine updateSingletonForE2ETest(LoggerFactory.Logger logger) {
+        synchronized (sJSScriptEngineLock) {
+            sLogger.d(
+                    "Setting JSScriptEngine singleton for tests using logger %s (previous singleton"
+                            + " was %s)",
+                    logger, sSingleton);
+            Context context = ApplicationContextSingleton.get();
+            Profiler profiler = Profiler.createNoOpInstance(TAG);
+            sSingleton =
+                    new JSScriptEngine(
+                            context,
+                            new JavaScriptSandboxProvider(profiler, logger),
+                            profiler,
+                            AdServicesExecutors.getLightWeightExecutor(),
+                            logger);
+            return sSingleton;
+        }
+    }
+
+    /**
+     * @deprecated TODO(b/366228321): used only by JSScriptEngineE2ETest because it needs to update
+     *     the singleton with a mockLogger
+     */
+    @Deprecated
+    @VisibleForTesting
+    public static void resetSingletonForE2ETest() {
+        synchronized (sJSScriptEngineLock) {
+            sLogger.i("resetSingletonForE2ETest(): releasing %s", sSingleton);
+            sSingleton = null;
+        }
     }
 
     /**

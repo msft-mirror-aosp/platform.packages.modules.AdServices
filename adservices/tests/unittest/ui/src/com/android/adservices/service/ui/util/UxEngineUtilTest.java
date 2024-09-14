@@ -16,8 +16,8 @@
 
 package com.android.adservices.service.ui.util;
 
-import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_U18_UX_ENABLED;
@@ -25,7 +25,6 @@ import static com.android.adservices.service.consent.ConsentManager.MANUAL_INTER
 import static com.android.adservices.service.consent.ConsentManager.NO_MANUAL_INTERACTIONS_RECORDED;
 import static com.android.adservices.service.consent.ConsentManager.UNKNOWN;
 import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.GA_UX;
-import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.RVC_UX;
 import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.UNSUPPORTED_UX;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -576,21 +575,6 @@ public class UxEngineUtilTest {
                 .getConsent(any(AdServicesApiType.class));
         mUxEngineUtil.startBackgroundTasksUponConsent(
                 PrivacySandboxUxCollection.U18_UX, mContext, mFlags);
-
-        ExtendedMockito.verify(
-                () -> PackageChangedReceiver.enableReceiver(mContext, mFlags), times(1));
-
-        ExtendedMockito.verify(
-                () -> BackgroundJobsManager.scheduleMeasurementBackgroundJobs(mContext), times(1));
-    }
-
-    @Test
-    public void startBackgroundTasksUponConsentTest_rvcUxConsentGiven() {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
-        doReturn(AdServicesApiConsent.GIVEN)
-                .when(mConsentManager)
-                .getConsent(any(AdServicesApiType.class));
-        mUxEngineUtil.startBackgroundTasksUponConsent(RVC_UX, mContext, mFlags);
 
         ExtendedMockito.verify(
                 () -> PackageChangedReceiver.enableReceiver(mContext, mFlags), times(1));

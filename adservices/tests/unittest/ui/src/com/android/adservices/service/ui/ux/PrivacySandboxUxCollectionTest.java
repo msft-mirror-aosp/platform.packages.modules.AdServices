@@ -28,7 +28,7 @@ public class PrivacySandboxUxCollectionTest {
 
     @Test
     public void uxCollectionTest_cardinalityCheck() {
-        assertEquals(5, PrivacySandboxUxCollection.values().length);
+        assertEquals(4, PrivacySandboxUxCollection.values().length);
     }
 
     @Test
@@ -37,9 +37,8 @@ public class PrivacySandboxUxCollectionTest {
 
         assertEquals(PrivacySandboxUxCollection.UNSUPPORTED_UX, uxCollection[0]);
         assertEquals(PrivacySandboxUxCollection.U18_UX, uxCollection[1]);
-        assertEquals(PrivacySandboxUxCollection.RVC_UX, uxCollection[2]);
-        assertEquals(PrivacySandboxUxCollection.GA_UX, uxCollection[3]);
-        assertEquals(PrivacySandboxUxCollection.BETA_UX, uxCollection[4]);
+        assertEquals(PrivacySandboxUxCollection.GA_UX, uxCollection[2]);
+        assertEquals(PrivacySandboxUxCollection.BETA_UX, uxCollection[3]);
     }
 
     @Test
@@ -50,10 +49,6 @@ public class PrivacySandboxUxCollectionTest {
                 .isTrue();
         assertThat(
                         PrivacySandboxUxCollection.U18_UX.getPriority()
-                                < PrivacySandboxUxCollection.RVC_UX.getPriority())
-                .isTrue();
-        assertThat(
-                        PrivacySandboxUxCollection.RVC_UX.getPriority()
                                 < PrivacySandboxUxCollection.GA_UX.getPriority())
                 .isTrue();
         assertThat(

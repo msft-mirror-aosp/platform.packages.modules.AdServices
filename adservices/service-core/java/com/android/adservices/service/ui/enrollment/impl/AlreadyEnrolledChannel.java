@@ -54,7 +54,6 @@ public class AlreadyEnrolledChannel implements PrivacySandboxEnrollmentChannel {
             case BETA_UX:
                 return consentManager.wasNotificationDisplayed();
             case U18_UX:
-            case RVC_UX:
                 return consentManager.wasU18NotificationDisplayed();
             default:
                 // Unsupported and non-valid UXs can never have enrollment channels.

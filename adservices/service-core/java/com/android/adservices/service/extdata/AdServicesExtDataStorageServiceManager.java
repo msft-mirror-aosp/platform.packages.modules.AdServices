@@ -19,11 +19,8 @@ package com.android.adservices.service.extdata;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_TIMEOUT;
-import static android.adservices.extdata.AdServicesExtDataParams.BOOLEAN_FALSE;
-import static android.adservices.extdata.AdServicesExtDataParams.BOOLEAN_TRUE;
 import static android.adservices.extdata.AdServicesExtDataParams.BOOLEAN_UNKNOWN;
 import static android.adservices.extdata.AdServicesExtDataParams.STATE_UNKNOWN;
-import static android.adservices.extdata.AdServicesExtDataParams.UserManualInteraction;
 import static android.adservices.extdata.AdServicesExtDataStorageService.AdServicesExtDataFieldId;
 import static android.adservices.extdata.AdServicesExtDataStorageService.FIELD_IS_ADULT_ACCOUNT;
 import static android.adservices.extdata.AdServicesExtDataStorageService.FIELD_IS_MEASUREMENT_CONSENTED;
@@ -43,8 +40,6 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.extdata.AdServicesExtDataParams;
 import android.adservices.extdata.AdServicesExtDataStorageService;
-import android.annotation.NonNull;
-import android.content.Context;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.errorlogging.ErrorLogUtil;
@@ -53,6 +48,7 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.ApiCallStats;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.adservices.shared.util.Clock;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -99,9 +95,9 @@ public final class AdServicesExtDataStorageServiceManager {
     private final String mPackageName;
 
     private AdServicesExtDataStorageServiceManager(
-            @NonNull AdServicesExtDataStorageServiceWorker dataWorker,
-            @NonNull AdServicesLogger adServicesLogger,
-            @NonNull String packageName) {
+            AdServicesExtDataStorageServiceWorker dataWorker,
+            AdServicesLogger adServicesLogger,
+            String packageName) {
         mDataWorker = Objects.requireNonNull(dataWorker);
         mAdServicesLogger = Objects.requireNonNull(adServicesLogger);
         mPackageName = Objects.requireNonNull(packageName);
@@ -109,13 +105,11 @@ public final class AdServicesExtDataStorageServiceManager {
     }
 
     /** Init {@link AdServicesExtDataStorageServiceManager}. */
-    @NonNull
-    public static AdServicesExtDataStorageServiceManager getInstance(@NonNull Context context) {
-        Objects.requireNonNull(context);
+    public static AdServicesExtDataStorageServiceManager getInstance() {
         return new AdServicesExtDataStorageServiceManager(
-                AdServicesExtDataStorageServiceWorker.getInstance(context),
+                AdServicesExtDataStorageServiceWorker.getInstance(),
                 AdServicesLoggerImpl.getInstance(),
-                context.getPackageName());
+                ApplicationContextSingleton.get().getPackageName());
     }
 
     /**
@@ -123,7 +117,6 @@ public final class AdServicesExtDataStorageServiceManager {
      *
      * @return {@link AdServicesExtDataParams} data object with the current state of AdExt data.
      */
-    @NonNull
     public AdServicesExtDataParams getAdServicesExtData() {
         long startServiceTime = mClock.elapsedRealtime();
         CountDownLatch latch = new CountDownLatch(1);
@@ -152,7 +145,7 @@ public final class AdServicesExtDataStorageServiceManager {
                     }
 
                     @Override
-                    public void onError(@NonNull Exception e) {
+                    public void onError(Exception e) {
                         LogUtil.e(e, "Error when getting AdExt data! Returning default values.");
                         ErrorLogUtil.e(
                                 e,
@@ -212,8 +205,7 @@ public final class AdServicesExtDataStorageServiceManager {
      * @return true if update is successful; false otherwise.
      */
     public boolean setAdServicesExtData(
-            @NonNull AdServicesExtDataParams params,
-            @NonNull @AdServicesExtDataFieldId int[] fieldsToUpdate) {
+            AdServicesExtDataParams params, @AdServicesExtDataFieldId int[] fieldsToUpdate) {
         Objects.requireNonNull(params);
         Objects.requireNonNull(fieldsToUpdate);
 
@@ -240,7 +232,7 @@ public final class AdServicesExtDataStorageServiceManager {
                     }
 
                     @Override
-                    public void onError(@NonNull Exception e) {
+                    public void onError(Exception e) {
                         LogUtil.e(e, "Exception when updating AdExt data!");
                         ErrorLogUtil.e(
                                 e,
@@ -279,150 +271,6 @@ public final class AdServicesExtDataStorageServiceManager {
                     AD_SERVICES_API_CALLED__API_NAME__PUT_AD_SERVICES_EXT_DATA,
                     resultCode);
         }
-    }
-
-    /**
-     * Sets Measurement API consent.
-     *
-     * @return true if update was successful; false otherwise.
-     */
-    public boolean setMsmtConsent(boolean isGiven) {
-        return setAdServicesExtData(
-                new AdServicesExtDataParams.Builder()
-                        .setMsmtConsent(isGiven ? BOOLEAN_TRUE : BOOLEAN_FALSE)
-                        .build(),
-                new int[] {FIELD_IS_MEASUREMENT_CONSENTED});
-    }
-
-    /**
-     * Retrieves the stored consent bit for Measurement API, converted into boolean. -1 (no data) is
-     * considered false.
-     */
-    public boolean getMsmtConsent() {
-        return getAdServicesExtData().getIsMeasurementConsented() == BOOLEAN_TRUE;
-    }
-
-    /**
-     * Sets manual interaction with consent status.
-     *
-     * @return true if update was successful; false otherwise.
-     */
-    public boolean setManualInteractionWithConsentStatus(
-            @UserManualInteraction int manualInteractionWithConsentStatus) {
-        return setAdServicesExtData(
-                new AdServicesExtDataParams.Builder()
-                        .setManualInteractionWithConsentStatus(manualInteractionWithConsentStatus)
-                        .build(),
-                new int[] {FIELD_MANUAL_INTERACTION_WITH_CONSENT_STATUS});
-    }
-
-    /** Retrieves stored value for manual interaction with consent status. */
-    @UserManualInteraction
-    public int getManualInteractionWithConsentStatus() {
-        return getAdServicesExtData().getManualInteractionWithConsentStatus();
-    }
-
-    /**
-     * Sets if notification was displayed.
-     *
-     * @return true if update was successful; false otherwise.
-     */
-    public boolean setNotificationDisplayed(boolean isGiven) {
-        return setAdServicesExtData(
-                new AdServicesExtDataParams.Builder()
-                        .setNotificationDisplayed(isGiven ? BOOLEAN_TRUE : BOOLEAN_FALSE)
-                        .build(),
-                new int[] {FIELD_IS_NOTIFICATION_DISPLAYED});
-    }
-
-    /**
-     * Retrieves the stored consent bit for notification displayed, converted into boolean. -1 (no
-     * data) is considered false.
-     */
-    public boolean getNotificationDisplayed() {
-        return getAdServicesExtData().getIsNotificationDisplayed() == BOOLEAN_TRUE;
-    }
-
-    /**
-     * Sets if account is U18
-     *
-     * @return true if update was successful; false otherwise.
-     */
-    public boolean setIsU18Account(boolean isU18Account) {
-        return setAdServicesExtData(
-                new AdServicesExtDataParams.Builder()
-                        .setIsU18Account(isU18Account ? BOOLEAN_TRUE : BOOLEAN_FALSE)
-                        .build(),
-                new int[] {FIELD_IS_U18_ACCOUNT});
-    }
-
-    /** Retrieves if account is U18, converted into boolean. -1 (no data) is considered false. */
-    public boolean getIsU18Account() {
-        return getAdServicesExtData().getIsU18Account() == BOOLEAN_TRUE;
-    }
-
-    /**
-     * Sets if adult account.
-     *
-     * @return true if update was successful; false otherwise.
-     */
-    public boolean setIsAdultAccount(boolean isAdultAccount) {
-        return setAdServicesExtData(
-                new AdServicesExtDataParams.Builder()
-                        .setIsAdultAccount(isAdultAccount ? BOOLEAN_TRUE : BOOLEAN_FALSE)
-                        .build(),
-                new int[] {FIELD_IS_ADULT_ACCOUNT});
-    }
-
-    /** Retrieves if adult account, converted into boolean. -1 (no data) is considered false. */
-    public boolean getIsAdultAccount() {
-        return getAdServicesExtData().getIsAdultAccount() == BOOLEAN_TRUE;
-    }
-
-    /**
-     * Sets the apex version when a measurement deletion event occurred, for rollback purposes
-     *
-     * @param apexVersion the version of the ExtServices apex that was running
-     * @return {@code true} if successful, {@code false} otherwise.
-     */
-    public boolean setMeasurementRollbackApexVersion(long apexVersion) {
-        return setAdServicesExtData(
-                new AdServicesExtDataParams.Builder()
-                        .setMsmtRollbackApexVersion(apexVersion)
-                        .build(),
-                new int[] {FIELD_MEASUREMENT_ROLLBACK_APEX_VERSION});
-    }
-
-    /**
-     * Returns the saved ExtServices apex version that had a measurement deletion event, if any
-     *
-     * @return the saved apex version if present, -1 otherwise.
-     */
-    public long getMeasurementRollbackApexVersion() {
-        return getAdServicesExtData().getMeasurementRollbackApexVersion();
-    }
-
-    /**
-     * Sets appropriate AdExt data values to their respective default values to indicate data
-     * clearance in a non-blocking manner. Data that indicates whether notification was shown on R
-     * will not be cleared to simplify OTA deletion logic as there's no requirement to delete it.
-     */
-    public void clearDataOnOtaAsync() {
-        mDataWorker.setAdServicesExtData(
-                DEFAULT_PARAMS,
-                DATA_FIELDS_TO_CLEAR_POST_OTA,
-                new AdServicesOutcomeReceiver<>() {
-                    @Override
-                    public void onResult(AdServicesExtDataParams result) {
-                        LogUtil.d("Cleared AdExt Data.");
-                    }
-
-                    @Override
-                    public void onError(@NonNull Exception e) {
-                        // TODO (b/301163895) Add logging to capture deletion failure.
-                        LogUtil.e(e, "Exception when clearing AdExt data!");
-                    }
-                });
     }
 
     private AdServicesExtDataParams constructParams(

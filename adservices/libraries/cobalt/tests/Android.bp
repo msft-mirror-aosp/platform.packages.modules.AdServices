@@ -41,8 +41,8 @@ android_test {
         "libhpke_jni",
     ],
     libs: [
-        "android.test.base",
-        "android.test.runner",
+        "android.test.base.stubs.test",
+        "android.test.runner.stubs.test",
         "mockito",
     ],
     sdk_version: "test_current",
@@ -78,8 +78,8 @@ android_test {
         "libhpke_jni",
     ],
     libs: [
-        "android.test.base",
-        "android.test.runner",
+        "android.test.base.stubs.test",
+        "android.test.runner.stubs.test",
         "mockito",
     ],
     sdk_version: "test_current",

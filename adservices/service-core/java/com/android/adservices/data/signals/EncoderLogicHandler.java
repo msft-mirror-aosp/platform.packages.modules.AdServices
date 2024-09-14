@@ -121,7 +121,7 @@ public class EncoderLogicHandler {
 
     public EncoderLogicHandler(@NonNull Context context) {
         this(
-                EncoderPersistenceDao.getInstance(context),
+                EncoderPersistenceDao.getInstance(),
                 ProtectedSignalsDatabase.getInstance().getEncoderEndpointsDao(),
                 ProtectedSignalsDatabase.getInstance().getEncoderLogicMetadataDao(),
                 ProtectedSignalsDatabase.getInstance().protectedSignalsDao(),

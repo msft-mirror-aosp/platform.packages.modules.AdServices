@@ -31,7 +31,6 @@ import static com.android.adservices.service.Flags.DEFAULT_PAS_SCRIPT_DOWNLOAD_R
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SCRIPT_EXECUTION_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS;
-import static com.android.adservices.service.Flags.DEFAULT_RVC_UX_ENABLED;
 import static com.android.adservices.service.Flags.ENABLE_ADEXT_SERVICE_CONSENT_DATA;
 import static com.android.adservices.service.Flags.ENABLE_APPSEARCH_CONSENT_DATA;
 import static com.android.adservices.service.Flags.ENABLE_MIGRATION_FROM_ADEXT_SERVICE;
@@ -53,6 +52,8 @@ import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_PER_D
 import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW_IN_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW;
 import static com.android.adservices.service.Flags.MEASUREMENT_KILL_SWITCH;
+import static com.android.adservices.service.Flags.MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE;
+import static com.android.adservices.service.Flags.MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_REINSTALL_REATTRIBUTION_WINDOW_SECONDS;
 import static com.android.adservices.service.Flags.MEASUREMENT_MIN_REPORT_LIFESPAN_FOR_UNINSTALL_SECONDS;
 import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_PERSISTED;
@@ -60,7 +61,6 @@ import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_REQ
 import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS;
 import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_SERVICE_MIN_EXECUTION_WINDOW_MILLIS;
-import static com.android.adservices.service.Flags.MEASUREMENT_ROLLBACK_DELETION_R_ENABLED;
 import static com.android.adservices.service.Flags.MEASUREMENT_TRIGGER_DEBUG_SIGNAL_PROBABILITY_FOR_FAKE_REPORTS;
 import static com.android.adservices.service.Flags.PPAPI_AND_ADEXT_SERVICE;
 import static com.android.adservices.service.Flags.PPAPI_AND_SYSTEM_SERVER;
@@ -217,48 +217,6 @@ public final class FlagsTest extends AdServicesUnitTestCase {
 
         expect.withMessage("getEnableAdExtServiceConsentData()")
                 .that(mFlags.getEnableAdExtServiceConsentData())
-                .isEqualTo(expected);
-    }
-
-    @Test
-    @RequiresSdkRange(atMost = RVC, reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
-    public void testEnableRvcUx_isR() {
-        assertEnableRvcUx(true);
-    }
-
-    @Test
-    @RequiresSdkLevelAtLeastS(reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
-    public void testEnableRvcUx_isAtLeastS() {
-        assertEnableRvcUx(false);
-    }
-
-    private void assertEnableRvcUx(boolean expected) {
-        expect.withMessage("DEFAULT_RVC_UX_ENABLED")
-                .that(DEFAULT_RVC_UX_ENABLED)
-                .isEqualTo(expected);
-
-        expect.withMessage("getEnableRvcUx()").that(mFlags.getEnableRvcUx()).isEqualTo(expected);
-    }
-
-    @Test
-    @RequiresSdkRange(atMost = RVC, reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
-    public void testMeasurementRollbackDeletionREnabled_isR() {
-        assertMeasurementRollbackDeletionREnabled(true);
-    }
-
-    @Test
-    @RequiresSdkLevelAtLeastS(reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
-    public void testaMeasurementRollbackDeletionREnabled_isAtLeastS() {
-        assertMeasurementRollbackDeletionREnabled(false);
-    }
-
-    private void assertMeasurementRollbackDeletionREnabled(boolean expected) {
-        expect.withMessage("MEASUREMENT_ROLLBACK_DELETION_R_ENABLED")
-                .that(MEASUREMENT_ROLLBACK_DELETION_R_ENABLED)
-                .isEqualTo(expected);
-
-        expect.withMessage("getMeasurementRollbackDeletionREnabled()")
-                .that(mFlags.getMeasurementRollbackDeletionREnabled())
                 .isEqualTo(expected);
     }
 
@@ -675,6 +633,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 Flags::getTopicsEpochJobBatteryNotLowInsteadOfCharging);
     }
 
+    @Test
+    public void testGetTopicsEpochJobBatteryConstraintLoggingEnabled() {
+        testFlag(
+                "TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_LOGGING_ENABLED",
+                /* defaultValue */ false,
+                Flags::getTopicsEpochJobBatteryConstraintLoggingEnabled);
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Tests for (legacy) kill-switch flags that will be refactored as feature flag - they should //
     // move to the block above once refactored.                                                   //
@@ -870,6 +836,12 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetDeveloperModeFeatureEnabled() {
+        testFeatureFlag(
+                "DEFAULT_DEVELOPER_MODE_FEATURE_ENABLED", Flags::getDeveloperModeFeatureEnabled);
+    }
+
+    @Test
     public void testGetMeasurementMaxReinstallReattributionWindowSeconds() {
         testFlag(
                 "getMeasurementMaxReinstallReattributionWindowSeconds",
@@ -973,6 +945,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetMeasurementValidFilteringIdMaxBytes() {
+        testFlag(
+                "getMeasurementValidFilteringIdMaxBytes",
+                MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES,
+                Flags::getMeasurementMaxFilteringIdMaxBytes);
+    }
+
+    @Test
     public void testGetMeasurementEnableFlexibleContributionFiltering() {
         testFeatureFlag(
                 "MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING",
@@ -1055,6 +1035,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getMeasurementAdrBudgetWindowLengthMillis",
                 MEASUREMENT_ADR_BUDGET_WINDOW_LENGTH_MILLIS,
                 Flags::getMeasurementAdrBudgetWindowLengthMillis);
+    }
+
+    @Test
+    public void testGetMeasurementMaxAdrCountPerSource() {
+        testFlag(
+                "getMeasurementMaxAdrCountPerSource",
+                MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE,
+                Flags::getMeasurementMaxAdrCountPerSource);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

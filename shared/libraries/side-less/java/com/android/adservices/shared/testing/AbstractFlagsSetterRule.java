@@ -17,7 +17,6 @@ package com.android.adservices.shared.testing;
 
 import static com.android.adservices.shared.testing.concurrency.SyncCallback.LOG_TAG;
 
-import com.android.adservices.shared.testing.DeviceConfigHelper.SyncDisabledModeForTest;
 import com.android.adservices.shared.testing.Logger.LogLevel;
 import com.android.adservices.shared.testing.Logger.RealLogger;
 import com.android.adservices.shared.testing.NameValuePair.Matcher;
@@ -49,6 +48,7 @@ import com.android.adservices.shared.testing.annotations.SetStringArrayFlag;
 import com.android.adservices.shared.testing.annotations.SetStringArrayFlags;
 import com.android.adservices.shared.testing.annotations.SetStringFlag;
 import com.android.adservices.shared.testing.annotations.SetStringFlags;
+import com.android.adservices.shared.testing.device.DeviceConfig;
 
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
@@ -97,7 +97,7 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
     private final List<NameValuePair> mOnTestFailureFlags = new ArrayList<>();
     private final List<NameValuePair> mOnTestFailureSystemProperties = new ArrayList<>();
 
-    private SyncDisabledModeForTest mPreviousSyncDisabledModeForTest = null;
+    private DeviceConfig.SyncDisabledModeForTest mPreviousSyncDisabledModeForTest = null;
 
     private boolean mFlagsClearedByTest;
 
@@ -139,7 +139,7 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         storeSyncDisabledMode();
         // Must set right away to avoid race conditions (for example, backend setting flags before
         // apply() is called)
-        setSyncDisabledMode(SyncDisabledModeForTest.PERSISTENT);
+        setSyncDisabledMode(DeviceConfig.SyncDisabledModeForTest.PERSISTENT);
 
         mLog.v(
                 "Constructor: mDeviceConfigNamespace=%s,"
@@ -209,7 +209,7 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         }
     }
 
-    private void setSyncDisabledMode(SyncDisabledModeForTest mode) {
+    private void setSyncDisabledMode(DeviceConfig.SyncDisabledModeForTest mode) {
         runOrCache(
                 "setSyncDisabledMode(" + mode + ")", () -> mDeviceConfig.setSyncDisabledMode(mode));
     }

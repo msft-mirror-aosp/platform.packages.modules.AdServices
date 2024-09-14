@@ -72,7 +72,7 @@ public class DebugReportSenderStrategyBatchImpl implements DebugReportSenderStra
                 DBAdSelectionDebugReport.create(
                         null,
                         uri,
-                        mDevContext.getDevOptionsEnabled(),
+                        mDevContext.getDeviceDevOptionsEnabled(),
                         Instant.now().toEpochMilli());
         mDebugReportQueue.add(dbAdSelectionDebugReport);
     }
@@ -86,7 +86,7 @@ public class DebugReportSenderStrategyBatchImpl implements DebugReportSenderStra
                             DBAdSelectionDebugReport.create(
                                     null,
                                     uri,
-                                    mDevContext.getDevOptionsEnabled(),
+                                    mDevContext.getDeviceDevOptionsEnabled(),
                                     Instant.now().toEpochMilli());
                     mDebugReportQueue.add(dbAdSelectionDebugReport);
                 });

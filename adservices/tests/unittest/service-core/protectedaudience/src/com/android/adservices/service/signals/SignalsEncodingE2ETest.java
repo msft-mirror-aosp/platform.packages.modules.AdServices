@@ -201,7 +201,7 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mUpdateProcessorSelector = new UpdateProcessorSelector();
-        mEncoderPersistenceDao = EncoderPersistenceDao.getInstance(mSpyContext);
+        mEncoderPersistenceDao = EncoderPersistenceDao.getInstance();
 
         mAdServicesHttpsClient =
                 new AdServicesHttpsClient(mBackgroundExecutorService, 2000, 2000, 10000);

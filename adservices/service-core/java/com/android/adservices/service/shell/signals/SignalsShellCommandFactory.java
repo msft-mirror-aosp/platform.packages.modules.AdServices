@@ -87,10 +87,8 @@ public class SignalsShellCommandFactory implements ShellCommandFactory {
                                         ShellCommand::getCommandName, Function.identity()));
     }
 
-    /**
-     * @return an instance of the {@link SignalsShellCommandFactory}.
-     */
-    public static ShellCommandFactory getInstance(
+    /** Gets a new {@link SignalsShellCommandFactory} instance. */
+    public static ShellCommandFactory newInstance(
             DebugFlags debugFlags,
             ProtectedSignalsDao protectedSignalsDao,
             Flags flags,

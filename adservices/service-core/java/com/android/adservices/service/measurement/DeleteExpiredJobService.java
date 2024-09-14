@@ -80,7 +80,7 @@ public final class DeleteExpiredJobService extends JobService {
                     int retryLimit =
                             FlagsFactory.getFlags()
                                     .getMeasurementMaxRetriesPerRegistrationRequest();
-                    DatastoreManagerFactory.getDatastoreManager(this)
+                    DatastoreManagerFactory.getDatastoreManager()
                             .runInTransaction(
                                     dao ->
                                             dao.deleteExpiredRecords(

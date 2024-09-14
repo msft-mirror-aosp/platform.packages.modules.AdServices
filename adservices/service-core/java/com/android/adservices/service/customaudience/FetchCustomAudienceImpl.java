@@ -460,7 +460,8 @@ public class FetchCustomAudienceImpl {
         return FluentFuture.from(
                 mExecutorService.submit(
                         () -> {
-                            boolean isDebuggableCustomAudience = devContext.getDevOptionsEnabled();
+                            boolean isDebuggableCustomAudience =
+                                    devContext.getDeviceDevOptionsEnabled();
                             sLogger.v(
                                     "Is debuggable custom audience: %b",
                                     isDebuggableCustomAudience);

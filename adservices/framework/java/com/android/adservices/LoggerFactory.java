@@ -28,7 +28,7 @@ import java.util.Locale;
  *
  * @hide
  */
-public class LoggerFactory {
+public final class LoggerFactory {
 
     public static final String TAG = "adservices";
     public static final String TOPICS_TAG = "adservices.topics";
@@ -85,11 +85,11 @@ public class LoggerFactory {
      *
      * @hide
      */
-    public static class Logger {
+    public static final class Logger {
         private final String mTag;
 
-        private Logger(String mTag) {
-            this.mTag = mTag;
+        private Logger(String tag) {
+            mTag = tag;
         }
 
         /** Log the message as VERBOSE. Return The number of bytes written. */
@@ -265,6 +265,11 @@ public class LoggerFactory {
             @SuppressWarnings("FormatStringAnnotation")
             int result = e(tr, msg);
             return result;
+        }
+
+        @Override
+        public String toString() {
+            return "Logger[tag=" + mTag + "]";
         }
 
         private static String format(String format, Object... args) {

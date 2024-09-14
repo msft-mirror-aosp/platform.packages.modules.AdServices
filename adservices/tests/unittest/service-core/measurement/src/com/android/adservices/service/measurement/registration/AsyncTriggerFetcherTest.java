@@ -70,6 +70,7 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.TriggerSpecs;
+import com.android.adservices.service.measurement.aggregation.AggregateDebugReportData;
 import com.android.adservices.service.measurement.aggregation.AggregateDebugReporting;
 import com.android.adservices.service.measurement.ondevicepersonalization.NoOdpDelegationWrapper;
 import com.android.adservices.service.measurement.ondevicepersonalization.OdpDelegationWrapperImpl;
@@ -96,6 +97,7 @@ import org.mockito.Mock;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -104,6 +106,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -2209,7 +2212,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         Trigger result = fetch.get();
         assertThat(result.getAggregateValuesString())
                 .isEqualTo(new JSONObject(validAggregatableValues).toString());
-        assertThat(asyncFetchStatus.isTriggerAggregatableValueFiltersConfigured()).isTrue();
     }
 
     @Test
@@ -2491,6 +2493,519 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         assertEquals(
                 AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
         assertThat(asyncFetchStatus.isTriggerAggregatableValueFiltersConfigured()).isFalse();
+    }
+
+    @Test
+    public void testTriggerRequest_flexibleFilteringJsonObject_success() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String validAggregatableValues =
+                "{\"campaignCounts\": {\"value\": 32768, \"filtering_id"
+                        + "\":\"1\"},\"geoValue\":1664}";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "\"aggregatable_values\":"
+                                                + validAggregatableValues
+                                                + ","
+                                                + "\"aggregatable_filtering_id_max_bytes\":"
+                                                + 2
+                                                + "}")));
+        when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
+        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
+        when(mMockFlags.getMeasurementMaxFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertTrue(fetch.isPresent());
+        assertEquals(AsyncFetchStatus.EntityStatus.SUCCESS, asyncFetchStatus.getEntityStatus());
+        Trigger result = fetch.get();
+        assertThat(result.getAggregateValuesString())
+                .isEqualTo(new JSONObject(validAggregatableValues).toString());
+        assertThat(result.getAggregatableFilteringIdMaxBytes()).isEqualTo(2);
+    }
+
+    @Test
+    public void testTriggerRequest_flexibleFilteringValueTooLarge_fails() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String invalidAggregatableValues =
+                "{\"campaignCounts\": {\"value\": 65537, \"filtering_id"
+                        + "\":\"1\"},\"geoValue\":1664}";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "\"aggregatable_values\":"
+                                                + invalidAggregatableValues
+                                                + "}")));
+        when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
+        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(fetch.isPresent()).isFalse();
+    }
+
+    @Test
+    public void testTriggerRequest_flexibleFilteringInvalidValueType_fails() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String invalidAggregatableValues = "{\"campaignCounts\":\"1664\"}";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{\"aggregatable_values\":"
+                                                + invalidAggregatableValues
+                                                + "}")));
+        when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
+        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(fetch.isPresent()).isFalse();
+    }
+
+    @Test
+    public void testTriggerRequest_flexibleFilteringTooSmallFilterIdMaxBytes_fails()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "\"aggregatable_filtering_id_max_bytes\":"
+                                                + 0
+                                                + "}")));
+        when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
+        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(fetch.isPresent()).isFalse();
+    }
+
+    @Test
+    public void testTriggerRequest_flexibleFilteringTooLargeFilterIdMaxBytes_fails()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "\"aggregatable_filtering_id_max_bytes\":"
+                                                + 9
+                                                + "}")));
+        when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
+        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(fetch.isPresent()).isFalse();
+    }
+
+    @Test
+    public void testTriggerRequest_flexibleFilteringInvalidFilterIdMaxBytesType_fails()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "\"aggregatable_filtering_id_max_bytes\":"
+                                                + "2"
+                                                + "}")));
+        when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
+        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(fetch.isPresent()).isFalse();
+    }
+
+    @Test
+    public void testTriggerRequest_flexibleFilteringFilteringIdMaxBytesDefaultToOne_success()
+            throws Exception {
+        // filtering_id is valid because default maxBytes is 1
+        // 255 is within range of 0-255 inclusive
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String validAggregatableValues =
+                "{\"campaignCounts\": {\"value\": 32768, \"filtering_id"
+                        + "\":\"255\"},\"geoValue\":1664}";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{\"aggregatable_values\":"
+                                                + validAggregatableValues
+                                                + "}")));
+        when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
+        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
+        when(mMockFlags.getMeasurementMaxFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(fetch.isPresent()).isTrue();
+        assertThat(asyncFetchStatus.getEntityStatus())
+                .isEqualTo(AsyncFetchStatus.EntityStatus.SUCCESS);
+        Trigger result = fetch.get();
+        assertThat(result.getAggregateValuesString())
+                .isEqualTo(new JSONObject(validAggregatableValues).toString());
+    }
+
+    @Test
+    public void testTriggerRequest_flexibleFilteringJsonObjectFilteringIdWithinRange_passes()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String validAggregatableValues =
+                "{\"campaignCounts\": {\"value\": 32768, \"filtering_id"
+                        + "\":\"65535\"},\"geoValue\":1664}";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "\"aggregatable_values\":"
+                                                + validAggregatableValues
+                                                + ","
+                                                + "\"aggregatable_filtering_id_max_bytes\":"
+                                                + 2
+                                                + "}")));
+        when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
+        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
+        when(mMockFlags.getMeasurementMaxFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(fetch.isPresent()).isTrue();
+        assertThat(asyncFetchStatus.getEntityStatus())
+                .isEqualTo(AsyncFetchStatus.EntityStatus.SUCCESS);
+        Trigger result = fetch.get();
+        assertThat(result.getAggregateValuesString())
+                .isEqualTo(new JSONObject(validAggregatableValues).toString());
+        assertThat(result.getAggregatableFilteringIdMaxBytes()).isEqualTo(2);
+    }
+
+    @Test
+    public void testTriggerRequest_flexibleFilteringJsonObjectFilteringIdExceedsDefaultRange_fails()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String invalidAggregatableValues =
+                "{\"campaignCounts\": {\"value\": 32768,"
+                        + " \"filtering_id\":\"256\"},\"geoValue\":1664}";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "\"aggregatable_values\":"
+                                                + invalidAggregatableValues
+                                                + "}")));
+        when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
+        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
+        when(mMockFlags.getMeasurementMaxFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(fetch.isPresent()).isFalse();
+    }
+
+    @Test
+    public void testTriggerRequest_flexibleFilteringJsonObjectInvalidFilteringIdInvalidType_fails()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String invalidAggregatableValues =
+                "{\"campaignCounts\": {\"value\": 32768,"
+                        + " \"filtering_id\":20},\"geoValue\":1664}";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "\"aggregatable_values\":"
+                                                + invalidAggregatableValues
+                                                + "}")));
+        when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
+        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
+        when(mMockFlags.getMeasurementMaxFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(fetch.isPresent()).isFalse();
+    }
+
+    @Test
+    public void testTriggerRequest_flexibleFilteringWithoutAggregateValueFilters_fails()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String validAggregatableValuesArr =
+                "[{\"values\":{\"campaignCounts\":{\"value\":32768, \"filtering_id\":\"123\"},"
+                        + " \"geoValue\":1664}, \"filters\":{\"category\":[\"filter_1\"]},"
+                        + " \"not_filters\":{\"category\":[\"filter_2\"]}}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "\"aggregatable_values\":"
+                                                + validAggregatableValuesArr
+                                                + ","
+                                                + "\"aggregatable_filtering_id_max_bytes\":"
+                                                + 2
+                                                + "}")));
+        when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
+        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
+        when(mMockFlags.getMeasurementMaxFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(fetch.isPresent()).isFalse();
+    }
+
+    @Test
+    public void testTriggerRequest_flexibleFilteringWithAggregateValueFilters_success()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String validAggregatableValuesArr =
+                "[{\"values\":{\"campaignCounts\":{\"value\":32768, \"filtering_id\":\"123\"},"
+                        + " \"geoValue\":1664}, \"filters\":{\"category\":[\"filter_1\"]},"
+                        + " \"not_filters\":{\"category\":[\"filter_2\"]}}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "\"aggregatable_values\":"
+                                                + validAggregatableValuesArr
+                                                + ","
+                                                + "\"aggregatable_filtering_id_max_bytes\":"
+                                                + 2
+                                                + "}")));
+        when(mMockFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
+        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
+        when(mMockFlags.getMeasurementMaxFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(fetch.isPresent()).isTrue();
+        assertThat(asyncFetchStatus.getEntityStatus())
+                .isEqualTo(AsyncFetchStatus.EntityStatus.SUCCESS);
+        Trigger result = fetch.get();
+        assertThat(result.getAggregateValuesString())
+                .isEqualTo(new JSONArray(validAggregatableValuesArr).toString());
+        assertThat(result.getAggregatableFilteringIdMaxBytes()).isEqualTo(2);
+    }
+
+    @Test
+    public void testTriggerRequest_flexibleFilteringJsonArrayValueNotIntOrJsonObject_fails()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String invalidAggregatableValuesArr = "[{\"values\":{\"campaignCounts\":\"123\"}}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{\"aggregatable_values\":"
+                                                + invalidAggregatableValuesArr
+                                                + "}")));
+        when(mMockFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
+        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
+        when(mMockFlags.getMeasurementMaxFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(fetch.isPresent()).isFalse();
+    }
+
+    @Test
+    public void
+            testTriggerRequest_flexibleFilteringFilteringIdExceedsDefaultFilteringIdMaxBytes_fails()
+                    throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        String invalidAggregatableValuesArr =
+                "[{\"values\":{\"campaignCounts\":{\"value\":32768, \"filtering_id\":\"257\"},"
+                        + " \"geoValue\":1664}, \"filters\":{\"category\":[\"filter_1\"]},"
+                        + " \"not_filters\":{\"category\":[\"filter_2\"]}}]";
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{\"aggregatable_values\":"
+                                                + invalidAggregatableValuesArr
+                                                + "}")));
+        when(mMockFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
+        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
+        when(mMockFlags.getMeasurementMaxFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(fetch.isPresent()).isFalse();
+    }
+
+    @Test
+    public void testTriggerRequest_flexibleFilteringFilteringIdExceedsFilteringIdMaxBytes_fails()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        String invalidAggregatableValuesArr =
+                "[{\"values\":{\"campaignCounts\":{\"value\":32768, \"filtering_id\":\"65537\"},"
+                        + " \"geoValue\":1664}, \"filters\":{\"category\":[\"filter_1\"]},"
+                        + " \"not_filters\":{\"category\":[\"filter_2\"]}}]";
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "\"aggregatable_values\":"
+                                                + invalidAggregatableValuesArr
+                                                + ","
+                                                + "\"aggregatable_filtering_id_max_bytes\":"
+                                                + 2
+                                                + "}")));
+        when(mMockFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
+        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
+        when(mMockFlags.getMeasurementMaxFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(fetch.isPresent()).isFalse();
     }
 
     @Test
@@ -4056,6 +4571,37 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     }
 
     @Test
+    public void testBasicTriggerRequestWithAggregateValues_valueWithTrailingZeros_success()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String aggregatableValues = "{\"campaignCounts\": 1664.0}";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "\"aggregatable_values\": "
+                                                + aggregatableValues
+                                                + "}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertTrue(fetch.isPresent());
+        Trigger result = fetch.get();
+        assertEquals(
+                new JSONObject(aggregatableValues).toString(), result.getAggregateValuesString());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
     public void testBasicTriggerRequestWithAggregateTriggerData_rejectsTooManyValueKeys()
             throws Exception {
         Assume.assumeFalse(mEnableUpdateTriggerHeaderSizeLimit);
@@ -5204,6 +5750,58 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     }
 
     @Test
+    public void triggerRequest_aggregatableValueJsonObject_fails() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String invalidAggregatableValues =
+                "{\"campaignCounts\": {\"value\": 32768, \"filtering_id\": \"1\"}}";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "\"aggregatable_values\": "
+                                                + invalidAggregatableValues
+                                                + "}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        assertFalse(fetch.isPresent());
+    }
+
+    @Test
+    public void triggerRequest_aggregatableValueJsonArrayNotAccepted_fails() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String invalidAggregatableValues =
+                "[{\"values\":{\"campaignCounts\":{\"value\":32768, \"filtering_id\":\"123\"},"
+                        + " \"geoValue\":1664}, \"filters\":{\"category\":[\"filter_1\"]},"
+                        + " \"not_filters\":{\"category\":[\"filter_2\"]}}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "\"aggregatable_values\": "
+                                                + invalidAggregatableValues
+                                                + "}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        assertFalse(fetch.isPresent());
+    }
+
+    @Test
     public void triggerRequest_aggregatableValueLessThanOne_fails() throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         String aggregatableValues = "{\"campaignCounts\":32768,\"geoValue\":0}";
@@ -5252,6 +5850,37 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
                         appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void triggerRequest_aggregatableValueWithFractional_fails() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String invalidAggregatableValues = "{\"campaignCounts\":32768.01,\"geoValue\":1644}";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "\"aggregatable_values\": "
+                                                + invalidAggregatableValues
+                                                + "}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertFalse(fetch.isPresent());
         assertEquals(
                 AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
         assertFalse(fetch.isPresent());
@@ -7415,8 +8044,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     }
 
     @Test
-    public void fetchTrigger_aggregateDebugReportingEnabled_invalidAggregateDebugReportingFields()
-            throws Exception {
+    public void fetchTrigger_adrHasInvalidDebugData_acceptsTrigger() throws Exception {
         when(mMockFlags.getMeasurementEnableAggregateDebugReporting()).thenReturn(true);
         when(mMockFlags.getMeasurementAggregationCoordinatorOriginList())
                 .thenReturn("https://cloud.coordination.test");
@@ -7447,16 +8075,35 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
 
+        Set<String> dataTypes1 = new HashSet<>();
+        dataTypes1.add(DebugReportApi.Type.TRIGGER_EVENT_DEDUPLICATED.getValue());
+        AggregateDebugReportData debugData1 =
+                new AggregateDebugReportData.Builder(dataTypes1, new BigInteger("123", 16), 123)
+                        .build();
+
+        Set<String> dataTypes2 = new HashSet<>();
+        dataTypes2.add(DebugReportApi.Type.TRIGGER_EVENT_NO_MATCHING_CONFIGURATIONS.getValue());
+        AggregateDebugReportData debugData2 =
+                new AggregateDebugReportData.Builder(dataTypes2, new BigInteger("789", 16), 789)
+                        .build();
+
+        AggregateDebugReporting adrObject =
+                new AggregateDebugReporting.Builder(
+                                1024,
+                                new BigInteger("1", 16),
+                                new ArrayList<>(List.of(debugData1, debugData2)),
+                                Uri.parse("https://cloud.coordination.test"))
+                        .build();
+
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
         // Assertion
+        verify(mUrlConnection).setRequestMethod("POST");
         assertThat(asyncFetchStatus.getResponseStatus())
                 .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
-        assertThat(fetch.isPresent()).isFalse();
-        assertThat(asyncFetchStatus.getEntityStatus())
-                .isEqualTo(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
-        verify(mUrlConnection).setRequestMethod("POST");
+        assertThat(fetch.isPresent()).isTrue();
+        assertThat(fetch.get().getAggregateDebugReportingObject()).isEqualTo(adrObject);
     }
 
     @Test

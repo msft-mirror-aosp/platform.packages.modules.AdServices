@@ -156,7 +156,7 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
                 };
 
         doReturn(flagsWithGaUxDisabled).when(FlagsFactory::getFlags);
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
+        doReturn(mConsentManagerMock).when(ConsentManager::getInstance);
         doReturn(AdServicesApiConsent.REVOKED)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -272,11 +272,11 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
                     }
                 };
         doReturn(flagsWithKillSwitchOff).when(FlagsFactory::getFlags);
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
+        doReturn(mConsentManagerMock).when(ConsentManager::getInstance);
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
-        doReturn(mUpdateWorker).when(() -> ScheduleCustomAudienceUpdateWorker.getInstance(any()));
+        doReturn(mUpdateWorker).when(ScheduleCustomAudienceUpdateWorker::getInstance);
         doReturn(FluentFuture.from(immediateFuture(null)))
                 .when(mUpdateWorker)
                 .updateCustomAudience();
@@ -293,8 +293,7 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
         assertTrue(mUpdateServiceSpy.onStartJob(mJobParametersMock));
         jobFinishedCountDown.await();
 
-        ExtendedMockito.verify(
-                () -> ScheduleCustomAudienceUpdateWorker.getInstance(mUpdateServiceSpy));
+        ExtendedMockito.verify(ScheduleCustomAudienceUpdateWorker::getInstance);
         verify(mUpdateWorker).updateCustomAudience();
         verify(mUpdateServiceSpy).jobFinished(mJobParametersMock, false);
         verifyNoMoreInteractions(staticMockMarker(ScheduleCustomAudienceUpdateWorker.class));
@@ -380,9 +379,9 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
                     }
                 };
         doReturn(flagsEnabledScheduleUpdate).when(FlagsFactory::getFlags);
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
+        doReturn(mConsentManagerMock).when(ConsentManager::getInstance);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
-        doReturn(mUpdateWorker).when(() -> ScheduleCustomAudienceUpdateWorker.getInstance(any()));
+        doReturn(mUpdateWorker).when(ScheduleCustomAudienceUpdateWorker::getInstance);
         doReturn(
                         FluentFuture.from(
                                 immediateFailedFuture(new InterruptedException("testing timeout"))))
@@ -399,8 +398,7 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
         assertTrue(mUpdateServiceSpy.onStartJob(mJobParametersMock));
         jobFinishedCountDown.await();
 
-        ExtendedMockito.verify(
-                () -> ScheduleCustomAudienceUpdateWorker.getInstance(mUpdateServiceSpy));
+        ExtendedMockito.verify(ScheduleCustomAudienceUpdateWorker::getInstance);
         verify(mUpdateWorker).updateCustomAudience();
         verify(mUpdateServiceSpy).jobFinished(mJobParametersMock, false);
         verifyNoMoreInteractions(staticMockMarker(ScheduleCustomAudienceUpdateWorker.class));
@@ -428,9 +426,9 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
                     }
                 };
         doReturn(flagsEnabledScheduleUpdate).when(FlagsFactory::getFlags);
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
+        doReturn(mConsentManagerMock).when(ConsentManager::getInstance);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
-        doReturn(mUpdateWorker).when(() -> ScheduleCustomAudienceUpdateWorker.getInstance(any()));
+        doReturn(mUpdateWorker).when(ScheduleCustomAudienceUpdateWorker::getInstance);
 
         doReturn(
                         FluentFuture.from(
@@ -450,8 +448,7 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
         assertTrue(mUpdateServiceSpy.onStartJob(mJobParametersMock));
         jobFinishedCountDown.await();
 
-        ExtendedMockito.verify(
-                () -> ScheduleCustomAudienceUpdateWorker.getInstance(mUpdateServiceSpy));
+        ExtendedMockito.verify(ScheduleCustomAudienceUpdateWorker::getInstance);
         verify(mUpdateWorker).updateCustomAudience();
         verify(mUpdateServiceSpy).jobFinished(mJobParametersMock, false);
         verifyNoMoreInteractions(staticMockMarker(ScheduleCustomAudienceUpdateWorker.class));
@@ -462,7 +459,7 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
         AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(mContext);
         JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
-        doReturn(mUpdateWorker).when(() -> ScheduleCustomAudienceUpdateWorker.getInstance(any()));
+        doReturn(mUpdateWorker).when(ScheduleCustomAudienceUpdateWorker::getInstance);
         doNothing().when(mUpdateWorker).stopWork();
         assertTrue(mUpdateServiceSpy.onStopJob(mJobParametersMock));
         verify(mUpdateWorker).stopWork();
@@ -650,9 +647,9 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
     private void testOnStartJobUpdateTimeoutHandled() throws InterruptedException {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
+        doReturn(mConsentManagerMock).when(ConsentManager::getInstance);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
-        doReturn(mUpdateWorker).when(() -> ScheduleCustomAudienceUpdateWorker.getInstance(any()));
+        doReturn(mUpdateWorker).when(ScheduleCustomAudienceUpdateWorker::getInstance);
         doReturn(FluentFuture.from(immediateFailedFuture(new TimeoutException("testing timeout"))))
                 .when(mUpdateWorker)
                 .updateCustomAudience();
@@ -667,8 +664,7 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
         assertTrue(mUpdateServiceSpy.onStartJob(mJobParametersMock));
         jobFinishedCountDown.await();
 
-        ExtendedMockito.verify(
-                () -> ScheduleCustomAudienceUpdateWorker.getInstance(mUpdateServiceSpy));
+        ExtendedMockito.verify(ScheduleCustomAudienceUpdateWorker::getInstance);
         verify(mUpdateWorker).updateCustomAudience();
         verify(mUpdateServiceSpy).jobFinished(mJobParametersMock, false);
         verifyNoMoreInteractions(staticMockMarker(ScheduleCustomAudienceUpdateWorker.class));
@@ -677,11 +673,11 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
     private void testOnStartJobUpdateSuccess() throws InterruptedException {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
+        doReturn(mConsentManagerMock).when(ConsentManager::getInstance);
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
-        doReturn(mUpdateWorker).when(() -> ScheduleCustomAudienceUpdateWorker.getInstance(any()));
+        doReturn(mUpdateWorker).when(ScheduleCustomAudienceUpdateWorker::getInstance);
         doReturn(FluentFuture.from(immediateFuture(null)))
                 .when(mUpdateWorker)
                 .updateCustomAudience();
@@ -696,8 +692,7 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
         assertTrue(mUpdateServiceSpy.onStartJob(mJobParametersMock));
         jobFinishedCountDown.await();
 
-        ExtendedMockito.verify(
-                () -> ScheduleCustomAudienceUpdateWorker.getInstance(mUpdateServiceSpy));
+        ExtendedMockito.verify(ScheduleCustomAudienceUpdateWorker::getInstance);
         verify(mUpdateWorker).updateCustomAudience();
         verify(mUpdateServiceSpy).jobFinished(mJobParametersMock, false);
         verifyNoMoreInteractions(staticMockMarker(ScheduleCustomAudienceUpdateWorker.class));
@@ -728,7 +723,7 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
     }
 
     private void testOnStartJobConsentRevokedGaUxEnabled() {
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
+        doReturn(mConsentManagerMock).when(ConsentManager::getInstance);
         doReturn(AdServicesApiConsent.REVOKED)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);

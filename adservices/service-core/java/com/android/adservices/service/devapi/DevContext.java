@@ -37,13 +37,13 @@ public abstract class DevContext {
      * Bogus package name used on test cases that emulate cases where the developer options is
      * disabled.
      */
-    public static final String UNKNOWN_APP_BECAUSE_DEV_OPTIONS_IS_DISABLED =
+    public static final String UNKNOWN_APP_BECAUSE_DEVICE_DEV_OPTIONS_IS_DISABLED =
             "unknown.app.because.dev.options.is.disabled";
 
     /**
-     * @return {@code true} if the developer options are enabled for this service call.
+     * @return {@code true} if the device's developer options are enabled for this service call.
      */
-    public abstract boolean getDevOptionsEnabled();
+    public abstract boolean getDeviceDevOptionsEnabled();
 
     // TODO(b/356709022): remove @Nullable
 
@@ -70,8 +70,8 @@ public abstract class DevContext {
 
     /** Returns a new instance of {@link DevContext} with developer options disabled. */
     public static DevContext createForDevOptionsDisabled() {
-        return DevContext.builder(UNKNOWN_APP_BECAUSE_DEV_OPTIONS_IS_DISABLED)
-                .setDevOptionsEnabled(false)
+        return DevContext.builder(UNKNOWN_APP_BECAUSE_DEVICE_DEV_OPTIONS_IS_DISABLED)
+                .setDeviceDevOptionsEnabled(false)
                 .build();
     }
 
@@ -83,7 +83,7 @@ public abstract class DevContext {
      */
     public static DevContext createForDevIdentity() {
         return DevContext.builder(ApplicationContextSingleton.get().getPackageName())
-                .setDevOptionsEnabled(true)
+                .setDeviceDevOptionsEnabled(true)
                 .build();
     }
 
@@ -91,7 +91,7 @@ public abstract class DevContext {
     @AutoValue.Builder
     public abstract static class Builder {
         /** Sets the value for the dev options enabled flag */
-        public abstract DevContext.Builder setDevOptionsEnabled(boolean flag);
+        public abstract DevContext.Builder setDeviceDevOptionsEnabled(boolean flag);
 
         // TODO(b/356709022): remove @Nullable
 

@@ -105,8 +105,7 @@ public final class EventReportingJobService extends JobService {
                                     FlagsFactory.getFlags()
                                             .getMeasurementMaxEventReportUploadRetryWindowMs();
                             new EventReportingJobHandler(
-                                            DatastoreManagerFactory.getDatastoreManager(
-                                                    getApplicationContext()),
+                                            DatastoreManagerFactory.getDatastoreManager(),
                                             FlagsFactory.getFlags(),
                                             AdServicesLoggerImpl.getInstance(),
                                             ReportingStatus.ReportType.EVENT,

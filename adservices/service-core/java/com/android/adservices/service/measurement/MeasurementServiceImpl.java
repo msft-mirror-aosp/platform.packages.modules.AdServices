@@ -56,7 +56,6 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.download.MddJob;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.PermissionHelper;
@@ -131,11 +130,11 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             @NonNull CachedFlags flags,
             @NonNull AppImportanceFilter appImportanceFilter) {
         this(
-                MeasurementImpl.getInstance(context),
+                MeasurementImpl.getInstance(),
                 context,
                 clock,
                 consentManager,
-                Throttler.getInstance(FlagsFactory.getFlags()),
+                Throttler.getInstance(),
                 flags,
                 AdServicesLoggerImpl.getInstance(),
                 appImportanceFilter,

@@ -201,10 +201,7 @@ public class PackageChangedReceiver extends BroadcastReceiver {
         LogUtil.d("Package Fully Removed:" + packageUri);
         sBackgroundExecutor.execute(
                 () ->
-                        MeasurementImpl.getInstance(
-                                        SdkLevel.isAtLeastS()
-                                                ? context
-                                                : context.getApplicationContext())
+                        MeasurementImpl.getInstance()
                                 .deletePackageRecords(packageUri, System.currentTimeMillis()));
 
         // Log wipeout event triggered by request to uninstall package on device
@@ -223,7 +220,7 @@ public class PackageChangedReceiver extends BroadcastReceiver {
         LogUtil.d("Package Data Cleared: " + packageUri);
         sBackgroundExecutor.execute(
                 () -> {
-                    MeasurementImpl.getInstance(context)
+                    MeasurementImpl.getInstance()
                             .deletePackageRecords(packageUri, System.currentTimeMillis());
                 });
 
@@ -242,7 +239,7 @@ public class PackageChangedReceiver extends BroadcastReceiver {
         LogUtil.d("Package Added: " + packageUri);
         sBackgroundExecutor.execute(
                 () ->
-                        MeasurementImpl.getInstance(context)
+                        MeasurementImpl.getInstance()
                                 .doInstallAttribution(packageUri, System.currentTimeMillis()));
     }
 
@@ -390,7 +387,7 @@ public class PackageChangedReceiver extends BroadcastReceiver {
     @VisibleForTesting
     CustomAudienceDatabase getCustomAudienceDatabase(@NonNull Context context) {
         Objects.requireNonNull(context);
-        return CustomAudienceDatabase.getInstance(context);
+        return CustomAudienceDatabase.getInstance();
     }
 
     /**
@@ -402,7 +399,7 @@ public class PackageChangedReceiver extends BroadcastReceiver {
     @VisibleForTesting
     SharedStorageDatabase getSharedStorageDatabase(@NonNull Context context) {
         Objects.requireNonNull(context);
-        return SharedStorageDatabase.getInstance(context);
+        return SharedStorageDatabase.getInstance();
     }
 
     private void logWipeoutStats(WipeoutStatus wipeoutStatus, String appPackageName) {

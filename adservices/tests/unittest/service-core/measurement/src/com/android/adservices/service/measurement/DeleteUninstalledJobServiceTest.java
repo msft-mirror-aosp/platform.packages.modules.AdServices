@@ -354,8 +354,7 @@ public final class DeleteUninstalledJobServiceTest
 
     private void runWithMocks(TestUtils.RunnableWithThrow execute) throws Exception {
         // Setup mock everything in job
-        ExtendedMockito.doReturn(mMockMeasurementImpl)
-                .when(() -> MeasurementImpl.getInstance(any()));
+        ExtendedMockito.doReturn(mMockMeasurementImpl).when(MeasurementImpl::getInstance);
         doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
         doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
         ExtendedMockito.doNothing().when(() -> DeleteUninstalledJobService.schedule(any(), any()));

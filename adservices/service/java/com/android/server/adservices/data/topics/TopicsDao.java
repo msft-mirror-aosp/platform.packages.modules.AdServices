@@ -40,7 +40,7 @@ import java.util.Set;
  *
  * @hide
  */
-public class TopicsDao {
+public final class TopicsDao {
     private static final Object LOCK = new Object();
     private static TopicsDao sSingleton;
 

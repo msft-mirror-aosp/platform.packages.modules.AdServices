@@ -244,10 +244,12 @@ java_library {
     sdk_version: "module_current",
     srcs: [
         "java/com/android/adservices/shared/util/ProtoParser.java",
+        "java/com/android/adservices/shared/errorlogging/AdServicesErrorLogger.java",
     ],
     static_libs: [
         "adservices-shared-proto-lite",
         "adservices-shared-util",
+        "adservices-statsd",
     ],
     libs: [
         "framework-annotations-lib",
@@ -282,7 +284,7 @@ java_library {
         "truth",
     ],
     libs: [
-        "framework-connectivity",
+        "framework-connectivity.stubs.module_lib",
     ],
     visibility: [
         "//packages/modules/AdServices:__subpackages__",

@@ -1,1 +1,0 @@
-rule com.android.sdksandbox.flags.** com.android.sdksandbox.service.flags.@1

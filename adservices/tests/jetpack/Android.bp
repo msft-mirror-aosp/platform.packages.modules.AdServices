@@ -78,8 +78,8 @@ java_defaults {
         "adservices-cts-test-utility",
     ],
     libs: [
-        "android.test.base",
-        "framework-sdkextensions",
+        "android.test.base.stubs.system",
+        "framework-sdkextensions.stubs.module_lib",
     ],
     test_suites: [
         "general-tests",

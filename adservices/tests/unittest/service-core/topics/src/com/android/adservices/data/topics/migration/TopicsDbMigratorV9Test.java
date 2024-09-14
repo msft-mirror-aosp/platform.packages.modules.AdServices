@@ -49,7 +49,7 @@ import java.util.Map;
 public class TopicsDbMigratorV9Test {
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     // The database is created with V8 and will migrate to V9.
-    private final TopicsDbHelperV8 mTopicsDbHelper = TopicsDbHelperV8.getInstance(sContext);
+    private final TopicsDbHelperV8 mTopicsDbHelper = TopicsDbHelperV8.getInstance();
 
     private MockitoSession mStaticMockSession;
     @Mock private Flags mMockFlags;

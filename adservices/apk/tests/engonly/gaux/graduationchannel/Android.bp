@@ -31,7 +31,7 @@ android_test {
         "platform-test-rules",
     ],
     libs: [
-        "android.test.base",
+        "android.test.base.stubs.system",
         "framework-adservices-lib",
     ],
     test_suites: [

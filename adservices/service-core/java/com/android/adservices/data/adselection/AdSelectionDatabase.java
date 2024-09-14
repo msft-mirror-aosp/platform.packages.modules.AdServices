@@ -18,7 +18,6 @@ package com.android.adservices.data.adselection;
 
 import android.content.Context;
 
-import androidx.annotation.NonNull;
 import androidx.room.AutoMigration;
 import androidx.room.Database;
 import androidx.room.RoomDatabase;
@@ -26,8 +25,9 @@ import androidx.room.TypeConverters;
 
 import com.android.adservices.data.common.FledgeRoomConverters;
 import com.android.adservices.service.common.compat.FileCompatUtils;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 
-import java.util.Objects;
+import com.google.errorprone.annotations.concurrent.GuardedBy;
 
 /** Room based database for Ad Selection. */
 @Database(
@@ -64,11 +64,11 @@ public abstract class AdSelectionDatabase extends RoomDatabase {
     public static final String DATABASE_NAME =
             FileCompatUtils.getAdservicesFilename("adselection.db");
 
-    private static volatile AdSelectionDatabase sSingleton = null;
+    @GuardedBy("SINGLETON_LOCK")
+    private static volatile AdSelectionDatabase sSingleton;
 
     /** Returns an instance of the AdSelectionDatabase given a context. */
-    public static AdSelectionDatabase getInstance(@NonNull Context context) {
-        Objects.requireNonNull(context, "Context must be provided.");
+    public static AdSelectionDatabase getInstance() {
         // Initialization pattern recommended on page 334 of "Effective Java" 3rd edition
         AdSelectionDatabase singleReadResult = sSingleton;
         if (singleReadResult != null) {
@@ -76,6 +76,7 @@ public abstract class AdSelectionDatabase extends RoomDatabase {
         }
         synchronized (SINGLETON_LOCK) {
             if (sSingleton == null) {
+                Context context = ApplicationContextSingleton.get();
                 sSingleton =
                         FileCompatUtils.roomDatabaseBuilderHelper(
                                         context, AdSelectionDatabase.class, DATABASE_NAME)

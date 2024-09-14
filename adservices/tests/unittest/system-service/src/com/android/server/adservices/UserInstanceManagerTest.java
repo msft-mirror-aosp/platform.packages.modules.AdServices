@@ -22,12 +22,13 @@ import static com.android.server.adservices.data.topics.TopicsTables.DUMMY_MODEL
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
+
 import android.adservices.topics.Topic;
 import android.app.adservices.topics.TopicParcel;
-import android.content.Context;
 
-import androidx.test.core.app.ApplicationProvider;
-
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.server.adservices.consent.AppConsentManager;
 import com.android.server.adservices.consent.ConsentManager;
 import com.android.server.adservices.data.topics.TopicsDao;
@@ -39,6 +40,7 @@ import com.android.server.adservices.rollback.RollbackHandlingManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -46,23 +48,23 @@ import java.util.List;
 import java.util.Set;
 
 /** Tests for {@link UserInstanceManager} */
-public class UserInstanceManagerTest {
-    private static final Context APPLICATION_CONTEXT = ApplicationProvider.getApplicationContext();
-    private static final String TEST_BASE_PATH =
-            APPLICATION_CONTEXT.getFilesDir().getAbsolutePath();
-    private static final String TOPICS_DAO_DUMP = "D'OHump!";
+public final class UserInstanceManagerTest extends AdServicesMockitoTestCase {
 
+    private static final String TOPICS_DAO_DUMP = "D'OHump!";
+    private static final int TEST_MODULE_VERSION = 339990000;
+
+    private final String mTestBasePath = mContext.getFilesDir().getAbsolutePath();
     private final TopicsDbHelper mDBHelper = TopicsDbTestUtil.getDbHelperForTest();
     private TopicsDao mTopicsDao;
 
     private UserInstanceManager mUserInstanceManager;
 
-    private static final int TEST_MODULE_VERSION = 339990000;
+    @Mock private TopicsDao mMockTopicsDao; // used to test dump
 
     @Before
     public void setup() throws IOException {
         mTopicsDao = new TopicsDao(mDBHelper);
-        mUserInstanceManager = new UserInstanceManager(mTopicsDao, TEST_BASE_PATH);
+        mUserInstanceManager = new UserInstanceManager(mTopicsDao, mTestBasePath);
     }
 
     @After
@@ -237,14 +239,14 @@ public class UserInstanceManagerTest {
 
     @Test
     public void testDump() throws Exception {
-        TopicsDao topicsDao =
-                new TopicsDao(mDBHelper) {
-                    @Override
-                    public void dump(PrintWriter writer, String prefix, String[] args) {
-                        writer.println(TOPICS_DAO_DUMP);
-                    }
-                };
-        UserInstanceManager mgr = new UserInstanceManager(topicsDao, TEST_BASE_PATH);
+        doAnswer(
+                        inv -> {
+                            ((PrintWriter) inv.getArgument(0)).println(TOPICS_DAO_DUMP);
+                            return null;
+                        })
+                .when(mMockTopicsDao)
+                .dump(any(), any(), any());
+        UserInstanceManager mgr = new UserInstanceManager(mMockTopicsDao, mTestBasePath);
 
         String[] args = new String[0];
         String dump = dump(pw -> mgr.dump(pw, args));

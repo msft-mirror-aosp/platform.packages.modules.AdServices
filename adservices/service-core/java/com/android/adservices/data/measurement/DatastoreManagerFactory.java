@@ -16,15 +16,11 @@
 
 package com.android.adservices.data.measurement;
 
-import android.content.Context;
-
 /** Factory for generating {@link DatastoreManager} */
-public class DatastoreManagerFactory {
+public final class DatastoreManagerFactory {
 
-    /**
-     * Get {@link DatastoreManager} instance.
-     */
-    public static DatastoreManager getDatastoreManager(Context context) {
-        return SQLDatastoreManager.getInstance(context);
+    /** Get {@link DatastoreManager} instance. */
+    public static DatastoreManager getDatastoreManager() {
+        return SQLDatastoreManager.getInstance();
     }
 }

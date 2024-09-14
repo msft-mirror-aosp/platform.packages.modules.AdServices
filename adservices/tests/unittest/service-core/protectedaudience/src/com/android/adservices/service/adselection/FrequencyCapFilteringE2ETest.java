@@ -508,78 +508,69 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
             }
         }
 
-        Throttler.destroyExistingThrottler();
-
         doNothing()
                 .when(mFledgeAuthorizationFilterSpy)
                 .assertAdTechAllowed(any(), any(), any(), anyInt(), anyInt());
 
-        try {
-            Flags flagsWithLowRateLimit = new FlagsWithLowRateLimit();
+        Flags flagsWithLowRateLimit = new FlagsWithLowRateLimit();
 
-            mAdFilteringFeatureFactory =
-                    new AdFilteringFeatureFactory(
-                            mAppInstallDao, mFrequencyCapDaoSpy, flagsWithLowRateLimit);
+        mAdFilteringFeatureFactory =
+                new AdFilteringFeatureFactory(
+                        mAppInstallDao, mFrequencyCapDaoSpy, flagsWithLowRateLimit);
 
-            mAdSelectionServiceImpl =
-                    new AdSelectionServiceImpl(
-                            mAdSelectionEntryDao,
-                            mAppInstallDao,
-                            mCustomAudienceDao,
-                            mEncodedPayloadDao,
-                            mFrequencyCapDaoSpy,
-                            mEncryptionKeyDao,
-                            mEnrollmentDao,
-                            mAdServicesHttpsClientMock,
-                            mDevContextFilterMock,
-                            mLightweightExecutorService,
-                            mBackgroundExecutorService,
-                            mScheduledExecutor,
-                            mSpyContext,
-                            mAdServicesLoggerMock,
-                            flagsWithLowRateLimit,
-                            CallingAppUidSupplierProcessImpl.create(),
-                            mFledgeAuthorizationFilterSpy,
-                            new AdSelectionServiceFilter(
-                                    mSpyContext,
-                                    mFledgeConsentFilterMock,
-                                    flagsWithLowRateLimit,
-                                    mAppImportanceFilterMock,
-                                    mFledgeAuthorizationFilterSpy,
-                                    mFledgeAllowListsFilterMock,
-                                    new FledgeApiThrottleFilter(
-                                            Throttler.getInstance(flagsWithLowRateLimit),
-                                            mAdServicesLoggerMock)),
-                            mAdFilteringFeatureFactory,
-                            mConsentManagerMock,
-                            mMultiCloudSupportStrategy,
-                            mAdSelectionDebugReportDao,
-                            mAdIdFetcher,
-                            mUnusedKAnonSignJoinFactory,
-                            false,
-                            mRetryStrategyFactory,
-                            mConsentedDebugConfigurationGeneratorFactory,
-                            mEgressConfigurationGenerator,
-                            CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+        mAdSelectionServiceImpl =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mAppInstallDao,
+                        mCustomAudienceDao,
+                        mEncodedPayloadDao,
+                        mFrequencyCapDaoSpy,
+                        mEncryptionKeyDao,
+                        mEnrollmentDao,
+                        mAdServicesHttpsClientMock,
+                        mDevContextFilterMock,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        mSpyContext,
+                        mAdServicesLoggerMock,
+                        flagsWithLowRateLimit,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterSpy,
+                        new AdSelectionServiceFilter(
+                                mSpyContext,
+                                mFledgeConsentFilterMock,
+                                flagsWithLowRateLimit,
+                                mAppImportanceFilterMock,
+                                mFledgeAuthorizationFilterSpy,
+                                mFledgeAllowListsFilterMock,
+                                new FledgeApiThrottleFilter(
+                                        Throttler.newInstance(flagsWithLowRateLimit),
+                                        mAdServicesLoggerMock)),
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock,
+                        mMultiCloudSupportStrategy,
+                        mAdSelectionDebugReportDao,
+                        mAdIdFetcher,
+                        mUnusedKAnonSignJoinFactory,
+                        false,
+                        mRetryStrategyFactory,
+                        mConsentedDebugConfigurationGeneratorFactory,
+                        mEgressConfigurationGenerator,
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
 
-            UpdateAdCounterHistogramTestCallback callback =
-                    callUpdateAdCounterHistogram(mInputParams);
+        UpdateAdCounterHistogramTestCallback callback = callUpdateAdCounterHistogram(mInputParams);
 
-            assertWithMessage("Callback failed, was: %s", callback)
-                    .that(callback.mIsSuccess)
-                    .isTrue();
+        assertWithMessage("Callback failed, was: %s", callback).that(callback.mIsSuccess).isTrue();
 
-            // Call again within the rate limit
-            callback = callUpdateAdCounterHistogram(mInputParams);
+        // Call again within the rate limit
+        callback = callUpdateAdCounterHistogram(mInputParams);
 
-            assertThat(callback.mIsSuccess).isFalse();
-            assertThat(callback.mFledgeErrorResponse.getStatusCode())
-                    .isEqualTo(AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED);
+        assertThat(callback.mIsSuccess).isFalse();
+        assertThat(callback.mFledgeErrorResponse.getStatusCode())
+                .isEqualTo(AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED);
 
-            verifyNoMoreInteractions(mFrequencyCapDaoSpy);
-        } finally {
-            Throttler.destroyExistingThrottler();
-        }
+        verifyNoMoreInteractions(mFrequencyCapDaoSpy);
     }
 
     @Test

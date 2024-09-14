@@ -94,10 +94,6 @@ public class NotificationPages {
                 notificationTitle = R.string.notificationUI_u18_notification_title;
                 notificationHeader = R.string.notificationUI_u18_header_title;
                 break;
-            case RVC_UX:
-                notificationTitle = R.string.notificationUI_u18_notification_title;
-                notificationHeader = R.string.notificationUI_u18_header_title;
-                break;
         }
 
         Log.d(

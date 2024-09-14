@@ -60,6 +60,7 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLoggerImpl;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
@@ -76,6 +77,7 @@ import org.mockito.Mock;
 import java.util.concurrent.ExecutorService;
 
 @MockStatic(PeriodicEncodingJobService.class)
+@RequiresSdkLevelAtLeastT(reason = "Protected App Signals is enabled for T+")
 public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMockitoTestCase {
 
     private static final int API_NAME = AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS;
@@ -126,7 +128,7 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
                         mEnrollmentDaoMock,
                         mUpdateSignalsProcessReportedLoggerMock);
 
-        mDevContext = DevContext.builder(PACKAGE).setDevOptionsEnabled(false).build();
+        mDevContext = DevContext.builder(PACKAGE).setDeviceDevOptionsEnabled(false).build();
         mInput = new UpdateSignalsInput.Builder(URI, PACKAGE).build();
 
         // Set up the mocks for a success flow -- individual tests that want a failure can overwrite

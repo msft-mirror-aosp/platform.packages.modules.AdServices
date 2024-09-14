@@ -29,11 +29,13 @@ import static com.android.adservices.data.topics.TopicsTables.CREATE_TABLE_USAGE
 
 import static com.google.common.truth.Truth.assertThat;
 
-import android.annotation.NonNull;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 
 import com.android.adservices.data.DbHelper;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
+
+import com.google.errorprone.annotations.concurrent.GuardedBy;
 
 import java.io.File;
 import java.util.List;
@@ -42,20 +44,23 @@ import java.util.List;
  * Class to get the state of Topics' database on version 8 for test purpose. V8 doesn't include
  * ReturnedEncryptedTopic Table.
  */
-public class TopicsDbHelperV8 extends DbHelper {
+public final class TopicsDbHelperV8 extends DbHelper {
     private static final int CURRENT_DATABASE_VERSION = 8;
     private static final String DATABASE_NAME_TOPICS_MIGRATION = "adservices_topics_migration.db";
-    private static TopicsDbHelperV8 sSingleton = null;
+    private static final Object LOCK = new Object();
+
+    @GuardedBy("LOCK")
+    private static TopicsDbHelperV8 sSingleton;
 
     TopicsDbHelperV8(Context context, String dbName, int dbVersion) {
         super(context, dbName, dbVersion);
     }
 
     /** Returns an instance of the DbHelper given a context. */
-    @NonNull
-    public static TopicsDbHelperV8 getInstance(@NonNull Context context) {
-        synchronized (TopicsDbHelperV7.class) {
+    public static TopicsDbHelperV8 getInstance() {
+        synchronized (LOCK) {
             if (sSingleton == null) {
+                Context context = ApplicationContextSingleton.get();
                 clearDatabase(context);
                 sSingleton =
                         new TopicsDbHelperV8(
@@ -73,7 +78,7 @@ public class TopicsDbHelperV8 extends DbHelper {
     }
 
     // Clear the database. Ensure there is no stale database with a different version existed.
-    private static void clearDatabase(@NonNull Context context) {
+    private static void clearDatabase(Context context) {
         File databaseFile = context.getDatabasePath(DATABASE_NAME_TOPICS_MIGRATION);
         if (databaseFile.exists()) {
             assertThat(databaseFile.delete()).isTrue();

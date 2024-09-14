@@ -65,6 +65,7 @@ public class E2EMockTest extends E2EAbstractMockTest {
                         mAsyncSourceFetcher,
                         mAsyncTriggerFetcher,
                         mDebugReportApi,
+                        mAggregateDebugReportApi,
                         mFlags);
     }
 }

@@ -477,7 +477,7 @@ public final class AttributionFallbackJobServiceTest
         doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
         doReturn(Mockito.mock(Context.class)).when(mSpyService).getApplicationContext();
         ExtendedMockito.doReturn(mMockDatastoreManager)
-                .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
+                .when(DatastoreManagerFactory::getDatastoreManager);
         ExtendedMockito.doNothing()
                 .when(() -> AttributionFallbackJobService.schedule(any(), any()));
         ExtendedMockito.doReturn(false)

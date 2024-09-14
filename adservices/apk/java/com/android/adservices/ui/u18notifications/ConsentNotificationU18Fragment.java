@@ -15,7 +15,6 @@
  */
 package com.android.adservices.ui.u18notifications;
 
-import static com.android.adservices.service.consent.ConsentManager.MANUAL_INTERACTIONS_RECORDED;
 import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.LANDING_PAGE_DISMISSED;
 import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.LANDING_PAGE_DISPLAYED;
 import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.LANDING_PAGE_GOT_IT_CLICKED;
@@ -24,7 +23,6 @@ import static com.android.adservices.ui.notifications.ConsentNotificationActivit
 import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.LANDING_PAGE_SCROLLED_TO_BOTTOM;
 import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.LANDING_PAGE_SETTINGS_BUTTON_CLICKED;
 import static com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity.FROM_NOTIFICATION_KEY;
-import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.RVC_UX;
 
 import android.content.Context;
 import android.content.Intent;
@@ -46,7 +44,6 @@ import androidx.fragment.app.Fragment;
 
 import com.android.adservices.api.R;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.ui.notifications.ConsentNotificationActivity;
 import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
@@ -68,11 +65,6 @@ public class ConsentNotificationU18Fragment extends Fragment {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         setupListeners(savedInstanceState);
         ConsentNotificationActivity.handleAction(LANDING_PAGE_DISPLAYED, getContext());
-        if (ConsentManager.getInstance().getUx() == RVC_UX
-                && ConsentManager.getInstance().getUserManualInteractionWithConsent()
-                        != MANUAL_INTERACTIONS_RECORDED) {
-            ConsentManager.getInstance().enable(requireContext(), AdServicesApiType.MEASUREMENTS);
-        }
     }
 
     @Override

@@ -379,7 +379,7 @@ public final class DevContextAccessResolverTest extends AdServicesMockitoTestCas
     }
 
     private DevContext getDevContextEnabled() {
-        return DevContext.builder(mPackageName).setDevOptionsEnabled(true).build();
+        return DevContext.builder(mPackageName).setDeviceDevOptionsEnabled(true).build();
     }
 
     private static DevContext getDevContextDisabled() {

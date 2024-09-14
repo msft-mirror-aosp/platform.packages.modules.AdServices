@@ -89,7 +89,7 @@ public class AdServicesExtDataStorageServiceDebugProxyTest {
         doReturn(mEditor).when(mEditor).putBoolean(any(), anyBoolean());
         doReturn(mEditor).when(mEditor).putInt(any(), anyInt());
         doNothing().when(mEditor).apply();
-        mSpyProxy = Mockito.spy(AdServicesExtDataStorageServiceDebugProxy.getInstance(mContext));
+        mSpyProxy = Mockito.spy(AdServicesExtDataStorageServiceDebugProxy.newInstance(mContext));
     }
 
     @Test

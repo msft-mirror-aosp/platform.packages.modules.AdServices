@@ -48,7 +48,7 @@ android_test {
         "adservices-clients",
     ],
     libs: [
-        "android.test.base",
+        "android.test.base.stubs.system",
         "android.test.mock.stubs",
         "framework-adservices.impl",
         "framework-annotations-lib",
@@ -95,7 +95,7 @@ android_test {
         "adservices-clients",
     ],
     libs: [
-        "android.test.base",
+        "android.test.base.stubs.system",
         "android.test.mock.stubs",
         "android.ext.adservices",
         "framework-annotations-lib",

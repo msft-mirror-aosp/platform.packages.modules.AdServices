@@ -30,7 +30,6 @@ import android.util.Pair;
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.appsearch.AppSearchMeasurementRollbackWorker;
 import com.android.internal.annotations.VisibleForTesting;
-import com.android.modules.utils.build.SdkLevel;
 
 import java.util.List;
 import java.util.Objects;
@@ -129,10 +128,9 @@ public final class MeasurementRollbackCompatManager {
         return true;
     }
 
+    @SuppressWarnings("NewApi")
     private static MeasurementRollbackWorker<?> getWorker(Context context) {
-        return SdkLevel.isAtLeastS()
-                ? AppSearchMeasurementRollbackWorker.getInstance(context, getUserId())
-                : new AdServicesExtStorageMeasurementRollbackWorker(context);
+        return AppSearchMeasurementRollbackWorker.getInstance(context, getUserId());
     }
 
     @VisibleForTesting
