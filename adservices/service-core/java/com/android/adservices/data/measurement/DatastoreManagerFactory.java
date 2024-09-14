@@ -16,13 +16,11 @@
 
 package com.android.adservices.data.measurement;
 
-import com.android.adservices.shared.common.ApplicationContextSingleton;
-
 /** Factory for generating {@link DatastoreManager} */
 public final class DatastoreManagerFactory {
 
     /** Get {@link DatastoreManager} instance. */
     public static DatastoreManager getDatastoreManager() {
-        return SQLDatastoreManager.getInstance(ApplicationContextSingleton.get());
+        return SQLDatastoreManager.getInstance();
     }
 }

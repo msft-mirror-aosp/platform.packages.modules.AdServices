@@ -134,7 +134,7 @@ public class DevContextFilter {
                             + " disabled and using package name %s",
                     callingAppUid, callingAppPackage);
             return builder.setCallingAppPackageName(callingAppPackage)
-                    .setDevOptionsEnabled(false)
+                    .setDeviceDevOptionsEnabled(false)
                     .build();
         }
 
@@ -154,7 +154,7 @@ public class DevContextFilter {
                     callingAppUid,
                     callingAppPackage);
             return builder.setCallingAppPackageName(callingAppPackage)
-                    .setDevOptionsEnabled(false)
+                    .setDeviceDevOptionsEnabled(false)
                     .build();
         }
         builder.setCallingAppPackageName(callingAppPackage);
@@ -162,12 +162,12 @@ public class DevContextFilter {
             LogUtil.v(
                     "createDevContext(%d): app %s not debuggable, creating DevContext as disabled",
                     callingAppUid, callingAppPackage);
-            builder.setDevOptionsEnabled(false);
+            builder.setDeviceDevOptionsEnabled(false);
         } else {
             LogUtil.v(
                     "createDevContext(%d): creating DevContext for calling app with package %s",
                     callingAppUid, callingAppPackage);
-            builder.setDevOptionsEnabled(true);
+            builder.setDeviceDevOptionsEnabled(true);
         }
         return builder.build();
     }
