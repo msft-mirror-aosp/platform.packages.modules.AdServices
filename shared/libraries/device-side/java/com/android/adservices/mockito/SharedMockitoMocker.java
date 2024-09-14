@@ -37,7 +37,7 @@ public final class SharedMockitoMocker extends AbstractMocker implements SharedM
         logV("setApplicationContextSingleton(): will use %s as appContext", context);
 
         when(context.getApplicationContext()).thenReturn(context);
-        ApplicationContextSingleton.setAsIs(context);
+        ApplicationContextSingleton.setForTests(context);
 
         return context;
     }

@@ -69,7 +69,7 @@ public final class ApplicationContextProviderTest extends SharedMockitoTestCase 
 
     @Test
     public void testOnCreate_setsSingleton() {
-        ApplicationContextSingleton.setAsIs(/* context= */ null);
+        ApplicationContextSingleton.setForTests(/* context= */ null);
         mockAppContext(mMockContext, mMockAppContext);
         mProvider.attachInfo(mMockContext, new ProviderInfo());
 

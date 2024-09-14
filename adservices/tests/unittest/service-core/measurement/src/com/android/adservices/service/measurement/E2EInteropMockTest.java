@@ -81,7 +81,6 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                         "aggregatable_with_event_disabled.json",
                         "aggregation_coordinator_origin.json",
                         "basic_aggregatable.json",
-                        "channel_capacity.json",
                         "clamp_aggregatable_report_window.json",
                         "clamp_event_report_window.json",
                         "clamp_expiry.json",
@@ -102,7 +101,6 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                         "lookback_window_precision.json",
                         "max_aggregatable_reports_per_source.json",
                         "max_event_level_reports_per_source.json",
-                        "max_trigger_state_cardinality.json",
                         "multiple_destinations.json",
                         "null_aggregatable_report.json",
                         "os_debug_reports.json",
@@ -255,6 +253,9 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                     entry(
                             FlagsConstants.KEY_MEASUREMENT_ENABLE_SOURCE_DESTINATION_LIMIT_PRIORITY,
                             "true"),
+                    entry(
+                            FlagsConstants.KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION,
+                            "11.46173"),
                     entry(FlagsConstants.KEY_MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM, "1"),
                     entry(FlagsConstants.KEY_MEASUREMENT_ENABLE_LOOKBACK_WINDOW_FILTER, "true"),
                     entry(FlagsConstants.KEY_MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED, "true"),

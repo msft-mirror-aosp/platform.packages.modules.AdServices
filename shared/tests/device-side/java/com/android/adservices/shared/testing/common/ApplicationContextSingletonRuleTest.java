@@ -52,7 +52,7 @@ public final class ApplicationContextSingletonRuleTest extends DeviceSideTestCas
     public void restorePreviousContext() {
         mLog.d("@After: restoring context as %s", mPreviousContext);
 
-        ApplicationContextSingleton.setAsIs(mPreviousContext);
+        ApplicationContextSingleton.setForTests(mPreviousContext);
     }
 
     @Test
@@ -81,7 +81,7 @@ public final class ApplicationContextSingletonRuleTest extends DeviceSideTestCas
     public void testApplicationContextSetDuringTestAndResetAtTheEnd() throws Throwable {
         Context contextBefore = mock(Context.class, "contextBefore");
         Context ruleContext = mock(Context.class, "ruleContext");
-        ApplicationContextSingleton.setAsIs(contextBefore);
+        ApplicationContextSingleton.setForTests(contextBefore);
         ApplicationContextSingletonRule rule =
                 new ApplicationContextSingletonRule(ruleContext, RESTORE_PREVIOUS);
 
@@ -106,7 +106,7 @@ public final class ApplicationContextSingletonRuleTest extends DeviceSideTestCas
             throws Throwable {
         Context contextBefore = mock(Context.class, "contextBefore");
         Context ruleContext = mock(Context.class, "ruleContext");
-        ApplicationContextSingleton.setAsIs(contextBefore);
+        ApplicationContextSingleton.setForTests(contextBefore);
         ApplicationContextSingletonRule rule =
                 new ApplicationContextSingletonRule(ruleContext, RESTORE_PREVIOUS);
         RuntimeException testFailure = new RuntimeException("D'OH!");
@@ -139,7 +139,7 @@ public final class ApplicationContextSingletonRuleTest extends DeviceSideTestCas
     public void testApplicationContextSetDuringTestAndDontResetAtTheEnd() throws Throwable {
         Context contextBefore = mock(Context.class, "contextBefore");
         Context ruleContext = mock(Context.class, "ruleContext");
-        ApplicationContextSingleton.setAsIs(contextBefore);
+        ApplicationContextSingleton.setForTests(contextBefore);
         ApplicationContextSingletonRule rule =
                 new ApplicationContextSingletonRule(ruleContext, DONT_RESTORE_PREVIOUS);
 
@@ -164,7 +164,7 @@ public final class ApplicationContextSingletonRuleTest extends DeviceSideTestCas
             throws Throwable {
         Context contextBefore = mock(Context.class, "contextBefore");
         Context ruleContext = mock(Context.class, "ruleContext");
-        ApplicationContextSingleton.setAsIs(contextBefore);
+        ApplicationContextSingleton.setForTests(contextBefore);
         ApplicationContextSingletonRule rule =
                 new ApplicationContextSingletonRule(ruleContext, DONT_RESTORE_PREVIOUS);
         RuntimeException testFailure = new RuntimeException("D'OH!");

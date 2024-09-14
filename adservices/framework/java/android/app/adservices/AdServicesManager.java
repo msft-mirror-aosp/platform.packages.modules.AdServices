@@ -16,10 +16,10 @@
 
 package android.app.adservices;
 
+import static android.Manifest.permission.DUMP;
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_MANAGER;
 
 import android.annotation.IntDef;
-import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.annotation.RequiresPermission;
 import android.app.adservices.consent.ConsentParcel;
@@ -35,6 +35,7 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.LogUtil;
 import com.android.internal.annotations.GuardedBy;
 
+import java.io.PrintWriter;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.List;
@@ -46,17 +47,21 @@ import java.util.Objects;
  *
  * @hide
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public final class AdServicesManager {
 
     public static final String AD_SERVICES_SYSTEM_SERVICE = "adservices_manager";
 
+    private static final Object SINGLETON_LOCK = new Object();
+
+    // TODO(b/366313883): get rid of this reference (and remove the Context arg from getInstance())
+    @GuardedBy("SINGLETON_LOCK")
+    private static Context sContext;
+
     @GuardedBy("SINGLETON_LOCK")
     private static AdServicesManager sSingleton;
 
     private final IAdServicesManager mService;
-    private static final Object SINGLETON_LOCK = new Object();
 
     @IntDef(value = {MEASUREMENT_DELETION})
     @Retention(RetentionPolicy.SOURCE)
@@ -66,15 +71,30 @@ public final class AdServicesManager {
 
     // TODO(b/267789077): Create bit for other APIs.
 
-    public AdServicesManager(@NonNull IAdServicesManager iAdServicesManager) {
-        Objects.requireNonNull(iAdServicesManager, "AdServicesManager is NULL!");
-        mService = iAdServicesManager;
+    public AdServicesManager(IAdServicesManager service) {
+        mService = Objects.requireNonNull(service, "IAdServicesManager cannot be null!");
     }
 
-    /** Get the singleton of AdServicesManager. Only used on T+ */
+    /**
+     * Gets the singleton instance.
+     *
+     * @param context (global) application context
+     * @return the singleton, or {@code null} when called on T- devices
+     * @throws IllegalArgumentException if called with a {@code context} that's not the same used to
+     *     lazy load the singleton in the first call.
+     */
     @Nullable
-    public static AdServicesManager getInstance(@NonNull Context context) {
+    public static AdServicesManager getInstance(Context context) {
+        Objects.requireNonNull(context, "context cannot be null");
+
         synchronized (SINGLETON_LOCK) {
+            if (sContext == null) {
+                LogUtil.i("Setting AdServicesManager static context as %s", context);
+                sContext = context;
+            } else if (sContext != context) {
+                throw new IllegalArgumentException(
+                        "getInstance(" + context + "): context already set as " + sContext);
+            }
             if (sSingleton == null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                     // Get the AdServicesManagerService's Binder from the SdkSandboxManager.
@@ -83,8 +103,8 @@ public final class AdServicesManager {
                     // (AdServicesJUnit4DeviceTest#testBinderServiceIsPublished, from
                     // CtsAdServicesDeviceTestCases)
                     LogUtil.d(
-                            "AdServicesManager.getInstance(): getting from SdkSandboxManager on"
-                                    + " TM");
+                            "AdServicesManager.getInstance(): getting binder from SdkSandboxManager"
+                                    + " on TM");
                     IBinder iBinder =
                             context.getSystemService(SdkSandboxManager.class)
                                     .getAdServicesManager();
@@ -93,14 +113,14 @@ public final class AdServicesManager {
                             new AdServicesManager(IAdServicesManager.Stub.asInterface(iBinder));
                 } else {
                     LogUtil.d(
-                            "AdServicesManager.getInstance(): getting from AdServicesManager on"
-                                    + " UDC+");
+                            "AdServicesManager.getInstance(): getting binder from AdServicesManager"
+                                    + " on UDC+");
                     sSingleton = context.getSystemService(AdServicesManager.class);
                 }
-                LogUtil.v("AdServicesManager.getInstance(): singleton set");
+                LogUtil.v("AdServicesManager.getInstance(): singleton set as %s", sSingleton);
             }
+            return sSingleton;
         }
-        return sSingleton;
     }
 
     /** Return the User Consent */
@@ -115,7 +135,7 @@ public final class AdServicesManager {
 
     /** Set the User Consent */
     @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
-    public void setConsent(@NonNull ConsentParcel consentParcel) {
+    public void setConsent(ConsentParcel consentParcel) {
         Objects.requireNonNull(consentParcel);
         try {
             mService.setConsent(consentParcel);
@@ -264,7 +284,7 @@ public final class AdServicesManager {
      * @param blockedTopicParcels the blocked topic to record
      */
     @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
-    public void recordBlockedTopic(@NonNull List<TopicParcel> blockedTopicParcels) {
+    public void recordBlockedTopic(List<TopicParcel> blockedTopicParcels) {
         try {
             mService.recordBlockedTopic(blockedTopicParcels);
         } catch (RemoteException e) {
@@ -278,7 +298,7 @@ public final class AdServicesManager {
      * @param blockedTopicParcel the blocked topic to remove
      */
     @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
-    public void removeBlockedTopic(@NonNull TopicParcel blockedTopicParcel) {
+    public void removeBlockedTopic(TopicParcel blockedTopicParcel) {
         try {
             mService.removeBlockedTopic(blockedTopicParcel);
         } catch (RemoteException e) {
@@ -759,6 +779,22 @@ public final class AdServicesManager {
             mService.setModuleEnrollmentState(enrollmentState);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Dumps its internal state. */
+    @RequiresPermission(DUMP)
+    public static void dump(PrintWriter pw) {
+        Objects.requireNonNull(pw, "PrintWriter cannot be null");
+
+        pw.printf("AdServicesManager: ");
+        synchronized (SINGLETON_LOCK) {
+            pw.printf("sContext=%s, sSingleton=%s", sContext, sSingleton);
+            if (sSingleton != null) {
+                pw.printf(" (service=%s)", sSingleton.mService);
+            }
+            pw.println();
+            return;
         }
     }
 }

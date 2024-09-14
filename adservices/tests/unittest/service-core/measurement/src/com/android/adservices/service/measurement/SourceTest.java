@@ -19,6 +19,7 @@ package com.android.adservices.service.measurement;
 import static com.android.adservices.service.measurement.Source.DEFAULT_MAX_EVENT_STATES;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -2389,5 +2390,80 @@ public final class SourceTest extends AdServicesMockitoTestCase {
         Double epsilonRetrievedConfigured =
                 withEpsilonConfigured.getConditionalEventLevelEpsilon(mMockFlags);
         assertEquals(10D, epsilonRetrievedConfigured, 0.0);
+    }
+
+    @Test
+    public void testGetInformationGainThreshold_dualDestination_event() {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
+                        .setWebDestinations(
+                                List.of(WebUtil.validUri("https://web-destination1.test")))
+                        .setSourceType(Source.SourceType.EVENT)
+                        .build();
+        when(mMockFlags.getMeasurementEnableCoarseEventReportDestinations()).thenReturn(false);
+        when(mMockFlags.getMeasurementFlexApiMaxInformationGainDualDestinationEvent())
+                .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT);
+
+        float thresholdRetrieved = source.getInformationGainThreshold(mMockFlags);
+        verify(mMockFlags).getMeasurementFlexApiMaxInformationGainDualDestinationEvent();
+        assertWithMessage("getInformationGainThreshold() dual destination event")
+                .that(thresholdRetrieved)
+                .isEqualTo(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT);
+    }
+
+    @Test
+    public void testGetInformationGainThreshold_dualDestination_navigation() {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
+                        .setWebDestinations(
+                                List.of(WebUtil.validUri("https://web-destination1.test")))
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .build();
+        when(mMockFlags.getMeasurementEnableCoarseEventReportDestinations()).thenReturn(false);
+        float infoGn = Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION;
+        when(mMockFlags.getMeasurementFlexApiMaxInformationGainDualDestinationNavigation())
+                .thenReturn(infoGn);
+
+        float thresholdRetrieved = source.getInformationGainThreshold(mMockFlags);
+        verify(mMockFlags).getMeasurementFlexApiMaxInformationGainDualDestinationNavigation();
+        assertWithMessage("getInformationGainThreshold() dual destination nav")
+                .that(thresholdRetrieved)
+                .isEqualTo(infoGn);
+    }
+
+    @Test
+    public void testGetInformationGainThreshold_singleDestination_event() {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSourceType(Source.SourceType.EVENT)
+                        .build();
+        when(mMockFlags.getMeasurementEnableCoarseEventReportDestinations()).thenReturn(true);
+        when(mMockFlags.getMeasurementFlexApiMaxInformationGainEvent())
+                .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT);
+
+        float thresholdRetrieved = source.getInformationGainThreshold(mMockFlags);
+        verify(mMockFlags).getMeasurementFlexApiMaxInformationGainEvent();
+        assertWithMessage("getInformationGainThreshold() single destination event")
+                .that(thresholdRetrieved)
+                .isEqualTo(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT);
+    }
+
+    @Test
+    public void testGetInformationGainThreshold_singleDestination_navigation() {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .build();
+        when(mMockFlags.getMeasurementEnableCoarseEventReportDestinations()).thenReturn(true);
+        when(mMockFlags.getMeasurementFlexApiMaxInformationGainNavigation())
+                .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION);
+
+        float thresholdRetrieved = source.getInformationGainThreshold(mMockFlags);
+        verify(mMockFlags).getMeasurementFlexApiMaxInformationGainNavigation();
+        assertWithMessage("getInformationGainThreshold() single destination nav")
+                .that(thresholdRetrieved)
+                .isEqualTo(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION);
     }
 }
