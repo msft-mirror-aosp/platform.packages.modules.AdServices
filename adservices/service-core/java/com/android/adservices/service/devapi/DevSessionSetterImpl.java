@@ -40,7 +40,6 @@ public class DevSessionSetterImpl implements DevSessionSetter {
 
     @VisibleForTesting static final int DAYS_UNTIL_EXPIRY = 365 * 24;
 
-    @VisibleForTesting
     public DevSessionSetterImpl(
             DatabaseClearer databaseClearer,
             DevSessionDataStore devSessionDataStore,
