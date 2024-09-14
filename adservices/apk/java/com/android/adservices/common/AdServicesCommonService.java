@@ -57,7 +57,7 @@ public class AdServicesCommonService extends Service {
                     new AdServicesCommonServiceImpl(
                             this,
                             FlagsFactory.getFlags(),
-                            UxEngine.getInstance(this),
+                            UxEngine.getInstance(),
                             UxStatesManager.getInstance(),
                             AdIdWorker.getInstance(),
                             AdServicesLoggerImpl.getInstance(),

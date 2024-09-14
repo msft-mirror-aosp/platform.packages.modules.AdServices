@@ -92,6 +92,8 @@ public final class CobaltFactory {
                                 getSystemData(context),
                                 getExecutor(),
                                 new SystemClockImpl(),
+                                // TODO(b/343722587): Parse reportsToIgnore from flags.
+                                List.of(),
                                 flags.getCobaltLoggingEnabled());
             }
             return sSingletonCobaltLogger;
@@ -132,6 +134,8 @@ public final class CobaltFactory {
                                 Duration.ofMillis(flags.getCobaltUploadServiceUnbindDelayMs()),
                                 new CobaltOperationLoggerImpl(
                                         flags.getCobaltOperationalLoggingEnabled()),
+                                // TODO(b/343722587): Parse reportsToIgnore from flags.
+                                List.of(),
                                 flags.getCobaltLoggingEnabled());
             }
             return sSingletonCobaltPeriodicJob;

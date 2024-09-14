@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Objects;
 
 /** Base class providing common functionalities to all rules. */
-abstract class AbstractRule implements TestRule, TestNamer {
+public abstract class AbstractRule implements TestRule, TestNamer {
     protected final Logger mLog;
 
     @Nullable private String mTestName = DEFAULT_TEST_NAME;

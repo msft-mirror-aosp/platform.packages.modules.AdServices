@@ -171,7 +171,7 @@ public abstract class AbstractFledgeServiceFilter {
         Uri adTechUri = Uri.parse("https://" + adTech.toString());
         boolean isLocalhostAddress =
                 WebAddresses.isLocalhost(adTechUri) || WebAddresses.isLocalhostIp(adTechUri);
-        boolean isDeveloperMode = devContext.getDevOptionsEnabled();
+        boolean isDeveloperMode = devContext.getDeviceDevOptionsEnabled();
         if (isLocalhostAddress && isDeveloperMode) {
             // Skip check for localhost and 127.0.0.1 addresses for debuggable CTS.
             return;

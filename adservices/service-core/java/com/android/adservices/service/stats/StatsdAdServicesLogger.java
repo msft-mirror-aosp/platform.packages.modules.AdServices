@@ -66,6 +66,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.SERVER_AUC
 import static com.android.adservices.service.stats.AdServicesStatsLog.SIGNATURE_VERIFICATION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.TOPICS_ENCRYPTION_EPOCH_COMPUTATION_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.TOPICS_ENCRYPTION_GET_TOPICS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.TOPICS_SCHEDULE_EPOCH_JOB_SETTING_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.UPDATE_CUSTOM_AUDIENCE_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.UPDATE_SIGNALS_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.UPDATE_SIGNALS_PROCESS_REPORTED;
@@ -963,6 +964,17 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 stats.getMeanRawProtectedSignalsSizeBytes(),
                 stats.getMaxRawProtectedSignalsSizeBytes(),
                 stats.getMinRawProtectedSignalsSizeBytes());
+    }
+
+    @Override
+    public void logTopicsScheduleEpochJobSettingReportedStats(
+            TopicsScheduleEpochJobSettingReportedStats stats) {
+        AdServicesStatsLog.write(
+                TOPICS_SCHEDULE_EPOCH_JOB_SETTING_REPORTED,
+                stats.getRescheduleEpochJobStatus(),
+                stats.getPreviousEpochJobSetting(),
+                stats.getCurrentEpochJobSetting(),
+                stats.getScheduleIfNeededEpochJobStatus());
     }
 
     @NonNull
