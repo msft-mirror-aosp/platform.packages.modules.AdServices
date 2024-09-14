@@ -37,7 +37,7 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 
-public class TopicsScheduleEpochJobSettingReportedStatsLoggerTest
+public final class TopicsScheduleEpochJobSettingReportedStatsLoggerTest
         extends AdServicesMockitoTestCase {
     @Mock private AdServicesLogger mAdServicesLoggerMock;
 
