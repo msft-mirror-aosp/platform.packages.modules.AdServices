@@ -15,6 +15,9 @@
  */
 package com.android.adservices.service.measurement.reporting;
 
+import static com.android.adservices.service.measurement.TriggerSpecsUtil.triggerSpecArrayFrom;
+
+import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -38,6 +41,7 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.TriggerFixture;
+import com.android.adservices.service.measurement.TriggerSpecs;
 import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -1250,6 +1254,268 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
 
         mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
                 trigger, mMeasurementDao, DebugReportApi.Type.TRIGGER_NO_MATCHING_SOURCE);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleSourceReport_sourceChannelCapacityLimit_success() throws Exception {
+        when(mMockFlags.getMeasurementEnableCoarseEventReportDestinations())
+                .thenReturn(Flags.DEFAULT_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS);
+        when(mMockFlags.getMeasurementEnableEventLevelEpsilonInSource())
+                .thenReturn(Flags.MEASUREMENT_ENABLE_EVENT_LEVEL_EPSILON_IN_SOURCE);
+        when(mMockFlags.getMeasurementFlexApiMaxInformationGainEvent()).thenReturn(1.5F);
+        when(mMockFlags.getMeasurementPrivacyEpsilon())
+                .thenReturn(Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON);
+        String triggerSpecsString =
+                "[{\"trigger_data\": [0, 1],"
+                        + "\"event_report_windows\": { "
+                        + "\"start_time\": 0, "
+                        + "\"end_times\": [172800]}, "
+                        + "\"summary_operator\": \"count\", "
+                        + "\"summary_buckets\": [1, 2]}]";
+        TriggerSpecs triggerSpecs =
+                new TriggerSpecs(triggerSpecArrayFrom(triggerSpecsString), 2, null);
+
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setWebDestinations(null)
+                        .setDebugKey(new UnsignedLong(123L))
+                        .setTriggerSpecs(triggerSpecs)
+                        .setMaxEventLevelReports(2)
+                        .setAdIdPermission(true)
+                        .setArDebugPermission(false)
+                        .setExpiryTime(172801L)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+        assertThat(source.hasValidInformationGain(mMockFlags)).isFalse();
+
+        mDebugReportApi.scheduleSourceReport(
+                source,
+                DebugReportApi.Type.SOURCE_CHANNEL_CAPACITY_LIMIT,
+                Map.of(DebugReportApi.Body.LIMIT, LIMIT),
+                mMeasurementDao);
+        ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
+        verify(mMeasurementDao).insertDebugReport(captor.capture());
+        DebugReport report = captor.getValue();
+        assertSourceDebugReportParameters(
+                report,
+                DebugReportApi.Type.SOURCE_CHANNEL_CAPACITY_LIMIT.getValue(),
+                SourceFixture.ValidSourceParams.PUBLISHER.toString(),
+                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS.get(0).toString(),
+                Map.of(DebugReportApi.Body.LIMIT, LIMIT));
+    }
+
+    @Test
+    public void testScheduleSourceReport_srcChannelCapacityLimitDebugFlagDisabled_dontSchedule()
+            throws Exception {
+        when(mMockFlags.getMeasurementEnableDebugReport()).thenReturn(false);
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setDebugKey(new UnsignedLong(123L))
+                        .setAdIdPermission(true)
+                        .setArDebugPermission(false)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleSourceReport(
+                source,
+                DebugReportApi.Type.SOURCE_CHANNEL_CAPACITY_LIMIT,
+                Map.of(DebugReportApi.Body.LIMIT, LIMIT),
+                mMeasurementDao);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleSourceReport_srcChannelCapacityLimitSourceFlagDisabled_dontSchedule()
+            throws Exception {
+        when(mMockFlags.getMeasurementEnableSourceDebugReport()).thenReturn(false);
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setDebugKey(new UnsignedLong(123L))
+                        .setAdIdPermission(true)
+                        .setArDebugPermission(false)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleSourceReport(
+                source,
+                DebugReportApi.Type.SOURCE_CHANNEL_CAPACITY_LIMIT,
+                Map.of(DebugReportApi.Body.LIMIT, LIMIT),
+                mMeasurementDao);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleSourceReport_srcChannelCapacityLimitAdTechNotOpIn_dontSchedule()
+            throws Exception {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setDebugKey(new UnsignedLong(123L))
+                        .setIsDebugReporting(false)
+                        .setArDebugPermission(false)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleSourceReport(
+                source,
+                DebugReportApi.Type.SOURCE_CHANNEL_CAPACITY_LIMIT,
+                Map.of(DebugReportApi.Body.LIMIT, LIMIT),
+                mMeasurementDao);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleSourceReport_srcChannelCapacityLimitNoEnrollmentId_dontSchedule()
+            throws Exception {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setDebugKey(new UnsignedLong(12L))
+                        .setAdIdPermission(true)
+                        .setArDebugPermission(false)
+                        .setEnrollmentId("")
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleSourceReport(
+                source,
+                DebugReportApi.Type.SOURCE_CHANNEL_CAPACITY_LIMIT,
+                Map.of(DebugReportApi.Body.LIMIT, LIMIT),
+                mMeasurementDao);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleSourceReport_srcTriggerStateCardinalityLimit_success()
+            throws Exception {
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setWebDestinations(null)
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setDebugKey(new UnsignedLong(123L))
+                        .setEventReportWindows(
+                                "{" + "\"end_times\": [5000, 8000, 11000, 14000, 17000]}")
+                        .setMaxEventLevelReports(20)
+                        .setAdIdPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+        assertThat(source.validateAndSetNumReportStates(mMockFlags)).isFalse();
+
+        mDebugReportApi.scheduleSourceReport(
+                source,
+                DebugReportApi.Type.SOURCE_TRIGGER_STATE_CARDINALITY_LIMIT,
+                Map.of(DebugReportApi.Body.LIMIT, LIMIT),
+                mMeasurementDao);
+        ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
+        verify(mMeasurementDao).insertDebugReport(captor.capture());
+        DebugReport report = captor.getValue();
+        assertSourceDebugReportParameters(
+                report,
+                DebugReportApi.Type.SOURCE_TRIGGER_STATE_CARDINALITY_LIMIT.getValue(),
+                SourceFixture.ValidSourceParams.PUBLISHER.toString(),
+                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS.get(0).toString(),
+                Map.of(DebugReportApi.Body.LIMIT, LIMIT));
+    }
+
+    @Test
+    public void testScheduleSourceReport_srcTriggerStateCardinalityLimDebugDisabled_dontSchedule()
+            throws Exception {
+        when(mMockFlags.getMeasurementEnableDebugReport()).thenReturn(false);
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setDebugKey(new UnsignedLong(12L))
+                        .setAdIdPermission(true)
+                        .setArDebugPermission(false)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleSourceReport(
+                source,
+                DebugReportApi.Type.SOURCE_TRIGGER_STATE_CARDINALITY_LIMIT,
+                Map.of(DebugReportApi.Body.LIMIT, LIMIT),
+                mMeasurementDao);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleSourceReport_srcTriggerStateCardinalityLimSourceDisabled_dontSchedule()
+            throws Exception {
+        when(mMockFlags.getMeasurementEnableSourceDebugReport()).thenReturn(false);
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setDebugKey(new UnsignedLong(12L))
+                        .setAdIdPermission(true)
+                        .setArDebugPermission(false)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleSourceReport(
+                source,
+                DebugReportApi.Type.SOURCE_TRIGGER_STATE_CARDINALITY_LIMIT,
+                Map.of(DebugReportApi.Body.LIMIT, LIMIT),
+                mMeasurementDao);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleSourceReport_srcTriggerStateCardinalityLimAdTechNotOpIn_dontSchedule()
+            throws Exception {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setDebugKey(new UnsignedLong(12L))
+                        .setIsDebugReporting(false)
+                        .setArDebugPermission(false)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleSourceReport(
+                source,
+                DebugReportApi.Type.SOURCE_TRIGGER_STATE_CARDINALITY_LIMIT,
+                Map.of(DebugReportApi.Body.LIMIT, LIMIT),
+                mMeasurementDao);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleSourceReport_srcTriggerStateCardinalityLimNoEnrollmentId_dontSchedule()
+            throws Exception {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setDebugKey(new UnsignedLong(12L))
+                        .setAdIdPermission(true)
+                        .setArDebugPermission(false)
+                        .setEnrollmentId("")
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+
+        mDebugReportApi.scheduleSourceReport(
+                source,
+                DebugReportApi.Type.SOURCE_TRIGGER_STATE_CARDINALITY_LIMIT,
+                Map.of(DebugReportApi.Body.LIMIT, LIMIT),
+                mMeasurementDao);
         verify(mMeasurementDao, never()).insertDebugReport(any());
     }
 
