@@ -16,6 +16,9 @@
 
 package com.android.adservices.service.stats;
 
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_UNSET;
+
 import com.google.auto.value.AutoValue;
 
 /** Class for logging topics epoch job setting during scheduling EpochJobService. */
@@ -42,7 +45,12 @@ public abstract class TopicsScheduleEpochJobSettingReportedStats {
 
     /** Returns generic builder. */
     public static Builder builder() {
-        return new AutoValue_TopicsScheduleEpochJobSettingReportedStats.Builder();
+        return new AutoValue_TopicsScheduleEpochJobSettingReportedStats.Builder()
+                .setRescheduleEpochJobStatus(TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_UNSET)
+                .setPreviousEpochJobSetting(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING)
+                .setCurrentEpochJobSetting(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING)
+                .setScheduleIfNeededEpochJobStatus(
+                        TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING);
     }
 
     /** Builder class for TopicsScheduleEpochJobSettingReportedStats. */

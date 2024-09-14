@@ -68,7 +68,7 @@ public final class DevContextFilterTest extends AdServicesExtendedMockitoTestCas
 
         assertWithMessage("createDevContext(%s)", APP_UID).that(devContext).isNotNull();
         expect.withMessage("devContext.getDevOptionsEnabled()")
-                .that(devContext.getDevOptionsEnabled())
+                .that(devContext.getDeviceDevOptionsEnabled())
                 .isTrue();
         expect.withMessage("devContext.getCallingAppPackageName()")
                 .that(devContext.getCallingAppPackageName())
@@ -87,7 +87,7 @@ public final class DevContextFilterTest extends AdServicesExtendedMockitoTestCas
         assertWithMessage("createDevContext(%s)", APP_UID).that(devContext).isNotNull();
 
         expect.withMessage("devContext.getDevOptionsEnabled()")
-                .that(devContext.getDevOptionsEnabled())
+                .that(devContext.getDeviceDevOptionsEnabled())
                 .isFalse();
         expect.withMessage("devContext.getCallingAppPackageName()")
                 .that(devContext.getCallingAppPackageName())
@@ -112,7 +112,7 @@ public final class DevContextFilterTest extends AdServicesExtendedMockitoTestCas
 
         assertWithMessage("createDevContext(%s)", APP_UID).that(devContext).isNotNull();
         expect.withMessage("devContext.getDevOptionsEnabled()")
-                .that(devContext.getDevOptionsEnabled())
+                .that(devContext.getDeviceDevOptionsEnabled())
                 .isTrue();
         expect.withMessage("devContext.getCallingAppPackageName()")
                 .that(devContext.getCallingAppPackageName())
@@ -130,7 +130,7 @@ public final class DevContextFilterTest extends AdServicesExtendedMockitoTestCas
 
         assertWithMessage("createDevContext(%s)", APP_UID).that(devContext).isNotNull();
         expect.withMessage("devContext.getDevOptionsEnabled()")
-                .that(devContext.getDevOptionsEnabled())
+                .that(devContext.getDeviceDevOptionsEnabled())
                 .isFalse();
         expect.withMessage("devContext.getCallingAppPackageName()")
                 .that(devContext.getCallingAppPackageName())
@@ -148,7 +148,7 @@ public final class DevContextFilterTest extends AdServicesExtendedMockitoTestCas
 
         assertWithMessage("createDevContext(%s)", APP_UID).that(devContext).isNotNull();
         expect.withMessage("devContext.getDevOptionsEnabled()")
-                .that(devContext.getDevOptionsEnabled())
+                .that(devContext.getDeviceDevOptionsEnabled())
                 .isFalse();
         expect.withMessage("devContext.getCallingAppPackageName()")
                 .that(devContext.getCallingAppPackageName())
@@ -170,7 +170,7 @@ public final class DevContextFilterTest extends AdServicesExtendedMockitoTestCas
 
         assertWithMessage("createDevContext(%s)", myUid).that(devContext).isNotNull();
         expect.withMessage("devContext.getDevOptionsEnabled()")
-                .that(devContext.getDevOptionsEnabled())
+                .that(devContext.getDeviceDevOptionsEnabled())
                 .isTrue();
         expect.withMessage("devContext.getCallingAppPackageName()")
                 .that(devContext.getCallingAppPackageName())

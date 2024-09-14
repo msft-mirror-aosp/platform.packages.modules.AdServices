@@ -16,6 +16,8 @@
 
 package com.android.server.sdksandbox;
 
+import static com.android.adservices.flags.Flags.FLAG_SDKSANDBOX_INVALIDATE_EFFECTIVE_TARGET_SDK_VERSION_CACHE;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import android.Manifest;
@@ -25,14 +27,17 @@ import android.content.pm.SharedLibraryInfo;
 import android.content.pm.VersionedPackage;
 import android.os.Build;
 import android.os.Process;
+import android.platform.test.annotations.RequiresFlagsEnabled;
+import android.platform.test.flag.junit.CheckFlagsRule;
+import android.platform.test.flag.junit.DeviceFlagsValueProvider;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 import com.android.server.sdksandbox.helpers.PackageManagerHelper;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -47,6 +52,9 @@ public class SdkSandboxRestrictionManagerUnitTest extends DeviceSupportedBaseTes
     private PackageManagerHelper mPackageManagerHelper;
     private SdkSandboxRestrictionManager.Injector mInjector;
     private int mClientAppUid;
+
+    @Rule
+    public final CheckFlagsRule checkFlagsRule = DeviceFlagsValueProvider.createCheckFlagsRule();
 
     @Before
     public void setUp() {
@@ -196,6 +204,31 @@ public class SdkSandboxRestrictionManagerUnitTest extends DeviceSupportedBaseTes
 
         assertThat(mSdkSandboxRestrictionManager.getEffectiveTargetSdkVersion(mClientAppUid))
                 .isEqualTo(35);
+    }
+
+    @Test
+    @RequiresFlagsEnabled(FLAG_SDKSANDBOX_INVALIDATE_EFFECTIVE_TARGET_SDK_VERSION_CACHE)
+    public void testGetEffectiveTargetSdkVersion_cachedValueReturned() throws Exception {
+        mSdkSandboxRestrictionManager.getEffectiveTargetSdkVersion(mClientAppUid);
+        mSdkSandboxRestrictionManager.getEffectiveTargetSdkVersion(mClientAppUid);
+
+        // Verify that the second call returns the cached value and does not call
+        // PackageManagerHelper#getPackageNamesForUid for the second call
+        Mockito.verify(mPackageManagerHelper, Mockito.times(1))
+                .getPackageNamesForUid(mClientAppUid);
+    }
+
+    @Test
+    @RequiresFlagsEnabled(FLAG_SDKSANDBOX_INVALIDATE_EFFECTIVE_TARGET_SDK_VERSION_CACHE)
+    public void testGetEffectiveTargetSdkVersion_cachedCleared() throws Exception {
+        mSdkSandboxRestrictionManager.getEffectiveTargetSdkVersion(mClientAppUid);
+        mSdkSandboxRestrictionManager.clearEffectiveTargetSdkVersion(mClientAppUid);
+        mSdkSandboxRestrictionManager.getEffectiveTargetSdkVersion(mClientAppUid);
+
+        // Verify that the second call calls PackageManagerHelper#getPackageNamesForUid because the
+        // information was cleared
+        Mockito.verify(mPackageManagerHelper, Mockito.times(2))
+                .getPackageNamesForUid(mClientAppUid);
     }
 
     static class FakeInjector extends SdkSandboxRestrictionManager.Injector {
