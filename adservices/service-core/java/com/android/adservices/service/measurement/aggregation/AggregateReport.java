@@ -340,12 +340,20 @@ public class AggregateReport {
         }
     }
 
-    /** Source ID */
+    /**
+     * Source ID. Can be null for trigger verbose aggregate debug reports, where no source is
+     * involved, e.g. trigger-no-matching-source or source-destination-limit (no source in DB).
+     */
+    @Nullable
     public String getSourceId() {
         return mSourceId;
     }
 
-    /** Trigger ID */
+    /**
+     * Trigger ID. Can be null for source verbose aggregate debug reports, where no trigger is
+     * involved, e.g. source-success.
+     */
+    @Nullable
     public String getTriggerId() {
         return mTriggerId;
     }

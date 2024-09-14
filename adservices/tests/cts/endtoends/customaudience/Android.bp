@@ -34,7 +34,7 @@ android_test {
         "mockwebserver",
     ],
     libs: [
-        "android.test.base",
+        "android.test.base.stubs.system",
         "framework-adservices-lib",
         "framework-sdksandbox.impl",
     ],
@@ -75,7 +75,7 @@ android_test {
     ],
     libs: [
         "android.ext.adservices",
-        "android.test.base",
+        "android.test.base.stubs.system",
         "framework-adservices-lib",
         "framework-sdksandbox.impl",
     ],

@@ -11320,8 +11320,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
     }
 
     @Test
-    public void fetchSource_aggregateDebugReportingEnabled_invalidAggregateDebugReporting()
-            throws Exception {
+    public void fetchSource_invalidAggregateDebugReporting_adrIgnored() throws Exception {
         when(mMockFlags.getMeasurementEnableAggregateDebugReporting()).thenReturn(true);
         when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource())
                 .thenReturn(MEASUREMENT_MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE);
@@ -11364,9 +11363,8 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         // Assertion
         assertThat(AsyncFetchStatus.ResponseStatus.SUCCESS)
                 .isEqualTo(asyncFetchStatus.getResponseStatus());
-        assertThat(fetch.isPresent()).isFalse();
-        assertThat(asyncFetchStatus.getEntityStatus())
-                .isEqualTo(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
+        assertThat(fetch.isPresent()).isTrue();
+        assertThat(fetch.get().getAggregateDebugReportingString()).isNull();
     }
 
     @Test

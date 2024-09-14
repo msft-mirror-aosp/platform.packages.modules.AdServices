@@ -89,7 +89,7 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
         when(mMockFlags.getFledgeScheduleCustomAudienceUpdateEnabled()).thenReturn(true);
         when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(eq(PACKAGE)))
                 .thenReturn(false);
-        mDevContext = DevContext.builder(PACKAGE).setDevOptionsEnabled(false).build();
+        mDevContext = DevContext.builder(PACKAGE).setDeviceDevOptionsEnabled(false).build();
         when(mCustomAudienceServiceFilterMock.filterRequestAndExtractIdentifier(
                         eq(UPDATE_URI),
                         eq(PACKAGE),

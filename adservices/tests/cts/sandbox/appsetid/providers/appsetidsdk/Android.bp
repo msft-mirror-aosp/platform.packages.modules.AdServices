@@ -30,7 +30,7 @@ android_test_helper_app {
         "adservices-shared-testing",
     ],
     libs: [
-        "android.test.base",
+        "android.test.base.stubs.system",
     ],
     platform_apis: true,
     min_sdk_version: "33",

@@ -39,8 +39,6 @@ import android.adservices.http.MockWebServerRule;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 
-import androidx.test.filters.FlakyTest;
-
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
@@ -335,7 +333,8 @@ public final class BackgroundFetchRunnerTest extends AdServicesExtendedMockitoTe
                                 CommonFixture.FIXED_NOW,
                                 CommonFixture.VALID_BUYER_1,
                                 mFetchUri,
-                                DevContext.createForDevOptionsDisabled().getDevOptionsEnabled())
+                                DevContext.createForDevOptionsDisabled()
+                                        .getDeviceDevOptionsEnabled())
                         .get();
 
         assertEquals(expectedUpdatableData, updatableData);
@@ -363,7 +362,8 @@ public final class BackgroundFetchRunnerTest extends AdServicesExtendedMockitoTe
                                 CommonFixture.FIXED_NOW,
                                 CommonFixture.VALID_BUYER_1,
                                 mFetchUri,
-                                DevContext.createForDevOptionsDisabled().getDevOptionsEnabled())
+                                DevContext.createForDevOptionsDisabled()
+                                        .getDeviceDevOptionsEnabled())
                         .get();
 
         assertEquals(expectedUpdatableData, updatableData);
@@ -425,7 +425,8 @@ public final class BackgroundFetchRunnerTest extends AdServicesExtendedMockitoTe
                                 CommonFixture.FIXED_NOW,
                                 CommonFixture.VALID_BUYER_1,
                                 mFetchUri,
-                                DevContext.createForDevOptionsDisabled().getDevOptionsEnabled())
+                                DevContext.createForDevOptionsDisabled()
+                                        .getDeviceDevOptionsEnabled())
                         .get();
 
         assertEquals(expectedUpdatableData, updatableData);
@@ -485,7 +486,8 @@ public final class BackgroundFetchRunnerTest extends AdServicesExtendedMockitoTe
                                 CommonFixture.FIXED_NOW,
                                 CommonFixture.VALID_BUYER_1,
                                 mFetchUri,
-                                DevContext.createForDevOptionsDisabled().getDevOptionsEnabled())
+                                DevContext.createForDevOptionsDisabled()
+                                        .getDeviceDevOptionsEnabled())
                         .get();
 
         assertEquals(expectedUpdatableData, updatableData);
@@ -495,15 +497,9 @@ public final class BackgroundFetchRunnerTest extends AdServicesExtendedMockitoTe
         assertEquals(mFetchPath, fetchRequest.getPath());
     }
 
-    @FlakyTest(bugId = 322167446)
     @Test
     public void testFetchAndValidateCustomAudienceUpdatableDataNetworkTimeout() throws Exception {
         class FlagsWithSmallLimits implements Flags {
-            @Override
-            public int getFledgeBackgroundFetchNetworkConnectTimeoutMs() {
-                return 30;
-            }
-
             @Override
             public int getFledgeBackgroundFetchNetworkReadTimeoutMs() {
                 return 50;
@@ -552,7 +548,8 @@ public final class BackgroundFetchRunnerTest extends AdServicesExtendedMockitoTe
                                 CommonFixture.FIXED_NOW,
                                 CommonFixture.VALID_BUYER_1,
                                 mFetchUri,
-                                DevContext.createForDevOptionsDisabled().getDevOptionsEnabled())
+                                DevContext.createForDevOptionsDisabled()
+                                        .getDeviceDevOptionsEnabled())
                         .get();
 
         assertTrue(responseLatch.await(150, TimeUnit.MILLISECONDS));
@@ -584,7 +581,8 @@ public final class BackgroundFetchRunnerTest extends AdServicesExtendedMockitoTe
                                 CommonFixture.FIXED_NOW,
                                 CommonFixture.VALID_BUYER_1,
                                 invalidFetchUri,
-                                DevContext.createForDevOptionsDisabled().getDevOptionsEnabled())
+                                DevContext.createForDevOptionsDisabled()
+                                        .getDeviceDevOptionsEnabled())
                         .get();
 
         assertEquals(expectedUpdatableData, updatableData);
@@ -629,7 +627,8 @@ public final class BackgroundFetchRunnerTest extends AdServicesExtendedMockitoTe
                                 CommonFixture.FIXED_NOW,
                                 CommonFixture.VALID_BUYER_1,
                                 mFetchUri,
-                                DevContext.createForDevOptionsDisabled().getDevOptionsEnabled())
+                                DevContext.createForDevOptionsDisabled()
+                                        .getDeviceDevOptionsEnabled())
                         .get();
 
         assertEquals(expectedUpdatableData, updatableData);

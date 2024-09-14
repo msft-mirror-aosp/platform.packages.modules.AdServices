@@ -37,6 +37,8 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 
 import java.util.ArrayList;
@@ -63,6 +65,16 @@ public class TopicsWorker {
     // Singleton instance of the TopicsWorker.
     @GuardedBy("SINGLETON_LOCK")
     private static volatile TopicsWorker sTopicsWorker;
+
+    private static Supplier<TopicsWorker> sTopicsWorkerSupplier =
+            Suppliers.memoize(
+                    () ->
+                            new TopicsWorker(
+                                    EpochManager.getInstance(),
+                                    CacheManager.getInstance(),
+                                    BlockedTopicsManager.getInstance(),
+                                    AppUpdateManager.getInstance(),
+                                    FlagsFactory.getFlags()));
 
     // Lock for concurrent Read and Write processing in TopicsWorker.
     // Read-only API will only need to acquire Read Lock.
@@ -101,17 +113,17 @@ public class TopicsWorker {
         if (sTopicsWorker == null) {
             synchronized (SINGLETON_LOCK) {
                 if (sTopicsWorker == null) {
-                    sTopicsWorker =
-                            new TopicsWorker(
-                                    EpochManager.getInstance(),
-                                    CacheManager.getInstance(),
-                                    BlockedTopicsManager.getInstance(),
-                                    AppUpdateManager.getInstance(),
-                                    FlagsFactory.getFlags());
+                    sTopicsWorker = sTopicsWorkerSupplier.get();
                 }
             }
         }
         return sTopicsWorker;
+    }
+
+    /** Gets the singleton to be used for lazy initialization. */
+    @NonNull
+    public static Supplier<TopicsWorker> getSingletonSupplier() {
+        return sTopicsWorkerSupplier;
     }
 
     /**

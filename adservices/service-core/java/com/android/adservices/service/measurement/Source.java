@@ -313,7 +313,11 @@ public class Source {
         return isFlexLiteApiValueValid(flags);
     }
 
-    private double getInformationGainThreshold(Flags flags) {
+    /**
+     * @param flags flag values
+     * @return the information gain threshold for a single attribution source
+     */
+    public float getInformationGainThreshold(Flags flags) {
         if (getDestinationTypeMultiplier(flags) == 2) {
             return mSourceType == SourceType.EVENT
                     ? flags.getMeasurementFlexApiMaxInformationGainDualDestinationEvent()
@@ -326,7 +330,7 @@ public class Source {
 
     /**
      * @param flags flag values
-     * @return the information gain thereshold for attribution scopes.
+     * @return the information gain threshold for attribution scopes.
      */
     public double getAttributionScopeInfoGainThreshold(Flags flags) {
         if (getDestinationTypeMultiplier(flags) == 2) {

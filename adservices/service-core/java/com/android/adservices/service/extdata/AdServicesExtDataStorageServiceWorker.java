@@ -24,7 +24,6 @@ import android.adservices.extdata.AdServicesExtDataStorageService;
 import android.adservices.extdata.GetAdServicesExtDataResult;
 import android.adservices.extdata.IAdServicesExtDataStorageService;
 import android.adservices.extdata.IGetAdServicesExtDataCallback;
-import android.annotation.NonNull;
 import android.content.Context;
 
 import com.android.adservices.LogUtil;
@@ -33,6 +32,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.errorprone.annotations.concurrent.GuardedBy;
 
 import java.util.Objects;
 
@@ -42,6 +42,8 @@ import java.util.Objects;
  */
 public final class AdServicesExtDataStorageServiceWorker {
     private static final Object SINGLETON_LOCK = new Object();
+
+    @GuardedBy("SINGLETON_LOCK")
     private static volatile AdServicesExtDataStorageServiceWorker sExtDataWorker;
 
     private final ServiceBinder<IAdServicesExtDataStorageService> mServiceBinder;
@@ -51,21 +53,20 @@ public final class AdServicesExtDataStorageServiceWorker {
     private AdServicesExtDataStorageServiceWorker(Context context) {
         mServiceBinder =
                 ServiceBinder.getServiceBinder(
-                        ApplicationContextSingleton.get(),
+                        context,
                         AdServicesExtDataStorageService.SERVICE_INTERFACE,
                         IAdServicesExtDataStorageService.Stub::asInterface);
-        mDebugProxy = AdServicesExtDataStorageServiceDebugProxy.getInstance(context);
+        mDebugProxy = AdServicesExtDataStorageServiceDebugProxy.newInstance(context);
     }
 
     /** Gets a singleton instance of {@link AdServicesExtDataStorageServiceWorker}. */
-    @NonNull
-    public static AdServicesExtDataStorageServiceWorker getInstance(@NonNull Context context) {
-        Objects.requireNonNull(context);
-
+    public static AdServicesExtDataStorageServiceWorker getInstance() {
         if (sExtDataWorker == null) {
             synchronized (SINGLETON_LOCK) {
                 if (sExtDataWorker == null) {
-                    sExtDataWorker = new AdServicesExtDataStorageServiceWorker(context);
+                    sExtDataWorker =
+                            new AdServicesExtDataStorageServiceWorker(
+                                    ApplicationContextSingleton.get());
                 }
             }
         }
@@ -78,7 +79,7 @@ public final class AdServicesExtDataStorageServiceWorker {
      * @param callback to return result.
      */
     public void getAdServicesExtData(
-            @NonNull AdServicesOutcomeReceiver<AdServicesExtDataParams, Exception> callback) {
+            AdServicesOutcomeReceiver<AdServicesExtDataParams, Exception> callback) {
         Objects.requireNonNull(callback);
 
         IAdServicesExtDataStorageService service = getService();
@@ -114,9 +115,9 @@ public final class AdServicesExtDataStorageServiceWorker {
      * @param callback callback to return result for confirming status of operation.
      */
     public void setAdServicesExtData(
-            @NonNull AdServicesExtDataParams params,
-            @NonNull @AdServicesExtDataFieldId int[] fieldsToUpdate,
-            @NonNull AdServicesOutcomeReceiver<AdServicesExtDataParams, Exception> callback) {
+            AdServicesExtDataParams params,
+            @AdServicesExtDataFieldId int[] fieldsToUpdate,
+            AdServicesOutcomeReceiver<AdServicesExtDataParams, Exception> callback) {
         Objects.requireNonNull(params);
         Objects.requireNonNull(fieldsToUpdate);
         Objects.requireNonNull(callback);
