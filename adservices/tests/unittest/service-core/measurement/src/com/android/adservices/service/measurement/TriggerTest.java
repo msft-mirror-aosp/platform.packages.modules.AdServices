@@ -1019,7 +1019,7 @@ public class TriggerTest {
                         + "\"value\": 444"
                         + "},"
                         + "{"
-                        + "\"types\": [\"default\"],"
+                        + "\"types\": [\"unspecified\"],"
                         + "\"key_piece\": \"0x555\","
                         + "\"value\": 555"
                         + "}"
@@ -1057,7 +1057,7 @@ public class TriggerTest {
                         .build();
         AggregateDebugReportData debugData3 =
                 new AggregateDebugReportData.Builder(
-                                Collections.singleton(DebugReportApi.Type.DEFAULT.getValue()),
+                                Collections.singleton(DebugReportApi.Type.UNSPECIFIED.getValue()),
                                 new BigInteger("555", 16),
                                 555)
                         .build();

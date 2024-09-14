@@ -121,7 +121,7 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
                         .setExecutor(MoreExecutors.directExecutor())
                         .build();
         DevContext devContext = DevContextFilter.create(sContext).createDevContext(Process.myUid());
-        mIsDebugMode = devContext.getDevOptionsEnabled();
+        mIsDebugMode = devContext.getDeviceDevOptionsEnabled();
 
         // Needed to test different custom audience limits
         InstrumentationRegistry.getInstrumentation()

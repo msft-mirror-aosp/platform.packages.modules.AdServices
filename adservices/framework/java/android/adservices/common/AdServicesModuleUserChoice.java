@@ -63,13 +63,14 @@ public final class AdServicesModuleUserChoice implements Parcelable {
 
     @ModuleUserChoiceCode private int mUserChoice;
 
-    private AdServicesModuleUserChoice(@NonNull Parcel in) {
-
+    private AdServicesModuleUserChoice(Parcel in) {
+        Objects.requireNonNull(in, "Parcel is null");
         mModule = in.readInt();
         mUserChoice = in.readInt();
     }
 
-    private AdServicesModuleUserChoice(int module, int userChoice) {
+    private AdServicesModuleUserChoice(
+            @Module.ModuleCode int module, @ModuleUserChoiceCode int userChoice) {
         this.mModule = module;
         this.mUserChoice = userChoice;
     }
@@ -79,7 +80,6 @@ public final class AdServicesModuleUserChoice implements Parcelable {
             new Creator<>() {
                 @Override
                 public AdServicesModuleUserChoice createFromParcel(Parcel in) {
-                    Objects.requireNonNull(in);
                     return new AdServicesModuleUserChoice(in);
                 }
 
@@ -89,41 +89,25 @@ public final class AdServicesModuleUserChoice implements Parcelable {
                 }
             };
 
-    /**
-     * Describe the kinds of special objects contained in this Parcelable instance's marshaled
-     * representation. For example, if the object will include a file descriptor in the output of
-     * {@link #writeToParcel(Parcel, int)}, the return value of this method must include the {@link
-     * #CONTENTS_FILE_DESCRIPTOR} bit.
-     *
-     * @return a bitmask indicating the set of special object types marshaled by this Parcelable
-     *     object instance.
-     */
     @Override
     public int describeContents() {
         return 0;
     }
 
-    /**
-     * Flatten this object in to a Parcel.
-     *
-     * @param dest The Parcel in which the object should be written.
-     * @param flags Additional flags about how the object should be written. May be 0 or {@link
-     *     #PARCELABLE_WRITE_RETURN_VALUE}.
-     */
     @Override
     public void writeToParcel(@NonNull Parcel dest, int flags) {
-        Objects.requireNonNull(dest);
+        Objects.requireNonNull(dest, "Parcel is null");
         dest.writeInt(mModule);
         dest.writeInt(mUserChoice);
     }
 
     /** Gets the name of current module */
-    public int getModule() {
+    public @Module.ModuleCode int getModule() {
         return mModule;
     }
 
     /** Gets the user opted in/out choice of current module */
-    public int getUserChoice() {
+    public @ModuleUserChoiceCode int getUserChoice() {
         return mUserChoice;
     }
 

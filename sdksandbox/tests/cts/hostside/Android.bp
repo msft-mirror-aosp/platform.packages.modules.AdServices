@@ -41,7 +41,7 @@ java_test_host {
         ":SdkSandboxStorageTestProvider",
         ":SdkSandboxManagerCtsProvider",
     ],
-    jarjar_rules: ":test-jarjar-rules",
+    jarjar_rules: ":test-service-jarjar-rules",
 }
 
 android_test_helper_app {

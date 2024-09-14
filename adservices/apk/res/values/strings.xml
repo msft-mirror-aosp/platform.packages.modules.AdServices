@@ -32,6 +32,16 @@
     <!-- Description of an application permission that lets it access AdServices Custom Audience API. [CHAR LIMIT=NONE] -->
     <string name="permdesc_accessAdServicesCustomAudience">Allows an application to access AdServices Custom Audience API.</string>
 
+    <!-- Title of an application permission that lets it access AdServices Ad Selection API. [CHAR LIMIT=NONE] -->
+    <string name="permlab_accessAdServicesAdSelection">access AdServices Ad Selection API</string>
+    <!-- Description of an application permission that lets it access AdServices Ad Selection API. [CHAR LIMIT=NONE] -->
+    <string name="permdesc_accessAdServicesAdSelection">Allows an application to access AdServices Ad Selection API.</string>
+
+    <!-- Title of an application permission that lets it access AdServices Protected Signals API. [CHAR LIMIT=NONE] -->
+    <string name="permlab_accessAdServicesProtectedSignals">access AdServices Protected Signals API</string>
+    <!-- Description of an application permission that lets it access AdServices Protected Signals API. [CHAR LIMIT=NONE] -->
+    <string name="permdesc_accessAdServicesProtectedSignals">Allows an application to access AdServices Protected Signals API.</string>
+
     <!-- Title of an application permission that lets it access Advertising ID API. [CHAR LIMIT=NONE] -->
     <string name="permlab_accessAdServicesAdId">Access to AdId API</string>
     <!-- Description of an application permission that lets it access AdId API. [CHAR LIMIT=NONE] -->

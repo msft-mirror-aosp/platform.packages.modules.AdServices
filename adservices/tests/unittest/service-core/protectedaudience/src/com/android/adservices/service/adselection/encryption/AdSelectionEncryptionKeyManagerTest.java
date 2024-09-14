@@ -120,7 +120,7 @@ public final class AdSelectionEncryptionKeyManagerTest extends AdServicesMockito
                         mMockHttpClient,
                         mLightweightExecutor,
                         mAdServicesLoggerSpy);
-        mDevContext = DevContext.builder(mPackageName).setDevOptionsEnabled(true).build();
+        mDevContext = DevContext.builder(mPackageName).setDeviceDevOptionsEnabled(true).build();
     }
 
     @Test
