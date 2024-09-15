@@ -90,6 +90,9 @@ public class AggregateReportingJobHandler {
     public static final String AGGREGATE_DEBUG_REPORT_URI_PATH =
             ".well-known/attribution-reporting/debug/report-aggregate-debug";
 
+    /** "0" is the convention for indicating an excluded source registration time. */
+    public static final String EXCLUDED_SOURCE_REGISTRATION_TIME = "0";
+
     private final DatastoreManager mDatastoreManager;
     private final AggregateEncryptionKeyManager mAggregateEncryptionKeyManager;
     private boolean mIsDebugInstance;
@@ -468,17 +471,10 @@ public class AggregateReportingJobHandler {
     @VisibleForTesting
     JSONObject createReportJsonPayload(AggregateReport aggregateReport, Uri reportingOrigin,
             AggregateEncryptionKey key) throws JSONException {
-        String sourceRegistrationTimeStr =
-                aggregateReport.getSourceRegistrationTime() == null
-                        ? null
-                        : String.valueOf(
-                                TimeUnit.MILLISECONDS.toSeconds(
-                                        roundDownToDay(
-                                                aggregateReport.getSourceRegistrationTime())));
         return new AggregateReportBody.Builder()
                 .setReportId(aggregateReport.getId())
                 .setAttributionDestination(aggregateReport.getAttributionDestination().toString())
-                .setSourceRegistrationTime(sourceRegistrationTimeStr)
+                .setSourceRegistrationTime(getSourceRegistrationTimeStr(aggregateReport))
                 .setScheduledReportTime(
                         String.valueOf(
                                 TimeUnit.MILLISECONDS.toSeconds(
@@ -498,6 +494,27 @@ public class AggregateReportingJobHandler {
                 .setTriggerContextId(aggregateReport.getTriggerContextId())
                 .build()
                 .toJson(key, mFlags);
+    }
+
+    private String getSourceRegistrationTimeStr(AggregateReport aggregateReport) {
+        if (aggregateReport.getSourceRegistrationTime() == null) {
+            if (AggregateDebugReportApi.AGGREGATE_DEBUG_REPORT_API.equals(
+                    aggregateReport.getApi())) {
+                return null;
+            }
+            if (mFlags.getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled()) {
+                // A null source registration time implies the source registration time was not set.
+                // We normally include this in the JSON serialization anyway, but when the feature
+                // flag for making source registration time optional is enabled, send a value
+                // indicating exclusion.
+                return EXCLUDED_SOURCE_REGISTRATION_TIME;
+            }
+            return null;
+        }
+
+        return String.valueOf(
+                TimeUnit.MILLISECONDS.toSeconds(
+                        roundDownToDay(aggregateReport.getSourceRegistrationTime())));
     }
 
     /** Makes the POST request to the reporting URL. */

@@ -273,4 +273,8 @@ public interface AdServicesLogger {
 
     /** Logs stats for UpdateSignalsApiCalledStats */
     void logUpdateSignalsApiCalledStats(UpdateSignalsApiCalledStats stats);
+
+    /** Logs stats for TopicsScheduleEpochJobSettingReportedStats */
+    void logTopicsScheduleEpochJobSettingReportedStats(
+            TopicsScheduleEpochJobSettingReportedStats stats);
 }

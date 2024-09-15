@@ -162,7 +162,7 @@ public final class SourceFixture {
                         + "\"value\": 111"
                         + "},"
                         + "{"
-                        + "\"types\": [\"default\"],"
+                        + "\"types\": [\"unspecified\"],"
                         + "\"key_piece\": \"0x222\","
                         + "\"value\": 222"
                         + "}"

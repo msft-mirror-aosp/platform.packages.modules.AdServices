@@ -65,6 +65,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -90,7 +91,7 @@ public class AsyncSourceFetcher {
                 context,
                 EnrollmentDao.getInstance(),
                 FlagsFactory.getFlags(),
-                DatastoreManagerFactory.getDatastoreManager(context),
+                DatastoreManagerFactory.getDatastoreManager(),
                 new DebugReportApi(context, FlagsFactory.getFlags()));
     }
 
@@ -590,12 +591,12 @@ public class AsyncSourceFetcher {
                     FetcherUtil.getValidAggregateDebugReportingString(
                             json.getJSONObject(SourceHeaderContract.AGGREGATABLE_DEBUG_REPORTING),
                             mFlags);
-            if (!validAggregateDebugReporting.isPresent()) {
+            if (validAggregateDebugReporting.isPresent()) {
+                builder.setAggregateDebugReportingString(validAggregateDebugReporting.get());
+            } else {
                 LoggerFactory.getMeasurementLogger()
                         .d("parseSource: aggregatable debug reporting is invalid.");
-                return false;
             }
-            builder.setAggregateDebugReportingString(validAggregateDebugReporting.get());
         }
         return true;
     }
@@ -900,6 +901,7 @@ public class AsyncSourceFetcher {
         LoggerFactory.getMeasurementLogger()
                 .d("Source ArDebug permission enabled %b", arDebugPermission);
         Source.Builder builder = new Source.Builder();
+        builder.setId(UUID.randomUUID().toString());
         builder.setRegistrationId(asyncRegistration.getRegistrationId());
         builder.setPublisher(getBaseUri(asyncRegistration.getTopOrigin()));
         builder.setEnrollmentId(enrollmentId);

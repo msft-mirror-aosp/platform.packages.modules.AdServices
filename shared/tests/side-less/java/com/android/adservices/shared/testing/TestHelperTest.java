@@ -138,7 +138,7 @@ public final class TestHelperTest extends SharedMockitoTestCase {
     }
 
     @Test
-    public void testIfNotTest_withNonTestDescription_throwsException() {
+    public void testThrowIfNotTest_withNonTestDescription_throwsException() {
         when(mMockDescription.isTest()).thenReturn(false);
 
         Exception exception =
@@ -154,12 +154,35 @@ public final class TestHelperTest extends SharedMockitoTestCase {
     }
 
     @Test
-    public void testIfNotTest_withTestDescription_throwsNoException() {
+    public void testThrowIfNotTest_withTestDescription_throwsNoException() {
         Description test =
                 Description.createTestDescription(AClassHasNoNothingAtAll.class, "butItHasATest");
 
         // No exception should be thrown for test.
         TestHelper.throwIfNotTest(test);
+    }
+
+    @Test
+    public void testThrowIfTest_withNonTestDescription_throwsException() {
+        Description test =
+                Description.createTestDescription(AClassHasNoNothingAtAll.class, "butItHasATest");
+
+        Exception exception =
+                assertThrows(IllegalStateException.class, () -> TestHelper.throwIfTest(test));
+
+        expect.that(exception)
+                .hasMessageThat()
+                .isEqualTo(
+                        "This rule can only be used as a @ClassRule or in a test suit, it cannot be"
+                                + " applied to individual tests as a @Rule");
+    }
+
+    @Test
+    public void testThrowIfTest_withTestDescription_throwsNoException() {
+        when(mMockDescription.isTest()).thenReturn(false);
+
+        // No exception should be thrown for test.
+        TestHelper.throwIfTest(mMockDescription);
     }
 
     private static class AClassHasNoNothingAtAll {}

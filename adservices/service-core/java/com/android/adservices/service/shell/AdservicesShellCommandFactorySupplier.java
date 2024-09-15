@@ -36,15 +36,15 @@ import com.google.common.collect.ImmutableList;
 public final class AdservicesShellCommandFactorySupplier extends ShellCommandFactorySupplier {
     private static final ImmutableList<ShellCommandFactory> sDefaultFactories =
             ImmutableList.of(
-                    CustomAudienceShellCommandFactory.getInstance(
+                    CustomAudienceShellCommandFactory.newInstance(
                             DebugFlags.getInstance(),
                             FlagsFactory.getFlags(),
                             ApplicationContextSingleton.get()),
-                    AdSelectionShellCommandFactory.getInstance(
+                    AdSelectionShellCommandFactory.newInstance(
                             DebugFlags.getInstance(),
                             FlagsFactory.getFlags(),
                             ApplicationContextSingleton.get()),
-                    SignalsShellCommandFactory.getInstance(
+                    SignalsShellCommandFactory.newInstance(
                             DebugFlags.getInstance(),
                             ProtectedSignalsDatabase.getInstance().protectedSignalsDao(),
                             FlagsFactory.getFlags(),
