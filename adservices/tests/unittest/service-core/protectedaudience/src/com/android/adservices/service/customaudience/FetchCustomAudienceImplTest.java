@@ -239,7 +239,7 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                         Process.myUid(),
                         API_NAME,
                         Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
-                        DevContext.builder(mPackageName).setDevOptionsEnabled(true).build());
+                        DevContext.builder(mPackageName).setDeviceDevOptionsEnabled(true).build());
         doReturn(
                         CustomAudienceStats.builder()
                                 .setTotalCustomAudienceCount(1)
@@ -979,7 +979,7 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                 .insertOrOverwriteCustomAudience(
                         FetchCustomAudienceFixture.getFullSuccessfulDBCustomAudience(),
                         getValidDailyUpdateUriByBuyer(BUYER),
-                        DevContext.createForDevOptionsDisabled().getDevOptionsEnabled());
+                        DevContext.createForDevOptionsDisabled().getDeviceDevOptionsEnabled());
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_SUCCESS), anyInt());
@@ -1011,7 +1011,7 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                 .insertOrOverwriteCustomAudience(
                         FetchCustomAudienceFixture.getFullSuccessfulDBCustomAudience(),
                         getValidDailyUpdateUriByBuyer(BUYER),
-                        DevContext.createForDevOptionsDisabled().getDevOptionsEnabled());
+                        DevContext.createForDevOptionsDisabled().getDeviceDevOptionsEnabled());
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_SUCCESS), anyInt());
@@ -1035,7 +1035,7 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                 .insertOrOverwriteCustomAudience(
                         FetchCustomAudienceFixture.getFullSuccessfulDBCustomAudience(),
                         getValidDailyUpdateUriByBuyer(BUYER),
-                        DevContext.createForDevOptionsDisabled().getDevOptionsEnabled());
+                        DevContext.createForDevOptionsDisabled().getDeviceDevOptionsEnabled());
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_SUCCESS), anyInt());
@@ -1124,7 +1124,7 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                                 .getFullSuccessfulDBCustomAudienceWithAuctionServerRequestFlags(
                                         FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS),
                         getValidDailyUpdateUriByBuyer(BUYER),
-                        DevContext.createForDevOptionsDisabled().getDevOptionsEnabled());
+                        DevContext.createForDevOptionsDisabled().getDeviceDevOptionsEnabled());
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_SUCCESS), anyInt());
@@ -1158,7 +1158,7 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                 .insertOrOverwriteCustomAudience(
                         FetchCustomAudienceFixture.getFullSuccessfulDBCustomAudience(),
                         getValidDailyUpdateUriByBuyer(BUYER),
-                        DevContext.createForDevOptionsDisabled().getDevOptionsEnabled());
+                        DevContext.createForDevOptionsDisabled().getDeviceDevOptionsEnabled());
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_SUCCESS), anyInt());
@@ -1194,7 +1194,7 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                 .insertOrOverwriteCustomAudience(
                         FetchCustomAudienceFixture.getFullSuccessfulDBCustomAudience(),
                         getValidDailyUpdateUriByBuyer(BUYER),
-                        DevContext.createForDevOptionsDisabled().getDevOptionsEnabled());
+                        DevContext.createForDevOptionsDisabled().getDeviceDevOptionsEnabled());
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_SUCCESS), anyInt());
@@ -1228,7 +1228,7 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                         FetchCustomAudienceFixture.getFullSuccessfulDBCustomAudienceWithPriority(
                                 VALID_PRIORITY_1),
                         getValidDailyUpdateUriByBuyer(BUYER),
-                        DevContext.createForDevOptionsDisabled().getDevOptionsEnabled());
+                        DevContext.createForDevOptionsDisabled().getDeviceDevOptionsEnabled());
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_SUCCESS), anyInt());
@@ -1261,7 +1261,7 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                 .insertOrOverwriteCustomAudience(
                         FetchCustomAudienceFixture.getFullSuccessfulDBCustomAudience(),
                         getValidDailyUpdateUriByBuyer(BUYER),
-                        DevContext.createForDevOptionsDisabled().getDevOptionsEnabled());
+                        DevContext.createForDevOptionsDisabled().getDeviceDevOptionsEnabled());
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_SUCCESS), anyInt());
@@ -1280,7 +1280,7 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
         mFetchCustomAudienceImpl.doFetchCustomAudience(
                 mInputBuilder.build(),
                 callback,
-                DevContext.builder(mPackageName).setDevOptionsEnabled(true).build());
+                DevContext.builder(mPackageName).setDeviceDevOptionsEnabled(true).build());
 
         callback.assertResultReceived();
         assertEquals(1, mockWebServer.getRequestCount());
@@ -1326,7 +1326,7 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                         FetchCustomAudienceFixture
                                 .getFullSuccessfulDBCustomAudienceWithAdRenderId(),
                         getValidDailyUpdateUriByBuyer(BUYER),
-                        DevContext.createForDevOptionsDisabled().getDevOptionsEnabled());
+                        DevContext.createForDevOptionsDisabled().getDeviceDevOptionsEnabled());
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_SUCCESS), anyInt());
@@ -1406,7 +1406,7 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                 .insertOrOverwriteCustomAudience(
                         argumentDBCustomAudience.capture(),
                         eq(getValidDailyUpdateUriByBuyer(BUYER)),
-                        eq(DevContext.createForDevOptionsDisabled().getDevOptionsEnabled()));
+                        eq(DevContext.createForDevOptionsDisabled().getDeviceDevOptionsEnabled()));
         DBCustomAudience dbCustomAudience = argumentDBCustomAudience.getValue();
         Assert.assertNotEquals(
                 FetchCustomAudienceFixture.getFullSuccessfulDBCustomAudienceWithAdRenderId(),
@@ -1458,7 +1458,7 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                 .insertOrOverwriteCustomAudience(
                         FetchCustomAudienceFixture.getFullSuccessfulDBCustomAudience(),
                         getValidDailyUpdateUriByBuyer(BUYER),
-                        DevContext.createForDevOptionsDisabled().getDevOptionsEnabled());
+                        DevContext.createForDevOptionsDisabled().getDeviceDevOptionsEnabled());
 
         FetchCustomAudienceTestSyncCallback callback2 =
                 callFetchCustomAudience(mInputBuilder.build());
@@ -1467,7 +1467,7 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                 .insertOrOverwriteCustomAudience(
                         FetchCustomAudienceFixture.getFullSuccessfulDBCustomAudience(),
                         differentDailyUpdateUri,
-                        DevContext.createForDevOptionsDisabled().getDevOptionsEnabled());
+                        DevContext.createForDevOptionsDisabled().getDeviceDevOptionsEnabled());
 
         verify(mAdServicesLoggerMock, times(2))
                 .logFledgeApiCallStats(
@@ -1574,7 +1574,7 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                 .insertOrOverwriteCustomAudience(
                         FetchCustomAudienceFixture.getFullSuccessfulDBCustomAudience(),
                         getValidDailyUpdateUriByBuyer(BUYER),
-                        DevContext.createForDevOptionsDisabled().getDevOptionsEnabled());
+                        DevContext.createForDevOptionsDisabled().getDeviceDevOptionsEnabled());
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(

@@ -450,11 +450,11 @@ public class AsyncRegistrationFallbackJobServiceTest
         doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
         doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
         doReturn(context).when(mSpyService).getApplicationContext();
-        doReturn(mock(EnrollmentDao.class)).when(() -> EnrollmentDao.getInstance());
+        doReturn(mock(EnrollmentDao.class)).when(EnrollmentDao::getInstance);
         doReturn(mock(AdServicesLoggerImpl.class)).when(AdServicesLoggerImpl::getInstance);
         ExtendedMockito.doNothing()
                 .when(() -> AsyncRegistrationFallbackJobService.schedule(any(), any()));
-        doReturn(mMockDatastoreManager).when(() -> DatastoreManagerFactory.getDatastoreManager());
+        doReturn(mMockDatastoreManager).when(DatastoreManagerFactory::getDatastoreManager);
         doReturn(false)
                 .when(
                         () ->

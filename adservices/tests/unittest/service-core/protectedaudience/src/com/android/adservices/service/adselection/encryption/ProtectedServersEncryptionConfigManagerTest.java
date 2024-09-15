@@ -128,7 +128,7 @@ public final class ProtectedServersEncryptionConfigManagerTest extends AdService
                         mMockHttpClient,
                         mLightweightExecutor,
                         mAdServicesLoggerSpy);
-        mDevContext = DevContext.builder(mPackageName).setDevOptionsEnabled(true).build();
+        mDevContext = DevContext.builder(mPackageName).setDeviceDevOptionsEnabled(true).build();
     }
 
     @Test

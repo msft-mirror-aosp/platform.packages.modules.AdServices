@@ -133,7 +133,7 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
     @Test
     public void testOnStartJobConsentRevokedGaUxDisabled() throws Exception {
         doReturn(mFlagsWithEnabledBgFGaUxDisabled).when(FlagsFactory::getFlags);
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
+        doReturn(mConsentManagerMock).when(ConsentManager::getInstance);
         doReturn(AdServicesApiConsent.REVOKED)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -232,7 +232,7 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
         doReturn(mFlagsWithEnabledBgFGaUxDisabled).when(FlagsFactory::getFlags);
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
+        doReturn(mConsentManagerMock).when(ConsentManager::getInstance);
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -264,7 +264,7 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
         doReturn(mFlagsWithEnabledBgFGaUxDisabled).when(FlagsFactory::getFlags);
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
+        doReturn(mConsentManagerMock).when(ConsentManager::getInstance);
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -460,7 +460,7 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
     private void testOnStartJobUpdateSuccess() throws Exception {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
+        doReturn(mConsentManagerMock).when(ConsentManager::getInstance);
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -488,7 +488,7 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
     private void testOnStartJobUpdateTimeoutHandled() throws Exception {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
+        doReturn(mConsentManagerMock).when(ConsentManager::getInstance);
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -517,7 +517,7 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
     }
 
     private void testOnStartJobConsentRevokedGaUxEnabled() throws Exception {
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
+        doReturn(mConsentManagerMock).when(ConsentManager::getInstance);
         doReturn(AdServicesApiConsent.REVOKED)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);

@@ -218,7 +218,7 @@ public class ScheduledUpdatesHandler {
                         FlagsFactory.getFlags().getFledgeFrequencyCapFilteringEnabled(),
                         FlagsFactory.getFlags().getFledgeAppInstallFilteringEnabled(),
                         FlagsFactory.getFlags().getFledgeAuctionServerAdRenderIdEnabled()),
-                CustomAudienceImpl.getInstance(context),
+                CustomAudienceImpl.getInstance(),
                 new CustomAudienceQuantityChecker(
                         CustomAudienceDatabase.getInstance().customAudienceDao(),
                         FlagsFactory.getFlags()));
@@ -315,7 +315,7 @@ public class ScheduledUpdatesHandler {
         // connection from a debuggable app.
         DevContext devContext =
                 update.getIsDebuggable()
-                        ? DevContext.builder().setDevOptionsEnabled(true).build()
+                        ? DevContext.builder().setDeviceDevOptionsEnabled(true).build()
                         : DevContext.createForDevOptionsDisabled();
 
         AdServicesHttpClientRequest request =
@@ -447,7 +447,7 @@ public class ScheduledUpdatesHandler {
                                             PLACEHOLDER_CUSTOM_AUDIENCE,
                                             fusedCustomAudienceBlob.getOwner());
                                     boolean isDebuggableCustomAudience =
-                                            devContext.getDevOptionsEnabled();
+                                            devContext.getDeviceDevOptionsEnabled();
                                     sLogger.v(
                                             "Is debuggable custom audience: %b",
                                             isDebuggableCustomAudience);

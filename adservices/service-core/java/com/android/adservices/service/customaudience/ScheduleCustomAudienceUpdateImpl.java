@@ -223,7 +223,7 @@ public class ScheduleCustomAudienceUpdateImpl {
                         .setBuyer(buyer)
                         .setCreationTime(Instant.now())
                         .setScheduledTime(scheduledTime)
-                        .setIsDebuggable(devContext.getDevOptionsEnabled())
+                        .setIsDebuggable(devContext.getDeviceDevOptionsEnabled())
                         .build();
 
         sLogger.d(

@@ -156,7 +156,7 @@ public class TrustedBiddingDataFetcherTest {
                         argThat(new TestTrustedBiddingDataUriKeysMatcher(PATH_2, KEYS_2)),
                         any());
 
-        verify(mDevContext).getDevOptionsEnabled();
+        verify(mDevContext).getDeviceDevOptionsEnabled();
         verifyNoMoreInteractions(
                 mAdServicesHttpsClient, mDevContext, mCustomAudienceDevOverridesHelper);
     }
@@ -222,7 +222,7 @@ public class TrustedBiddingDataFetcherTest {
                         argThat(new TestTrustedBiddingDataUriKeysMatcher(PATH_2, KEYS_2)),
                         any());
 
-        verify(mDevContext).getDevOptionsEnabled();
+        verify(mDevContext).getDeviceDevOptionsEnabled();
         verifyNoMoreInteractions(
                 mAdServicesHttpsClient, mDevContext, mCustomAudienceDevOverridesHelper);
     }
@@ -269,7 +269,7 @@ public class TrustedBiddingDataFetcherTest {
                         argThat(new TestTrustedBiddingDataUriKeysMatcher(PATH_2, KEYS_2)),
                         any());
 
-        verify(mDevContext).getDevOptionsEnabled();
+        verify(mDevContext).getDeviceDevOptionsEnabled();
         verifyNoMoreInteractions(
                 mAdServicesHttpsClient, mDevContext, mCustomAudienceDevOverridesHelper);
     }
@@ -319,7 +319,7 @@ public class TrustedBiddingDataFetcherTest {
                 .fetchPayload(
                         argThat(new TestTrustedBiddingDataUriKeysMatcher(PATH_2, KEYS_2)),
                         any());
-        verify(mDevContext).getDevOptionsEnabled();
+        verify(mDevContext).getDeviceDevOptionsEnabled();
         verifyNoMoreInteractions(
                 mAdServicesHttpsClient, mDevContext, mCustomAudienceDevOverridesHelper);
     }
@@ -327,7 +327,7 @@ public class TrustedBiddingDataFetcherTest {
     @Test
     public void testDevOptionEnabled_someCAhasDevOverride()
             throws ExecutionException, InterruptedException {
-        when(mDevContext.getDevOptionsEnabled()).thenReturn(true);
+        when(mDevContext.getDeviceDevOptionsEnabled()).thenReturn(true);
         when(mCustomAudienceDevOverridesHelper.getTrustedBiddingSignalsOverride(
                         CustomAudienceFixture.VALID_OWNER, CommonFixture.VALID_BUYER_1, NAME_1))
                 .thenReturn(AdSelectionSignals.EMPTY);
@@ -363,7 +363,7 @@ public class TrustedBiddingDataFetcherTest {
                 result.get(PATH_2).getBody().toString());
         assertNull(result.get(PATH_1));
 
-        verify(mDevContext).getDevOptionsEnabled();
+        verify(mDevContext).getDeviceDevOptionsEnabled();
         verify(mCustomAudienceDevOverridesHelper)
                 .getTrustedBiddingSignalsOverride(
                         CustomAudienceFixture.VALID_OWNER, CommonFixture.VALID_BUYER_1, NAME_1);
