@@ -18,57 +18,30 @@ package com.android.adservices.data.topics.migration;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 
-import androidx.test.core.app.ApplicationProvider;
-
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
-import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
 import java.util.Map;
 import java.util.Set;
 
 /** Unit tests for {@link TopicsDbMigratorV7} */
-public class TopicsDbMigratorV7Test {
-    private static final Context sContext = ApplicationProvider.getApplicationContext();
+@MockStatic(FlagsFactory.class)
+public final class TopicsDbMigratorV7Test extends AdServicesExtendedMockitoTestCase {
     // The database is created with V6 and will migrate to V7.
-    private final TopicsDbHelperV6 mTopicsDbHelper = TopicsDbHelperV6.getInstance(sContext);
-
-    private MockitoSession mStaticMockSession;
-    @Mock private Flags mMockFlags;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+    private final TopicsDbHelperV6 mTopicsDbHelper = TopicsDbHelperV6.getInstance();
 
     @Before
     public void setup() {
-        MockitoAnnotations.initMocks(this);
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .strictness(Strictness.WARN)
-                        .startMocking();
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-    }
-
-    @After
-    public void teardown() {
-        mStaticMockSession.finishMocking();
+        mocker.mockGetFlags(mMockFlags);
     }
 
     @Test
@@ -81,7 +54,7 @@ public class TopicsDbMigratorV7Test {
                         DbTestUtil.doesTableExistAndColumnCountMatch(
                                 db,
                                 TopicsTables.TopicContributorsContract.TABLE,
-                                /* number Of Columns */ 4))
+                                /* columnCount= */ 4))
                 .isFalse();
 
         // Use transaction here so that the changes in the performMigration is committed.
@@ -99,7 +72,7 @@ public class TopicsDbMigratorV7Test {
                         DbTestUtil.doesTableExistAndColumnCountMatch(
                                 db,
                                 TopicsTables.TopicContributorsContract.TABLE,
-                                /* number Of Columns */ 4))
+                                /* columnCount= */ 4))
                 .isTrue();
 
         // Test dated db is cleared when upgrading.

@@ -61,7 +61,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 public final class GenerateInputForEncodingCommandTest
         extends ShellCommandTestCase<GenerateInputForEncodingCommand> {
@@ -114,10 +113,9 @@ public final class GenerateInputForEncodingCommandTest
             WebViewSupportUtil.createJSSandboxAvailableRule(sContext);
 
     @Before
-    public void killAndRecreateJavascriptSandboxIsolate()
-            throws ExecutionException, InterruptedException, TimeoutException {
+    public void killAndRecreateJavascriptSandboxIsolate() throws Exception {
         if (mJSScriptEngine == null) {
-            mJSScriptEngine = JSScriptEngine.getInstance(mContext, sLogger);
+            mJSScriptEngine = JSScriptEngine.getInstance();
         }
         // Kill the JSScriptEngine to ensure it re-creates the JavascriptEngine isolate.
         mJSScriptEngine.shutdown().get(JS_SCRIPT_ENGINE_TIMEOUT_SEC, TimeUnit.SECONDS);
@@ -128,7 +126,7 @@ public final class GenerateInputForEncodingCommandTest
     }
 
     @After
-    public void tearDown() throws ExecutionException, InterruptedException, TimeoutException {
+    public void tearDown() throws Exception {
         if (mJSScriptEngine != null) {
             mJSScriptEngine.shutdown().get(JS_SCRIPT_ENGINE_TIMEOUT_SEC, TimeUnit.SECONDS);
         }

@@ -15,6 +15,7 @@
  */
 package com.android.adservices.service.common;
 
+import android.app.adservices.AdServicesManager;
 import android.content.Context;
 
 import com.android.adservices.LogUtil;
@@ -36,6 +37,7 @@ public final class AdServicesInternalProvider extends ApplicationContextProvider
         return super.onCreate();
     }
 
+    @SuppressWarnings("NewApi")
     @Override
     public void dump(FileDescriptor fd, PrintWriter writer, String[] args) {
         try {
@@ -47,5 +49,7 @@ public final class AdServicesInternalProvider extends ApplicationContextProvider
         } catch (Exception e) {
             writer.printf("Failed to get ApplicationContextSingleton: %s\n", e);
         }
+
+        AdServicesManager.dump(writer);
     }
 }

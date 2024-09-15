@@ -72,7 +72,7 @@ java_defaults {
         "truth",
     ],
     libs: [
-        "framework-connectivity",
+        "framework-connectivity.stubs.module_lib",
     ],
     plugins: ["auto_annotation_plugin"],
     min_sdk_version: "30",

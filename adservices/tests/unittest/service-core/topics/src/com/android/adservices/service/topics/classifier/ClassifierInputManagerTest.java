@@ -56,7 +56,7 @@ import org.mockito.Mock;
 @SpyStatic(FlagsFactory.class)
 // TODO(b/290839573) - Remove rule if Topics is enabled on R in the future.
 @RequiresSdkLevelAtLeastS
-public class ClassifierInputManagerTest extends AdServicesExtendedMockitoTestCase {
+public final class ClassifierInputManagerTest extends AdServicesExtendedMockitoTestCase {
     private static final String TEST_PACKAGE_NAME = "com.sample.package.name";
     private static final String TEST_APP_NAME = "Name for App";
     private static final CharSequence TEST_APP_DESCRIPTION = "Description for App";
@@ -70,13 +70,13 @@ public class ClassifierInputManagerTest extends AdServicesExtendedMockitoTestCas
     @Mock private ApplicationInfo mApplicationInfo;
     @Mock private Resources mAppResources;
     @Mock private Resources mContextResources;
-    @Mock private Context mApplicationContext;
+    @Mock private Context mMockApplicationContext;
     @Mock private Preprocessor mPreprocessor;
 
     @Before
     public void setup() throws Exception {
-        doReturn(mApplicationContext).when(mMockContext).getApplicationContext();
-        doReturn(mPackageManager).when(mApplicationContext).getPackageManager();
+        doReturn(mMockApplicationContext).when(mMockContext).getApplicationContext();
+        doReturn(mPackageManager).when(mMockApplicationContext).getPackageManager();
         doReturn(mApplicationInfo)
                 .when(mPackageManager)
                 .getApplicationInfo(any(String.class), anyInt());
@@ -84,7 +84,7 @@ public class ClassifierInputManagerTest extends AdServicesExtendedMockitoTestCas
                 .when(mPackageManager)
                 .getResourcesForApplication(any(ApplicationInfo.class), any(Configuration.class));
 
-        doReturn(mContextResources).when(mApplicationContext).getResources();
+        doReturn(mContextResources).when(mMockApplicationContext).getResources();
         doReturn(new Configuration()).when(mContextResources).getConfiguration();
 
         // Mock default flag values and return mocked flags from factory.

@@ -19,16 +19,17 @@ package com.android.adservices.data.consent;
 import android.content.Context;
 import android.content.pm.PackageManager;
 
-import androidx.annotation.NonNull;
-
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.common.AtomicFileDatastore;
 import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -42,7 +43,7 @@ import java.util.stream.Collectors;
  *
  * <p>This class is not thread safe. It's methods are not synchronized.
  */
-public class AppConsentDao {
+public final class AppConsentDao {
     @VisibleForTesting public static final int DATASTORE_VERSION = 1;
 
     @VisibleForTesting
@@ -56,7 +57,17 @@ public class AppConsentDao {
     @GuardedBy("SINGLETON_LOCK")
     private static volatile AppConsentDao sAppConsentDao;
 
-    private volatile boolean mInitialized = false;
+    private volatile boolean mInitialized;
+    // Using supplier here to lazy initialize the AppConsentDao Singleton.
+    private static volatile Supplier<AppConsentDao> sAppConsentDaoSupplier =
+            Suppliers.memoize(
+                    () -> {
+                        Context context = ApplicationContextSingleton.get();
+                        AtomicFileDatastore datastore =
+                                new AtomicFileDatastore(context, DATASTORE_NAME, DATASTORE_VERSION);
+                        PackageManager packageManager = context.getPackageManager();
+                        return new AppConsentDao(datastore, packageManager);
+                    });
 
     /**
      * The {@link AtomicFileDatastore} will store {@code true} if an app has had its consent revoked
@@ -69,8 +80,7 @@ public class AppConsentDao {
 
     /** Constructs the {@link AppConsentDao}. */
     @VisibleForTesting
-    public AppConsentDao(
-            @NonNull AtomicFileDatastore datastore, @NonNull PackageManager packageManager) {
+    public AppConsentDao(AtomicFileDatastore datastore, PackageManager packageManager) {
         Objects.requireNonNull(datastore);
         Objects.requireNonNull(packageManager);
 
@@ -78,22 +88,23 @@ public class AppConsentDao {
         mPackageManager = packageManager;
     }
 
-    /** @return the singleton instance of the {@link AppConsentDao} */
-    public static AppConsentDao getInstance(@NonNull Context context) {
-        Objects.requireNonNull(context, "Context must be provided.");
-
+    /** Get the singleton instance of the {@link AppConsentDao} */
+    public static AppConsentDao getInstance() {
         if (sAppConsentDao == null) {
             synchronized (SINGLETON_LOCK) {
                 if (sAppConsentDao == null) {
-                    AtomicFileDatastore datastore =
-                            new AtomicFileDatastore(context, DATASTORE_NAME, DATASTORE_VERSION);
-                    PackageManager packageManager = context.getPackageManager();
-                    sAppConsentDao = new AppConsentDao(datastore, packageManager);
+                    sAppConsentDao = sAppConsentDaoSupplier.get();
                 }
             }
         }
-
         return sAppConsentDao;
+    }
+
+    /**
+     * @return the singleton supplier of the {@link AppConsentDao}
+     */
+    public static Supplier<AppConsentDao> getSingletonSupplier() {
+        return sAppConsentDaoSupplier;
     }
 
     /**
@@ -160,7 +171,7 @@ public class AppConsentDao {
      *     application
      * @throws IOException if the operation fails
      */
-    public void setConsentForApp(@NonNull String packageName, boolean isConsentRevoked)
+    public void setConsentForApp(String packageName, boolean isConsentRevoked)
             throws IllegalArgumentException, IOException {
         initializeDatastoreIfNeeded();
         mDatastore.putBoolean(toDatastoreKey(packageName), isConsentRevoked);
@@ -177,7 +188,7 @@ public class AppConsentDao {
      *     application
      * @throws IOException if the operation fails
      */
-    public boolean setConsentForAppIfNew(@NonNull String packageName, boolean isConsentRevoked)
+    public boolean setConsentForAppIfNew(String packageName, boolean isConsentRevoked)
             throws IllegalArgumentException, IOException {
         initializeDatastoreIfNeeded();
         return mDatastore.putBooleanIfNew(toDatastoreKey(packageName), isConsentRevoked);
@@ -194,7 +205,7 @@ public class AppConsentDao {
      *     application
      * @throws IOException if the operation fails
      */
-    public boolean isConsentRevokedForApp(@NonNull String packageName)
+    public boolean isConsentRevokedForApp(String packageName)
             throws IllegalArgumentException, IOException {
         initializeDatastoreIfNeeded();
         return Boolean.TRUE.equals(mDatastore.getBoolean(toDatastoreKey(packageName)));
@@ -227,7 +238,7 @@ public class AppConsentDao {
      * @throws IllegalArgumentException if the package name or package UID is invalid
      * @throws IOException if the operation fails
      */
-    public void clearConsentForUninstalledApp(@NonNull String packageName, int packageUid)
+    public void clearConsentForUninstalledApp(String packageName, int packageUid)
             throws IllegalArgumentException, IOException {
         initializeDatastoreIfNeeded();
         // Do not check whether the application has been uninstalled; in an edge case where the app
@@ -246,7 +257,7 @@ public class AppConsentDao {
      * @throws IllegalArgumentException if the package name is invalid
      * @throws IOException if the operation fails
      */
-    public void clearConsentForUninstalledApp(@NonNull String packageName) throws IOException {
+    public void clearConsentForUninstalledApp(String packageName) throws IOException {
         Objects.requireNonNull(packageName, "Package name must be provided");
         Preconditions.checkArgument(!packageName.isEmpty(), "Invalid package name");
 
@@ -267,9 +278,7 @@ public class AppConsentDao {
      * @throws IllegalArgumentException if the package UID is not valid
      */
     @VisibleForTesting
-    @NonNull
-    String toDatastoreKey(@NonNull String packageName, int packageUid)
-            throws IllegalArgumentException {
+    String toDatastoreKey(String packageName, int packageUid) throws IllegalArgumentException {
         Objects.requireNonNull(packageName, "Package name must be provided");
         Preconditions.checkArgument(!packageName.isEmpty(), "Invalid package name");
         Preconditions.checkArgument(packageUid > 0, "Invalid package UID");
@@ -285,8 +294,7 @@ public class AppConsentDao {
      *     application
      */
     @VisibleForTesting
-    @NonNull
-    String toDatastoreKey(@NonNull String packageName) throws IllegalArgumentException {
+    String toDatastoreKey(String packageName) throws IllegalArgumentException {
         Objects.requireNonNull(packageName);
 
         int packageUid = getUidForInstalledPackageName(packageName);
@@ -303,8 +311,7 @@ public class AppConsentDao {
      * @throws IllegalArgumentException if the given key does not match the expected schema
      */
     @VisibleForTesting
-    @NonNull
-    String datastoreKeyToPackageName(@NonNull String datastoreKey) throws IllegalArgumentException {
+    String datastoreKeyToPackageName(String datastoreKey) throws IllegalArgumentException {
         Objects.requireNonNull(datastoreKey);
         Preconditions.checkArgument(!datastoreKey.isEmpty(), "Empty input datastore key");
         int separatorIndex = datastoreKey.lastIndexOf(DATASTORE_KEY_SEPARATOR);
@@ -318,7 +325,7 @@ public class AppConsentDao {
      *
      * @return the UID for the installed application, if found
      */
-    public int getUidForInstalledPackageName(@NonNull String packageName) {
+    public int getUidForInstalledPackageName(String packageName) {
         Objects.requireNonNull(packageName);
 
         try {
@@ -330,7 +337,6 @@ public class AppConsentDao {
     }
 
     /** Returns the list of packages installed on the device of the user. */
-    @NonNull
     public Set<String> getInstalledPackages() {
         return PackageManagerCompatUtils.getInstalledApplications(mPackageManager, 0).stream()
                 .map(applicationInfo -> applicationInfo.packageName)
