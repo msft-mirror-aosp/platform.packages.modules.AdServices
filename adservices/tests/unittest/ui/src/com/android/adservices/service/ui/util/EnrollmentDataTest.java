@@ -154,7 +154,7 @@ public class EnrollmentDataTest {
         assertThat(data.getUserChoice(Module.TOPICS))
                 .isEqualTo(AdServicesModuleUserChoice.USER_CHOICE_UNKNOWN);
 
-        String result = data.serialize();
+        String result = EnrollmentData.serialize(data);
 
         EnrollmentData newData = EnrollmentData.deserialize(result);
 
@@ -175,7 +175,7 @@ public class EnrollmentDataTest {
 
     @Test
     public void serializationBase64Test() {
-        EnrollmentData data = EnrollmentData.deserializeFromBase64("");
+        EnrollmentData data = EnrollmentData.deserialize("");
         AdServicesModuleUserChoice userChoiceMeasurement =
                 new AdServicesModuleUserChoice.Builder()
                         .setModule(Module.MEASUREMENT)
@@ -228,9 +228,9 @@ public class EnrollmentDataTest {
         assertThat(data.getUserChoice(Module.TOPICS))
                 .isEqualTo(AdServicesModuleUserChoice.USER_CHOICE_UNKNOWN);
 
-        String result = EnrollmentData.serializeBase64(data);
+        String result = EnrollmentData.serialize(data);
 
-        EnrollmentData newData = EnrollmentData.deserializeFromBase64(result);
+        EnrollmentData newData = EnrollmentData.deserialize(result);
 
         assertThat(newData.getModuleState(Module.MEASUREMENT))
                 .isEqualTo(AdServicesModuleState.MODULE_STATE_ENABLED);

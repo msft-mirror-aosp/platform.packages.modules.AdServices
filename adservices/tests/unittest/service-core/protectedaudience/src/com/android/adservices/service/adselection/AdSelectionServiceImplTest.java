@@ -41,7 +41,7 @@ import static com.android.adservices.service.adselection.ImpressionReporterLegac
 import static com.android.adservices.service.adselection.ImpressionReporterLegacy.UNABLE_TO_FIND_AD_SELECTION_WITH_GIVEN_ID;
 import static com.android.adservices.service.adselection.ReportEventDisabledImpl.API_DISABLED_MESSAGE;
 import static com.android.adservices.service.common.AppManifestConfigCall.API_AD_SELECTION;
-import static com.android.adservices.service.devapi.DevContext.UNKNOWN_APP_BECAUSE_DEV_OPTIONS_IS_DISABLED;
+import static com.android.adservices.service.devapi.DevContext.UNKNOWN_APP_BECAUSE_DEVICE_DEV_OPTIONS_IS_DISABLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE;
@@ -6012,7 +6012,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
         verifyLogFledgeApiCallStatsAnyLatency(
                 SHORT_API_NAME_OVERRIDE,
-                UNKNOWN_APP_BECAUSE_DEV_OPTIONS_IS_DISABLED,
+                UNKNOWN_APP_BECAUSE_DEVICE_DEV_OPTIONS_IS_DISABLED,
                 STATUS_INTERNAL_ERROR);
     }
 
@@ -6225,7 +6225,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
         verifyLogFledgeApiCallStatsAnyLatency(
                 SHORT_API_NAME_REMOVE_OVERRIDE,
-                UNKNOWN_APP_BECAUSE_DEV_OPTIONS_IS_DISABLED,
+                UNKNOWN_APP_BECAUSE_DEVICE_DEV_OPTIONS_IS_DISABLED,
                 STATUS_INTERNAL_ERROR);
     }
 
@@ -6756,14 +6756,14 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
         verifyLogFledgeApiCallStatsAnyLatency(
                 SHORT_API_NAME_RESET_ALL_OVERRIDES,
-                UNKNOWN_APP_BECAUSE_DEV_OPTIONS_IS_DISABLED,
+                UNKNOWN_APP_BECAUSE_DEVICE_DEV_OPTIONS_IS_DISABLED,
                 STATUS_INTERNAL_ERROR);
     }
 
     @Test
     public void testCloseJSScriptEngineConnectionAtShutDown() {
         JSScriptEngine jsScriptEngineMock = mock(JSScriptEngine.class);
-        doReturn(jsScriptEngineMock).when(() -> JSScriptEngine.getInstance(any()));
+        doReturn(jsScriptEngineMock).when(JSScriptEngine::getInstance);
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -6804,8 +6804,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     @Test
     public void testJSScriptEngineConnectionExceptionAtShutDown() {
         JSScriptEngine jsScriptEngineMock = mock(JSScriptEngine.class);
-        doThrow(JSSandboxIsNotAvailableException.class)
-                .when(() -> JSScriptEngine.getInstance(any()));
+        doThrow(JSSandboxIsNotAvailableException.class).when(JSScriptEngine::getInstance);
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -8920,7 +8919,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
         verifyLogFledgeApiCallStatsAnyLatency(
                 AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
-                UNKNOWN_APP_BECAUSE_DEV_OPTIONS_IS_DISABLED,
+                UNKNOWN_APP_BECAUSE_DEVICE_DEV_OPTIONS_IS_DISABLED,
                 STATUS_INTERNAL_ERROR);
     }
 
@@ -9142,7 +9141,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
         verifyLogFledgeApiCallStatsAnyLatency(
                 AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
-                UNKNOWN_APP_BECAUSE_DEV_OPTIONS_IS_DISABLED,
+                UNKNOWN_APP_BECAUSE_DEVICE_DEV_OPTIONS_IS_DISABLED,
                 STATUS_INTERNAL_ERROR);
     }
 
@@ -9577,7 +9576,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
         verifyLogFledgeApiCallStatsAnyLatency(
                 AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
-                UNKNOWN_APP_BECAUSE_DEV_OPTIONS_IS_DISABLED,
+                UNKNOWN_APP_BECAUSE_DEVICE_DEV_OPTIONS_IS_DISABLED,
                 STATUS_INTERNAL_ERROR);
     }
 
@@ -9907,7 +9906,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     @Ignore("b/271652362")
     @Test
     public void testReportEvent_callbackErrorReported() throws Exception {
-        doReturn(mMeasurementServiceMock).when(() -> MeasurementImpl.getInstance(any()));
+        doReturn(mMeasurementServiceMock).when(MeasurementImpl::getInstance);
 
         Uri biddingLogicUri = (mMockWebServerRule.uriForPath(mFetchJavaScriptPathBuyer));
 
@@ -9964,7 +9963,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testReportEvent_disabled_failsFast() throws Exception {
-        doReturn(mMeasurementServiceMock).when(() -> MeasurementImpl.getInstance(any()));
+        doReturn(mMeasurementServiceMock).when(MeasurementImpl::getInstance);
 
         // Generate service instance with feature disabled.
         mFakeFlags =
@@ -10024,7 +10023,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         .setReportingDestinations(FLAG_REPORTING_DESTINATION_BUYER)
                         .build();
 
-        doReturn(mMeasurementServiceMock).when(() -> MeasurementImpl.getInstance(any()));
+        doReturn(mMeasurementServiceMock).when(MeasurementImpl::getInstance);
 
         // Count down callback + log interaction.
         ReportInteractionTestCallback callback =
@@ -11018,7 +11017,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     private void mockCreateDevContext(DevContextFilter mockFilter, String callingAppPackageName) {
         mockCreateDevContext(
                 mockFilter,
-                DevContext.builder(callingAppPackageName).setDevOptionsEnabled(true).build());
+                DevContext.builder(callingAppPackageName).setDeviceDevOptionsEnabled(true).build());
     }
 
     private void mockCreateDevContext(DevContextFilter mockFilter, DevContext devContext) {

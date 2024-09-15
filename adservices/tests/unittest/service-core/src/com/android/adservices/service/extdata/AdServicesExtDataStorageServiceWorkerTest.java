@@ -35,10 +35,7 @@ import android.adservices.extdata.AdServicesExtDataParams;
 import android.adservices.extdata.GetAdServicesExtDataResult;
 import android.adservices.extdata.IAdServicesExtDataStorageService;
 import android.adservices.extdata.IGetAdServicesExtDataCallback;
-import android.content.Context;
 import android.os.RemoteException;
-
-import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
@@ -78,14 +75,8 @@ public final class AdServicesExtDataStorageServiceWorkerTest
     public void setup() {
         mocker.mockGetFlags(mMockFlags);
         ExtendedMockito.doReturn(mDebugProxy)
-                .when(
-                        () ->
-                                AdServicesExtDataStorageServiceDebugProxy.getInstance(
-                                        any(Context.class)));
-        mSpyWorker =
-                spy(
-                        AdServicesExtDataStorageServiceWorker.getInstance(
-                                ApplicationProvider.getApplicationContext()));
+                .when(() -> AdServicesExtDataStorageServiceDebugProxy.newInstance(any()));
+        mSpyWorker = spy(AdServicesExtDataStorageServiceWorker.getInstance());
     }
 
     @Test

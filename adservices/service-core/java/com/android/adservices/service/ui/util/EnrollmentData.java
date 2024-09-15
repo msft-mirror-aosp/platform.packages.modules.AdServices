@@ -30,13 +30,7 @@ import com.android.adservices.LogUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -60,32 +54,6 @@ public class EnrollmentData implements Serializable {
     }
 
     /**
-     * Serializes module enrollment state data to string.
-     *
-     * @return Serialized string.
-     */
-    public String serialize() {
-        return serialize(this);
-    }
-
-    /**
-     * Serializes module enrollment state data to base64 string.
-     *
-     * @param data Data to serialize.
-     * @return Serialized string.
-     */
-    public static String serializeBase64(EnrollmentData data) {
-        try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                ObjectOutputStream oos = new ObjectOutputStream(bos)) {
-            oos.writeObject(data);
-            return Base64.getEncoder().encodeToString(bos.toByteArray());
-        } catch (IOException e) {
-            LogUtil.e("Enrollment Data serializeBase64 error:" + e);
-            return "";
-        }
-    }
-
-    /**
      * Deserializes module enrolment state data from string.
      *
      * @param string String to deserialize.
@@ -99,26 +67,6 @@ public class EnrollmentData implements Serializable {
             }
         } catch (JsonSyntaxException e) {
             LogUtil.e("Enrollment Data deserializing error:" + e);
-        }
-        return new EnrollmentData();
-    }
-
-    /**
-     * Deserializes module enrolment state data from string, using base64.
-     *
-     * @param base64Encoded to deserialize.
-     * @return Object with enrollment data.
-     */
-    public static EnrollmentData deserializeFromBase64(String base64Encoded) {
-        if (base64Encoded == null || base64Encoded.isEmpty()) {
-            return new EnrollmentData();
-        }
-        byte[] decodedBytes = Base64.getDecoder().decode(base64Encoded);
-        try (ByteArrayInputStream bis = new ByteArrayInputStream(decodedBytes);
-                ObjectInputStream ois = new ObjectInputStream(bis)) {
-            return (EnrollmentData) ois.readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            LogUtil.e("Enrollment Data deserializing from base64 error:" + e);
         }
         return new EnrollmentData();
     }

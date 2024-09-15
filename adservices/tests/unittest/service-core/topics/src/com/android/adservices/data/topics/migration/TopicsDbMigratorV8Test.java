@@ -18,58 +18,32 @@ package com.android.adservices.data.topics.migration;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
-import androidx.test.core.app.ApplicationProvider;
-
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.data.topics.TopicsTables;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
-import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 /** Unit tests for {@link TopicsDbMigratorV8} */
-public class TopicsDbMigratorV8Test {
-    private static final Context sContext = ApplicationProvider.getApplicationContext();
+@MockStatic(FlagsFactory.class)
+public final class TopicsDbMigratorV8Test extends AdServicesExtendedMockitoTestCase {
+
     // The database is created with V7 and will migrate to V8.
-    private final TopicsDbHelperV7 mTopicsDbHelper = TopicsDbHelperV7.getInstance(sContext);
-
-    private MockitoSession mStaticMockSession;
-    @Mock private Flags mMockFlags;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+    private final TopicsDbHelperV7 mTopicsDbHelper = TopicsDbHelperV7.getInstance();
 
     @Before
     public void setup() {
-        MockitoAnnotations.initMocks(this);
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .strictness(Strictness.WARN)
-                        .startMocking();
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-    }
-
-    @After
-    public void teardown() {
-        mStaticMockSession.finishMocking();
+        mocker.mockGetFlags(mMockFlags);
     }
 
     @Test
@@ -94,11 +68,9 @@ public class TopicsDbMigratorV8Test {
         assertThat(DbTestUtil.getTableColumns(db, TopicsTables.ReturnedTopicContract.TABLE))
                 .contains(TopicsTables.ReturnedTopicContract.LOGGED_TOPIC);
         assertThat(
-                DbTestUtil.doesTableExistAndColumnCountMatch(
-                        db,
-                        TopicsTables.ReturnedTopicContract.TABLE,
-                        /* number of columns */ 8
-                )).isTrue();
+                        DbTestUtil.doesTableExistAndColumnCountMatch(
+                                db, TopicsTables.ReturnedTopicContract.TABLE, /* columnCount= */ 8))
+                .isTrue();
         // Insert two logged_topic (10001 and 10005) into ReturnedTopic table.
         insertTestLoggedTopic(
                 db,

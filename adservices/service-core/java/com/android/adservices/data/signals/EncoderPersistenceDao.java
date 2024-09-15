@@ -25,7 +25,10 @@ import androidx.annotation.NonNull;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.common.compat.FileCompatUtils;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
+
+import com.google.errorprone.annotations.concurrent.GuardedBy;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -40,7 +43,7 @@ import java.util.Objects;
  * sequential, and will honor the last completed write for parallel writes. Multiple encoder write
  * updates are unlikely to happen.
  */
-public class EncoderPersistenceDao {
+public final class EncoderPersistenceDao {
 
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
@@ -55,6 +58,8 @@ public class EncoderPersistenceDao {
 
     @NonNull private File mFilesDir;
     private static final Object SINGLETON_LOCK = new Object();
+
+    @GuardedBy("SINGLETON_LOCK")
     private static volatile EncoderPersistenceDao sInstance;
 
     @SuppressLint("NewAdServicesFile")
@@ -63,9 +68,7 @@ public class EncoderPersistenceDao {
     }
 
     /** Provides a singleton instance of {@link EncoderPersistenceDao} */
-    public static EncoderPersistenceDao getInstance(@NonNull Context context) {
-        Objects.requireNonNull(context, "Context must not be null");
-
+    public static EncoderPersistenceDao getInstance() {
         EncoderPersistenceDao singleInstance = sInstance;
         if (singleInstance != null) {
             return singleInstance;
@@ -73,6 +76,7 @@ public class EncoderPersistenceDao {
 
         synchronized (SINGLETON_LOCK) {
             if (sInstance == null) {
+                Context context = ApplicationContextSingleton.get();
                 sInstance = new EncoderPersistenceDao(context);
             }
         }

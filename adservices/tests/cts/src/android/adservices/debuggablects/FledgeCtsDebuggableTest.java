@@ -536,7 +536,7 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         DevContext devContext = DevContextFilter.create(sContext).createDevContext(Process.myUid());
         boolean isDebuggable = devContextFilter.isDebuggable(devContext.getCallingAppPackageName());
         boolean isDeveloperMode = devContextFilter.isDeveloperMode();
-        mHasAccessToDevOverrides = devContext.getDevOptionsEnabled();
+        mHasAccessToDevOverrides = devContext.getDeviceDevOptionsEnabled();
         mAccessStatus =
                 String.format("Debuggable: %b\n", isDebuggable)
                         + String.format("Developer options on: %b", isDeveloperMode);

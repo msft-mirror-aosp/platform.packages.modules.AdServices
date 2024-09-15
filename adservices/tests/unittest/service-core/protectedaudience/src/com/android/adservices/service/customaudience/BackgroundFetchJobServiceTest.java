@@ -133,7 +133,7 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
     @Test
     public void testOnStartJobConsentRevokedGaUxDisabled() throws Exception {
         doReturn(mFlagsWithEnabledBgFGaUxDisabled).when(FlagsFactory::getFlags);
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
+        doReturn(mConsentManagerMock).when(ConsentManager::getInstance);
         doReturn(AdServicesApiConsent.REVOKED)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -232,11 +232,11 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
         doReturn(mFlagsWithEnabledBgFGaUxDisabled).when(FlagsFactory::getFlags);
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
+        doReturn(mConsentManagerMock).when(ConsentManager::getInstance);
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
-        doReturn(mBgFWorkerMock).when(() -> BackgroundFetchWorker.getInstance(any()));
+        doReturn(mBgFWorkerMock).when(BackgroundFetchWorker::getInstance);
         doReturn(
                         FluentFuture.from(
                                 immediateFailedFuture(new InterruptedException("testing timeout"))))
@@ -253,7 +253,7 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
         assertTrue(mBgFJobServiceSpy.onStartJob(mJobParametersMock));
         jobFinishedCountDown.await();
 
-        verify(() -> BackgroundFetchWorker.getInstance(mBgFJobServiceSpy));
+        verify(BackgroundFetchWorker::getInstance);
         verify(mBgFWorkerMock).runBackgroundFetch();
         verify(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
         verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
@@ -264,11 +264,11 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
         doReturn(mFlagsWithEnabledBgFGaUxDisabled).when(FlagsFactory::getFlags);
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
+        doReturn(mConsentManagerMock).when(ConsentManager::getInstance);
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
-        doReturn(mBgFWorkerMock).when(() -> BackgroundFetchWorker.getInstance(any()));
+        doReturn(mBgFWorkerMock).when(BackgroundFetchWorker::getInstance);
         doReturn(
                         FluentFuture.from(
                                 immediateFailedFuture(
@@ -286,7 +286,7 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
         assertTrue(mBgFJobServiceSpy.onStartJob(mJobParametersMock));
         jobFinishedCountDown.await();
 
-        verify(() -> BackgroundFetchWorker.getInstance(mBgFJobServiceSpy));
+        verify(BackgroundFetchWorker::getInstance);
         verify(mBgFWorkerMock).runBackgroundFetch();
         verify(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
         verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
@@ -378,7 +378,7 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
-        doReturn(mBgFWorkerMock).when(() -> BackgroundFetchWorker.getInstance(any()));
+        doReturn(mBgFWorkerMock).when(BackgroundFetchWorker::getInstance);
         doReturn(FluentFuture.from(immediateFuture(null)))
                 .when(mBgFWorkerMock)
                 .runBackgroundFetch();
@@ -395,7 +395,7 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
         assertTrue(mBgFJobServiceSpy.onStartJob(mJobParametersMock));
         jobFinishedCountDown.await();
 
-        verify(() -> BackgroundFetchWorker.getInstance(mBgFJobServiceSpy));
+        verify(BackgroundFetchWorker::getInstance);
         FluentFuture<Void> unusedFuture = verify(mBgFWorkerMock).runBackgroundFetch();
         verify(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
         verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
@@ -460,11 +460,11 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
     private void testOnStartJobUpdateSuccess() throws Exception {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
+        doReturn(mConsentManagerMock).when(ConsentManager::getInstance);
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
-        doReturn(mBgFWorkerMock).when(() -> BackgroundFetchWorker.getInstance(any()));
+        doReturn(mBgFWorkerMock).when(BackgroundFetchWorker::getInstance);
         doReturn(FluentFuture.from(immediateFuture(null)))
                 .when(mBgFWorkerMock)
                 .runBackgroundFetch();
@@ -479,7 +479,7 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
         assertTrue(mBgFJobServiceSpy.onStartJob(mJobParametersMock));
         jobFinishedCountDown.await();
 
-        verify(() -> BackgroundFetchWorker.getInstance(mBgFJobServiceSpy));
+        verify(BackgroundFetchWorker::getInstance);
         verify(mBgFWorkerMock).runBackgroundFetch();
         verify(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
         verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
@@ -488,14 +488,14 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
     private void testOnStartJobUpdateTimeoutHandled() throws Exception {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
+        doReturn(mConsentManagerMock).when(ConsentManager::getInstance);
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
-        doReturn(mBgFWorkerMock).when(() -> BackgroundFetchWorker.getInstance(any()));
+        doReturn(mBgFWorkerMock).when(BackgroundFetchWorker::getInstance);
         doReturn(FluentFuture.from(immediateFailedFuture(new TimeoutException("testing timeout"))))
                 .when(mBgFWorkerMock)
                 .runBackgroundFetch();
@@ -510,14 +510,14 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
         assertTrue(mBgFJobServiceSpy.onStartJob(mJobParametersMock));
         jobFinishedCountDown.await();
 
-        verify(() -> BackgroundFetchWorker.getInstance(mBgFJobServiceSpy));
+        verify(BackgroundFetchWorker::getInstance);
         verify(mBgFWorkerMock).runBackgroundFetch();
         verify(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
         verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
     }
 
     private void testOnStartJobConsentRevokedGaUxEnabled() throws Exception {
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
+        doReturn(mConsentManagerMock).when(ConsentManager::getInstance);
         doReturn(AdServicesApiConsent.REVOKED)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -543,7 +543,7 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
     }
 
     private void testOnStopJobCallsStopWork() {
-        doReturn(mBgFWorkerMock).when(() -> BackgroundFetchWorker.getInstance(any()));
+        doReturn(mBgFWorkerMock).when(BackgroundFetchWorker::getInstance);
         doNothing().when(mBgFWorkerMock).stopWork();
 
         assertTrue(mBgFJobServiceSpy.onStopJob(mJobParametersMock));
