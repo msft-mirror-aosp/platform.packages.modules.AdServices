@@ -16,19 +16,45 @@
 
 package com.android.adservices.service.shell;
 
-import static com.google.common.truth.Truth.assertThat;
+import com.android.adservices.service.stats.ShellCommandStats;
 
 import org.junit.Test;
 
-public final class NoOpShellCommandTest extends ShellCommandTest<NoOpShellCommand> {
+public final class NoOpShellCommandTest extends ShellCommandTestCase<NoOpShellCommand> {
 
     @Test
     public void test_success() {
+        String debugFlagName = "adservices";
         String commandName = "test";
-        NoOpShellCommand command = new NoOpShellCommand(commandName);
+        int expectedCommand = ShellCommandStats.COMMAND_ECHO;
+        int expectedResult = ShellCommandStats.RESULT_NOT_ENABLED;
+        NoOpShellCommand command =
+                new NoOpShellCommand(commandName, expectedCommand, debugFlagName);
         Result actualResult = run(command, commandName);
-        expectSuccess(actualResult);
-        assertThat(actualResult.mOut)
-                .isEqualTo(String.format(NoOpShellCommand.RESPONSE_MSG, commandName));
+        expectFailure(
+                actualResult,
+                String.format(NoOpShellCommand.RESPONSE_MSG, commandName),
+                expectedCommand,
+                expectedResult);
+    }
+
+    @Test
+    public void test_getCommandName() {
+        String debugFlagName = "adservices";
+        String commandName = "test";
+        int expectedCommand = ShellCommandStats.COMMAND_ECHO;
+        NoOpShellCommand command =
+                new NoOpShellCommand(commandName, expectedCommand, debugFlagName);
+        expect.withMessage("getCommandHel").that(command.getCommandName()).isEqualTo(commandName);
+    }
+
+    @Test
+    public void test_getCommandHelp() {
+        String debugFlagName = "adservices";
+        String commandName = "test";
+        int expectedCommand = ShellCommandStats.COMMAND_ECHO;
+        NoOpShellCommand command =
+                new NoOpShellCommand(commandName, expectedCommand, debugFlagName);
+        expect.withMessage("getCommandHel").that(command.getCommandHelp()).isEqualTo("");
     }
 }

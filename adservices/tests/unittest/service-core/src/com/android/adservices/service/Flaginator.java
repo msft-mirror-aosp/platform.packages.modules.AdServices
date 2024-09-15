@@ -16,9 +16,9 @@
 package com.android.adservices.service;
 
 /**
- * "Fancy" interface used to build lambdas that can test a speficic flag on multiple {@code Flag}
+ * "Fancy" interface used to build lambdas that can test a specific flag on multiple {@code Flag}
  * objects.
  */
-interface Flaginator<T> {
-    T getFlagValue(Flags flags);
+interface Flaginator<F, T> {
+    T getFlagValue(F flags);
 }

@@ -24,16 +24,12 @@ import androidx.annotation.RequiresApi;
 import androidx.lifecycle.Observer;
 
 import com.android.adservices.api.R;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.UiStatsLogger;
-import com.android.adservices.ui.settings.DialogFragmentManager;
-import com.android.adservices.ui.settings.DialogManager;
 import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
 import com.android.adservices.ui.settings.activities.AppsActivity;
 import com.android.adservices.ui.settings.activities.MeasurementActivity;
 import com.android.adservices.ui.settings.activities.TopicsActivity;
 import com.android.adservices.ui.settings.viewmodels.MainViewModel;
-import com.android.settingslib.widget.MainSwitchBar;
 
 import java.util.HashMap;
 import java.util.Locale;
@@ -45,15 +41,6 @@ import java.util.Map;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class MainActivityActionDelegate extends BaseActionDelegate {
-    private static final int[] BetaOnlyElements =
-            new int[] {
-                R.id.main_switch_bar,
-                R.id.above_pic_paragraph,
-                R.id.main_view_pic,
-                R.id.main_view_footer
-            };
-    private static final int[] GaOnlyElements =
-            new int[] {R.id.main_view_ga_pic, R.id.main_view_ga_footer};
     private final MainViewModel mMainViewModel;
 
     public MainActivityActionDelegate(
@@ -64,42 +51,13 @@ public class MainActivityActionDelegate extends BaseActionDelegate {
         listenToMainViewModelUiEvents();
     }
 
-    @Override
-    public void initBeta() {
-        // hidden elements
-        hideElements(GaOnlyElements);
-        // show elements
-        showElements(BetaOnlyElements);
-
-        mActivity.setTitle(R.string.settingsUI_main_view_title);
-        // privacy sandbox controls
-        configureElement(
-                R.id.privacy_sandbox_controls,
-                mMainViewModel.getConsent(),
-                controls ->
-                        consent -> controls.setVisibility((consent ? View.VISIBLE : View.GONE)));
-        // main consent switch
-        configureElement(
-                R.id.main_switch_bar,
-                switchBar -> mMainViewModel.consentSwitchClickHandler((MainSwitchBar) switchBar),
-                mMainViewModel.getConsent(),
-                switchBar -> ((MainSwitchBar) switchBar)::setChecked);
-        // topics button
-        configureElement(
-                R.id.topics_preference, button -> mMainViewModel.topicsButtonClickHandler());
-        configureElement(R.id.topics_preference_title, R.string.settingsUI_topics_title);
-        // apps button
-        configureElement(R.id.apps_preference, button -> mMainViewModel.appsButtonClickHandler());
-        configureElement(R.id.apps_preference_title, R.string.settingsUI_apps_title);
+    /** Refreshes static views with data from view model that may have changed. */
+    public void refreshState() {
+        initWithUx(mActivity, mActivity.getApplicationContext());
     }
 
     @Override
     public void initGA() {
-        // hidden elements
-        hideElements(BetaOnlyElements);
-        // show elements
-        showElements(GaOnlyElements);
-
         mActivity.setTitle(R.string.settingsUI_main_view_ga_title);
 
         // privacy sandbox controls
@@ -175,21 +133,6 @@ public class MainActivityActionDelegate extends BaseActionDelegate {
                     }
                     try {
                         switch (event) {
-                            case SWITCH_ON_PRIVACY_SANDBOX_BETA:
-                                mMainViewModel.setConsent(true);
-                                break;
-                            case SWITCH_OFF_PRIVACY_SANDBOX_BETA:
-                                if (FlagsFactory.getFlags().getUiDialogsFeatureEnabled()) {
-                                    if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
-                                        DialogFragmentManager.showOptOutDialogFragment(
-                                                mActivity, mMainViewModel);
-                                    } else {
-                                        DialogManager.showOptOutDialog(mActivity, mMainViewModel);
-                                    }
-                                } else {
-                                    mMainViewModel.setConsent(false);
-                                }
-                                break;
                             case DISPLAY_APPS_FRAGMENT:
                                 UiStatsLogger.logManageAppsSelected();
                                 mActivity.startActivity(new Intent(mActivity, AppsActivity.class));

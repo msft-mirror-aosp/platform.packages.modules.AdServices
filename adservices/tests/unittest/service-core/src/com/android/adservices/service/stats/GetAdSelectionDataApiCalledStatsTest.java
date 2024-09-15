@@ -16,6 +16,9 @@
 
 package com.android.adservices.service.stats;
 
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_API;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_UNSET;
+
 import android.adservices.common.AdServicesStatusUtils;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
@@ -25,6 +28,10 @@ import org.junit.Test;
 public class GetAdSelectionDataApiCalledStatsTest extends AdServicesUnitTestCase {
     private static final int PAYLOAD_SIZE_KB = 64;
     private static final int NUM_BUYERS = 2;
+
+    @AdsRelevanceStatusUtils.ServerAuctionCoordinatorSource
+    private static final int SERVER_AUCTION_COORDINATOR_SOURCE =
+            SERVER_AUCTION_COORDINATOR_SOURCE_API;
 
     @AdServicesStatusUtils.StatusCode
     private static final int STATUS_CODE = AdServicesStatusUtils.STATUS_SUCCESS;
@@ -41,5 +48,24 @@ public class GetAdSelectionDataApiCalledStatsTest extends AdServicesUnitTestCase
         expect.that(stats.getPayloadSizeKb()).isEqualTo(PAYLOAD_SIZE_KB);
         expect.that(stats.getNumBuyers()).isEqualTo(NUM_BUYERS);
         expect.that(stats.getStatusCode()).isEqualTo(STATUS_CODE);
+        expect.that(stats.getServerAuctionCoordinatorSource())
+                .isEqualTo(SERVER_AUCTION_COORDINATOR_SOURCE_UNSET);
+    }
+
+    @Test
+    public void testBuildGetAdSelectionDataApiCalledStats_WithCoordinatorSource() {
+        GetAdSelectionDataApiCalledStats stats =
+                GetAdSelectionDataApiCalledStats.builder()
+                        .setPayloadSizeKb(PAYLOAD_SIZE_KB)
+                        .setNumBuyers(NUM_BUYERS)
+                        .setStatusCode(STATUS_CODE)
+                        .setServerAuctionCoordinatorSource(SERVER_AUCTION_COORDINATOR_SOURCE)
+                        .build();
+
+        expect.that(stats.getPayloadSizeKb()).isEqualTo(PAYLOAD_SIZE_KB);
+        expect.that(stats.getNumBuyers()).isEqualTo(NUM_BUYERS);
+        expect.that(stats.getStatusCode()).isEqualTo(STATUS_CODE);
+        expect.that(stats.getServerAuctionCoordinatorSource())
+                .isEqualTo(SERVER_AUCTION_COORDINATOR_SOURCE);
     }
 }

@@ -23,6 +23,10 @@ android_test {
     srcs: [
         "src/**/*.java",
         "side-less/**/*.java",
+        ":adservices-shared-sideless-meta-testing-sources",
+    ],
+    libs: [
+        "framework-adservices-lib", // Needed to test fake ServiceBinder implementations
     ],
     static_libs: [
         "adservices-test-utility",
@@ -34,7 +38,11 @@ android_test {
     sdk_version: "module_current",
     plugins: ["auto_annotation_plugin"],
     test_config: "AndroidTest.xml",
-    // TODO(b/293894199): should be 30 (see explanation on AndroidTest.xml)
-    min_sdk_version: "31",
+    min_sdk_version: "30",
     target_sdk_version: "31",
+    lint: {
+        extra_check_modules: ["AdServicesTestLintChecker"],
+        baseline_filename: "lint-baseline.xml",
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
 }

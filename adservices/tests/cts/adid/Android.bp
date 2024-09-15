@@ -18,6 +18,7 @@ package {
 
 android_test {
     name: "CtsAdIdEndToEndTest",
+    team: "trendy_team_android_rubidium",
     srcs: [
         "src/**/*.java",
     ],
@@ -29,7 +30,7 @@ android_test {
         "truth",
     ],
     libs: [
-        "android.test.base",
+        "android.test.base.stubs.system",
         "framework-adservices-lib",
         "framework-sdksandbox.impl",
     ],
@@ -42,6 +43,10 @@ android_test {
     sdk_version: "module_current",
     min_sdk_version: "Tiramisu",
     manifest: "AndroidManifest.xml",
+    lint: {
+        extra_check_modules: ["AdServicesTestLintChecker"],
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
 }
 
 android_test {
@@ -58,7 +63,7 @@ android_test {
     ],
     libs: [
         "android.ext.adservices",
-        "android.test.base",
+        "android.test.base.stubs.system",
         "framework-sdksandbox.impl",
     ],
     test_suites: [
@@ -72,4 +77,9 @@ android_test {
     max_sdk_version: "32",
     test_config: "AndroidTest.ExtServices.xml",
     manifest: "AndroidManifestExtServices.xml",
+    lint: {
+        extra_check_modules: ["AdServicesTestLintChecker"],
+        baseline_filename: "lint-baseline-adextservices.xml",
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
 }

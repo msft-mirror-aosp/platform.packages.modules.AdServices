@@ -16,8 +16,6 @@
 
 package com.android.adservices.service.common;
 
-import static android.adservices.common.AdServicesStatusUtils.RATE_LIMIT_REACHED_ERROR_MESSAGE;
-
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
@@ -28,10 +26,7 @@ import android.os.LimitExceededException;
 
 import androidx.annotation.RequiresApi;
 
-import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.consent.AdServicesApiConsent;
-import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
@@ -39,41 +34,39 @@ import com.android.adservices.service.exception.FilterException;
 import java.util.Objects;
 
 /** Utility class to filter FLEDGE requests. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public abstract class AbstractFledgeServiceFilter {
-    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     @NonNull private final Context mContext;
-    @NonNull private final ConsentManager mConsentManager;
+    @NonNull private final FledgeConsentFilter mFledgeConsentFilter;
     @NonNull private final Flags mFlags;
     @NonNull private final AppImportanceFilter mAppImportanceFilter;
     @NonNull private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
     @NonNull private final FledgeAllowListsFilter mFledgeAllowListsFilter;
-    @NonNull private final Throttler mThrottler;
+    @NonNull private final FledgeApiThrottleFilter mFledgeApiThrottleFilter;
 
     public AbstractFledgeServiceFilter(
             @NonNull Context context,
-            @NonNull ConsentManager consentManager,
+            @NonNull FledgeConsentFilter fledgeConsentFilter,
             @NonNull Flags flags,
             @NonNull AppImportanceFilter appImportanceFilter,
             @NonNull FledgeAuthorizationFilter fledgeAuthorizationFilter,
             @NonNull FledgeAllowListsFilter fledgeAllowListsFilter,
-            @NonNull Throttler throttler) {
+            @NonNull FledgeApiThrottleFilter fledgeApiThrottleFilter) {
         Objects.requireNonNull(context);
-        Objects.requireNonNull(consentManager);
+        Objects.requireNonNull(fledgeConsentFilter);
         Objects.requireNonNull(flags);
         Objects.requireNonNull(appImportanceFilter);
         Objects.requireNonNull(fledgeAuthorizationFilter);
         Objects.requireNonNull(fledgeAllowListsFilter);
-        Objects.requireNonNull(throttler);
+        Objects.requireNonNull(fledgeApiThrottleFilter);
 
         mContext = context;
-        mConsentManager = consentManager;
+        mFledgeConsentFilter = fledgeConsentFilter;
         mFlags = flags;
         mAppImportanceFilter = appImportanceFilter;
         mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
         mFledgeAllowListsFilter = fledgeAllowListsFilter;
-        mThrottler = throttler;
+        mFledgeApiThrottleFilter = fledgeApiThrottleFilter;
     }
 
     /**
@@ -82,12 +75,9 @@ public abstract class AbstractFledgeServiceFilter {
      * @throws ConsentManager.RevokedConsentException if FLEDGE or the Privacy Sandbox do not have
      *     user consent
      */
-    protected void assertCallerHasUserConsent() throws ConsentManager.RevokedConsentException {
-        AdServicesApiConsent userConsent = mConsentManager.getConsent(AdServicesApiType.FLEDGE);
-
-        if (!userConsent.isGiven()) {
-            throw new ConsentManager.RevokedConsentException();
-        }
+    protected void assertCallerHasUserConsent(String callerPackageName, int apiName)
+            throws ConsentManager.RevokedConsentException {
+        mFledgeConsentFilter.assertCallerHasApiUserConsent(callerPackageName, apiName);
     }
 
     /**
@@ -97,11 +87,9 @@ public abstract class AbstractFledgeServiceFilter {
      * @throws ConsentManager.RevokedConsentException if FLEDGE or the Privacy Sandbox do not have
      *     user consent
      */
-    protected void assertAndPersistCallerHasUserConsentForApp(String callerPackageName)
+    protected void assertAndPersistCallerHasUserConsentForApp(String callerPackageName, int apiName)
             throws ConsentManager.RevokedConsentException {
-        if (mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(callerPackageName)) {
-            throw new ConsentManager.RevokedConsentException();
-        }
+        mFledgeConsentFilter.assertAndPersistCallerHasUserConsentForApp(callerPackageName, apiName);
     }
 
     /**
@@ -198,15 +186,10 @@ public abstract class AbstractFledgeServiceFilter {
      * @throws LimitExceededException if the provided {@code callerPackageName} exceeds its rate
      *     limits
      */
-    protected void assertCallerNotThrottled(final String callerPackageName, Throttler.ApiKey apiKey)
+    protected void assertCallerNotThrottled(
+            final String callerPackageName, Throttler.ApiKey apiKey, int apiName)
             throws LimitExceededException {
-        sLogger.v("Checking if API is throttled for package: %s ", callerPackageName);
-        boolean isThrottled = !mThrottler.tryAcquire(apiKey, callerPackageName);
-
-        if (isThrottled) {
-            sLogger.e(String.format("Rate Limit Reached for API: %s", apiKey));
-            throw new LimitExceededException(RATE_LIMIT_REACHED_ERROR_MESSAGE);
-        }
+        mFledgeApiThrottleFilter.assertCallerNotThrottled(callerPackageName, apiKey, apiName);
     }
 
     /**

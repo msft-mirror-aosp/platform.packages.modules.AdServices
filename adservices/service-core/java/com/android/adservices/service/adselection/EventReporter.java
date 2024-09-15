@@ -65,7 +65,6 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
 /** Encapsulates the Event Reporting logic */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public abstract class EventReporter {
     public static final String NO_MATCH_FOUND_IN_AD_SELECTION_DB =
@@ -191,12 +190,21 @@ public abstract class EventReporter {
                                                             adSelectionId,
                                                             interactionKey,
                                                             destination)) {
+                                                sLogger.v(
+                                                        "Found registered ad beacons for"
+                                                                + " id:%s, key:%s and dest:%s",
+                                                        adSelectionId, interactionKey, destination);
                                                 resultingReportingUris.add(
                                                         mAdSelectionEntryDao
                                                                 .getRegisteredAdInteractionUri(
                                                                         adSelectionId,
                                                                         interactionKey,
                                                                         destination));
+                                            } else {
+                                                sLogger.w(
+                                                        "Registered ad beacon URIs not found for"
+                                                                + " id:%s, key:%s and dest:%s",
+                                                        adSelectionId, interactionKey, destination);
                                             }
                                         }
                                     }
@@ -230,6 +238,7 @@ public abstract class EventReporter {
                                                         uri));
                                     }
                                 }
+                                sLogger.v("Validated uris: %s", validatedUris);
                                 return validatedUris;
                             }
                         }));

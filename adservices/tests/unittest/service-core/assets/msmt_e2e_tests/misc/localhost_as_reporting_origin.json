@@ -3,7 +3,6 @@
   "input": {
     "sources": [{
       "registration_request": {
-        "attribution_src_url": "https://localhost",
         "source_type": "navigation",
         "registrant": "example.1s1.test"
       },
@@ -24,7 +23,6 @@
     }],
     "triggers": [{
       "registration_request": {
-        "attribution_src_url": "https://localhost",
         "registrant": "example.2d1.test"
       },
       "responses": [{
@@ -47,11 +45,11 @@
   },
   "output": {
     "event_level_results": [{
-      "report_time": "800176400001",
+      "report_time": "800172800001",
       "report_url": "https://localhost/.well-known/attribution-reporting/report-event-attribution",
       "payload": {
         "attribution_destination": "android-app://example.2d1.test",
-        "scheduled_report_time": "800176400",
+        "scheduled_report_time": "800172800",
         "source_event_id": "1",
         "trigger_data": "2",
         "source_type": "navigation",

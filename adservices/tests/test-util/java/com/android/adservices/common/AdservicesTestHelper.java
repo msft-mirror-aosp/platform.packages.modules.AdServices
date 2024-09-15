@@ -34,7 +34,7 @@ import java.util.List;
 /** Class to place Adservices CTS related helper method. */
 public final class AdservicesTestHelper {
     // Used to get the package name. Copied over from com.android.adservices.AdServicesCommon
-    private static final String TOPICS_SERVICE_NAME = "android.adservices.TOPICS_SERVICE";
+    private static final String MEASUREMENT_SERVICE_NAME = "android.adservices.MEASUREMENT_SERVICE";
     private static final String DEFAULT_LOG_TAG = "adservices";
     private static final String FORCE_KILL_PROCESS_COMMAND = "am force-stop";
     // Used to differentiate between AdServices APK package name and AdExtServices APK package name.
@@ -46,15 +46,17 @@ public final class AdservicesTestHelper {
      * @param context the context
      * @param logTag the tag used for logging
      * @return Adservices package name
+     * @deprecated use {@link AdServicesSupportHelper#getAdServicesPackageName()} instead.
      */
+    @Deprecated
     public static String getAdServicesPackageName(
             @NonNull Context context, @NonNull String logTag) {
-        final Intent intent = new Intent(TOPICS_SERVICE_NAME);
+        final Intent intent = new Intent(MEASUREMENT_SERVICE_NAME);
         final List<ResolveInfo> resolveInfos =
                 context.getPackageManager()
                         .queryIntentServices(intent, PackageManager.MATCH_SYSTEM_ONLY);
         final ServiceInfo serviceInfo =
-                resolveAdServicesService(resolveInfos, TOPICS_SERVICE_NAME, logTag);
+                resolveAdServicesService(resolveInfos, MEASUREMENT_SERVICE_NAME, logTag);
         if (serviceInfo == null) {
             Log.e(logTag, "Failed to find serviceInfo for adServices service");
             return null;
@@ -69,7 +71,9 @@ public final class AdservicesTestHelper {
      *
      * @param context the context
      * @return Adservices package name
+     * @deprecated use {@link AdServicesSupportHelper#getAdServicesPackageName()} instead.
      */
+    @Deprecated
     public static String getAdServicesPackageName(@NonNull Context context) {
         return getAdServicesPackageName(context, DEFAULT_LOG_TAG);
     }

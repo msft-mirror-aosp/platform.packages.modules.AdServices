@@ -29,7 +29,7 @@ import com.android.sdksandbox.IComputeSdkStorageCallback;
 
 /** @hide */
 oneway interface ISdkSandboxService {
-    void initialize(in ISdkToServiceCallback sdkToService, boolean isCustomizedSdkContextEnabled);
+    void initialize(in ISdkToServiceCallback sdkToService);
     void computeSdkStorage(in List<String> sharedPaths, in List<String> sdkPaths,
                            in IComputeSdkStorageCallback callback);
     // TODO(b/228045863): Wrap parameters in a parcelable

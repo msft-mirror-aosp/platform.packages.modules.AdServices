@@ -38,6 +38,22 @@ public class MigrationHelpers {
         db.execSQL(String.format("ALTER TABLE %1$s ADD %2$s INTEGER", tableName, columnName));
     }
 
+    /** Add TEXT columns {@code columnNames} to {@code tableName} in the {@code db}. */
+    static void addTextColumnsIfAbsent(SQLiteDatabase db, String tableName, String[] columnNames) {
+        for (String column : columnNames) {
+            addTextColumnIfAbsent(db, tableName, column);
+        }
+    }
+
+    /** Add a TEXT column {@code columnName} to {@code tableName} in the {@code db}. */
+    private static void addTextColumnIfAbsent(
+            SQLiteDatabase db, String tableName, String columnName) {
+        if (isColumnPresent(db, tableName, columnName)) {
+            return;
+        }
+        db.execSQL(String.format("ALTER TABLE %1$s ADD %2$s TEXT", tableName, columnName));
+    }
+
     /** Returns true if {@code tableName} contains a column {@code columnName}. */
     static boolean isColumnPresent(SQLiteDatabase db, String tableName, String columnName) {
         final String query =

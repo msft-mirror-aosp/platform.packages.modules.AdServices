@@ -17,6 +17,8 @@
 package com.android.adservices.service.signals;
 
 import static com.android.adservices.service.signals.SignalsFixture.DEV_CONTEXT;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JSON_PROCESSING_STATUS_SEMANTIC_ERROR;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JSON_PROCESSING_STATUS_SYNTACTIC_ERROR;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -32,7 +34,6 @@ import static org.mockito.Mockito.when;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.service.signals.evict.SignalEvictionController;
@@ -41,6 +42,8 @@ import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEven
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessor;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorSelector;
+import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -77,6 +80,7 @@ public class UpdateProcessingOrchestratorTest {
     @Mock private UpdateProcessorSelector mUpdateProcessorSelectorMock;
     @Mock private UpdateEncoderEventHandler mUpdateEncoderEventHandlerMock;
     @Mock private SignalEvictionController mSignalEvictionControllerMock;
+    private UpdateSignalsApiCalledStats.Builder mUpdateSignalsApiCalledStats;
     @Captor ArgumentCaptor<List<DBProtectedSignal>> mInsertCaptor;
     @Captor ArgumentCaptor<List<DBProtectedSignal>> mRemoveCaptor;
     @Captor ArgumentCaptor<UpdateOutput> mUpdateOutputArgumentCaptor;
@@ -94,13 +98,14 @@ public class UpdateProcessingOrchestratorTest {
                         mUpdateProcessorSelectorMock,
                         mUpdateEncoderEventHandlerMock,
                         mSignalEvictionControllerMock);
+        mUpdateSignalsApiCalledStats = UpdateSignalsApiCalledStats.builder();
     }
 
     @Test
     public void testUpdatesProcessorEmptyJson() {
         when(mProtectedSignalsDaoMock.getSignalsByBuyer(ADTECH)).thenReturn(List.of());
         mUpdateProcessingOrchestrator.processUpdates(
-                ADTECH, PACKAGE, NOW, new JSONObject(), DEV_CONTEXT);
+                ADTECH, PACKAGE, NOW, new JSONObject(), DEV_CONTEXT, mUpdateSignalsApiCalledStats);
         verify(mProtectedSignalsDaoMock).getSignalsByBuyer(eq(ADTECH));
         verify(mProtectedSignalsDaoMock)
                 .insertAndDelete(ADTECH, NOW, Collections.emptyList(), Collections.emptyList());
@@ -140,11 +145,19 @@ public class UpdateProcessingOrchestratorTest {
                         IllegalArgumentException.class,
                         () ->
                                 mUpdateProcessingOrchestrator.processUpdates(
-                                        ADTECH, PACKAGE, NOW, commandToNumber, DEV_CONTEXT));
+                                        ADTECH,
+                                        PACKAGE,
+                                        NOW,
+                                        commandToNumber,
+                                        DEV_CONTEXT,
+                                        mUpdateSignalsApiCalledStats));
         assertEquals(exception, t.getCause());
         verify(mProtectedSignalsDaoMock).getSignalsByBuyer(ADTECH);
         verifyZeroInteractions(mSignalEvictionControllerMock);
         verifyNoMoreInteractions(mProtectedSignalsDaoMock);
+        assertEquals(
+                JSON_PROCESSING_STATUS_SYNTACTIC_ERROR,
+                mUpdateSignalsApiCalledStats.build().getJsonProcessingStatus());
     }
 
     @Test
@@ -162,7 +175,8 @@ public class UpdateProcessingOrchestratorTest {
         when(mUpdateProcessorSelectorMock.getUpdateProcessor(TEST_PROCESSOR))
                 .thenReturn(createProcessor(TEST_PROCESSOR, toReturn));
 
-        mUpdateProcessingOrchestrator.processUpdates(ADTECH, PACKAGE, NOW, json, DEV_CONTEXT);
+        mUpdateProcessingOrchestrator.processUpdates(
+                ADTECH, PACKAGE, NOW, json, DEV_CONTEXT, mUpdateSignalsApiCalledStats);
 
         List<DBProtectedSignal> expected = List.of(createSignal(KEY_1, VALUE));
         verify(mProtectedSignalsDaoMock)
@@ -191,7 +205,8 @@ public class UpdateProcessingOrchestratorTest {
         when(mUpdateProcessorSelectorMock.getUpdateProcessor(TEST_PROCESSOR))
                 .thenReturn(createProcessor(TEST_PROCESSOR, toReturn));
 
-        mUpdateProcessingOrchestrator.processUpdates(ADTECH, PACKAGE, NOW, json, DEV_CONTEXT);
+        mUpdateProcessingOrchestrator.processUpdates(
+                ADTECH, PACKAGE, NOW, json, DEV_CONTEXT, mUpdateSignalsApiCalledStats);
 
         List<DBProtectedSignal> expected = Arrays.asList(createSignal(KEY_1, VALUE));
         verify(mProtectedSignalsDaoMock)
@@ -220,7 +235,8 @@ public class UpdateProcessingOrchestratorTest {
         when(mUpdateProcessorSelectorMock.getUpdateProcessor(TEST_PROCESSOR))
                 .thenReturn(createProcessor(TEST_PROCESSOR, toReturn));
 
-        mUpdateProcessingOrchestrator.processUpdates(ADTECH, PACKAGE, NOW, json, DEV_CONTEXT);
+        mUpdateProcessingOrchestrator.processUpdates(
+                ADTECH, PACKAGE, NOW, json, DEV_CONTEXT, mUpdateSignalsApiCalledStats);
 
         verify(mProtectedSignalsDaoMock).getSignalsByBuyer(eq(ADTECH));
         verify(mProtectedSignalsDaoMock)
@@ -255,7 +271,8 @@ public class UpdateProcessingOrchestratorTest {
         when(mUpdateProcessorSelectorMock.getUpdateProcessor(TEST_PROCESSOR + 2))
                 .thenReturn(createProcessor(TEST_PROCESSOR, toReturnSecond));
 
-        mUpdateProcessingOrchestrator.processUpdates(ADTECH, PACKAGE, NOW, json, DEV_CONTEXT);
+        mUpdateProcessingOrchestrator.processUpdates(
+                ADTECH, PACKAGE, NOW, json, DEV_CONTEXT, mUpdateSignalsApiCalledStats);
 
         DBProtectedSignal expected1 = createSignal(KEY_1, VALUE);
         DBProtectedSignal expected2 = createSignal(KEY_2, VALUE);
@@ -303,8 +320,16 @@ public class UpdateProcessingOrchestratorTest {
                 IllegalArgumentException.class,
                 () ->
                         mUpdateProcessingOrchestrator.processUpdates(
-                                ADTECH, PACKAGE, NOW, json, DEV_CONTEXT));
+                                ADTECH,
+                                PACKAGE,
+                                NOW,
+                                json,
+                                DEV_CONTEXT,
+                                mUpdateSignalsApiCalledStats));
         verifyZeroInteractions(mSignalEvictionControllerMock);
+        assertEquals(
+                JSON_PROCESSING_STATUS_SEMANTIC_ERROR,
+                mUpdateSignalsApiCalledStats.build().getJsonProcessingStatus());
     }
 
     @Test
@@ -323,7 +348,8 @@ public class UpdateProcessingOrchestratorTest {
         when(mUpdateProcessorSelectorMock.getUpdateProcessor(TEST_PROCESSOR))
                 .thenReturn(createProcessor(TEST_PROCESSOR, toReturn));
 
-        mUpdateProcessingOrchestrator.processUpdates(ADTECH, PACKAGE, NOW, json, DEV_CONTEXT);
+        mUpdateProcessingOrchestrator.processUpdates(
+                ADTECH, PACKAGE, NOW, json, DEV_CONTEXT, mUpdateSignalsApiCalledStats);
 
         verify(mProtectedSignalsDaoMock).getSignalsByBuyer(eq(ADTECH));
         verify(mProtectedSignalsDaoMock)
@@ -343,7 +369,8 @@ public class UpdateProcessingOrchestratorTest {
         UpdateOutput toReturn = new UpdateOutput();
         when(mUpdateProcessorSelectorMock.getUpdateProcessor(TEST_PROCESSOR))
                 .thenReturn(createProcessor(TEST_PROCESSOR, toReturn));
-        mUpdateProcessingOrchestrator.processUpdates(ADTECH, PACKAGE, NOW, json, DEV_CONTEXT);
+        mUpdateProcessingOrchestrator.processUpdates(
+                ADTECH, PACKAGE, NOW, json, DEV_CONTEXT, mUpdateSignalsApiCalledStats);
         verifyZeroInteractions(mUpdateEncoderEventHandlerMock);
     }
 
@@ -362,7 +389,8 @@ public class UpdateProcessingOrchestratorTest {
         toReturn.setUpdateEncoderEvent(event);
         when(mUpdateProcessorSelectorMock.getUpdateProcessor(TEST_PROCESSOR))
                 .thenReturn(createProcessor(TEST_PROCESSOR, toReturn));
-        mUpdateProcessingOrchestrator.processUpdates(ADTECH, PACKAGE, NOW, json, DEV_CONTEXT);
+        mUpdateProcessingOrchestrator.processUpdates(
+                ADTECH, PACKAGE, NOW, json, DEV_CONTEXT, mUpdateSignalsApiCalledStats);
         verify(mUpdateEncoderEventHandlerMock)
                 .handle(CommonFixture.VALID_BUYER_1, event, DEV_CONTEXT);
     }
@@ -449,7 +477,8 @@ public class UpdateProcessingOrchestratorTest {
                         mUpdateEncoderEventHandlerMock,
                         signalEvictionController);
 
-        mUpdateProcessingOrchestrator.processUpdates(ADTECH, PACKAGE, NOW, json, DEV_CONTEXT);
+        mUpdateProcessingOrchestrator.processUpdates(
+                ADTECH, PACKAGE, NOW, json, DEV_CONTEXT, mUpdateSignalsApiCalledStats);
 
         List<DBProtectedSignal> expected = Arrays.asList(createSignal(KEY_1, VALUE));
         verify(mProtectedSignalsDaoMock).insertAndDelete(ADTECH, NOW, expected, expected);

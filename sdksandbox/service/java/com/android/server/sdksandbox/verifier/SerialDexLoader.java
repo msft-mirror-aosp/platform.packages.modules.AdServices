@@ -18,7 +18,11 @@ package com.android.server.sdksandbox.verifier;
 
 import android.os.Handler;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Handles the loading of dex files for multiple apks to be verified, ensures that a single dex file
@@ -42,25 +46,40 @@ public class SerialDexLoader {
     /**
      * Queues all dex files found for an apk for serially loading and analyzing.
      *
-     * @param apkPath path to an apk containing one or more dex files
+     * @param apkPathFile path to apk containing one or more dex files
      * @param packagename packagename associated with the apk
      * @param verificationHandler object to handle the verification of the loaded dex
      */
     public void queueApkToLoad(
-            String apkPath, String packagename, VerificationHandler verificationHandler) {
-        List<String> dexFiles = mParser.getDexList(apkPath);
+            File apkPathFile, String packagename, VerificationHandler verificationHandler) {
 
         mHandler.post(
                 () -> {
-                    for (String dexFile : dexFiles) {
-                        mParser.loadDexSymbols(dexFile, mDexLoadResult);
+                    Map<File, List<String>> dexEntries;
+                    try {
+                        dexEntries = mParser.getDexFilePaths(apkPathFile);
+                    } catch (IOException e) {
+                        verificationHandler.onVerificationErrorForPackage(e);
+                        return;
+                    }
 
-                        if (!verificationHandler.verify(mDexLoadResult)) {
-                            verificationHandler.verificationFinishedForPackage(false);
-                            return;
+                    for (Map.Entry<File, List<String>> dexFileEntries : dexEntries.entrySet()) {
+                        for (String dexEntry : dexFileEntries.getValue()) {
+                            try {
+                                mParser.loadDexSymbols(
+                                        dexFileEntries.getKey(), dexEntry, mDexLoadResult);
+                            } catch (IOException e) {
+                                verificationHandler.onVerificationErrorForPackage(e);
+                                return;
+                            }
+                            if (!verificationHandler.verify(mDexLoadResult)) {
+                                verificationHandler.onVerificationCompleteForPackage(false);
+                                return;
+                            }
                         }
                     }
-                    verificationHandler.verificationFinishedForPackage(true);
+
+                    verificationHandler.onVerificationCompleteForPackage(true);
                 });
     }
 
@@ -80,9 +99,37 @@ public class SerialDexLoader {
          * @param passed is false if the last loaded dex failed verification, or true if all dexes
          *     passed.
          */
-        void verificationFinishedForPackage(boolean passed);
+        void onVerificationCompleteForPackage(boolean result);
+
+        /**
+         * Error occurred on verifying.
+         *
+         * @param e exception thrown while attempting to load and verify the apk.
+         */
+        void onVerificationErrorForPackage(Exception e);
     }
 
     /** Result class that contains symbols loaded from a DEX file */
-    public static class DexLoadResult {}
+    public static class DexLoadResult {
+
+        public static final int DEX_MAX_METHOD_COUNT = 65536;
+
+        /** The table of methods referenced by the DEX file. */
+        private ArrayList<String> mReferencedMethods = new ArrayList<>(DEX_MAX_METHOD_COUNT);
+
+        /** Adds a new method to the referencedMethods table */
+        public void addReferencedMethod(String method) {
+            mReferencedMethods.add(method);
+        }
+
+        /** Returns true if the method string is present in the referencedMethods table */
+        public boolean hasReferencedMethod(String method) {
+            return mReferencedMethods.contains(method);
+        }
+
+        /** Clears the internal state of DexLoadResult to load next dex file. */
+        public void clear() {
+            mReferencedMethods.clear();
+        }
+    }
 }

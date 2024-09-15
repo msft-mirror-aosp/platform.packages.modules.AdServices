@@ -42,11 +42,11 @@ java_defaults {
         "libstaticjvmtiagent",
     ],
     libs: [
-        "android.test.base",
-        "android.test.mock",
-        "android.test.runner",
+        "android.test.base.stubs.system",
+        "android.test.mock.stubs.system",
+        "android.test.runner.stubs.system",
         "framework-sdksandbox.impl",
-        "framework-configinfrastructure",
+        "framework-configinfrastructure.stubs.module_lib",
     ],
     // Test coverage system runs on different devices. Need to
     // compile for all architecture.

@@ -24,27 +24,23 @@ import android.adservices.common.CommonFixture;
 import android.adservices.common.FrequencyCapFilters;
 import android.os.Parcel;
 
-import androidx.test.filters.SmallTest;
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.EqualsTester;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
-import com.android.adservices.common.SdkLevelSupportRule;
-
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Random;
 
-@SmallTest
-public class UpdateAdCounterHistogramInputTest {
+@RequiresSdkLevelAtLeastS
+public final class UpdateAdCounterHistogramInputTest extends AdServicesUnitTestCase {
     private static final Random RANDOM = new Random();
     private static final long VALID_AD_SELECTION_ID = 10;
     private static final String VALID_PACKAGE_NAME = "test.package";
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Test
     public void testBuildValidInput_success() {
-        final UpdateAdCounterHistogramInput originalInput =
+        UpdateAdCounterHistogramInput originalInput =
                 new UpdateAdCounterHistogramInput.Builder(
                                 VALID_AD_SELECTION_ID,
                                 FrequencyCapFilters.AD_EVENT_TYPE_CLICK,
@@ -52,16 +48,16 @@ public class UpdateAdCounterHistogramInputTest {
                                 VALID_PACKAGE_NAME)
                         .build();
 
-        assertThat(originalInput.getAdEventType())
+        expect.that(originalInput.getAdEventType())
                 .isEqualTo(FrequencyCapFilters.AD_EVENT_TYPE_CLICK);
-        assertThat(originalInput.getAdSelectionId()).isEqualTo(VALID_AD_SELECTION_ID);
-        assertThat(originalInput.getCallerAdTech()).isEqualTo(CommonFixture.VALID_BUYER_1);
-        assertThat(originalInput.getCallerPackageName()).isEqualTo(VALID_PACKAGE_NAME);
+        expect.that(originalInput.getAdSelectionId()).isEqualTo(VALID_AD_SELECTION_ID);
+        expect.that(originalInput.getCallerAdTech()).isEqualTo(CommonFixture.VALID_BUYER_1);
+        expect.that(originalInput.getCallerPackageName()).isEqualTo(VALID_PACKAGE_NAME);
     }
 
     @Test
     public void testParcelInput_success() {
-        final UpdateAdCounterHistogramInput originalInput =
+        UpdateAdCounterHistogramInput originalInput =
                 new UpdateAdCounterHistogramInput.Builder(
                                 VALID_AD_SELECTION_ID,
                                 FrequencyCapFilters.AD_EVENT_TYPE_VIEW,
@@ -72,26 +68,26 @@ public class UpdateAdCounterHistogramInputTest {
         Parcel targetParcel = Parcel.obtain();
         originalInput.writeToParcel(targetParcel, 0);
         targetParcel.setDataPosition(0);
-        final UpdateAdCounterHistogramInput requestFromParcel =
+        UpdateAdCounterHistogramInput requestFromParcel =
                 UpdateAdCounterHistogramInput.CREATOR.createFromParcel(targetParcel);
 
-        assertThat(requestFromParcel.getAdEventType())
+        expect.that(requestFromParcel.getAdEventType())
                 .isEqualTo(FrequencyCapFilters.AD_EVENT_TYPE_VIEW);
-        assertThat(requestFromParcel.getAdSelectionId()).isEqualTo(VALID_AD_SELECTION_ID);
-        assertThat(requestFromParcel.getCallerAdTech()).isEqualTo(CommonFixture.VALID_BUYER_1);
-        assertThat(requestFromParcel.getCallerPackageName()).isEqualTo(VALID_PACKAGE_NAME);
+        expect.that(requestFromParcel.getAdSelectionId()).isEqualTo(VALID_AD_SELECTION_ID);
+        expect.that(requestFromParcel.getCallerAdTech()).isEqualTo(CommonFixture.VALID_BUYER_1);
+        expect.that(requestFromParcel.getCallerPackageName()).isEqualTo(VALID_PACKAGE_NAME);
     }
 
     @Test
     public void testEqualsIdentical() {
-        final UpdateAdCounterHistogramInput originalInput =
+        UpdateAdCounterHistogramInput originalInput =
                 new UpdateAdCounterHistogramInput.Builder(
                                 VALID_AD_SELECTION_ID,
                                 FrequencyCapFilters.AD_EVENT_TYPE_VIEW,
                                 CommonFixture.VALID_BUYER_1,
                                 VALID_PACKAGE_NAME)
                         .build();
-        final UpdateAdCounterHistogramInput identicalInput =
+        UpdateAdCounterHistogramInput identicalInput =
                 new UpdateAdCounterHistogramInput.Builder(
                                 VALID_AD_SELECTION_ID,
                                 FrequencyCapFilters.AD_EVENT_TYPE_VIEW,
@@ -99,19 +95,20 @@ public class UpdateAdCounterHistogramInputTest {
                                 VALID_PACKAGE_NAME)
                         .build();
 
-        assertThat(originalInput.equals(identicalInput)).isTrue();
+        EqualsTester et = new EqualsTester(expect);
+        et.expectObjectsAreEqual(originalInput, identicalInput);
     }
 
     @Test
     public void testEqualsDifferent() {
-        final UpdateAdCounterHistogramInput originalInput =
+        UpdateAdCounterHistogramInput originalInput =
                 new UpdateAdCounterHistogramInput.Builder(
                                 VALID_AD_SELECTION_ID,
                                 FrequencyCapFilters.AD_EVENT_TYPE_VIEW,
                                 CommonFixture.VALID_BUYER_1,
                                 VALID_PACKAGE_NAME)
                         .build();
-        final UpdateAdCounterHistogramInput differentInput =
+        UpdateAdCounterHistogramInput differentInput =
                 new UpdateAdCounterHistogramInput.Builder(
                                 VALID_AD_SELECTION_ID + 99,
                                 FrequencyCapFilters.AD_EVENT_TYPE_VIEW,
@@ -119,33 +116,13 @@ public class UpdateAdCounterHistogramInputTest {
                                 VALID_PACKAGE_NAME)
                         .build();
 
-        assertThat(originalInput.equals(differentInput)).isFalse();
+        EqualsTester et = new EqualsTester(expect);
+        et.expectObjectsAreNotEqual(originalInput, differentInput);
     }
 
     @Test
     public void testEqualsNull() {
-        final UpdateAdCounterHistogramInput originalInput =
-                new UpdateAdCounterHistogramInput.Builder(
-                                VALID_AD_SELECTION_ID,
-                                FrequencyCapFilters.AD_EVENT_TYPE_VIEW,
-                                CommonFixture.VALID_BUYER_1,
-                                VALID_PACKAGE_NAME)
-                        .build();
-        final UpdateAdCounterHistogramInput nullInput = null;
-
-        assertThat(originalInput.equals(nullInput)).isFalse();
-    }
-
-    @Test
-    public void testHashCodeIdentical() {
-        final UpdateAdCounterHistogramInput originalInput =
-                new UpdateAdCounterHistogramInput.Builder(
-                                VALID_AD_SELECTION_ID,
-                                FrequencyCapFilters.AD_EVENT_TYPE_VIEW,
-                                CommonFixture.VALID_BUYER_1,
-                                VALID_PACKAGE_NAME)
-                        .build();
-        final UpdateAdCounterHistogramInput identicalInput =
+        UpdateAdCounterHistogramInput originalInput =
                 new UpdateAdCounterHistogramInput.Builder(
                                 VALID_AD_SELECTION_ID,
                                 FrequencyCapFilters.AD_EVENT_TYPE_VIEW,
@@ -153,32 +130,12 @@ public class UpdateAdCounterHistogramInputTest {
                                 VALID_PACKAGE_NAME)
                         .build();
 
-        assertThat(originalInput.hashCode()).isEqualTo(identicalInput.hashCode());
-    }
-
-    @Test
-    public void testHashCodeDifferent() {
-        final UpdateAdCounterHistogramInput originalInput =
-                new UpdateAdCounterHistogramInput.Builder(
-                                VALID_AD_SELECTION_ID,
-                                FrequencyCapFilters.AD_EVENT_TYPE_VIEW,
-                                CommonFixture.VALID_BUYER_1,
-                                VALID_PACKAGE_NAME)
-                        .build();
-        final UpdateAdCounterHistogramInput differentInput =
-                new UpdateAdCounterHistogramInput.Builder(
-                                VALID_AD_SELECTION_ID + 99,
-                                FrequencyCapFilters.AD_EVENT_TYPE_CLICK,
-                                CommonFixture.VALID_BUYER_2,
-                                VALID_PACKAGE_NAME)
-                        .build();
-
-        assertThat(originalInput.hashCode()).isNotEqualTo(differentInput.hashCode());
+        assertThat(originalInput).isNotEqualTo(null);
     }
 
     @Test
     public void testToString() {
-        final UpdateAdCounterHistogramInput originalInput =
+        UpdateAdCounterHistogramInput originalInput =
                 new UpdateAdCounterHistogramInput.Builder(
                                 VALID_AD_SELECTION_ID,
                                 FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION,
@@ -186,7 +143,7 @@ public class UpdateAdCounterHistogramInputTest {
                                 VALID_PACKAGE_NAME)
                         .build();
 
-        final String expected =
+        String expected =
                 String.format(
                         "UpdateAdCounterHistogramInput{mAdSelectionId=%s, mAdEventType=%s,"
                                 + " mCallerAdTech=%s, mCallerPackageName='%s'}",
@@ -200,10 +157,10 @@ public class UpdateAdCounterHistogramInputTest {
 
     @Test
     public void testAllSettersOverwrite_success() {
-        final long otherAdSelectionId = VALID_AD_SELECTION_ID + 1;
-        final String otherPackageName = VALID_PACKAGE_NAME + "2";
+        long otherAdSelectionId = VALID_AD_SELECTION_ID + 1;
+        String otherPackageName = VALID_PACKAGE_NAME + "2";
 
-        final UpdateAdCounterHistogramInput originalInput =
+        UpdateAdCounterHistogramInput originalInput =
                 new UpdateAdCounterHistogramInput.Builder(
                                 VALID_AD_SELECTION_ID,
                                 FrequencyCapFilters.AD_EVENT_TYPE_CLICK,
@@ -215,11 +172,11 @@ public class UpdateAdCounterHistogramInputTest {
                         .setCallerPackageName(otherPackageName)
                         .build();
 
-        assertThat(originalInput.getAdEventType())
+        expect.that(originalInput.getAdEventType())
                 .isEqualTo(FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION);
-        assertThat(originalInput.getAdSelectionId()).isEqualTo(otherAdSelectionId);
-        assertThat(originalInput.getCallerAdTech()).isEqualTo(CommonFixture.VALID_BUYER_2);
-        assertThat(originalInput.getCallerPackageName()).isEqualTo(otherPackageName);
+        expect.that(originalInput.getAdSelectionId()).isEqualTo(otherAdSelectionId);
+        expect.that(originalInput.getCallerAdTech()).isEqualTo(CommonFixture.VALID_BUYER_2);
+        expect.that(originalInput.getCallerPackageName()).isEqualTo(otherPackageName);
     }
 
     @Test

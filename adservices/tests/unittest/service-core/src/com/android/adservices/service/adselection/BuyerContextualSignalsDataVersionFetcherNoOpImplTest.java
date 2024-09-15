@@ -18,7 +18,7 @@ package com.android.adservices.service.adselection;
 
 import static android.adservices.adselection.CustomAudienceBiddingInfoFixture.DATA_VERSION_1;
 
-import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_BIDDING_KEY;
+import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_KEY;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNull;
@@ -26,8 +26,8 @@ import static junit.framework.Assert.assertNull;
 import android.adservices.common.AdSelectionSignals;
 import android.net.Uri;
 
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -63,7 +63,7 @@ public class BuyerContextualSignalsDataVersionFetcherNoOpImplTest {
                             .setHeaders(
                                     new JSONObject(
                                             ImmutableMap.of(
-                                                    DATA_VERSION_HEADER_BIDDING_KEY,
+                                                    DATA_VERSION_HEADER_KEY,
                                                     List.of(DATA_VERSION_1))))
                             .build());
 
@@ -82,7 +82,8 @@ public class BuyerContextualSignalsDataVersionFetcherNoOpImplTest {
                 AdSelectionSignals.EMPTY,
                 BUYER_CONTEXTUAL_SIGNALS_DATA_VERSION_FETCHER_NO_OP
                         .getContextualSignalsForGenerateBid(
-                                TRUSTED_BIDDING_DATA, MAP_WITH_DATA_VERSION_HEADER));
+                                TRUSTED_BIDDING_DATA, MAP_WITH_DATA_VERSION_HEADER)
+                        .toAdSelectionSignals());
     }
 
     @Test
@@ -91,7 +92,8 @@ public class BuyerContextualSignalsDataVersionFetcherNoOpImplTest {
                 AdSelectionSignals.EMPTY,
                 BUYER_CONTEXTUAL_SIGNALS_DATA_VERSION_FETCHER_NO_OP
                         .getContextualSignalsForGenerateBid(
-                                TRUSTED_BIDDING_DATA, MAP_WITHOUT_DATA_VERSION_HEADER));
+                                TRUSTED_BIDDING_DATA, MAP_WITHOUT_DATA_VERSION_HEADER)
+                        .toAdSelectionSignals());
     }
 
     @Test

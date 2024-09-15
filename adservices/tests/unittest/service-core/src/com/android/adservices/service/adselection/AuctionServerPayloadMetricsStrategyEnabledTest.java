@@ -18,11 +18,14 @@ package com.android.adservices.service.adselection;
 
 import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
 
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_API;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
 
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
@@ -33,11 +36,13 @@ import com.android.adservices.service.proto.bidding_auction_servers.BiddingAucti
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.BuyerInputGeneratorIntermediateStats;
 import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
+import com.android.adservices.service.stats.GetAdSelectionDataBuyerInputGeneratedStats;
 
 import com.google.common.base.Strings;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -68,6 +73,13 @@ public class AuctionServerPayloadMetricsStrategyEnabledTest {
     }
 
     @Test
+    public void testSetServerAuctionCoordinatorSourceDoesNothing() {
+        mAuctionServerPayloadMetricsStrategy.setServerAuctionCoordinatorSource(
+                mBuilder, SERVER_AUCTION_COORDINATOR_SOURCE_API);
+        verifyZeroInteractions(mBuilder);
+    }
+
+    @Test
     public void testLogGetAdSelectionDataApiCalledStatsDoesLog() {
         int payloadSize = 2000;
         mAuctionServerPayloadMetricsStrategy.logGetAdSelectionDataApiCalledStats(
@@ -91,6 +103,71 @@ public class AuctionServerPayloadMetricsStrategyEnabledTest {
                 buyerStats);
         verify(mAdServicesLoggerMock, times(2))
                 .logGetAdSelectionDataBuyerInputGeneratedStats(any());
+    }
+
+    @Test
+    public void testLogGetAdSelectionDataBuyerInputGeneratedStatsWithPasMetricsDoesLog() {
+        ArgumentCaptor<GetAdSelectionDataBuyerInputGeneratedStats> argumentCaptor =
+                ArgumentCaptor.forClass(GetAdSelectionDataBuyerInputGeneratedStats.class);
+        Map<AdTechIdentifier, BuyerInputGeneratorIntermediateStats> buyerStats = new HashMap<>();
+        BuyerInputGeneratorIntermediateStats stats1 = new BuyerInputGeneratorIntermediateStats();
+        stats1.incrementNumCustomAudiences();
+        BuyerInputGeneratorIntermediateStats stats2 = new BuyerInputGeneratorIntermediateStats();
+        stats2.incrementNumCustomAudiences();
+        buyerStats.put(AdTechIdentifier.fromString("hello"), stats1);
+        buyerStats.put(AdTechIdentifier.fromString("hello2"), stats2);
+
+        int encodedSignalsCount = 5;
+        int encodedSignalsTotalSizeInBytes = 11;
+        int encodedSignalsMaxSizeInBytes = 3;
+        int encodedSignalsMinSizeInBytes = 2;
+
+        mAuctionServerPayloadMetricsStrategy
+                .logGetAdSelectionDataBuyerInputGeneratedStatsWithExtendedPasMetrics(
+                        buyerStats,
+                        encodedSignalsCount,
+                        encodedSignalsTotalSizeInBytes,
+                        encodedSignalsMaxSizeInBytes,
+                        encodedSignalsMinSizeInBytes);
+        verify(mAdServicesLoggerMock, times(2))
+                .logGetAdSelectionDataBuyerInputGeneratedStats(argumentCaptor.capture());
+
+        GetAdSelectionDataBuyerInputGeneratedStats stats = argumentCaptor.getAllValues().get(0);
+        assertThat(stats.getNumEncodedSignals()).isEqualTo(encodedSignalsCount);
+        assertThat(stats.getEncodedSignalsSizeMean())
+                .isEqualTo(encodedSignalsTotalSizeInBytes / encodedSignalsCount);
+        assertThat(stats.getEncodedSignalsSizeMax()).isEqualTo(encodedSignalsMaxSizeInBytes);
+        assertThat(stats.getEncodedSignalsSizeMin()).isEqualTo(encodedSignalsMinSizeInBytes);
+    }
+
+    @Test
+    public void
+            testLogGetAdSelectionDataBuyerInputGeneratedStatsWithPasMetricsDoesLog_emptyStats() {
+        ArgumentCaptor<GetAdSelectionDataBuyerInputGeneratedStats> argumentCaptor =
+                ArgumentCaptor.forClass(GetAdSelectionDataBuyerInputGeneratedStats.class);
+        Map<AdTechIdentifier, BuyerInputGeneratorIntermediateStats> buyerStats = new HashMap<>();
+
+        int encodedSignalsCount = 5;
+        int encodedSignalsTotalSizeInBytes = 11;
+        int encodedSignalsMaxSizeInBytes = 3;
+        int encodedSignalsMinSizeInBytes = 2;
+
+        mAuctionServerPayloadMetricsStrategy
+                .logGetAdSelectionDataBuyerInputGeneratedStatsWithExtendedPasMetrics(
+                        buyerStats,
+                        encodedSignalsCount,
+                        encodedSignalsTotalSizeInBytes,
+                        encodedSignalsMaxSizeInBytes,
+                        encodedSignalsMinSizeInBytes);
+        verify(mAdServicesLoggerMock, times(1))
+                .logGetAdSelectionDataBuyerInputGeneratedStats(argumentCaptor.capture());
+
+        GetAdSelectionDataBuyerInputGeneratedStats stats = argumentCaptor.getValue();
+        assertThat(stats.getNumEncodedSignals()).isEqualTo(encodedSignalsCount);
+        assertThat(stats.getEncodedSignalsSizeMean())
+                .isEqualTo(encodedSignalsTotalSizeInBytes / encodedSignalsCount);
+        assertThat(stats.getEncodedSignalsSizeMax()).isEqualTo(encodedSignalsMaxSizeInBytes);
+        assertThat(stats.getEncodedSignalsSizeMin()).isEqualTo(encodedSignalsMinSizeInBytes);
     }
 
     @Test

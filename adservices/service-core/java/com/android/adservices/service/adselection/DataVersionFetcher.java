@@ -23,7 +23,6 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 import com.android.internal.annotations.VisibleForTesting;
 
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -33,11 +32,7 @@ import java.util.Objects;
 
 /** Utility class to fetch the data version from trusted bidding/scoring signals. */
 public class DataVersionFetcher {
-    public static final String DATA_VERSION_HEADER_BIDDING_KEY =
-            "x-fledge-bidding-signals-format-version";
-
-    public static final String DATA_VERSION_HEADER_SCORING_KEY =
-            "x-fledge-scoring-signals-format-version";
+    public static final String DATA_VERSION_HEADER_KEY = "Data-Version";
 
     @VisibleForTesting static final int MAX_UNSIGNED_8_BIT = 255;
 
@@ -67,7 +62,7 @@ public class DataVersionFetcher {
         try {
             headers =
                     trustedBiddingResponsesByBaseUri.get(trustedBiddingData.getUri()).getHeaders();
-            dataVersion = headers.getJSONArray(DATA_VERSION_HEADER_BIDDING_KEY).getInt(0);
+            dataVersion = headers.getJSONArray(DATA_VERSION_HEADER_KEY).getInt(0);
         } catch (JSONException e) {
             LogUtil.v("Data version header does not conform required header formatting.");
             throw new IllegalStateException(
@@ -96,7 +91,7 @@ public class DataVersionFetcher {
         }
         int dataVersion;
         try {
-            dataVersion = Integer.parseInt(headers.get(DATA_VERSION_HEADER_SCORING_KEY).get(0));
+            dataVersion = Integer.parseInt(headers.get(DATA_VERSION_HEADER_KEY).get(0));
         } catch (Exception e) {
             LogUtil.v("Data version header does not conform required header formatting.");
             throw new IllegalStateException(

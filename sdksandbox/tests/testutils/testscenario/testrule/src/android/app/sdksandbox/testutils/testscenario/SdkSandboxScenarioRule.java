@@ -29,6 +29,7 @@ import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallback;
+import android.app.sdksandbox.testutils.SdkLifecycleHelper;
 import android.app.sdksandbox.testutils.WaitableCountDownLatch;
 import android.content.Context;
 import android.os.Bundle;
@@ -86,6 +87,7 @@ public class SdkSandboxScenarioRule implements TestRule {
     private @Nullable IBinder mBinder;
     private final int mFlags;
     private SdkSandboxManager mSdkSandboxManager;
+    private SdkLifecycleHelper mSdkLifecycleHelper;
 
     public SdkSandboxScenarioRule(String sdkName) {
         this(sdkName, null, null, ENABLE_ALWAYS);
@@ -120,6 +122,7 @@ public class SdkSandboxScenarioRule implements TestRule {
                     final Context context =
                             InstrumentationRegistry.getInstrumentation().getContext();
                     mSdkSandboxManager = context.getSystemService(SdkSandboxManager.class);
+                    mSdkLifecycleHelper = new SdkLifecycleHelper(context);
                     final IBinder textExecutor = loadTestSdk();
                     if (textExecutor != null) {
                         mTestExecutor = ISdkSandboxTestExecutor.Stub.asInterface(textExecutor);
@@ -130,7 +133,7 @@ public class SdkSandboxScenarioRule implements TestRule {
                 } finally {
                     try (ActivityScenario scenario =
                             ActivityScenario.launch(SdkSandboxCtsActivity.class)) {
-                        mSdkSandboxManager.unloadSdk(mSdkName);
+                        mSdkLifecycleHelper.unloadSdk(mSdkName);
                     }
                 }
             }

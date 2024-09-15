@@ -12,7 +12,6 @@
         "timestamp": "0",
         "registration_request": {
           "registrant": "com.source",
-          "attribution_src_url": "https://reporter.test/register-source",
           "source_type": "navigation"
         },
         "responses": [
@@ -36,7 +35,6 @@
       {
         "timestamp": "1000",
         "registration_request": {
-          "attribution_src_url": "https://reporter.test/register-trigger",
           "registrant": "com.destination"
         },
         "responses": [
@@ -68,7 +66,6 @@
         "timestamp": "2000",
         "registration_request": {
           "registrant": "com.source",
-          "attribution_src_url": "https://reporter.test/register-source",
           "source_type": "navigation"
         },
         "responses": [
@@ -110,7 +107,6 @@
       {
         "timestamp": "3000",
         "registration_request": {
-          "attribution_src_url": "https://reporter.test/register-trigger",
           "registrant": "com.destination"
         },
         "responses": [
@@ -152,7 +148,6 @@
       {
         "timestamp": "4000",
         "registration_request": {
-          "attribution_src_url": "https://reporter.test/register-trigger",
           "registrant": "com.destination"
         },
         "responses": [
@@ -179,18 +174,24 @@
     ]
   },
   "output": {
-    "unparsable_registrations": [],
     "reports": [
       {
         "payload": {
-          "attribution_destination": "android-app://com.destination",
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://com.destination",
+            "reporting_origin": "https://reporter.test",
+            "scheduled_report_time": "3601",
+            "source_registration_time": "0",
+            "version": "0.1"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
             {
               "key": "0x559",
               "value": 123
             }
-          ],
-          "source_registration_time": "0"
+          ]
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "report_time": "3601000"
@@ -199,18 +200,18 @@
         "payload": {
           "attribution_destination": "android-app://com.destination",
           "randomized_trigger_rate": 0.0024263,
-          "scheduled_report_time": "176400",
+          "scheduled_report_time": "172800",
           "source_event_id": "123",
           "source_type": "navigation",
           "trigger_data": "7"
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-event-attribution",
-        "report_time": "176400000"
+        "report_time": "172800000"
       },
       {
         "payload": {
           "attribution_destination": "android-app://com.destination",
-          "scheduled_report_time": "176402",
+          "scheduled_report_time": "172802",
           "source_event_id": "456",
           "trigger_data": "0",
           "source_type": "navigation",
@@ -220,12 +221,12 @@
           "randomized_trigger_rate": 0.0000125
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-event-attribution",
-        "report_time": "176402000"
+        "report_time": "172802000"
       },
       {
         "payload": {
           "attribution_destination": "android-app://com.destination",
-          "scheduled_report_time": "176402",
+          "scheduled_report_time": "172802",
           "source_event_id": "456",
           "trigger_data": "0",
           "source_type": "navigation",
@@ -240,7 +241,7 @@
       {
         "payload": {
           "attribution_destination": "android-app://com.destination",
-          "scheduled_report_time": "176402",
+          "scheduled_report_time": "172802",
           "source_event_id": "456",
           "trigger_data": "0",
           "source_type": "navigation",

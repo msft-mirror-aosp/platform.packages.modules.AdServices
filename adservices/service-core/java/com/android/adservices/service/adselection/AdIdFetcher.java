@@ -23,9 +23,13 @@ import static androidx.concurrent.futures.CallbackToFutureAdapter.Resolver;
 import android.adservices.adid.GetAdIdResult;
 import android.adservices.adid.IGetAdIdCallback;
 import android.annotation.NonNull;
+import android.content.Context;
+
+import androidx.annotation.VisibleForTesting;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.adid.AdIdWorker;
+import com.android.adservices.service.common.PermissionHelper;
 
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
@@ -43,8 +47,9 @@ import java.util.concurrent.TimeoutException;
 
 /** Class to fetch Ad Id related data required to run ad selection. */
 public class AdIdFetcher {
-    private static final boolean DEFAULT_IS_LAT_ENABLED = true;
+    @VisibleForTesting public static final boolean DEFAULT_IS_LAT_ENABLED = true;
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
+    @NonNull private final Context mContext;
     @NonNull private final AdIdWorker mAdIdWorker;
     @NonNull private final ListeningExecutorService mLightweightExecutorService;
     @NonNull private final ScheduledThreadPoolExecutor mScheduledExecutor;
@@ -57,13 +62,17 @@ public class AdIdFetcher {
      * @param scheduledExecutor scheduler executor
      */
     public AdIdFetcher(
+            @NonNull Context context,
             @NonNull AdIdWorker adIdWorker,
             @NonNull final ExecutorService lightweightExecutorService,
             @NonNull final ScheduledThreadPoolExecutor scheduledExecutor) {
-        Objects.requireNonNull(adIdWorker);
-        Objects.requireNonNull(lightweightExecutorService);
-        Objects.requireNonNull(scheduledExecutor);
+        Objects.requireNonNull(context, "context cannot be null");
+        Objects.requireNonNull(adIdWorker, "adIdWorker cannot be null");
+        Objects.requireNonNull(
+                lightweightExecutorService, "lightweightExecutorService cannot be null");
+        Objects.requireNonNull(scheduledExecutor, "scheduledExecutor cannot be null");
 
+        mContext = context;
         mAdIdWorker = adIdWorker;
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
         mScheduledExecutor = scheduledExecutor;
@@ -80,6 +89,24 @@ public class AdIdFetcher {
      */
     public ListenableFuture<Boolean> isLimitedAdTrackingEnabled(
             @NonNull String packageName, int callingUid, long adIdFetcherTimeoutMs) {
+
+        // Check if the permission is declared in the manifest of that package name.
+        sLogger.v(
+                "Checking if Package %s with calling Uid %d has declared permission for AdId",
+                packageName, callingUid);
+        boolean hasAdIdPermission =
+                PermissionHelper.hasAdIdPermission(mContext, packageName, callingUid);
+        if (!hasAdIdPermission) {
+            sLogger.v(
+                    "Package %s with calling Uid %d has not declared permission for AdId. Returning"
+                            + " isLimitedAdTrackingEnabled %b",
+                    packageName, callingUid, DEFAULT_IS_LAT_ENABLED);
+            return Futures.immediateFuture(DEFAULT_IS_LAT_ENABLED);
+        }
+        sLogger.v(
+                "Package %s with calling Uid %d has declared permission for AdId. Checking if"
+                        + " AdId is Zeroed out",
+                packageName, callingUid);
         return FluentFuture.from(
                         getFutureWithTimeout(
                                 convertToCallback(packageName, callingUid),

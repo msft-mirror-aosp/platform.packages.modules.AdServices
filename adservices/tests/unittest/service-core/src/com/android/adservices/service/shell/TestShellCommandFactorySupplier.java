@@ -16,10 +16,15 @@
 
 package com.android.adservices.service.shell;
 
-
+import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
-import com.android.adservices.service.Flags;
+import com.android.adservices.data.signals.ProtectedSignalsDao;
+import com.android.adservices.service.adselection.AuctionServerDataCompressor;
+import com.android.adservices.service.adselection.BuyerInputGenerator;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
+import com.android.adservices.service.shell.adselection.AdSelectionShellCommandFactory;
+import com.android.adservices.service.shell.customaudience.CustomAudienceShellCommandFactory;
+import com.android.adservices.service.shell.signals.SignalsShellCommandFactory;
 
 import com.google.common.collect.ImmutableList;
 
@@ -31,28 +36,58 @@ import java.util.Objects;
  */
 public class TestShellCommandFactorySupplier extends ShellCommandFactorySupplier {
 
-    private final Flags mFlags;
+    private final boolean mIsCustomAudienceCliEnabled;
+    private final boolean mIsConsentedDebugCliEnabled;
+    private final boolean mIsSignalsCliEnabled;
     private final CustomAudienceDao mCustomAudienceDao;
     private final BackgroundFetchRunner mBackgroundFetchRunner;
+    private final ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
+    private final ProtectedSignalsDao mProtectedSignalsDao;
+    private final BuyerInputGenerator mBuyerInputGenerator;
+    private final AuctionServerDataCompressor mAuctionServerDataCompressor;
 
     TestShellCommandFactorySupplier(
-            Flags flags,
+            boolean isCustomAudienceCLiEnabled,
+            boolean isConsentedDebugCliEnabled,
+            boolean isSignalsCliEnabled,
             BackgroundFetchRunner backgroundFetchRunner,
-            CustomAudienceDao customAudienceDao) {
-        mFlags = Objects.requireNonNull(flags, "Flags cannot be null");
+            CustomAudienceDao customAudienceDao,
+            ConsentedDebugConfigurationDao consentedDebugConfigurationDao,
+            ProtectedSignalsDao protectedSignalsDao,
+            BuyerInputGenerator buyerInputGenerator,
+            AuctionServerDataCompressor auctionServerDataCompressor) {
+        mIsCustomAudienceCliEnabled = isCustomAudienceCLiEnabled;
+        mIsConsentedDebugCliEnabled = isConsentedDebugCliEnabled;
+        mIsSignalsCliEnabled = isSignalsCliEnabled;
         mCustomAudienceDao =
                 Objects.requireNonNull(customAudienceDao, "CustomAudienceDao cannot be null");
         mBackgroundFetchRunner =
                 Objects.requireNonNull(
                         backgroundFetchRunner, "BackgroundFetchRunner cannot be null");
+        mConsentedDebugConfigurationDao =
+                Objects.requireNonNull(
+                        consentedDebugConfigurationDao,
+                        "ConsentedDebugConfigurationDao cannot be null");
+        mProtectedSignalsDao =
+                Objects.requireNonNull(protectedSignalsDao, "ProtectedSignalsDao cannot be null");
+        mBuyerInputGenerator =
+                Objects.requireNonNull(buyerInputGenerator, "BuyerInputGenerator cannot be null");
+        mAuctionServerDataCompressor =
+                Objects.requireNonNull(
+                        auctionServerDataCompressor, "AuctionServerDataCompressor cannot be null");
     }
 
     @Override
     public ImmutableList<ShellCommandFactory> getAllShellCommandFactories() {
         return ImmutableList.of(
                 new CustomAudienceShellCommandFactory(
-                        mFlags.getFledgeCustomAudienceCLIEnabledStatus(),
-                        mBackgroundFetchRunner,
-                        mCustomAudienceDao));
+                        mIsCustomAudienceCliEnabled, mBackgroundFetchRunner, mCustomAudienceDao),
+                new AdSelectionShellCommandFactory(
+                        mIsConsentedDebugCliEnabled,
+                        true,
+                        mConsentedDebugConfigurationDao,
+                        mBuyerInputGenerator,
+                        mAuctionServerDataCompressor),
+                new SignalsShellCommandFactory(mIsSignalsCliEnabled, mProtectedSignalsDao));
     }
 }

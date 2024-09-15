@@ -21,7 +21,7 @@ import android.util.Log;
 
 import androidx.javascriptengine.JavaScriptSandbox;
 
-import com.android.adservices.common.SupportedByConditionRule;
+import com.android.adservices.shared.testing.SupportedByConditionRule;
 
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;

@@ -54,11 +54,11 @@ java_defaults {
         "framework-ondevicepersonalization.impl",
     ],
     libs: [
-        "android.test.base",
+        "android.test.base.stubs.system",
         "android.test.mock.stubs",
         "framework-adservices.impl",
         "framework-annotations-lib",
-        "framework-configinfrastructure",
+        "framework-configinfrastructure.stubs.module_lib",
         "framework-sdksandbox.impl",
         "auto_value_annotations",
     ],
@@ -80,6 +80,10 @@ java_defaults {
         "-0 .lite",
         "-0 .tflite",
     ],
+    lint: {
+        extra_check_modules: ["AdServicesTestLintChecker"],
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
 }
 
 android_test {
@@ -125,7 +129,7 @@ android_test {
         "adservices-test-fixtures",
     ],
     libs: [
-        "android.test.base",
+        "android.test.base.stubs.system",
         "android.test.mock.stubs",
         "framework-adservices.impl",
         "framework-annotations-lib",
@@ -137,6 +141,10 @@ android_test {
     ],
     test_config: "AndroidTest.JsScriptEngine.xml",
     instrumentation_for: "AdServicesApk",
+    lint: {
+        extra_check_modules: ["AdServicesTestLintChecker"],
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
 }
 
 android_test {
@@ -162,10 +170,11 @@ android_test {
         "mobile_data_downloader_lib",
     ],
     libs: [
-        "android.test.base",
+        "android.test.base.stubs.system",
         "android.test.mock.stubs",
         "framework-adservices.impl",
         "framework-annotations-lib",
+        "framework-wifi",
     ],
     test_suites: [
         "general-tests",
@@ -173,6 +182,10 @@ android_test {
     ],
     test_config: "AndroidTestMDD.xml",
     instrumentation_for: "AdServicesApk",
+    lint: {
+        extra_check_modules: ["AdServicesTestLintChecker"],
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
 }
 
 java_defaults {
@@ -212,10 +225,10 @@ java_defaults {
     ],
     libs: [
         "android.ext.adservices",
-        "android.test.base",
+        "android.test.base.stubs.system",
         "android.test.mock.stubs",
         "framework-annotations-lib",
-        "framework-configinfrastructure",
+        "framework-configinfrastructure.stubs.module_lib",
         "framework-sdksandbox.impl",
     ],
     test_suites: [
@@ -236,6 +249,10 @@ java_defaults {
         "-0 .lite",
         "-0 .tflite",
     ],
+    lint: {
+        extra_check_modules: ["AdServicesTestLintChecker"],
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
 }
 
 android_test {
@@ -332,7 +349,7 @@ android_test {
     ],
     libs: [
         "android.ext.adservices",
-        "android.test.base",
+        "android.test.base.stubs.system",
         "android.test.mock.stubs",
         "framework-annotations-lib",
         "framework-statsd.stubs.module_lib",
@@ -343,6 +360,10 @@ android_test {
     ],
     test_config: "AndroidTest.JsScriptEngine.ExtServices.xml",
     instrumentation_for: "ExtServices-sminus",
+    lint: {
+        extra_check_modules: ["AdServicesTestLintChecker"],
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
 }
 
 android_test {
@@ -370,10 +391,11 @@ android_test {
     ],
     libs: [
         "android.ext.adservices",
-        "android.test.base",
+        "android.test.base.stubs.system",
         "android.test.mock.stubs",
         "framework-adservices.impl",
         "framework-annotations-lib",
+        "framework-wifi",
     ],
     test_suites: [
         "general-tests",
@@ -381,6 +403,11 @@ android_test {
     ],
     test_config: "AndroidTestMDD.ExtServices.xml",
     instrumentation_for: "ExtServices-sminus",
+    lint: {
+        extra_check_modules: ["AdServicesTestLintChecker"],
+        baseline_filename: "lint-baseline-adextservices-mdd.xml",
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
 }
 
 cc_library_shared {
@@ -398,12 +425,18 @@ cc_library_shared {
     ],
     include_dirs: [
         "packages/modules/AdServices/adservices/service-core/jni/include",
-        "packages/modules/AdServices/adservices/tests/unittest/service-core/src/jni/cpp"
+        "packages/modules/AdServices/adservices/tests/unittest/service-core/src/jni/cpp",
     ],
     header_libs: ["jni_headers"],
-    shared_libs: ["liblog",],
-    static_libs: ["libact", "libcrypto_static"],
-    apex_available: ["com.android.adservices", "com.android.extservices"],
+    shared_libs: ["liblog"],
+    static_libs: [
+        "libact",
+        "libcrypto_static",
+    ],
+    apex_available: [
+        "com.android.adservices",
+        "com.android.extservices",
+    ],
     visibility: [
         "//packages/modules/AdServices:__subpackages__",
         "//packages/modules/ExtServices:__subpackages__",

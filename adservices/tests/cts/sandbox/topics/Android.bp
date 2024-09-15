@@ -18,6 +18,7 @@ package {
 
 android_test {
     name: "CtsSandboxedTopicsManagerTests",
+    team: "trendy_team_android_rubidium",
     srcs: [
         "src/**/*.java",
     ],
@@ -30,9 +31,9 @@ android_test {
         "adservices-test-utility",
     ],
     libs: [
-        "android.test.base",
-        "android.test.mock",
-        "android.test.runner",
+        "android.test.base.stubs.system",
+        "android.test.mock.stubs.system",
+        "android.test.runner.stubs.system",
     ],
     data: [
         ":Sdk1",
@@ -45,4 +46,9 @@ android_test {
         "general-tests",
         "mcts-adservices",
     ],
+    lint: {
+        extra_check_modules: ["AdServicesTestLintChecker"],
+        baseline_filename: "lint-baseline.xml",
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
 }

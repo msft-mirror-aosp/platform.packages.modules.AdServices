@@ -21,7 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import androidx.test.runner.AndroidJUnit4;
 
 import com.android.cobalt.data.EventVector;
-import com.android.cobalt.observations.testing.FakeSecureRandom;
+import com.android.cobalt.testing.observations.FakeSecureRandom;
 
 import com.google.cobalt.MetricDefinition;
 import com.google.cobalt.MetricDefinition.MetricDimension;

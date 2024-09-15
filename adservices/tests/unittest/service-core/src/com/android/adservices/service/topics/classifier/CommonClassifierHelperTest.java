@@ -17,7 +17,7 @@
 package com.android.adservices.service.topics.classifier;
 
 import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetFlagsForTest;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mocker;
 import static com.android.adservices.service.topics.classifier.CommonClassifierHelper.computeClassifierAssetChecksum;
 import static com.android.adservices.service.topics.classifier.CommonClassifierHelper.getTopTopics;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
@@ -31,13 +31,13 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockRandom;
-import com.android.adservices.common.SdkLevelSupportRule;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.EpochComputationGetTopTopicsStats;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.android.libraries.mobiledatadownload.file.SynchronousFileStorage;
 import com.google.common.collect.ImmutableList;
@@ -111,7 +111,7 @@ public class CommonClassifierHelperTest {
 
     @Before
     public void setUp() {
-        mockGetFlagsForTest();
+        mocker.mockGetFlagsForTesting();
 
         mTestModelManager =
                 new ModelManager(

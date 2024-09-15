@@ -66,15 +66,17 @@ class AdServicesShellCommand extends BasicShellCommandHandler {
     private static final String TIMEOUT_ARG = "--timeout";
     // Default timeout value to wait for the shell command output when we bind to the adservices
     // process.
-    private static final int DEFAULT_TIMEOUT_MILLIS = 5_000;
+    @VisibleForTesting static final long DEFAULT_TIMEOUT_MILLIS = 5_000L;
+
+    @VisibleForTesting static final int TIMEOUT_OFFSET_MILLIS = 500;
 
     private final Injector mInjector;
     private final Flags mFlags;
     private final Context mContext;
-    private int mTimeoutMillis = DEFAULT_TIMEOUT_MILLIS;
+    private long mTimeoutMillis = DEFAULT_TIMEOUT_MILLIS;
 
     AdServicesShellCommand(Context context) {
-        this(new Injector(), PhFlags.getInstance(), context);
+        this(new Injector(), FlagsFactory.getFlags(), context);
     }
 
     @VisibleForTesting
@@ -119,7 +121,9 @@ class AdServicesShellCommand extends BasicShellCommandHandler {
             return -1;
         }
         String[] realArgs = handleAdServicesArgs(args);
-        ShellCommandParam param = new ShellCommandParam(realArgs);
+
+        ShellCommandParam param =
+                new ShellCommandParam(getMaxCommandDurationMillis(mTimeoutMillis), realArgs);
         CountDownLatch latch = new CountDownLatch(1);
         AtomicInteger resultCode = new AtomicInteger(-1);
         try {
@@ -163,8 +167,16 @@ class AdServicesShellCommand extends BasicShellCommandHandler {
         return resultCode.get();
     }
 
+    private long getMaxCommandDurationMillis(long timeout) {
+        // Decrease timeout by `TIMEOUT_OFFSET_MILLIS` so that shell service can return earlier
+        // before the latch times out in case of timeout.
+        long maxCommandDurationMillis = timeout - TIMEOUT_OFFSET_MILLIS;
+        return maxCommandDurationMillis > 0 ? maxCommandDurationMillis : DEFAULT_TIMEOUT_MILLIS;
+    }
+
     private String[] handleAdServicesArgs(String[] args) {
-        // Contains all the args except --user, --timeout arg and its value.
+        // Contains all the args except --user, --timeout arg and its value. Currently we only
+        // support --timeout arg and run the command for the current user only.
         List<String> realArgs = new ArrayList<>();
         for (int i = 0; i < args.length; i++) {
             String arg = args[i];
@@ -172,8 +184,6 @@ class AdServicesShellCommand extends BasicShellCommandHandler {
                 case TIMEOUT_ARG:
                     mTimeoutMillis = parseTimeoutArg(args, ++i);
                     break;
-                    // TODO(b/308009734): Check for --user args in the follow-up cl and change
-                    //  context and bind to the service accordingly.
                 default:
                     realArgs.add(arg);
             }

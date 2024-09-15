@@ -15,30 +15,32 @@
  */
 package com.android.adservices.common;
 
-import com.android.tradefed.device.ITestDevice;
-import com.android.tradefed.testtype.IDeviceTest;
+import com.android.adservices.shared.testing.HostSideSdkLevelSupportRule;
+import com.android.adservices.shared.testing.HostSideTestCase;
 
-import java.util.Objects;
+import org.junit.Rule;
 
 /**
  * Base class for host-side tests, it contains just the bare minimum setup needed by all tests (like
  * implementing {@link IDeviceTest}).
  */
-public abstract class AdServicesHostSideTestCase implements IDeviceTest {
+public abstract class AdServicesHostSideTestCase extends HostSideTestCase {
 
-    protected final Logger mLog = new Logger(ConsoleLogger.getInstance(), getClass());
+    // Need to define these constants here so they can be used on subclasses annotations
+    public static final String CTS_TEST_PACKAGE = "com.android.adservices.cts";
+    public static final String APPSEARCH_WRITER_ACTIVITY_CLASS = "AppSearchWriterActivity";
 
-    protected ITestDevice mDevice;
+    @Rule(order = 0)
+    public final HostSideSdkLevelSupportRule sdkLevel = HostSideSdkLevelSupportRule.forAnyLevel();
 
-    @Override
-    public final void setDevice(ITestDevice device) {
-        mDevice = Objects.requireNonNull(device);
-        // TODO(b/296240972): this is needed because our custom rules
-        TestDeviceHelper.setTestDevice(device);
-    }
+    @Rule(order = 1)
+    public final AdServicesHostSideDeviceSupportedRule adServicesDeviceSupportedRule =
+            new AdServicesHostSideDeviceSupportedRule();
 
-    @Override
-    public final ITestDevice getDevice() {
-        return mDevice;
+    @Rule(order = 2)
+    public final AdServicesHostSideFlagsSetterRule flags = getAdServicesHostSideFlagsSetterRule();
+
+    protected AdServicesHostSideFlagsSetterRule getAdServicesHostSideFlagsSetterRule() {
+        return AdServicesHostSideFlagsSetterRule.forCompatModeEnabledTests();
     }
 }

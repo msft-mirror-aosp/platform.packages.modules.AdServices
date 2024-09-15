@@ -19,7 +19,7 @@ package {
 
 filegroup {
     name: "concurrent-profile-proto-def",
-    srcs: [ "src/**/concurrent_profile.proto", ],
+    srcs: ["src/**/concurrent_profile.proto"],
 }
 
 java_library_static {
@@ -27,10 +27,10 @@ java_library_static {
     srcs: [
         "src/**/*.java",
         "src/**/*.proto",
-         ],
+    ],
     proto: {
         type: "lite",
-        include_dirs: [ "external/protobuf/src" ],
+        include_dirs: ["external/protobuf/src"],
     },
     static_libs: [
         "adservices-shared-testing",
@@ -42,7 +42,10 @@ java_library_static {
         "guava",
         "platform-test-composers",
         "platform-test-rules",
-        "microbenchmark-device-lib"
+        "microbenchmark-device-lib",
     ],
     min_sdk_version: "30",
+    lint: {
+        extra_check_modules: ["AdServicesTestLintChecker"],
+    },
 }

@@ -28,7 +28,7 @@ import android.adservices.adselection.ReportEventRequest;
 import android.view.InputEvent;
 import android.view.KeyEvent;
 
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.json.JSONObject;
 import org.junit.Before;
@@ -90,6 +90,29 @@ public class ReportEventRequestTest {
                                     0, INTERACTION_KEY, mInteractionData, DESTINATIONS)
                             .build();
                 });
+    }
+
+    @Test
+    public void testBuildReportEventRequestSuccess_callAllSetters() throws Exception {
+        long otherAdSelectionId = AD_SELECTION_ID + 1;
+        String hoverKey = "hover";
+        String otherInteractionData = "otherInteractionData";
+
+        ReportEventRequest request =
+                new ReportEventRequest.Builder(
+                                AD_SELECTION_ID, INTERACTION_KEY, mInteractionData, DESTINATIONS)
+                        .setAdSelectionId(otherAdSelectionId)
+                        .setKey(hoverKey)
+                        .setData(otherInteractionData)
+                        .setReportingDestinations(FLAG_REPORTING_DESTINATION_SELLER)
+                        .setInputEvent(INPUT_EVENT)
+                        .build();
+
+        assertEquals(otherAdSelectionId, request.getAdSelectionId());
+        assertEquals(hoverKey, request.getKey());
+        assertEquals(INPUT_EVENT, request.getInputEvent());
+        assertEquals(otherInteractionData, request.getData());
+        assertEquals(FLAG_REPORTING_DESTINATION_SELLER, request.getReportingDestinations());
     }
 
     @Test
