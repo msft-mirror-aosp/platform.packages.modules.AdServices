@@ -106,8 +106,10 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVEN
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_AGGREGATABLE_BUCKETS_PER_SOURCE_REGISTRATION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPES_PER_SOURCE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_LENGTH_PER_AGGREGATABLE_BUCKET;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REPORTING_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
@@ -3470,6 +3472,20 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public int getMeasurementMaxLengthPerAggregatableBucket() {
+        return getDeviceConfigFlag(
+                KEY_MEASUREMENT_MAX_LENGTH_PER_AGGREGATABLE_BUCKET,
+                MEASUREMENT_MAX_LENGTH_PER_AGGREGATABLE_BUCKET);
+    }
+
+    @Override
+    public int getMeasurementMaxAggregatableBucketsPerSourceRegistration() {
+        return getDeviceConfigFlag(
+                KEY_MEASUREMENT_MAX_AGGREGATABLE_BUCKETS_PER_SOURCE_REGISTRATION,
+                MEASUREMENT_MAX_AGGREGATABLE_BUCKETS_PER_SOURCE_REGISTRATION);
+    }
+
+    @Override
     public boolean getFledgeMeasurementReportAndRegisterEventApiEnabled() {
         return getDeviceConfigFlag(
                 KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED,
@@ -5696,6 +5712,16 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPES_PER_SOURCE
                         + " = "
                         + getMeasurementMaxAttributionScopesPerSource());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_MAX_LENGTH_PER_AGGREGATABLE_BUCKET
+                        + " = "
+                        + getMeasurementMaxLengthPerAggregatableBucket());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_MAX_AGGREGATABLE_BUCKETS_PER_SOURCE_REGISTRATION
+                        + " = "
+                        + getMeasurementMaxAggregatableBucketsPerSourceRegistration());
         writer.println(
                 "\t"
                         + KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION
