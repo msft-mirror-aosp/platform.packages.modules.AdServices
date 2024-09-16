@@ -363,16 +363,32 @@ public final class AsyncRegistrationQueueRunner {
             Source source, IMeasurementDao dao, Flags flags, Set<DebugReportApi.Type> adrTypes)
             throws DatastoreException {
         try {
-            if (!source.validateAndSetNumReportStates(flags)
-                    || !source.hasValidInformationGain(flags)) {
+            if (!source.validateAndSetNumReportStates(flags)) {
+                long maxTriggerStateCardinality =
+                        flags.getMeasurementMaxReportStatesPerSourceRegistration();
                 mDebugReportApi.scheduleSourceReport(
                         source,
-                        DebugReportApi.Type.SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR,
-                        /* additionalBodyParams= */ null,
+                        DebugReportApi.Type.SOURCE_TRIGGER_STATE_CARDINALITY_LIMIT,
+                        Map.of(
+                                DebugReportApi.Body.LIMIT,
+                                String.valueOf(maxTriggerStateCardinality)),
                         dao);
-                adrTypes.add(DebugReportApi.Type.SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR);
+                adrTypes.add(DebugReportApi.Type.SOURCE_TRIGGER_STATE_CARDINALITY_LIMIT);
                 return false;
             }
+            if (!source.hasValidInformationGain(flags)) {
+                float maxEventLevelChannelCapacity = source.getInformationGainThreshold(flags);
+                mDebugReportApi.scheduleSourceReport(
+                        source,
+                        DebugReportApi.Type.SOURCE_CHANNEL_CAPACITY_LIMIT,
+                        Map.of(
+                                DebugReportApi.Body.LIMIT,
+                                String.valueOf(maxEventLevelChannelCapacity)),
+                        dao);
+                adrTypes.add(DebugReportApi.Type.SOURCE_CHANNEL_CAPACITY_LIMIT);
+                return false;
+            }
+
             if (flags.getMeasurementEnableAttributionScope()) {
                 Source.AttributionScopeValidationResult attributionScopeValidationResult =
                         source.validateAttributionScopeValues(flags);

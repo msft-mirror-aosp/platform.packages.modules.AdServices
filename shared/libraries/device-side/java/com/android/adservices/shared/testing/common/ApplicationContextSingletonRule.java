@@ -82,7 +82,7 @@ public final class ApplicationContextSingletonRule implements TestRule {
         if (VERBOSE) {
             LogUtil.v("set(%s)", context);
         }
-        ApplicationContextSingleton.setAsIs(context);
+        ApplicationContextSingleton.setForTests(context);
     }
 
     @Override
@@ -100,7 +100,7 @@ public final class ApplicationContextSingletonRule implements TestRule {
                             "Changing ApplicationContextSingleton from %s to %s on %s",
                             previousContext, mContext, testName);
                 }
-                ApplicationContextSingleton.setAsIs(mContext);
+                ApplicationContextSingleton.setForTests(mContext);
                 try {
                     base.evaluate();
                 } finally {
@@ -110,7 +110,7 @@ public final class ApplicationContextSingletonRule implements TestRule {
                                     "Restoring ApplicationContextSingleton to %s on %s",
                                     previousContext, testName);
                         }
-                        ApplicationContextSingleton.setAsIs(previousContext);
+                        ApplicationContextSingleton.setForTests(previousContext);
                     } else {
                         if (DEBUG) {
                             LogUtil.d(
