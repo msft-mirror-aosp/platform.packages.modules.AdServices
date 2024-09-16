@@ -72,4 +72,7 @@ public final class DebugFlagsConstants {
 
     public static final String KEY_RECORD_TOPICS_COMPLETE_BROADCAST_ENABLED =
             "record_topics_complete_broadcast_enabled";
+
+    public static final String KEY_FLEDGE_SCHEDULE_CA_COMPLETE_BROADCAST_ENABLED =
+            "fledge_schedule_ca_complete_broadcast_enabled";
 }

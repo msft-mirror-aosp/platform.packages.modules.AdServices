@@ -24,6 +24,14 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="4553614196392171">"Ivumela i-app ukufinyelela kuma-AdServices Attribution API."</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="4365562651019065480">"finyelela ku-AdServices Custom Audience API"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="6713089438953075862">"Ivumela i-app ukufinyelela i-AdServices Custom Audience API."</string>
+    <!-- no translation found for permlab_accessAdServicesAdSelection (672819511145374384) -->
+    <skip />
+    <!-- no translation found for permdesc_accessAdServicesAdSelection (6095291420798129879) -->
+    <skip />
+    <!-- no translation found for permlab_accessAdServicesProtectedSignals (147489803040522247) -->
+    <skip />
+    <!-- no translation found for permdesc_accessAdServicesProtectedSignals (2320760922272886523) -->
+    <skip />
     <string name="permlab_accessAdServicesAdId" msgid="1615451959935917231">"Finyelela ku-AdId API"</string>
     <string name="permdesc_accessAdServicesAdId" msgid="6145143976659732220">"Ivumela i-application ukuba ifinyelele ku-AdId API."</string>
     <string name="permlab_accessAdServicesConsent" msgid="4218463631288201212">"finyelela i-AdServices Consent API"</string>

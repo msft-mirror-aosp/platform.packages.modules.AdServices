@@ -21,21 +21,24 @@ import android.content.Context;
 import android.os.Build;
 import android.util.Log;
 
+import com.android.adservices.shared.testing.BroadcastReceiverSyncCallback;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.Assume;
 
 import java.util.Objects;
 
-class BackgroundJobHelper {
+public final class BackgroundJobHelper {
 
     private static final String TAG = "BackgroundJobHelper";
     private static final String PACKAGE = "com.google.android.adservices.api";
     private static final long MAX_TIMEOUT_MS = 16000;
+    private Context mContext;
 
     private final JobScheduler mJobScheduler;
 
     BackgroundJobHelper(Context context) {
+        mContext = context;
         mJobScheduler = context.getSystemService(JobScheduler.class);
         // ExtServices has a different package name for U. Currently only run on S+.
         Assume.assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.S);
@@ -68,6 +71,23 @@ class BackgroundJobHelper {
 
         Log.d(TAG, String.format("rootcts: Job with id %s scheduled but timed out!", jobId));
         return false;
+    }
+
+    /**
+     * Runs the adservices background job with the given job ID. This method runs the background job
+     * and then waits till it receives the broadcast intent indicating the completion of the
+     * background job.
+     *
+     * @param jobId ID of the job to run.
+     * @param intentActionToWait Expected intent action.
+     * @return false if the job didn't schedule or didn't complete on time.
+     */
+    boolean runJobWithBroadcastIntent(int jobId, String intentActionToWait) throws Exception {
+        runScheduleJobCommand(jobId);
+        BroadcastReceiverSyncCallback callback =
+                new BroadcastReceiverSyncCallback(mContext, intentActionToWait);
+        callback.assertResultReceived();
+        return true;
     }
 
     private void runScheduleJobCommand(int jobId) {
