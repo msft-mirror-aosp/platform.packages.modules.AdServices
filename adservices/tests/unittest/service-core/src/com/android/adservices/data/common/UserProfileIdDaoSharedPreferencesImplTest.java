@@ -16,27 +16,24 @@
 
 package com.android.adservices.data.common;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.mockito.Mockito.when;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import androidx.test.core.app.ApplicationProvider;
-
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.shared.util.Clock;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
 import java.util.UUID;
 
-public class UserProfileIdDaoSharedPreferencesImplTest {
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
+public final class UserProfileIdDaoSharedPreferencesImplTest extends AdServicesMockitoTestCase {
     private static final String STORAGE_NAME = "test_storage";
 
     SharedPreferences mSharedPreferences;
@@ -47,79 +44,79 @@ public class UserProfileIdDaoSharedPreferencesImplTest {
 
     @Before
     public void setup() {
-        MockitoAnnotations.initMocks(this);
-        mSharedPreferences = CONTEXT.getSharedPreferences(STORAGE_NAME, Context.MODE_PRIVATE);
+        mSharedPreferences = mContext.getSharedPreferences(STORAGE_NAME, Context.MODE_PRIVATE);
         mUserProfileIdDao = new UserProfileIdDaoSharedPreferencesImpl(mSharedPreferences, mClock);
         when(mClock.currentTimeMillis()).thenReturn(TIME_INITIAL);
     }
 
     @After
     public void teardown() {
-        CONTEXT.deleteSharedPreferences(STORAGE_NAME);
+        mContext.deleteSharedPreferences(STORAGE_NAME);
     }
 
     @Test
     public void testSetAndReadId() {
         UUID uuid = UUID.randomUUID();
 
-        assertNull(mUserProfileIdDao.getUserProfileId());
+        assertThat(mUserProfileIdDao.getUserProfileId()).isNull();
         mUserProfileIdDao.setUserProfileId(uuid);
-        assertEquals(
-                mSharedPreferences.getString(
-                        UserProfileIdDaoSharedPreferencesImpl.USER_PROFILE_ID_KEY, null),
-                uuid.toString());
-        assertEquals(mUserProfileIdDao.getUserProfileId(), uuid);
-        assertEquals(TIME_INITIAL, mUserProfileIdDao.getTimestamp());
+        assertThat(
+                        mSharedPreferences.getString(
+                                UserProfileIdDaoSharedPreferencesImpl.USER_PROFILE_ID_KEY, null))
+                .isEqualTo(uuid.toString());
+        assertThat(mUserProfileIdDao.getUserProfileId()).isEqualTo(uuid);
+        assertThat(mUserProfileIdDao.getTimestamp()).isEqualTo(TIME_INITIAL);
     }
 
     @Test
     public void testSetId_idExist_overrideExistingId() {
         UUID uuid1 = UUID.randomUUID();
 
-        assertNull(mUserProfileIdDao.getUserProfileId());
+        assertThat(mUserProfileIdDao.getUserProfileId()).isNull();
         mUserProfileIdDao.setUserProfileId(uuid1);
         when(mClock.currentTimeMillis()).thenReturn(TIME_INITIAL);
-        assertEquals(
-                mSharedPreferences.getString(
-                        UserProfileIdDaoSharedPreferencesImpl.USER_PROFILE_ID_KEY, null),
-                uuid1.toString());
-        assertEquals(mUserProfileIdDao.getUserProfileId(), uuid1);
-        assertEquals(TIME_INITIAL, mUserProfileIdDao.getTimestamp());
+        assertThat(
+                        mSharedPreferences.getString(
+                                UserProfileIdDaoSharedPreferencesImpl.USER_PROFILE_ID_KEY, null))
+                .isEqualTo(uuid1.toString());
+        assertThat(mUserProfileIdDao.getUserProfileId()).isEqualTo(uuid1);
+        assertThat(mUserProfileIdDao.getTimestamp()).isEqualTo(TIME_INITIAL);
 
         UUID uuid2 = UUID.randomUUID();
         when(mClock.currentTimeMillis()).thenReturn(TIME_INITIAL + 100);
         mUserProfileIdDao.setUserProfileId(uuid2);
-        assertEquals(
-                mSharedPreferences.getString(
-                        UserProfileIdDaoSharedPreferencesImpl.USER_PROFILE_ID_KEY, null),
-                uuid2.toString());
-        assertEquals(mUserProfileIdDao.getUserProfileId(), uuid2);
-        assertEquals(TIME_INITIAL + 100, mUserProfileIdDao.getTimestamp());
+        assertThat(
+                        mSharedPreferences.getString(
+                                UserProfileIdDaoSharedPreferencesImpl.USER_PROFILE_ID_KEY, null))
+                .isEqualTo(uuid2.toString());
+        assertThat(mUserProfileIdDao.getUserProfileId()).isEqualTo(uuid2);
+        assertThat(mUserProfileIdDao.getTimestamp()).isEqualTo(TIME_INITIAL + 100);
     }
 
     @Test
     public void testDeleteStorage() {
         UUID uuid = UUID.randomUUID();
 
-        assertNull(mUserProfileIdDao.getUserProfileId());
+        assertThat(mUserProfileIdDao.getUserProfileId()).isNull();
         mUserProfileIdDao.setUserProfileId(uuid);
-        assertEquals(
-                mSharedPreferences.getString(
-                        UserProfileIdDaoSharedPreferencesImpl.USER_PROFILE_ID_KEY, null),
-                uuid.toString());
-        assertEquals(mUserProfileIdDao.getUserProfileId(), uuid);
+        assertThat(
+                        mSharedPreferences.getString(
+                                UserProfileIdDaoSharedPreferencesImpl.USER_PROFILE_ID_KEY, null))
+                .isEqualTo(uuid.toString());
+        assertThat(mUserProfileIdDao.getUserProfileId()).isEqualTo(uuid);
 
         mUserProfileIdDao.deleteStorage();
-        assertNull(mUserProfileIdDao.getUserProfileId());
-        assertNull(
-                mSharedPreferences.getString(
-                        UserProfileIdDaoSharedPreferencesImpl.USER_PROFILE_ID_KEY, null));
-        assertEquals(0, mUserProfileIdDao.getTimestamp());
-        assertEquals(
-                0,
-                mSharedPreferences.getLong(
-                        UserProfileIdDaoSharedPreferencesImpl
-                                .USER_PROFILE_ID_CREATION_TIMESTAMP_KEY,
-                        0));
+        assertThat(mUserProfileIdDao.getUserProfileId()).isNull();
+        assertThat(
+                        mSharedPreferences.getString(
+                                UserProfileIdDaoSharedPreferencesImpl.USER_PROFILE_ID_KEY, null))
+                .isNull();
+        assertThat(mUserProfileIdDao.getTimestamp()).isEqualTo(0);
+        assertThat(
+                        mSharedPreferences.getLong(
+                                UserProfileIdDaoSharedPreferencesImpl
+                                        .USER_PROFILE_ID_CREATION_TIMESTAMP_KEY,
+                                0))
+                .isEqualTo(0);
     }
 }
