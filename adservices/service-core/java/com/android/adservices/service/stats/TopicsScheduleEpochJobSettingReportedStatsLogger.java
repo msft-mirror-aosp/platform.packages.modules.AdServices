@@ -73,7 +73,7 @@ public class TopicsScheduleEpochJobSettingReportedStatsLogger {
                         : TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_REQUIRES_CHARGING;
         mBuilder.setScheduleIfNeededEpochJobStatus(scheduleIfNeededEpochJobStatus);
 
-        Future<?> logScheduleIfNeededFuture =
+        Future<?> unusedLogScheduleIfNeededFuture =
                 AdServicesExecutors.getBackgroundExecutor().submit(
                         () -> mAdServicesLogger
                                 .logTopicsScheduleEpochJobSettingReportedStats(
@@ -94,7 +94,7 @@ public class TopicsScheduleEpochJobSettingReportedStatsLogger {
         }
         mBuilder.setRescheduleEpochJobStatus(skipReason);
 
-        Future<?> logSkipRescheduleEpochJobFuture =
+        Future<?> unusedLogSkipRescheduleEpochJobFuture =
                 AdServicesExecutors.getBackgroundExecutor().submit(
                         () -> mAdServicesLogger
                                 .logTopicsScheduleEpochJobSettingReportedStats(

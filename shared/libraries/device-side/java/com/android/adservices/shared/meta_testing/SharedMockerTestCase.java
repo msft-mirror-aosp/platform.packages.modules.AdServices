@@ -55,7 +55,7 @@ public abstract class SharedMockerTestCase<T extends SharedMocker> extends Devic
                     .that(ApplicationContextSingleton.get())
                     .isSameInstanceAs(context);
         } finally {
-            ApplicationContextSingleton.setAsIs(contextBefore);
+            ApplicationContextSingleton.setForTests(contextBefore);
         }
     }
 }
