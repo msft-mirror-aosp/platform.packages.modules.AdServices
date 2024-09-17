@@ -409,10 +409,6 @@ java_defaults {
     // modules-utils-extended-mockito-rule-defaults once it have
     // compile_multilib: "both",
     defaults: ["modules-utils-testable-device-config-defaults"],
-    // TODO(b/345219434, b/354885695): explictily adding compile_multilib just
-    // in case the build is using the modules-utils-testable-device-config-defaults
-    // version that removed it
-    compile_multilib: "both",
     visibility: [
         "//packages/modules/AdServices:__subpackages__",
         "//packages/modules/ExtServices:__subpackages__",
