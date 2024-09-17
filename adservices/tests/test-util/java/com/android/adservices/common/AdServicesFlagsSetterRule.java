@@ -145,11 +145,6 @@ public final class AdServicesFlagsSetterRule
     // NOTE: add more factory methods as needed
 
     @Override
-    protected boolean isDeviceConfigAvailable() {
-        return true;
-    }
-
-    @Override
     protected String getTestPackageName() {
         return InstrumentationRegistry.getInstrumentation().getTargetContext().getPackageName();
     }
