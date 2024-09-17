@@ -972,7 +972,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                         .build();
         AggregateDebugReportData debugData2 =
                 new AggregateDebugReportData.Builder(
-                                Collections.singleton(DebugReportApi.Type.DEFAULT.getValue()),
+                                Collections.singleton(DebugReportApi.Type.UNSPECIFIED.getValue()),
                                 new BigInteger("222", 16),
                                 222)
                         .build();

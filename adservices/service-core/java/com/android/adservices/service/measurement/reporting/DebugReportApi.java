@@ -52,7 +52,7 @@ public class DebugReportApi {
 
     /** Define different verbose debug report types. */
     public enum Type {
-        DEFAULT("unspecified"),
+        UNSPECIFIED("unspecified"),
         SOURCE_DESTINATION_LIMIT("source-destination-limit"),
         SOURCE_DESTINATION_RATE_LIMIT("source-destination-rate-limit"),
         SOURCE_DESTINATION_PER_DAY_RATE_LIMIT("source-destination-per-day-rate-limit"),
@@ -66,6 +66,7 @@ public class DebugReportApi {
         SOURCE_ATTRIBUTION_SCOPE_INFO_GAIN_LIMIT("source-attribution-scope-info-gain-limit"),
         SOURCE_DESTINATION_GLOBAL_RATE_LIMIT("source-destination-global-rate-limit"),
         SOURCE_DESTINATION_LIMIT_REPLACED("source-destination-limit-replaced"),
+        SOURCE_REPORTING_ORIGIN_LIMIT("source-reporting-origin-limit"),
         SOURCE_REPORTING_ORIGIN_PER_SITE_LIMIT("source-reporting-origin-per-site-limit"),
         // TODO(b/363156698): Not implemented yet
         SOURCE_TRIGGER_STATE_CARDINALITY_LIMIT("source-trigger-state-cardinality-limit"),
@@ -148,15 +149,13 @@ public class DebugReportApi {
     private final Flags mFlags;
     private final EventReportWindowCalcDelegate mEventReportWindowCalcDelegate;
     private final SourceNoiseHandler mSourceNoiseHandler;
-    private final AggregateDebugReportApi mAggregateDebugReportApi;
 
     public DebugReportApi(Context context, Flags flags) {
         this(
                 context,
                 flags,
                 new EventReportWindowCalcDelegate(flags),
-                new SourceNoiseHandler(flags),
-                new AggregateDebugReportApi(flags));
+                new SourceNoiseHandler(flags));
     }
 
     @VisibleForTesting
@@ -164,13 +163,11 @@ public class DebugReportApi {
             Context context,
             Flags flags,
             EventReportWindowCalcDelegate eventReportWindowCalcDelegate,
-            SourceNoiseHandler sourceNoiseHandler,
-            AggregateDebugReportApi aggregateDebugReportApi) {
+            SourceNoiseHandler sourceNoiseHandler) {
         mContext = context;
         mFlags = flags;
         mEventReportWindowCalcDelegate = eventReportWindowCalcDelegate;
         mSourceNoiseHandler = sourceNoiseHandler;
-        mAggregateDebugReportApi = aggregateDebugReportApi;
     }
 
     /** Schedules the Source Destination limit Debug Report */
@@ -195,7 +192,7 @@ public class DebugReportApi {
     }
 
     /** Schedules Source Attribution Scope Debug Report */
-    public void scheduleAttributionScopeDebugReport(
+    public DebugReportApi.Type scheduleAttributionScopeDebugReport(
             Source source, Source.AttributionScopeValidationResult result, IMeasurementDao dao) {
         DebugReportApi.Type type = null;
         Map<String, String> additionalBodyParams = new HashMap<>();
@@ -215,10 +212,10 @@ public class DebugReportApi {
             }
         }
         if (type == null) {
-            return;
+            return null;
         }
-        scheduleSourceReport(
-                source, type, additionalBodyParams, dao, /* differentReportTypeForAdr= */ null);
+        scheduleSourceReport(source, type, additionalBodyParams, dao);
+        return type;
     }
 
     /** Determines if scheduling the Trigger Report is allowed */
@@ -249,8 +246,6 @@ public class DebugReportApi {
     public void scheduleTriggerNoMatchingSourceDebugReport(
             Trigger trigger, IMeasurementDao dao, DebugReportApi.Type type)
             throws DatastoreException {
-        mAggregateDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(trigger, dao);
-
         if (!isTriggerReportAllowed(trigger, type, /* source= */ null)) {
             return;
         }
@@ -273,8 +268,6 @@ public class DebugReportApi {
             IMeasurementDao dao,
             DebugReportApi.Type type)
             throws DatastoreException {
-        mAggregateDebugReportApi.scheduleTriggerAttributionErrorWithSourceDebugReport(
-                source, trigger, type, dao);
         if (!isTriggerReportAllowed(trigger, type, source)) {
             return;
         }
@@ -300,8 +293,6 @@ public class DebugReportApi {
             IMeasurementDao dao,
             DebugReportApi.Type type)
             throws DatastoreException {
-        mAggregateDebugReportApi.scheduleTriggerAttributionErrorWithSourceDebugReport(
-                source, trigger, type, dao);
         if (!isTriggerReportAllowed(trigger, type, source)) {
             return;
         }
@@ -317,20 +308,9 @@ public class DebugReportApi {
                 dao);
     }
 
-    /**
-     * Schedules a null report when attribution is successful. We generate ADR but not verbose debug
-     * report for attribution-success case. This API integrates {@link
-     * com.android.adservices.service.measurement.attribution.AttributionJobHandler} with {@link
-     * AggregateDebugReportApi}.
-     */
-    public void scheduleNullDebugReport(Source source, Trigger trigger, IMeasurementDao dao) {
-        mAggregateDebugReportApi.scheduleNullDebugReport(source, trigger, dao);
-    }
-
     /** Schedules the Source Destination limit type Debug Report */
     private void scheduleSourceDestinationLimitDebugReport(
             Source source, String limit, Type type, IMeasurementDao dao) {
-        mAggregateDebugReportApi.scheduleSourceRegistrationDebugReport(source, type, dao);
         if (isSourceDebugFlagDisabled(Type.SOURCE_DESTINATION_LIMIT)) {
             return;
         }
@@ -393,16 +373,12 @@ public class DebugReportApi {
      * @param type The type of the debug report
      * @param additionalBodyParams Additional parameters to add to the body of the debug report
      * @param dao Measurement DAO
-     * @param differentReportTypeForAdr The type for SOURCE_SUCCESS adr report
      */
     public void scheduleSourceReport(
             Source source,
-            DebugReportApi.Type type,
+            Type type,
             @Nullable Map<String, String> additionalBodyParams,
-            IMeasurementDao dao,
-            @Nullable DebugReportApi.Type differentReportTypeForAdr) {
-        mAggregateDebugReportApi.scheduleSourceRegistrationDebugReport(
-                source, differentReportTypeForAdr != null ? differentReportTypeForAdr : type, dao);
+            IMeasurementDao dao) {
         Objects.requireNonNull(source, "source cannot be null");
         Objects.requireNonNull(type, "type cannot be null");
         Objects.requireNonNull(dao, "dao cannot be null");
