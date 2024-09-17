@@ -566,7 +566,8 @@ public final class ScheduledUpdatesHandler {
     private void sendBroadcastIntentIfEnabled() {
         if (DebugFlags.getInstance().getFledgeScheduleCACompleteBroadcastEnabled()) {
             Context context = ApplicationContextSingleton.get();
-            sLogger.d("Sending a broadcast intent with intent action: " +
+            sLogger.d(
+                    "Sending a broadcast intent with intent action: %s",
                     ACTION_SCHEDULE_CA_COMPLETE_INTENT);
             context.sendBroadcast(new Intent(ACTION_SCHEDULE_CA_COMPLETE_INTENT));
         }

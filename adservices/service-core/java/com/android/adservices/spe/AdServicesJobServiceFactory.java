@@ -95,6 +95,7 @@ public final class AdServicesJobServiceFactory implements JobServiceFactory {
                 ModuleJobPolicy policy =
                         ProtoParser.parseBase64EncodedStringToProto(
                                 ModuleJobPolicy.parser(),
+                                AdServicesErrorLoggerImpl.getInstance(),
                                 PROTO_PROPERTY_FOR_LOGCAT,
                                 flags.getAdServicesModuleJobPolicy());
                 sSingleton =

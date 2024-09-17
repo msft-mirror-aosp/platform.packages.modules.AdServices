@@ -65,6 +65,7 @@ import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.ui.enrollment.collection.GaUxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.enrollment.collection.U18UxEnrollmentChannelCollection;
+import com.android.adservices.shared.system.SystemContextSingleton;
 import com.android.adservices.shared.testing.annotations.DisableDebugFlag;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.modules.utils.testing.TestableDeviceConfig;
@@ -1041,16 +1042,42 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
 
     @Test
     public void testDump() throws Exception {
-        doNothing()
-                .when(mSpyContext)
-                .enforceCallingPermission(eq(android.Manifest.permission.DUMP), isNull());
+        mockDumpPermission();
+        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
+
+        Context previousContext = SystemContextSingleton.setForTests(mContext);
+        try {
+            String dump = dump(pw -> mService.dump(/* fd= */ null, pw, /* args= */ null));
+
+            // Content doesn't matter much, we just wanna make sure it doesn't crash (for example,
+            // by using the wrong %s / %d tokens) and that its components are dumped
+            expect.withMessage("content of dump()").that(dump).contains(USER_INSTANCE_MANAGER_DUMP);
+            expect.withMessage("content of dump()")
+                    .that(dump)
+                    .contains("SystemContextSingleton: " + mContext);
+        } finally {
+            SystemContextSingleton.setForTests(previousContext);
+        }
+    }
+
+    @Test
+    public void testDump_systemContextSingletonNotSetYet() throws Exception {
+        mockDumpPermission();
         mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
 
         String dump = dump(pw -> mService.dump(/* fd= */ null, pw, /* args= */ null));
 
-        // Content doesn't matter much, we just wanna make sure it doesn't crash (for example,
-        // by using the wrong %s / %d tokens) and that its components are dumped
-        assertWithMessage("content of dump()").that(dump).contains(USER_INSTANCE_MANAGER_DUMP);
+        assertWithMessage("content of dump()")
+                .that(dump)
+                .contains(
+                        "SystemContextSingleton: "
+                                + SystemContextSingleton.ERROR_MESSAGE_SET_NOT_CALLED);
+    }
+
+    private void mockDumpPermission() {
+        doNothing()
+                .when(mSpyContext)
+                .enforceCallingPermission(eq(android.Manifest.permission.DUMP), isNull());
     }
 
     // Mock the call to get the AdServices module version from the PackageManager.

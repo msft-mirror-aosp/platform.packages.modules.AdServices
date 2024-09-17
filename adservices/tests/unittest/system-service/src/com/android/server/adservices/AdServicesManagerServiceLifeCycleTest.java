@@ -23,15 +23,20 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
+import android.content.Context;
+
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.shared.system.SystemContextSingleton;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 import com.android.server.LocalManagerRegistry;
 import com.android.server.sdksandbox.SdkSandboxManagerLocal;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
+@SuppressWarnings("VisibleForTests") // TODO(b/343741206): remove when linter is fixed
 @SpyStatic(LocalManagerRegistry.class)
 public final class AdServicesManagerServiceLifeCycleTest extends AdServicesExtendedMockitoTestCase {
 
@@ -41,11 +46,45 @@ public final class AdServicesManagerServiceLifeCycleTest extends AdServicesExten
     // Need to use a spy to mock publishBinderService()
     private AdServicesManagerService.Lifecycle mSpyLifecycle;
 
+    private Context mPreviousSystemContextSingleton;
+
     @Before
     public void setUp() {
+        mPreviousSystemContextSingleton = SystemContextSingleton.setForTests(null);
         mSpyLifecycle = spy(new AdServicesManagerService.Lifecycle(mContext, mService));
         doNothing().when(mSpyLifecycle).publishBinderService();
         mockGetLocalManager(SdkSandboxManagerLocal.class, mSdkSandboxManagerLocal);
+    }
+
+    // TODO(b/285300419): use rule instead / remove this method and mPreviousSystemContextSingleton
+    @After
+    public void resetSystemContextSingleton() {
+        SystemContextSingleton.setForTests(mPreviousSystemContextSingleton);
+    }
+
+    @Test
+    public void testSystemSingletonContextSetOnConstructor() {
+        // Should not have being set by test-only constructor
+        expect.withMessage("SystemContextSingleton.get() after constructor from @Before")
+                .that(SystemContextSingleton.getForTests())
+                .isSameInstanceAs(mPreviousSystemContextSingleton);
+
+        // It should be nill, but better reset in case some tests somehow set it...
+        SystemContextSingleton.setForTests(null);
+
+        // Constructor mitght throw an exception - like SecurityException when trying to register a
+        // DeviceConfigReceiver - but it doesn't matter: at that point it should have set the
+        // singleton already
+        try {
+            @SuppressWarnings("UnusedVariable")
+            var unused = new AdServicesManagerService.Lifecycle(mMockContext);
+        } catch (RuntimeException e) {
+            mLog.d("Ignoring exception thrown at constructor: %s", e);
+        }
+
+        expect.withMessage("SystemContextSingleton.get() after new constructor")
+                .that(SystemContextSingleton.get())
+                .isSameInstanceAs(mMockContext);
     }
 
     @Test

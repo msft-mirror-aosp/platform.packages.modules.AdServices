@@ -19,6 +19,7 @@ import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisa
 import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest.PERSISTENT;
 import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest.UNSUPPORTED;
 import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest.UNTIL_REBOOT;
+import static com.android.adservices.shared.testing.device.ShellCommandOutput.EMPTY_RESULT;
 
 import static org.junit.Assert.assertThrows;
 
@@ -38,6 +39,19 @@ public final class DeviceConfigShellCmdImplTest extends SharedSidelessTestCase {
     private final FakeDeviceGateway mGateway = new FakeDeviceGateway();
     private final DeviceConfigShellCmdImpl mImpl =
             new DeviceConfigShellCmdImpl(mFakeLogger, mGateway);
+
+    @Test
+    public void testSyncDisabledModeForTest_getShellCommandString() {
+        expect.withMessage("%s.getShellCommandString()", NONE)
+                .that(NONE.getShellCommandString())
+                .isEqualTo("none");
+        expect.withMessage("%s.getShellCommandString()", PERSISTENT)
+                .that(PERSISTENT.getShellCommandString())
+                .isEqualTo("persistent");
+        expect.withMessage("%s.getShellCommandString()", UNTIL_REBOOT)
+                .that(UNTIL_REBOOT.getShellCommandString())
+                .isEqualTo("until_reboot");
+    }
 
     @Test
     public void testNullConstructor() {
@@ -70,13 +84,49 @@ public final class DeviceConfigShellCmdImplTest extends SharedSidelessTestCase {
         mGateway.setSdkLevel(Level.S);
 
         for (var mode : REAL_MODES) {
+            ShellCommandInput input =
+                    new ShellCommandInput(
+                            "device_config set_sync_disabled_for_tests %s",
+                            mode.getShellCommandString());
+            mGateway.onCommand(input, EMPTY_RESULT);
             mImpl.setSyncDisabledMode(mode);
-
-            mGateway.expectCalled(
-                    expect,
-                    "device_config set_sync_disabled_for_tests %s",
-                    mode.name().toString().toLowerCase());
+            mGateway.expectCalled(expect, input);
         }
+    }
+
+    @Test
+    public void testSetSyncDisabledMode_failedBecauseOutIsNotEmpty() {
+        mGateway.setSdkLevel(Level.S);
+        ShellCommandInput input =
+                new ShellCommandInput("device_config set_sync_disabled_for_tests persistent");
+        ShellCommandOutput output = new ShellCommandOutput("D'OH!");
+        mGateway.onCommand(input, output);
+
+        var thrown =
+                assertThrows(
+                        InvalidShellCommandResultException.class,
+                        () -> mImpl.setSyncDisabledMode(PERSISTENT));
+
+        expect.withMessage("input on exception").that(thrown.getInput()).isEqualTo(input);
+        expect.withMessage("output on exception").that(thrown.getOutput()).isSameInstanceAs(output);
+    }
+
+    @Test
+    public void testSetSyncDisabledMode_failedBecauseErrIsNotEmpty() {
+        mGateway.setSdkLevel(Level.S);
+        ShellCommandInput input =
+                new ShellCommandInput("device_config set_sync_disabled_for_tests persistent");
+        ShellCommandOutput output =
+                new ShellCommandOutput.Builder().setOut("").setErr("Annoyed grunt").build();
+        mGateway.onCommand(input, output);
+
+        var thrown =
+                assertThrows(
+                        InvalidShellCommandResultException.class,
+                        () -> mImpl.setSyncDisabledMode(PERSISTENT));
+
+        expect.withMessage("input on exception").that(thrown.getInput()).isEqualTo(input);
+        expect.withMessage("output on exception").that(thrown.getOutput()).isSameInstanceAs(output);
     }
 
     @Test
@@ -100,31 +150,34 @@ public final class DeviceConfigShellCmdImplTest extends SharedSidelessTestCase {
 
     private void testGetSyncDisabledModeInvalidResultForSLevels(Level level) {
         mGateway.setSdkLevel(level);
-        mGateway.onCommand("D'OH!", "device_config is_sync_disabled_for_tests");
+        ShellCommandInput input = new ShellCommandInput("device_config is_sync_disabled_for_tests");
+        ShellCommandOutput output = new ShellCommandOutput("D'OH!");
+        mGateway.onCommand(input, output);
 
-        var thrown = assertThrows(IllegalStateException.class, () -> mImpl.getSyncDisabledMode());
+        var thrown =
+                assertThrows(
+                        InvalidShellCommandResultException.class,
+                        () -> mImpl.getSyncDisabledMode());
 
-        expect.withMessage("exception message")
-                .that(thrown)
-                .hasMessageThat()
-                .isEqualTo(
-                        "'device_config is_sync_disabled_for_tests' returned unexpected result:"
-                                + " D'OH!");
+        expect.withMessage("input on exception").that(thrown.getInput()).isEqualTo(input);
+        expect.withMessage("output on exception").that(thrown.getOutput()).isSameInstanceAs(output);
     }
 
     @Test
     public void testGetSyncDisabledMode_invalidResult_TPlus() {
         mGateway.setSdkLevel(Level.T);
-        mGateway.onCommand("D'OH!", "device_config get_sync_disabled_for_tests");
+        ShellCommandInput input =
+                new ShellCommandInput("device_config get_sync_disabled_for_tests");
+        ShellCommandOutput output = new ShellCommandOutput("D'OH!");
+        mGateway.onCommand(input, output);
 
-        var thrown = assertThrows(IllegalStateException.class, () -> mImpl.getSyncDisabledMode());
+        var thrown =
+                assertThrows(
+                        InvalidShellCommandResultException.class,
+                        () -> mImpl.getSyncDisabledMode());
 
-        expect.withMessage("exception message")
-                .that(thrown)
-                .hasMessageThat()
-                .isEqualTo(
-                        "'device_config get_sync_disabled_for_tests' returned unexpected result:"
-                                + " D'OH!");
+        expect.withMessage("input on exception").that(thrown.getInput()).isEqualTo(input);
+        expect.withMessage("output on exception").that(thrown.getOutput()).isSameInstanceAs(output);
     }
 
     @Test
@@ -141,8 +194,8 @@ public final class DeviceConfigShellCmdImplTest extends SharedSidelessTestCase {
         mGateway.setSdkLevel(level);
         for (var mode : REAL_MODES) {
             mGateway.onCommand(
-                    mode.name().toString().toLowerCase(),
-                    "device_config is_sync_disabled_for_tests");
+                    new ShellCommandInput("device_config is_sync_disabled_for_tests"),
+                    new ShellCommandOutput(mode.getShellCommandString()));
 
             var actualMode = mImpl.getSyncDisabledMode();
 
@@ -151,16 +204,60 @@ public final class DeviceConfigShellCmdImplTest extends SharedSidelessTestCase {
     }
 
     @Test
+    public void testGetSyncDisabledMode_S_cmdReturnedStandardError() {
+        testGetSyncDisabledModeForSLevelsWhenCmdReturnedStandardError(Level.S);
+    }
+
+    @Test
+    public void testGetSyncDisabledMode_S2_cmdReturnedStandardError() {
+        testGetSyncDisabledModeForSLevelsWhenCmdReturnedStandardError(Level.S2);
+    }
+
+    private void testGetSyncDisabledModeForSLevelsWhenCmdReturnedStandardError(Level level) {
+        mGateway.setSdkLevel(level);
+        ShellCommandInput input = new ShellCommandInput("device_config is_sync_disabled_for_tests");
+        ShellCommandOutput output =
+                new ShellCommandOutput.Builder().setOut("").setErr("D'OH!").build();
+        mGateway.onCommand(input, output);
+
+        var thrown =
+                assertThrows(
+                        InvalidShellCommandResultException.class,
+                        () -> mImpl.getSyncDisabledMode());
+
+        expect.withMessage("input on exception").that(thrown.getInput()).isEqualTo(input);
+        expect.withMessage("output on exception").that(thrown.getOutput()).isSameInstanceAs(output);
+    }
+
+    @Test
     public void testGetSyncDisabledMode_TPlus() {
         mGateway.setSdkLevel(Level.T);
         for (var mode : REAL_MODES) {
             mGateway.onCommand(
-                    mode.name().toString().toLowerCase(),
-                    "device_config get_sync_disabled_for_tests");
+                    new ShellCommandInput("device_config get_sync_disabled_for_tests"),
+                    new ShellCommandOutput(mode.getShellCommandString()));
 
             var actualMode = mImpl.getSyncDisabledMode();
 
             expect.withMessage("getSyncDisabledMode()").that(actualMode).isEqualTo(mode);
         }
+    }
+
+    @Test
+    public void testGetSyncDisabledMode_TPlus_cmdReturnedStandardError() {
+        mGateway.setSdkLevel(Level.T);
+        ShellCommandInput input =
+                new ShellCommandInput("device_config get_sync_disabled_for_tests");
+        ShellCommandOutput output =
+                new ShellCommandOutput.Builder().setOut("").setErr("D'OH!").build();
+        mGateway.onCommand(input, output);
+
+        var thrown =
+                assertThrows(
+                        InvalidShellCommandResultException.class,
+                        () -> mImpl.getSyncDisabledMode());
+
+        expect.withMessage("input on exception").that(thrown.getInput()).isEqualTo(input);
+        expect.withMessage("output on exception").that(thrown.getOutput()).isSameInstanceAs(output);
     }
 }

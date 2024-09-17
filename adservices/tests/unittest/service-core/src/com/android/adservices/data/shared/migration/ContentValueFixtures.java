@@ -46,12 +46,11 @@ import android.content.ContentValues;
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.enrollment.EnrollmentTables;
 
-import java.util.Arrays;
 import java.util.List;
 
-public class ContentValueFixtures {
+public final class ContentValueFixtures {
 
-    public static class EnrollmentValues {
+    public static final class EnrollmentValues {
 
         // Default Enrollment Example Data
         public static final String ENROLLMENT_ID = "enrollment_id";
@@ -192,26 +191,12 @@ public class ContentValueFixtures {
 
     /**
      * @return List of Example EnrollmentV1 contentValues. Contain multiple distinct values that
-     *     differ in URI Origin but share Site.
-     */
-    public static List<ContentValues> generateCrossSiteEnrollmentListV1() {
-        List<ContentValues> list =
-                Arrays.asList(
-                        generateEnrollmentDefaultExampleContentValuesV1(),
-                        generateEnrollmentCrossSiteExampleContentValuesV1());
-        return list;
-    }
-
-    /**
-     * @return List of Example EnrollmentV1 contentValues. Contain multiple distinct values that
      *     differ in URI Origin and Site.
      */
     public static List<ContentValues> generateDistinctSiteEnrollmentListV1() {
-        List<ContentValues> list =
-                Arrays.asList(
-                        generateEnrollmentDefaultExampleContentValuesV1(),
-                        generateEnrollmentUniqueExampleContentValuesV1());
-        return list;
+        return List.of(
+                generateEnrollmentDefaultExampleContentValuesV1(),
+                generateEnrollmentUniqueExampleContentValuesV1());
     }
 
     /**
@@ -219,11 +204,9 @@ public class ContentValueFixtures {
      *     cases that (share/are distinct) in URI Origin/Site.
      */
     public static List<ContentValues> generateFullSiteEnrollmentListV1() {
-        List<ContentValues> list =
-                Arrays.asList(
-                        generateEnrollmentDefaultExampleContentValuesV1(),
-                        generateEnrollmentCrossSiteExampleContentValuesV1(),
-                        generateEnrollmentUniqueExampleContentValuesV1());
-        return list;
+        return List.of(
+                generateEnrollmentDefaultExampleContentValuesV1(),
+                generateEnrollmentCrossSiteExampleContentValuesV1(),
+                generateEnrollmentUniqueExampleContentValuesV1());
     }
 }

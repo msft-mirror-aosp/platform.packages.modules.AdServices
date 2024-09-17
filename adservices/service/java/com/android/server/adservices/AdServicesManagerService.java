@@ -46,6 +46,7 @@ import android.util.ArrayMap;
 import android.util.Dumpable;
 
 import com.android.adservices.service.CommonFlagsConstants;
+import com.android.adservices.shared.system.SystemContextSingleton;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.BackgroundThread;
@@ -150,6 +151,8 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         registerReceivers();
         setAdServicesApexVersion();
         setRollbackStatus();
+
+        LogUtil.d("AdServicesManagerService constructed (context=%s)!", mContext);
     }
 
     /** @hide */
@@ -159,11 +162,10 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         /** @hide */
         public Lifecycle(Context context) {
             this(
-                    context,
+                    SystemContextSingleton.set(context),
                     new AdServicesManagerService(
                             context,
-                            new UserInstanceManager(
-                                    TopicsDao.getInstance(context), ADSERVICES_BASE_DIR)));
+                            new UserInstanceManager(TopicsDao.getInstance(), ADSERVICES_BASE_DIR)));
         }
 
         /** @hide */
@@ -171,7 +173,6 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         public Lifecycle(Context context, AdServicesManagerService service) {
             super(context);
             mService = service;
-            LogUtil.d("AdServicesManagerService constructed!");
         }
 
         /** @hide */
@@ -799,6 +800,15 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
             pw.printf("mAdServicesPackagesRolledBackTo: %s\n", mAdServicesPackagesRolledBackTo);
         }
         pw.printf("ShellCmd enabled: %b\n", isShellCmdEnabled());
+
+        pw.print("SystemContextSingleton: ");
+        try {
+            Context systemContext = SystemContextSingleton.get();
+            pw.println(systemContext);
+        } catch (RuntimeException e) {
+            pw.println(e.getMessage());
+        }
+
         mUserInstanceManager.dump(pw, args);
     }
 

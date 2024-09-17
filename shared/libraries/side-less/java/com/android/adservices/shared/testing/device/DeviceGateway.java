@@ -24,9 +24,17 @@ import com.google.errorprone.annotations.FormatString;
 /** Generic device functionalitie3s that are not provided by other interfaces in this package. */
 public interface DeviceGateway {
 
-    /** Runs the given Shell command, returning its output. */
+    /**
+     * Runs the given Shell command, returning its output.
+     *
+     * @deprecated - use {@link #runShellCommandRwe(ShellCommandInput)} instead.
+     */
     @FormatMethod
+    @Deprecated // TODO(b/297085722): remove or undeprecated this method
     String runShellCommand(@FormatString String cmdFmt, @Nullable Object... cmdArgs);
+
+    /** Runs the given Shell command, returning its full output. */
+    ShellCommandOutput runShellCommandRwe(ShellCommandInput input);
 
     /** Gets the SDK level of the device. */
     Level getSdkLevel();
