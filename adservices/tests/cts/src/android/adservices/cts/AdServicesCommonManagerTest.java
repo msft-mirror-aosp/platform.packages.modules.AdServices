@@ -29,7 +29,7 @@ import android.adservices.common.AdServicesCommonManager;
 import android.adservices.common.AdServicesCommonStatesResponse;
 import android.adservices.common.AdServicesModuleState;
 import android.adservices.common.AdServicesModuleUserChoice;
-import android.adservices.common.NotificationTypeParams;
+import android.adservices.common.NotificationType;
 import android.adservices.common.UpdateAdIdRequest;
 
 import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
@@ -166,12 +166,8 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
 
         expect.that(moduleState.getModule()).isEqualTo(MEASUREMENT);
         expect.that(moduleState.getModuleState()).isEqualTo(MODULE_STATE_ENABLED);
-        NotificationTypeParams params =
-                new NotificationTypeParams.Builder()
-                        .setNotificationType(NotificationTypeParams.NOTIFICATION_ONGOING)
-                        .build();
-        expect.that(params.getNotificationType())
-                .isEqualTo(NotificationTypeParams.NOTIFICATION_ONGOING);
+        int params = NotificationType.NOTIFICATION_ONGOING;
+        expect.that(params).isEqualTo(NotificationType.NOTIFICATION_ONGOING);
 
         mCommonManager.requestAdServicesModuleOverrides(
                 adServicesModuleStateList, params, CALLBACK_EXECUTOR, receiver);

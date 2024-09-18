@@ -67,7 +67,7 @@ import android.adservices.common.IRequestAdServicesModuleOverridesCallback;
 import android.adservices.common.IRequestAdServicesModuleUserChoicesCallback;
 import android.adservices.common.IUpdateAdIdCallback;
 import android.adservices.common.IsAdServicesEnabledResult;
-import android.adservices.common.NotificationTypeParams;
+import android.adservices.common.NotificationType;
 import android.adservices.common.UpdateAdIdRequest;
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
@@ -508,7 +508,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
     @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
     public void requestAdServicesModuleOverrides(
             List<AdServicesModuleState> adServicesModuleStateList,
-            NotificationTypeParams notificationType,
+            @NotificationType.NotificationTypeCode int notificationType,
             IRequestAdServicesModuleOverridesCallback callback) {
 
         boolean authorizedCaller = PermissionHelper.hasModifyAdServicesStatePermission(mContext);
