@@ -53,17 +53,17 @@ public final class FledgeRoomConvertersTest extends AdServicesUnitTestCase {
 
     @Test
     public void testConvertersNullInputs() {
-        assertThat(FledgeRoomConverters.serializeInstant(null)).isNull();
-        assertThat(FledgeRoomConverters.deserializeInstant(null)).isNull();
+        expect.that(FledgeRoomConverters.serializeInstant(null)).isNull();
+        expect.that(FledgeRoomConverters.deserializeInstant(null)).isNull();
 
-        assertThat(FledgeRoomConverters.serializeUri(null)).isNull();
-        assertThat(FledgeRoomConverters.deserializeUri(null)).isNull();
+        expect.that(FledgeRoomConverters.serializeUri(null)).isNull();
+        expect.that(FledgeRoomConverters.deserializeUri(null)).isNull();
 
-        assertThat(FledgeRoomConverters.serializeAdTechIdentifier(null)).isNull();
-        assertThat(FledgeRoomConverters.deserializeAdTechIdentifier(null)).isNull();
+        expect.that(FledgeRoomConverters.serializeAdTechIdentifier(null)).isNull();
+        expect.that(FledgeRoomConverters.deserializeAdTechIdentifier(null)).isNull();
 
-        assertThat(FledgeRoomConverters.serializeAdSelectionSignals(null)).isNull();
-        assertThat(FledgeRoomConverters.deserializeAdSelectionSignals(null)).isNull();
+        expect.that(FledgeRoomConverters.serializeAdSelectionSignals(null)).isNull();
+        expect.that(FledgeRoomConverters.deserializeAdSelectionSignals(null)).isNull();
     }
 
     @Test
