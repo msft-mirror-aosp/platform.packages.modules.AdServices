@@ -15,8 +15,6 @@
  */
 package com.android.adservices.shared.common;
 
-import static com.google.common.truth.Truth.assertWithMessage;
-
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.when;
 
@@ -44,7 +42,9 @@ public final class ApplicationContextSingletonTest extends SharedMockitoTestCase
     @Test
     public void testGet_notSet() {
         assertThrows(IllegalStateException.class, () -> ApplicationContextSingleton.get());
-        assertWithMessage("getForTests()").that(ApplicationContextSingleton.getForTests()).isNull();
+        expect.withMessage("getForTests()")
+                .that(ApplicationContextSingleton.getForTests())
+                .isNull();
     }
 
     @Test
@@ -67,7 +67,7 @@ public final class ApplicationContextSingletonTest extends SharedMockitoTestCase
 
         ApplicationContextSingleton.set(mMockContext);
 
-        assertWithMessage("get()")
+        expect.withMessage("get()")
                 .that(ApplicationContextSingleton.get())
                 .isSameInstanceAs(mMockAppContext);
     }
@@ -80,7 +80,7 @@ public final class ApplicationContextSingletonTest extends SharedMockitoTestCase
         ApplicationContextSingleton.set(mMockContext);
         ApplicationContextSingleton.set(mMockOtherContext);
 
-        assertWithMessage("get()")
+        expect.withMessage("get()")
                 .that(ApplicationContextSingleton.get())
                 .isSameInstanceAs(mMockAppContext);
     }
@@ -95,7 +95,7 @@ public final class ApplicationContextSingletonTest extends SharedMockitoTestCase
                 IllegalStateException.class,
                 () -> ApplicationContextSingleton.set(mMockOtherContext));
 
-        assertWithMessage("get()")
+        expect.withMessage("get()")
                 .that(ApplicationContextSingleton.get())
                 .isSameInstanceAs(mMockAppContext);
     }
@@ -104,7 +104,7 @@ public final class ApplicationContextSingletonTest extends SharedMockitoTestCase
     public void testSetForTests() {
         ApplicationContextSingleton.setForTests(mMockContext);
 
-        assertWithMessage("get()")
+        expect.withMessage("get()")
                 .that(ApplicationContextSingleton.get())
                 .isSameInstanceAs(mMockContext);
     }

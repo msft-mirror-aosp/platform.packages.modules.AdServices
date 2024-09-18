@@ -35,18 +35,17 @@ import java.util.UUID;
 
 public final class UserProfileIdDaoSharedPreferencesImplTest extends AdServicesMockitoTestCase {
     private static final String STORAGE_NAME = "test_storage";
+    private static final long TIME_INITIAL_MS = 1000;
 
-    SharedPreferences mSharedPreferences;
-    UserProfileIdDao mUserProfileIdDao;
+    private SharedPreferences mSharedPreferences;
+    private UserProfileIdDao mUserProfileIdDao;
     @Mock private Clock mClock;
-
-    private static final long TIME_INITIAL = 1000;
 
     @Before
     public void setup() {
         mSharedPreferences = mContext.getSharedPreferences(STORAGE_NAME, Context.MODE_PRIVATE);
         mUserProfileIdDao = new UserProfileIdDaoSharedPreferencesImpl(mSharedPreferences, mClock);
-        when(mClock.currentTimeMillis()).thenReturn(TIME_INITIAL);
+        when(mClock.currentTimeMillis()).thenReturn(TIME_INITIAL_MS);
     }
 
     @After
@@ -65,7 +64,7 @@ public final class UserProfileIdDaoSharedPreferencesImplTest extends AdServicesM
                                 UserProfileIdDaoSharedPreferencesImpl.USER_PROFILE_ID_KEY, null))
                 .isEqualTo(uuid.toString());
         assertThat(mUserProfileIdDao.getUserProfileId()).isEqualTo(uuid);
-        assertThat(mUserProfileIdDao.getTimestamp()).isEqualTo(TIME_INITIAL);
+        assertThat(mUserProfileIdDao.getTimestamp()).isEqualTo(TIME_INITIAL_MS);
     }
 
     @Test
@@ -74,23 +73,23 @@ public final class UserProfileIdDaoSharedPreferencesImplTest extends AdServicesM
 
         assertThat(mUserProfileIdDao.getUserProfileId()).isNull();
         mUserProfileIdDao.setUserProfileId(uuid1);
-        when(mClock.currentTimeMillis()).thenReturn(TIME_INITIAL);
+        when(mClock.currentTimeMillis()).thenReturn(TIME_INITIAL_MS);
         assertThat(
                         mSharedPreferences.getString(
                                 UserProfileIdDaoSharedPreferencesImpl.USER_PROFILE_ID_KEY, null))
                 .isEqualTo(uuid1.toString());
         assertThat(mUserProfileIdDao.getUserProfileId()).isEqualTo(uuid1);
-        assertThat(mUserProfileIdDao.getTimestamp()).isEqualTo(TIME_INITIAL);
+        assertThat(mUserProfileIdDao.getTimestamp()).isEqualTo(TIME_INITIAL_MS);
 
         UUID uuid2 = UUID.randomUUID();
-        when(mClock.currentTimeMillis()).thenReturn(TIME_INITIAL + 100);
+        when(mClock.currentTimeMillis()).thenReturn(TIME_INITIAL_MS + 100);
         mUserProfileIdDao.setUserProfileId(uuid2);
         assertThat(
                         mSharedPreferences.getString(
                                 UserProfileIdDaoSharedPreferencesImpl.USER_PROFILE_ID_KEY, null))
                 .isEqualTo(uuid2.toString());
         assertThat(mUserProfileIdDao.getUserProfileId()).isEqualTo(uuid2);
-        assertThat(mUserProfileIdDao.getTimestamp()).isEqualTo(TIME_INITIAL + 100);
+        assertThat(mUserProfileIdDao.getTimestamp()).isEqualTo(TIME_INITIAL_MS + 100);
     }
 
     @Test
