@@ -114,4 +114,17 @@ public final class BackgroundJobHelper {
     private boolean isJobPending(int jobId) {
         return !Objects.isNull(mJobScheduler.getPendingJob(jobId));
     }
+
+    /**
+     * This method checks whether background job with the given jobId is scheduled.
+     *
+     * @param jobId jobId for the background job service in the adservices packages
+     * @return true if the Background job is scheduled, false otherwise.
+     */
+    public boolean isJobScheduled(int jobId) {
+        String outputMessages =
+                ShellUtils.runShellCommand(
+                        "cmd jobscheduler get-job-state -u 0  %s %s", PACKAGE, jobId);
+        return outputMessages.contains("waiting");
+    }
 }

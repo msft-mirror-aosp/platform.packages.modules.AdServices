@@ -740,6 +740,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                                 DevContext.builder()
                                         .setDeviceDevOptionsEnabled(true)
                                         .setCallingAppPackageName(CALLER_PACKAGE_NAME)
+                                        .setDevSessionActive(false)
                                         .build()));
     }
 }

@@ -3888,6 +3888,14 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_ADSERVICES_VERSION_MAPPINGS;
     }
 
+    /** Default value for Measurement aggregate contribution budget capacity */
+    @FeatureFlag boolean MEASUREMENT_ENABLE_AGGREGATE_CONTRIBUTION_BUDGET_CAPACITY = false;
+
+    /** Returns whether to enable Measurement aggregate contribution budget capacity */
+    default boolean getMeasurementEnableAggregateContributionBudgetCapacity() {
+        return MEASUREMENT_ENABLE_AGGREGATE_CONTRIBUTION_BUDGET_CAPACITY;
+    }
+
     /** Default value for Measurement V1 source trigger data */
     @FeatureFlag boolean MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA = false;
 
