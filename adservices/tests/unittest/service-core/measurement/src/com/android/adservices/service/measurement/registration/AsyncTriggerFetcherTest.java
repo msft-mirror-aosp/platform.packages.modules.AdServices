@@ -8089,7 +8089,8 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
 
         AggregateDebugReporting adrObject =
                 new AggregateDebugReporting.Builder(
-                                1024,
+                                // Budget field is ignored for trigger
+                                0,
                                 new BigInteger("1", 16),
                                 new ArrayList<>(List.of(debugData1, debugData2)),
                                 Uri.parse("https://cloud.coordination.test"))
@@ -8152,7 +8153,8 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                                 new JSONObject(fetch.get().getAggregateDebugReportingString()))
                         .build();
         assertThat(aggregateDebugReporting.getKeyPiece()).isEqualTo(new BigInteger("1", 16));
-        assertThat(aggregateDebugReporting.getBudget()).isEqualTo(1024);
+        // Budget field is ignored for trigger
+        assertThat(aggregateDebugReporting.getBudget()).isEqualTo(0);
         assertThat(aggregateDebugReporting.getAggregationCoordinatorOrigin())
                 .isEqualTo(Uri.parse("https://cloud.coordination.test"));
         assertThat(aggregateDebugReporting.getAggregateDebugReportDataList().get(0).getKeyPiece())
