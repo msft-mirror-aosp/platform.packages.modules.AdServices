@@ -275,7 +275,7 @@ public class AdServicesCommonManager {
 
     /**
      * Broadcast action: notify that a consent notification has been displayed to the user, and the
-     * user consent choices can be set by calling {@link #setAdServicesModuleUserChoices()}.
+     * user consent choices can be set by calling {@link #requestAdServicesModuleUserChoices()}.
      *
      * @hide
      */
@@ -288,7 +288,7 @@ public class AdServicesCommonManager {
     /**
      * Activity Action: Open the consent landing page activity. In the activity, user consent
      * choices can be set, depending on user action, by calling {@link
-     * #setAdServicesModuleUserChoices()}.
+     * #requestAdServicesModuleUserChoices()}.
      *
      * <p>Input: nothing
      *
@@ -322,7 +322,7 @@ public class AdServicesCommonManager {
     @SystemApi
     @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
     @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
-    public void setAdServicesModuleOverrides(
+    public void requestAdServicesModuleOverrides(
             @NonNull List<AdServicesModuleState> adServicesModuleStateList,
             @NonNull NotificationTypeParams notificationType,
             @NonNull @CallbackExecutor Executor executor,
@@ -338,10 +338,10 @@ public class AdServicesCommonManager {
 
         final IAdServicesCommonService service = getService();
         try {
-            service.setAdServicesModuleOverrides(
+            service.requestAdServicesModuleOverrides(
                     adServicesModuleStateList,
                     notificationType,
-                    new ISetAdServicesModuleOverridesCallback.Stub() {
+                    new IRequestAdServicesModuleOverridesCallback.Stub() {
                         @Override
                         public void onResult(AdServicesCommonResponse adServicesCommonResponse)
                                 throws RemoteException {
@@ -377,7 +377,7 @@ public class AdServicesCommonManager {
     @SystemApi
     @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
     @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
-    public void setAdServicesModuleUserChoices(
+    public void requestAdServicesModuleUserChoices(
             @NonNull List<AdServicesModuleUserChoice> adServicesModuleUserChoiceList,
             @NonNull @CallbackExecutor Executor executor,
             @NonNull AdServicesOutcomeReceiver<AdServicesCommonResponse, Exception> callback) {
@@ -391,9 +391,9 @@ public class AdServicesCommonManager {
 
         final IAdServicesCommonService service = getService();
         try {
-            service.setAdServicesModuleUserChoices(
+            service.requestAdServicesModuleUserChoices(
                     adServicesModuleUserChoiceList,
-                    new ISetAdServicesModuleUserChoicesCallback.Stub() {
+                    new IRequestAdServicesModuleUserChoicesCallback.Stub() {
                         @Override
                         public void onResult(AdServicesCommonResponse adServicesCommonResponse)
                                 throws RemoteException {
