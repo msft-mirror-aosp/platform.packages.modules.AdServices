@@ -193,6 +193,7 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
     private Uri mFetchUri;
     private FetchCustomAudienceImpl mFetchCustomAudienceImpl;
     private FetchAndJoinCustomAudienceInput.Builder mInputBuilder;
+    private Flags mFetchCustomAudienceFlags;
 
     @Before
     public void setup() {
@@ -207,22 +208,24 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                         .setExpirationTime(VALID_EXPIRATION_TIME)
                         .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
 
-        Flags flags = new FetchCustomAudienceFlags();
+        mFetchCustomAudienceFlags = new FetchCustomAudienceFlags();
 
         mAdFilteringFeatureFactory =
-                new AdFilteringFeatureFactory(mAppInstallDaoMock, mFrequencyCapDaoMock, flags);
+                new AdFilteringFeatureFactory(
+                        mAppInstallDaoMock, mFrequencyCapDaoMock, mFetchCustomAudienceFlags);
 
-        mFetchCustomAudienceImpl = getImplWithFlags(flags);
+        mFetchCustomAudienceImpl = getImplWithFlags(mFetchCustomAudienceFlags);
 
         doReturn(BUYER)
                 .when(mCustomAudienceServiceFilterMock)
                 .filterRequestAndExtractIdentifier(
                         mFetchUri,
                         VALID_OWNER,
-                        false,
+                        mFetchCustomAudienceFlags.getDisableFledgeEnrollmentCheck(),
+                        mFetchCustomAudienceFlags
+                                .getEnforceForegroundStatusForFledgeCustomAudience(),
                         true,
-                        true,
-                        true,
+                        !mFetchCustomAudienceFlags.getConsentNotificationDebugMode(),
                         Process.myUid(),
                         API_NAME,
                         Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
@@ -232,10 +235,11 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                 .filterRequestAndExtractIdentifier(
                         mFetchUri,
                         VALID_OWNER,
-                        false,
+                        mFetchCustomAudienceFlags.getDisableFledgeEnrollmentCheck(),
+                        mFetchCustomAudienceFlags
+                                .getEnforceForegroundStatusForFledgeCustomAudience(),
                         true,
-                        true,
-                        true,
+                        !mFetchCustomAudienceFlags.getConsentNotificationDebugMode(),
                         Process.myUid(),
                         API_NAME,
                         Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
@@ -297,10 +301,11 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                 .filterRequestAndExtractIdentifier(
                         mFetchUri,
                         otherPackageName,
-                        false,
+                        mFetchCustomAudienceFlags.getDisableFledgeEnrollmentCheck(),
+                        mFetchCustomAudienceFlags
+                                .getEnforceForegroundStatusForFledgeCustomAudience(),
                         true,
-                        true,
-                        true,
+                        !mFetchCustomAudienceFlags.getConsentNotificationDebugMode(),
                         Process.myUid(),
                         API_NAME,
                         Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
@@ -331,10 +336,11 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                 .filterRequestAndExtractIdentifier(
                         mFetchUri,
                         VALID_OWNER,
-                        false,
+                        mFetchCustomAudienceFlags.getDisableFledgeEnrollmentCheck(),
+                        mFetchCustomAudienceFlags
+                                .getEnforceForegroundStatusForFledgeCustomAudience(),
                         true,
-                        true,
-                        true,
+                        !mFetchCustomAudienceFlags.getConsentNotificationDebugMode(),
                         Process.myUid(),
                         API_NAME,
                         Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
@@ -365,10 +371,11 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                 .filterRequestAndExtractIdentifier(
                         mFetchUri,
                         VALID_OWNER,
-                        false,
+                        mFetchCustomAudienceFlags.getDisableFledgeEnrollmentCheck(),
+                        mFetchCustomAudienceFlags
+                                .getEnforceForegroundStatusForFledgeCustomAudience(),
                         true,
-                        true,
-                        true,
+                        !mFetchCustomAudienceFlags.getConsentNotificationDebugMode(),
                         Process.myUid(),
                         API_NAME,
                         Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
@@ -400,10 +407,11 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                 .filterRequestAndExtractIdentifier(
                         mFetchUri,
                         VALID_OWNER,
-                        false,
+                        mFetchCustomAudienceFlags.getDisableFledgeEnrollmentCheck(),
+                        mFetchCustomAudienceFlags
+                                .getEnforceForegroundStatusForFledgeCustomAudience(),
                         true,
-                        true,
-                        true,
+                        !mFetchCustomAudienceFlags.getConsentNotificationDebugMode(),
                         Process.myUid(),
                         API_NAME,
                         Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
@@ -436,10 +444,11 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                 .filterRequestAndExtractIdentifier(
                         mFetchUri,
                         VALID_OWNER,
-                        false,
+                        mFetchCustomAudienceFlags.getDisableFledgeEnrollmentCheck(),
+                        mFetchCustomAudienceFlags
+                                .getEnforceForegroundStatusForFledgeCustomAudience(),
                         true,
-                        true,
-                        true,
+                        !mFetchCustomAudienceFlags.getConsentNotificationDebugMode(),
                         Process.myUid(),
                         API_NAME,
                         Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
@@ -472,10 +481,11 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                 .filterRequestAndExtractIdentifier(
                         mFetchUri,
                         VALID_OWNER,
-                        false,
+                        mFetchCustomAudienceFlags.getDisableFledgeEnrollmentCheck(),
+                        mFetchCustomAudienceFlags
+                                .getEnforceForegroundStatusForFledgeCustomAudience(),
                         true,
-                        true,
-                        true,
+                        !mFetchCustomAudienceFlags.getConsentNotificationDebugMode(),
                         Process.myUid(),
                         API_NAME,
                         Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
@@ -498,25 +508,25 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
 
     @Test
     public void testImpl_revokedConsent_failsSilentlyUXNotificationDisabled() throws Exception {
-
-        mFetchCustomAudienceImpl =
-                getImplWithFlags(
-                        new FetchCustomAudienceFlags() {
-                            @Override
-                            public boolean getConsentNotificationDebugMode() {
-                                return true;
-                            }
-                        });
+        final class fetchCAFlagsWithNotificationDisabled extends FetchCustomAudienceFlags {
+            @Override
+            public boolean getConsentNotificationDebugMode() {
+                return true;
+            }
+        }
+        Flags flagsWithNotificationDisabled = new fetchCAFlagsWithNotificationDisabled();
+        mFetchCustomAudienceImpl = getImplWithFlags(flagsWithNotificationDisabled);
 
         doThrow(new ConsentManager.RevokedConsentException())
                 .when(mCustomAudienceServiceFilterMock)
                 .filterRequestAndExtractIdentifier(
                         mFetchUri,
                         VALID_OWNER,
-                        false,
+                        flagsWithNotificationDisabled.getDisableFledgeEnrollmentCheck(),
+                        flagsWithNotificationDisabled
+                                .getEnforceForegroundStatusForFledgeCustomAudience(),
                         true,
-                        true,
-                        false,
+                        !flagsWithNotificationDisabled.getConsentNotificationDebugMode(),
                         Process.myUid(),
                         API_NAME,
                         Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
@@ -540,10 +550,11 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                 .filterRequestAndExtractIdentifier(
                         mFetchUri,
                         VALID_OWNER,
-                        false,
+                        flagsWithNotificationDisabled.getDisableFledgeEnrollmentCheck(),
+                        flagsWithNotificationDisabled
+                                .getEnforceForegroundStatusForFledgeCustomAudience(),
                         true,
-                        true,
-                        false,
+                        !flagsWithNotificationDisabled.getConsentNotificationDebugMode(),
                         Process.myUid(),
                         API_NAME,
                         Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
@@ -1072,10 +1083,11 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                 .filterRequestAndExtractIdentifier(
                         mFetchUri,
                         VALID_OWNER,
-                        false,
+                        mFetchCustomAudienceFlags.getDisableFledgeEnrollmentCheck(),
+                        mFetchCustomAudienceFlags
+                                .getEnforceForegroundStatusForFledgeCustomAudience(),
                         true,
-                        true,
-                        true,
+                        !mFetchCustomAudienceFlags.getConsentNotificationDebugMode(),
                         Process.myUid(),
                         API_NAME,
                         Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
@@ -1686,6 +1698,21 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
         @Override
         public boolean getFledgeAppInstallFilteringEnabled() {
             return true;
+        }
+
+        @Override
+        public boolean getDisableFledgeEnrollmentCheck() {
+            return false;
+        }
+
+        @Override
+        public boolean getEnforceForegroundStatusForFledgeCustomAudience() {
+            return true;
+        }
+
+        @Override
+        public boolean getConsentNotificationDebugMode() {
+            return false;
         }
     }
 }

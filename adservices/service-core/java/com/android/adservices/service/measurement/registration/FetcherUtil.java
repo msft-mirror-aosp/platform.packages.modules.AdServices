@@ -417,8 +417,48 @@ public class FetcherUtil {
         return true;
     }
 
-    static Optional<String> getValidAggregateDebugReportingString(
+    static Optional<String> getValidAggregateDebugReportingWithBudget(
             JSONObject aggregateDebugReporting, Flags flags) throws JSONException {
+        int budget = 0;
+        if (!aggregateDebugReporting.isNull(AggregateDebugReportingHeaderContract.BUDGET)) {
+            Optional<BigDecimal> optionalBudget =
+                    extractIntegralValue(
+                            aggregateDebugReporting, AggregateDebugReportingHeaderContract.BUDGET);
+            // If the budget is invalid number or not in range, fallback to 0
+            int maxSumAggValuesPerSource = flags.getMeasurementMaxSumOfAggregateValuesPerSource();
+            budget =
+                    optionalBudget
+                            .filter(val -> val.compareTo(BigDecimal.ZERO) >= 0)
+                            .filter(
+                                    val ->
+                                            val.compareTo(new BigDecimal(maxSumAggValuesPerSource))
+                                                    <= 0)
+                            .map(BigDecimal::intValue)
+                            .orElse(0);
+        }
+        Optional<JSONObject> validAggregateDebugReporting =
+                getValidAggregateDebugReportingWithoutBudget(
+                        aggregateDebugReporting, flags, budget);
+        if (validAggregateDebugReporting.isPresent()) {
+            validAggregateDebugReporting
+                    .get()
+                    .put(AggregateDebugReportingHeaderContract.BUDGET, budget);
+        }
+        return validAggregateDebugReporting.map(JSONObject::toString);
+    }
+
+    static Optional<String> getValidAggregateDebugReportingWithoutBudget(
+            JSONObject aggregateDebugReporting, Flags flags) throws JSONException {
+        return getValidAggregateDebugReportingWithoutBudget(
+                        aggregateDebugReporting,
+                        flags,
+                        flags.getMeasurementMaxSumOfAggregateValuesPerSource())
+                .map(JSONObject::toString);
+    }
+
+    private static Optional<JSONObject> getValidAggregateDebugReportingWithoutBudget(
+            JSONObject aggregateDebugReporting, Flags flags, int maxAggregateDebugDataValue)
+            throws JSONException {
         JSONObject validAggregateDebugReporting = new JSONObject();
         String keyPiece =
                 aggregateDebugReporting.optString(AggregateDebugReportingHeaderContract.KEY_PIECE);
@@ -431,24 +471,7 @@ public class FetcherUtil {
             return Optional.empty();
         }
         validAggregateDebugReporting.put(AggregateDebugReportingHeaderContract.KEY_PIECE, keyPiece);
-        if (!aggregateDebugReporting.isNull(AggregateDebugReportingHeaderContract.BUDGET)) {
-            Optional<BigDecimal> optionalBudget =
-                    extractIntegralValue(
-                            aggregateDebugReporting, AggregateDebugReportingHeaderContract.BUDGET);
-            if (optionalBudget.isEmpty()) {
-                LoggerFactory.getMeasurementLogger()
-                        .d("Aggregate debug reporting budget is invalid.");
-                return Optional.empty();
-            }
-            int budget = optionalBudget.get().intValue();
 
-            if (budget <= 0 || budget > flags.getMeasurementMaxSumOfAggregateValuesPerSource()) {
-                LoggerFactory.getMeasurementLogger()
-                        .d("Aggregate debug reporting budget is invalid.");
-                return Optional.empty();
-            }
-            validAggregateDebugReporting.put(AggregateDebugReportingHeaderContract.BUDGET, budget);
-        }
         if (!aggregateDebugReporting.isNull(
                 AggregateDebugReportingHeaderContract.AGGREGATION_COORDINATOR_ORIGIN)) {
             String origin =
@@ -471,18 +494,22 @@ public class FetcherUtil {
                             aggregateDebugReporting.getJSONArray(
                                     AggregateDebugReportingHeaderContract.DEBUG_DATA),
                             existingReportTypes,
-                            flags);
+                            flags,
+                            maxAggregateDebugDataValue);
             if (maybeValidDebugDataArr.isEmpty()) {
                 return Optional.empty();
             }
             validAggregateDebugReporting.put(
                     AggregateDebugReportingHeaderContract.DEBUG_DATA, maybeValidDebugDataArr.get());
         }
-        return Optional.of(validAggregateDebugReporting.toString());
+        return Optional.of(validAggregateDebugReporting);
     }
 
     private static Optional<JSONArray> getValidAggregateDebugReportingData(
-            JSONArray debugDataArr, Set<String> existingReportTypes, Flags flags)
+            JSONArray debugDataArr,
+            Set<String> existingReportTypes,
+            Flags flags,
+            int maxAggregateDebugDataValue)
             throws JSONException {
         JSONArray validDebugDataArr = new JSONArray();
         for (int i = 0; i < debugDataArr.length(); i++) {
@@ -513,13 +540,14 @@ public class FetcherUtil {
                 LoggerFactory.getMeasurementLogger().d("Aggregate debug data value is invalid.");
                 return Optional.empty();
             }
-            int value = optionalValue.get().intValue();
-            if (value <= 0 || value > flags.getMeasurementMaxSumOfAggregateValuesPerSource()) {
+            BigDecimal value = optionalValue.get();
+            if (value.compareTo(BigDecimal.ZERO) <= 0
+                    || value.compareTo(new BigDecimal(maxAggregateDebugDataValue)) > 0) {
                 LoggerFactory.getMeasurementLogger()
                         .d("Aggregate debug reporting data value is invalid.");
                 return Optional.empty();
             }
-            validDebugDataObj.put(AggregateDebugReportDataHeaderContract.VALUE, value);
+            validDebugDataObj.put(AggregateDebugReportDataHeaderContract.VALUE, value.intValue());
 
             Optional<List<String>> maybeDebugDataTypes =
                     FetcherUtil.extractStringArray(

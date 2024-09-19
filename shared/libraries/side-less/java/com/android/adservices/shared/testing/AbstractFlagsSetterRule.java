@@ -82,9 +82,9 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
     private final String mDebugFlagPrefix;
     private final SystemPropertiesHelper mSystemProperties;
 
-    // Cache of commands that were called before DeviceConfig is available (for example, on
-    // host-side tests, where the TestDevice is only set when the test starts)
-    private final List<Command> mCachedCommands = new ArrayList<>();
+    // Cache methods that were called before the test started, so the rule can be
+    // instantiated using a builder-like approach.
+    private final List<Command> mInitialCommands = new ArrayList<>();
 
     // Name of flags that were changed by the test
     private final Set<String> mChangedFlags = new LinkedHashSet<>();
@@ -99,6 +99,7 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
 
     private DeviceConfig.SyncDisabledModeForTest mPreviousSyncDisabledModeForTest = null;
 
+    private boolean mIsRunning;
     private boolean mFlagsClearedByTest;
 
     protected AbstractFlagsSetterRule(
@@ -143,21 +144,14 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
 
         mLog.v(
                 "Constructor: mDeviceConfigNamespace=%s,"
-                        + " mDebugFlagPrefix=%s, mDeviceConfig=%s, mSystemProperties=%s",
+                        + " mDebugFlagPrefix=%s,mDeviceConfig=%s, mSystemProperties=%s",
                 mDeviceConfigNamespace, mDebugFlagPrefix, mDeviceConfig, mSystemProperties);
     }
-
-    /**
-     * Checks whether {@code DeviceConfig} can be called.
-     *
-     * <p>Device-side subclasses should return {@code true} as it's always "available", but
-     * host-side ones should check if the {@code TestDevice} is set.
-     */
-    protected abstract boolean isDeviceConfigAvailable();
 
     @Override
     protected void preTest(Statement base, Description description, List<Throwable> cleanUpErrors) {
         String testName = TestHelper.getTestName(description);
+        mIsRunning = true;
 
         // TODO(b/294423183): ideally should be "setupErrors", but it's not used yet (other
         // than logging), so it doesn't matter
@@ -196,6 +190,7 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         runSafely(cleanUpErrors, () -> resetFlags(testName));
         runSafely(cleanUpErrors, () -> resetSystemProperties(testName));
         restoreSyncDisabledMode(cleanUpErrors);
+        mIsRunning = false;
     }
 
     private void restoreSyncDisabledMode(List<Throwable> cleanUpErrors) {
@@ -332,9 +327,7 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         return runOrCache(
                 "clearFlags()",
                 () -> {
-                    mLog.i(
-                            "Clearing all flags. isDeviceConfigAvailable()=%b",
-                            isDeviceConfigAvailable());
+                    mLog.i("Clearing all flags. mIsRunning=%b", mIsRunning);
                     mDeviceConfig.clearFlags();
                     // TODO(b/294423183): ideally we should save the flags and restore - possibly
                     // using DeviceConfig properties - but for now let's just clear it.
@@ -539,8 +532,7 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
     // TODO(b/294423183): need to add unit test for setters that call this
     protected final T setOrCacheFlag(String name, String value, @Nullable String separator) {
         NameValuePair flag = new NameValuePair(name, value, separator);
-
-        if (!isDeviceConfigAvailable()) {
+        if (!mIsRunning) {
             if (isFlagManagedByRunner(name)) {
                 return getThis();
             }
@@ -592,7 +584,7 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
 
     private T setOrCacheSystemProperty(String name, String value) {
         NameValuePair systemProperty = new NameValuePair(name, value);
-        if (!isDeviceConfigAvailable()) {
+        if (!mIsRunning) {
             cacheCommand(new SetSystemPropertyCommand(systemProperty));
             return getThis();
         }
@@ -613,7 +605,7 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
 
     protected T runOrCache(String description, Runnable r) {
         RunnableCommand command = new RunnableCommand(description, r);
-        if (!isDeviceConfigAvailable()) {
+        if (!mIsRunning) {
             cacheCommand(command);
             return getThis();
         }
@@ -622,14 +614,12 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
     }
 
     private void cacheCommand(Command command) {
-        if (isDeviceConfigAvailable()) {
+        if (mIsRunning) {
             throw new IllegalStateException(
-                    "Doesn't need to cache "
-                            + command
-                            + " because DeviceConfig is already available");
+                    "Cannot cache " + command + " as test is already running");
         }
-        mLog.v("Caching %s as DeviceConfig is not available yet", command);
-        mCachedCommands.add(command);
+        mLog.v("Caching %s as test is not running yet", command);
+        mInitialCommands.add(command);
     }
 
     private void runCommand(String description, Runnable runnable) {
@@ -637,14 +627,15 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         runnable.run();
     }
 
-    private void runInitialCommands(String testName) {
-        if (mCachedCommands.isEmpty()) {
+    // TODO(b/294423183): make private once not used by subclass for legacy methods
+    protected final void runInitialCommands(String testName) {
+        if (mInitialCommands.isEmpty()) {
             mLog.d("Not executing any command before %s", testName);
         } else {
-            int size = mCachedCommands.size();
+            int size = mInitialCommands.size();
             mLog.d("Executing %d commands before %s", size, testName);
-            for (int i = 0; i < mCachedCommands.size(); i++) {
-                Command command = mCachedCommands.get(i);
+            for (int i = 0; i < mInitialCommands.size(); i++) {
+                Command command = mInitialCommands.get(i);
                 mLog.v("\t%d: %s", i, command);
                 command.execute();
             }

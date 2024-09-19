@@ -17,6 +17,7 @@
 package com.android.sdksandbox.cts.host;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assume.assumeTrue;
 
@@ -152,9 +153,10 @@ public class SdkSandboxDataIsolationHostTest extends BaseHostJUnit4Test {
             final String uuid = mAdoptableUtils.createNewVolume();
 
             // Move second package to the newly created volume
-            assertSuccess(
+            String result =
                     getDevice()
-                            .executeShellCommand("pm move-package " + APP_2_PACKAGE + " " + uuid));
+                            .executeShellCommand("pm move-package " + APP_2_PACKAGE + " " + uuid);
+            assertWithMessage("Command failed: pm move-package").that(result).startsWith("Success");
 
             runPhase(
                     "testSdkSandboxDataIsolation_CannotVerifyAcrossVolumes",
@@ -162,12 +164,6 @@ public class SdkSandboxDataIsolationHostTest extends BaseHostJUnit4Test {
                     uuid);
         } finally {
             mAdoptableUtils.cleanUpVolume();
-        }
-    }
-
-    private static void assertSuccess(String str) {
-        if (str == null || !str.startsWith("Success")) {
-            throw new AssertionError("Expected success string but found " + str);
         }
     }
 }
