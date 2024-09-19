@@ -94,13 +94,13 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
                     /* sdkCeDataDir= */ null,
                     /* sdkDeDataDir= */ null);
 
-    private String getPackageName() {
+    private static String getPackageName() {
         return SdkLevel.isAtLeastT()
                 ? "com.android.adservices.endtoendtest"
                 : "com.android.adextservices.endtoendtest";
     }
 
-    private MeasurementCompatibleManager getMeasurementCompatibleManager() {
+    private static MeasurementCompatibleManager getMeasurementCompatibleManager() {
         return spy(MeasurementCompatibleManager.get(sContext));
     }
 
@@ -391,7 +391,7 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
         assertThat(anyCountDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
     }
 
-    private WebSourceRegistrationRequest buildDefaultWebSourceRegistrationRequest() {
+    private static WebSourceRegistrationRequest buildDefaultWebSourceRegistrationRequest() {
         WebSourceParams webSourceParams =
                 new WebSourceParams.Builder(Uri.parse("https://example.com"))
                         .setDebugKeyAllowed(false)
@@ -631,7 +631,7 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
         expect.that(captor.getValue().getAppPackageName()).isEqualTo(getPackageName());
     }
 
-    private WebTriggerRegistrationRequest buildDefaultWebTriggerRegistrationRequest() {
+    private static WebTriggerRegistrationRequest buildDefaultWebTriggerRegistrationRequest() {
         WebTriggerParams webTriggerParams =
                 new WebTriggerParams.Builder(Uri.parse("https://example.com"))
                         .setDebugKeyAllowed(false)
@@ -1403,17 +1403,7 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
     @Test
     public void
             testRegisterSourceMulti_callbackProvidedWithoutExecutor_throwsIllegalArgException() {
-        MeasurementCompatibleManager measurementManager = getMeasurementCompatibleManager();
-        doThrow(new IllegalStateException()).when(measurementManager).getService();
-        AdServicesOutcomeReceiver callback = mock(AdServicesOutcomeReceiver.class);
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                        measurementManager.registerSource(
-                                buildDefaultAppSourcesRegistrationRequest(),
-                                /* executor= */ null,
-                                /* callback= */ callback));
+        RvcGuardUberHackPlusPlus.assertRegisterSourceFromSourceRegistrationRequestThrows();
     }
 
     @Test
@@ -1442,51 +1432,20 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
 
     @Test
     public void testRegisterSource_callbackProvidedWithoutExecutor_throwsIllegalArgException() {
-        MeasurementCompatibleManager measurementManager = getMeasurementCompatibleManager();
-        doThrow(new IllegalStateException()).when(measurementManager).getService();
-        AdServicesOutcomeReceiver callback = mock(AdServicesOutcomeReceiver.class);
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                        measurementManager.registerSource(
-                                Uri.parse("https://example.com"),
-                                /* input event */ null,
-                                /* executor= */ null,
-                                /* callback= */ callback));
+        RvcGuardUberHackPlusPlus.assertRegisterSourceFromUriAndInputEventThrows();
     }
 
     @Test
     public void testRegisterWebSource_callbackProvidedWithoutExecutor_throwsIllegalArgException() {
-        MeasurementCompatibleManager measurementManager = getMeasurementCompatibleManager();
-        doThrow(new IllegalStateException()).when(measurementManager).getService();
-        AdServicesOutcomeReceiver callback = mock(AdServicesOutcomeReceiver.class);
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                        measurementManager.registerWebSource(
-                                buildDefaultWebSourceRegistrationRequest(),
-                                /* executor= */ null,
-                                /* callback= */ callback));
+        RvcGuardUberHackPlusPlus.assertRegisterWebSourceThrows();
     }
 
     @Test
     public void testRegisterWebTrigger_callbackProvidedWithoutExecutor_throwsIllegalArgException() {
-        MeasurementCompatibleManager measurementManager = getMeasurementCompatibleManager();
-        doThrow(new IllegalStateException()).when(measurementManager).getService();
-        AdServicesOutcomeReceiver callback = mock(AdServicesOutcomeReceiver.class);
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                        measurementManager.registerWebTrigger(
-                                buildDefaultWebTriggerRegistrationRequest(),
-                                /* executor= */ null,
-                                /* callback= */ callback));
+        RvcGuardUberHackPlusPlus.assertRegisterWebTriggerThrows();
     }
 
-    private SourceRegistrationRequest buildDefaultAppSourcesRegistrationRequest() {
+    private static SourceRegistrationRequest buildDefaultAppSourcesRegistrationRequest() {
         return new SourceRegistrationRequest.Builder(
                         java.util.Arrays.asList(
                                 Uri.parse("https://example1.com"),
@@ -1518,5 +1477,74 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
     // Override the Consent Manager behaviour - Consent Given
     private void overrideConsentManagerDebugMode() {
         flags.setDebugFlag(KEY_CONSENT_MANAGER_DEBUG_MODE, true);
+    }
+
+    @SuppressWarnings("VisibleForTests") // TODO(b/343741206): Remove suppress warning once fixed.
+    /**
+     * "Clever" workaround to avoid {@code java.lang.NoClassDefFoundError} failures when running on
+     * Android RVC without using the {@code SafeAndroidJUnitRunner} "cleverer" runner.
+     */
+    private static final class RvcGuardUberHackPlusPlus {
+
+        private static void assertRegisterSourceFromSourceRegistrationRequestThrows() {
+            MeasurementCompatibleManager measurementManager = getMeasurementCompatibleManager();
+            doThrow(new IllegalStateException()).when(measurementManager).getService();
+            AdServicesOutcomeReceiver callback = mock(AdServicesOutcomeReceiver.class);
+
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () ->
+                            measurementManager.registerSource(
+                                    buildDefaultAppSourcesRegistrationRequest(),
+                                    /* executor= */ null,
+                                    /* callback= */ callback));
+        }
+
+        private static void assertRegisterSourceFromUriAndInputEventThrows() {
+            MeasurementCompatibleManager measurementManager = getMeasurementCompatibleManager();
+            doThrow(new IllegalStateException()).when(measurementManager).getService();
+            AdServicesOutcomeReceiver callback = mock(AdServicesOutcomeReceiver.class);
+
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () ->
+                            measurementManager.registerSource(
+                                    Uri.parse("https://example.com"),
+                                    /* inputEvent */ null,
+                                    /* executor= */ null,
+                                    /* callback= */ callback));
+        }
+
+        private static void assertRegisterWebSourceThrows() {
+            MeasurementCompatibleManager measurementManager = getMeasurementCompatibleManager();
+            doThrow(new IllegalStateException()).when(measurementManager).getService();
+            AdServicesOutcomeReceiver callback = mock(AdServicesOutcomeReceiver.class);
+
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () ->
+                            measurementManager.registerWebSource(
+                                    buildDefaultWebSourceRegistrationRequest(),
+                                    /* executor= */ null,
+                                    /* callback= */ callback));
+        }
+
+        private static void assertRegisterWebTriggerThrows() {
+            MeasurementCompatibleManager measurementManager = getMeasurementCompatibleManager();
+            doThrow(new IllegalStateException()).when(measurementManager).getService();
+            AdServicesOutcomeReceiver callback = mock(AdServicesOutcomeReceiver.class);
+
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () ->
+                            measurementManager.registerWebTrigger(
+                                    buildDefaultWebTriggerRegistrationRequest(),
+                                    /* executor= */ null,
+                                    /* callback= */ callback));
+        }
+
+        private RvcGuardUberHackPlusPlus() {
+            throw new UnsupportedOperationException("Contains only static methods");
+        }
     }
 }
