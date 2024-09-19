@@ -1617,5 +1617,15 @@ public final class ReportAndRegisterEventFallbackImplTest
         public boolean getFledgeBeaconReportingMetricsEnabled() {
             return true;
         }
+
+        @Override
+        public boolean getConsentNotificationDebugMode() {
+            return false;
+        }
+
+        @Override
+        public boolean getEnforceForegroundStatusForFledgeReportInteraction() {
+            return true;
+        }
     }
 }
