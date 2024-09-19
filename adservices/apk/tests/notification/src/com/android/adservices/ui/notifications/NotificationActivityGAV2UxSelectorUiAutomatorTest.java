@@ -16,6 +16,7 @@
 package com.android.adservices.ui.notifications;
 
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
+import static com.android.adservices.service.Flags.IS_EEA_DEVICE_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_DEBUG_UX;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_AD_SERVICES_SYSTEM_API;
 import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
@@ -60,7 +61,7 @@ public final class NotificationActivityGAV2UxSelectorUiAutomatorTest extends AdS
                     .setFlag(KEY_U18_UX_ENABLED, true)
                     .setFlag(KEY_DEBUG_UX, "GA_UX")
                     // TODO(b/297085722): remove seFlag() below if/when all flags are cleared
-                    .setFlag(KEY_IS_EEA_DEVICE_FEATURE_ENABLED, true);
+                    .setFlag(KEY_IS_EEA_DEVICE_FEATURE_ENABLED, IS_EEA_DEVICE_FEATURE_ENABLED);
 
     @BeforeClass
     public static void classSetup() throws Exception {
