@@ -17,13 +17,11 @@
 
 package android.adservices.common;
 
-import android.adservices.common.AdServicesCommonResponse;
-
 /**
  * Callback used by the RequestAdServicesModuleOverrides API.
  * {@hide}
  */
 oneway interface IRequestAdServicesModuleOverridesCallback {
-    void onResult(in AdServicesCommonResponse response);
+    void onSuccess();
     void onFailure(int statusCode);
 }
