@@ -18,6 +18,8 @@ package com.android.adservices.service.signals;
 
 import static com.android.adservices.service.signals.SignalsFixture.DEV_CONTEXT;
 import static com.android.adservices.service.signals.UpdatesDownloader.PACKAGE_NAME_HEADER;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_CONVERTING_UPDATE_SIGNALS_RESPONSE_TO_JSON_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
@@ -27,6 +29,9 @@ import static org.mockito.Mockito.when;
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
@@ -48,7 +53,10 @@ import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
 @RunWith(MockitoJUnitRunner.class)
-public class UpdatesDownloaderTest {
+@SetErrorLogUtilDefaultParams(
+        throwable = ExpectErrorLogUtilWithExceptionCall.Any.class,
+        ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS)
+public class UpdatesDownloaderTest extends AdServicesExtendedMockitoTestCase {
 
     private static final Uri URI = Uri.parse("https://example.com");
     private static final String JSON = "{\"a\":\"b\"}";
@@ -93,6 +101,8 @@ public class UpdatesDownloaderTest {
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_CONVERTING_UPDATE_SIGNALS_RESPONSE_TO_JSON_ERROR)
     public void testInvalidJsonThrowsExecutionException() {
         AdServicesHttpClientResponse response =
                 AdServicesHttpClientResponse.builder().setResponseBody("{abc").build();
