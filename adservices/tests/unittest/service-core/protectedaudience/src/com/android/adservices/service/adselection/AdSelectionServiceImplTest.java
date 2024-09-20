@@ -165,6 +165,7 @@ import com.android.adservices.service.signals.EgressConfigurationGenerator;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.FetchProcessLogger;
+import com.android.adservices.shared.testing.SkipLoggingUsageRule;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -208,6 +209,7 @@ import java.util.concurrent.TimeUnit;
 @MockStatic(FlagsFactory.class)
 @MockStatic(MeasurementImpl.class)
 @MockStatic(AppImportanceFilter.class)
+@SkipLoggingUsageRule(reason = "b/355696393")
 public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoTestCase {
 
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
