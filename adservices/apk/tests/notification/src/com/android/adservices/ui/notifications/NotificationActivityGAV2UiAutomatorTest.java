@@ -16,8 +16,10 @@
 package com.android.adservices.ui.notifications;
 
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
+import static com.android.adservices.service.Flags.IS_EEA_DEVICE_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_DEBUG_UX;
 import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_IS_EEA_DEVICE_FEATURE_ENABLED;
 import static com.android.adservices.ui.util.ApkTestUtil.getString;
 import static com.android.adservices.ui.util.NotificationActivityTestUtil.WINDOW_LAUNCH_TIMEOUT;
 
@@ -31,6 +33,7 @@ import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.shared.testing.annotations.SetFlagFalse;
 import com.android.adservices.ui.util.AdServicesUiTestCase;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.adservices.ui.util.NotificationActivityTestUtil;
@@ -52,7 +55,9 @@ public final class NotificationActivityGAV2UiAutomatorTest extends AdServicesUiT
                     .setCompatModeFlags()
                     .setDebugFlag(KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE, true)
                     .setFlag(KEY_GA_UX_FEATURE_ENABLED, true)
-                    .setFlag(KEY_DEBUG_UX, "GA_UX");
+                    .setFlag(KEY_DEBUG_UX, "GA_UX")
+                    // TODO(b/297085722): remove seFlag() below if/when all flags are cleared
+                    .setFlag(KEY_IS_EEA_DEVICE_FEATURE_ENABLED, IS_EEA_DEVICE_FEATURE_ENABLED);
 
     @BeforeClass
     public static void classSetup() throws Exception {
@@ -83,6 +88,8 @@ public final class NotificationActivityGAV2UiAutomatorTest extends AdServicesUiT
     }
 
     @Test
+    // TODO(b/297085722): remove SetFlagFalse below if/when all flags are cleared
+    @SetFlagFalse(KEY_IS_EEA_DEVICE_FEATURE_ENABLED)
     public void euAcceptFlowTest() throws Exception {
         NotificationActivityTestUtil.startActivity(/* isEuActivity= */ true, mDevice);
         NotificationActivityTestUtil.clickMoreToBottom(mDevice);
