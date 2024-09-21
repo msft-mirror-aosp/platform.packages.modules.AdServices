@@ -51,6 +51,7 @@ java_sdk_library {
     ],
     static_libs: [
         "adservices-shared-storage",
+        "adservices-shared-system-common",
         "modules-utils-backgroundthread",
         "modules-utils-preconditions",
         "modules-utils-shell-command-handler",

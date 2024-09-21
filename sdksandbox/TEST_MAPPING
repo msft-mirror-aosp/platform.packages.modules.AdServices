@@ -233,9 +233,6 @@
       "name": "CtsSdkSandboxHostSideTests"
     },
     {
-      "name": "SdkSandboxUiTests"
-    },
-    {
       "name": "SdkSandboxNextTests"
     },
     {

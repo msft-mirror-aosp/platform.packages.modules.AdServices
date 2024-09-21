@@ -18,9 +18,6 @@ package com.android.adservices.data.common;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.common.AdData;
@@ -28,20 +25,19 @@ import android.adservices.common.AdDataFixture;
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.data.customaudience.AdDataConversionStrategy;
 import com.android.adservices.data.customaudience.AdDataConversionStrategyFactory;
+import com.android.adservices.shared.testing.EqualsTester;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Set;
 
-@RunWith(MockitoJUnitRunner.class)
-public class DBAdDataTest {
-
+public final class DBAdDataTest extends AdServicesMockitoTestCase {
     private static final AdData SAMPLE_AD_DATA =
             AdDataFixture.getValidFilterAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 1)
                     .setAdRenderId("ad-render-id")
@@ -70,11 +66,11 @@ public class DBAdDataTest {
                         new HashSet<>(),
                         null,
                         null);
-        assertEquals(SAMPLE_AD_DATA.getRenderUri(), dbAdData.getRenderUri());
-        assertEquals(SAMPLE_AD_DATA.getMetadata(), dbAdData.getMetadata());
-        assertEquals(Collections.EMPTY_SET, dbAdData.getAdCounterKeys());
-        assertNull(dbAdData.getAdFilters());
-        assertNull(dbAdData.getAdRenderId());
+        expect.that(dbAdData.getRenderUri()).isEqualTo(SAMPLE_AD_DATA.getRenderUri());
+        expect.that(dbAdData.getMetadata()).isEqualTo(SAMPLE_AD_DATA.getMetadata());
+        expect.that(dbAdData.getAdCounterKeys()).isEqualTo(Collections.EMPTY_SET);
+        expect.that(dbAdData.getAdFilters()).isNull();
+        expect.that(dbAdData.getAdRenderId()).isNull();
     }
 
     @Test
@@ -137,9 +133,10 @@ public class DBAdDataTest {
                 AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, false, false)
                         .fromServiceObject(original)
                         .build();
-        assertThat(dbAdData.getAdFilters().getFrequencyCapFilters())
+        assertThat(dbAdData.getAdFilters()).isNotNull();
+        expect.that(dbAdData.getAdFilters().getFrequencyCapFilters())
                 .isEqualTo(original.getAdFilters().getFrequencyCapFilters());
-        assertThat(dbAdData.getAdFilters().getAppInstallFilters()).isNull();
+        expect.that(dbAdData.getAdFilters().getAppInstallFilters()).isNull();
     }
 
     @Test
@@ -149,8 +146,9 @@ public class DBAdDataTest {
                 AdDataConversionStrategyFactory.getAdDataConversionStrategy(false, true, false)
                         .fromServiceObject(original)
                         .build();
-        assertThat(dbAdData.getAdFilters().getFrequencyCapFilters()).isNull();
-        assertThat(dbAdData.getAdFilters().getAppInstallFilters())
+        assertThat(dbAdData.getAdFilters()).isNotNull();
+        expect.that(dbAdData.getAdFilters().getFrequencyCapFilters()).isNull();
+        expect.that(dbAdData.getAdFilters().getAppInstallFilters())
                 .isEqualTo(original.getAdFilters().getAppInstallFilters());
     }
 
@@ -161,9 +159,10 @@ public class DBAdDataTest {
                 AdDataConversionStrategyFactory.getAdDataConversionStrategy(true, true, false)
                         .fromServiceObject(original)
                         .build();
-        assertThat(dbAdData.getAdFilters().getFrequencyCapFilters())
+        assertThat(dbAdData.getAdFilters()).isNotNull();
+        expect.that(dbAdData.getAdFilters().getFrequencyCapFilters())
                 .isEqualTo(original.getAdFilters().getFrequencyCapFilters());
-        assertThat(dbAdData.getAdFilters().getAppInstallFilters())
+        expect.that(dbAdData.getAdFilters().getAppInstallFilters())
                 .isEqualTo(original.getAdFilters().getAppInstallFilters());
     }
 
@@ -177,7 +176,7 @@ public class DBAdDataTest {
                 AdDataConversionStrategyFactory.getAdDataConversionStrategy(false, false, false)
                         .fromServiceObject(original)
                         .build();
-        assertNull(dbAdData.getAdRenderId());
+        assertThat(dbAdData.getAdRenderId()).isNull();
     }
 
     @Test
@@ -188,12 +187,12 @@ public class DBAdDataTest {
         SAMPLE_AD_DATA.getAdCounterKeys().forEach(x -> size[0] += 4);
         size[0] += SAMPLE_AD_DATA.getAdFilters().getSizeInBytes();
         size[0] += SAMPLE_AD_DATA.getAdRenderId().getBytes(StandardCharsets.UTF_8).length;
-        assertEquals(
-                size[0],
-                CONVERSION_STRATEGY_ALL_FEATURES_ENABLED
-                        .fromServiceObject(SAMPLE_AD_DATA)
-                        .build()
-                        .size());
+        assertThat(
+                        CONVERSION_STRATEGY_ALL_FEATURES_ENABLED
+                                .fromServiceObject(SAMPLE_AD_DATA)
+                                .build()
+                                .size())
+                .isEqualTo(size[0]);
     }
 
     @Test
@@ -205,10 +204,10 @@ public class DBAdDataTest {
                 new DBAdData(
                         SAMPLE_AD_DATA.getRenderUri(),
                         SAMPLE_AD_DATA.getMetadata(),
-                        Collections.EMPTY_SET,
+                        Set.of(),
                         null,
                         null);
-        assertEquals(size[0], dbAdData.size());
+        assertThat(dbAdData.size()).isEqualTo(size[0]);
     }
 
     @Test
@@ -217,56 +216,27 @@ public class DBAdDataTest {
                 CONVERSION_STRATEGY_ALL_FEATURES_ENABLED.fromServiceObject(SAMPLE_AD_DATA).build();
         DBAdData dbAdData2 =
                 CONVERSION_STRATEGY_ALL_FEATURES_ENABLED.fromServiceObject(SAMPLE_AD_DATA).build();
-        assertEquals(dbAdData1, dbAdData2);
-    }
 
-    @Test
-    public void testNotEqual() {
-        DBAdData dbAdData1 =
-                CONVERSION_STRATEGY_ALL_FEATURES_ENABLED.fromServiceObject(SAMPLE_AD_DATA).build();
-        DBAdData dbAdData2 =
+        DBAdData dbAdDataDifferent =
                 new DBAdData(
                         SAMPLE_AD_DATA.getRenderUri(),
                         SAMPLE_AD_DATA.getMetadata(),
-                        Collections.EMPTY_SET,
+                        Set.of(),
                         null,
                         null);
-        assertNotEquals(dbAdData1, dbAdData2);
-    }
 
-    @Test
-    public void testHashEquals() {
-        DBAdData dbAdData1 =
-                CONVERSION_STRATEGY_ALL_FEATURES_ENABLED.fromServiceObject(SAMPLE_AD_DATA).build();
-        DBAdData dbAdData2 =
-                CONVERSION_STRATEGY_ALL_FEATURES_ENABLED.fromServiceObject(SAMPLE_AD_DATA).build();
-        assertEquals(dbAdData1.hashCode(), dbAdData2.hashCode());
-    }
-
-    @Test
-    public void testHashNotEqual() {
-        // Technically there are values for SAMPLE_AD_DATA that could produce a collision, but it's
-        // deterministic so there's no flake risk.
-        DBAdData dbAdData1 =
-                CONVERSION_STRATEGY_ALL_FEATURES_ENABLED.fromServiceObject(SAMPLE_AD_DATA).build();
-        DBAdData dbAdData2 =
-                new DBAdData(
-                        SAMPLE_AD_DATA.getRenderUri(),
-                        SAMPLE_AD_DATA.getMetadata(),
-                        Collections.EMPTY_SET,
-                        null,
-                        null);
-        assertNotEquals(dbAdData1.hashCode(), dbAdData2.hashCode());
+        EqualsTester et = new EqualsTester(expect);
+        et.expectObjectsAreEqual(dbAdData1, dbAdData2);
+        et.expectObjectsAreNotEqual(dbAdData1, dbAdDataDifferent);
     }
 
     @Test
     public void testToString() {
-        DBAdData dbAdData =
-                new DBAdData(Uri.parse("https://a.com"), "{}", Collections.EMPTY_SET, null, null);
-        assertEquals(
-                "DBAdData{mRenderUri=https://a.com, mMetadata='{}', mAdCounterKeys=[], "
-                        + "mAdFilters=null, mAdRenderId='null'}",
-                dbAdData.toString());
+        DBAdData dbAdData = new DBAdData(Uri.parse("https://a.com"), "{}", Set.of(), null, null);
+        assertThat(dbAdData.toString())
+                .isEqualTo(
+                        "DBAdData{mRenderUri=https://a.com, mMetadata='{}', mAdCounterKeys=[], "
+                                + "mAdFilters=null, mAdRenderId='null'}");
     }
 
     @Test
@@ -282,9 +252,9 @@ public class DBAdDataTest {
     }
 
     private void assertEqualsServiceObject(AdData expected, DBAdData test) {
-        assertEquals(expected.getRenderUri(), test.getRenderUri());
-        assertEquals(expected.getMetadata(), test.getMetadata());
-        assertEquals(expected.getAdCounterKeys(), test.getAdCounterKeys());
-        assertEquals(expected.getAdFilters(), test.getAdFilters());
+        expect.that(test.getRenderUri()).isEqualTo(expected.getRenderUri());
+        expect.that(test.getMetadata()).isEqualTo(expected.getMetadata());
+        expect.that(test.getAdCounterKeys()).isEqualTo(expected.getAdCounterKeys());
+        expect.that(test.getAdFilters()).isEqualTo(expected.getAdFilters());
     }
 }

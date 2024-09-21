@@ -16,22 +16,26 @@
 
 package com.android.adservices.shared.testing.shell;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import java.util.Objects;
 
+// TODO(b/324491698): use ShellCommandOutput instead (or factor it to use it inside)
 /** Contains the result of a shell command. */
 public final class CommandResult {
 
-    private static final String STATUS_RUNNING = "RUNNING";
-    private static final String STATUS_FINISHED = "FINISHED";
+    // TODO(b/324491698): make them package protected when moved to c.a.a.s.t.device packages
+    @VisibleForTesting public static final String STATUS_RUNNING = "RUNNING";
+    @VisibleForTesting public static final String STATUS_FINISHED = "FINISHED";
 
     private final String mOut;
     private final String mErr;
     private final String mCommandStatus;
 
     public CommandResult(String out, String err, String commandStatus) {
-        mOut = Objects.requireNonNull(out);
-        mErr = Objects.requireNonNull(err);
-        mCommandStatus = Objects.requireNonNull(commandStatus);
+        mOut = Objects.requireNonNull(out, "out cannot be null");
+        mErr = Objects.requireNonNull(err, "err cannot be null");
+        mCommandStatus = Objects.requireNonNull(commandStatus, "status cannot be null");
     }
 
     public CommandResult(String out, String err) {
@@ -53,7 +57,7 @@ public final class CommandResult {
     @Override
     public String toString() {
         return String.format(
-                "CommandResult [out=%s, err=%s, status=%s]", mOut, mErr, mCommandStatus);
+                "CommandResult[out=%s, err=%s, status=%s]", mOut, mErr, mCommandStatus);
     }
 
     public boolean isCommandRunning() {

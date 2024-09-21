@@ -23,11 +23,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
-import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 
-import androidx.test.core.app.ApplicationProvider;
-
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.data.shared.SharedDbHelper;
 
@@ -56,8 +54,7 @@ import java.util.stream.Stream;
  *   <li>Add a test for data migration to SharedDbMigratorVxTest class.
  * </ol>
  */
-public abstract class SharedDbMigratorTestBase {
-    protected static final Context sContext = ApplicationProvider.getApplicationContext();
+public abstract class SharedDbMigratorTestBase extends AdServicesMockitoTestCase {
     protected static final String SHARED_DATABASE_NAME_FOR_MIGRATION =
             "adservices_shared_migration.db";
     protected static final String SHARED_DATABASE_REFERENCE_DB_NAME =
@@ -69,7 +66,7 @@ public abstract class SharedDbMigratorTestBase {
     @Before
     public void setup() {
         Stream.of(SHARED_DATABASE_NAME_FOR_MIGRATION, SHARED_DATABASE_REFERENCE_DB_NAME)
-                .map(sContext::getDatabasePath)
+                .map(mContext::getDatabasePath)
                 .filter(File::exists)
                 .forEach(File::delete);
     }
@@ -100,13 +97,13 @@ public abstract class SharedDbMigratorTestBase {
         // Setup
         SharedDbHelper dbHelper =
                 new SharedDbHelper(
-                        sContext,
+                        mContext,
                         SHARED_DATABASE_NAME_FOR_MIGRATION,
                         getTargetVersion(),
                         getDbHelperForTest());
         SQLiteDatabase goldenDb =
                 createReferenceDbAtVersion(
-                        sContext, SHARED_DATABASE_REFERENCE_DB_NAME, getTargetVersion());
+                        mContext, SHARED_DATABASE_REFERENCE_DB_NAME, getTargetVersion());
 
         // Execution - invokes onCreate implicitly
         SQLiteDatabase actualDb = dbHelper.getWritableDatabase();
@@ -122,13 +119,13 @@ public abstract class SharedDbMigratorTestBase {
         int prevVersion = getTargetVersion() - 1;
         SharedDbHelper dbHelper =
                 new SharedDbHelper(
-                        sContext,
+                        mContext,
                         SHARED_DATABASE_NAME_FOR_MIGRATION,
                         prevVersion,
                         getDbHelperForTest());
         SQLiteDatabase goldenDb =
                 createReferenceDbAtVersion(
-                        sContext, SHARED_DATABASE_REFERENCE_DB_NAME, getTargetVersion());
+                        mContext, SHARED_DATABASE_REFERENCE_DB_NAME, getTargetVersion());
 
         // Execution
         SQLiteDatabase actualDb = dbHelper.getWritableDatabase();

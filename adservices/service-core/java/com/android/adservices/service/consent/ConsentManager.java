@@ -22,9 +22,14 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATASTORE_EXCEPTION_WHILE_RECORDING_MANUAL_CONSENT_INTERACTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATASTORE_EXCEPTION_WHILE_RECORDING_NOTIFICATION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_WHILE_GET_CONSENT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_CONSENT_MANAGER_INVALID_CONSENT_SOURCE_OF_TRUTH;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_CONSENT_MANAGER_PPAPI_AND_ADEXT_SERVICE_CONSENT_FAILED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_CONSENT_MANAGER_PPAPI_AND_SYSTEM_SERVER_FLEDGE_CONSENT_CHECK_FAILED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_CONSENT_MANAGER_PPAPI_ONLY_FLEDGE_CONSENT_CHECK_FAILED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PRIVACY_SANDBOX_SAVE_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_RESET_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_WIPEOUT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU;
@@ -827,6 +832,10 @@ public class ConsentManager {
                         return mAppConsentDaoSupplier.get().isConsentRevokedForApp(packageName);
                     } catch (IOException exception) {
                         LogUtil.e(exception, "FLEDGE consent check failed due to IOException");
+                        ErrorLogUtil.e(
+                                exception,
+                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_CONSENT_MANAGER_PPAPI_ONLY_FLEDGE_CONSENT_CHECK_FAILED,
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
                     }
                     return true;
                 case Flags.SYSTEM_SERVER_ONLY:
@@ -843,6 +852,9 @@ public class ConsentManager {
                     }
                 default:
                     LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                    ErrorLogUtil.e(
+                            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_CONSENT_MANAGER_INVALID_CONSENT_SOURCE_OF_TRUTH,
+                            AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
                     return true;
             }
         }
@@ -885,6 +897,10 @@ public class ConsentManager {
                                 .setConsentForAppIfNew(packageName, false);
                     } catch (IOException exception) {
                         LogUtil.e(exception, "FLEDGE consent check failed due to IOException");
+                        ErrorLogUtil.e(
+                                exception,
+                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_CONSENT_MANAGER_PPAPI_ONLY_FLEDGE_CONSENT_CHECK_FAILED,
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
                         return true;
                     }
                 case Flags.SYSTEM_SERVER_ONLY:
@@ -897,6 +913,10 @@ public class ConsentManager {
                         mAppConsentDaoSupplier.get().setConsentForAppIfNew(packageName, false);
                     } catch (IOException exception) {
                         LogUtil.e(exception, "FLEDGE consent check failed due to IOException");
+                        ErrorLogUtil.e(
+                                exception,
+                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_CONSENT_MANAGER_PPAPI_AND_SYSTEM_SERVER_FLEDGE_CONSENT_CHECK_FAILED,
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
                         return true;
                     }
                     return mAdServicesManager.setConsentForAppIfNew(
@@ -910,6 +930,9 @@ public class ConsentManager {
                     }
                 default:
                     LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                    ErrorLogUtil.e(
+                            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_CONSENT_MANAGER_INVALID_CONSENT_SOURCE_OF_TRUTH,
+                            AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
                     return true;
             }
         }

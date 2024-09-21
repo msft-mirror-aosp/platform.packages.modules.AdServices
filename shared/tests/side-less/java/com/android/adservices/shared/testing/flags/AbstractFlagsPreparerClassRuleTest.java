@@ -99,7 +99,7 @@ public class AbstractFlagsPreparerClassRuleTest extends SharedSidelessTestCase {
                 () -> new FakeFlagsPreparerClassRule(/* deviceConfig= */ null, mModeDuringTest));
         assertThrows(
                 NullPointerException.class,
-                () -> new FakeFlagsPreparerClassRule(mDeviceConfig, /* syncMode= */ null));
+                () -> new FakeFlagsPreparerClassRule(mDeviceConfig, /* mode= */ null));
     }
 
     @Test
@@ -257,8 +257,7 @@ public class AbstractFlagsPreparerClassRuleTest extends SharedSidelessTestCase {
             super(realLogger, deviceConfig, isValid(mode));
         }
 
-        protected FakeFlagsPreparerClassRule(
-                DeviceConfig deviceConfig, SyncDisabledModeForTest mode) {
+        FakeFlagsPreparerClassRule(DeviceConfig deviceConfig, SyncDisabledModeForTest mode) {
             this(StandardStreamsLogger.getInstance(), deviceConfig, mode);
         }
     }

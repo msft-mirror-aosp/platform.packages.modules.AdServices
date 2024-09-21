@@ -189,6 +189,7 @@ java_library {
     ],
     exclude_srcs: [
         "java/com/android/adservices/shared/common/exception/*.java",
+        "java/com/android/adservices/shared/common/system/*.java",
     ],
     static_libs: [
         "adservices-shared-util",
@@ -219,6 +220,37 @@ java_library {
         "com.android.adservices",
         "com.android.extservices",
         "com.android.ondevicepersonalization",
+    ],
+    lint: {
+        extra_check_modules: ["AdServicesProdLintChecker"],
+    },
+}
+
+// Provides helper to be used only by system-server classes
+java_library {
+    name: "adservices-shared-system-common",
+    min_sdk_version: "33",
+    sdk_version: "module_current",
+    srcs: [
+        "java/com/android/adservices/shared/system/**/*.java",
+    ],
+    libs: [
+        "error_prone_annotations", // for @FormatMethod
+        "framework-annotations-lib", // for @VisibleForTesting
+    ],
+    apex_available: [
+        "com.android.adservices",
+        // extservices doesn't have system-server classes
+        "com.android.ondevicepersonalization",
+    ],
+    visibility: [
+        // Available for its own tests...
+        "//packages/modules/AdServices/shared/tests/device-side:__subpackages__",
+
+        // ... and system-server projects
+        "//packages/modules/AdServices/adservices/service:__subpackages__",
+        "//packages/modules/AdServices/sdksandbox/service:__subpackages__",
+        "//packages/modules/OnDevicePersonalization/systemservice:__subpackages__",
     ],
     lint: {
         extra_check_modules: ["AdServicesProdLintChecker"],
@@ -409,10 +441,6 @@ java_defaults {
     // modules-utils-extended-mockito-rule-defaults once it have
     // compile_multilib: "both",
     defaults: ["modules-utils-testable-device-config-defaults"],
-    // TODO(b/345219434, b/354885695): explictily adding compile_multilib just
-    // in case the build is using the modules-utils-testable-device-config-defaults
-    // version that removed it
-    compile_multilib: "both",
     visibility: [
         "//packages/modules/AdServices:__subpackages__",
         "//packages/modules/ExtServices:__subpackages__",

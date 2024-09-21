@@ -22,6 +22,7 @@ import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UN
 
 import android.annotation.NonNull;
 import android.content.Context;
+import android.content.Intent;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -31,6 +32,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetchData;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.SingletonRunner;
@@ -62,6 +64,8 @@ public final class BackgroundFetchWorker {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     public static final String JOB_DESCRIPTION = "FLEDGE background fetch";
     private static final Object SINGLETON_LOCK = new Object();
+    private static final String ACTION_BACKGROUND_FETCH_JOB_FINISHED =
+            "ACTION_BACKGROUND_FETCH_JOB_FINISHED";
 
     @GuardedBy("SINGLETON_LOCK")
     private static volatile BackgroundFetchWorker sBackgroundFetchWorker;
@@ -167,11 +171,22 @@ public final class BackgroundFetchWorker {
                                 mFlags.getFledgeBackgroundFetchJobMaxRuntimeMs(),
                                 TimeUnit.MILLISECONDS,
                                 AdServicesExecutors.getScheduler());
+
         run.addCallback(
                 getCloseBackgroundFetchExecutionLoggerCallback(backgroundFetchExecutionLogger),
                 AdServicesExecutors.getBackgroundExecutor());
 
         return run;
+    }
+
+    private void sendBroadcastIntentIfEnabled() {
+        if (DebugFlags.getInstance().getFledgeBackgroundFetchCompleteBroadcastEnabled()) {
+            Context context = ApplicationContextSingleton.get();
+            sLogger.d(
+                    "Sending a broadcast intent with intent action: %s",
+                    ACTION_BACKGROUND_FETCH_JOB_FINISHED);
+            context.sendBroadcast(new Intent(ACTION_BACKGROUND_FETCH_JOB_FINISHED));
+        }
     }
 
     private ListenableFuture<Void> updateData(
@@ -262,6 +277,7 @@ public final class BackgroundFetchWorker {
                         backgroundFetchExecutionLogger,
                         backgroundFetchExecutionLogger.getNumOfEligibleToUpdateCAs(),
                         STATUS_SUCCESS);
+                sendBroadcastIntentIfEnabled();
             }
 
             @Override
@@ -272,6 +288,7 @@ public final class BackgroundFetchWorker {
                         backgroundFetchExecutionLogger,
                         backgroundFetchExecutionLogger.getNumOfEligibleToUpdateCAs(),
                         resultCode);
+                sendBroadcastIntentIfEnabled();
             }
         };
     }

@@ -64,6 +64,7 @@ java_defaults {
         "adservices-shared-proto-utils",
         "adservices-shared-spe",
         "adservices-shared-storage",
+        "adservices-shared-system-common",
         "adservices-shared-testing",
         "adservices-shared-util",
         "androidx.test.core",

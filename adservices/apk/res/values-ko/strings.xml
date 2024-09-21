@@ -24,6 +24,10 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="4553614196392171">"애플리케이션이 AdServices Attribution API에 액세스하도록 허용합니다."</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="4365562651019065480">"AdServices Custom Audience API 액세스"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="6713089438953075862">"애플리케이션이 AdServices Custom Audience API에 액세스하도록 허용합니다."</string>
+    <string name="permlab_accessAdServicesAdSelection" msgid="672819511145374384">"AdServices Ad Selection API 액세스 권한"</string>
+    <string name="permdesc_accessAdServicesAdSelection" msgid="6095291420798129879">"애플리케이션이 AdServices Ad Selection API에 액세스하도록 허용합니다."</string>
+    <string name="permlab_accessAdServicesProtectedSignals" msgid="147489803040522247">"AdServices Protected Signals API 액세스 권한"</string>
+    <string name="permdesc_accessAdServicesProtectedSignals" msgid="2320760922272886523">"애플리케이션이 AdServices Protected Signals API에 액세스하도록 허용합니다."</string>
     <string name="permlab_accessAdServicesAdId" msgid="1615451959935917231">"AdId API 액세스"</string>
     <string name="permdesc_accessAdServicesAdId" msgid="6145143976659732220">"애플리케이션이 AdId API에 액세스하도록 허용합니다."</string>
     <string name="permlab_accessAdServicesConsent" msgid="4218463631288201212">"AdServices Consent API 액세스"</string>

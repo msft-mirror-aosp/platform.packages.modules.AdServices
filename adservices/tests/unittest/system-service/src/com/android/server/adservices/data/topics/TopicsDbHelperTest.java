@@ -24,8 +24,6 @@ import static com.google.common.truth.Truth.assertWithMessage;
 
 import android.database.sqlite.SQLiteDatabase;
 
-import androidx.test.platform.app.InstrumentationRegistry;
-
 import com.android.adservices.common.AdServicesUnitTestCase;
 
 import org.junit.Test;
@@ -46,9 +44,7 @@ public final class TopicsDbHelperTest extends AdServicesUnitTestCase {
     @Test
     public void testDump() throws Exception {
         String prefix = "fixed, pre is:";
-        TopicsDbHelper dao =
-                TopicsDbHelper.getInstance(
-                        InstrumentationRegistry.getInstrumentation().getTargetContext());
+        TopicsDbHelper dao = new TopicsDbHelper(mContext);
 
         String dump = dump(pw -> dao.dump(pw, prefix, /* args= */ null));
 

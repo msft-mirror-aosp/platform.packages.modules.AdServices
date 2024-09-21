@@ -24,6 +24,10 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="4553614196392171">"Tətbiqə AdServices Attribution API\'ə giriş icazəsi verir."</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="4365562651019065480">"AdServices Custom Audience API\'ə giriş"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="6713089438953075862">"Tətbiqə AdServices Custom Audience API\'ə giriş icazəsi verir."</string>
+    <string name="permlab_accessAdServicesAdSelection" msgid="672819511145374384">"AdServices reklam seçimi API-sinə giriş"</string>
+    <string name="permdesc_accessAdServicesAdSelection" msgid="6095291420798129879">"Tətbiqin AdServices reklam seçimi API-sinə girişinə icazə verir."</string>
+    <string name="permlab_accessAdServicesProtectedSignals" msgid="147489803040522247">"AdServices qorunan siqnallar API-sinə giriş"</string>
+    <string name="permdesc_accessAdServicesProtectedSignals" msgid="2320760922272886523">"Tətbiqin AdServices qorunan siqnallar API-sinə girişinə icazə verir."</string>
     <string name="permlab_accessAdServicesAdId" msgid="1615451959935917231">"AdID API\'ə giriş"</string>
     <string name="permdesc_accessAdServicesAdId" msgid="6145143976659732220">"Tətbiqə AdID API\'ə giriş icazəsi verir."</string>
     <string name="permlab_accessAdServicesConsent" msgid="4218463631288201212">"AdServices Consent API\'ə giriş"</string>

@@ -25,16 +25,15 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_STATUS_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH;
-import static com.android.adservices.service.FlagsConstants.KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST;
 
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
 import android.os.Bundle;
 
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
-import com.android.adservices.shared.testing.annotations.SetStringFlag;
 
 import org.junit.After;
 import org.junit.Before;
@@ -58,9 +57,6 @@ import java.util.concurrent.TimeoutException;
 @SetFlagDisabled(KEY_MEASUREMENT_API_STATUS_KILL_SWITCH)
 @SetFlagDisabled(KEY_MEASUREMENT_KILL_SWITCH)
 @SetFlagEnabled(KEY_DISABLE_MEASUREMENT_ENROLLMENT_CHECK)
-@SetStringFlag(
-        name = KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST,
-        value = "com.android.tests.sandbox.measurement")
 public final class SandboxedMeasurementManagerTest extends CtsSandboxedMeasurementManagerTestCase {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final String SDK_NAME = "com.android.tests.providers.sdkmeasurement";
@@ -70,13 +66,15 @@ public final class SandboxedMeasurementManagerTest extends CtsSandboxedMeasureme
 
     @Before
     public void setup() throws TimeoutException {
+        // Kill adservices process to avoid interfering from other tests.
+        AdservicesTestHelper.killAdservicesProcess(mContext);
         // Start a foreground activity
-        SimpleActivity.startAndWaitForSimpleActivity(sContext, Duration.ofMillis(10_000));
+        SimpleActivity.startAndWaitForSimpleActivity(mContext, Duration.ofMillis(10_000));
     }
 
     @After
     public void shutDown() {
-        SimpleActivity.stopSimpleActivity(sContext);
+        SimpleActivity.stopSimpleActivity(mContext);
     }
 
     @Test
@@ -91,7 +89,7 @@ public final class SandboxedMeasurementManagerTest extends CtsSandboxedMeasureme
         // In this test, we use the loadSdk's callback as a 2-way communications between the Test
         // app (this class) and the Sdk running within the Sandbox process.
 
-        SdkSandboxManager sdkSandboxManager = sContext.getSystemService(SdkSandboxManager.class);
+        SdkSandboxManager sdkSandboxManager = mContext.getSystemService(SdkSandboxManager.class);
 
         // The enrolled URLs should time out when registering to them, because we don't control
         // them; each timeout is 5 seconds, plus some wiggle room

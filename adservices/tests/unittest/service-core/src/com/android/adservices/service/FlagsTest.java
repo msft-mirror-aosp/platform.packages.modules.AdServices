@@ -535,6 +535,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetMeasurementEnableAggregateContributionBudgetCapacity() {
+        testFeatureFlag(
+                "MEASUREMENT_ENABLE_AGGREGATE_CONTRIBUTION_BUDGET_CAPACITY",
+                Flags::getMeasurementEnableAggregateContributionBudgetCapacity);
+    }
+
+    @Test
     public void testGetMeasurementEnableV1SourceTriggerData() {
         testFeatureFlag(
                 "MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA",

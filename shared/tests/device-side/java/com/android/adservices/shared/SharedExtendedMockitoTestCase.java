@@ -44,9 +44,6 @@ public abstract class SharedExtendedMockitoTestCase extends SharedUnitTestCase {
     protected final Context mMockContext = mock(Context.class);
     protected final ModuleSharedFlags mMockFlags = mock(ModuleSharedFlags.class);
 
-    private static final String REASON_SESSION_MANAGED_BY_RULE =
-            "mockito session is automatically managed by a @Rule";
-
     // TODO(b/361555631): rename to testSharedExtendedMockitoTestCaseFixtures() and annotate it with
     // @MetaTest
     @CallSuper

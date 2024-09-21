@@ -50,7 +50,7 @@ public final class CleanupUtilsTest extends AdServicesExtendedMockitoTestCase {
         CleanupUtils.removeAllowedPackages(
                 packageList,
                 mContext.getPackageManager(),
-                Arrays.asList(CommonFixture.TEST_PACKAGE_NAME_1));
+                List.of(CommonFixture.TEST_PACKAGE_NAME_1));
 
         assertWithMessage("packageList").that(packageList).isEmpty();
     }
@@ -68,12 +68,12 @@ public final class CleanupUtilsTest extends AdServicesExtendedMockitoTestCase {
                         Arrays.asList(
                                 CommonFixture.TEST_PACKAGE_NAME_1,
                                 CommonFixture.TEST_PACKAGE_NAME_2));
-        List<String> expected = Arrays.asList(CommonFixture.TEST_PACKAGE_NAME_2);
+        List<String> expected = List.of(CommonFixture.TEST_PACKAGE_NAME_2);
 
         CleanupUtils.removeAllowedPackages(
                 packageList,
                 mContext.getPackageManager(),
-                Arrays.asList(CommonFixture.TEST_PACKAGE_NAME_1));
+                List.of(CommonFixture.TEST_PACKAGE_NAME_1));
 
         assertWithMessage("packageList").that(packageList).containsExactlyElementsIn(expected);
     }
@@ -83,16 +83,16 @@ public final class CleanupUtilsTest extends AdServicesExtendedMockitoTestCase {
         ApplicationInfo installedPackage2 = new ApplicationInfo();
         installedPackage2.packageName = CommonFixture.TEST_PACKAGE_NAME_2;
         when(PackageManagerCompatUtils.getInstalledApplications(any(), anyInt()))
-                .thenReturn(Arrays.asList(installedPackage2));
+                .thenReturn(List.of(installedPackage2));
         List<String> packageList =
                 new ArrayList<>(
                         Arrays.asList(
                                 CommonFixture.TEST_PACKAGE_NAME_1,
                                 CommonFixture.TEST_PACKAGE_NAME_2));
-        List<String> expected = Arrays.asList(CommonFixture.TEST_PACKAGE_NAME_1);
+        List<String> expected = List.of(CommonFixture.TEST_PACKAGE_NAME_1);
 
         CleanupUtils.removeAllowedPackages(
-                packageList, mContext.getPackageManager(), Arrays.asList(ALLOW_ALL));
+                packageList, mContext.getPackageManager(), List.of(ALLOW_ALL));
 
         assertWithMessage("packageList").that(packageList).containsExactlyElementsIn(expected);
     }
@@ -157,7 +157,7 @@ public final class CleanupUtilsTest extends AdServicesExtendedMockitoTestCase {
                         Arrays.asList(
                                 CommonFixture.TEST_PACKAGE_NAME_1,
                                 CommonFixture.TEST_PACKAGE_NAME_2));
-        List<String> expected = Arrays.asList(CommonFixture.TEST_PACKAGE_NAME_2);
+        List<String> expected = List.of(CommonFixture.TEST_PACKAGE_NAME_2);
 
         CleanupUtils.removeAllowedPackages(
                 packageList,

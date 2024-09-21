@@ -20,6 +20,8 @@ import com.android.adservices.shared.testing.DynamicLogger;
 import com.android.adservices.shared.testing.Logger;
 import com.android.adservices.shared.testing.Nullable;
 import com.android.adservices.shared.testing.device.DeviceGateway;
+import com.android.adservices.shared.testing.device.ShellCommandInput;
+import com.android.adservices.shared.testing.device.ShellCommandOutput;
 
 import com.google.common.truth.Expect;
 import com.google.common.truth.StandardSubjectBuilder;
@@ -36,7 +38,8 @@ import java.util.Objects;
 public final class FakeDeviceGateway implements DeviceGateway {
 
     private final Logger mLog = new Logger(DynamicLogger.getInstance(), getClass());
-    private final Map<String, String> mExpectations = new HashMap<>();
+    private final Map<String, String> mStringResultExpectations = new HashMap<>();
+    private final Map<String, ShellCommandOutput> mCommandOutputExpectations = new HashMap<>();
     private final List<String> mCalls = new ArrayList<>();
 
     @Nullable private Level mSdkLevel;
@@ -49,7 +52,16 @@ public final class FakeDeviceGateway implements DeviceGateway {
         String cmd = String.format(cmdFmt, cmdArgs);
 
         mLog.i("expectCalled: %s => %s", cmd, result);
-        mExpectations.put(cmd, result);
+        mStringResultExpectations.put(cmd, result);
+    }
+
+    /** Sets what the given command will return. */
+    public void onCommand(ShellCommandInput input, ShellCommandOutput output) {
+        Objects.requireNonNull(input, "input cannot be null");
+        Objects.requireNonNull(output, "output cannot be null");
+
+        mLog.i("expectCalled: %s => %s", input, output);
+        mCommandOutputExpectations.put(input.getCommand(), output);
     }
 
     /** Expects that the given command was called. */
@@ -58,10 +70,13 @@ public final class FakeDeviceGateway implements DeviceGateway {
             StandardSubjectBuilder expect,
             @FormatString String cmdFmt,
             @Nullable Object... cmdArgs) {
-        Objects.requireNonNull(expect, "expect cannot be null");
-        Objects.requireNonNull(cmdFmt, "cmdFmt cannot be null");
-        String cmd = String.format(Locale.ENGLISH, cmdFmt, cmdArgs);
+        expectCalled(expect, new ShellCommandInput(cmdFmt, cmdArgs));
+    }
 
+    /** Expects that the given command was called. */
+    public void expectCalled(StandardSubjectBuilder expect, ShellCommandInput input) {
+        Objects.requireNonNull(input, "input cannot be null");
+        String cmd = input.getCommand();
         if (!mCalls.contains(cmd)) {
             expect.withMessage(
                             "Command %s not called (commands called so far were: %s)", cmd, mCalls)
@@ -90,10 +105,24 @@ public final class FakeDeviceGateway implements DeviceGateway {
 
         mCalls.add(cmd);
 
-        String result = mExpectations.get(cmd);
+        String result = mStringResultExpectations.get(cmd);
         mLog.i("runShellCommand(): returning %s", result);
 
         return result;
+    }
+
+    @Override
+    public ShellCommandOutput runShellCommandRwe(ShellCommandInput input) {
+        Objects.requireNonNull(input, "input cannot be null");
+
+        mLog.i("runShellCommandRwe(): running %s", input);
+
+        mCalls.add(input.getCommand());
+
+        ShellCommandOutput output = mCommandOutputExpectations.get(input.getCommand());
+        mLog.i("runShellCommandRwe(): returning %s", output);
+
+        return output;
     }
 
     @Override
@@ -110,8 +139,10 @@ public final class FakeDeviceGateway implements DeviceGateway {
                 + mLog
                 + ", mSdkLevel="
                 + mSdkLevel
-                + ", mExpectations="
-                + mExpectations
+                + ", mStringResultExpectations="
+                + mStringResultExpectations
+                + ", mCommandOutputExpectations="
+                + mCommandOutputExpectations
                 + ", mCalls="
                 + mCalls
                 + "]";

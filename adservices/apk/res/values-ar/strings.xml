@@ -24,6 +24,10 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="4553614196392171">"يتيح هذا الإذن للتطبيق الوصول إلى واجهات AdServices Attribution API."</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="4365562651019065480">"الوصول إلى واجهة AdServices Custom Audience API"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="6713089438953075862">"يتيح هذا الإذن للتطبيق الوصول إلى واجهة AdServices Custom Audience API."</string>
+    <string name="permlab_accessAdServicesAdSelection" msgid="672819511145374384">"إذن الوصول إلى واجهة برمجة التطبيقات AdServices Ad Selection API"</string>
+    <string name="permdesc_accessAdServicesAdSelection" msgid="6095291420798129879">"يسمح هذا الإذن للتطبيق بالوصول إلى واجهة برمجة التطبيقات AdServices Ad Selection API."</string>
+    <string name="permlab_accessAdServicesProtectedSignals" msgid="147489803040522247">"إذن الوصول إلى واجهة برمجة التطبيقات AdServices Protected Signals API"</string>
+    <string name="permdesc_accessAdServicesProtectedSignals" msgid="2320760922272886523">"يسمح هذا الإذن للتطبيق بالوصول إلى واجهة برمجة التطبيقات AdServices Protected Signals API."</string>
     <string name="permlab_accessAdServicesAdId" msgid="1615451959935917231">"الوصول إلى واجهة برمجة تطبيقات المعرّف الإعلاني"</string>
     <string name="permdesc_accessAdServicesAdId" msgid="6145143976659732220">"يتيح هذا الإذن للتطبيق الوصول إلى واجهة برمجة تطبيقات المعرّف الإعلاني."</string>
     <string name="permlab_accessAdServicesConsent" msgid="4218463631288201212">"الوصول إلى واجهة AdServices Consent API"</string>

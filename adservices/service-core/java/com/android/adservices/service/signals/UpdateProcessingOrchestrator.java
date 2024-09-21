@@ -16,6 +16,10 @@
 
 package com.android.adservices.service.signals;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_COLLISION_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_JSON_PROCESSING_STATUS_SEMANTIC_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_UNPACK_SIGNAL_UPDATES_JSON_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JSON_PROCESSING_STATUS_SEMANTIC_ERROR;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JSON_PROCESSING_STATUS_SYNTACTIC_ERROR;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JSON_SIZE_BUCKETS;
@@ -27,6 +31,7 @@ import android.annotation.NonNull;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.signals.evict.SignalEvictionController;
 import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEvent;
@@ -124,6 +129,10 @@ public class UpdateProcessingOrchestrator {
                 } catch (IllegalArgumentException e) {
                     jsonProcessingStatsBuilder.setJsonProcessingStatus(
                             JSON_PROCESSING_STATUS_SEMANTIC_ERROR);
+                    ErrorLogUtil.e(
+                            e,
+                            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_JSON_PROCESSING_STATUS_SEMANTIC_ERROR,
+                            AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS);
                     throw e;
                 }
             }
@@ -150,6 +159,10 @@ public class UpdateProcessingOrchestrator {
                 jsonProcessingStatsBuilder.setJsonProcessingStatus(
                         JSON_PROCESSING_STATUS_SYNTACTIC_ERROR);
             }
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_UNPACK_SIGNAL_UPDATES_JSON_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS);
             throw new IllegalArgumentException("Couldn't unpack signal updates JSON", e);
         }
     }
@@ -221,6 +234,9 @@ public class UpdateProcessingOrchestrator {
                     jsonProcessingStatsBuilder.setJsonProcessingStatus(
                             JSON_PROCESSING_STATUS_SEMANTIC_ERROR);
                 }
+                ErrorLogUtil.e(
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_COLLISION_ERROR,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS);
                 throw new IllegalArgumentException(COLLISION_ERROR);
             }
             combinedUpdates.getKeysTouched().addAll(output.getKeysTouched());

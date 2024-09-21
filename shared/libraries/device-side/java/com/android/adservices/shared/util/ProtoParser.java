@@ -39,29 +39,12 @@ public final class ProtoParser {
     }
 
     /**
-     * Parses Base64 encoded string to a proto object. This does not use client error logger.
-     *
-     * @param parser A protobuf parser object. e.g. MyProto.parser()
-     * @param property The property which needs to be decoded
-     * @param value Base64 encoded String
-     * @return parsed proto from the Base64 encoded string
-     */
-    // TODO(b/362547408): Remove this method and use the below method with errorLogger once we
-    // change the ODP and AdServices code to pass in the error logger.
-    @Nullable
-    public static <T extends MessageLite> T parseBase64EncodedStringToProto(
-            Parser<T> parser, String property, String value) {
-        return parseBase64EncodedStringToProto(
-                parser, NoOpAdServicesErrorLoggerImpl.getInstance(), property, value);
-    }
-
-    /**
      * Parses Base64 encoded string to a proto object. This uses client error logger to log errors.
      *
      * @param parser A protobuf parser object. e.g. MyProto.parser()
+     * @param errorLogger Error logger to log errors.
      * @param property The property which needs to be decoded
      * @param value Base64 encoded String
-     * @param errorLogger Error logger to log errors.
      * @return parsed proto from the Base64 encoded string
      */
     @Nullable
@@ -110,21 +93,5 @@ public final class ProtoParser {
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
         }
         return null;
-    }
-
-    // TODO(b/362547408): Remove this method once we change the ODP and AdServices code to pass in
-    // the error logger.
-    private static class NoOpAdServicesErrorLoggerImpl implements AdServicesErrorLogger {
-        private static final AdServicesErrorLogger INSTANCE = new NoOpAdServicesErrorLoggerImpl();
-
-        private static AdServicesErrorLogger getInstance() {
-            return INSTANCE;
-        }
-
-        @Override
-        public void logError(int errorCode, int ppapiName) {}
-
-        @Override
-        public void logErrorWithExceptionInfo(Throwable tr, int errorCode, int ppapiName) {}
     }
 }

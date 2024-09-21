@@ -19,15 +19,15 @@ package com.android.server.adservices.data.topics;
 import static com.android.server.adservices.data.topics.TopicsTables.DUMMY_MODEL_VERSION;
 
 import android.adservices.topics.Topic;
-import android.annotation.NonNull;
 import android.content.ContentValues;
-import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.adservices.LogUtil;
+
+import com.google.errorprone.annotations.concurrent.GuardedBy;
 
 import java.io.PrintWriter;
 import java.util.HashSet;
@@ -42,6 +42,8 @@ import java.util.Set;
  */
 public final class TopicsDao {
     private static final Object LOCK = new Object();
+
+    @GuardedBy("LOCK")
     private static TopicsDao sSingleton;
 
     private final TopicsDbHelper mTopicsDbHelper;
@@ -57,11 +59,10 @@ public final class TopicsDao {
     }
 
     /** Returns an instance of the TopicsDAO given a context. */
-    @NonNull
-    public static TopicsDao getInstance(@NonNull Context context) {
+    public static TopicsDao getInstance() {
         synchronized (LOCK) {
             if (sSingleton == null) {
-                sSingleton = new TopicsDao(TopicsDbHelper.getInstance(context));
+                sSingleton = new TopicsDao(TopicsDbHelper.getInstance());
             }
             return sSingleton;
         }
@@ -73,7 +74,7 @@ public final class TopicsDao {
      * @param topics {@link Topic}s to block.
      * @param userIdentifier the user id to record the blocked topic
      */
-    public void recordBlockedTopic(@NonNull List<Topic> topics, int userIdentifier) {
+    public void recordBlockedTopic(List<Topic> topics, int userIdentifier) {
         Objects.requireNonNull(topics);
         SQLiteDatabase db = mTopicsDbHelper.safeGetWritableDatabase();
         if (db == null) {
@@ -106,7 +107,7 @@ public final class TopicsDao {
      * @param topic blocked {@link Topic} to remove.
      * @param userIdentifier the user id to remove the blocked topic
      */
-    public void removeBlockedTopic(@NonNull Topic topic, int userIdentifier) {
+    public void removeBlockedTopic(Topic topic, int userIdentifier) {
         Objects.requireNonNull(topic);
         SQLiteDatabase db = mTopicsDbHelper.safeGetWritableDatabase();
         if (db == null) {
@@ -142,7 +143,6 @@ public final class TopicsDao {
      * @param userIdentifier the user id to get all blocked topics
      * @return {@link List} a {@link List} of blocked {@link Topic}s.
      */
-    @NonNull
     public Set<Topic> retrieveAllBlockedTopics(int userIdentifier) {
         SQLiteDatabase db = mTopicsDbHelper.safeGetReadableDatabase();
         Set<Topic> blockedTopics = new HashSet<>();

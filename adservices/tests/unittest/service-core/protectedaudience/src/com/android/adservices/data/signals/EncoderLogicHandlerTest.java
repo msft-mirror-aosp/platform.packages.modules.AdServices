@@ -20,6 +20,9 @@ import static com.android.adservices.data.signals.EncoderLogicHandler.EMPTY_ADTE
 import static com.android.adservices.data.signals.EncoderLogicHandler.ENCODER_VERSION_RESPONSE_HEADER;
 import static com.android.adservices.data.signals.EncoderLogicHandler.FALLBACK_VERSION;
 import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_INVALID_OR_MISSING_ENCODER_VERSION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_UPDATE_FOR_ENCODING_LOGIC_ON_PERSISTENCE_LAYER_FAILED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_OTHER_FAILURE;
 import static com.android.adservices.service.stats.EncodingJsFetchProcessLoggerImplTestFixture.TEST_AD_TECH_ID;
 import static com.android.adservices.service.stats.EncodingJsFetchProcessLoggerImplTestFixture.TEST_JS_DOWNLOAD_END_TIMESTAMP;
@@ -37,7 +40,10 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
-import com.android.adservices.common.AdServicesMockitoTestCase;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
@@ -74,7 +80,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 @RequiresSdkLevelAtLeastT
-public final class EncoderLogicHandlerTest extends AdServicesMockitoTestCase {
+@SetErrorLogUtilDefaultParams(
+        throwable = ExpectErrorLogUtilWithExceptionCall.Any.class,
+        ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS)
+public final class EncoderLogicHandlerTest extends AdServicesExtendedMockitoTestCase {
 
     @Mock private EncoderPersistenceDao mEncoderPersistenceDao;
     @Mock private EncoderEndpointsDao mEncoderEndpointsDao;
@@ -233,6 +242,8 @@ public final class EncoderLogicHandlerTest extends AdServicesMockitoTestCase {
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_INVALID_OR_MISSING_ENCODER_VERSION)
     public void testExtractAndPersistEncoder_UnreadableVersionFallback() {
         AdTechIdentifier buyer = CommonFixture.VALID_BUYER_1;
         String body = "function() { fake JS}";
@@ -264,6 +275,8 @@ public final class EncoderLogicHandlerTest extends AdServicesMockitoTestCase {
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_UPDATE_FOR_ENCODING_LOGIC_ON_PERSISTENCE_LAYER_FAILED)
     public void testExtractAndPersistEncoderFailed_SkipUpdate() {
         AdTechIdentifier buyer = CommonFixture.VALID_BUYER_1;
         String body = "function() { fake JS}";

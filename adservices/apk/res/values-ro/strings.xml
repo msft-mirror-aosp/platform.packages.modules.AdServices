@@ -24,6 +24,10 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="4553614196392171">"Permite unei aplicații să acceseze API-urile AdServices Attribution."</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="4365562651019065480">"să acceseze API-ul AdServices Custom Audience"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="6713089438953075862">"Permite unei aplicații să acceseze API-ul AdServices Custom Audience."</string>
+    <string name="permlab_accessAdServicesAdSelection" msgid="672819511145374384">"să acceseze API-ul AdServices Ad Selection"</string>
+    <string name="permdesc_accessAdServicesAdSelection" msgid="6095291420798129879">"Permite unei aplicații să acceseze API-ul AdServices Ad Selection."</string>
+    <string name="permlab_accessAdServicesProtectedSignals" msgid="147489803040522247">"să acceseze API-ul AdServices Protected Signals"</string>
+    <string name="permdesc_accessAdServicesProtectedSignals" msgid="2320760922272886523">"Permite unei aplicații să acceseze API-ul AdServices Protected Signals."</string>
     <string name="permlab_accessAdServicesAdId" msgid="1615451959935917231">"Acces la API-ul AdId"</string>
     <string name="permdesc_accessAdServicesAdId" msgid="6145143976659732220">"Permite unei aplicații să acceseze API-ul AdId."</string>
     <string name="permlab_accessAdServicesConsent" msgid="4218463631288201212">"să acceseze API-ul AdServices Consent"</string>

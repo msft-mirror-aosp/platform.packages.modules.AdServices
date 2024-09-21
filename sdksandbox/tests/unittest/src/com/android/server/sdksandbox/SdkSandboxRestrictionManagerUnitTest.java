@@ -209,6 +209,7 @@ public class SdkSandboxRestrictionManagerUnitTest extends DeviceSupportedBaseTes
     @Test
     @RequiresFlagsEnabled(FLAG_SDKSANDBOX_INVALIDATE_EFFECTIVE_TARGET_SDK_VERSION_CACHE)
     public void testGetEffectiveTargetSdkVersion_cachedValueReturned() throws Exception {
+        Mockito.when(mInjector.getCurrentSdkLevel()).thenReturn(35);
         mSdkSandboxRestrictionManager.getEffectiveTargetSdkVersion(mClientAppUid);
         mSdkSandboxRestrictionManager.getEffectiveTargetSdkVersion(mClientAppUid);
 
@@ -221,6 +222,7 @@ public class SdkSandboxRestrictionManagerUnitTest extends DeviceSupportedBaseTes
     @Test
     @RequiresFlagsEnabled(FLAG_SDKSANDBOX_INVALIDATE_EFFECTIVE_TARGET_SDK_VERSION_CACHE)
     public void testGetEffectiveTargetSdkVersion_cachedCleared() throws Exception {
+        Mockito.when(mInjector.getCurrentSdkLevel()).thenReturn(35);
         mSdkSandboxRestrictionManager.getEffectiveTargetSdkVersion(mClientAppUid);
         mSdkSandboxRestrictionManager.clearEffectiveTargetSdkVersion(mClientAppUid);
         mSdkSandboxRestrictionManager.getEffectiveTargetSdkVersion(mClientAppUid);

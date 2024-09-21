@@ -37,12 +37,19 @@ import java.util.stream.Collectors;
  *
  * <p>In particular, it won't crash the test process when methods in the test class somehow
  * references Android classes that are not available in the device SDK, like {@link
- * android.os.OutcomeReceiver} (which was introduced on Android RVC.
+ * android.os.OutcomeReceiver} (which was introduced on Android RVC).
  *
  * <p>Notice that the it doesn't prevent crashes if such classes are exposed outside methods (like
  * as instance variables) - it's responsibility of the test author to "hide" those references. The
  * test authors should also make sure that test methods that use unsupported classes are skipped
  * (for example, using {@link com.android.adservices.shared.testing.SdkLevelSupportRule})
+ *
+ * <p>The most "obvious" way these unavailable types are referenced in tests is when the test class
+ * has fields of those types or use them in method signatures. A more "obscure" case is when the
+ * test uses {@code org.junit.Assert.assertThrows} with a lambda that reference them - if you want
+ * avoid these failures WITHOUT using this runner (for example, because your test already uses
+ * another runner), a workaround is to use private static class to encapsulate such calls - see
+ * {@code MeasurementCompatibleManagerTest.RvcGuardUberHackPlusPlus} as an example.
  */
 public class SafeAndroidJUnitRunner extends EasilyExtensibleBlockJUnit4ClassRunner {
 

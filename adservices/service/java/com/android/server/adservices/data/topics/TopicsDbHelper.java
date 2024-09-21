@@ -16,15 +16,17 @@
 
 package com.android.server.adservices.data.topics;
 
-import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import com.android.adservices.shared.system.SystemContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.adservices.LogUtil;
+
+import com.google.errorprone.annotations.concurrent.GuardedBy;
 
 import java.io.File;
 import java.io.PrintWriter;
@@ -35,7 +37,7 @@ import java.io.PrintWriter;
  *
  * @hide
  */
-public class TopicsDbHelper extends SQLiteOpenHelper {
+public final class TopicsDbHelper extends SQLiteOpenHelper {
     /** The current version of the database. */
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PACKAGE)
     public static final int CURRENT_DATABASE_VERSION = 1;
@@ -43,7 +45,9 @@ public class TopicsDbHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "adservices_topics.db";
     private static final Object LOCK = new Object();
 
-    private static TopicsDbHelper sSingleton = null;
+    @GuardedBy("LOCK")
+    private static TopicsDbHelper sSingleton;
+
     private final File mDbFile;
     // The version when the database is actually created
     private final int mDbVersion;
@@ -56,25 +60,29 @@ public class TopicsDbHelper extends SQLiteOpenHelper {
      * @param dbVersion db version
      */
     @VisibleForTesting
-    public TopicsDbHelper(@NonNull Context context, @NonNull String dbName, int dbVersion) {
+    public TopicsDbHelper(Context context, String dbName, int dbVersion) {
         super(context, dbName, null, dbVersion);
         mDbFile = context.getDatabasePath(dbName);
         this.mDbVersion = dbVersion;
     }
 
+    @VisibleForTesting
+    TopicsDbHelper(Context context) {
+        this(context, DATABASE_NAME, CURRENT_DATABASE_VERSION);
+    }
+
     /** Returns an instance of the DbHelper given a context. */
-    @NonNull
-    public static TopicsDbHelper getInstance(@NonNull Context ctx) {
+    public static TopicsDbHelper getInstance() {
         synchronized (LOCK) {
             if (sSingleton == null) {
-                sSingleton = new TopicsDbHelper(ctx, DATABASE_NAME, CURRENT_DATABASE_VERSION);
+                sSingleton = new TopicsDbHelper(SystemContextSingleton.get());
             }
             return sSingleton;
         }
     }
 
     @Override
-    public void onCreate(@NonNull SQLiteDatabase db) {
+    public void onCreate(SQLiteDatabase db) {
         LogUtil.d(
                 "TopicsDbHelper.onCreate with version %d. Name: %s", mDbVersion, mDbFile.getName());
         for (String sql : TopicsTables.CREATE_STATEMENTS) {
@@ -83,7 +91,7 @@ public class TopicsDbHelper extends SQLiteOpenHelper {
     }
 
     @Override
-    public void onUpgrade(@NonNull SQLiteDatabase db, int oldVersion, int newVersion) {
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         LogUtil.d(
                 "DbHelper.onUpgrade. Attempting to upgrade version from %d to %d.",
                 oldVersion, newVersion);
