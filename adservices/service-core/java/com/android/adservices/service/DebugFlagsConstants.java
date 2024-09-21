@@ -78,4 +78,7 @@ public final class DebugFlagsConstants {
 
     public static final String KEY_FLEDGE_BACKGROUND_FETCH_COMPLETE_BROADCAST_ENABLED =
             "fledge_background_fetch_complete_broadcast_enabled";
+
+    public static final String KEY_FLEDGE_BACKGROUND_KEY_FETCH_COMPLETE_BROADCAST_ENABLED =
+            "fledge_background_key_fetch_complete_broadcast_enabled";
 }

@@ -24,14 +24,10 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="4553614196392171">"Қолданбаға AdServices Attribution API-ларын пайдалануға мүмкіндік береді."</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="4365562651019065480">"AdServices Custom Audience API-ын пайдалану"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="6713089438953075862">"Қолданбаға AdServices Custom Audience API-ын пайдалануға мүмкіндік береді."</string>
-    <!-- no translation found for permlab_accessAdServicesAdSelection (672819511145374384) -->
-    <skip />
-    <!-- no translation found for permdesc_accessAdServicesAdSelection (6095291420798129879) -->
-    <skip />
-    <!-- no translation found for permlab_accessAdServicesProtectedSignals (147489803040522247) -->
-    <skip />
-    <!-- no translation found for permdesc_accessAdServicesProtectedSignals (2320760922272886523) -->
-    <skip />
+    <string name="permlab_accessAdServicesAdSelection" msgid="672819511145374384">"AdServices жарнама таңдау API-ін пайдалану"</string>
+    <string name="permdesc_accessAdServicesAdSelection" msgid="6095291420798129879">"Қолданбаға AdServices жарнама таңдау API-ін пайдалануға рұқсат береді."</string>
+    <string name="permlab_accessAdServicesProtectedSignals" msgid="147489803040522247">"AdServices қорғалған сигналдар API-ін пайдалану"</string>
+    <string name="permdesc_accessAdServicesProtectedSignals" msgid="2320760922272886523">"Қолданбаға AdServices қорғалған сигналдар API-ін пайдалануға рұқсат береді."</string>
     <string name="permlab_accessAdServicesAdId" msgid="1615451959935917231">"AdID API-ын пайдалану рұқсаты"</string>
     <string name="permdesc_accessAdServicesAdId" msgid="6145143976659732220">"Қолданбаға AdID API-ын пайдалануға мүмкіндік береді."</string>
     <string name="permlab_accessAdServicesConsent" msgid="4218463631288201212">"AdServices Consent API-ын пайдалану"</string>
