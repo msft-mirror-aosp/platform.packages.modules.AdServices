@@ -24,14 +24,10 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="4553614196392171">"Дозвољава апликацији да приступа API-јима за атрибуцију услуга оглашавања."</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="4365562651019065480">"приступ API-ју за прилагођену публику услуга оглашавања"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="6713089438953075862">"Дозвољава апликацији да приступа API-ју за прилагођену публику услуга оглашавања."</string>
-    <!-- no translation found for permlab_accessAdServicesAdSelection (672819511145374384) -->
-    <skip />
-    <!-- no translation found for permdesc_accessAdServicesAdSelection (6095291420798129879) -->
-    <skip />
-    <!-- no translation found for permlab_accessAdServicesProtectedSignals (147489803040522247) -->
-    <skip />
-    <!-- no translation found for permdesc_accessAdServicesProtectedSignals (2320760922272886523) -->
-    <skip />
+    <string name="permlab_accessAdServicesAdSelection" msgid="672819511145374384">"приступ API-ју за избор огласа у услугама оглашавања"</string>
+    <string name="permdesc_accessAdServicesAdSelection" msgid="6095291420798129879">"Дозвољава апликацији да приступа API-ју за избор огласа у услугама оглашавања."</string>
+    <string name="permlab_accessAdServicesProtectedSignals" msgid="147489803040522247">"приступ API-ју за заштићене сигнале у услугама оглашавања"</string>
+    <string name="permdesc_accessAdServicesProtectedSignals" msgid="2320760922272886523">"Дозвољава апликацији да приступа API-ју за заштићене сигнале у услугама оглашавања."</string>
     <string name="permlab_accessAdServicesAdId" msgid="1615451959935917231">"Приступ API-ју за ИД оглашавања"</string>
     <string name="permdesc_accessAdServicesAdId" msgid="6145143976659732220">"Дозвољава апликацији да приступа API-ју за ИД оглашавања."</string>
     <string name="permlab_accessAdServicesConsent" msgid="4218463631288201212">"приступ AdServices Consent API-ју"</string>

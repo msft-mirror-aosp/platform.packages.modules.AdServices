@@ -24,14 +24,10 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="4553614196392171">"इससे किसी ऐप्लिकेशन को AdServices एट्रिब्यूशन एपीआई को ऐक्सेस करने की अनुमति मिलती है."</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="4365562651019065480">"AdServices कस्टम ऑडियंस एपीआई को ऐक्सेस करें"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="6713089438953075862">"इससे किसी ऐप्लिकेशन को AdServices कस्टम ऑडियंस एपीआई को ऐक्सेस करने की अनुमति मिलती है."</string>
-    <!-- no translation found for permlab_accessAdServicesAdSelection (672819511145374384) -->
-    <skip />
-    <!-- no translation found for permdesc_accessAdServicesAdSelection (6095291420798129879) -->
-    <skip />
-    <!-- no translation found for permlab_accessAdServicesProtectedSignals (147489803040522247) -->
-    <skip />
-    <!-- no translation found for permdesc_accessAdServicesProtectedSignals (2320760922272886523) -->
-    <skip />
+    <string name="permlab_accessAdServicesAdSelection" msgid="672819511145374384">"AdServices Ad Selection API को ऐक्सेस करें"</string>
+    <string name="permdesc_accessAdServicesAdSelection" msgid="6095291420798129879">"इससे किसी ऐप्लिकेशन को AdServices Ad Selection API ऐक्सेस करने की अनुमति मिलती है."</string>
+    <string name="permlab_accessAdServicesProtectedSignals" msgid="147489803040522247">"AdServices Protected Signals API को ऐक्सेस करें"</string>
+    <string name="permdesc_accessAdServicesProtectedSignals" msgid="2320760922272886523">"इससे किसी ऐप्लिकेशन को AdServices Protected Signals API को ऐक्सेस करने की अनुमति मिलती है."</string>
     <string name="permlab_accessAdServicesAdId" msgid="1615451959935917231">"विज्ञापन आईडी एपीआई को ऐक्सेस करें"</string>
     <string name="permdesc_accessAdServicesAdId" msgid="6145143976659732220">"इससे किसी ऐप्लिकेशन को, विज्ञापन आईडी एपीआई को ऐक्सेस करने की अनुमति मिलती है."</string>
     <string name="permlab_accessAdServicesConsent" msgid="4218463631288201212">"AdServices Consent API का ऐक्सेस"</string>

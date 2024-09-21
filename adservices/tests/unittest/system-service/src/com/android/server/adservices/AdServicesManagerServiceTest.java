@@ -132,7 +132,6 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
             AdServicesFlagsSetterRule.withoutAdoptingShellPermissions();
 
     private final TopicsDbHelper mDBHelper = TopicsDbTestUtil.getDbHelperForTest();
-    private AdServicesManagerService mService;
     private UserInstanceManager mUserInstanceManager;
     @Mock private PackageManager mMockPackageManager;
     @Mock private RollbackManager mMockRollbackManager;
@@ -180,7 +179,7 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
         setFlag(KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED, true);
 
         // This will trigger the registration of the Receiver.
-        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
+        AdServicesManagerService service = newService();
 
         ArgumentCaptor<BroadcastReceiver> argumentReceiver =
                 ArgumentCaptor.forClass(BroadcastReceiver.class);
@@ -190,7 +189,7 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
         ArgumentCaptor<Handler> argumentHandler = ArgumentCaptor.forClass(Handler.class);
 
         // Calling the second time will not register again.
-        mService.registerReceivers();
+        service.registerReceivers();
 
         // We have 2 receivers which are PackageChangeReceiver and UserActionReceiver.
         int numReceivers = 2;
@@ -234,7 +233,7 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
         Thread.sleep(500);
 
         // Calling when the flag is disabled will unregister the Receiver!
-        mService.registerReceivers();
+        service.registerReceivers();
         Mockito.verify(mSpyContext, Mockito.times(numReceivers))
                 .unregisterReceiver(argumentReceiver.capture());
 
@@ -248,7 +247,7 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
         // Disable the flag.
         setFlag(KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED, false);
 
-        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
+        AdServicesManagerService service = newService();
 
         // The flag is disabled so there is no registerReceiverForAllUsers
         Mockito.verify(mSpyContext, Mockito.times(0))
@@ -267,7 +266,7 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
         setupMockInstalledPackages();
 
         // This will trigger the lookup of the AdServices version.
-        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
+        AdServicesManagerService service = newService();
 
         ArgumentCaptor<PackageManager.PackageInfoFlags> argumentPackageInfoFlags =
                 ArgumentCaptor.forClass(PackageManager.PackageInfoFlags.class);
@@ -280,7 +279,7 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
         assertThat(argumentPackageInfoFlags.getAllValues().get(0).getValue())
                 .isEqualTo(PackageManager.MATCH_APEX);
 
-        assertThat(mService.getAdServicesApexVersion())
+        assertThat(service.getAdServicesApexVersion())
                 .isEqualTo(TEST_ROLLED_BACK_FROM_MODULE_VERSION);
     }
 
@@ -289,7 +288,7 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
         // Disable the flag.
         setFlag(KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED, false);
 
-        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
+        AdServicesManagerService service = newService();
 
         // The flag is disabled so there is no call to the packageManager
         Mockito.verify(mSpyContext, Mockito.times(0)).getPackageManager();
@@ -300,9 +299,9 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
     public void testAdServicesShellCommand_disabled() throws Exception {
         String expectedOutput = handleShellCommand(new Binder());
 
-        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
+        AdServicesManagerService service = newService();
 
-        String result = handleShellCommand(mService);
+        String result = handleShellCommand(service);
 
         assertWithMessage("shell command output").that(result).contains(expectedOutput);
     }
@@ -310,18 +309,18 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
     @Test
     @EnableDebugFlag(KEY_ADSERVICES_SHELL_COMMAND_ENABLED)
     public void testAdServicesShellCommand_enabled() throws Exception {
-        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
+        AdServicesManagerService service = newService();
         String expectedOutput =
                 String.format(AdServicesShellCommand.WRONG_UID_TEMPLATE, Binder.getCallingUid());
 
-        String result = handleShellCommand(mService);
+        String result = handleShellCommand(service);
 
         assertWithMessage("shell command output").that(result).contains(expectedOutput);
     }
 
     @Test
     public void testSendBroadcastForPackageFullyRemoved() {
-        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
+        AdServicesManagerService service = newService();
 
         Intent i = new Intent(Intent.ACTION_PACKAGE_FULLY_REMOVED);
         i.setData(Uri.parse("package:" + PACKAGE_NAME));
@@ -333,7 +332,7 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
         setupMockResolveInfo();
         Mockito.doNothing().when(mSpyContext).sendBroadcastAsUser(Mockito.any(), Mockito.any());
 
-        mService.onPackageChange(i, mSpyContext.getUser());
+        service.onPackageChange(i, mSpyContext.getUser());
 
         Mockito.verify(mSpyContext, Mockito.times(1))
                 .sendBroadcastAsUser(argumentIntent.capture(), argumentUser.capture());
@@ -348,8 +347,8 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
     }
 
     @Test
-    public void testOnUserRemoved() throws IOException {
-        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
+    public void testOnUserRemoved() throws Exception {
+        AdServicesManagerService service = newService();
         int userId = 1;
         String consentDataStoreDir = BASE_DIR + "/" + userId;
         Path packageDir = Paths.get(consentDataStoreDir);
@@ -359,43 +358,43 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
         assertThat(Files.exists(packageDir)).isTrue();
         assertThat(mUserInstanceManager.getUserConsentManagerInstance(userId)).isNotNull();
 
-        mService.onUserRemoved(intent);
+        service.onUserRemoved(intent);
 
         assertThat(Files.exists(packageDir)).isFalse();
         assertThat(mUserInstanceManager.getUserConsentManagerInstance(userId)).isNull();
     }
 
     @Test
-    public void testOnUserRemoved_userIdNotPresentInIntent() throws IOException {
-        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
+    public void testOnUserRemoved_userIdNotPresentInIntent() throws Exception {
+        AdServicesManagerService service = newService();
         Intent intent = new Intent(Intent.ACTION_USER_REMOVED);
         // userId 1 is not present in the intent.
         int userId = 1;
         mUserInstanceManager.getOrCreateUserConsentManagerInstance(userId);
         assertThat(mUserInstanceManager.getUserConsentManagerInstance(userId)).isNotNull();
 
-        mService.onUserRemoved(intent);
+        service.onUserRemoved(intent);
 
         assertThat(mUserInstanceManager.getUserConsentManagerInstance(userId)).isNotNull();
     }
 
     @Test
-    public void testOnUserRemoved_removeNonexistentUserId() throws IOException {
-        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
+    public void testOnUserRemoved_removeNonexistentUserId() throws Exception {
+        AdServicesManagerService service = newService();
         Intent intent = new Intent(Intent.ACTION_USER_REMOVED);
         // userId 1 does not have consent directory.
         int userId = 1;
         intent.putExtra(Intent.EXTRA_USER, UserHandle.of(2));
 
-        mService.onUserRemoved(intent);
+        service.onUserRemoved(intent);
 
         assertThat(mUserInstanceManager.getUserConsentManagerInstance(userId)).isNull();
     }
 
     @Test
     public void testClearAllBlockedTopics() {
-        mService = spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
-        disableEnforceAdServicesManagerPermission(mService);
+        AdServicesManagerService service = spy(newService());
+        disableEnforceAdServicesManagerPermission(service);
 
         final int topicId = 1;
 
@@ -405,21 +404,21 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
                         .setTaxonomyVersion(TAXONOMY_VERSION)
                         .setModelVersion(MODEL_VERSION)
                         .build();
-        mService.recordBlockedTopic(List.of(topicParcel));
+        service.recordBlockedTopic(List.of(topicParcel));
 
         //  Verify the topic is recorded.
-        List<TopicParcel> resultTopicParcels = mService.retrieveAllBlockedTopics();
+        List<TopicParcel> resultTopicParcels = service.retrieveAllBlockedTopics();
         assertThat(resultTopicParcels).hasSize(1);
         assertThat(resultTopicParcels.get(0)).isEqualTo(topicParcel);
 
         // Verify the topic is  removed
-        mService.clearAllBlockedTopics();
-        assertThat(mService.retrieveAllBlockedTopics()).isEmpty();
+        service.clearAllBlockedTopics();
+        assertThat(service.retrieveAllBlockedTopics()).isEmpty();
     }
 
     @Test
     public void testSendBroadcastForPackageAdded() {
-        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
+        AdServicesManagerService service = newService();
 
         Intent i = new Intent(Intent.ACTION_PACKAGE_ADDED);
         i.setData(Uri.parse("package:" + PACKAGE_NAME));
@@ -432,7 +431,7 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
         setupMockResolveInfo();
         Mockito.doNothing().when(mSpyContext).sendBroadcastAsUser(Mockito.any(), Mockito.any());
 
-        mService.onPackageChange(i, mSpyContext.getUser());
+        service.onPackageChange(i, mSpyContext.getUser());
 
         Mockito.verify(mSpyContext, Mockito.times(1))
                 .sendBroadcastAsUser(argumentIntent.capture(), argumentUser.capture());
@@ -447,7 +446,7 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
 
     @Test
     public void testSendBroadcastForPackageDataCleared() {
-        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
+        AdServicesManagerService service = newService();
 
         Intent i = new Intent(Intent.ACTION_PACKAGE_DATA_CLEARED);
         i.setData(Uri.parse("package:" + PACKAGE_NAME));
@@ -459,7 +458,7 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
         setupMockResolveInfo();
         Mockito.doNothing().when(mSpyContext).sendBroadcastAsUser(Mockito.any(), Mockito.any());
 
-        mService.onPackageChange(i, mSpyContext.getUser());
+        service.onPackageChange(i, mSpyContext.getUser());
 
         Mockito.verify(mSpyContext, Mockito.times(1))
                 .sendBroadcastAsUser(argumentIntent.capture(), argumentUser.capture());
@@ -474,9 +473,8 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
     }
 
     @Test
-    public void testGetConsent_unSet() throws IOException {
-        AdServicesManagerService service =
-                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+    public void testGetConsent_unSet() throws Exception {
+        AdServicesManagerService service = spy(newService());
         // Since unit test cannot execute an IPC call currently, disable the permission check.
         disableEnforceAdServicesManagerPermission(service);
 
@@ -488,9 +486,8 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
     }
 
     @Test
-    public void testGetAndSetConsent_null() throws IOException {
-        AdServicesManagerService service =
-                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+    public void testGetAndSetConsent_null() throws Exception {
+        AdServicesManagerService service = spy(newService());
         // Since unit test cannot execute an IPC call currently, disable the permission check.
         disableEnforceAdServicesManagerPermission(service);
 
@@ -529,8 +526,7 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
 
     @Test
     public void testGetAndSetConsent_nonNull() {
-        AdServicesManagerService service =
-                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+        AdServicesManagerService service = spy(newService());
         // Since unit test cannot execute an IPC call currently, disable the permission check.
         disableEnforceAdServicesManagerPermission(service);
 
@@ -564,8 +560,7 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
         // context.getSystemService(). However, when the system server restarts, there will be
         // another singleton instance of AdServicesManagerService. This test here verifies that
         // the Consents are persisted correctly across restarts.
-        AdServicesManagerService service2 =
-                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+        AdServicesManagerService service2 = spy(newService());
         // Since unit test cannot execute an IPC call currently, disable the permission check.
         disableEnforceAdServicesManagerPermission(service2);
 
@@ -576,9 +571,8 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
     }
 
     @Test
-    public void testRecordNotificationDisplayed() throws IOException {
-        AdServicesManagerService service =
-                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+    public void testRecordNotificationDisplayed() throws Exception {
+        AdServicesManagerService service = spy(newService());
         // Since unit test cannot execute an IPC call currently, disable the permission check.
         disableEnforceAdServicesManagerPermission(service);
 
@@ -590,17 +584,15 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
 
     @Test
     public void testEnforceAdServicesManagerPermission() {
-        AdServicesManagerService service =
-                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+        AdServicesManagerService service = spy(newService());
 
         // Throw due to non-IPC call
         assertThrows(SecurityException.class, () -> service.getConsent(ConsentParcel.ALL_API));
     }
 
     @Test
-    public void testRecordGaUxNotificationDisplayed() throws IOException {
-        AdServicesManagerService service =
-                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+    public void testRecordGaUxNotificationDisplayed() throws Exception {
+        AdServicesManagerService service = spy(newService());
         // Since unit test cannot execute an IPC call currently, disable the permission check.
         disableEnforceAdServicesManagerPermission(service);
 
@@ -612,8 +604,7 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
 
     @Test
     public void testRecordPasNotificationDisplayed() {
-        AdServicesManagerService service =
-                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+        AdServicesManagerService service = spy(newService());
         // Since unit test cannot execute an IPC call currently, disable the permission check.
         disableEnforceAdServicesManagerPermission(service);
 
@@ -625,8 +616,7 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
 
     @Test
     public void testRecordPasNotificationOpened() {
-        AdServicesManagerService service =
-                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+        AdServicesManagerService service = spy(newService());
         // Since unit test cannot execute an IPC call currently, disable the permission check.
         disableEnforceAdServicesManagerPermission(service);
 
@@ -637,9 +627,8 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
     }
 
     @Test
-    public void recordUserManualInteractionWithConsent() throws IOException {
-        AdServicesManagerService service =
-                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+    public void recordUserManualInteractionWithConsent() throws Exception {
+        AdServicesManagerService service = spy(newService());
         // Since unit test cannot execute an IPC call currently, disable the permission check.
         disableEnforceAdServicesManagerPermission(service);
 
@@ -651,56 +640,56 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
 
     @Test
     public void testSetAppConsent() {
-        mService = spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
-        disableEnforceAdServicesManagerPermission(mService);
+        AdServicesManagerService service = spy(newService());
+        disableEnforceAdServicesManagerPermission(service);
 
-        mService.setConsentForApp(
+        service.setConsentForApp(
                 AppConsentManagerFixture.APP10_PACKAGE_NAME,
                 AppConsentManagerFixture.APP10_UID,
                 false);
         assertFalse(
-                mService.isConsentRevokedForApp(
+                service.isConsentRevokedForApp(
                         AppConsentManagerFixture.APP10_PACKAGE_NAME,
                         AppConsentManagerFixture.APP10_UID));
 
-        mService.setConsentForAppIfNew(
+        service.setConsentForAppIfNew(
                 AppConsentManagerFixture.APP20_PACKAGE_NAME,
                 AppConsentManagerFixture.APP20_UID,
                 false);
         assertFalse(
-                mService.isConsentRevokedForApp(
+                service.isConsentRevokedForApp(
                         AppConsentManagerFixture.APP20_PACKAGE_NAME,
                         AppConsentManagerFixture.APP20_UID));
 
-        mService.setConsentForApp(
+        service.setConsentForApp(
                 AppConsentManagerFixture.APP20_PACKAGE_NAME,
                 AppConsentManagerFixture.APP20_UID,
                 true);
         assertTrue(
-                mService.isConsentRevokedForApp(
+                service.isConsentRevokedForApp(
                         AppConsentManagerFixture.APP20_PACKAGE_NAME,
                         AppConsentManagerFixture.APP20_UID));
         assertTrue(
-                mService.setConsentForAppIfNew(
+                service.setConsentForAppIfNew(
                         AppConsentManagerFixture.APP20_PACKAGE_NAME,
                         AppConsentManagerFixture.APP20_UID,
                         false));
 
         assertFalse(
-                mService.setConsentForAppIfNew(
+                service.setConsentForAppIfNew(
                         AppConsentManagerFixture.APP30_PACKAGE_NAME,
                         AppConsentManagerFixture.APP30_UID,
                         false));
 
         assertThat(
-                        mService.getKnownAppsWithConsent(
+                        service.getKnownAppsWithConsent(
                                 List.of(
                                         AppConsentManagerFixture.APP10_PACKAGE_NAME,
                                         AppConsentManagerFixture.APP20_PACKAGE_NAME,
                                         AppConsentManagerFixture.APP30_PACKAGE_NAME)))
                 .hasSize(2);
         assertThat(
-                        mService.getAppsWithRevokedConsent(
+                        service.getAppsWithRevokedConsent(
                                 List.of(
                                         AppConsentManagerFixture.APP10_PACKAGE_NAME,
                                         AppConsentManagerFixture.APP20_PACKAGE_NAME,
@@ -710,91 +699,91 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
 
     @Test
     public void testClearAppConsent() {
-        mService = spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
-        disableEnforceAdServicesManagerPermission(mService);
+        AdServicesManagerService service = spy(newService());
+        disableEnforceAdServicesManagerPermission(service);
 
-        mService.setConsentForApp(
+        service.setConsentForApp(
                 AppConsentManagerFixture.APP10_PACKAGE_NAME,
                 AppConsentManagerFixture.APP10_UID,
                 false);
-        mService.setConsentForApp(
+        service.setConsentForApp(
                 AppConsentManagerFixture.APP20_PACKAGE_NAME,
                 AppConsentManagerFixture.APP20_UID,
                 false);
-        mService.setConsentForApp(
+        service.setConsentForApp(
                 AppConsentManagerFixture.APP30_PACKAGE_NAME,
                 AppConsentManagerFixture.APP30_UID,
                 true);
         assertThat(
-                        mService.getKnownAppsWithConsent(
+                        service.getKnownAppsWithConsent(
                                 List.of(
                                         AppConsentManagerFixture.APP10_PACKAGE_NAME,
                                         AppConsentManagerFixture.APP20_PACKAGE_NAME,
                                         AppConsentManagerFixture.APP30_PACKAGE_NAME)))
                 .hasSize(2);
         assertThat(
-                        mService.getAppsWithRevokedConsent(
+                        service.getAppsWithRevokedConsent(
                                 List.of(
                                         AppConsentManagerFixture.APP10_PACKAGE_NAME,
                                         AppConsentManagerFixture.APP20_PACKAGE_NAME,
                                         AppConsentManagerFixture.APP30_PACKAGE_NAME)))
                 .hasSize(1);
 
-        mService.clearConsentForUninstalledApp(
+        service.clearConsentForUninstalledApp(
                 AppConsentManagerFixture.APP10_PACKAGE_NAME, AppConsentManagerFixture.APP10_UID);
         assertThat(
-                        mService.getKnownAppsWithConsent(
+                        service.getKnownAppsWithConsent(
                                 List.of(
                                         AppConsentManagerFixture.APP20_PACKAGE_NAME,
                                         AppConsentManagerFixture.APP30_PACKAGE_NAME)))
                 .hasSize(1);
         assertThat(
-                        mService.getAppsWithRevokedConsent(
+                        service.getAppsWithRevokedConsent(
                                 List.of(
                                         AppConsentManagerFixture.APP20_PACKAGE_NAME,
                                         AppConsentManagerFixture.APP30_PACKAGE_NAME)))
                 .hasSize(1);
 
-        mService.clearKnownAppsWithConsent();
+        service.clearKnownAppsWithConsent();
         assertThat(
-                        mService.getKnownAppsWithConsent(
+                        service.getKnownAppsWithConsent(
                                 List.of(
                                         AppConsentManagerFixture.APP20_PACKAGE_NAME,
                                         AppConsentManagerFixture.APP30_PACKAGE_NAME)))
                 .hasSize(0);
         assertThat(
-                        mService.getAppsWithRevokedConsent(
+                        service.getAppsWithRevokedConsent(
                                 List.of(
                                         AppConsentManagerFixture.APP20_PACKAGE_NAME,
                                         AppConsentManagerFixture.APP30_PACKAGE_NAME)))
                 .hasSize(1);
 
-        mService.setConsentForApp(
+        service.setConsentForApp(
                 AppConsentManagerFixture.APP20_PACKAGE_NAME,
                 AppConsentManagerFixture.APP20_UID,
                 false);
         assertThat(
-                        mService.getKnownAppsWithConsent(
+                        service.getKnownAppsWithConsent(
                                 List.of(
                                         AppConsentManagerFixture.APP20_PACKAGE_NAME,
                                         AppConsentManagerFixture.APP30_PACKAGE_NAME)))
                 .hasSize(1);
         assertThat(
-                        mService.getAppsWithRevokedConsent(
+                        service.getAppsWithRevokedConsent(
                                 List.of(
                                         AppConsentManagerFixture.APP20_PACKAGE_NAME,
                                         AppConsentManagerFixture.APP30_PACKAGE_NAME)))
                 .hasSize(1);
 
-        mService.clearAllAppConsentData();
+        service.clearAllAppConsentData();
         assertThat(
-                        mService.getKnownAppsWithConsent(
+                        service.getKnownAppsWithConsent(
                                 List.of(
                                         AppConsentManagerFixture.APP20_PACKAGE_NAME,
                                         AppConsentManagerFixture.APP30_PACKAGE_NAME)))
                 .hasSize(0);
         assertThat(
-                        mService.getAppsWithRevokedConsent(
+                        service.getAppsWithRevokedConsent(
                                 List.of(
                                         AppConsentManagerFixture.APP20_PACKAGE_NAME,
                                         AppConsentManagerFixture.APP30_PACKAGE_NAME)))
@@ -803,8 +792,8 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
 
     @Test
     public void testRecordAndRetrieveBlockedTopic() {
-        mService = spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
-        disableEnforceAdServicesManagerPermission(mService);
+        AdServicesManagerService service = spy(newService());
+        disableEnforceAdServicesManagerPermission(service);
 
         final int topicId = 1;
 
@@ -814,18 +803,18 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
                         .setTaxonomyVersion(TAXONOMY_VERSION)
                         .setModelVersion(MODEL_VERSION)
                         .build();
-        mService.recordBlockedTopic(List.of(topicParcel));
+        service.recordBlockedTopic(List.of(topicParcel));
 
         //  Verify the topic is recorded.
-        List<TopicParcel> resultTopicParcels = mService.retrieveAllBlockedTopics();
+        List<TopicParcel> resultTopicParcels = service.retrieveAllBlockedTopics();
         assertThat(resultTopicParcels).hasSize(1);
         assertThat(resultTopicParcels.get(0)).isEqualTo(topicParcel);
     }
 
     @Test
     public void testRecordAndRemoveBlockedTopic() {
-        mService = spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
-        disableEnforceAdServicesManagerPermission(mService);
+        AdServicesManagerService service = spy(newService());
+        disableEnforceAdServicesManagerPermission(service);
 
         final int topicId = 1;
 
@@ -835,22 +824,21 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
                         .setTaxonomyVersion(TAXONOMY_VERSION)
                         .setModelVersion(MODEL_VERSION)
                         .build();
-        mService.recordBlockedTopic(List.of(topicParcel));
+        service.recordBlockedTopic(List.of(topicParcel));
 
         //  Verify the topic is recorded.
-        List<TopicParcel> resultTopicParcels = mService.retrieveAllBlockedTopics();
+        List<TopicParcel> resultTopicParcels = service.retrieveAllBlockedTopics();
         assertThat(resultTopicParcels).hasSize(1);
         assertThat(resultTopicParcels.get(0)).isEqualTo(topicParcel);
 
         // Verify the topic is  removed
-        mService.removeBlockedTopic(topicParcel);
-        assertThat(mService.retrieveAllBlockedTopics()).isEmpty();
+        service.removeBlockedTopic(topicParcel);
+        assertThat(service.retrieveAllBlockedTopics()).isEmpty();
     }
 
     @Test
-    public void testRecordMeasurementDeletionOccurred() throws IOException {
-        AdServicesManagerService service =
-                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+    public void testRecordMeasurementDeletionOccurred() throws Exception {
+        AdServicesManagerService service = spy(newService());
         // Since unit test cannot execute an IPC call currently, disable the permission check.
         disableEnforceAdServicesManagerPermission(service);
 
@@ -867,8 +855,7 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
 
     @Test
     public void testNeedsToHandleRollbackReconciliation_noRollback_returnsFalse() {
-        AdServicesManagerService service =
-                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+        AdServicesManagerService service = spy(newService());
 
         disableEnforceAdServicesManagerPermission(service);
 
@@ -885,8 +872,7 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
 
     @Test
     public void testNeedsToHandleRollbackReconciliation_noDeletion_returnsFalse() {
-        AdServicesManagerService service =
-                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+        AdServicesManagerService service = spy(newService());
 
         disableEnforceAdServicesManagerPermission(service);
 
@@ -911,8 +897,7 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
 
     @Test
     public void testNeedsToHandleRollbackReconciliation_versionFromDoesNotEqual_returnsFalse() {
-        AdServicesManagerService service =
-                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+        AdServicesManagerService service = spy(newService());
 
         disableEnforceAdServicesManagerPermission(service);
 
@@ -937,8 +922,7 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
 
     @Test
     public void testNeedsToHandleRollbackReconciliation_versionToDoesNotEqual_returnsFalse() {
-        AdServicesManagerService service =
-                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+        AdServicesManagerService service = spy(newService());
 
         disableEnforceAdServicesManagerPermission(service);
 
@@ -963,8 +947,7 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
 
     @Test
     public void testNeedsToHandleRollbackReconciliation_returnsTrue() {
-        AdServicesManagerService service =
-                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+        AdServicesManagerService service = spy(newService());
 
         disableEnforceAdServicesManagerPermission(service);
 
@@ -990,9 +973,8 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
     }
 
     @Test
-    public void setCurrentPrivacySandboxFeatureWithConsent() throws IOException {
-        AdServicesManagerService service =
-                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+    public void setCurrentPrivacySandboxFeatureWithConsent() throws Exception {
+        AdServicesManagerService service = spy(newService());
         // Since unit test cannot execute an IPC call currently, disable the permission check.
         disableEnforceAdServicesManagerPermission(service);
 
@@ -1014,9 +996,8 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
     }
 
     @Test
-    public void uxConformanceTest() throws IOException {
-        AdServicesManagerService service =
-                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+    public void uxConformanceTest() throws Exception {
+        AdServicesManagerService service = spy(newService());
         // Since unit test cannot execute an IPC call currently, disable the permission check.
         disableEnforceAdServicesManagerPermission(service);
 
@@ -1033,21 +1014,21 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
 
     @Test
     public void testDump_noPermission() throws Exception {
-        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
+        AdServicesManagerService service = newService();
 
         assertThrows(
                 SecurityException.class,
-                () -> mService.dump(/* fd= */ null, /* pw= */ null, /* args= */ null));
+                () -> service.dump(/* fd= */ null, /* pw= */ null, /* args= */ null));
     }
 
     @Test
     public void testDump() throws Exception {
         mockDumpPermission();
-        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
+        AdServicesManagerService service = newService();
 
         Context previousContext = SystemContextSingleton.setForTests(mContext);
         try {
-            String dump = dump(pw -> mService.dump(/* fd= */ null, pw, /* args= */ null));
+            String dump = dump(pw -> service.dump(/* fd= */ null, pw, /* args= */ null));
 
             // Content doesn't matter much, we just wanna make sure it doesn't crash (for example,
             // by using the wrong %s / %d tokens) and that its components are dumped
@@ -1063,9 +1044,9 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
     @Test
     public void testDump_systemContextSingletonNotSetYet() throws Exception {
         mockDumpPermission();
-        mService = new AdServicesManagerService(mSpyContext, mUserInstanceManager);
+        AdServicesManagerService service = newService();
 
-        String dump = dump(pw -> mService.dump(/* fd= */ null, pw, /* args= */ null));
+        String dump = dump(pw -> service.dump(/* fd= */ null, pw, /* args= */ null));
 
         assertWithMessage("content of dump()")
                 .that(dump)
@@ -1139,9 +1120,8 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
     }
 
     @Test
-    public void isAdIdEnabledTest() throws IOException {
-        AdServicesManagerService service =
-                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+    public void isAdIdEnabledTest() throws Exception {
+        AdServicesManagerService service = spy(newService());
 
         disableEnforceAdServicesManagerPermission(service);
 
@@ -1151,9 +1131,8 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
     }
 
     @Test
-    public void isU18AccountTest() throws IOException {
-        AdServicesManagerService service =
-                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+    public void isU18AccountTest() throws Exception {
+        AdServicesManagerService service = spy(newService());
 
         disableEnforceAdServicesManagerPermission(service);
 
@@ -1163,9 +1142,8 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
     }
 
     @Test
-    public void isEntryPointEnabledTest() throws IOException {
-        AdServicesManagerService service =
-                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+    public void isEntryPointEnabledTest() throws Exception {
+        AdServicesManagerService service = spy(newService());
 
         disableEnforceAdServicesManagerPermission(service);
 
@@ -1175,9 +1153,8 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
     }
 
     @Test
-    public void isAdultAccountTest() throws IOException {
-        AdServicesManagerService service =
-                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+    public void isAdultAccountTest() throws Exception {
+        AdServicesManagerService service = spy(newService());
 
         disableEnforceAdServicesManagerPermission(service);
 
@@ -1187,9 +1164,8 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
     }
 
     @Test
-    public void wasU18NotificationDisplayedTest() throws IOException {
-        AdServicesManagerService service =
-                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+    public void wasU18NotificationDisplayedTest() throws Exception {
+        AdServicesManagerService service = spy(newService());
 
         disableEnforceAdServicesManagerPermission(service);
 
@@ -1199,9 +1175,8 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
     }
 
     @Test
-    public void enrollmentChannelConformanceTest() throws IOException {
-        AdServicesManagerService service =
-                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+    public void enrollmentChannelConformanceTest() throws Exception {
+        AdServicesManagerService service = spy(newService());
         // Since unit test cannot execute an IPC call currently, disable the permission check.
         disableEnforceAdServicesManagerPermission(service);
 
@@ -1219,8 +1194,7 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
 
     @Test
     public void enrollmentChannelConformanceWithServiceCoreTest() {
-        AdServicesManagerService service =
-                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+        AdServicesManagerService service = spy(newService());
         // Since unit test cannot execute an IPC call currently, disable the permission check.
         disableEnforceAdServicesManagerPermission(service);
 
@@ -1265,5 +1239,12 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
     private void setFlag(String name, boolean value) {
         Log.d(mTag, "setFlag(): " + name + "=" + value);
         flags.setFlag(name, value);
+    }
+
+    private AdServicesManagerService newService() {
+        AdServicesManagerService service =
+                new AdServicesManagerService(mSpyContext, mUserInstanceManager);
+        mLog.v("newService(): returning %s for %s", service, getTestName());
+        return service;
     }
 }
