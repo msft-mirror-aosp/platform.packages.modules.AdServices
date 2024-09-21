@@ -24,14 +24,10 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="4553614196392171">"Annab rakendusele juurdepääsu AdServices Attribution API-dele."</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="4365562651019065480">"juurdepääs AdServices Custom Audience API-dele"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="6713089438953075862">"Annab rakendusele juurdepääsu AdServices Custom Audience API-dele."</string>
-    <!-- no translation found for permlab_accessAdServicesAdSelection (672819511145374384) -->
-    <skip />
-    <!-- no translation found for permdesc_accessAdServicesAdSelection (6095291420798129879) -->
-    <skip />
-    <!-- no translation found for permlab_accessAdServicesProtectedSignals (147489803040522247) -->
-    <skip />
-    <!-- no translation found for permdesc_accessAdServicesProtectedSignals (2320760922272886523) -->
-    <skip />
+    <string name="permlab_accessAdServicesAdSelection" msgid="672819511145374384">"juurdepääs AdServices Ad Selectioni API-le"</string>
+    <string name="permdesc_accessAdServicesAdSelection" msgid="6095291420798129879">"Võimaldab rakendusel juurdepääsu AdServices Ad Selectioni API-le."</string>
+    <string name="permlab_accessAdServicesProtectedSignals" msgid="147489803040522247">"juurdepääs AdServices Protected Signalsi API-le"</string>
+    <string name="permdesc_accessAdServicesProtectedSignals" msgid="2320760922272886523">"Võimaldab rakendusel juurdepääsu AdServices Protected Signalsi API-le."</string>
     <string name="permlab_accessAdServicesAdId" msgid="1615451959935917231">"Juurdepääs AdID API-dele"</string>
     <string name="permdesc_accessAdServicesAdId" msgid="6145143976659732220">"Annab rakendusele juurdepääsu AdID API-dele."</string>
     <string name="permlab_accessAdServicesConsent" msgid="4218463631288201212">"Juurdepääs AdServices Consent API-le"</string>
