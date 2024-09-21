@@ -681,7 +681,7 @@ public class AsyncTriggerFetcher {
         if (mFlags.getMeasurementEnableAggregateDebugReporting()
                 && !json.isNull(TriggerHeaderContract.AGGREGATABLE_DEBUG_REPORTING)) {
             Optional<String> validAggregateDebugReporting =
-                    FetcherUtil.getValidAggregateDebugReportingString(
+                    FetcherUtil.getValidAggregateDebugReportingWithoutBudget(
                             json.getJSONObject(TriggerHeaderContract.AGGREGATABLE_DEBUG_REPORTING),
                             mFlags);
             if (validAggregateDebugReporting.isPresent()) {

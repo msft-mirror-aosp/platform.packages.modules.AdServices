@@ -24,14 +24,10 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="4553614196392171">"允許應用程式存取 AdServices Attribution API。"</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="4365562651019065480">"存取 AdServices Custom Audience API"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="6713089438953075862">"允許應用程式存取 AdServices Custom Audience API。"</string>
-    <!-- no translation found for permlab_accessAdServicesAdSelection (672819511145374384) -->
-    <skip />
-    <!-- no translation found for permdesc_accessAdServicesAdSelection (6095291420798129879) -->
-    <skip />
-    <!-- no translation found for permlab_accessAdServicesProtectedSignals (147489803040522247) -->
-    <skip />
-    <!-- no translation found for permdesc_accessAdServicesProtectedSignals (2320760922272886523) -->
-    <skip />
+    <string name="permlab_accessAdServicesAdSelection" msgid="672819511145374384">"存取 AdServices Ad Selection API"</string>
+    <string name="permdesc_accessAdServicesAdSelection" msgid="6095291420798129879">"允許應用程式存取 AdServices Ad Selection API。"</string>
+    <string name="permlab_accessAdServicesProtectedSignals" msgid="147489803040522247">"存取 AdServices Protected Signals API"</string>
+    <string name="permdesc_accessAdServicesProtectedSignals" msgid="2320760922272886523">"允許應用程式存取 AdServices Protected Signals API。"</string>
     <string name="permlab_accessAdServicesAdId" msgid="1615451959935917231">"AdID API 存取權"</string>
     <string name="permdesc_accessAdServicesAdId" msgid="6145143976659732220">"允許應用程式存取 AdID API。"</string>
     <string name="permlab_accessAdServicesConsent" msgid="4218463631288201212">"存取 AdServices Consent API"</string>
