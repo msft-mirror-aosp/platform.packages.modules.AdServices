@@ -24,14 +24,10 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="4553614196392171">"AdServices Attribution API များကို အပလီကေးရှင်းတစ်ခုအား သုံးခွင့်ပေးနိုင်သည်။"</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="4365562651019065480">"AdServices Custom Audience API သုံးခွင့်"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="6713089438953075862">"AdServices Custom Audience API ကို အပလီကေးရှင်းတစ်ခုအား သုံးခွင့်ပေးနိုင်သည်။"</string>
-    <!-- no translation found for permlab_accessAdServicesAdSelection (672819511145374384) -->
-    <skip />
-    <!-- no translation found for permdesc_accessAdServicesAdSelection (6095291420798129879) -->
-    <skip />
-    <!-- no translation found for permlab_accessAdServicesProtectedSignals (147489803040522247) -->
-    <skip />
-    <!-- no translation found for permdesc_accessAdServicesProtectedSignals (2320760922272886523) -->
-    <skip />
+    <string name="permlab_accessAdServicesAdSelection" msgid="672819511145374384">"AdServices Ad Selection API သုံးခွင့်"</string>
+    <string name="permdesc_accessAdServicesAdSelection" msgid="6095291420798129879">"AdServices Ad Selection API သုံးရန် အပလီကေးရှင်းကို ခွင့်ပြုသည်။"</string>
+    <string name="permlab_accessAdServicesProtectedSignals" msgid="147489803040522247">"AdServices Protected Signals API သုံးခွင့်"</string>
+    <string name="permdesc_accessAdServicesProtectedSignals" msgid="2320760922272886523">"AdServices Protected Signals API သုံးရန် အပလီကေးရှင်းကို ခွင့်ပြုသည်။"</string>
     <string name="permlab_accessAdServicesAdId" msgid="1615451959935917231">"AdId API သုံးခွင့်"</string>
     <string name="permdesc_accessAdServicesAdId" msgid="6145143976659732220">"အပလီကေးရှင်းကို ကြော်ငြာ AdId API သုံးခွင့်ပြုနိုင်သည်။"</string>
     <string name="permlab_accessAdServicesConsent" msgid="4218463631288201212">"AdServices Consent API သုံးခွင့်"</string>
