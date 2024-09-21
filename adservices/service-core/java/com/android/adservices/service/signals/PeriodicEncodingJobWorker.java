@@ -16,6 +16,9 @@
 
 package com.android.adservices.service.signals;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_FAILED_PER_BUYER_ENCODING;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS;
+
 import android.adservices.common.AdTechIdentifier;
 import android.content.Context;
 
@@ -28,6 +31,7 @@ import com.android.adservices.data.signals.EncoderLogicHandler;
 import com.android.adservices.data.signals.EncoderLogicMetadataDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -283,6 +287,10 @@ public final class PeriodicEncodingJobWorker {
                         (e) -> {
                             handleFailedPerBuyerEncoding(metadata);
                             encodingJobRunStatsLogger.addOneSignalEncodingFailures();
+                            ErrorLogUtil.e(
+                                    e,
+                                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_FAILED_PER_BUYER_ENCODING,
+                                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS);
                             return null;
                         },
                         mLightWeightExecutor);
