@@ -2051,6 +2051,11 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
         public boolean getPasExtendedMetricsEnabled() {
             return PAS_EXTENDED_METRICS_ENABLED_IN_TEST;
         }
+
+        @Override
+        public boolean getConsentNotificationDebugMode() {
+            return false;
+        }
     }
 
     public static class PersistAdSelectionResultRunnerTestFlagsForKAnon

@@ -24,12 +24,6 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
@@ -87,11 +81,10 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                                     + " PRIVACY_SANDBOX_API_TOPICS"
                                     + " PRIVACY_SANDBOX_API_PROTECTED_APP_SIGNALS")
                     .setSdkNames("1sdk")
-                    .setAttributionSourceRegistrationUrl(Arrays.asList("https://1test.com/source"))
-                    .setAttributionTriggerRegistrationUrl(
-                            Arrays.asList("https://1test.com/trigger"))
-                    .setAttributionReportingUrl(Arrays.asList("https://1test.com"))
-                    .setRemarketingResponseBasedRegistrationUrl(Arrays.asList("https://1test.com"))
+                    .setAttributionSourceRegistrationUrl(List.of("https://1test.com/source"))
+                    .setAttributionTriggerRegistrationUrl(List.of("https://1test.com/trigger"))
+                    .setAttributionReportingUrl(List.of("https://1test.com"))
+                    .setRemarketingResponseBasedRegistrationUrl(List.of("https://1test.com"))
                     .setEncryptionKeyUrl("https://1test.com/keys")
                     .build();
 
@@ -122,8 +115,8 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                             Arrays.asList(
                                     "https://2test.com/trigger",
                                     "https://2test.com/trigger/extra/path"))
-                    .setAttributionReportingUrl(Arrays.asList("https://2test.com"))
-                    .setRemarketingResponseBasedRegistrationUrl(Arrays.asList("https://2test.com"))
+                    .setAttributionReportingUrl(List.of("https://2test.com"))
+                    .setRemarketingResponseBasedRegistrationUrl(List.of("https://2test.com"))
                     .setEncryptionKeyUrl("https://2test.com/keys")
                     .build();
 
@@ -146,10 +139,9 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                     .setSdkNames("3sdk 31sdk")
                     .setAttributionSourceRegistrationUrl(
                             Arrays.asList("https://2test.com/source", "https://2test2.com/source"))
-                    .setAttributionTriggerRegistrationUrl(
-                            Arrays.asList("https://2test.com/trigger"))
-                    .setAttributionReportingUrl(Arrays.asList("https://2test.com"))
-                    .setRemarketingResponseBasedRegistrationUrl(Arrays.asList("https://2test.com"))
+                    .setAttributionTriggerRegistrationUrl(List.of("https://2test.com/trigger"))
+                    .setAttributionReportingUrl(List.of("https://2test.com"))
+                    .setRemarketingResponseBasedRegistrationUrl(List.of("https://2test.com"))
                     .setEncryptionKeyUrl("https://2test.com/keys")
                     .build();
 
@@ -172,9 +164,9 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                     .setSdkNames("4sdk 41sdk")
                     .setAttributionSourceRegistrationUrl(
                             Arrays.asList("https://4test.com", "https://prefix.test-prefix.com"))
-                    .setAttributionTriggerRegistrationUrl(Arrays.asList("https://4test.com"))
-                    .setAttributionReportingUrl(Arrays.asList("https://4test.com"))
-                    .setRemarketingResponseBasedRegistrationUrl(Arrays.asList("https://4test.com"))
+                    .setAttributionTriggerRegistrationUrl(List.of("https://4test.com"))
+                    .setAttributionReportingUrl(List.of("https://4test.com"))
+                    .setRemarketingResponseBasedRegistrationUrl(List.of("https://4test.com"))
                     .setEncryptionKeyUrl("https://4test.com/keys")
                     .build();
 
@@ -210,9 +202,8 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                             Arrays.asList(
                                     "https://us.5test.com/trigger",
                                     "https://port-test.5test3.com:443/trigger"))
-                    .setAttributionReportingUrl(Arrays.asList("https://us.5test.com"))
-                    .setRemarketingResponseBasedRegistrationUrl(
-                            Arrays.asList("https://us.5test.com"))
+                    .setAttributionReportingUrl(List.of("https://us.5test.com"))
+                    .setRemarketingResponseBasedRegistrationUrl(List.of("https://us.5test.com"))
                     .setEncryptionKeyUrl("https://us.5test.com/keys")
                     .build();
 
@@ -221,11 +212,10 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                     .setEnrollmentId("1")
                     .setEnrolledAPIs("PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING")
                     .setSdkNames("4sdk")
-                    .setAttributionSourceRegistrationUrl(Arrays.asList("https://4test.com/source"))
-                    .setAttributionTriggerRegistrationUrl(
-                            Arrays.asList("https://4test.com/trigger"))
-                    .setAttributionReportingUrl(Arrays.asList("https://4test.com"))
-                    .setRemarketingResponseBasedRegistrationUrl(Arrays.asList("https://4test.com"))
+                    .setAttributionSourceRegistrationUrl(List.of("https://4test.com/source"))
+                    .setAttributionTriggerRegistrationUrl(List.of("https://4test.com/trigger"))
+                    .setAttributionReportingUrl(List.of("https://4test.com"))
+                    .setRemarketingResponseBasedRegistrationUrl(List.of("https://4test.com"))
                     .setEncryptionKeyUrl("https://4test.com/keys")
                     .build();
 
@@ -234,10 +224,9 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                     .setEnrollmentId("6")
                     .setEnrolledAPIs("PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE")
                     .setSdkNames("6sdk")
-                    .setAttributionSourceRegistrationUrl(Arrays.asList("https://6test.com/source"))
-                    .setAttributionTriggerRegistrationUrl(
-                            Arrays.asList("https://6test.com/trigger"))
-                    .setAttributionReportingUrl(Arrays.asList("https://6test.com"))
+                    .setAttributionSourceRegistrationUrl(List.of("https://6test.com/source"))
+                    .setAttributionTriggerRegistrationUrl(List.of("https://6test.com/trigger"))
+                    .setAttributionReportingUrl(List.of("https://6test.com"))
                     .setRemarketingResponseBasedRegistrationUrl(
                             Arrays.asList(
                                     CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "")
@@ -254,7 +243,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
         when(mEnrollmentUtil.getBuildId()).thenReturn(1);
         mEnrollmentDao =
                 new EnrollmentDao(
-                        sContext,
+                        mContext,
                         mDbHelper,
                         mMockFlags,
                         mMockFlags.isEnableEnrollmentTestSeed(),
@@ -281,7 +270,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
         EnrollmentDao spyEnrollmentDao =
                 Mockito.spy(
                         new EnrollmentDao(
-                                sContext,
+                                mContext,
                                 mDbHelper,
                                 mMockFlags,
                                 mMockFlags.isEnableEnrollmentTestSeed(),
@@ -295,18 +284,18 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                         mDbHelper.getReadableDatabase(),
                         EnrollmentTables.EnrollmentDataContract.TABLE,
                         null);
-        assertNotEquals(count, 0);
+        assertThat(count).isNotEqualTo(0);
 
         // Check that seeded enrollments are in the table.
         EnrollmentData e = spyEnrollmentDao.getEnrollmentData("E1");
-        assertNotNull(e);
-        assertEquals(e.getSdkNames().get(0), "sdk1");
+        assertThat(e).isNotNull();
+        assertThat(e.getSdkNames().get(0)).isEqualTo("sdk1");
         EnrollmentData e2 = spyEnrollmentDao.getEnrollmentData("E2");
-        assertNotNull(e2);
-        assertEquals(e2.getSdkNames().get(0), "sdk2");
+        assertThat(e2).isNotNull();
+        assertThat(e2.getSdkNames().get(0)).isEqualTo("sdk2");
         EnrollmentData e3 = spyEnrollmentDao.getEnrollmentData("E3");
-        assertNotNull(e3);
-        assertEquals(e3.getSdkNames().get(0), "sdk3");
+        assertThat(e3).isNotNull();
+        assertThat(e3.getSdkNames().get(0)).isEqualTo("sdk3");
         spyEnrollmentDao.deleteAll();
     }
 
@@ -321,7 +310,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                         eq(1));
 
         EnrollmentData e = mEnrollmentDao.getEnrollmentData("1");
-        assertEquals(e, ENROLLMENT_DATA1);
+        assertThat(e).isEqualTo(ENROLLMENT_DATA1);
 
         mEnrollmentDao.delete("1");
         verify(mEnrollmentUtil, times(2))
@@ -332,7 +321,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                         eq(1));
 
         EnrollmentData e2 = mEnrollmentDao.getEnrollmentData("1");
-        assertNull(e2);
+        assertThat(e2).isNull();
     }
 
     @Test
@@ -344,7 +333,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                         mDbHelper.getReadableDatabase(),
                         EnrollmentTables.EnrollmentDataContract.TABLE,
                         null);
-        assertNotEquals(count, 0);
+        assertThat(count).isNotEqualTo(0);
         verify(mEnrollmentUtil, times(1))
                 .logEnrollmentDataStats(
                         eq(mLogger),
@@ -353,7 +342,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                         eq(1));
 
         // Delete the whole table
-        assertTrue(mEnrollmentDao.deleteAll());
+        assertThat(mEnrollmentDao.deleteAll()).isTrue();
         verify(mEnrollmentUtil, times(2))
                 .logEnrollmentDataStats(
                         eq(mLogger),
@@ -367,10 +356,10 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                         mDbHelper.getReadableDatabase(),
                         EnrollmentTables.EnrollmentDataContract.TABLE,
                         null);
-        assertEquals(count, 0);
+        assertThat(count).isEqualTo(0);
 
         // Check unseeded.
-        assertFalse(mEnrollmentDao.isSeeded());
+        assertThat(mEnrollmentDao.isSeeded()).isFalse();
     }
 
     @Test
@@ -385,7 +374,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
 
         EnrollmentDao enrollmentDao =
                 new EnrollmentDao(
-                        sContext,
+                        mContext,
                         helper,
                         mMockFlags,
                         mMockFlags.isEnableEnrollmentTestSeed(),
@@ -398,7 +387,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                 .thenThrow(SQLiteException.class);
 
         boolean result = enrollmentDao.deleteAll();
-        assertFalse(result);
+        assertThat(result).isFalse();
     }
 
     @Test
@@ -409,7 +398,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                         mDbHelper.getReadableDatabase(),
                         EnrollmentTables.EnrollmentDataContract.TABLE,
                         null);
-        assertNotEquals(0, count);
+        assertThat(count).isNotEqualTo(0);
 
         mEnrollmentDao.overwriteData(Arrays.asList(ENROLLMENT_DATA2, ENROLLMENT_DATA3));
         count =
@@ -417,14 +406,12 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                         mDbHelper.getReadableDatabase(),
                         EnrollmentTables.EnrollmentDataContract.TABLE,
                         null);
-        assertEquals(2, count);
-        assertNull(mEnrollmentDao.getEnrollmentData(ENROLLMENT_DATA1.getEnrollmentId()));
-        assertEquals(
-                mEnrollmentDao.getEnrollmentData(ENROLLMENT_DATA2.getEnrollmentId()),
-                ENROLLMENT_DATA2);
-        assertEquals(
-                mEnrollmentDao.getEnrollmentData(ENROLLMENT_DATA3.getEnrollmentId()),
-                ENROLLMENT_DATA3);
+        assertThat(count).isEqualTo(2);
+        assertThat(mEnrollmentDao.getEnrollmentData(ENROLLMENT_DATA1.getEnrollmentId())).isNull();
+        assertThat(mEnrollmentDao.getEnrollmentData(ENROLLMENT_DATA2.getEnrollmentId()))
+                .isEqualTo(ENROLLMENT_DATA2);
+        assertThat(mEnrollmentDao.getEnrollmentData(ENROLLMENT_DATA3.getEnrollmentId()))
+                .isEqualTo(ENROLLMENT_DATA3);
     }
 
     @Test
@@ -437,7 +424,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                         eq(true),
                         eq(1));
         EnrollmentData e = mEnrollmentDao.getEnrollmentData("1");
-        assertEquals(e, ENROLLMENT_DATA1);
+        assertThat(e).isEqualTo(ENROLLMENT_DATA1);
     }
 
     @Test
@@ -446,7 +433,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
         mEnrollmentDao.insert(ENROLLMENT_DATA2);
 
         List<EnrollmentData> enrollmentDataList = mEnrollmentDao.getAllEnrollmentData();
-        assertEquals(2, enrollmentDataList.size());
+        assertThat(enrollmentDataList).hasSize(2);
     }
 
     @Test
@@ -454,7 +441,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
         when(mMockFlags.isEnableEnrollmentTestSeed()).thenReturn(true);
         EnrollmentDao enrollmentDao =
                 new EnrollmentDao(
-                        sContext,
+                        mContext,
                         mDbHelper,
                         mMockFlags,
                         mMockFlags.isEnableEnrollmentTestSeed(),
@@ -463,7 +450,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
 
         for (EnrollmentData enrollmentData : PreEnrolledAdTechForTest.getList()) {
             EnrollmentData e = enrollmentDao.getEnrollmentData(enrollmentData.getEnrollmentId());
-            assertEquals(enrollmentData, e);
+            assertThat(e).isEqualTo(enrollmentData);
         }
         enrollmentDao.deleteAll();
     }
@@ -473,7 +460,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
         when(mMockFlags.isEnableEnrollmentTestSeed()).thenReturn(false);
         for (EnrollmentData enrollmentData : PreEnrolledAdTechForTest.getList()) {
             EnrollmentData e = mEnrollmentDao.getEnrollmentData(enrollmentData.getEnrollmentId());
-            assertNull(e);
+            assertThat(e).isNull();
         }
     }
 
@@ -508,11 +495,11 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://us.5test.com/trigger"));
 
-        assertEquals(e1, ENROLLMENT_DATA5);
-        assertEquals(e2, ENROLLMENT_DATA5);
-        assertEquals(e3, ENROLLMENT_DATA5);
-        assertEquals(e4, ENROLLMENT_DATA5);
-        assertEquals(e5, ENROLLMENT_DATA5);
+        assertThat(e1).isEqualTo(ENROLLMENT_DATA5);
+        assertThat(e2).isEqualTo(ENROLLMENT_DATA5);
+        assertThat(e3).isEqualTo(ENROLLMENT_DATA5);
+        assertThat(e4).isEqualTo(ENROLLMENT_DATA5);
+        assertThat(e5).isEqualTo(ENROLLMENT_DATA5);
         verify(mEnrollmentUtil, times(5))
                 .logEnrollmentDataStats(
                         eq(mLogger),
@@ -545,10 +532,10 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://5test3.com/source"));
 
-        assertEquals(e1, ENROLLMENT_DATA5);
-        assertEquals(e2, ENROLLMENT_DATA5);
-        assertEquals(e3, ENROLLMENT_DATA5);
-        assertEquals(e4, ENROLLMENT_DATA5);
+        assertThat(e1).isEqualTo(ENROLLMENT_DATA5);
+        assertThat(e2).isEqualTo(ENROLLMENT_DATA5);
+        assertThat(e3).isEqualTo(ENROLLMENT_DATA5);
+        assertThat(e4).isEqualTo(ENROLLMENT_DATA5);
         verify(mEnrollmentUtil, times(4))
                 .logEnrollmentDataStats(
                         eq(mLogger),
@@ -570,17 +557,17 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
         EnrollmentData e1 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://2test.com/source"));
-        assertEquals(e1, ENROLLMENT_DATA2);
+        assertThat(e1).isEqualTo(ENROLLMENT_DATA2);
 
         EnrollmentData e2 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://2test2.com/source"));
-        assertEquals(e2, ENROLLMENT_DATA2);
+        assertThat(e2).isEqualTo(ENROLLMENT_DATA2);
 
         EnrollmentData e3 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://2test.com/trigger"));
-        assertEquals(e3, ENROLLMENT_DATA2);
+        assertThat(e3).isEqualTo(ENROLLMENT_DATA2);
         verify(mEnrollmentUtil, times(3))
                 .logEnrollmentDataStats(
                         eq(mLogger),
@@ -602,17 +589,17 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
         EnrollmentData e1 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://prefix.2test.com/source"));
-        assertEquals(e1, ENROLLMENT_DATA2);
+        assertThat(e1).isEqualTo(ENROLLMENT_DATA2);
 
         EnrollmentData e2 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://prefix.2test2.com/source"));
-        assertEquals(e2, ENROLLMENT_DATA2);
+        assertThat(e2).isEqualTo(ENROLLMENT_DATA2);
 
         EnrollmentData e3 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://prefix.2test.com/trigger"));
-        assertEquals(e3, ENROLLMENT_DATA2);
+        assertThat(e3).isEqualTo(ENROLLMENT_DATA2);
         verify(mEnrollmentUtil, times(3))
                 .logEnrollmentDataStats(
                         eq(mLogger),
@@ -640,8 +627,8 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://2test.com/trigger"));
 
-        assertEquals(e1, ENROLLMENT_DATA2);
-        assertEquals(e2, ENROLLMENT_DATA2);
+        assertThat(e1).isEqualTo(ENROLLMENT_DATA2);
+        assertThat(e2).isEqualTo(ENROLLMENT_DATA2);
         verify(mEnrollmentUtil, times(2))
                 .logEnrollmentDataStats(
                         eq(mLogger),
@@ -664,19 +651,19 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
         EnrollmentData e =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://2test.com/so"));
-        assertEquals(e, ENROLLMENT_DATA2);
+        assertThat(e).isEqualTo(ENROLLMENT_DATA2);
         EnrollmentData e2 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://2test2.com/so"));
-        assertEquals(e2, ENROLLMENT_DATA2);
+        assertThat(e2).isEqualTo(ENROLLMENT_DATA2);
         EnrollmentData e3 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://2test.com/tri"));
-        assertEquals(e3, ENROLLMENT_DATA2);
+        assertThat(e3).isEqualTo(ENROLLMENT_DATA2);
         EnrollmentData e4 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://2test.com/trigger/extra"));
-        assertEquals(e4, ENROLLMENT_DATA2);
+        assertThat(e4).isEqualTo(ENROLLMENT_DATA2);
         verify(mEnrollmentUtil, times(4))
                 .logEnrollmentDataStats(
                         eq(mLogger),
@@ -699,22 +686,22 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
         EnrollmentData e1 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://2test.com/source/viewId/123"));
-        assertEquals(e1, ENROLLMENT_DATA2);
+        assertThat(e1).isEqualTo(ENROLLMENT_DATA2);
 
         EnrollmentData e2 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://2test2.com/source/viewId/123"));
-        assertEquals(e2, ENROLLMENT_DATA2);
+        assertThat(e2).isEqualTo(ENROLLMENT_DATA2);
 
         EnrollmentData e3 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://2test.com/trigger/clickId/123"));
-        assertEquals(e3, ENROLLMENT_DATA2);
+        assertThat(e3).isEqualTo(ENROLLMENT_DATA2);
 
         EnrollmentData e4 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://2test.com/trigger/extra/path/clickId/123"));
-        assertEquals(e4, ENROLLMENT_DATA2);
+        assertThat(e4).isEqualTo(ENROLLMENT_DATA2);
         verify(mEnrollmentUtil, times(4))
                 .logEnrollmentDataStats(
                         eq(mLogger),
@@ -737,17 +724,17 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
         EnrollmentData e1 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://4test.com/path"));
-        assertEquals(e1, ENROLLMENT_DATA4);
+        assertThat(e1).isEqualTo(ENROLLMENT_DATA4);
 
         EnrollmentData e2 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://prefix.test-prefix.com/path"));
-        assertEquals(e2, ENROLLMENT_DATA4);
+        assertThat(e2).isEqualTo(ENROLLMENT_DATA4);
 
         EnrollmentData e3 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://test-prefix.com/path"));
-        assertEquals(e3, ENROLLMENT_DATA4);
+        assertThat(e3).isEqualTo(ENROLLMENT_DATA4);
         verify(mEnrollmentUtil, times(3))
                 .logEnrollmentDataStats(
                         eq(mLogger),
@@ -765,11 +752,10 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                         .setEnrolledAPIs("PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING")
                         .setSdkNames("5sdk 51sdk")
                         .setAttributionSourceRegistrationUrl(
-                                Arrays.asList("https://prefix.test-prefix.com"))
-                        .setAttributionTriggerRegistrationUrl(Arrays.asList("https://5test.com"))
-                        .setAttributionReportingUrl(Arrays.asList("https://5test.com"))
-                        .setRemarketingResponseBasedRegistrationUrl(
-                                Arrays.asList("https://5test.com"))
+                                List.of("https://prefix.test-prefix.com"))
+                        .setAttributionTriggerRegistrationUrl(List.of("https://5test.com"))
+                        .setAttributionReportingUrl(List.of("https://5test.com"))
+                        .setRemarketingResponseBasedRegistrationUrl(List.of("https://5test.com"))
                         .setEncryptionKeyUrl("https://5test.com/keys")
                         .build();
         mEnrollmentDao.insert(data);
@@ -783,17 +769,17 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
         EnrollmentData e1 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://prefix.test-prefix.com"));
-        assertEquals(e1, data);
+        assertThat(e1).isEqualTo(data);
 
         EnrollmentData e2 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://another-prefix.prefix.test-prefix.com"));
-        assertEquals(e2, data);
+        assertThat(e2).isEqualTo(data);
 
         EnrollmentData e3 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://prefix.test-prefix.com/path"));
-        assertEquals(e3, data);
+        assertThat(e3).isEqualTo(data);
         verify(mEnrollmentUtil, times(3))
                 .logEnrollmentDataStats(
                         eq(mLogger),
@@ -812,10 +798,9 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                         .setSdkNames("4sdk 41sdk")
                         .setAttributionSourceRegistrationUrl(
                                 Arrays.asList("http://4test.com", "https://prefix.test-prefix.com"))
-                        .setAttributionTriggerRegistrationUrl(Arrays.asList("https://4test.com"))
-                        .setAttributionReportingUrl(Arrays.asList("https://4test.com"))
-                        .setRemarketingResponseBasedRegistrationUrl(
-                                Arrays.asList("https://4test.com"))
+                        .setAttributionTriggerRegistrationUrl(List.of("https://4test.com"))
+                        .setAttributionReportingUrl(List.of("https://4test.com"))
+                        .setRemarketingResponseBasedRegistrationUrl(List.of("https://4test.com"))
                         .setEncryptionKeyUrl("https://4test.com/keys")
                         .build();
         mEnrollmentDao.insert(data);
@@ -829,7 +814,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
         EnrollmentData e1 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://prefix.test-prefix.com"));
-        assertEquals(e1, data);
+        assertThat(e1).isEqualTo(data);
         verify(mEnrollmentUtil, times(1))
                 .logEnrollmentDataStats(
                         eq(mLogger),
@@ -852,12 +837,12 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
         EnrollmentData e =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://test-prefix.com"));
-        assertEquals(e, ENROLLMENT_DATA4);
+        assertThat(e).isEqualTo(ENROLLMENT_DATA4);
 
         EnrollmentData e1 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://other-prefix.test-prefix.com"));
-        assertEquals(e1, ENROLLMENT_DATA4);
+        assertThat(e1).isEqualTo(ENROLLMENT_DATA4);
         verify(mEnrollmentUtil, times(2))
                 .logEnrollmentDataStats(
                         eq(mLogger),
@@ -880,11 +865,11 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
         EnrollmentData e =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://abc2test.com/source"));
-        assertNull(e);
+        assertThat(e).isNull();
         EnrollmentData e1 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://abc2test.com/trigger"));
-        assertNull(e1);
+        assertThat(e1).isNull();
         verify(mEnrollmentUtil, times(2))
                 .logEnrollmentDataStats(
                         eq(mLogger),
@@ -907,11 +892,11 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
         EnrollmentData e =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("http://2test.com/source"));
-        assertNull(e);
+        assertThat(e).isNull();
         EnrollmentData e1 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("http://2test.com/trigger"));
-        assertNull(e1);
+        assertThat(e1).isNull();
         verify(mEnrollmentUtil, times(2))
                 .logEnrollmentDataStats(
                         eq(mLogger),
@@ -934,15 +919,15 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
         EnrollmentData e =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(Uri.parse("https://2test.co"));
 
-        assertNull(e);
+        assertThat(e).isNull();
         EnrollmentData e2 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://2test.co/source"));
-        assertNull(e2);
+        assertThat(e2).isNull();
         EnrollmentData e3 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://2test.co/trigger"));
-        assertNull(e3);
+        assertThat(e3).isNull();
         verify(mEnrollmentUtil, times(3))
                 .logEnrollmentDataStats(
                         eq(mLogger),
@@ -965,7 +950,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
         EnrollmentData e =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://4test.invalid"));
-        assertNull(e);
+        assertThat(e).isNull();
         verifyZeroInteractions(mLogger);
 
         EnrollmentData enrollmentData =
@@ -973,12 +958,11 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                         .setEnrollmentId("4")
                         .setEnrolledAPIs("PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING")
                         .setSdkNames("4sdk 41sdk")
-                        .setAttributionSourceRegistrationUrl(Arrays.asList("https://4test.invalid"))
-                        .setAttributionTriggerRegistrationUrl(
-                                Arrays.asList("https://4test.invalid"))
-                        .setAttributionReportingUrl(Arrays.asList("https://4test.invalid"))
+                        .setAttributionSourceRegistrationUrl(List.of("https://4test.invalid"))
+                        .setAttributionTriggerRegistrationUrl(List.of("https://4test.invalid"))
+                        .setAttributionReportingUrl(List.of("https://4test.invalid"))
                         .setRemarketingResponseBasedRegistrationUrl(
-                                Arrays.asList("https://4test.invalid"))
+                                List.of("https://4test.invalid"))
                         .setEncryptionKeyUrl("https://4test.invalid/keys")
                         .build();
         mEnrollmentDao.insert(enrollmentData);
@@ -992,7 +976,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
         EnrollmentData e1 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://4test.invalid"));
-        assertNull(e1);
+        assertThat(e1).isNull();
         verifyZeroInteractions(mLogger);
     }
 
@@ -1120,6 +1104,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
         Pair<AdTechIdentifier, EnrollmentData> enrollmentResult =
                 mEnrollmentDao.getEnrollmentDataForFledgeByMatchingAdTechIdentifier(exactMatchUri);
 
+        assertThat(enrollmentResult).isNotNull();
         assertWithMessage("Returned EnrollmentData")
                 .that(enrollmentResult.second)
                 .isEqualTo(ENROLLMENT_DATA_MULTIPLE_FLEDGE_RBR);
@@ -1153,6 +1138,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                 mEnrollmentDao.getEnrollmentDataForFledgeByMatchingAdTechIdentifier(
                         subdomainMatchUri);
 
+        assertThat(enrollmentResult).isNotNull();
         assertWithMessage("Returned EnrollmentData")
                 .that(enrollmentResult.second)
                 .isEqualTo(ENROLLMENT_DATA_MULTIPLE_FLEDGE_RBR);
@@ -1201,9 +1187,9 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                         eq(1));
 
         EnrollmentData e = mEnrollmentDao.getEnrollmentDataFromSdkName("2sdk");
-        assertEquals(e, ENROLLMENT_DATA2);
+        assertThat(e).isEqualTo(ENROLLMENT_DATA2);
         EnrollmentData e2 = mEnrollmentDao.getEnrollmentDataFromSdkName("anotherSdk");
-        assertEquals(e2, ENROLLMENT_DATA2);
+        assertThat(e2).isEqualTo(ENROLLMENT_DATA2);
         verify(mEnrollmentUtil, times(2))
                 .logEnrollmentDataStats(
                         eq(mLogger),
@@ -1221,7 +1207,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                         eq(1));
 
         EnrollmentData e3 = mEnrollmentDao.getEnrollmentDataFromSdkName("31sdk");
-        assertEquals(e3, ENROLLMENT_DATA3);
+        assertThat(e3).isEqualTo(ENROLLMENT_DATA3);
         verify(mEnrollmentUtil, times(3))
                 .logEnrollmentDataStats(
                         eq(mLogger),
@@ -1242,7 +1228,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                         eq(1));
 
         EnrollmentData e = mEnrollmentDao.getEnrollmentData("1");
-        assertEquals(ENROLLMENT_DATA1, e);
+        assertThat(e).isEqualTo(ENROLLMENT_DATA1);
 
         mEnrollmentDao.insert(DUPLICATE_ID_ENROLLMENT_DATA);
         verify(mEnrollmentUtil, times(2))
@@ -1253,7 +1239,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                         eq(1));
 
         e = mEnrollmentDao.getEnrollmentData("1");
-        assertEquals(DUPLICATE_ID_ENROLLMENT_DATA, e);
+        assertThat(e).isEqualTo(DUPLICATE_ID_ENROLLMENT_DATA);
     }
 
     @Test
@@ -1270,7 +1256,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                         eq(1));
 
         int enrollmentRecordsCount = mEnrollmentDao.getEnrollmentRecordCountForLogging();
-        assertEquals(enrollmentRecordsCount, 3);
+        assertThat(enrollmentRecordsCount).isEqualTo(3);
     }
 
     @Test
@@ -1280,14 +1266,14 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
         mEnrollmentDao.insert(ENROLLMENT_DATA3);
         when(mMockFlags.getEnrollmentEnableLimitedLogging()).thenReturn(true);
         int enrollmentRecordsCount = mEnrollmentDao.getEnrollmentRecordCountForLogging();
-        assertEquals(-2, enrollmentRecordsCount);
+        assertThat(enrollmentRecordsCount).isEqualTo(-2);
     }
 
     @Test
     public void testGetEnrollmentRecordsCountForLogging_databaseError() {
         EnrollmentDao enrollmentDao =
                 new EnrollmentDao(
-                        sContext,
+                        mContext,
                         mMockDbHelper,
                         mMockFlags,
                         mMockFlags.isEnableEnrollmentTestSeed(),
@@ -1299,7 +1285,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
         when(mMockFlags.getEnrollmentEnableLimitedLogging()).thenReturn(false);
         when(mMockDbHelper.safeGetWritableDatabase()).thenReturn(null);
         int enrollmentRecordsCount = enrollmentDao.getEnrollmentRecordCountForLogging();
-        assertEquals(-1, enrollmentRecordsCount);
+        assertThat(enrollmentRecordsCount).isEqualTo(-1);
     }
 
     @Test
@@ -1325,33 +1311,35 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
         mEnrollmentDao.insert(ENROLLMENT_DATA3);
         // Checking ENROLLMENT_DATA2
         EnrollmentData enrollmentData2 = mEnrollmentDao.getEnrollmentData("2");
+        assertThat(enrollmentData2).isNotNull();
 
         String enrolledAPIsString2 =
                 "PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING"
                         + " PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE";
-        assertEquals(enrolledAPIsString2, enrollmentData2.getEnrolledAPIsString());
+        assertThat(enrollmentData2.getEnrolledAPIsString()).isEqualTo(enrolledAPIsString2);
 
         List<PrivacySandboxApi> enrolledAPIs2 =
                 ImmutableList.of(
                         PrivacySandboxApi.PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE,
                         PrivacySandboxApi.PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING);
-        assertEquals(2, enrollmentData2.getEnrolledAPIs().size());
+        assertThat(enrollmentData2.getEnrolledAPIs()).hasSize(2);
         assertThat(enrollmentData2.getEnrolledAPIs()).containsExactlyElementsIn(enrolledAPIs2);
 
         // Checking ENROLLMENT_DATA3
         EnrollmentData enrollmentData3 = mEnrollmentDao.getEnrollmentData("3");
+        assertThat(enrollmentData3).isNotNull();
 
         String enrolledAPIsString3 =
                 "PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING PRIVACY_SANDBOX_API_TOPICS"
                         + " PRIVACY_SANDBOX_API_PRIVATE_AGGREGATION";
-        assertEquals(enrolledAPIsString3, enrollmentData3.getEnrolledAPIsString());
+        assertThat(enrollmentData3.getEnrolledAPIsString()).isEqualTo(enrolledAPIsString3);
 
         List<PrivacySandboxApi> enrolledAPIs3 =
                 ImmutableList.of(
                         PrivacySandboxApi.PRIVACY_SANDBOX_API_TOPICS,
                         PrivacySandboxApi.PRIVACY_SANDBOX_API_PRIVATE_AGGREGATION,
                         PrivacySandboxApi.PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING);
-        assertEquals(3, enrollmentData3.getEnrolledAPIs().size());
+        assertThat(enrollmentData3.getEnrolledAPIs()).hasSize(3);
         assertThat(enrollmentData3.getEnrolledAPIs()).containsExactlyElementsIn(enrolledAPIs3);
     }
 
@@ -1369,9 +1357,9 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
         Pair<AdTechIdentifier, EnrollmentData> paired =
                 mEnrollmentDao.getEnrollmentDataForPASByMatchingAdTechIdentifier(
                         Uri.parse("https://4test.com/"));
-
-        assertEquals(paired.first, AdTechIdentifier.fromString("4test.com"));
-        assertEquals(paired.second, ENROLLMENT_DATA4);
+        assertThat(paired).isNotNull();
+        assertThat(paired.first).isEqualTo(AdTechIdentifier.fromString("4test.com"));
+        assertThat(paired.second).isEqualTo(ENROLLMENT_DATA4);
     }
 
     @Test
@@ -1404,9 +1392,9 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
 
         Pair<AdTechIdentifier, EnrollmentData> enrollmentResult =
                 mEnrollmentDao.getEnrollmentDataForPASByMatchingAdTechIdentifier(subdomainMatchUri);
-
-        assertEquals(enrollmentResult.first, AdTechIdentifier.fromString("4test.com"));
-        assertEquals(enrollmentResult.second, ENROLLMENT_DATA4);
+        assertThat(enrollmentResult).isNotNull();
+        assertThat(enrollmentResult.first).isEqualTo(AdTechIdentifier.fromString("4test.com"));
+        assertThat(enrollmentResult.second).isEqualTo(ENROLLMENT_DATA4);
     }
 
     @Test
@@ -1452,7 +1440,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
         AdTechIdentifier adTechIdentifier = AdTechIdentifier.fromString("1test.com");
         EnrollmentData enrollmentResult =
                 mEnrollmentDao.getEnrollmentDataForPASByAdTechIdentifier(adTechIdentifier);
-        assertEquals(ENROLLMENT_DATA1, enrollmentResult);
+        assertThat(enrollmentResult).isEqualTo(ENROLLMENT_DATA1);
     }
 
     @Test
@@ -1467,7 +1455,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
         AdTechIdentifier adTechIdentifier = AdTechIdentifier.fromString("2test.com");
         EnrollmentData enrollmentResult =
                 mEnrollmentDao.getEnrollmentDataForPASByAdTechIdentifier(adTechIdentifier);
-        assertNull(enrollmentResult);
+        assertThat(enrollmentResult).isNull();
     }
 
     @Test
@@ -1568,7 +1556,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                         Uri.parse("https://abc.example.1test.com"),
                         PrivacySandboxApi.PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING);
 
-        assertEquals(ENROLLMENT_DATA1_API_BASED, enrollmentData);
+        assertThat(enrollmentData).isEqualTo(ENROLLMENT_DATA1_API_BASED);
         verify(mEnrollmentUtil, times(1))
                 .logEnrollmentDataStats(
                         eq(mLogger),
@@ -1591,7 +1579,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
         AdTechIdentifier adtechIdentifier = AdTechIdentifier.fromString("2test.com", false);
         EnrollmentData e =
                 mEnrollmentDao.getEnrollmentDataForFledgeByAdTechIdentifier(adtechIdentifier);
-        assertEquals(ENROLLMENT_DATA2_API_BASED, e);
+        assertThat(e).isEqualTo(ENROLLMENT_DATA2_API_BASED);
         verify(mEnrollmentUtil, times(1))
                 .logEnrollmentDataStats(
                         eq(mLogger),
@@ -1646,12 +1634,12 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
         EnrollmentData e1 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://2test.com/source"));
-        assertEquals(e1, ENROLLMENT_DATA2_API_BASED);
+        assertThat(e1).isEqualTo(ENROLLMENT_DATA2_API_BASED);
 
         EnrollmentData e2 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://2test.com/trigger"));
-        assertEquals(e2, ENROLLMENT_DATA2_API_BASED);
+        assertThat(e2).isEqualTo(ENROLLMENT_DATA2_API_BASED);
 
         verify(mEnrollmentUtil, times(2))
                 .logEnrollmentDataStats(
@@ -1675,12 +1663,12 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
         EnrollmentData e1 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://example.2test.com/source"));
-        assertEquals(e1, ENROLLMENT_DATA2_API_BASED);
+        assertThat(e1).isEqualTo(ENROLLMENT_DATA2_API_BASED);
 
         EnrollmentData e2 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://example.2test.com/trigger"));
-        assertEquals(e2, ENROLLMENT_DATA2_API_BASED);
+        assertThat(e2).isEqualTo(ENROLLMENT_DATA2_API_BASED);
 
         verify(mEnrollmentUtil, times(2))
                 .logEnrollmentDataStats(
@@ -1704,7 +1692,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
         EnrollmentData e1 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://3test.com/source"));
-        assertNull(e1);
+        assertThat(e1).isNull();
 
         verify(mEnrollmentUtil, times(1))
                 .logEnrollmentDataStats(
@@ -1728,7 +1716,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
         EnrollmentData e1 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://2TEST.com/source"));
-        assertEquals(e1, ENROLLMENT_DATA2_API_BASED);
+        assertThat(e1).isEqualTo(ENROLLMENT_DATA2_API_BASED);
 
         verify(mEnrollmentUtil, times(1))
                 .logEnrollmentDataStats(
@@ -1752,7 +1740,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
         EnrollmentData e1 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://localhost:8383"));
-        assertEquals(e1, ENROLLMENT_DATA_LOCAL_API_BASED);
+        assertThat(e1).isEqualTo(ENROLLMENT_DATA_LOCAL_API_BASED);
 
         verify(mEnrollmentUtil, times(1))
                 .logEnrollmentDataStats(
@@ -1782,7 +1770,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                         eq(1));
         EnrollmentData e1 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(Uri.parse("https://prefix.com"));
-        assertNull(e1);
+        assertThat(e1).isNull();
     }
 
     @Test
@@ -1805,7 +1793,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
         EnrollmentData e1 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://prefix_host.com"));
-        assertNull(e1);
+        assertThat(e1).isNull();
     }
 
     @Test
@@ -1829,7 +1817,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
         EnrollmentData e1 =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://my_prefix.site.com "));
-        assertNull(e1);
+        assertThat(e1).isNull();
     }
 
     @Test
@@ -1840,6 +1828,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
         Pair<AdTechIdentifier, EnrollmentData> enrollmentResult =
                 mEnrollmentDao.getEnrollmentDataForFledgeByMatchingAdTechIdentifier(
                         Uri.parse("https://example.2test.com/path/to/resource"));
+        assertThat(enrollmentResult).isNotNull();
         assertWithMessage("Returned EnrollmentData")
                 .that(enrollmentResult.second)
                 .isEqualTo(ENROLLMENT_DATA2);
@@ -1853,6 +1842,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
         Pair<AdTechIdentifier, EnrollmentData> enrollmentResultAPIBased =
                 mEnrollmentDao.getEnrollmentDataForFledgeByMatchingAdTechIdentifier(
                         Uri.parse("https://example.2test.com/path/to/resource"));
+        assertThat(enrollmentResultAPIBased).isNotNull();
         assertWithMessage("Returned EnrollmentData")
                 .that(enrollmentResultAPIBased.second)
                 .isEqualTo(ENROLLMENT_DATA2_API_BASED);
@@ -1883,6 +1873,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
         Pair<AdTechIdentifier, EnrollmentData> enrollmentResultAPIBased =
                 mEnrollmentDao.getEnrollmentDataForFledgeByMatchingAdTechIdentifier(
                         Uri.parse("https://example.4test.com/path/to/resource"));
+        assertThat(enrollmentResultAPIBased).isNotNull();
         assertWithMessage("Returned EnrollmentData")
                 .that(enrollmentResultAPIBased.second)
                 .isEqualTo(ENROLLMENT_DATA4_API_BASED);
@@ -1896,6 +1887,7 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
         Pair<AdTechIdentifier, EnrollmentData> enrollmentResult =
                 mEnrollmentDao.getEnrollmentDataForFledgeByMatchingAdTechIdentifier(
                         Uri.parse("https://example.4test.com/path/to/resource"));
+        assertThat(enrollmentResult).isNotNull();
         assertWithMessage("Returned EnrollmentData")
                 .that(enrollmentResult.second)
                 .isEqualTo(ENROLLMENT_DATA4);

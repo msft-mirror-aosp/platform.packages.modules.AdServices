@@ -24,6 +24,8 @@ import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOT
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_BACKGROUND_FETCH_COMPLETE_BROADCAST_ENABLED;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_BACKGROUND_KEY_FETCH_COMPLETE_BROADCAST_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_SCHEDULE_CA_COMPLETE_BROADCAST_ENABLED;
@@ -72,6 +74,14 @@ public final class DebugFlags extends CommonDebugFlags {
 
     /** Default value for sending a broadcast when schedule custom audience is completed. */
     @VisibleForTesting static final boolean DEFAULT_SCHEDULE_CA_COMPLETE_BROADCAST_ENABLED = false;
+
+    /** Default value for sending a broadcast when schedule custom audience is completed. */
+    @VisibleForTesting
+    static final boolean DEFAULT_FLEDGE_BACKGROUND_FETCH_COMPLETE_BROADCAST_ENABLED = false;
+
+    /** Default value for sending a broadcast when background key fetch is completed. */
+    @VisibleForTesting
+    static final boolean DEFAULT_FLEDGE_BACKGROUND_KEY_FETCH_COMPLETE_BROADCAST_ENABLED = false;
 
     static final boolean CONSENT_NOTIFICATION_DEBUG_MODE = false;
     static final boolean CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE = false;
@@ -160,6 +170,20 @@ public final class DebugFlags extends CommonDebugFlags {
         return getBoolean(
                 KEY_FLEDGE_SCHEDULE_CA_COMPLETE_BROADCAST_ENABLED,
                 DEFAULT_SCHEDULE_CA_COMPLETE_BROADCAST_ENABLED);
+    }
+
+    /** Returns whether sending a broadcast when background fetch job is completed is enabled. */
+    public boolean getFledgeBackgroundFetchCompleteBroadcastEnabled() {
+        return getBoolean(
+                KEY_FLEDGE_BACKGROUND_FETCH_COMPLETE_BROADCAST_ENABLED,
+                DEFAULT_FLEDGE_BACKGROUND_FETCH_COMPLETE_BROADCAST_ENABLED);
+    }
+
+    /** Returns whether sending a broadcast when Background Key Fetch completed is enabled. */
+    public boolean getFledgeBackgroundKeyFetchCompleteBroadcastEnabled() {
+        return getBoolean(
+                KEY_FLEDGE_BACKGROUND_KEY_FETCH_COMPLETE_BROADCAST_ENABLED,
+                DEFAULT_FLEDGE_BACKGROUND_KEY_FETCH_COMPLETE_BROADCAST_ENABLED);
     }
 
     /**

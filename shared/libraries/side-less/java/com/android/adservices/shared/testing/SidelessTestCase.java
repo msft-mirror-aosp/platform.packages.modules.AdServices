@@ -178,7 +178,6 @@ public abstract class SidelessTestCase implements TestNamer {
                 .fail();
     }
 
-    @Nullable
     private boolean iHaveThisField(String name) {
         try {
             Field field = getClass().getDeclaredField(name);

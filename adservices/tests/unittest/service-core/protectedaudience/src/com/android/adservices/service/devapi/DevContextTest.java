@@ -36,9 +36,12 @@ public final class DevContextTest extends AdServicesUnitTestCase {
                 builder.setCallingAppPackageName(PKG_NAME).setDeviceDevOptionsEnabled(true).build();
 
         assertWithMessage("builder.build()").that(devContext).isNotNull();
-        expect.withMessage("devContext.getDevOptionsEnabled()")
+        expect.withMessage("devContext.getDeviceDevOptionsEnabled()")
                 .that(devContext.getDeviceDevOptionsEnabled())
                 .isTrue();
+        expect.withMessage("devContext.getDevSessionActive()")
+                .that(devContext.getDevSessionActive())
+                .isFalse();
         expect.withMessage("devContext.getCallingAppPackageName()")
                 .that(devContext.getCallingAppPackageName())
                 .isEqualTo(PKG_NAME);
@@ -54,11 +57,15 @@ public final class DevContextTest extends AdServicesUnitTestCase {
         DevContext.Builder builder = DevContext.builder(PKG_NAME);
         assertWithMessage("builder(%s)", PKG_NAME).that(builder).isNotNull();
 
-        DevContext devContext = builder.setDeviceDevOptionsEnabled(true).build();
+        DevContext devContext =
+                builder.setDeviceDevOptionsEnabled(true).setDevSessionActive(true).build();
 
         assertWithMessage("builder.build()").that(devContext).isNotNull();
         expect.withMessage("devContext.getDevOptionsEnabled()")
                 .that(devContext.getDeviceDevOptionsEnabled())
+                .isTrue();
+        expect.withMessage("devContext.getDevSessionActive()")
+                .that(devContext.getDevSessionActive())
                 .isTrue();
         expect.withMessage("devContext.getCallingAppPackageName()")
                 .that(devContext.getCallingAppPackageName())

@@ -85,7 +85,9 @@ public final class ApplicationContextSingleton {
         }
     }
 
-    // TODO(b/285300419): make it package protected so it's only accessed by rule
+    // TODO(b/285300419): make it package protected so it's only accessed by rule - would need to
+    // move the rule to this package, which currently would be a pain (as all testing artifacts
+    // are under c.a.a.shared.testing packages)
     /**
      * Gets the application context, returning {@code null} if it's not set yet.
      *

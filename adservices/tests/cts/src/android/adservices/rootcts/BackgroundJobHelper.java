@@ -85,9 +85,26 @@ public final class BackgroundJobHelper {
     boolean runJobWithBroadcastIntent(int jobId, String intentActionToWait) throws Exception {
         runScheduleJobCommand(jobId);
         BroadcastReceiverSyncCallback callback =
-                new BroadcastReceiverSyncCallback(mContext, intentActionToWait);
+                new BroadcastReceiverSyncCallback(mContext, intentActionToWait, 31_000);
         callback.assertResultReceived();
         return true;
+    }
+
+    /**
+     * Runs the adservices background job with the given job ID. This method runs the background job
+     * and then waits till it receives the broadcast intent indicating the completion of the
+     * background job. This method takes timeout as an argument.
+     *
+     * @param jobId ID of the job to run.
+     * @param intentActionToWait Expected intent action.
+     * @param timeoutMs timeout in milliseconds
+     */
+    void runJobWithBroadcastIntentWithTimeout(int jobId, String intentActionToWait, long timeoutMs)
+            throws Exception {
+        runScheduleJobCommand(jobId);
+        BroadcastReceiverSyncCallback callback =
+                new BroadcastReceiverSyncCallback(mContext, intentActionToWait, timeoutMs);
+        callback.assertResultReceived();
     }
 
     private void runScheduleJobCommand(int jobId) {
@@ -96,5 +113,18 @@ public final class BackgroundJobHelper {
 
     private boolean isJobPending(int jobId) {
         return !Objects.isNull(mJobScheduler.getPendingJob(jobId));
+    }
+
+    /**
+     * This method checks whether background job with the given jobId is scheduled.
+     *
+     * @param jobId jobId for the background job service in the adservices packages
+     * @return true if the Background job is scheduled, false otherwise.
+     */
+    public boolean isJobScheduled(int jobId) {
+        String outputMessages =
+                ShellUtils.runShellCommand(
+                        "cmd jobscheduler get-job-state -u 0  %s %s", PACKAGE, jobId);
+        return outputMessages.contains("waiting");
     }
 }
