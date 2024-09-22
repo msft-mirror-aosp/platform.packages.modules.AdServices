@@ -75,6 +75,8 @@ public final class AdServicesManager {
         mService = Objects.requireNonNull(service, "IAdServicesManager cannot be null!");
     }
 
+    // TODO(b/366313883): remove context once it's moved to AdServices service
+    // code (so it can use ApplicationContextSingleton)
     /**
      * Gets the singleton instance.
      *

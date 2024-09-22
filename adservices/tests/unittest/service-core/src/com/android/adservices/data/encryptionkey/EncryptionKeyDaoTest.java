@@ -16,18 +16,15 @@
 
 package com.android.adservices.data.encryptionkey;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import android.content.Context;
 import android.net.Uri;
 
-import androidx.test.core.app.ApplicationProvider;
-
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.data.shared.SharedDbHelper;
 import com.android.adservices.service.encryptionkey.EncryptionKey;
@@ -48,13 +45,12 @@ import org.mockito.MockitoAnnotations;
 import java.util.Arrays;
 import java.util.List;
 
-public class EncryptionKeyDaoTest {
+public final class EncryptionKeyDaoTest extends AdServicesUnitTestCase {
 
     @Rule
     public final TestableDeviceConfig.TestableDeviceConfigRule mDeviceConfigRule =
             new TestableDeviceConfig.TestableDeviceConfigRule();
 
-    protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private SharedDbHelper mDbHelper;
     private EncryptionKeyDao mEncryptionKeyDao;
     @Mock private AdServicesLogger mAdServicesLogger;
@@ -184,21 +180,21 @@ public class EncryptionKeyDaoTest {
         verify(mAdServicesLogger).logEncryptionKeyDbTransactionEndedStats(eq(stats));
 
         List<EncryptionKey> encryptionKeys = mEncryptionKeyDao.getAllEncryptionKeys();
-        assertEquals(1, encryptionKeys.size());
-        assertEquals(ENCRYPTION_KEY1, encryptionKeys.get(0));
+        assertThat(encryptionKeys).hasSize(1);
+        assertThat(encryptionKeys.get(0)).isEqualTo(ENCRYPTION_KEY1);
     }
 
     @Test
     public void testInsertExistingEncryptionKey() {
-        assertTrue(mEncryptionKeyDao.insert(ENCRYPTION_KEY1));
-        assertTrue(mEncryptionKeyDao.insert(DUPLICATE_ENCRYPTION_KEY1));
-        assertEquals(1, mEncryptionKeyDao.getAllEncryptionKeys().size());
+        assertThat(mEncryptionKeyDao.insert(ENCRYPTION_KEY1)).isTrue();
+        assertThat(mEncryptionKeyDao.insert(DUPLICATE_ENCRYPTION_KEY1)).isTrue();
+        assertThat(mEncryptionKeyDao.getAllEncryptionKeys()).hasSize(1);
         EncryptionKey encryptionKey =
                 mEncryptionKeyDao.getEncryptionKeyFromEnrollmentIdAndKeyCommitmentId(
                         DUPLICATE_ENCRYPTION_KEY1.getEnrollmentId(),
                         DUPLICATE_ENCRYPTION_KEY1.getKeyCommitmentId());
-        assertNotNull(encryptionKey);
-        assertEquals("1111", encryptionKey.getId());
+        assertThat(encryptionKey).isNotNull();
+        assertThat(encryptionKey.getId()).isEqualTo("1111");
 
         AdServicesEncryptionKeyDbTransactionEndedStats insertStats =
                 AdServicesEncryptionKeyDbTransactionEndedStats.builder()
@@ -223,7 +219,7 @@ public class EncryptionKeyDaoTest {
     public void testInsertInvalidEncryptionKey() {
         mEncryptionKeyDao.insert(INVALID_KEY);
         List<EncryptionKey> encryptionKeyList = mEncryptionKeyDao.getAllEncryptionKeys();
-        assertEquals(0, encryptionKeyList.size());
+        assertThat(encryptionKeyList).hasSize(0);
 
         AdServicesEncryptionKeyDbTransactionEndedStats stats =
                 AdServicesEncryptionKeyDbTransactionEndedStats.builder()
@@ -239,7 +235,7 @@ public class EncryptionKeyDaoTest {
         List<EncryptionKey> encryptionKeyList = Arrays.asList(ENCRYPTION_KEY1, SIGNING_KEY1);
         mEncryptionKeyDao.insert(encryptionKeyList);
 
-        assertEquals(2, mEncryptionKeyDao.getAllEncryptionKeys().size());
+        assertThat(mEncryptionKeyDao.getAllEncryptionKeys()).hasSize(2);
         AdServicesEncryptionKeyDbTransactionEndedStats stats =
                 AdServicesEncryptionKeyDbTransactionEndedStats.builder()
                         .setDbTransactionType(DbTransactionType.WRITE_TRANSACTION_TYPE)
@@ -257,7 +253,7 @@ public class EncryptionKeyDaoTest {
         mEncryptionKeyDao.insert(SIGNING_KEY2);
         mEncryptionKeyDao.insert(ENCRYPTION_KEY2);
         List<EncryptionKey> encryptionKeyList = mEncryptionKeyDao.getAllEncryptionKeys();
-        assertEquals(4, encryptionKeyList.size());
+        assertThat(encryptionKeyList).hasSize(4);
 
         AdServicesEncryptionKeyDbTransactionEndedStats stats =
                 AdServicesEncryptionKeyDbTransactionEndedStats.builder()
@@ -273,12 +269,12 @@ public class EncryptionKeyDaoTest {
     public void testDelete() {
         mEncryptionKeyDao.insert(ENCRYPTION_KEY1);
         List<EncryptionKey> encryptionKeyList = mEncryptionKeyDao.getAllEncryptionKeys();
-        assertEquals(1, encryptionKeyList.size());
+        assertThat(encryptionKeyList).hasSize(1);
 
         String id = encryptionKeyList.get(0).getId();
         mEncryptionKeyDao.delete(id);
         List<EncryptionKey> emptyList = mEncryptionKeyDao.getAllEncryptionKeys();
-        assertEquals(0, emptyList.size());
+        assertThat(emptyList).hasSize(0);
 
         AdServicesEncryptionKeyDbTransactionEndedStats stats =
                 AdServicesEncryptionKeyDbTransactionEndedStats.builder()
@@ -298,8 +294,8 @@ public class EncryptionKeyDaoTest {
 
         List<EncryptionKey> encryptionKeyList =
                 mEncryptionKeyDao.getEncryptionKeyFromEnrollmentId("100");
-        assertNotNull(encryptionKeyList);
-        assertEquals(3, encryptionKeyList.size());
+        assertThat(encryptionKeyList).isNotNull();
+        assertThat(encryptionKeyList).hasSize(3);
 
         AdServicesEncryptionKeyDbTransactionEndedStats stats =
                 AdServicesEncryptionKeyDbTransactionEndedStats.builder()
@@ -320,20 +316,20 @@ public class EncryptionKeyDaoTest {
         List<EncryptionKey> encryptionKeyList =
                 mEncryptionKeyDao.getEncryptionKeyFromEnrollmentIdAndKeyType(
                         "100", EncryptionKey.KeyType.ENCRYPTION);
-        assertNotNull(encryptionKeyList);
-        assertEquals(1, encryptionKeyList.size());
+        assertThat(encryptionKeyList).isNotNull();
+        assertThat(encryptionKeyList).hasSize(1);
         EncryptionKey encryptionKey = encryptionKeyList.get(0);
-        assertEquals("1", encryptionKey.getId());
-        assertEquals(EncryptionKey.ProtocolType.HPKE, encryptionKey.getProtocolType());
-        assertEquals(11, encryptionKey.getKeyCommitmentId());
-        assertEquals("AVZBTFVF", encryptionKey.getBody());
-        assertEquals(100001L, encryptionKey.getExpiration());
-        assertEquals(100001L, encryptionKey.getLastFetchTime());
+        expect.that(encryptionKey.getId()).isEqualTo("1");
+        expect.that(encryptionKey.getProtocolType()).isEqualTo(EncryptionKey.ProtocolType.HPKE);
+        expect.that(encryptionKey.getKeyCommitmentId()).isEqualTo(11);
+        expect.that(encryptionKey.getBody()).isEqualTo("AVZBTFVF");
+        expect.that(encryptionKey.getExpiration()).isEqualTo(100001L);
+        expect.that(encryptionKey.getLastFetchTime()).isEqualTo(100001L);
 
         List<EncryptionKey> signingKeyList =
                 mEncryptionKeyDao.getEncryptionKeyFromEnrollmentIdAndKeyType(
                         "100", EncryptionKey.KeyType.SIGNING);
-        assertNotNull(signingKeyList);
+        assertThat(signingKeyList).isNotNull();
         assertSigningKeyListResult(signingKeyList);
 
         AdServicesEncryptionKeyDbTransactionEndedStats stats =
@@ -354,13 +350,13 @@ public class EncryptionKeyDaoTest {
                 mEncryptionKeyDao.getEncryptionKeyFromEnrollmentIdAndKeyCommitmentId(
                         ENCRYPTION_KEY1.getEnrollmentId(), ENCRYPTION_KEY1.getKeyCommitmentId());
 
-        assertNotNull(encryptionKey);
-        assertEquals("1", encryptionKey.getId());
-        assertEquals(EncryptionKey.ProtocolType.HPKE, encryptionKey.getProtocolType());
-        assertEquals(11, encryptionKey.getKeyCommitmentId());
-        assertEquals("AVZBTFVF", encryptionKey.getBody());
-        assertEquals(100001L, encryptionKey.getExpiration());
-        assertEquals(100001L, encryptionKey.getLastFetchTime());
+        assertThat(encryptionKey).isNotNull();
+        expect.that(encryptionKey.getId()).isEqualTo("1");
+        expect.that(encryptionKey.getProtocolType()).isEqualTo(EncryptionKey.ProtocolType.HPKE);
+        expect.that(encryptionKey.getKeyCommitmentId()).isEqualTo(11);
+        expect.that(encryptionKey.getBody()).isEqualTo("AVZBTFVF");
+        expect.that(encryptionKey.getExpiration()).isEqualTo(100001L);
+        expect.that(encryptionKey.getLastFetchTime()).isEqualTo(100001L);
 
         AdServicesEncryptionKeyDbTransactionEndedStats signingKeyStats =
                 AdServicesEncryptionKeyDbTransactionEndedStats.builder()
@@ -381,21 +377,21 @@ public class EncryptionKeyDaoTest {
         List<EncryptionKey> signingKeyList =
                 mEncryptionKeyDao.getEncryptionKeyFromReportingOrigin(
                         Uri.parse("https://test1.com"), EncryptionKey.KeyType.SIGNING);
-        assertNotNull(signingKeyList);
+        assertThat(signingKeyList).isNotNull();
         assertSigningKeyListResult(signingKeyList);
 
         List<EncryptionKey> encryptionKeyList =
                 mEncryptionKeyDao.getEncryptionKeyFromReportingOrigin(
                         Uri.parse("https://test2.com"), EncryptionKey.KeyType.ENCRYPTION);
-        assertNotNull(encryptionKeyList);
-        assertEquals(1, encryptionKeyList.size());
+        assertThat(encryptionKeyList).isNotNull();
+        assertThat(encryptionKeyList).hasSize(1);
         EncryptionKey encryptionKey = encryptionKeyList.get(0);
-        assertEquals("4", encryptionKey.getId());
-        assertEquals(EncryptionKey.ProtocolType.HPKE, encryptionKey.getProtocolType());
-        assertEquals(14, encryptionKey.getKeyCommitmentId());
-        assertEquals("DVZBTFVF", encryptionKey.getBody());
-        assertEquals(100004L, encryptionKey.getExpiration());
-        assertEquals(100004L, encryptionKey.getLastFetchTime());
+        expect.that(encryptionKey.getId()).isEqualTo("4");
+        expect.that(encryptionKey.getProtocolType()).isEqualTo(EncryptionKey.ProtocolType.HPKE);
+        expect.that(encryptionKey.getKeyCommitmentId()).isEqualTo(14);
+        expect.that(encryptionKey.getBody()).isEqualTo("DVZBTFVF");
+        expect.that(encryptionKey.getExpiration()).isEqualTo(100004L);
+        expect.that(encryptionKey.getLastFetchTime()).isEqualTo(100004L);
 
         AdServicesEncryptionKeyDbTransactionEndedStats signingKeyStats =
                 AdServicesEncryptionKeyDbTransactionEndedStats.builder()
@@ -408,19 +404,19 @@ public class EncryptionKeyDaoTest {
     }
 
     private void assertSigningKeyListResult(List<EncryptionKey> signingKeyList) {
-        assertEquals(2, signingKeyList.size());
+        assertThat(signingKeyList).hasSize(2);
         EncryptionKey signingKey1 = signingKeyList.get(0);
-        assertEquals(EncryptionKey.ProtocolType.ECDSA, signingKey1.getProtocolType());
-        assertEquals(12, signingKey1.getKeyCommitmentId());
-        assertEquals("BVZBTFVF", signingKey1.getBody());
-        assertEquals(100002L, signingKey1.getExpiration());
-        assertEquals(100002L, signingKey1.getLastFetchTime());
+        expect.that(signingKey1.getProtocolType()).isEqualTo(EncryptionKey.ProtocolType.ECDSA);
+        expect.that(signingKey1.getKeyCommitmentId()).isEqualTo(12);
+        expect.that(signingKey1.getBody()).isEqualTo("BVZBTFVF");
+        expect.that(signingKey1.getExpiration()).isEqualTo(100002L);
+        expect.that(signingKey1.getLastFetchTime()).isEqualTo(100002L);
 
         EncryptionKey signingKey2 = signingKeyList.get(1);
-        assertEquals(EncryptionKey.ProtocolType.ECDSA, signingKey2.getProtocolType());
-        assertEquals(13, signingKey2.getKeyCommitmentId());
-        assertEquals("CVZBTFVF", signingKey2.getBody());
-        assertEquals(100003L, signingKey2.getExpiration());
-        assertEquals(100003L, signingKey2.getLastFetchTime());
+        expect.that(signingKey2.getProtocolType()).isEqualTo(EncryptionKey.ProtocolType.ECDSA);
+        expect.that(signingKey2.getKeyCommitmentId()).isEqualTo(13);
+        expect.that(signingKey2.getBody()).isEqualTo("CVZBTFVF");
+        expect.that(signingKey2.getExpiration()).isEqualTo(100003L);
+        expect.that(signingKey2.getLastFetchTime()).isEqualTo(100003L);
     }
 }

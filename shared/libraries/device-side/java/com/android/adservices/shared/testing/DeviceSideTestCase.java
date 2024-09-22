@@ -198,6 +198,7 @@ public abstract class DeviceSideTestCase extends SidelessTestCase {
 
         // Listed below are existing names for the extended mockito session on test classes that
         // don't use the rule / superclass:
+        // TODO(b/368153625): should check for type instead
         testInstance.assertTestClassHasNoSuchField(
                 "mStaticMockSession", REASON_SESSION_MANAGED_BY_RULE);
         testInstance.assertTestClassHasNoSuchField(

@@ -341,6 +341,9 @@ public class FetchCustomAudienceImpl {
                                                         API_NAME,
                                                         FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
                                                         devContext);
+                                sLogger.d(
+                                        "Buyer extracted by Custom Audience Service Filter is: %s",
+                                        mBuyer);
                             } catch (Throwable t) {
                                 throw new FilterException(t);
                             }

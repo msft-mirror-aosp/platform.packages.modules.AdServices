@@ -47,9 +47,15 @@ public final class DeviceConfigShellCmdImpl implements DeviceConfig {
             return;
         }
 
-        mGateway.runShellCommand(
-                "%s set_sync_disabled_for_tests %s",
-                CMD_DEVICE_CONFIG, mode.name().toString().toLowerCase());
+        ShellCommandInput input =
+                new ShellCommandInput(
+                        "%s set_sync_disabled_for_tests %s",
+                        CMD_DEVICE_CONFIG, mode.getShellCommandString());
+        ShellCommandOutput output = mGateway.runShellCommandRwe(input);
+
+        if (!output.getOut().isEmpty() || !output.getErr().isEmpty()) {
+            throw new InvalidShellCommandResultException(input, output);
+        }
     }
 
     @Override
@@ -66,27 +72,15 @@ public final class DeviceConfigShellCmdImpl implements DeviceConfig {
                 sdkLevel.isAtLeast(Level.T)
                         ? "get_sync_disabled_for_tests"
                         : "is_sync_disabled_for_tests";
+        ShellCommandInput input = new ShellCommandInput("%s %s", CMD_DEVICE_CONFIG, subCmd);
+        ShellCommandOutput output = mGateway.runShellCommandRwe(input);
 
         String result = null;
         try {
-            result = mGateway.runShellCommand("%s %s", CMD_DEVICE_CONFIG, subCmd);
+            result = output.getOut();
             return DeviceConfig.SyncDisabledModeForTest.valueOf(result.toUpperCase(Locale.ENGLISH));
         } catch (Exception e) {
-            mLog.e(
-                    e,
-                    "getSyncDisabledMode(): failed to parse result (%s) of %s sub-command (%s) on"
-                            + " device with SDK level %d",
-                    result,
-                    CMD_DEVICE_CONFIG,
-                    subCmd,
-                    sdkLevel.getLevel());
-            throw new IllegalStateException(
-                    "'"
-                            + CMD_DEVICE_CONFIG
-                            + " "
-                            + subCmd
-                            + "' returned unexpected result: "
-                            + result);
+            throw new InvalidShellCommandResultException(input, output);
         }
     }
 }

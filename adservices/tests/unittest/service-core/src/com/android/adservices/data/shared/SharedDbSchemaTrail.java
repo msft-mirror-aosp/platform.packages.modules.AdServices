@@ -34,7 +34,7 @@ import java.util.Map;
  * entries will cause creation of method {@code getCreateStatementByTableVx}, where the previous
  * version's (x-1) scripts will be revised to create scripts for version x.
  */
-public class SharedDbSchemaTrail {
+public final class SharedDbSchemaTrail {
     private static final String CREATE_TABLE_ENROLLMENT_V1 =
             "CREATE TABLE "
                     + EnrollmentTables.EnrollmentDataContract.TABLE

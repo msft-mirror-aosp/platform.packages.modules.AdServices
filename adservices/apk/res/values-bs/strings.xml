@@ -24,6 +24,10 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="4553614196392171">"Dozvoljava aplikaciji da pristupi AdServices Attribution API-ovima."</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="4365562651019065480">"pristup AdServices Custom Audience API-ju"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="6713089438953075862">"Dozvoljava aplikaciji da pristupi AdServices Custom Audience API-ju."</string>
+    <string name="permlab_accessAdServicesAdSelection" msgid="672819511145374384">"pristup AdServices Ad Selection API-ju"</string>
+    <string name="permdesc_accessAdServicesAdSelection" msgid="6095291420798129879">"Dozvoljava aplikaciji da pristupa AdServices Ad Selection API-ju."</string>
+    <string name="permlab_accessAdServicesProtectedSignals" msgid="147489803040522247">"pristup AdServices Protected Signals API-ju"</string>
+    <string name="permdesc_accessAdServicesProtectedSignals" msgid="2320760922272886523">"Dozvoljava aplikaciji da pristupa AdServices Protected Signals API-ju."</string>
     <string name="permlab_accessAdServicesAdId" msgid="1615451959935917231">"Pristup API-ju ID-a za oglašavanje"</string>
     <string name="permdesc_accessAdServicesAdId" msgid="6145143976659732220">"Dozvoljava aplikaciji pristup API-ju ID-a za oglašavanje."</string>
     <string name="permlab_accessAdServicesConsent" msgid="4218463631288201212">"pristupite AdServices Consent API-ju"</string>
