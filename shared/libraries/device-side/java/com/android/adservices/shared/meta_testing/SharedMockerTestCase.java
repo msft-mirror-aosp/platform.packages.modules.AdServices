@@ -40,6 +40,8 @@ public abstract class SharedMockerTestCase<T extends SharedMocker> extends Devic
         assertWithMessage("getMocker()").that(getMocker()).isNotNull();
     }
 
+    // TODO(b/285300419): use ApplicationContextSingleton rule / helper instead?
+    @SuppressWarnings("VisibleForTests")
     @Test
     public final void testSetApplicationContextSingleton() {
         Context contextBefore = ApplicationContextSingleton.getForTests();

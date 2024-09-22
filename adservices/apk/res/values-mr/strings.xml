@@ -24,6 +24,10 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="4553614196392171">"अ‍ॅप्लिकेशनला AdServices Attribution API अ‍ॅक्सेस करण्याची अनुमती देते."</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="4365562651019065480">"AdServices Custom Audience API अ‍ॅक्सेस करा"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="6713089438953075862">"अ‍ॅप्लिकेशनला AdServices Custom Audience API अ‍ॅक्सेस करण्याची अनुमती देते."</string>
+    <string name="permlab_accessAdServicesAdSelection" msgid="672819511145374384">"AdServices Ad Selection API ॲक्सेस करा"</string>
+    <string name="permdesc_accessAdServicesAdSelection" msgid="6095291420798129879">"ॲप्लिकेशनला AdServices Ad Selection API ॲक्सेस करण्याची अनुमती देते."</string>
+    <string name="permlab_accessAdServicesProtectedSignals" msgid="147489803040522247">"AdServices Protected Signals API ॲक्सेस करा"</string>
+    <string name="permdesc_accessAdServicesProtectedSignals" msgid="2320760922272886523">"ॲप्लिकेशनला AdServices Protected Signals API ॲक्सेस करण्याची अनुमती देते."</string>
     <string name="permlab_accessAdServicesAdId" msgid="1615451959935917231">"AdId API चा अ‍ॅक्सेस"</string>
     <string name="permdesc_accessAdServicesAdId" msgid="6145143976659732220">"अ‍ॅप्लिकेशनला AdId API अ‍ॅक्सेस करण्याची अनुमती देते."</string>
     <string name="permlab_accessAdServicesConsent" msgid="4218463631288201212">"AdServices Consent API अ‍ॅक्सेस करणे"</string>

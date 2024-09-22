@@ -588,7 +588,7 @@ public class AsyncSourceFetcher {
         if (mFlags.getMeasurementEnableAggregateDebugReporting()
                 && !json.isNull(SourceHeaderContract.AGGREGATABLE_DEBUG_REPORTING)) {
             Optional<String> validAggregateDebugReporting =
-                    FetcherUtil.getValidAggregateDebugReportingString(
+                    FetcherUtil.getValidAggregateDebugReportingWithBudget(
                             json.getJSONObject(SourceHeaderContract.AGGREGATABLE_DEBUG_REPORTING),
                             mFlags);
             if (validAggregateDebugReporting.isPresent()) {

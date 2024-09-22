@@ -27,6 +27,7 @@ import android.adservices.common.AdData;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudience;
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.util.Pair;
 
@@ -45,6 +46,7 @@ import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBPartialCustomAudience;
 import com.android.adservices.data.customaudience.DBScheduledCustomAudienceUpdate;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
@@ -58,6 +60,7 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpClientResp
 import com.android.adservices.service.common.httpclient.AdServicesHttpUtil;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ExecutionSequencer;
@@ -81,11 +84,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class ScheduledUpdatesHandler {
+public final class ScheduledUpdatesHandler {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
     public static final String JOIN_CUSTOM_AUDIENCE_KEY = "join";
     public static final String LEAVE_CUSTOM_AUDIENCE_KEY = "leave";
+    private static final String ACTION_SCHEDULE_CA_COMPLETE_INTENT =
+            "ACTION_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_FINISHED";
     public static final Duration STALE_DELAYED_UPDATE_AGE = Duration.of(24, ChronoUnit.HOURS);
     public static final String FUSED_CUSTOM_AUDIENCE_INCOMPLETE_MESSAGE =
             "Fused custom audience is incomplete.";
@@ -258,7 +263,12 @@ public class ScheduledUpdatesHandler {
                             mBackgroundExecutor));
         }
         return FluentFuture.from(Futures.successfulAsList(handledUpdates))
-                .transform(ignored -> null, mLightWeightExecutor);
+                .transform(
+                        ignored -> {
+                            sendBroadcastIntentIfEnabled();
+                            return null;
+                        },
+                        mLightWeightExecutor);
     }
 
     private FluentFuture<Void> handleSingleUpdate(
@@ -551,5 +561,15 @@ public class ScheduledUpdatesHandler {
             currentKeySet.remove(PRIORITY_KEY);
         }
         return currentKeySet.size() == expectedKeysSet.size();
+    }
+
+    private void sendBroadcastIntentIfEnabled() {
+        if (DebugFlags.getInstance().getFledgeScheduleCACompleteBroadcastEnabled()) {
+            Context context = ApplicationContextSingleton.get();
+            sLogger.d(
+                    "Sending a broadcast intent with intent action: %s",
+                    ACTION_SCHEDULE_CA_COMPLETE_INTENT);
+            context.sendBroadcast(new Intent(ACTION_SCHEDULE_CA_COMPLETE_INTENT));
+        }
     }
 }
