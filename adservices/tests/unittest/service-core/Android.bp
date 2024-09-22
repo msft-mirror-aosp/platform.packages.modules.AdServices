@@ -174,7 +174,7 @@ android_test {
         "android.test.mock.stubs",
         "framework-adservices.impl",
         "framework-annotations-lib",
-        "framework-wifi",
+        "framework-wifi.stubs.module_lib",
     ],
     test_suites: [
         "general-tests",
@@ -395,7 +395,7 @@ android_test {
         "android.test.mock.stubs",
         "framework-adservices.impl",
         "framework-annotations-lib",
-        "framework-wifi",
+        "framework-wifi.stubs.module_lib",
     ],
     test_suites: [
         "general-tests",
