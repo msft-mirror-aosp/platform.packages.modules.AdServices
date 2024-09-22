@@ -431,5 +431,10 @@ public class AppInstallAdvertisersSetterTest {
         public boolean getFledgeAppInstallFilteringEnabled() {
             return mAppInstallFilteringEnabled;
         }
+
+        @Override
+        public boolean getConsentNotificationDebugMode() {
+            return false;
+        }
     }
 }

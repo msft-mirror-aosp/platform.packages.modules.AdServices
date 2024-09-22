@@ -52,6 +52,8 @@ public final class ShellCommandStats {
     public static final int COMMAND_RESET_CONSENT_DATA =
             AdServicesStatsLog
                     .AD_SERVICES_SHELL_COMMAND_CALLED__COMMAND__COMMAND_RESET_CONSENT_DATA;
+    public static final int COMMAND_DEV_SESSION =
+            AdServicesStatsLog.AD_SERVICES_SHELL_COMMAND_CALLED__COMMAND__COMMAND_DEV_SESSION;
 
     public static final int COMMAND_CUSTOM_AUDIENCE_VIEW =
             AdServicesStatsLog
@@ -102,6 +104,7 @@ public final class ShellCommandStats {
         COMMAND_IS_ALLOWED_TOPICS_ACCESS,
         COMMAND_ENABLE_ADSERVICES,
         COMMAND_RESET_CONSENT_DATA,
+        COMMAND_DEV_SESSION,
 
         // Custom audience commands
         COMMAND_CUSTOM_AUDIENCE_VIEW,

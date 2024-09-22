@@ -18,6 +18,7 @@ package com.android.adservices.ui.notifications;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_DEBUG_UX;
 import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_UX_ENABLED;
 import static com.android.adservices.ui.util.ApkTestUtil.getString;
 import static com.android.adservices.ui.util.NotificationActivityTestUtil.WINDOW_LAUNCH_TIMEOUT;
 
@@ -50,8 +51,10 @@ public final class NotificationActivityGAV2UiAutomatorTest extends AdServicesUiT
     public final AdServicesFlagsSetterRule flags =
             AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
                     .setCompatModeFlags()
+                    .setAllLogcatTags()
                     .setDebugFlag(KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE, true)
                     .setFlag(KEY_GA_UX_FEATURE_ENABLED, true)
+                    .setFlag(KEY_PAS_UX_ENABLED, false)
                     .setFlag(KEY_DEBUG_UX, "GA_UX");
 
     @BeforeClass
