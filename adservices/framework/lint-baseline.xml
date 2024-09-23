@@ -135,12 +135,23 @@
 
     <issue
         id="FlaggedApi"
+        message="Method `getSellerConfiguration()` is a flagged API and should be inside an `if (Flags.fledgeGetAdSelectionDataSellerConfigurationEnabled())` check (or annotate the surrounding method `getAdSelectionData` with `@FlaggedApi(Flags.FLAG_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED) to transfer requirement to caller`)"
+        errorLine1="                            .setSellerConfiguration(request.getSellerConfiguration())"
+        errorLine2="                                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/AdSelectionManager.java"
+            line="241"
+            column="53"/>
+    </issue>
+
+    <issue
+        id="FlaggedApi"
         message="Field `ACCESS_ADSERVICES_PROTECTED_SIGNALS` is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `persistAdSelectionResult` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
         errorLine1="                ACCESS_ADSERVICES_PROTECTED_SIGNALS,"
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/AdSelectionManager.java"
-            line="321"
+            line="322"
             column="17"/>
     </issue>
 
@@ -151,7 +162,7 @@
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/AdSelectionManager.java"
-            line="322"
+            line="323"
             column="17"/>
     </issue>
 
@@ -160,17 +171,6 @@
         message="Field `ACCESS_ADSERVICES_PROTECTED_SIGNALS` is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `selectAds` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
         errorLine1="                ACCESS_ADSERVICES_PROTECTED_SIGNALS,"
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/AdSelectionManager.java"
-            line="427"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Field `ACCESS_ADSERVICES_AD_SELECTION` is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `selectAds` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                ACCESS_ADSERVICES_AD_SELECTION"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/AdSelectionManager.java"
             line="428"
@@ -179,12 +179,23 @@
 
     <issue
         id="FlaggedApi"
+        message="Field `ACCESS_ADSERVICES_AD_SELECTION` is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `selectAds` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
+        errorLine1="                ACCESS_ADSERVICES_AD_SELECTION"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/AdSelectionManager.java"
+            line="429"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="FlaggedApi"
         message="Field `ACCESS_ADSERVICES_PROTECTED_SIGNALS` is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `selectAds` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
         errorLine1="                ACCESS_ADSERVICES_PROTECTED_SIGNALS,"
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/AdSelectionManager.java"
-            line="537"
+            line="538"
             column="17"/>
     </issue>
 
@@ -195,7 +206,7 @@
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/AdSelectionManager.java"
-            line="538"
+            line="539"
             column="17"/>
     </issue>
 
@@ -206,7 +217,7 @@
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/AdSelectionManager.java"
-            line="677"
+            line="678"
             column="17"/>
     </issue>
 
@@ -217,7 +228,7 @@
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/AdSelectionManager.java"
-            line="678"
+            line="679"
             column="17"/>
     </issue>
 
@@ -228,7 +239,7 @@
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/AdSelectionManager.java"
-            line="756"
+            line="757"
             column="17"/>
     </issue>
 
@@ -239,7 +250,7 @@
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/AdSelectionManager.java"
-            line="757"
+            line="758"
             column="17"/>
     </issue>
 
@@ -250,7 +261,7 @@
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/AdSelectionManager.java"
-            line="836"
+            line="837"
             column="17"/>
     </issue>
 
@@ -261,7 +272,7 @@
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/AdSelectionManager.java"
-            line="837"
+            line="838"
             column="17"/>
     </issue>
 
@@ -272,7 +283,7 @@
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/AdSelectionManager.java"
-            line="911"
+            line="912"
             column="17"/>
     </issue>
 
@@ -283,7 +294,7 @@
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/AdSelectionManager.java"
-            line="912"
+            line="913"
             column="17"/>
     </issue>
 
@@ -305,7 +316,7 @@
         errorLine2="        ^">
         <location
             file="packages/modules/AdServices/adservices/framework/java/android/adservices/common/AdServicesCommonManager.java"
-            line="120"
+            line="123"
             column="9"/>
     </issue>
 
@@ -316,7 +327,7 @@
         errorLine2="        ^">
         <location
             file="packages/modules/AdServices/adservices/framework/java/android/adservices/common/AdServicesCommonManager.java"
-            line="223"
+            line="226"
             column="9"/>
     </issue>
 
@@ -327,7 +338,7 @@
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/framework/java/android/adservices/AdServicesFrameworkInitializer.java"
-            line="97"
+            line="99"
             column="17"/>
     </issue>
 
@@ -338,7 +349,7 @@
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/framework/java/android/adservices/AdServicesFrameworkInitializer.java"
-            line="98"
+            line="100"
             column="17"/>
     </issue>
 
@@ -349,7 +360,7 @@
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/framework/java/android/adservices/AdServicesFrameworkInitializer.java"
-            line="99"
+            line="101"
             column="17"/>
     </issue>
 
@@ -360,7 +371,7 @@
         errorLine2="                        ~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/framework/java/android/adservices/AdServicesFrameworkInitializer.java"
-            line="103"
+            line="105"
             column="25"/>
     </issue>
 
@@ -371,7 +382,7 @@
         errorLine2="                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/framework/java/android/adservices/AdServicesFrameworkInitializer.java"
-            line="104"
+            line="106"
             column="43"/>
     </issue>
 
@@ -382,7 +393,7 @@
         errorLine2="                                            ~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/framework/java/android/adservices/AdServicesFrameworkInitializer.java"
-            line="104"
+            line="106"
             column="45"/>
     </issue>
 
@@ -415,7 +426,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/framework/java/android/adservices/customaudience/CustomAudience.java"
-            line="59"
+            line="62"
             column="13"/>
     </issue>
 
@@ -426,7 +437,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/framework/java/android/adservices/customaudience/CustomAudience.java"
-            line="59"
+            line="62"
             column="13"/>
     </issue>
 
@@ -437,7 +448,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/framework/java/android/adservices/customaudience/CustomAudience.java"
-            line="351"
+            line="354"
             column="13"/>
     </issue>
 
@@ -448,7 +459,7 @@
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/framework/java/android/adservices/customaudience/CustomAudience.java"
-            line="549"
+            line="552"
             column="17"/>
     </issue>
 
@@ -536,7 +547,7 @@
         errorLine2="                                                                                   ~~~~~~~">
         <location
             file="packages/modules/AdServices/adservices/framework/java/android/adservices/customaudience/ScheduleCustomAudienceUpdateInput.java"
-            line="75"
+            line="77"
             column="84"/>
     </issue>
 
@@ -783,762 +794,80 @@
     </issue>
 
     <issue
-        id="FlaggedApi"
-        message="Field `CREATOR` is a flagged API and should be inside an `if (Flags.fledgeAdSelectionFilteringEnabled())` check (or annotate the surrounding method `AdFilters` with `@FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                        in, AppInstallFilters.CREATOR::createFromParcel);"
-        errorLine2="                                              ~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/common/AdFilters.java"
-            line="81"
-            column="47"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Method `getSizeInBytes()` is a flagged API and should be inside an `if (Flags.fledgeAdSelectionFilteringEnabled())` check (or annotate the surrounding method `getSizeInBytes` with `@FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED) to transfer requirement to caller`)"
-        errorLine1="            size += mAppInstallFilters.getSizeInBytes();"
-        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/common/AdFilters.java"
-            line="117"
-            column="21"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Method `toJson()` is a flagged API and should be inside an `if (Flags.fledgeAdSelectionFilteringEnabled())` check (or annotate the surrounding method `toJson` with `@FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED) to transfer requirement to caller`)"
-        errorLine1="            toReturn.put(APP_INSTALL_FIELD_NAME, mAppInstallFilters.toJson());"
-        errorLine2="                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/common/AdFilters.java"
-            line="134"
-            column="50"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Method `setAppInstallFilters()` is a flagged API and should be inside an `if (Flags.fledgeAdSelectionFilteringEnabled())` check (or annotate the surrounding method `fromJson` with `@FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED) to transfer requirement to caller`)"
-        errorLine1="            builder.setAppInstallFilters("
-        errorLine2="            ^">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/common/AdFilters.java"
-            line="154"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Method `fromJson()` is a flagged API and should be inside an `if (Flags.fledgeAdSelectionFilteringEnabled())` check (or annotate the surrounding method `fromJson` with `@FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                    AppInstallFilters.fromJson(json.getJSONObject(APP_INSTALL_FIELD_NAME)));"
-        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/common/AdFilters.java"
-            line="155"
-            column="21"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Method `writeToParcel()` is a flagged API and should be inside an `if (Flags.fledgeAdSelectionFilteringEnabled())` check (or annotate the surrounding method `writeToParcel` with `@FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                (targetParcel, sourceFilters) -> sourceFilters.writeToParcel(targetParcel, flags));"
-        errorLine2="                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/common/AdFilters.java"
-            line="171"
-            column="50"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Class `SignedContextualAds` is a flagged API and should be inside an `if (Flags.fledgeAdSelectionFilteringEnabled())` check (or annotate the surrounding method `AdSelectionConfig` with `@FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                        in, AdTechIdentifier::fromString, SignedContextualAds.class);"
-        errorLine2="                                                          ~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/AdSelectionConfig.java"
-            line="119"
-            column="59"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Method `setPerBuyerSignedContextualAds()` is a flagged API and should be inside an `if (Flags.fledgeAdSelectionFilteringEnabled())` check (or annotate the surrounding method `cloneToBuilder` with `@FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED) to transfer requirement to caller`)"
-        errorLine1="        return new AdSelectionConfig.Builder()"
-        errorLine2="               ^">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/AdSelectionConfig.java"
-            line="176"
-            column="16"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Method `getPerBuyerSignedContextualAds()` is a flagged API and should be inside an `if (Flags.fledgeAdSelectionFilteringEnabled())` check (or annotate the surrounding method `cloneToBuilder` with `@FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                .setPerBuyerSignedContextualAds(this.getPerBuyerSignedContextualAds())"
-        errorLine2="                                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/AdSelectionConfig.java"
-            line="178"
-            column="49"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Field `ACCESS_ADSERVICES_PROTECTED_SIGNALS` is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `getAdSelectionData` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                ACCESS_ADSERVICES_PROTECTED_SIGNALS,"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/AdSelectionManager.java"
-            line="225"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Field `ACCESS_ADSERVICES_AD_SELECTION` is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `getAdSelectionData` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                ACCESS_ADSERVICES_AD_SELECTION"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/AdSelectionManager.java"
-            line="226"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Method `getCoordinatorOriginUri()` is a flagged API and should be inside an `if (Flags.fledgeServerAuctionMultiCloudEnabled())` check (or annotate the surrounding method `getAdSelectionData` with `@FlaggedApi(Flags.FLAG_FLEDGE_SERVER_AUCTION_MULTI_CLOUD_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                            .setCoordinatorOriginUri(request.getCoordinatorOriginUri())"
-        errorLine2="                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/AdSelectionManager.java"
-            line="241"
-            column="54"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Field `ACCESS_ADSERVICES_PROTECTED_SIGNALS` is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `persistAdSelectionResult` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                ACCESS_ADSERVICES_PROTECTED_SIGNALS,"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/AdSelectionManager.java"
-            line="322"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Field `ACCESS_ADSERVICES_AD_SELECTION` is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `persistAdSelectionResult` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                ACCESS_ADSERVICES_AD_SELECTION"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/AdSelectionManager.java"
-            line="323"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Field `ACCESS_ADSERVICES_PROTECTED_SIGNALS` is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `selectAds` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                ACCESS_ADSERVICES_PROTECTED_SIGNALS,"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/AdSelectionManager.java"
-            line="428"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Field `ACCESS_ADSERVICES_AD_SELECTION` is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `selectAds` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                ACCESS_ADSERVICES_AD_SELECTION"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/AdSelectionManager.java"
-            line="429"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Field `ACCESS_ADSERVICES_PROTECTED_SIGNALS` is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `selectAds` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                ACCESS_ADSERVICES_PROTECTED_SIGNALS,"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/AdSelectionManager.java"
-            line="538"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Field `ACCESS_ADSERVICES_AD_SELECTION` is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `selectAds` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                ACCESS_ADSERVICES_AD_SELECTION"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/AdSelectionManager.java"
-            line="539"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Field `ACCESS_ADSERVICES_PROTECTED_SIGNALS` is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `reportImpression` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                ACCESS_ADSERVICES_PROTECTED_SIGNALS,"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/AdSelectionManager.java"
-            line="678"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Field `ACCESS_ADSERVICES_AD_SELECTION` is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `reportImpression` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                ACCESS_ADSERVICES_AD_SELECTION"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/AdSelectionManager.java"
-            line="679"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Field `ACCESS_ADSERVICES_PROTECTED_SIGNALS` is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `reportEvent` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                ACCESS_ADSERVICES_PROTECTED_SIGNALS,"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/AdSelectionManager.java"
-            line="757"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Field `ACCESS_ADSERVICES_AD_SELECTION` is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `reportEvent` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                ACCESS_ADSERVICES_AD_SELECTION"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/AdSelectionManager.java"
-            line="758"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Field `ACCESS_ADSERVICES_PROTECTED_SIGNALS` is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `setAppInstallAdvertisers` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                ACCESS_ADSERVICES_PROTECTED_SIGNALS,"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/AdSelectionManager.java"
-            line="837"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Field `ACCESS_ADSERVICES_AD_SELECTION` is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `setAppInstallAdvertisers` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                ACCESS_ADSERVICES_AD_SELECTION"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/AdSelectionManager.java"
-            line="838"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Field `ACCESS_ADSERVICES_PROTECTED_SIGNALS` is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `updateAdCounterHistogram` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                ACCESS_ADSERVICES_PROTECTED_SIGNALS,"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/AdSelectionManager.java"
-            line="912"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Field `ACCESS_ADSERVICES_AD_SELECTION` is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `updateAdCounterHistogram` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                ACCESS_ADSERVICES_AD_SELECTION"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/AdSelectionManager.java"
-            line="913"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Field `SERVICE_INTERFACE` is a flagged API and should be inside an `if (Flags.adextDataServiceApisEnabled())` check (or annotate the surrounding method `?` with `@FlaggedApi(Flags.FLAG_ADEXT_DATA_SERVICE_APIS_ENABLED) to transfer requirement to caller`)"
-        errorLine1="            AdServicesExtDataStorageService.SERVICE_INTERFACE;"
-        errorLine2="                                            ~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/com/android/adservices/AdServicesCommon.java"
-            line="72"
-            column="45"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Method `isAdServicesEnabled()` is a flagged API and should be inside an `if (Flags.adservicesEnablementCheckEnabled())` check (or annotate the surrounding method `isAdServicesEnabled` with `@FlaggedApi(Flags.FLAG_ADSERVICES_ENABLEMENT_CHECK_ENABLED) to transfer requirement to caller`)"
-        errorLine1="        isAdServicesEnabled("
-        errorLine2="        ^">
+        id="MissingPermissionAnnotation"
+        message="onResult should be annotated with either @EnforcePermission, @RequiresNoPermission or @PermissionManuallyEnforced."
+        errorLine1="                        @Override"
+        errorLine2="                        ^">
         <location
             file="packages/modules/AdServices/adservices/framework/java/android/adservices/common/AdServicesCommonManager.java"
-            line="120"
-            column="9"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Method `enableAdServices()` is a flagged API and should be inside an `if (Flags.enableAdservicesApiEnabled())` check (or annotate the surrounding method `enableAdServices` with `@FlaggedApi(Flags.FLAG_ENABLE_ADSERVICES_API_ENABLED) to transfer requirement to caller`)"
-        errorLine1="        enableAdServices("
-        errorLine2="        ^">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/common/AdServicesCommonManager.java"
-            line="223"
-            column="9"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Field `PROTECTED_SIGNALS_SERVICE` is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `registerServiceWrappers` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                PROTECTED_SIGNALS_SERVICE,"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/AdServicesFrameworkInitializer.java"
-            line="97"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Class `ProtectedSignalsManager` is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `registerServiceWrappers` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                ProtectedSignalsManager.class,"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/AdServicesFrameworkInitializer.java"
-            line="98"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Method `ProtectedSignalsManager()` is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `registerServiceWrappers` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                ProtectedSignalsManager::new);"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/AdServicesFrameworkInitializer.java"
-            line="99"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Field `PROTECTED_SIGNALS_SERVICE` is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `registerServiceWrappers` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                        PROTECTED_SIGNALS_SERVICE,"
-        errorLine2="                        ~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/AdServicesFrameworkInitializer.java"
-            line="103"
+            line="297"
             column="25"/>
     </issue>
 
     <issue
-        id="FlaggedApi"
-        message="Method `initialize()` is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `registerServiceWrappers` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                        (service, ctx) -> ((ProtectedSignalsManager) service).initialize(ctx));"
-        errorLine2="                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        id="MissingPermissionAnnotation"
+        message="onFailure should be annotated with either @EnforcePermission, @RequiresNoPermission or @PermissionManuallyEnforced."
+        errorLine1="                        @Override"
+        errorLine2="                        ^">
         <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/AdServicesFrameworkInitializer.java"
-            line="104"
-            column="43"/>
+            file="packages/modules/AdServices/adservices/framework/java/android/adservices/common/AdServicesCommonManager.java"
+            line="303"
+            column="25"/>
     </issue>
 
     <issue
-        id="FlaggedApi"
-        message="This is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `registerServiceWrappers` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                        (service, ctx) -> ((ProtectedSignalsManager) service).initialize(ctx));"
-        errorLine2="                                            ~~~~~~~~~~~~~~~~~~~~~~~">
+        id="MissingPermissionAnnotation"
+        message="onResult should be annotated with either @EnforcePermission, @RequiresNoPermission or @PermissionManuallyEnforced."
+        errorLine1="                        @Override"
+        errorLine2="                        ^">
         <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/AdServicesFrameworkInitializer.java"
-            line="104"
-            column="45"/>
+            file="packages/modules/AdServices/adservices/framework/java/android/adservices/common/AdServicesCommonManager.java"
+            line="345"
+            column="25"/>
     </issue>
 
     <issue
-        id="FlaggedApi"
-        message="Method `AddAdSelectionOverrideRequest()` is a flagged API and should be inside an `if (Flags.fledgeAdSelectionFilteringEnabled())` check (or annotate the surrounding method `AddAdSelectionOverrideRequest` with `@FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED) to transfer requirement to caller`)"
-        errorLine1="        this("
-        errorLine2="        ^">
+        id="MissingPermissionAnnotation"
+        message="onFailure should be annotated with either @EnforcePermission, @RequiresNoPermission or @PermissionManuallyEnforced."
+        errorLine1="                        @Override"
+        errorLine2="                        ^">
         <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/AddAdSelectionOverrideRequest.java"
-            line="88"
-            column="9"/>
+            file="packages/modules/AdServices/adservices/framework/java/android/adservices/common/AdServicesCommonManager.java"
+            line="351"
+            column="25"/>
     </issue>
 
     <issue
-        id="FlaggedApi"
-        message="Field `EMPTY` is a flagged API and should be inside an `if (Flags.fledgeAdSelectionFilteringEnabled())` check (or annotate the surrounding method `AddAdSelectionOverrideRequest` with `@FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                PerBuyerDecisionLogic.EMPTY);"
-        errorLine2="                                      ~~~~~">
+        id="AvoidSystemPropertiesUsage"
+        message="DO NOT USE android.os.SystemProperties methods. Use DebugFlags&#xA;(service-core/java/com/android/adservices/service/DebugFlags.java) instead."
+        errorLine1="            String propValue = SystemProperties.get(SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_RAM_LOW);"
+        errorLine2="                                                ~~~">
         <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/AddAdSelectionOverrideRequest.java"
-            line="92"
-            column="39"/>
+            file="packages/modules/AdServices/adservices/framework/java/com/android/adservices/AndroidServiceBinder.java"
+            line="103"
+            column="49"/>
     </issue>
 
     <issue
-        id="FlaggedApi"
-        message="@FlaggedApi should specify an actual flag constant; raw strings are discouraged (and more importantly, **not enforced**)"
-        errorLine1="            &quot;com.android.adservices.flags.fledge_custom_audience_auction_server_request_flags_enabled&quot;)"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        id="AvoidSystemPropertiesUsage"
+        message="DO NOT USE android.os.SystemProperties methods. Use DebugFlags&#xA;(service-core/java/com/android/adservices/service/DebugFlags.java) instead."
+        errorLine1="                SystemProperties.getInt("
+        errorLine2="                                 ~~~~~~">
         <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/customaudience/CustomAudience.java"
-            line="57"
-            column="13"/>
+            file="packages/modules/AdServices/adservices/framework/java/com/android/adservices/AndroidServiceBinder.java"
+            line="114"
+            column="34"/>
     </issue>
 
     <issue
-        id="FlaggedApi"
-        message="@FlaggedApi should specify an actual flag constant; raw strings are discouraged (and more importantly, **not enforced**)"
-        errorLine1="            &quot;com.android.adservices.flags.fledge_custom_audience_auction_server_request_flags_enabled&quot;)"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        id="AvoidSystemPropertiesUsage"
+        message="DO NOT USE android.os.SystemProperties methods. Use DebugFlags&#xA;(service-core/java/com/android/adservices/service/DebugFlags.java) instead."
+        errorLine1="        return SystemProperties.getInt(&quot;ro.debuggable&quot;, 0) == 1;"
+        errorLine2="                                ~~~~~~">
         <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/customaudience/CustomAudience.java"
-            line="57"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="@FlaggedApi should specify an actual flag constant; raw strings are discouraged (and more importantly, **not enforced**)"
-        errorLine1="            &quot;com.android.adservices.flags.fledge_custom_audience_auction_server_request_flags_enabled&quot;)"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/customaudience/CustomAudience.java"
-            line="337"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="@FlaggedApi should specify an actual flag constant; raw strings are discouraged (and more importantly, **not enforced**)"
-        errorLine1="                &quot;com.android.adservices.flags.fledge_custom_audience_auction_server_request_flags_enabled&quot;)"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/customaudience/CustomAudience.java"
-            line="516"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="@FlaggedApi should specify an actual flag constant; raw strings are discouraged (and more importantly, **not enforced**)"
-        errorLine1="            &quot;com.android.adservices.flags.fledge_auction_server_get_ad_selection_data_id_enabled&quot;)"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/GetAdSelectionDataOutcome.java"
-            line="53"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Class `AdServicesExtDataParams` is a flagged API and should be inside an `if (Flags.adextDataServiceApisEnabled())` check (or annotate the surrounding method `GetAdServicesExtDataResult` with `@FlaggedApi(Flags.FLAG_ADEXT_DATA_SERVICE_APIS_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                in.readParcelable(AdServicesExtDataParams.class.getClassLoader());"
-        errorLine2="                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/extdata/GetAdServicesExtDataResult.java"
-            line="50"
-            column="35"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Method `toString()` is a flagged API and should be inside an `if (Flags.adextDataServiceApisEnabled())` check (or annotate the surrounding method `toString` with `@FlaggedApi(Flags.FLAG_ADEXT_DATA_SERVICE_APIS_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                mStatusCode, mErrorMessage, mAdServicesExtDataParams.toString());"
-        errorLine2="                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/extdata/GetAdServicesExtDataResult.java"
-            line="108"
-            column="45"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="@FlaggedApi should specify an actual flag constant; raw strings are discouraged (and more importantly, **not enforced**)"
-        errorLine1="            &quot;com.android.adservices.flags.fledge_auction_server_get_ad_selection_data_id_enabled&quot;)"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/PersistAdSelectionResultRequest.java"
-            line="69"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="@FlaggedApi should specify an actual flag constant; raw strings are discouraged (and more importantly, **not enforced**)"
-        errorLine1="                &quot;com.android.adservices.flags.fledge_auction_server_get_ad_selection_data_id_enabled&quot;)"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/PersistAdSelectionResultRequest.java"
-            line="116"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Field `CREATOR` is a flagged API and should be inside an `if (Flags.fledgeScheduleCustomAudienceUpdateEnabled())` check (or annotate the surrounding method `ScheduleCustomAudienceUpdateInput` with `@FlaggedApi(Flags.FLAG_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED) to transfer requirement to caller`)"
-        errorLine1="        mPartialCustomAudienceList = in.createTypedArrayList(PartialCustomAudience.CREATOR);"
-        errorLine2="                                                                                   ~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/customaudience/ScheduleCustomAudienceUpdateInput.java"
-            line="75"
-            column="84"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Field `ACCESS_ADSERVICES_PROTECTED_SIGNALS` is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `overrideAdSelectionConfigRemoteInfo` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                ACCESS_ADSERVICES_PROTECTED_SIGNALS,"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/TestAdSelectionManager.java"
-            line="75"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Field `ACCESS_ADSERVICES_AD_SELECTION` is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `overrideAdSelectionConfigRemoteInfo` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                ACCESS_ADSERVICES_AD_SELECTION"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/TestAdSelectionManager.java"
-            line="76"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Method `getPerBuyerDecisionLogic()` is a flagged API and should be inside an `if (Flags.fledgeAdSelectionFilteringEnabled())` check (or annotate the surrounding method `overrideAdSelectionConfigRemoteInfo` with `@FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                    request.getPerBuyerDecisionLogic(),"
-        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/TestAdSelectionManager.java"
-            line="93"
-            column="21"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Field `ACCESS_ADSERVICES_PROTECTED_SIGNALS` is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `removeAdSelectionConfigRemoteInfoOverride` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                ACCESS_ADSERVICES_PROTECTED_SIGNALS,"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/TestAdSelectionManager.java"
-            line="134"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Field `ACCESS_ADSERVICES_AD_SELECTION` is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `removeAdSelectionConfigRemoteInfoOverride` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                ACCESS_ADSERVICES_AD_SELECTION"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/TestAdSelectionManager.java"
-            line="135"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Field `ACCESS_ADSERVICES_PROTECTED_SIGNALS` is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `resetAllAdSelectionConfigRemoteOverrides` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                ACCESS_ADSERVICES_PROTECTED_SIGNALS,"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/TestAdSelectionManager.java"
-            line="188"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Field `ACCESS_ADSERVICES_AD_SELECTION` is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `resetAllAdSelectionConfigRemoteOverrides` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                ACCESS_ADSERVICES_AD_SELECTION"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/TestAdSelectionManager.java"
-            line="189"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Field `ACCESS_ADSERVICES_PROTECTED_SIGNALS` is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `overrideAdSelectionFromOutcomesConfigRemoteInfo` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                ACCESS_ADSERVICES_PROTECTED_SIGNALS,"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/TestAdSelectionManager.java"
-            line="242"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Field `ACCESS_ADSERVICES_AD_SELECTION` is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `overrideAdSelectionFromOutcomesConfigRemoteInfo` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                ACCESS_ADSERVICES_AD_SELECTION"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/TestAdSelectionManager.java"
-            line="243"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Field `ACCESS_ADSERVICES_PROTECTED_SIGNALS` is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `removeAdSelectionFromOutcomesConfigRemoteInfoOverride` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                ACCESS_ADSERVICES_PROTECTED_SIGNALS,"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/TestAdSelectionManager.java"
-            line="300"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Field `ACCESS_ADSERVICES_AD_SELECTION` is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `removeAdSelectionFromOutcomesConfigRemoteInfoOverride` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                ACCESS_ADSERVICES_AD_SELECTION"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/TestAdSelectionManager.java"
-            line="301"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Field `ACCESS_ADSERVICES_PROTECTED_SIGNALS` is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `resetAllAdSelectionFromOutcomesConfigRemoteOverrides` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                ACCESS_ADSERVICES_PROTECTED_SIGNALS,"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/TestAdSelectionManager.java"
-            line="354"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Field `ACCESS_ADSERVICES_AD_SELECTION` is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `resetAllAdSelectionFromOutcomesConfigRemoteOverrides` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                ACCESS_ADSERVICES_AD_SELECTION"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/TestAdSelectionManager.java"
-            line="355"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Field `ACCESS_ADSERVICES_PROTECTED_SIGNALS` is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `setAdCounterHistogramOverride` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                ACCESS_ADSERVICES_PROTECTED_SIGNALS,"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/TestAdSelectionManager.java"
-            line="409"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Field `ACCESS_ADSERVICES_AD_SELECTION` is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `setAdCounterHistogramOverride` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                ACCESS_ADSERVICES_AD_SELECTION"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/TestAdSelectionManager.java"
-            line="410"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Field `ACCESS_ADSERVICES_PROTECTED_SIGNALS` is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `removeAdCounterHistogramOverride` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                ACCESS_ADSERVICES_PROTECTED_SIGNALS,"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/TestAdSelectionManager.java"
-            line="474"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Field `ACCESS_ADSERVICES_AD_SELECTION` is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `removeAdCounterHistogramOverride` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                ACCESS_ADSERVICES_AD_SELECTION"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/TestAdSelectionManager.java"
-            line="475"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Field `ACCESS_ADSERVICES_PROTECTED_SIGNALS` is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `resetAllAdCounterHistogramOverrides` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                ACCESS_ADSERVICES_PROTECTED_SIGNALS,"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/TestAdSelectionManager.java"
-            line="536"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Field `ACCESS_ADSERVICES_AD_SELECTION` is a flagged API and should be inside an `if (Flags.protectedSignalsEnabled())` check (or annotate the surrounding method `resetAllAdCounterHistogramOverrides` with `@FlaggedApi(Flags.FLAG_PROTECTED_SIGNALS_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                ACCESS_ADSERVICES_AD_SELECTION"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/adselection/TestAdSelectionManager.java"
-            line="537"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Method `getBiddingLogicJsVersion()` is a flagged API and should be inside an `if (Flags.fledgeAdSelectionFilteringEnabled())` check (or annotate the surrounding method `overrideCustomAudienceRemoteInfo` with `@FlaggedApi(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                    request.getBiddingLogicJsVersion(),"
-        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/customaudience/TestCustomAudienceManager.java"
-            line="86"
-            column="21"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Method `Builder()` is a flagged API and should be inside an `if (Flags.topicsEncryptionEnabled())` check (or annotate the surrounding method `buildGetTopicsResponse` with `@FlaggedApi(Flags.FLAG_TOPICS_ENCRYPTION_ENABLED) to transfer requirement to caller`)"
-        errorLine1="        return new GetTopicsResponse.Builder("
-        errorLine2="               ^">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/topics/TopicsManager.java"
-            line="231"
-            column="16"/>
-    </issue>
-
-    <issue
-        id="FlaggedApi"
-        message="Method `EncryptedTopic()` is a flagged API and should be inside an `if (Flags.topicsEncryptionEnabled())` check (or annotate the surrounding method `getEncryptedTopicList` with `@FlaggedApi(Flags.FLAG_TOPICS_ENCRYPTION_ENABLED) to transfer requirement to caller`)"
-        errorLine1="                    new EncryptedTopic("
-        errorLine2="                    ^">
-        <location
-            file="packages/modules/AdServices/adservices/framework/java/android/adservices/topics/TopicsManager.java"
-            line="262"
-            column="21"/>
+            file="packages/modules/AdServices/adservices/framework/java/com/android/adservices/AndroidServiceBinder.java"
+            line="297"
+            column="33"/>
     </issue>
 
 </issues>
