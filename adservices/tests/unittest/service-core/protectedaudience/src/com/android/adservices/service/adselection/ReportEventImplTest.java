@@ -162,13 +162,16 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
                 public boolean getDisableFledgeEnrollmentCheck() {
                     return false;
                 }
+
+                @Override
+                public boolean getConsentNotificationDebugMode() {
+                    return false;
+                }
             };
 
-    private final long mMaxRegisteredAdBeaconsTotalCount =
-            mFakeFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount();
+    private long mMaxRegisteredAdBeaconsTotalCount;
 
-    private final long mMaxRegisteredAdBeaconsPerDestination =
-            mFakeFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount();
+    private long mMaxRegisteredAdBeaconsPerDestination;
 
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
 
@@ -183,6 +186,11 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
 
     @Before
     public void setup() throws Exception {
+        mFakeFlags = FakeFlagsFactory.getFlagsForTest();
+        mMaxRegisteredAdBeaconsPerDestination =
+                mFakeFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount();
+        mMaxRegisteredAdBeaconsTotalCount =
+                mFakeFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount();
         mAdSelectionEntryDao =
                 Room.inMemoryDatabaseBuilder(
                                 ApplicationProvider.getApplicationContext(),
