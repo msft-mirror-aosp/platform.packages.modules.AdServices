@@ -238,12 +238,12 @@ public class AdServicesCommonManager {
     @SdkConstant(SdkConstantType.BROADCAST_INTENT_ACTION)
     @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
     @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
-    public static final String ACTION_ADSERVICES_NOTIFICATION_DISPLAY =
-            "android.adservices.common.action.ADSERVICES_NOTIFICATION_DISPLAY";
+    public static final String ACTION_ADSERVICES_NOTIFICATION_DISPLAYED =
+            "android.adservices.common.action.ADSERVICES_NOTIFICATION_DISPLAYED";
 
     /**
-     * Activity Action: Open the consent landing page activity on notification click. In the
-     * activity, user consent choices can be set, depending on user action, by calling {@link
+     * Activity Action: Open the consent landing page activity. In the activity, user consent
+     * choices can be set, depending on user action, by calling {@link
      * #setAdServicesModuleUserChoices()}.
      *
      * <p>Input: nothing
@@ -255,8 +255,8 @@ public class AdServicesCommonManager {
     @SdkConstant(SdkConstantType.ACTIVITY_INTENT_ACTION)
     @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
     @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
-    public static final String ACTION_ADSERVICES_NOTIFICATION_CLICK =
-            "android.adservices.common.action.ADSERVICES_NOTIFICATION_CLICK";
+    public static final String ACTION_VIEW_ADSERVICES_CONSENT_PAGE =
+            "android.adservices.common.action.VIEW_ADSERVICES_CONSENT_PAGE";
 
     /**
      * Sets overrides for the AdServices Module(s).
