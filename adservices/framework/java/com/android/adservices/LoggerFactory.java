@@ -29,7 +29,8 @@ import java.util.Locale;
  * @hide
  */
 public final class LoggerFactory {
-
+    // NOTE: new log tags here also need to add to setAllLogcatTags() in
+    // AbstractAdServicesFlagsSetterRule class
     public static final String TAG = "adservices";
     public static final String TOPICS_TAG = "adservices.topics";
     public static final String FLEDGE_TAG = "adservices.fledge";

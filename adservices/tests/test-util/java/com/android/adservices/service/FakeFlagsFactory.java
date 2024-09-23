@@ -117,6 +117,11 @@ public final class FakeFlagsFactory {
         public boolean getPasExtendedMetricsEnabled() {
             return true;
         }
+
+        @Override
+        public boolean getConsentNotificationDebugMode() {
+            return false;
+        }
     }
 
     private FakeFlagsFactory() {

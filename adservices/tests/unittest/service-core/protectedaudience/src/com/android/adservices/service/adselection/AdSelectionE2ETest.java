@@ -8242,5 +8242,10 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         public boolean getFledgeEventLevelDebugReportSendImmediately() {
             return false;
         }
+
+        @Override
+        public boolean getConsentNotificationDebugMode() {
+            return false;
+        }
     }
 }

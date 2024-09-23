@@ -35,7 +35,6 @@ public final class FlagsConstants {
     public static final int PPAPI_ONLY = 1;
     public static final int PPAPI_AND_SYSTEM_SERVER = 2;
     public static final int APPSEARCH_ONLY = 3;
-    public static final int PPAPI_AND_ADEXT_SERVICE = 4;
     public static final float ADID_REQUEST_PERMITS_PER_SECOND = 25;
 
     // **************************************************
@@ -981,8 +980,6 @@ public final class FlagsConstants {
 
     public static final String KEY_APPSEARCH_WRITE_TIMEOUT_MS = "appsearch_write_timeout_ms";
     public static final String KEY_APPSEARCH_READ_TIMEOUT_MS = "appsearch_read_timeout_ms";
-    public static final String KEY_ADEXT_WRITE_TIMEOUT_MS = "adext_write_timeout_ms";
-    public static final String KEY_ADEXT_READ_TIMEOUT_MS = "adext_read_timeout_ms";
     public static final String KEY_APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE =
             "appsearch_writer_allow_list_override";
 
@@ -1143,18 +1140,8 @@ public final class FlagsConstants {
 
     public static final String KEY_ENABLE_APPSEARCH_CONSENT_DATA = "enable_appsearch_consent_data";
 
-    public static final String KEY_ENABLE_ADEXT_SERVICE_CONSENT_DATA =
-            "enable_adext_service_consent_data";
-
     public static final String KEY_ENABLE_U18_APPSEARCH_MIGRATION =
             "enable_u18_appsearch_migration";
-
-    // NOTE: To disable migration from AdExtService to AppSearch on 2024 M03- build, use the
-    // deprecated flag enable_adext_service_to_appsearch_migration. This flag is introduced to
-    // unify flag-guarding from AdExtData service to AppSearch and System Server based on SDK
-    // version.
-    public static final String KEY_ENABLE_MIGRATION_FROM_ADEXT_SERVICE =
-            "enable_migration_from_adext_service";
 
     // Whether to call trusted servers for off device ad selection.
     public static final String KEY_OFF_DEVICE_AD_SELECTION_ENABLED =

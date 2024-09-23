@@ -81,15 +81,14 @@ public final class AdServicesExtDataServiceCtsTest {
                 new int[] {}, // Fake service implementation ignores this parameter.
                 putReceiver);
 
-        putReceiver.assertResultReceived();
+        putReceiver.assertFailureReceived();
 
         // Get updated AdExt data
         SyncAdExtTestCallback getReceiver = new SyncAdExtTestCallback();
         service.getAdServicesExtData(getReceiver);
 
-        GetAdServicesExtDataResult result = getReceiver.assertResultReceived();
-        assertThat(result).isNotNull();
-        assertThat(result.getAdServicesExtDataParams()).isEqualTo(paramsToUpdate);
+        String error = getReceiver.assertFailureReceived();
+        assertThat(error).isNotEmpty();
     }
 
     private static final class SyncAdExtTestCallback

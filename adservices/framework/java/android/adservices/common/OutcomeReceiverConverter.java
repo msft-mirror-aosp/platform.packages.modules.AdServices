@@ -61,4 +61,32 @@ public final class OutcomeReceiverConverter {
             }
         };
     }
+
+    /**
+     * Converts an instance of {@link AdServicesOutcomeReceiver} to a custom {@link
+     * OutcomeReceiver}.
+     *
+     * @param callback the instance of {@link AdServicesOutcomeReceiver} to wrap
+     * @return an {@link OutcomeReceiver} that wraps the original input
+     * @param <R> the type of Result that the receiver can process
+     * @param <E> the type of Exception that can be handled by the receiver
+     */
+    public static <R, E extends Throwable> OutcomeReceiver<R, E> toOutcomeReceiver(
+            AdServicesOutcomeReceiver<R, E> callback) {
+        if (callback == null) {
+            return null;
+        }
+
+        return new OutcomeReceiver<R, E>() {
+            @Override
+            public void onResult(R result) {
+                callback.onResult(result);
+            }
+
+            @Override
+            public void onError(E error) {
+                callback.onError(error);
+            }
+        };
+    }
 }

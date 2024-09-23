@@ -5722,5 +5722,10 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
         public String getPpapiAppAllowList() {
             return CommonFixture.TEST_PACKAGE_NAME;
         }
+
+        @Override
+        public boolean getConsentNotificationDebugMode() {
+            return false;
+        }
     }
 }

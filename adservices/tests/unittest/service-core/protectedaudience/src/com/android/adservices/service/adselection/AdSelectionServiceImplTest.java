@@ -11277,5 +11277,10 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
         public boolean getFledgeOnDeviceAuctionShouldUseUnifiedTables() {
             return false;
         }
+
+        @Override
+        public boolean getConsentNotificationDebugMode() {
+            return false;
+        }
     }
 }
