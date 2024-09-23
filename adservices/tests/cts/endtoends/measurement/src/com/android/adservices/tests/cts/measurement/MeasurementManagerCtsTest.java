@@ -65,6 +65,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+@RequiresSdkLevelAtLeastS(reason = "Cannot run on R with Consent Source of truth removed")
 public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestCase {
 
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
