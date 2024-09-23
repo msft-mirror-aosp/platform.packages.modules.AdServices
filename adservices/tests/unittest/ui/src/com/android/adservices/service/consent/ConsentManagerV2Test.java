@@ -121,6 +121,7 @@ import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.download.MddJob;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
@@ -254,6 +255,7 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
     @Mock private StatsdAdServicesLogger mStatsdAdServicesLoggerMock;
 
     @Mock private AdServicesErrorLogger mMockAdServicesErrorLogger;
+    @Mock private DebugFlags mMockDebugFlags;
 
     @Before
     public void setup() throws IOException {
@@ -2973,6 +2975,7 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
                         mAppSearchConsentManagerMock,
                         mUserProfileIdManagerMock,
                         mMockFlags,
+                        mMockDebugFlags,
                         Flags.PPAPI_ONLY,
                         true);
 
@@ -3343,6 +3346,7 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
                 mAppSearchConsentManagerMock,
                 mUserProfileIdManagerMock,
                 mMockFlags,
+                mMockDebugFlags,
                 consentSourceOfTruth,
                 true);
     }
