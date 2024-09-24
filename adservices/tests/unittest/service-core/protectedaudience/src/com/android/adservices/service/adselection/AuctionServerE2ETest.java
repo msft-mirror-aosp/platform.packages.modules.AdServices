@@ -5055,5 +5055,10 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
         public boolean getFledgeAuctionServerMediaTypeChangeEnabled() {
             return false;
         }
+
+        @Override
+        public boolean getConsentNotificationDebugMode() {
+            return false;
+        }
     }
 }

@@ -64,6 +64,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /** @hide */
 // TODO(b/267667963): Offload methods from binder thread to background thread.
@@ -124,10 +125,21 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     @GuardedBy("mRollbackCheckLock")
     private final Map<Integer, VersionedPackage> mAdServicesPackagesRolledBackTo = new ArrayMap<>();
 
+    // Used by mOnFlagsChangedListener to avoid failures on unit tests
+    private final AtomicBoolean mShutdown = new AtomicBoolean();
+
     // This will be triggered when there is a flag change.
     private final DeviceConfig.OnPropertiesChangedListener mOnFlagsChangedListener =
             properties -> {
                 if (!properties.getNamespace().equals(DeviceConfig.NAMESPACE_ADSERVICES)) {
+                    return;
+                }
+                if (mShutdown.get()) {
+                    // Shouldn't happen in "real life"
+                    LogUtil.w(
+                            "onPropertiesChanged(%s): ignoring because service already shut down"
+                                    + " (should only happen on unit tests)",
+                            properties.getKeyset());
                     return;
                 }
                 registerReceivers();
@@ -153,6 +165,26 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         setRollbackStatus();
 
         LogUtil.d("AdServicesManagerService constructed (context=%s)!", mContext);
+    }
+
+    // Used only by AdServicesManagerServiceTest - even though TestableDeviceConfig automatically
+    // removes the listeners on tearDown() (when integrated with the ExtendedMockitoRule), there
+    // seems to be a race condition somewhere that causes some tests to fail when a property is
+    // changed in the background, after the test finished.
+    @VisibleForTesting
+    void tearDownForTesting() {
+        mShutdown.set(true);
+        LogUtil.i(
+                "shutdown(): calling DeviceConfig.removeOnPropertiesChangedListener(%s)",
+                mOnFlagsChangedListener);
+        try {
+            DeviceConfig.removeOnPropertiesChangedListener(mOnFlagsChangedListener);
+        } catch (Exception e) {
+            LogUtil.e(
+                    e,
+                    "Call to DeviceConfig.removeOnPropertiesChangedListener(%s) failed",
+                    mOnFlagsChangedListener);
+        }
     }
 
     /** @hide */

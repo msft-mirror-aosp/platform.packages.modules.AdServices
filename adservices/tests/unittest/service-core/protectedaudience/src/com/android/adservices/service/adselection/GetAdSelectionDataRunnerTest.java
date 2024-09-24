@@ -1558,6 +1558,11 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
         public boolean getFledgeAuctionServerKeyFetchMetricsEnabled() {
             return FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED_IN_TEST;
         }
+
+        @Override
+        public boolean getConsentNotificationDebugMode() {
+            return false;
+        }
     }
 
     static class GetAdSelectionDataRunnerTestFlagsWithExcessiveSizeFormatter
