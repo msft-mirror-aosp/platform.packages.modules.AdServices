@@ -605,5 +605,10 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
         public boolean getPasProductMetricsV1Enabled() {
             return true;
         }
+
+        @Override
+        public boolean getConsentNotificationDebugMode() {
+            return false;
+        }
     }
 }

@@ -2185,5 +2185,10 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
         public boolean getDisableFledgeEnrollmentCheck() {
             return !mEnrollmentCheckEnabled;
         }
+
+        @Override
+        public boolean getConsentNotificationDebugMode() {
+            return false;
+        }
     }
 }
