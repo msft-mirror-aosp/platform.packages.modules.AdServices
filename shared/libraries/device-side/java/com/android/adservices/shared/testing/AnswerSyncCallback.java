@@ -16,8 +16,6 @@
 
 package com.android.adservices.shared.testing;
 
-import android.util.Log;
-
 import com.android.adservices.shared.testing.concurrency.DeviceSideSyncCallback;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
@@ -32,8 +30,6 @@ import org.mockito.stubbing.Answer;
  * @param <T> return type of the method being "answered".
  */
 public final class AnswerSyncCallback<T> extends DeviceSideSyncCallback implements Answer<T> {
-
-    private static final String TAG = AnswerSyncCallback.class.getSimpleName();
 
     @Nullable private final T mAnswer;
     @Nullable private final Throwable mFailure;
@@ -115,12 +111,13 @@ public final class AnswerSyncCallback<T> extends DeviceSideSyncCallback implemen
 
     @Override
     public T answer(InvocationOnMock invocation) throws Throwable {
-        super.internalSetCalled(MockitoHelper.toString(invocation));
+        String invocationString = MockitoHelper.toString(invocation);
+        super.internalSetCalled(invocationString);
         if (mFailure != null) {
-            Log.v(TAG, "Throwing '" + mFailure + "' on " + invocation);
+            logV("Throwing '%s' on %s", mFailure, invocationString);
             throw mFailure;
         }
-        Log.v(TAG, "Answering '" + mAnswer + "' on " + invocation);
+        logV("Answering '%s' on %s", mAnswer, invocationString);
         return mAnswer;
     }
 }
