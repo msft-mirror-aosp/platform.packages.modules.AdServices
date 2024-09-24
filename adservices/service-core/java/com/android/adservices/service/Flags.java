@@ -17,7 +17,6 @@
 package com.android.adservices.service;
 
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND_SERVICE;
-import static android.os.Build.VERSION.SDK_INT;
 
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH;
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH_GLOBAL;
@@ -25,7 +24,6 @@ import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY
 
 import android.annotation.IntDef;
 import android.app.job.JobInfo;
-import android.os.Build;
 
 import androidx.annotation.Nullable;
 
@@ -2119,25 +2117,6 @@ public interface Flags extends ModuleSharedFlags {
         return DebugFlags.getInstance().getConsentNotificationDebugMode();
     }
 
-    /** Returns the consent notification activity debug mode. */
-    default boolean getConsentNotificationActivityDebugMode() {
-        return DebugFlags.getInstance().getConsentNotificationActivityDebugMode();
-    }
-
-    /** Returns whether to suppress consent notified state. */
-    default boolean getConsentNotifiedDebugMode() {
-        return DebugFlags.getInstance().getConsentNotifiedDebugMode();
-    }
-
-    default boolean getConsentManagerDebugMode() {
-        return DebugFlags.getInstance().getConsentManagerDebugMode();
-    }
-
-    /** When enabled, the device is treated as OTA device. */
-    default boolean getConsentManagerOTADebugMode() {
-        return DebugFlags.getInstance().getConsentManagerOTADebugMode();
-    }
-
     boolean DEFAULT_RVC_POST_OTA_NOTIF_AGE_CHECK = false;
 
     /** When enabled, perform age check in rvc post ota notification channel. */
@@ -2153,7 +2132,6 @@ public interface Flags extends ModuleSharedFlags {
                 PPAPI_ONLY,
                 PPAPI_AND_SYSTEM_SERVER,
                 APPSEARCH_ONLY,
-                PPAPI_AND_ADEXT_SERVICE,
             })
     @Retention(RetentionPolicy.SOURCE)
     @interface ConsentSourceOfTruth {}
@@ -2176,22 +2154,12 @@ public interface Flags extends ModuleSharedFlags {
     int APPSEARCH_ONLY = FlagsConstants.APPSEARCH_ONLY;
 
     /**
-     * Read and write data that need to be rollback-safe from AdServicesExtDataStorageService; rest
-     * can be handled by PPAPI_API only. This is intended to be used on Android R as AppSearch and
-     * system server are unavailable.
-     */
-    int PPAPI_AND_ADEXT_SERVICE = FlagsConstants.PPAPI_AND_ADEXT_SERVICE;
-
-    /**
      * Consent source of truth intended to be used by default. On S devices, there is no AdServices
-     * code running in the system server, so the default is APPSEARCH_ONLY. On R devices, there is
-     * no system server and appseach, so the default is PPAPI_AND_ADEXT_SERVICE_ONLY.
+     * code running in the system server, so the default for those is PPAPI_ONLY.
      */
     @ConsentSourceOfTruth
     int DEFAULT_CONSENT_SOURCE_OF_TRUTH =
-            SdkLevel.isAtLeastT()
-                    ? PPAPI_AND_SYSTEM_SERVER
-                    : (SdkLevel.isAtLeastS() ? APPSEARCH_ONLY : PPAPI_AND_ADEXT_SERVICE);
+            SdkLevel.isAtLeastT() ? PPAPI_AND_SYSTEM_SERVER : APPSEARCH_ONLY;
 
     /** Returns the consent source of truth currently used for PPAPI. */
     @ConsentSourceOfTruth
@@ -2200,16 +2168,12 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     /**
-     * Blocked topics source of truth intended to be used by default. On S devices, there is no
-     * AdServices code running in the system server, so the default is APPSEARCH_ONLY. On R devices,
-     * there is no system server and appseach, so the default is PPAPI_ADEXT_SERVICE_ONLY. However,
-     * note that topics is not supported on R.
+     * Blocked topics source of truth intended to be used by default. On S- devices, there is no
+     * AdServices code running in the system server, so the default for those is PPAPI_ONLY.
      */
     @ConsentSourceOfTruth
     int DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH =
-            SdkLevel.isAtLeastT()
-                    ? PPAPI_AND_SYSTEM_SERVER
-                    : (SdkLevel.isAtLeastS() ? APPSEARCH_ONLY : PPAPI_AND_ADEXT_SERVICE);
+            SdkLevel.isAtLeastT() ? PPAPI_AND_SYSTEM_SERVER : APPSEARCH_ONLY;
 
     /** Returns the blocked topics source of truth currently used for PPAPI */
     @ConsentSourceOfTruth
@@ -2948,33 +2912,6 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns value of enable U18 appsearch migration flag */
     default boolean getEnableU18AppsearchMigration() {
         return DEFAULT_ENABLE_U18_APPSEARCH_MIGRATION;
-    }
-
-    /**
-     * Enable AdServicesExtDataStorageService read for consent data feature flag. The default value
-     * on R devices is true as the consent source of truth is PPAPI_AND_ADEXT_SERVICE_ONLY. The
-     * default value on S+ devices is false which means AdServicesExtDataStorageService is not
-     * considered as source of truth after OTA. This flag should be enabled for OTA support of
-     * consent data on S devices.
-     */
-    boolean ENABLE_ADEXT_SERVICE_CONSENT_DATA = SDK_INT == Build.VERSION_CODES.R;
-
-    /** Returns value of enable AdExt service consent data flag. */
-    default boolean getEnableAdExtServiceConsentData() {
-        return ENABLE_ADEXT_SERVICE_CONSENT_DATA;
-    }
-
-    /**
-     * Enables data migration from AdServicesExtDataStorageService to AppSearch (on S) and System
-     * server (on T+) upon OTA from R.
-     */
-    boolean ENABLE_MIGRATION_FROM_ADEXT_SERVICE = SdkLevel.isAtLeastS();
-
-    /**
-     * @return value of enable migration AdExt service.
-     */
-    default boolean getEnableMigrationFromAdExtService() {
-        return ENABLE_MIGRATION_FROM_ADEXT_SERVICE;
     }
 
     /*
@@ -5205,20 +5142,6 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     /**
-     * Enable AdServicesExtDataStorageServiceProxy read for consent data feature flag. Its meant to
-     * enable the proxy service for testing when the actual service is unavailable The default value
-     * is false.
-     */
-    boolean DEFAULT_ENABLE_ADEXT_SERVICE_DEBUG_PROXY = false;
-
-    /**
-     * @return value of enable AdExt service proxy.
-     */
-    default boolean getEnableAdExtServiceDebugProxy() {
-        return DEFAULT_ENABLE_ADEXT_SERVICE_DEBUG_PROXY;
-    }
-
-    /**
      * Default value to determine how many logging events {@link AdServicesJobServiceLogger} should
      * upload to the server.
      *
@@ -5256,36 +5179,6 @@ public interface Flags extends ModuleSharedFlags {
      */
     default int getAppSearchReadTimeout() {
         return DEFAULT_APPSEARCH_READ_TIMEOUT_MS;
-    }
-
-    /** Default value of the timeout for AdExtDataStorageService write operations */
-    @ConfigFlag int DEFAULT_ADEXT_WRITE_TIMEOUT_MS = 3000;
-
-    /**
-     * Gets the value of the timeout for AdExtDataStorageService write operations, in milliseconds.
-     * Note that this is the platform side timeout which awaits for the operation to be completed by
-     * the chimera service, which does not reside in AdServices. Ensure timeout on platform side is
-     * greater with ~100 ms buffer to take into account binder communication latency.
-     *
-     * @return the timeout, in milliseconds, for AdExtDataStorageService write operations
-     */
-    default int getAdExtWriteTimeoutMs() {
-        return DEFAULT_ADEXT_WRITE_TIMEOUT_MS;
-    }
-
-    /** Default value of the timeout for AdExtDataStorageService read operations */
-    @ConfigFlag int DEFAULT_ADEXT_READ_TIMEOUT_MS = 1000;
-
-    /**
-     * Gets the value of the timeout for AdExtDataStorageService read operations, in milliseconds.
-     * Note that this is the platform side timeout which awaits for the operation to be completed by
-     * the chimera service, which does not reside in AdServices. Ensure timeout on platform side is
-     * greater with ~100 ms buffer to take into account binder communication latency.
-     *
-     * @return the timeout, in milliseconds, for AdExtDataStoreageService read operations
-     */
-    default int getAdExtReadTimeoutMs() {
-        return DEFAULT_ADEXT_READ_TIMEOUT_MS;
     }
 
     /** default value for get adservices common states enabled */

@@ -103,10 +103,12 @@ public final class DebugFlags extends CommonDebugFlags {
         return getBoolean(KEY_CONSENT_NOTIFICATION_DEBUG_MODE, CONSENT_NOTIFICATION_DEBUG_MODE);
     }
 
+    /** Returns whether to suppress consent notified state. */
     public boolean getConsentNotifiedDebugMode() {
         return getBoolean(KEY_CONSENT_NOTIFIED_DEBUG_MODE, CONSENT_NOTIFIED_DEBUG_MODE);
     }
 
+    /** Returns the consent notification activity debug mode. */
     public boolean getConsentNotificationActivityDebugMode() {
         return getBoolean(
                 KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE,
@@ -117,6 +119,7 @@ public final class DebugFlags extends CommonDebugFlags {
         return getBoolean(KEY_CONSENT_MANAGER_DEBUG_MODE, CONSENT_MANAGER_DEBUG_MODE);
     }
 
+    /** When enabled, the device is treated as OTA device. */
     public boolean getConsentManagerOTADebugMode() {
         return getBoolean(
                 KEY_CONSENT_MANAGER_OTA_DEBUG_MODE, DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE);
