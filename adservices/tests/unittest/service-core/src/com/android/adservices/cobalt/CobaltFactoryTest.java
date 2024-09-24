@@ -25,6 +25,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
+import com.android.cobalt.domain.ReportIdentifier;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -76,6 +77,69 @@ public final class CobaltFactoryTest extends AdServicesMockitoTestCase {
 
         assertThat(CobaltFactory.computeApexVersion(mMockContext))
                 .isEqualTo(String.valueOf(ADSERVICES_VERSION));
+    }
+
+    @Test
+    public void testGetReportsToIgnore_singleReportIdParsed() {
+        when(mMockFlags.getCobaltIgnoredReportIdList()).thenReturn("1:2:3:4");
+        assertThat(CobaltFactory.parseReportsToIgnore(mMockFlags))
+                .containsExactly(ReportIdentifier.create(1, 2, 3, 4));
+    }
+
+    @Test
+    public void testGetReportsToIgnore_commaSepareatedReportIds_parsedIntoList() {
+        when(mMockFlags.getCobaltIgnoredReportIdList()).thenReturn("1:2:3:4,5:6:7:8,11:12:13:14");
+        assertThat(CobaltFactory.parseReportsToIgnore(mMockFlags))
+                .containsExactly(
+                        ReportIdentifier.create(1, 2, 3, 4),
+                        ReportIdentifier.create(5, 6, 7, 8),
+                        ReportIdentifier.create(11, 12, 13, 14));
+    }
+
+    @Test
+    public void testGetReportsToIgnore_commaSepareatedReportIds_whitespaceIgnored() {
+        when(mMockFlags.getCobaltIgnoredReportIdList())
+                .thenReturn("   1 :2:3:4,5:  6 :7:8, 11: 12:1 3:14");
+        assertThat(CobaltFactory.parseReportsToIgnore(mMockFlags))
+                .containsExactly(
+                        ReportIdentifier.create(1, 2, 3, 4),
+                        ReportIdentifier.create(5, 6, 7, 8),
+                        ReportIdentifier.create(11, 12, 13, 14));
+    }
+
+    @Test
+    public void testGetReportsToIgnore_zeroIdsSupported() {
+        when(mMockFlags.getCobaltIgnoredReportIdList()).thenReturn("0:0:0:0");
+        assertThat(CobaltFactory.parseReportsToIgnore(mMockFlags))
+                .containsExactly(ReportIdentifier.create(0, 0, 0, 0));
+    }
+
+    @Test
+    public void testGetReportsToIgnore_nullFlag_emptyList() {
+        when(mMockFlags.getCobaltIgnoredReportIdList()).thenReturn(null);
+        assertThat(CobaltFactory.parseReportsToIgnore(mMockFlags)).isEmpty();
+    }
+
+    @Test
+    public void testGetReportsToIgnore_non4PartIds_ignored() {
+        when(mMockFlags.getCobaltIgnoredReportIdList())
+                .thenReturn("11,21:22,31:32:33,41:42:43:44,51:52:53:54:55");
+        assertThat(CobaltFactory.parseReportsToIgnore(mMockFlags))
+                .containsExactly(ReportIdentifier.create(41, 42, 43, 44));
+    }
+
+    @Test
+    public void testGetReportsToIgnore_nonParseableIds_ignored() {
+        when(mMockFlags.getCobaltIgnoredReportIdList())
+                .thenReturn("a:2:3:4,11:b:13:14,21:22:c:24,31:32:33:d");
+        assertThat(CobaltFactory.parseReportsToIgnore(mMockFlags)).isEmpty();
+    }
+
+    @Test
+    public void testGetReportsToIgnore_negativeIds_ignored() {
+        when(mMockFlags.getCobaltIgnoredReportIdList())
+                .thenReturn("-1:2:3:4,11:-12:13:14,21:22:-23:24,31:32:33:-34");
+        assertThat(CobaltFactory.parseReportsToIgnore(mMockFlags)).isEmpty();
     }
 
     private void addPackageInfo(String packageName, long version) {
