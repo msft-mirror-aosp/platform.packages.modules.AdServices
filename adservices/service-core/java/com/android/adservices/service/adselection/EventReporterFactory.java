@@ -22,6 +22,7 @@ import android.content.Context;
 import android.os.Build;
 
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.BinderFlagReader;
@@ -53,6 +54,7 @@ public final class EventReporterFactory {
     @NonNull private final ListeningExecutorService mBackgroundExecutorService;
     @NonNull private final AdServicesLogger mAdServicesLogger;
     @NonNull private final Flags mFlags;
+    @NonNull private final DebugFlags mDebugFlags;
     @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
     private int mCallerUid;
     @NonNull private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
@@ -69,6 +71,7 @@ public final class EventReporterFactory {
             @NonNull ExecutorService backgroundExecutorService,
             @NonNull AdServicesLogger adServicesLogger,
             @NonNull Flags flags,
+            @NonNull DebugFlags debugFlags,
             @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
             int callerUid,
             @NonNull FledgeAuthorizationFilter fledgeAuthorizationFilter,
@@ -83,6 +86,7 @@ public final class EventReporterFactory {
         Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(flags);
+        Objects.requireNonNull(debugFlags);
         Objects.requireNonNull(adSelectionServiceFilter);
         Objects.requireNonNull(fledgeAuthorizationFilter);
         Objects.requireNonNull(devContext);
@@ -96,6 +100,7 @@ public final class EventReporterFactory {
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
         mAdServicesLogger = adServicesLogger;
         mFlags = flags;
+        mDebugFlags = debugFlags;
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mCallerUid = callerUid;
         mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
@@ -128,6 +133,7 @@ public final class EventReporterFactory {
                     mBackgroundExecutorService,
                     mAdServicesLogger,
                     mFlags,
+                    mDebugFlags,
                     mAdSelectionServiceFilter,
                     mCallerUid,
                     mFledgeAuthorizationFilter,
@@ -146,6 +152,7 @@ public final class EventReporterFactory {
                     mBackgroundExecutorService,
                     mAdServicesLogger,
                     mFlags,
+                    mDebugFlags,
                     mAdSelectionServiceFilter,
                     mCallerUid,
                     mFledgeAuthorizationFilter,
@@ -164,6 +171,7 @@ public final class EventReporterFactory {
                     mBackgroundExecutorService,
                     mAdServicesLogger,
                     mFlags,
+                    mDebugFlags,
                     mAdSelectionServiceFilter,
                     mCallerUid,
                     mFledgeAuthorizationFilter,
@@ -185,6 +193,7 @@ public final class EventReporterFactory {
                 mBackgroundExecutorService,
                 mAdServicesLogger,
                 mFlags,
+                mDebugFlags,
                 mAdSelectionServiceFilter,
                 mCallerUid,
                 mFledgeAuthorizationFilter,
