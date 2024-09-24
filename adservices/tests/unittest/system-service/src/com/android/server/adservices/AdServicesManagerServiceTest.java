@@ -27,12 +27,15 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.Manifest;
@@ -129,8 +132,9 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
     // will fail due to lack of android.permission.INTERACT_ACROSS_USERS_FULL.
     @Rule(order = 11)
     public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.withoutAdoptingShellPermissions();
+            AdServicesFlagsSetterRule.withoutAdoptingShellPermissions().setDefaultLogcatTags();
 
+    private final List<AdServicesManagerService> mServices = new ArrayList<>();
     private final TopicsDbHelper mDBHelper = TopicsDbTestUtil.getDbHelperForTest();
     private UserInstanceManager mUserInstanceManager;
     @Mock private PackageManager mMockPackageManager;
@@ -164,8 +168,12 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
         doReturn(mMockRollbackManager).when(mSpyContext).getSystemService(RollbackManager.class);
     }
 
+    // TODO(b/343741206): Remove suppress warning once the lint is fixed.
+    @SuppressWarnings("VisibleForTests")
     @After
     public void tearDown() {
+        mServices.forEach(AdServicesManagerService::tearDownForTesting);
+
         // We need tear down this instance since it can have underlying persisted Data Store.
         mUserInstanceManager.tearDownForTesting();
 
@@ -194,7 +202,7 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
         // We have 2 receivers which are PackageChangeReceiver and UserActionReceiver.
         int numReceivers = 2;
         // The flag is enabled so we call registerReceiverForAllUsers
-        Mockito.verify(mSpyContext, Mockito.times(numReceivers))
+        verify(mSpyContext, times(numReceivers))
                 .registerReceiverForAllUsers(
                         argumentReceiver.capture(),
                         argumentIntentFilter.capture(),
@@ -230,12 +238,16 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
         // .OnPropertiesChangedListener. The listener is invoked on the separate thread. So, we
         // need to add a wait time to ensure the listener gets executed. If listener gets
         // executed after the test is finished, we hit READ_DEVICE_CONFIG exception.
+        // TODO(b/368342138): improve this by using a (new) SyncCallback that blocks until the given
+        // prop->value change is received. Notice that such callback alone would not be enough right
+        // now, as TestableDeviceConfig uses a HashMap to set the listeners, so there's no
+        // guarantee about the order they'd be called - we'd need to change it to use a
+        // LinkedHashMap instead first
         Thread.sleep(500);
 
         // Calling when the flag is disabled will unregister the Receiver!
         service.registerReceivers();
-        Mockito.verify(mSpyContext, Mockito.times(numReceivers))
-                .unregisterReceiver(argumentReceiver.capture());
+        verify(mSpyContext, times(numReceivers)).unregisterReceiver(argumentReceiver.capture());
 
         // The unregistered is called on the same receiver when registered above.
         assertThat(argumentReceiver.getAllValues().get(0)).isSameInstanceAs(receiverList.get(0));
@@ -250,7 +262,7 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
         AdServicesManagerService service = newService();
 
         // The flag is disabled so there is no registerReceiverForAllUsers
-        Mockito.verify(mSpyContext, Mockito.times(0))
+        verify(mSpyContext, never())
                 .registerReceiverForAllUsers(
                         any(BroadcastReceiver.class),
                         any(IntentFilter.class),
@@ -271,10 +283,9 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
         ArgumentCaptor<PackageManager.PackageInfoFlags> argumentPackageInfoFlags =
                 ArgumentCaptor.forClass(PackageManager.PackageInfoFlags.class);
 
-        Mockito.verify(mSpyContext, Mockito.times(1)).getPackageManager();
+        verify(mSpyContext).getPackageManager();
 
-        Mockito.verify(mMockPackageManager, Mockito.times(1))
-                .getInstalledPackages(argumentPackageInfoFlags.capture());
+        verify(mMockPackageManager).getInstalledPackages(argumentPackageInfoFlags.capture());
 
         assertThat(argumentPackageInfoFlags.getAllValues().get(0).getValue())
                 .isEqualTo(PackageManager.MATCH_APEX);
@@ -291,7 +302,7 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
         AdServicesManagerService service = newService();
 
         // The flag is disabled so there is no call to the packageManager
-        Mockito.verify(mSpyContext, Mockito.times(0)).getPackageManager();
+        verify(mSpyContext, never()).getPackageManager();
     }
 
     @Test
@@ -330,12 +341,11 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
         ArgumentCaptor<UserHandle> argumentUser = ArgumentCaptor.forClass(UserHandle.class);
 
         setupMockResolveInfo();
-        Mockito.doNothing().when(mSpyContext).sendBroadcastAsUser(Mockito.any(), Mockito.any());
+        doNothing().when(mSpyContext).sendBroadcastAsUser(any(), any());
 
         service.onPackageChange(i, mSpyContext.getUser());
 
-        Mockito.verify(mSpyContext, Mockito.times(1))
-                .sendBroadcastAsUser(argumentIntent.capture(), argumentUser.capture());
+        verify(mSpyContext).sendBroadcastAsUser(argumentIntent.capture(), argumentUser.capture());
 
         assertThat(argumentIntent.getValue().getAction()).isEqualTo(PACKAGE_CHANGED_BROADCAST);
         assertThat(argumentIntent.getValue().getData()).isEqualTo(i.getData());
@@ -429,12 +439,11 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
         ArgumentCaptor<UserHandle> argumentUser = ArgumentCaptor.forClass(UserHandle.class);
 
         setupMockResolveInfo();
-        Mockito.doNothing().when(mSpyContext).sendBroadcastAsUser(Mockito.any(), Mockito.any());
+        doNothing().when(mSpyContext).sendBroadcastAsUser(any(), any());
 
         service.onPackageChange(i, mSpyContext.getUser());
 
-        Mockito.verify(mSpyContext, Mockito.times(1))
-                .sendBroadcastAsUser(argumentIntent.capture(), argumentUser.capture());
+        verify(mSpyContext).sendBroadcastAsUser(argumentIntent.capture(), argumentUser.capture());
 
         assertThat(argumentIntent.getValue().getAction()).isEqualTo(PACKAGE_CHANGED_BROADCAST);
         assertThat(argumentIntent.getValue().getData()).isEqualTo(i.getData());
@@ -456,12 +465,11 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
         ArgumentCaptor<UserHandle> argumentUser = ArgumentCaptor.forClass(UserHandle.class);
 
         setupMockResolveInfo();
-        Mockito.doNothing().when(mSpyContext).sendBroadcastAsUser(Mockito.any(), Mockito.any());
+        doNothing().when(mSpyContext).sendBroadcastAsUser(any(), any());
 
         service.onPackageChange(i, mSpyContext.getUser());
 
-        Mockito.verify(mSpyContext, Mockito.times(1))
-                .sendBroadcastAsUser(argumentIntent.capture(), argumentUser.capture());
+        verify(mSpyContext).sendBroadcastAsUser(argumentIntent.capture(), argumentUser.capture());
 
         assertThat(argumentIntent.getValue().getAction()).isEqualTo(PACKAGE_CHANGED_BROADCAST);
         assertThat(argumentIntent.getValue().getData()).isEqualTo(i.getData());
@@ -862,7 +870,7 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
         // Set the rolled back from package to null, indicating there was not a rollback.
         doReturn(Collections.emptyMap()).when(service).getAdServicesPackagesRolledBackFrom();
 
-        doReturn(true).when(service).hasAdServicesDeletionOccurred(Mockito.anyInt());
+        doReturn(true).when(service).hasAdServicesDeletionOccurred(anyInt());
 
         assertThat(
                         service.needsToHandleRollbackReconciliation(
@@ -882,11 +890,11 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
                 service, TEST_ROLLED_BACK_TO_MODULE_VERSION, ROLLBACK_ID);
 
         // Set the deletion bit to false.
-        doReturn(false).when(service).hasAdServicesDeletionOccurred(Mockito.anyInt());
+        doReturn(false).when(service).hasAdServicesDeletionOccurred(anyInt());
 
         doReturn(TEST_ROLLED_BACK_FROM_MODULE_VERSION)
                 .when(service)
-                .getPreviousStoredVersion(Mockito.anyInt());
+                .getPreviousStoredVersion(anyInt());
         setAdServicesModuleVersion(service, TEST_ROLLED_BACK_TO_MODULE_VERSION);
 
         assertThat(
@@ -907,11 +915,11 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
                 service, TEST_ROLLED_BACK_TO_MODULE_VERSION, ROLLBACK_ID);
 
         // Set the deletion bit to false.
-        doReturn(true).when(service).hasAdServicesDeletionOccurred(Mockito.anyInt());
+        doReturn(true).when(service).hasAdServicesDeletionOccurred(anyInt());
 
         doReturn(TEST_ROLLED_BACK_FROM_MODULE_VERSION + 1)
                 .when(service)
-                .getPreviousStoredVersion(Mockito.anyInt());
+                .getPreviousStoredVersion(anyInt());
         setAdServicesModuleVersion(service, TEST_ROLLED_BACK_TO_MODULE_VERSION);
 
         assertThat(
@@ -932,11 +940,11 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
                 service, TEST_ROLLED_BACK_TO_MODULE_VERSION, ROLLBACK_ID);
 
         // Set the deletion bit to false.
-        doReturn(true).when(service).hasAdServicesDeletionOccurred(Mockito.anyInt());
+        doReturn(true).when(service).hasAdServicesDeletionOccurred(anyInt());
 
         doReturn(TEST_ROLLED_BACK_FROM_MODULE_VERSION)
                 .when(service)
-                .getPreviousStoredVersion(Mockito.anyInt());
+                .getPreviousStoredVersion(anyInt());
         setAdServicesModuleVersion(service, TEST_ROLLED_BACK_TO_MODULE_VERSION + 1);
 
         assertThat(
@@ -957,19 +965,18 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
                 service, TEST_ROLLED_BACK_TO_MODULE_VERSION, ROLLBACK_ID);
 
         // Set the deletion bit to false.
-        doReturn(true).when(service).hasAdServicesDeletionOccurred(Mockito.anyInt());
+        doReturn(true).when(service).hasAdServicesDeletionOccurred(anyInt());
 
         doReturn(TEST_ROLLED_BACK_FROM_MODULE_VERSION)
                 .when(service)
-                .getPreviousStoredVersion(Mockito.anyInt());
+                .getPreviousStoredVersion(anyInt());
         setAdServicesModuleVersion(service, TEST_ROLLED_BACK_TO_MODULE_VERSION);
 
         assertThat(
                         service.needsToHandleRollbackReconciliation(
                                 AdServicesManager.MEASUREMENT_DELETION))
                 .isTrue();
-        Mockito.verify(service, times(1))
-                .resetAdServicesDeletionOccurred(AdServicesManager.MEASUREMENT_DELETION);
+        verify(service).resetAdServicesDeletionOccurred(AdServicesManager.MEASUREMENT_DELETION);
     }
 
     @Test
@@ -1239,11 +1246,18 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
     private void setFlag(String name, boolean value) {
         Log.d(mTag, "setFlag(): " + name + "=" + value);
         flags.setFlag(name, value);
+
+        // Make sure rule really set it
+        // TODO(b/369198554): shouldn't be necessary
+        assertWithMessage("flags.get(%s) after flags.set(%s, %s)", name, name, value)
+                .that(flags.getFlag(name))
+                .isEqualTo(Boolean.toString(value));
     }
 
     private AdServicesManagerService newService() {
         AdServicesManagerService service =
                 new AdServicesManagerService(mSpyContext, mUserInstanceManager);
+        mServices.add(service);
         mLog.v("newService(): returning %s for %s", service, getTestName());
         return service;
     }

@@ -31,7 +31,7 @@ public abstract class HostSideTestCase extends SidelessTestCase implements IDevi
 
     @Override
     public final void setDevice(ITestDevice device) {
-        mDevice = Objects.requireNonNull(device);
+        mDevice = Objects.requireNonNull(device, "device cannot be null");
         // TODO(b/296240972): this is needed because our custom rules
         TestDeviceHelper.setTestDevice(device);
     }

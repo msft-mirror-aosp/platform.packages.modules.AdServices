@@ -27,10 +27,10 @@ public interface DeviceGateway {
     /**
      * Runs the given Shell command, returning its output.
      *
-     * @deprecated - use {@link #runShellCommandRwe(ShellCommandInput)} instead.
+     * @throws InvalidShellCommandResultException if the Shell command returned a non-empty string
+     *     on its standard error stream.
      */
     @FormatMethod
-    @Deprecated // TODO(b/297085722): remove or undeprecated this method
     String runShellCommand(@FormatString String cmdFmt, @Nullable Object... cmdArgs);
 
     /** Runs the given Shell command, returning its full output. */
