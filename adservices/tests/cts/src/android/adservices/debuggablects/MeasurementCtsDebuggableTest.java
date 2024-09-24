@@ -43,6 +43,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
 
 import com.android.adservices.common.AdServicesSupportHelper;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
@@ -66,6 +67,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /** CTS debuggable test for Measurement API. */
+@RequiresSdkLevelAtLeastS(reason = "Cannot run on R with Consent Source of truth removed")
 public final class MeasurementCtsDebuggableTest extends AdServicesDebuggableTestCase {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static UiDevice sDevice;
