@@ -187,8 +187,8 @@ public final class DebugFlagsTest extends AdServicesExtendedMockitoTestCase {
             String name = flag.first;
             String value = flag.second;
             if (!dump.contains(DUMP_PREFIX + value + DUMP_EQUALS)) {
-                // NOTE: note using expect because the value of dump print on each failure would be
-                // hundreds of lines long
+                // NOTE: not using expect because the value of dump print on each failure would be
+                // dozens of lines long
                 numberMissingFlags++;
                 missingFlags.append('\n').append(name);
             }
