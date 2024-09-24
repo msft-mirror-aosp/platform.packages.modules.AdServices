@@ -1100,5 +1100,10 @@ public final class AdSelectionFromOutcomesE2ETest extends AdServicesExtendedMock
         public boolean getFledgeSelectAdsFromOutcomesApiMetricsEnabled() {
             return true;
         }
+
+        @Override
+        public boolean getConsentNotificationDebugMode() {
+            return false;
+        }
     }
 }
