@@ -134,6 +134,7 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
     public final AdServicesFlagsSetterRule flags =
             AdServicesFlagsSetterRule.withoutAdoptingShellPermissions().setDefaultLogcatTags();
 
+    private final List<AdServicesManagerService> mServices = new ArrayList<>();
     private final TopicsDbHelper mDBHelper = TopicsDbTestUtil.getDbHelperForTest();
     private UserInstanceManager mUserInstanceManager;
     @Mock private PackageManager mMockPackageManager;
@@ -167,8 +168,12 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
         doReturn(mMockRollbackManager).when(mSpyContext).getSystemService(RollbackManager.class);
     }
 
+    // TODO(b/343741206): Remove suppress warning once the lint is fixed.
+    @SuppressWarnings("VisibleForTests")
     @After
     public void tearDown() {
+        mServices.forEach(AdServicesManagerService::tearDownForTesting);
+
         // We need tear down this instance since it can have underlying persisted Data Store.
         mUserInstanceManager.tearDownForTesting();
 
@@ -233,6 +238,11 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
         // .OnPropertiesChangedListener. The listener is invoked on the separate thread. So, we
         // need to add a wait time to ensure the listener gets executed. If listener gets
         // executed after the test is finished, we hit READ_DEVICE_CONFIG exception.
+        // TODO(b/368342138): improve this by using a (new) SyncCallback that blocks until the given
+        // prop->value change is received. Notice that such callback alone would not be enough right
+        // now, as TestableDeviceConfig uses a HashMap to set the listeners, so there's no
+        // guarantee about the order they'd be called - we'd need to change it to use a
+        // LinkedHashMap instead first
         Thread.sleep(500);
 
         // Calling when the flag is disabled will unregister the Receiver!
@@ -1247,6 +1257,7 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
     private AdServicesManagerService newService() {
         AdServicesManagerService service =
                 new AdServicesManagerService(mSpyContext, mUserInstanceManager);
+        mServices.add(service);
         mLog.v("newService(): returning %s for %s", service, getTestName());
         return service;
     }
