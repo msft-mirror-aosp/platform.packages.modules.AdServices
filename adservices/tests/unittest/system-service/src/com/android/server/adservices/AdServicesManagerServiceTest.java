@@ -132,7 +132,7 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
     // will fail due to lack of android.permission.INTERACT_ACROSS_USERS_FULL.
     @Rule(order = 11)
     public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.withoutAdoptingShellPermissions();
+            AdServicesFlagsSetterRule.withoutAdoptingShellPermissions().setDefaultLogcatTags();
 
     private final TopicsDbHelper mDBHelper = TopicsDbTestUtil.getDbHelperForTest();
     private UserInstanceManager mUserInstanceManager;
