@@ -112,7 +112,7 @@ public final class AnswerSyncCallback<T> extends DeviceSideSyncCallback implemen
     @Override
     public T answer(InvocationOnMock invocation) throws Throwable {
         String invocationString = MockitoHelper.toString(invocation);
-        super.internalSetCalled(invocationString);
+        super.internalSetCalled("answer(" + invocationString + ")");
         if (mFailure != null) {
             logV("Throwing '%s' on %s", mFailure, invocationString);
             throw mFailure;
