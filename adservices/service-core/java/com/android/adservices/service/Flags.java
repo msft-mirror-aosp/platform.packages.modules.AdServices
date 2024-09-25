@@ -2117,25 +2117,6 @@ public interface Flags extends ModuleSharedFlags {
         return DebugFlags.getInstance().getConsentNotificationDebugMode();
     }
 
-    /** Returns the consent notification activity debug mode. */
-    default boolean getConsentNotificationActivityDebugMode() {
-        return DebugFlags.getInstance().getConsentNotificationActivityDebugMode();
-    }
-
-    /** Returns whether to suppress consent notified state. */
-    default boolean getConsentNotifiedDebugMode() {
-        return DebugFlags.getInstance().getConsentNotifiedDebugMode();
-    }
-
-    default boolean getConsentManagerDebugMode() {
-        return DebugFlags.getInstance().getConsentManagerDebugMode();
-    }
-
-    /** When enabled, the device is treated as OTA device. */
-    default boolean getConsentManagerOTADebugMode() {
-        return DebugFlags.getInstance().getConsentManagerOTADebugMode();
-    }
-
     boolean DEFAULT_RVC_POST_OTA_NOTIF_AGE_CHECK = false;
 
     /** When enabled, perform age check in rvc post ota notification channel. */

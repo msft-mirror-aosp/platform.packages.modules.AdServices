@@ -4990,7 +4990,7 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void testGetNavigationAttributionScopesForRegistration() {
+    public void testGetAttributionScopesForRegistration() {
         mFlags = mock(Flags.class);
         ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
         doReturn(true).when(mFlags).getMeasurementEnableAttributionScope();
@@ -5041,41 +5041,44 @@ public class MeasurementDaoTest {
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 Source.SourceType.NAVIGATION,
                 Source.Status.IGNORED);
-        // Event source, attribution scopes ignored.
-        insertSourceForAttributionScope(
-                List.of("5"),
-                ATTRIBUTION_SCOPE_LIMIT,
-                MAX_EVENT_STATES,
-                SOURCE_EVENT_TIME,
-                List.of(WEB_ONE_DESTINATION),
-                List.of(APP_ONE_DESTINATION),
-                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
-                SourceFixture.ValidSourceParams.REGISTRATION_ID,
-                Source.SourceType.EVENT,
-                Source.Status.ACTIVE);
+
         // Execution
         mDatastoreManager.runInTransaction(
                 (dao) -> {
                     assertThat(
-                                    dao.getNavigationAttributionScopesForRegistration(
-                                            SourceFixture.ValidSourceParams.REGISTRATION_ID,
-                                            SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN
-                                                    .toString()))
+                                    dao.getAttributionScopesForRegistration(
+                                                    SourceFixture.ValidSourceParams.REGISTRATION_ID,
+                                                    SourceFixture.ValidSourceParams
+                                                            .REGISTRATION_ORIGIN
+                                                            .toString())
+                                            .get())
                             .containsExactly("1", "2");
                     assertThat(
-                                    dao.getNavigationAttributionScopesForRegistration(
-                                            REGISTRATION_ID2, REGISTRATION_ORIGIN_2.toString()))
+                                    dao.getAttributionScopesForRegistration(
+                                                    REGISTRATION_ID2,
+                                                    REGISTRATION_ORIGIN_2.toString())
+                                            .get())
                             .containsExactly("3");
                     assertThat(
-                                    dao.getNavigationAttributionScopesForRegistration(
-                                            SourceFixture.ValidSourceParams.REGISTRATION_ID,
-                                            SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN
-                                                    .toString()))
+                                    dao.getAttributionScopesForRegistration(
+                                                    SourceFixture.ValidSourceParams.REGISTRATION_ID,
+                                                    SourceFixture.ValidSourceParams
+                                                            .REGISTRATION_ORIGIN
+                                                            .toString())
+                                            .get())
                             .containsExactly("1", "2");
                     assertThat(
-                                    dao.getNavigationAttributionScopesForRegistration(
-                                            REGISTRATION_ID2, REGISTRATION_ORIGIN_2.toString()))
+                                    dao.getAttributionScopesForRegistration(
+                                                    REGISTRATION_ID2,
+                                                    REGISTRATION_ORIGIN_2.toString())
+                                            .get())
                             .containsExactly("3");
+                    assertThat(
+                                    dao.getAttributionScopesForRegistration(
+                                                    SourceFixture.ValidSourceParams.REGISTRATION_ID,
+                                                    REGISTRATION_ORIGIN_2.toString())
+                                            .isEmpty())
+                            .isTrue();
                 });
     }
 

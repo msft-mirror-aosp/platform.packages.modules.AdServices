@@ -400,15 +400,16 @@ public final class AsyncRegistrationQueueRunner {
                     return false;
                 }
 
-                if (source.getSourceType() == Source.SourceType.NAVIGATION
-                        && source.getAttributionScopes() != null) {
-                    Set<String> navigationAttributionScopes =
-                            dao.getNavigationAttributionScopesForRegistration(
+                if (source.getSourceType() == Source.SourceType.NAVIGATION) {
+                    Optional<Set<String>> existingScopes =
+                            dao.getAttributionScopesForRegistration(
                                     source.getRegistrationId(),
                                     source.getRegistrationOrigin().toString());
-                    if (!navigationAttributionScopes.isEmpty()
-                            && !navigationAttributionScopes.equals(
-                                    new HashSet<>(source.getAttributionScopes()))) {
+                    Set<String> newScopes =
+                            source.getAttributionScopes() != null
+                                    ? new HashSet<>(source.getAttributionScopes())
+                                    : Set.of();
+                    if (existingScopes.isPresent() && !existingScopes.get().equals(newScopes)) {
                         return false;
                     }
                 }

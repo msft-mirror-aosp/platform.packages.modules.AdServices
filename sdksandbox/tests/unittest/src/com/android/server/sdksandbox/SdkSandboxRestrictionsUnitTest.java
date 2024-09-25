@@ -151,7 +151,8 @@ public class SdkSandboxRestrictionsUnitTest extends DeviceSupportedBaseTest {
                                 new FakeSdkSandboxProvider(
                                         Mockito.spy(FakeSdkSandboxService.class)),
                                 Mockito.spy(SdkSandboxPulledAtoms.class),
-                                new SdkSandboxStatsdLogger()));
+                                new SdkSandboxStatsdLogger(),
+                                new SdkSandboxRestrictionManager(context)));
         mService = new SdkSandboxManagerService(context, mInjector);
         mSdkSandboxManagerLocal = mService.getLocalManager();
         assertThat(mSdkSandboxManagerLocal).isNotNull();
