@@ -27,6 +27,7 @@ import static android.app.sdksandbox.SdkSandboxManager.REQUEST_SURFACE_PACKAGE_S
 import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_AVAILABLE;
 import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_SERVICE;
 
+import static com.android.adservices.flags.Flags.sdksandboxDumpEffectiveTargetSdkVersion;
 import static com.android.adservices.flags.Flags.sdksandboxInvalidateEffectiveTargetSdkVersionCache;
 import static com.android.sdksandbox.flags.Flags.sandboxActivitySdkBasedContext;
 import static com.android.sdksandbox.flags.Flags.serviceRestrictionPackageNameLogicUpdated;
@@ -385,7 +386,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
                         if (sdksandboxInvalidateEffectiveTargetSdkVersionCache()) {
                             if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
-                                mHandler.post(() -> invalidateCachePreW(callingInfo));
+                                invalidateCachePreW(callingInfo);
                             } else {
                                 invalidateCachePostW(uid);
                             }
@@ -408,7 +409,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 mContext.getPackageManager()
                         .getDeclaredSharedLibraries(callingInfo.getPackageName(), 0);
 
-        if (sharedLibraryInfos.size() == 0) {
+        if (sharedLibraryInfos.isEmpty()) {
             // It is an app and cache for the UID needs to be invalidated
             mSdkSandboxRestrictionManager.clearEffectiveTargetSdkVersion(callingInfo.getUid());
         } else {
@@ -1161,6 +1162,11 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         writer.println("mServiceProvider:");
         mServiceProvider.dump(writer);
         writer.println();
+
+        if (sdksandboxDumpEffectiveTargetSdkVersion()) {
+            mSdkSandboxRestrictionManager.dump(writer);
+            writer.println();
+        }
 
         dumpAdServices(fd, writer, args, /* quiet= */ true);
     }

@@ -43,6 +43,7 @@ import android.os.RemoteException;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.shared.testing.OutcomeReceiverForTests;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.testing.annotations.RequiresSdkRange;
@@ -50,7 +51,6 @@ import com.android.adservices.shared.testing.annotations.RequiresSdkRange;
 import com.google.common.base.Strings;
 
 import org.json.JSONObject;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.security.SecureRandom;
@@ -74,16 +74,16 @@ public final class AdSelectionManagerTest extends AdServicesUnitTestCase {
     private static final String CALLER_PACKAGE_NAME = TEST_PACKAGE_NAME;
     private static final int REPORTING_DESTINATIONS =
             FLAG_REPORTING_DESTINATION_SELLER | FLAG_REPORTING_DESTINATION_BUYER;
-    private String mEventData;
-    private ReportEventRequest mReportEventRequest;
 
     private static final long SLEEP_TIME_MS = 200;
     private static final int TYPICAL_PAYLOAD_SIZE_BYTES = 1024; // 1kb
     private static final int EXCESSIVE_PAYLOAD_SIZE_BYTES =
             TYPICAL_PAYLOAD_SIZE_BYTES * 2 * 1024; // 2Mb
 
-    @Before
-    public void setup() throws Exception {
+    private final String mEventData;
+    private final ReportEventRequest mReportEventRequest;
+
+    public AdSelectionManagerTest() throws Exception {
         mEventData = new JSONObject().put("key", "value").toString();
         mReportEventRequest =
                 new ReportEventRequest.Builder(
@@ -117,7 +117,7 @@ public final class AdSelectionManagerTest extends AdServicesUnitTestCase {
         mockAdIdManager.setResult(new AdId(AD_ID, true));
 
         mAdSelectionManager.reportEvent(
-                mReportEventRequest, CALLBACK_EXECUTOR, new MockOutcomeReceiver<>());
+                mReportEventRequest, CALLBACK_EXECUTOR, new OutcomeReceiverForTests<>());
 
         // Assert values passed to the service are as expected
         ReportInteractionInput input = mockServiceToReportEvent.mInput;
@@ -143,7 +143,7 @@ public final class AdSelectionManagerTest extends AdServicesUnitTestCase {
         mockAdIdManager.setResult(new AdId(AdId.ZERO_OUT, true));
 
         mAdSelectionManager.reportEvent(
-                mReportEventRequest, CALLBACK_EXECUTOR, new MockOutcomeReceiver<>());
+                mReportEventRequest, CALLBACK_EXECUTOR, new OutcomeReceiverForTests<>());
 
         // Assert values passed to the service are as expected
         ReportInteractionInput input = mockServiceToReportEvent.mInput;
@@ -169,7 +169,7 @@ public final class AdSelectionManagerTest extends AdServicesUnitTestCase {
         mockAdIdManager.setError(new SecurityException());
 
         mAdSelectionManager.reportEvent(
-                mReportEventRequest, CALLBACK_EXECUTOR, new MockOutcomeReceiver<>());
+                mReportEventRequest, CALLBACK_EXECUTOR, new OutcomeReceiverForTests<>());
 
         // Assert values passed to the service are as expected
         ReportInteractionInput input = mockServiceToReportEvent.mInput;
@@ -203,17 +203,15 @@ public final class AdSelectionManagerTest extends AdServicesUnitTestCase {
                         .setSeller(AdSelectionConfigFixture.SELLER)
                         .build();
 
-        MockOutcomeReceiverGetAdSelectionData<GetAdSelectionDataOutcome, Exception>
-                outcomeReceiver = new MockOutcomeReceiverGetAdSelectionData<>();
+        OutcomeReceiverForTests<GetAdSelectionDataOutcome> outcomeReceiver =
+                new OutcomeReceiverForTests<>();
 
         adSelectionManager.getAdSelectionData(request, CALLBACK_EXECUTOR, outcomeReceiver);
 
-        // Need time to sleep to allow time for outcome receiver to get setup
-        doSleep(SLEEP_TIME_MS);
+        var result = outcomeReceiver.assertResultReceived();
 
-        assertThat(outcomeReceiver.getResult()).isNotNull();
-        expect.that(outcomeReceiver.getResult().getAdSelectionId())
-                .isEqualTo(expectedAdSelectionId);
+        assertThat(result).isNotNull();
+        expect.that(result.getAdSelectionId()).isEqualTo(expectedAdSelectionId);
         assertArrayEquals(expectedByteArray, outcomeReceiver.getResult().getAdSelectionData());
     }
 
@@ -238,15 +236,15 @@ public final class AdSelectionManagerTest extends AdServicesUnitTestCase {
                         .setCoordinatorOriginUri(Uri.parse("https://example.com"))
                         .build();
 
-        MockOutcomeReceiverGetAdSelectionData<GetAdSelectionDataOutcome, Exception>
-                outcomeReceiver = new MockOutcomeReceiverGetAdSelectionData<>();
+        OutcomeReceiverForTests<GetAdSelectionDataOutcome> outcomeReceiver =
+                new OutcomeReceiverForTests<>();
 
         adSelectionManager.getAdSelectionData(request, CALLBACK_EXECUTOR, outcomeReceiver);
 
         // Need time to sleep to allow time for outcome receiver to get setup
         doSleep(SLEEP_TIME_MS);
 
-        expect.that(outcomeReceiver.getResult()).isNotNull();
+        expect.that(outcomeReceiver.assertResultReceived()).isNotNull();
         expect.that(mockServiceGetAdSelectionData.wasCoordinatorSet()).isTrue();
         expect.that(mockServiceGetAdSelectionData.getSellerConfiguration()).isNull();
     }
@@ -273,15 +271,12 @@ public final class AdSelectionManagerTest extends AdServicesUnitTestCase {
                         .setSellerConfiguration(SellerConfigurationFixture.SELLER_CONFIGURATION)
                         .build();
 
-        MockOutcomeReceiverGetAdSelectionData<GetAdSelectionDataOutcome, Exception>
-                outcomeReceiver = new MockOutcomeReceiverGetAdSelectionData<>();
+        OutcomeReceiverForTests<GetAdSelectionDataOutcome> outcomeReceiver =
+                new OutcomeReceiverForTests<>();
 
         adSelectionManager.getAdSelectionData(request, CALLBACK_EXECUTOR, outcomeReceiver);
 
-        // Need time to sleep to allow time for outcome receiver to get setup
-        doSleep(SLEEP_TIME_MS);
-
-        expect.that(outcomeReceiver.getResult()).isNotNull();
+        expect.that(outcomeReceiver.assertResultReceived()).isNotNull();
         expect.that(mockServiceGetAdSelectionData.wasCoordinatorSet()).isFalse();
         expect.that(mockServiceGetAdSelectionData.getSellerConfiguration())
                 .isEqualTo(SellerConfigurationFixture.SELLER_CONFIGURATION);
@@ -309,16 +304,14 @@ public final class AdSelectionManagerTest extends AdServicesUnitTestCase {
                         .setSeller(AdSelectionConfigFixture.SELLER)
                         .build();
 
-        MockOutcomeReceiverGetAdSelectionData<GetAdSelectionDataOutcome, Exception>
-                outcomeReceiver = new MockOutcomeReceiverGetAdSelectionData<>();
+        OutcomeReceiverForTests<GetAdSelectionDataOutcome> outcomeReceiver =
+                new OutcomeReceiverForTests<>();
 
         adSelectionManager.getAdSelectionData(request, CALLBACK_EXECUTOR, outcomeReceiver);
 
-        // Need time to sleep to allow time for outcome receiver to get setup
-        doSleep(SLEEP_TIME_MS);
-
-        assertThat(outcomeReceiver.getResult()).isNotNull();
-        assertThat(outcomeReceiver.getResult().getAdSelectionId()).isEqualTo(expectedAdSelectionId);
+        var result = outcomeReceiver.assertResultReceived();
+        assertThat(result).isNotNull();
+        assertThat(result.getAdSelectionId()).isEqualTo(expectedAdSelectionId);
         assertArrayEquals(expectedByteArray, outcomeReceiver.getResult().getAdSelectionData());
     }
 
@@ -344,17 +337,17 @@ public final class AdSelectionManagerTest extends AdServicesUnitTestCase {
                         .setSeller(AdSelectionConfigFixture.SELLER)
                         .build();
 
-        MockOutcomeReceiverGetAdSelectionData<GetAdSelectionDataOutcome, Exception>
-                outcomeReceiver = new MockOutcomeReceiverGetAdSelectionData<>();
+        OutcomeReceiverForTests<GetAdSelectionDataOutcome> outcomeReceiver =
+                new OutcomeReceiverForTests<>();
         adSelectionManager.getAdSelectionData(request, CALLBACK_EXECUTOR, outcomeReceiver);
-        // Need time to sleep to allow time for outcome receiver to get setup
-        doSleep(SLEEP_TIME_MS);
-        assertThat(outcomeReceiver.getResult()).isNotNull();
-        assertThat(outcomeReceiver.getResult().getAdSelectionId()).isEqualTo(expectedAdSelectionId);
 
-        byte[] result = outcomeReceiver.getResult().getAdSelectionData();
-        assertThat(result).hasLength(expectedByteArray.length);
-        assertArrayEquals(expectedByteArray, result);
+        var result = outcomeReceiver.assertResultReceived();
+        assertThat(result).isNotNull();
+        assertThat(result.getAdSelectionId()).isEqualTo(expectedAdSelectionId);
+
+        byte[] adSelectionData = result.getAdSelectionData();
+        assertThat(adSelectionData).hasLength(expectedByteArray.length);
+        assertArrayEquals(expectedByteArray, adSelectionData);
     }
 
     private static byte[] getRandomByteArray(int size) {
@@ -604,33 +597,5 @@ public final class AdSelectionManagerTest extends AdServicesUnitTestCase {
         public SellerConfiguration getSellerConfiguration() {
             return mSellerConfiguration;
         }
-    }
-
-    // TODO(b/296886238): Remove this mock once Mockito issue is resolved.
-    private static class MockOutcomeReceiver<R, E extends Throwable>
-            implements android.os.OutcomeReceiver<Object, Exception> {
-        @Override
-        public void onResult(Object result) {}
-
-        @Override
-        public void onError(Exception exception) {}
-    }
-
-    // TODO(b/296886238): Remove this mock once Mockito issue is resolved.
-    private static class MockOutcomeReceiverGetAdSelectionData<R, E extends Throwable>
-            implements android.os.OutcomeReceiver<GetAdSelectionDataOutcome, Exception> {
-        private GetAdSelectionDataOutcome mGetAdSelectionDataOutcome;
-
-        public GetAdSelectionDataOutcome getResult() {
-            return mGetAdSelectionDataOutcome;
-        }
-
-        @Override
-        public void onResult(GetAdSelectionDataOutcome result) {
-            mGetAdSelectionDataOutcome = result;
-        }
-
-        @Override
-        public void onError(Exception exception) {}
     }
 }

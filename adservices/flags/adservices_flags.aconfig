@@ -107,6 +107,14 @@ flag {
 }
 
 flag {
+    name: "sdksandbox_dump_effective_target_sdk_version"
+    namespace: "adservices_aconfig"
+    description: "Adds the effective target SDK version to the dump method"
+    bug: "321202443"
+    is_fixed_read_only: true
+}
+
+flag {
     name: "sdksandbox_invalidate_effective_target_sdk_version_cache"
     namespace: "adservices_aconfig"
     description: "Invalidate the effective target SDK version cache"
