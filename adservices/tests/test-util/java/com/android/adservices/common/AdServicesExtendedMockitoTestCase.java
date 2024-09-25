@@ -50,6 +50,7 @@ import com.android.adservices.mockito.LogInterceptor;
 import com.android.adservices.mockito.SharedMocker;
 import com.android.adservices.mockito.SharedMockitoMocker;
 import com.android.adservices.mockito.StaticClassChecker;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -300,6 +301,11 @@ public abstract class AdServicesExtendedMockitoTestCase extends AdServicesUnitTe
         @Override
         public void mockGetFlagsForTesting() {
             mAdServicesStaticMocker.mockGetFlagsForTesting();
+        }
+
+        @Override
+        public void mockGetDebugFlags(DebugFlags mockedDebugFlags) {
+            mAdServicesStaticMocker.mockGetDebugFlags(mockedDebugFlags);
         }
 
         @Override
