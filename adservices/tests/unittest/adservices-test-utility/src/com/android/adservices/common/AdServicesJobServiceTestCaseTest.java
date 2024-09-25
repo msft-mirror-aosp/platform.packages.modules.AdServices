@@ -23,10 +23,16 @@ import org.junit.Test;
 
 public final class AdServicesJobServiceTestCaseTest extends AdServicesJobTestCase {
 
-    // TODO(b/369656942): merge with testMocker()
     @Test
     public void testJobMocker() {
-        assertWithMessage("jobMocker").that(jobMocker).isNotNull();
-        expect.withMessage("jobMocker").that(jobMocker).isInstanceOf(AdServicesJobMocker.class);
+        assertWithMessage("mocker").that(mocker).isNotNull();
+
+        // Test parent subclass so we don't need to create one test class for each of the mocker
+        // interfaces it implements
+        expect.withMessage("mocker")
+                .that(mocker)
+                .isInstanceOf(AdServicesMockerLessExtendedMockitoTestCase.InternalMocker.class);
+
+        expect.withMessage("mocker").that(mocker).isInstanceOf(AdServicesJobMocker.class);
     }
 }

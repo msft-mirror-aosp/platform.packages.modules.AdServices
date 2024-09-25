@@ -30,6 +30,9 @@ import com.android.adservices.shared.testing.CallSuper;
 
 import org.junit.Rule;
 
+// NOTE: currently no subclass needs a custom mocker; once they do, this class should be split
+// into a SharedMockerLessExtendededMockitoTestCase (similar to AdServiceExtendedMockitoTestCase /
+// AdServicesMockerLessExtendedMockitoTestCase)
 // TODO(b/335935200): fix this
 @DisabledOnRavenwood(reason = "Uses ExtendedMockito")
 public abstract class SharedExtendedMockitoTestCase extends SharedUnitTestCase {
