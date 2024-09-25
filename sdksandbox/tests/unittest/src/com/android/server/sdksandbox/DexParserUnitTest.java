@@ -27,6 +27,7 @@ import android.content.pm.PackageManager;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.server.sdksandbox.DeviceSupportedBaseTest;
+import com.android.server.sdksandbox.verifier.DexParser.DexEntry;
 import com.android.server.sdksandbox.verifier.SerialDexLoader.DexSymbols;
 
 import org.junit.Before;
@@ -64,7 +65,7 @@ public class DexParserUnitTest extends DeviceSupportedBaseTest {
     public void getDexList() throws Exception {
         File apkPathFile = getAppFile(TEST_PACKAGENAME);
         assertThat(apkPathFile.exists()).isTrue();
-        Map<File, List<String>> dexList = mDexParser.getDexFilePaths(apkPathFile);
+        List<DexEntry> dexList = mDexParser.getDexFilePaths(apkPathFile);
 
         assertWithMessage("Dex list should not be empty " + apkPathFile.getAbsolutePath())
                 .that(dexList)
@@ -75,19 +76,18 @@ public class DexParserUnitTest extends DeviceSupportedBaseTest {
     public void resultContainsCalledApi() throws Exception {
         File apkPathFile = getAppFile(TEST_PACKAGENAME);
         assertThat(apkPathFile.exists()).isTrue();
-        Map<File, List<String>> dexList = mDexParser.getDexFilePaths(apkPathFile);
+        List<DexEntry> dexList = mDexParser.getDexFilePaths(apkPathFile);
 
         DexSymbols dexLoadResult = new DexSymbols();
         boolean foundCalledApi = false;
-        for (Map.Entry<File, List<String>> dexFile : dexList.entrySet()) {
-            for (String dexEntry : dexFile.getValue()) {
-                mDexParser.loadDexSymbols(dexFile.getKey(), dexEntry, dexLoadResult);
-                if (dexLoadResult.hasReferencedMethod(
-                        BUFFERED_READER_READ_LINE_CLASSNAME,
-                        BUFFERED_READER_READ_LINE_METHOD_STRING)) {
-                    foundCalledApi = true;
-                    break;
-                }
+        for (DexEntry dexEntry : dexList) {
+            mDexParser.loadDexSymbols(
+                dexEntry.getApkFile(), dexEntry.getDexEntry(), dexLoadResult);
+            if (dexLoadResult.hasReferencedMethod(
+                    BUFFERED_READER_READ_LINE_CLASSNAME,
+                    BUFFERED_READER_READ_LINE_METHOD_STRING)) {
+                foundCalledApi = true;
+                break;
             }
         }
 
@@ -98,19 +98,17 @@ public class DexParserUnitTest extends DeviceSupportedBaseTest {
     public void resultDoesNotContainAbsentApi() throws Exception {
         File apkPathFile = getAppFile(TEST_PACKAGENAME);
         assertThat(apkPathFile.exists()).isTrue();
-        Map<File, List<String>> dexList = mDexParser.getDexFilePaths(apkPathFile);
+        List<DexEntry> dexList = mDexParser.getDexFilePaths(apkPathFile);
 
         DexSymbols dexLoadResult = new DexSymbols();
         boolean foundAbsentApi = false;
-        for (Map.Entry<File, List<String>> dexFile : dexList.entrySet()) {
-            for (String dexEntry : dexFile.getValue()) {
-                mDexParser.loadDexSymbols(dexFile.getKey(), dexEntry, dexLoadResult);
-                if (dexLoadResult.hasReferencedMethod(
-                        RESOURCES_GET_DISPLAY_METRICS_CLASSNAME,
-                        RESOURCES_GET_DISPLAY_METRICS_STRING)) {
-                    foundAbsentApi = true;
-                    break;
-                }
+        for (DexEntry dexEntry : dexList) {
+            mDexParser.loadDexSymbols(dexEntry.getApkFile(), dexEntry.getDexEntry(), dexLoadResult);
+            if (dexLoadResult.hasReferencedMethod(
+                    RESOURCES_GET_DISPLAY_METRICS_CLASSNAME,
+                    RESOURCES_GET_DISPLAY_METRICS_STRING)) {
+                foundAbsentApi = true;
+                break;
             }
         }
 

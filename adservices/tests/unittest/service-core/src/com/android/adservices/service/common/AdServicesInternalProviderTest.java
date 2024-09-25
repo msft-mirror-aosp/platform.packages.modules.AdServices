@@ -21,15 +21,20 @@ import static com.android.adservices.shared.testing.common.DumpHelper.mockDump;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
 
 import android.app.adservices.AdServicesManager;
 import android.content.Context;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Test;
+
+import java.io.PrintWriter;
 
 public final class AdServicesInternalProviderTest extends AdServicesExtendedMockitoTestCase {
 
@@ -81,5 +86,25 @@ public final class AdServicesInternalProviderTest extends AdServicesExtendedMock
         String dump = dump(pw -> mProvider.dump(/* fd= */ null, pw, /* args= */ null));
 
         assertWithMessage("content of dump()").that(dump).contains(mgrDump);
+    }
+
+    @Test
+    @SpyStatic(DebugFlags.class)
+    public void testDump_includesDebugFlagsDump() throws Exception {
+        DebugFlags mockDebugFlags = mock(DebugFlags.class);
+        mocker.mockGetDebugFlags(mockDebugFlags);
+        String expectedDump = "The Bug is on the Table";
+        // Ideally we should have a Dumper.mockDump() method that could be used below...
+        doAnswer(
+                        (inv) -> {
+                            ((PrintWriter) inv.getArgument(0)).println(expectedDump);
+                            return null;
+                        })
+                .when(mockDebugFlags)
+                .dump(any());
+
+        String dump = dump(pw -> mProvider.dump(/* fd= */ null, pw, /* args= */ null));
+
+        assertWithMessage("content of dump()").that(dump).contains(expectedDump);
     }
 }
