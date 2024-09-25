@@ -17,12 +17,16 @@ package com.android.adservices.common;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
+import com.android.adservices.mockito.AdServicesJobMocker;
+
 import org.junit.Test;
 
 public final class AdServicesJobServiceTestCaseTest extends AdServicesJobTestCase {
 
+    // TODO(b/369656942): merge with testMocker()
     @Test
     public void testJobMocker() {
         assertWithMessage("jobMocker").that(jobMocker).isNotNull();
+        expect.withMessage("jobMocker").that(jobMocker).isInstanceOf(AdServicesJobMocker.class);
     }
 }
