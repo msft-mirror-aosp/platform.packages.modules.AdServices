@@ -5478,8 +5478,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 getSpyAsyncRegistrationQueueRunner();
 
         // Execution
-        when(mMeasurementDao.getNavigationAttributionScopesForRegistration(any(), any()))
-                .thenReturn(Set.of("1", "2", "3"));
+        when(mMeasurementDao.getAttributionScopesForRegistration(any(), any()))
+                .thenReturn(Optional.of(Set.of("1", "2", "3")));
 
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -5499,13 +5499,178 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         .setMaxEventStates(3L)
                         .build();
         HashSet<DebugReportApi.Type> adrTypes = new HashSet<>();
-        assertFalse(
-                asyncRegistrationQueueRunner.areValidSourcePrivacyParameters(
-                        source, mMeasurementDao, mMockFlags, adrTypes));
 
         // Assertions
-        verify(mMeasurementDao, times(1))
-                .getNavigationAttributionScopesForRegistration(any(), any());
+        assertThat(
+                        asyncRegistrationQueueRunner.areValidSourcePrivacyParameters(
+                                source, mMeasurementDao, mMockFlags, adrTypes))
+                .isFalse();
+        verify(mMeasurementDao, times(1)).getAttributionScopesForRegistration(any(), any());
+        assertThat(adrTypes).isEmpty();
+    }
+
+    @Test
+    public void areValidSourcePrivacyParameters_navigationNonEmptyToEmptyScopes_fail()
+            throws DatastoreException {
+        // setup
+        when(mMockFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
+        when(mMockFlags.getMeasurementAttributionScopeMaxInfoGainNavigation())
+                .thenReturn(Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION);
+        when(mMockFlags.getMeasurementAttributionScopeMaxInfoGainEvent())
+                .thenReturn(Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT);
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                getSpyAsyncRegistrationQueueRunner();
+
+        // Execution
+        when(mMeasurementDao.getAttributionScopesForRegistration(any(), any()))
+                .thenReturn(Optional.of(Set.of("1", "2", "3")));
+
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setPublisher(APP_TOP_ORIGIN)
+                        .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
+                        .setEnrollmentId(DEFAULT_ENROLLMENT_ID)
+                        .setRegistrant(Uri.parse("android-app://com.example"))
+                        .setEventTime(8000000000L)
+                        .setExpiryTime(8640000010L)
+                        .setPriority(100L)
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setDebugKey(new UnsignedLong(47823478789L))
+                        .setAttributionScopes(List.of())
+                        .build();
+        HashSet<DebugReportApi.Type> adrTypes = new HashSet<>();
+
+        // Assertions
+        assertThat(
+                        asyncRegistrationQueueRunner.areValidSourcePrivacyParameters(
+                                source, mMeasurementDao, mMockFlags, adrTypes))
+                .isFalse();
+        verify(mMeasurementDao, times(1)).getAttributionScopesForRegistration(any(), any());
+        assertThat(adrTypes).isEmpty();
+    }
+
+    @Test
+    public void areValidSourcePrivacyParameters_navigationEmptyToNonEmptyScopes_fail()
+            throws DatastoreException {
+        // setup
+        when(mMockFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
+        when(mMockFlags.getMeasurementAttributionScopeMaxInfoGainNavigation())
+                .thenReturn(Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION);
+        when(mMockFlags.getMeasurementAttributionScopeMaxInfoGainEvent())
+                .thenReturn(Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT);
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                getSpyAsyncRegistrationQueueRunner();
+
+        // Execution
+        when(mMeasurementDao.getAttributionScopesForRegistration(any(), any()))
+                .thenReturn(Optional.of(Set.of()));
+
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setPublisher(APP_TOP_ORIGIN)
+                        .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
+                        .setEnrollmentId(DEFAULT_ENROLLMENT_ID)
+                        .setRegistrant(Uri.parse("android-app://com.example"))
+                        .setEventTime(8000000000L)
+                        .setExpiryTime(8640000010L)
+                        .setPriority(100L)
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setDebugKey(new UnsignedLong(47823478789L))
+                        .setAttributionScopes(List.of("1"))
+                        .build();
+        HashSet<DebugReportApi.Type> adrTypes = new HashSet<>();
+        // Assertions
+        assertThat(
+                        asyncRegistrationQueueRunner.areValidSourcePrivacyParameters(
+                                source, mMeasurementDao, mMockFlags, adrTypes))
+                .isFalse();
+        verify(mMeasurementDao, times(1)).getAttributionScopesForRegistration(any(), any());
+        assertThat(adrTypes).isEmpty();
+    }
+
+    @Test
+    public void areValidSourcePrivacyParameters_firstNavigationEmptyScopes_pass()
+            throws DatastoreException {
+        // setup
+        when(mMockFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
+        when(mMockFlags.getMeasurementAttributionScopeMaxInfoGainNavigation())
+                .thenReturn(Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION);
+        when(mMockFlags.getMeasurementAttributionScopeMaxInfoGainEvent())
+                .thenReturn(Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT);
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                getSpyAsyncRegistrationQueueRunner();
+
+        // Execution
+        when(mMeasurementDao.getAttributionScopesForRegistration(any(), any()))
+                .thenReturn(Optional.empty());
+
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setPublisher(APP_TOP_ORIGIN)
+                        .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
+                        .setEnrollmentId(DEFAULT_ENROLLMENT_ID)
+                        .setRegistrant(Uri.parse("android-app://com.example"))
+                        .setEventTime(8000000000L)
+                        .setExpiryTime(8640000010L)
+                        .setPriority(100L)
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setDebugKey(new UnsignedLong(47823478789L))
+                        .setAttributionScopes(List.of())
+                        .build();
+        HashSet<DebugReportApi.Type> adrTypes = new HashSet<>();
+        // Assertions
+        assertThat(
+                        asyncRegistrationQueueRunner.areValidSourcePrivacyParameters(
+                                source, mMeasurementDao, mMockFlags, adrTypes))
+                .isTrue();
+        verify(mMeasurementDao, times(1)).getAttributionScopesForRegistration(any(), any());
+        assertThat(adrTypes).isEmpty();
+    }
+
+    @Test
+    public void areValidSourcePrivacyParameters_firstNonEmptyScopes_pass()
+            throws DatastoreException {
+        // setup
+        when(mMockFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
+        when(mMockFlags.getMeasurementAttributionScopeMaxInfoGainNavigation())
+                .thenReturn(Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION);
+        when(mMockFlags.getMeasurementAttributionScopeMaxInfoGainEvent())
+                .thenReturn(Flags.MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT);
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                getSpyAsyncRegistrationQueueRunner();
+
+        // Execution
+        when(mMeasurementDao.getAttributionScopesForRegistration(any(), any()))
+                .thenReturn(Optional.empty());
+
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setEventId(new UnsignedLong(1L))
+                        .setPublisher(APP_TOP_ORIGIN)
+                        .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
+                        .setEnrollmentId(DEFAULT_ENROLLMENT_ID)
+                        .setRegistrant(Uri.parse("android-app://com.example"))
+                        .setEventTime(8000000000L)
+                        .setExpiryTime(8640000010L)
+                        .setPriority(100L)
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setDebugKey(new UnsignedLong(47823478789L))
+                        .setAttributionScopes(List.of())
+                        .build();
+        HashSet<DebugReportApi.Type> adrTypes = new HashSet<>();
+        // Assertions
+        assertThat(
+                        asyncRegistrationQueueRunner.areValidSourcePrivacyParameters(
+                                source, mMeasurementDao, mMockFlags, adrTypes))
+                .isTrue();
+        verify(mMeasurementDao, times(1)).getAttributionScopesForRegistration(any(), any());
         assertThat(adrTypes).isEmpty();
     }
 
@@ -5522,8 +5687,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 getSpyAsyncRegistrationQueueRunner();
 
         // Execution
-        when(mMeasurementDao.getNavigationAttributionScopesForRegistration(any(), any()))
-                .thenReturn(Set.of("1", "2", "3"));
+        when(mMeasurementDao.getAttributionScopesForRegistration(any(), any()))
+                .thenReturn(Optional.of(Set.of("1", "2", "3")));
 
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -5548,8 +5713,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         source, mMeasurementDao, mMockFlags, adrTypes));
 
         // Assertions
-        verify(mMeasurementDao, times(1))
-                .getNavigationAttributionScopesForRegistration(any(), any());
+        verify(mMeasurementDao, times(1)).getAttributionScopesForRegistration(any(), any());
         assertThat(adrTypes).isEmpty();
     }
 

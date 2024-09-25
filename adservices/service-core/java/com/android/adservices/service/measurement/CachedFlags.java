@@ -36,7 +36,6 @@ public class CachedFlags {
     private final boolean mEnforceForegroundStatusForMeasurementDeleteRegistrations;
     private final boolean mEnforceForegroundStatusForMeasurementStatus;
     private final boolean mEnableApiStatusAllowListCheck;
-    private final boolean mConsentNotifiedDebugMode;
     private final String mApiAppAllowList;
     private final String mApiAppBlockList;
     private final String mWebContextClientAppAllowList;
@@ -70,7 +69,6 @@ public class CachedFlags {
         mApiAppBlockList = flags.getMsmtApiAppBlockList();
         mWebContextClientAppAllowList = flags.getWebContextClientAppAllowList();
         mEnableApiStatusAllowListCheck = flags.getMsmtEnableApiStatusAllowListCheck();
-        mConsentNotifiedDebugMode = flags.getConsentNotifiedDebugMode();
     }
 
     public boolean getMeasurementApiRegisterSourceKillSwitch() {
@@ -155,12 +153,6 @@ public class CachedFlags {
         return mEnableSessionStableKillSwitches
                 ? mEnableApiStatusAllowListCheck
                 : mFlags.getMsmtEnableApiStatusAllowListCheck();
-    }
-
-    public boolean getConsentNotifiedDebugMode() {
-        return mEnableSessionStableKillSwitches
-                ? mConsentNotifiedDebugMode
-                : mFlags.getConsentNotifiedDebugMode();
     }
 
     public boolean getEnforceForegroundStatusForMeasurementStatus() {

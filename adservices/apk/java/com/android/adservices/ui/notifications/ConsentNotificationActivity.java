@@ -29,6 +29,7 @@ import androidx.fragment.app.FragmentActivity;
 import com.android.adservices.LogUtil;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.api.R;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.ui.OTAResourcesManager;
@@ -95,9 +96,8 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
             OTAResourcesManager.applyOTAResources(context, true);
         }
         boolean debugModeEnabled =
-                FlagsFactory.getFlags().getConsentNotificationActivityDebugMode();
+                DebugFlags.getInstance().getConsentNotificationActivityDebugMode();
         boolean isUxStateReady = isUxStatesReady(this);
-
         LoggerFactory.getUILogger()
                 .d(
                         "getting debug mode %b, getting ux state ready %b",
