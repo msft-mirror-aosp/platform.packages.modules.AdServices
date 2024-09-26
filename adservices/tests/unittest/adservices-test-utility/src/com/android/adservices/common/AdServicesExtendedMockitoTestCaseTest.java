@@ -21,6 +21,7 @@ import static com.android.adservices.shared.testing.mockito.MockitoHelper.isSpy;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
+import com.android.adservices.mockito.AdServicesDebugFlagsMocker;
 import com.android.adservices.mockito.AdServicesFlagsMocker;
 import com.android.adservices.mockito.AdServicesPragmaticMocker;
 import com.android.adservices.mockito.AdServicesStaticMocker;
@@ -63,6 +64,7 @@ public final class AdServicesExtendedMockitoTestCaseTest extends AdServicesExten
         expect.withMessage("mocker").that(mocker).isInstanceOf(AndroidStaticMocker.class);
         expect.withMessage("mocker").that(mocker).isInstanceOf(AdServicesPragmaticMocker.class);
         expect.withMessage("mocker").that(mocker).isInstanceOf(AdServicesFlagsMocker.class);
+        expect.withMessage("mocker").that(mocker).isInstanceOf(AdServicesDebugFlagsMocker.class);
         expect.withMessage("mocker").that(mocker).isInstanceOf(AdServicesStaticMocker.class);
     }
 }

@@ -34,6 +34,7 @@ import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.mockito.AdServicesJobMocker;
 import com.android.adservices.mockito.AdServicesMockitoJobMocker;
 import com.android.adservices.mockito.StaticClassChecker;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
@@ -47,8 +48,9 @@ public abstract class AdServicesJobServiceTestCase
         extends AdServicesMockerLessExtendedMockitoTestCase<Mocker> {
 
     @Override
-    protected Mocker newMocker(AdServicesExtendedMockitoRule rule, Flags mockFlags) {
-        return new Mocker(rule, mockFlags);
+    protected final Mocker newMocker(
+            AdServicesExtendedMockitoRule rule, Flags mockFlags, DebugFlags mockDebugFlags) {
+        return new Mocker(rule, mockFlags, mockDebugFlags);
     }
 
     // TODO(b/314969513): inline methods below once all classes are refactored (and use a common
@@ -228,8 +230,8 @@ public abstract class AdServicesJobServiceTestCase
         private final AdServicesJobMocker mJobMocker;
 
         @VisibleForTesting
-        Mocker(StaticClassChecker checker, Flags flags) {
-            super(checker, flags);
+        Mocker(StaticClassChecker checker, Flags mockFlags, DebugFlags mockDebugFlags) {
+            super(checker, mockFlags, mockDebugFlags);
             mJobMocker = new AdServicesMockitoJobMocker(checker);
         }
 
