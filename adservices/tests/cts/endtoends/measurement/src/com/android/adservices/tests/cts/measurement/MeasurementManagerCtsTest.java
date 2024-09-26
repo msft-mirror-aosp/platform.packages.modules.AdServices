@@ -17,7 +17,6 @@
 package com.android.adservices.tests.cts.measurement;
 
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH;
-import static com.android.adservices.shared.testing.AndroidSdk.RVC;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
@@ -25,7 +24,6 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static org.junit.Assert.fail;
 
 import android.adservices.common.AdServicesOutcomeReceiver;
-import android.adservices.exceptions.AdServicesException;
 import android.adservices.measurement.DeletionRequest;
 import android.adservices.measurement.MeasurementManager;
 import android.adservices.measurement.SourceRegistrationRequest;
@@ -43,13 +41,11 @@ import android.view.KeyEvent;
 
 import androidx.annotation.NonNull;
 
-import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
-import com.android.adservices.shared.testing.annotations.RequiresSdkRange;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -69,6 +65,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+@RequiresSdkLevelAtLeastS(reason = "Cannot run on R with Consent Source of truth removed")
 public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestCase {
 
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
@@ -117,106 +114,6 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     @Test
-    @RequiresSdkRange(atMost = RVC)
-    public void testRegisterSourceUri_onR_invokesCallbackOnError() throws Exception {
-        AdServicesOutcomeReceiverForTests callback = new AdServicesOutcomeReceiverForTests();
-
-        mMeasurementManager.registerSource(
-                Uri.parse("https://registration-source"),
-                /* inputEvent= */ null,
-                CALLBACK_EXECUTOR,
-                callback);
-
-        callback.assertFailure(AdServicesException.class);
-    }
-
-    @Test
-    @RequiresSdkRange(atMost = RVC)
-    public void testRegisterSourceRequest_onR_invokesCallbackOnError() throws Exception {
-        SourceRegistrationRequest request = createSourceRegistrationRequest();
-        AdServicesOutcomeReceiverForTests callback = new AdServicesOutcomeReceiverForTests();
-
-        mMeasurementManager.registerSource(request, CALLBACK_EXECUTOR, callback);
-
-        callback.assertFailure(AdServicesException.class);
-    }
-
-    @Test
-    @RequiresSdkRange(atMost = RVC)
-    public void testRegisterWebSource_onR_invokesCallbackOnError() throws Exception {
-        AdServicesOutcomeReceiverForTests callback = new AdServicesOutcomeReceiverForTests();
-
-        WebSourceParams webSourceParams =
-                new WebSourceParams.Builder(SOURCE_REGISTRATION_URI)
-                        .setDebugKeyAllowed(false)
-                        .build();
-        WebSourceRegistrationRequest webSourceRegistrationRequest =
-                new WebSourceRegistrationRequest.Builder(
-                                Collections.singletonList(webSourceParams), SOURCE_REGISTRATION_URI)
-                        .setInputEvent(null)
-                        .setAppDestination(OS_DESTINATION)
-                        .setWebDestination(WEB_DESTINATION)
-                        .setVerifiedDestination(null)
-                        .build();
-
-        mMeasurementManager.registerWebSource(
-                webSourceRegistrationRequest, CALLBACK_EXECUTOR, callback);
-
-        callback.assertFailure(AdServicesException.class);
-    }
-
-    @Test
-    @RequiresSdkRange(atMost = RVC)
-    public void testRegisterWebTrigger_onR_invokesCallbackOnError() throws Exception {
-        AdServicesOutcomeReceiverForTests callback = new AdServicesOutcomeReceiverForTests();
-
-        WebTriggerParams webTriggerParams =
-                new WebTriggerParams.Builder(TRIGGER_REGISTRATION_URI).build();
-        WebTriggerRegistrationRequest webTriggerRegistrationRequest =
-                new WebTriggerRegistrationRequest.Builder(
-                                Collections.singletonList(webTriggerParams), DESTINATION)
-                        .build();
-
-        mMeasurementManager.registerWebTrigger(
-                webTriggerRegistrationRequest, CALLBACK_EXECUTOR, callback);
-
-        callback.assertFailure(AdServicesException.class);
-    }
-
-    @Test
-    @RequiresSdkRange(atMost = RVC)
-    public void testRegisterTrigger_onR_invokesCallbackOnError() throws Exception {
-        AdServicesOutcomeReceiverForTests callback = new AdServicesOutcomeReceiverForTests();
-
-        mMeasurementManager.registerTrigger(
-                Uri.parse("https://registration-trigger"), CALLBACK_EXECUTOR, callback);
-
-        callback.assertFailure(AdServicesException.class);
-    }
-
-    @Test
-    @RequiresSdkRange(atMost = RVC)
-    public void testDeleteRegistrations_onR_invokesCallbackOnError() throws Exception {
-        DeletionRequest request = new DeletionRequest.Builder().build();
-        AdServicesOutcomeReceiverForTests callback = new AdServicesOutcomeReceiverForTests();
-
-        mMeasurementManager.deleteRegistrations(request, CALLBACK_EXECUTOR, callback);
-
-        callback.assertFailure(AdServicesException.class);
-    }
-
-    @Test
-    @RequiresSdkRange(atMost = RVC)
-    public void testGetMeasurementApiStatus_onR_invokesCallbackOnError() throws Exception {
-        AdServicesOutcomeReceiverForTests callback = new AdServicesOutcomeReceiverForTests();
-
-        mMeasurementManager.getMeasurementApiStatus(CALLBACK_EXECUTOR, callback);
-
-        callback.assertFailure(AdServicesException.class);
-    }
-
-    @Test
-    @RequiresSdkLevelAtLeastS()
     @RequiresLowRamDevice
     public void testMeasurementApiDisabled_lowRamDevice() throws Exception {
         MeasurementManager manager = MeasurementManager.get(mContext);
@@ -241,7 +138,6 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterSource_withNoServerSetupWithCallbackCustomReceiver_noErrors()
             throws Exception {
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -281,7 +177,6 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterSource_withLocalhostUriNonDebuggableCallerWithCustomReceiver_fails()
             throws Exception {
         CompletableFuture<Void> future = new CompletableFuture<>();
@@ -339,7 +234,6 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterSource_withCallbackCustomReceiver_verifyRateLimitReached()
             throws Exception {
         // Rate limit hasn't reached yet
@@ -381,7 +275,6 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterSourceMultiple_withNoServerSetupWithCallbackCustomReceiver_noErrors()
             throws Exception {
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -426,7 +319,6 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterSourceMultiple_withCallbackCustomReceiver_verifyRateLimitReached()
             throws Exception {
         // Rate limit hasn't reached yet
@@ -471,7 +363,6 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterTrigger_withNoServerSetupWithCallbackCustomReceiver_noErrors()
             throws Exception {
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -516,7 +407,6 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterTrigger_withCallbackCustomReceiver_verifyRateLimitReached()
             throws Exception {
         // Rate limit hasn't reached yet
@@ -573,7 +463,6 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterWebSource_withCallbackCustomReceiver_noErrors() throws Exception {
         WebSourceParams webSourceParams =
                 new WebSourceParams.Builder(SOURCE_REGISTRATION_URI)
@@ -631,7 +520,6 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterWebSource_withCallbackCustomReceiver_verifyRateLimitReached()
             throws Exception {
         // Rate limit hasn't reached yet
@@ -681,7 +569,6 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterWebTrigger_withCallbackCustomReceiver_noErrors() throws Exception {
         WebTriggerParams webTriggerParams =
                 new WebTriggerParams.Builder(TRIGGER_REGISTRATION_URI).build();
@@ -731,7 +618,6 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterWebTrigger_withCustomReceiver_verifyRateLimitReached()
             throws Exception {
         // Rate limit hasn't reached yet
@@ -777,7 +663,6 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testDeleteRegistrations_withNoOriginNoRangeWithCallbackCustomReceiver_noErrors()
             throws Exception {
         DeletionRequest deletionRequest = new DeletionRequest.Builder().build();
@@ -813,7 +698,6 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void
             testDeleteRegistrations_withMultipleNoOriginNoRangeWithCallbackCustomReceiver_noErrors()
                     throws Exception {
@@ -854,7 +738,6 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testDeleteRegistrations_withNoRangeWithCallbackCustomReceiver_noErrors()
             throws Exception {
         DeletionRequest deletionRequest =
@@ -891,7 +774,6 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testDeleteRegistrations_withEmptyListsWithRangeWithCallbackCustomReceiver_noErrors()
             throws Exception {
         DeletionRequest deletionRequest =
@@ -930,7 +812,6 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testDeleteRegistrations_withUrisWithRangeWithCallbackCustomReceiver_noErrors()
             throws Exception {
         DeletionRequest deletionRequest =
@@ -983,7 +864,6 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testDeleteRegistrations_withInvalidArgumentsWithCallbackCustomReceiver_hasError()
             throws Exception {
         MeasurementManager manager = MeasurementManager.get(mContext);
@@ -1028,7 +908,6 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testMeasurementApiStatus_killSwitchGlobalOffWithCustomReceiver_returnEnabled()
             throws Exception {
         enableGlobalKillSwitch(/* enabled= */ false);
@@ -1048,7 +927,6 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testMeasurementApiStatus_killSwitchGlobalOnWithCustomReceiver_returnDisabled()
             throws Exception {
         enableGlobalKillSwitch(/* enabled= */ true);
@@ -1066,7 +944,6 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testMeasurementApiStatus_killSwitchMeasurementOnWithCustomReceiver_returnDisabled()
             throws Exception {
         enableMeasurementKillSwitch(/* enabled= */ true);
@@ -1085,7 +962,6 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testMeasurementApiStatus_notInAllowListWithCustomReceiver_returnDisabled()
             throws Exception {
         enableGlobalKillSwitch(/* enabled= */ true);
