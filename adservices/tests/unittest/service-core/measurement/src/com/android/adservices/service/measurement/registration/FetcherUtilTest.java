@@ -474,6 +474,46 @@ public final class FetcherUtilTest {
     }
 
     @Test
+    public void extractIntegralInt_posIntegralNumber_success() throws Exception {
+        JSONObject jsonObj = new JSONObject().put(KEY, 2147483647);
+        assertWithMessage("extractIntegralInt(2147483647)")
+                .that(FetcherUtil.extractIntegralInt(jsonObj, KEY))
+                .isEqualTo(Optional.of(Integer.valueOf(2147483647)));
+    }
+
+    @Test
+    public void extractIntegralInt_negativeIntegralNumber_success() throws Exception {
+        JSONObject jsonObj = new JSONObject().put(KEY, -2147483648);
+        assertWithMessage("extractIntegralInt(-2147483648)")
+                .that(FetcherUtil.extractIntegralInt(jsonObj, KEY))
+                .isEqualTo(Optional.of(Integer.valueOf(-2147483648)));
+    }
+
+    @Test
+    public void extractIntegralInt_zeroInput_success() throws Exception {
+        JSONObject jsonObj = new JSONObject().put(KEY, 0);
+        assertWithMessage("extractIntegralInt(0)")
+                .that(FetcherUtil.extractIntegralInt(jsonObj, KEY))
+                .isEqualTo(Optional.of(Integer.valueOf(0)));
+    }
+
+    @Test
+    public void extractIntegralInt_inputAboveMaxInt_fails() throws Exception {
+        JSONObject jsonObj = new JSONObject().put(KEY, 2147483648L);
+        assertWithMessage("extractIntegralInt(2147483648)")
+                .that(FetcherUtil.extractIntegralInt(jsonObj, KEY))
+                .isEqualTo(Optional.empty());
+    }
+
+    @Test
+    public void extractIntegralInt_inputBelowMinInt_fails() throws Exception {
+        JSONObject jsonObj = new JSONObject().put(KEY, -2147483649L);
+        assertWithMessage("extractIntegralInt(-2147483649)")
+                .that(FetcherUtil.extractIntegralInt(jsonObj, KEY))
+                .isEqualTo(Optional.empty());
+    }
+
+    @Test
     public void testIsValidAggregateKeyId_valid() {
         assertTrue(FetcherUtil.isValidAggregateKeyId("abcd"));
     }

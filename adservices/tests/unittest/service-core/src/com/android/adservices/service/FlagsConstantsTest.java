@@ -189,7 +189,7 @@ public final class FlagsConstantsTest extends AdServicesUnitTestCase {
         return aconfigToDeviceConfig(aconfigFlag);
     }
 
-    private static List<Pair<String, String>> getAllFlagNameConstants(Class<?> clazz)
+    static List<Pair<String, String>> getAllFlagNameConstants(Class<?> clazz)
             throws IllegalAccessException {
         List<Pair<String, String>> constants = new ArrayList<>();
         for (Field field : clazz.getDeclaredFields()) {

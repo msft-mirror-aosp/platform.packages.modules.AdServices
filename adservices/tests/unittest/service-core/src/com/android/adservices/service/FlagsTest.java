@@ -49,7 +49,9 @@ import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_PER_D
 import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW;
 import static com.android.adservices.service.Flags.MEASUREMENT_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE;
+import static com.android.adservices.service.Flags.MEASUREMENT_MAX_AGGREGATABLE_BUCKETS_PER_SOURCE_REGISTRATION;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES;
+import static com.android.adservices.service.Flags.MEASUREMENT_MAX_LENGTH_PER_AGGREGATABLE_BUCKET;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_REINSTALL_REATTRIBUTION_WINDOW_SECONDS;
 import static com.android.adservices.service.Flags.MEASUREMENT_MIN_REPORT_LIFESPAN_FOR_UNINSTALL_SECONDS;
 import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_PERSISTED;
@@ -387,6 +389,22 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getJobSchedulingLoggingEnabled()",
                 DEFAULT_JOB_SCHEDULING_LOGGING_ENABLED,
                 Flags::getJobSchedulingLoggingEnabled);
+    }
+
+    @Test
+    public void testGetMeasurementMaxLengthPerAggregatableBucket() {
+        testFlag(
+                "getMeasurementMaxLengthPerAggregatableBucket()",
+                MEASUREMENT_MAX_LENGTH_PER_AGGREGATABLE_BUCKET,
+                Flags::getMeasurementMaxLengthPerAggregatableBucket);
+    }
+
+    @Test
+    public void testGetMeasurementMaxAggregatableBucketsPerSourceRegistration() {
+        testFlag(
+                "getMeasurementMaxAggregatableBucketsPerSourceRegistration()",
+                MEASUREMENT_MAX_AGGREGATABLE_BUCKETS_PER_SOURCE_REGISTRATION,
+                Flags::getMeasurementMaxAggregatableBucketsPerSourceRegistration);
     }
 
     @Test
