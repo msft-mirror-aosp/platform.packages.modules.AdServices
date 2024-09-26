@@ -15,6 +15,7 @@
  */
 package com.android.adservices.service.measurement;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_ADSERVICES_DISABLED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
@@ -30,6 +31,8 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REGISTER_TRIGGER;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REGISTER_WEB_SOURCE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REGISTER_WEB_TRIGGER;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
 
 import android.adservices.common.AdServicesPermissions;
 import android.adservices.common.CallerMetadata;
@@ -53,9 +56,11 @@ import android.os.RemoteException;
 
 import androidx.annotation.RequiresApi;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.download.MddJob;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -182,6 +187,10 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         Objects.requireNonNull(callerMetadata);
         Objects.requireNonNull(callback);
 
+        if (invokeCallbackOnFailureOnRvc(callback)) {
+            return;
+        }
+
         final long serviceStartTime = mClock.elapsedRealtime();
 
         final Throttler.ApiKey apiKey = getApiKey(request);
@@ -242,6 +251,10 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         Objects.requireNonNull(request);
         Objects.requireNonNull(callerMetadata);
         Objects.requireNonNull(callback);
+
+        if (invokeCallbackOnFailureOnRvc(callback)) {
+            return;
+        }
 
         final long serviceStartTime = mClock.elapsedRealtime();
 
@@ -311,6 +324,10 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         Objects.requireNonNull(callerMetadata);
         Objects.requireNonNull(callback);
 
+        if (invokeCallbackOnFailureOnRvc(callback)) {
+            return;
+        }
+
         final long serviceStartTime = mClock.elapsedRealtime();
         final Throttler.ApiKey apiKey = Throttler.ApiKey.MEASUREMENT_API_REGISTER_SOURCES;
         final int apiNameId = AD_SERVICES_API_CALLED__API_NAME__REGISTER_SOURCES;
@@ -370,6 +387,10 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         Objects.requireNonNull(request);
         Objects.requireNonNull(callerMetadata);
         Objects.requireNonNull(callback);
+
+        if (invokeCallbackOnFailureOnRvc(callback)) {
+            return;
+        }
 
         final long serviceStartTime = mClock.elapsedRealtime();
 
@@ -434,6 +455,10 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         Objects.requireNonNull(callerMetadata);
         Objects.requireNonNull(callback);
 
+        if (invokeCallbackOnFailureOnRvc(callback)) {
+            return;
+        }
+
         final long serviceStartTime = mClock.elapsedRealtime();
 
         final Throttler.ApiKey apiKey = Throttler.ApiKey.MEASUREMENT_API_DELETION_REGISTRATION;
@@ -489,6 +514,21 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         Objects.requireNonNull(statusParam);
         Objects.requireNonNull(callerMetadata);
         Objects.requireNonNull(callback);
+
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.R) {
+            try {
+                // API status callback doesn't have an onError/onFailure
+                callback.onResult(MeasurementManager.MEASUREMENT_API_STATE_DISABLED);
+            } catch (RemoteException e) {
+                String errorMsg = "AdServices is not enabled on Android R.";
+                LogUtil.e(e, "Fail to call the callback. %s", errorMsg);
+                ErrorLogUtil.e(
+                        e,
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
+            }
+            return;
+        }
 
         final long serviceStartTime = mClock.elapsedRealtime();
 
@@ -569,6 +609,11 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
 
     @Override
     public void schedulePeriodicJobs(IMeasurementCallback callback) {
+
+        if (invokeCallbackOnFailureOnRvc(callback)) {
+            return;
+        }
+
         // Job scheduling is an expensive operation because of calls to JobScheduler.getPendingJob.
         // Perform scheduling on a background thread so that the main thread isn't held up.
         FluentFuture.from(
@@ -821,5 +866,28 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         return request.getRegistrationType() == RegistrationRequest.REGISTER_SOURCE
                 ? flags::getEnforceForegroundStatusForMeasurementRegisterSource
                 : flags::getEnforceForegroundStatusForMeasurementRegisterTrigger;
+    }
+
+    private boolean invokeCallbackOnFailureOnRvc(IMeasurementCallback callback) {
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.R) {
+            String errorMsg = "AdServices is not supported on Android R";
+            MeasurementErrorResponse response =
+                    new MeasurementErrorResponse.Builder()
+                            .setStatusCode(STATUS_ADSERVICES_DISABLED)
+                            .setErrorMessage(errorMsg)
+                            .build();
+
+            try {
+                callback.onFailure(response);
+            } catch (RemoteException e) {
+                LogUtil.e(e, String.format("Fail to call the callback. %s", errorMsg));
+                ErrorLogUtil.e(
+                        e,
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
+            }
+            return true;
+        }
+        return false;
     }
 }
