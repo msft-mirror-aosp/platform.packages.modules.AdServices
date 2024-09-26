@@ -30,7 +30,7 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
 
 import android.adservices.adid.AdId;
-import android.adservices.adid.AdIdCompatibleManager;
+import android.adservices.adid.AdIdManager;
 import android.adservices.common.AdServicesOutcomeReceiver;
 import android.annotation.RequiresApi;
 import android.net.Uri;
@@ -85,7 +85,7 @@ public final class AdSelectionManagerTest extends AdServicesMockitoTestCase {
 
     @Mock private AdSelectionService mMockAdSelectionService;
 
-    @Mock private AdIdCompatibleManager mMockAdIdManager;
+    @Mock private AdIdManager mMockAdIdManager;
 
     @Captor private ArgumentCaptor<ReportInteractionInput> mCaptorReportInteractionInput;
 
@@ -333,7 +333,7 @@ public final class AdSelectionManagerTest extends AdServicesMockitoTestCase {
                             return null;
                         })
                 .when(mMockAdIdManager)
-                .getAdId(any(), any());
+                .getAdId(any(), any(AdServicesOutcomeReceiver.class));
     }
 
     private void mockGetAdId(Exception error) {
@@ -347,7 +347,7 @@ public final class AdSelectionManagerTest extends AdServicesMockitoTestCase {
                             return null;
                         })
                 .when(mMockAdIdManager)
-                .getAdId(any(), any());
+                .getAdId(any(), any(AdServicesOutcomeReceiver.class));
     }
 
     private AtomicReference<GetAdSelectionDataInput> mockGetAdSelectionData(
