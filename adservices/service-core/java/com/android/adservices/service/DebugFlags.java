@@ -35,6 +35,8 @@ import static com.android.adservices.service.DebugFlagsConstants.KEY_RECORD_TOPI
 
 import androidx.annotation.VisibleForTesting;
 
+import java.io.PrintWriter;
+
 /**
  * Flags that are only used for development / testing purposes.
  *
@@ -47,6 +49,9 @@ import androidx.annotation.VisibleForTesting;
  */
 public final class DebugFlags extends CommonDebugFlags {
     private static final DebugFlags sInstance = new DebugFlags();
+
+    @VisibleForTesting static final String DUMP_PREFIX = "  ";
+    @VisibleForTesting static final String DUMP_EQUALS = " = ";
 
     /** Default for if FLEDGE app signals CLI is enabled. */
     @VisibleForTesting static final boolean DEFAULT_PROTECTED_APP_SIGNALS_CLI_ENABLED = false;
@@ -197,5 +202,60 @@ public final class DebugFlags extends CommonDebugFlags {
         return getBoolean(
                 KEY_AD_SERVICES_JS_ISOLATE_CONSOLE_MESSAGES_IN_LOGS_ENABLED,
                 DEFAULT_JS_ISOLATE_CONSOLE_MESSAGES_IN_LOGS_ENABLED);
+    }
+
+    private void dump(PrintWriter pw, String key, boolean value) {
+        pw.printf("%s%s%s%b\n", DUMP_PREFIX, key, DUMP_EQUALS, value);
+    }
+
+    /** Dumps the internal state. */
+    public void dump(PrintWriter pw) {
+        pw.println("DebugFlags:");
+        dump(pw, KEY_CONSENT_NOTIFICATION_DEBUG_MODE, getConsentNotificationDebugMode());
+        dump(pw, KEY_CONSENT_NOTIFIED_DEBUG_MODE, getConsentNotifiedDebugMode());
+        dump(
+                pw,
+                KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE,
+                getConsentNotificationActivityDebugMode());
+        dump(pw, KEY_CONSENT_MANAGER_DEBUG_MODE, getConsentManagerDebugMode());
+        dump(pw, KEY_CONSENT_MANAGER_OTA_DEBUG_MODE, getConsentManagerOTADebugMode());
+        dump(pw, KEY_PROTECTED_APP_SIGNALS_CLI_ENABLED, getProtectedAppSignalsCommandsEnabled());
+        dump(
+                pw,
+                KEY_PROTECTED_APP_SIGNALS_ENCODER_LOGIC_REGISTERED_BROADCAST_ENABLED,
+                getProtectedAppSignalsEncoderLogicRegisteredBroadcastEnabled());
+        dump(pw, KEY_AD_SELECTION_CLI_ENABLED, getAdSelectionCommandsEnabled());
+        dump(
+                pw,
+                KEY_FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED,
+                getFledgeAuctionServerConsentedDebuggingEnabled());
+        dump(
+                pw,
+                KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED,
+                getFledgeConsentedDebuggingCliEnabledStatus());
+        dump(
+                pw,
+                KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED,
+                getFledgeCustomAudienceCLIEnabledStatus());
+        dump(
+                pw,
+                KEY_RECORD_TOPICS_COMPLETE_BROADCAST_ENABLED,
+                getRecordTopicsCompleteBroadcastEnabled());
+        dump(
+                pw,
+                KEY_FLEDGE_SCHEDULE_CA_COMPLETE_BROADCAST_ENABLED,
+                getFledgeScheduleCACompleteBroadcastEnabled());
+        dump(
+                pw,
+                KEY_AD_SERVICES_JS_ISOLATE_CONSOLE_MESSAGES_IN_LOGS_ENABLED,
+                getAdServicesJsIsolateConsoleMessagesInLogsEnabled());
+        dump(
+                pw,
+                KEY_FLEDGE_BACKGROUND_FETCH_COMPLETE_BROADCAST_ENABLED,
+                getFledgeBackgroundFetchCompleteBroadcastEnabled());
+        dump(
+                pw,
+                KEY_FLEDGE_BACKGROUND_KEY_FETCH_COMPLETE_BROADCAST_ENABLED,
+                getFledgeBackgroundKeyFetchCompleteBroadcastEnabled());
     }
 }
