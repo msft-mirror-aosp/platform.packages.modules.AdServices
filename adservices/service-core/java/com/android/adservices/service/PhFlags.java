@@ -7245,4 +7245,9 @@ public final class PhFlags implements Flags {
                 FlagsConstants.KEY_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL,
                 DEFAULT_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL);
     }
+
+    @Override
+    public boolean getConsentNotificationDebugMode() {
+        return DebugFlags.getInstance().getConsentNotificationDebugMode();
+    }
 }
