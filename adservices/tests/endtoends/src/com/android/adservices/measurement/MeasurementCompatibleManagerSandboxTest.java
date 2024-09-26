@@ -33,7 +33,7 @@ import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 
 import android.adservices.adid.AdId;
-import android.adservices.adid.AdIdManager;
+import android.adservices.adid.AdIdCompatibleManager;
 import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.measurement.DeletionParam;
 import android.adservices.measurement.DeletionRequest;
@@ -48,7 +48,6 @@ import android.adservices.measurement.WebTriggerParams;
 import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.adservices.measurement.WebTriggerRegistrationRequestInternal;
 import android.net.Uri;
-import android.os.OutcomeReceiver;
 
 import com.android.adservices.AdServicesEndToEndTestCase;
 import com.android.adservices.common.annotations.DisableGlobalKillSwitch;
@@ -71,9 +70,9 @@ import java.util.concurrent.Executor;
 @SetFlagDisabled(KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH)
 @SetFlagDisabled(KEY_MEASUREMENT_API_STATUS_KILL_SWITCH)
 @SetFlagDisabled(KEY_MEASUREMENT_KILL_SWITCH)
-@SuppressWarnings("NewApi")
 public final class MeasurementCompatibleManagerSandboxTest extends AdServicesEndToEndTestCase {
     private Executor mMockCallbackExecutor;
+    private AdServicesOutcomeReceiver mMockOutcomeReceiver;
     private IMeasurementService mMockMeasurementService;
 
     private MeasurementCompatibleManager mMeasurementManager;
@@ -81,6 +80,7 @@ public final class MeasurementCompatibleManagerSandboxTest extends AdServicesEnd
     @Before
     public void setUp() {
         mMockCallbackExecutor = mock(Executor.class);
+        mMockOutcomeReceiver = mock(AdServicesOutcomeReceiver.class);
         mMockMeasurementService = mock(IMeasurementService.class);
 
         // The intention of spying on MeasurementManager and returning an IMeasurementService mock
@@ -89,7 +89,7 @@ public final class MeasurementCompatibleManagerSandboxTest extends AdServicesEnd
         // name could be the only parameter that could differ, so package name would need to be
         // verified that it remains the same as the context package name on all the APIs.
         String adId = "35a4ac90-e4dc-4fe7-bbc6-95e804aa7dbc";
-        AdIdManager adIdManager = mock(AdIdManager.class);
+        AdIdCompatibleManager adIdManager = mock(AdIdCompatibleManager.class);
         mMeasurementManager = spy(MeasurementCompatibleManager.get(sContext, adIdManager));
         doReturn(mMockMeasurementService).when(mMeasurementManager).getService();
         doAnswer(
@@ -104,13 +104,12 @@ public final class MeasurementCompatibleManagerSandboxTest extends AdServicesEnd
 
     @Test
     public void testRegisterSource_verifySamePackageAsContext() throws Exception {
-        OutcomeReceiver mockOutcomeReceiver = mock(OutcomeReceiver.class);
         // Execution
         mMeasurementManager.registerSource(
                 Uri.parse("https://registration-source"),
-                /* inputEvent= */ null,
+                /* inputEvent = */ null,
                 mMockCallbackExecutor,
-                mockOutcomeReceiver);
+                mMockOutcomeReceiver);
         // Verification
         ArgumentCaptor<RegistrationRequest> captor =
                 ArgumentCaptor.forClass(RegistrationRequest.class);
@@ -122,12 +121,11 @@ public final class MeasurementCompatibleManagerSandboxTest extends AdServicesEnd
 
     @Test
     public void testRegisterTrigger_verifySamePackageAsContext() throws Exception {
-        OutcomeReceiver mockOutcomeReceiver = mock(OutcomeReceiver.class);
         // Execution
         mMeasurementManager.registerTrigger(
                 Uri.parse("https://registration-trigger"),
                 mMockCallbackExecutor,
-                mockOutcomeReceiver);
+                mMockOutcomeReceiver);
 
         // Verification
         ArgumentCaptor<RegistrationRequest> captor =
@@ -140,7 +138,6 @@ public final class MeasurementCompatibleManagerSandboxTest extends AdServicesEnd
 
     @Test
     public void testRegisterWebSource_verifySamePackageAsContext() throws Exception {
-        OutcomeReceiver mockOutcomeReceiver = mock(OutcomeReceiver.class);
         // Setup
         final Uri source = Uri.parse("https://source");
         final Uri osDestination = Uri.parse("android-app://os.destination");
@@ -160,7 +157,7 @@ public final class MeasurementCompatibleManagerSandboxTest extends AdServicesEnd
 
         // Execution
         mMeasurementManager.registerWebSource(
-                webSourceRegistrationRequest, mMockCallbackExecutor, mockOutcomeReceiver);
+                webSourceRegistrationRequest, mMockCallbackExecutor, mMockOutcomeReceiver);
 
         // Verification
         ArgumentCaptor<WebSourceRegistrationRequestInternal> captor =
@@ -174,7 +171,6 @@ public final class MeasurementCompatibleManagerSandboxTest extends AdServicesEnd
 
     @Test
     public void testRegisterWebTrigger_verifySamePackageAsContext() throws Exception {
-        OutcomeReceiver mockOutcomeReceiver = mock(OutcomeReceiver.class);
         // Setup
         final Uri registrationUri = Uri.parse("https://registration-uri");
         final Uri destination = Uri.parse("https://destination");
@@ -187,7 +183,7 @@ public final class MeasurementCompatibleManagerSandboxTest extends AdServicesEnd
 
         // Execution
         mMeasurementManager.registerWebTrigger(
-                webTriggerRegistrationRequest, mMockCallbackExecutor, mockOutcomeReceiver);
+                webTriggerRegistrationRequest, mMockCallbackExecutor, mMockOutcomeReceiver);
 
         // Verification
         ArgumentCaptor<WebTriggerRegistrationRequestInternal> captor =
@@ -201,7 +197,6 @@ public final class MeasurementCompatibleManagerSandboxTest extends AdServicesEnd
 
     @Test
     public void testDeleteRegistrations_verifySamePackageAsContext() throws Exception {
-        OutcomeReceiver mockOutcomeReceiver = mock(OutcomeReceiver.class);
         // Setup
         DeletionRequest deletionRequest =
                 new DeletionRequest.Builder()
@@ -211,7 +206,7 @@ public final class MeasurementCompatibleManagerSandboxTest extends AdServicesEnd
 
         // Execution
         mMeasurementManager.deleteRegistrations(
-                deletionRequest, mMockCallbackExecutor, mockOutcomeReceiver);
+                deletionRequest, mMockCallbackExecutor, mMockOutcomeReceiver);
 
         // Verification
         ArgumentCaptor<DeletionParam> captor = ArgumentCaptor.forClass(DeletionParam.class);
@@ -224,9 +219,8 @@ public final class MeasurementCompatibleManagerSandboxTest extends AdServicesEnd
 
     @Test
     public void testMeasurementApiStatus_verifySamePackageAsContext() throws Exception {
-        OutcomeReceiver mockOutcomeReceiver = mock(OutcomeReceiver.class);
         // Execution
-        mMeasurementManager.getMeasurementApiStatus(mMockCallbackExecutor, mockOutcomeReceiver);
+        mMeasurementManager.getMeasurementApiStatus(mMockCallbackExecutor, mMockOutcomeReceiver);
 
         // Verification
         ArgumentCaptor<StatusParam> captor = ArgumentCaptor.forClass(StatusParam.class);
