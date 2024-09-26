@@ -28,7 +28,7 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assume.assumeTrue;
 
 import android.adservices.adid.AdId;
-import android.adservices.adid.AdIdManager;
+import android.adservices.adid.AdIdCompatibleManager;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.adservices.adselection.AdSelectionOutcome;
@@ -449,12 +449,12 @@ public final class AdSelectionTest extends FledgeDebuggableScenarioTest {
     }
 
     private boolean isAdIdSupported() {
-        AdIdManager adIdManager;
+        AdIdCompatibleManager adIdCompatibleManager;
         AdServicesOutcomeReceiverForTests<AdId> callback =
                 new AdServicesOutcomeReceiverForTests<>();
         try {
-            adIdManager = AdIdManager.get(sContext);
-            adIdManager.getAdId(MoreExecutors.directExecutor(), callback);
+            adIdCompatibleManager = new AdIdCompatibleManager(sContext);
+            adIdCompatibleManager.getAdId(MoreExecutors.directExecutor(), callback);
         } catch (IllegalStateException e) {
             Log.d(TAG, "isAdIdAvailable(): IllegalStateException detected in AdId manager.");
             return false;
