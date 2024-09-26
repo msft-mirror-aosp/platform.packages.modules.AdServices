@@ -35,6 +35,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.WebAddresses;
+import com.android.adservices.service.measurement.AggregateContributionBuckets;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.MeasurementHttpClient;
 import com.android.adservices.service.measurement.Source;
@@ -60,6 +61,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -598,6 +600,24 @@ public class AsyncSourceFetcher {
                         .d("parseSource: aggregatable debug reporting is invalid.");
             }
         }
+        if (mFlags.getMeasurementEnableAggregateContributionBudgetCapacity()
+                && !json.isNull(SourceHeaderContract.AGGREGATABLE_BUCKET_MAX_BUDGET)) {
+            Optional<AggregateContributionBuckets> maybeAggregateContributionBuckets =
+                    parseAggregatableBucketBudget(
+                            json.getJSONObject(
+                                    SourceHeaderContract.AGGREGATABLE_BUCKET_MAX_BUDGET));
+            if (maybeAggregateContributionBuckets.isEmpty()) {
+                LoggerFactory.getMeasurementLogger()
+                        .e(
+                                String.format(
+                                        "parseValidateSource: Invalid"
+                                                + " aggregatable_bucket_max_budget in %s header.",
+                                        SourceHeaderContract
+                                                .HEADER_ATTRIBUTION_REPORTING_REGISTER_SOURCE));
+                return false;
+            }
+            builder.setAggregateContributionBuckets(maybeAggregateContributionBuckets.get());
+        }
         return true;
     }
 
@@ -673,6 +693,64 @@ public class AsyncSourceFetcher {
         builder.setAttributionScopes(attributionScopes);
         builder.setMaxEventStates(maxEventStates);
         return true;
+    }
+
+    private Optional<AggregateContributionBuckets> parseAggregatableBucketBudget(
+            JSONObject aggregationBucketBudget) {
+        if (aggregationBucketBudget.length()
+                > mFlags.getMeasurementMaxAggregatableBucketsPerSourceRegistration()) {
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "parseAggregatableBucketBudget: more buckets than permitted. %s",
+                            aggregationBucketBudget.length());
+            return Optional.empty();
+        }
+        AggregateContributionBuckets aggregateContributionBuckets =
+                new AggregateContributionBuckets();
+
+        Iterator<String> keys = aggregationBucketBudget.keys();
+        while (keys.hasNext()) {
+            String id = keys.next();
+            if (id.length() > mFlags.getMeasurementMaxLengthPerAggregatableBucket()) {
+                LoggerFactory.getMeasurementLogger()
+                        .d(
+                                "parseAggregatableBucketBudget: aggregation bucket ID is invalid."
+                                        + " %s",
+                                id);
+                return Optional.empty();
+            }
+            Optional<Integer> maybeIntBudget =
+                    FetcherUtil.extractIntegralInt(aggregationBucketBudget, id);
+            if (maybeIntBudget.isEmpty()) {
+                LoggerFactory.getMeasurementLogger()
+                        .d(
+                                "parseAggregatableBucketBudget: aggregation bucket budget"
+                                        + " isn't an integer. %s",
+                                id);
+                return Optional.empty();
+            }
+            int intBudget = maybeIntBudget.get();
+            if (intBudget <= 0) {
+                LoggerFactory.getMeasurementLogger()
+                        .d(
+                                "parseAggregatableBucketBudget: aggregation bucket budget"
+                                        + " is non positive. %s",
+                                intBudget);
+                return Optional.empty();
+            }
+            if (intBudget > mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()) {
+                LoggerFactory.getMeasurementLogger()
+                        .d(
+                                "parseAggregatableBucketBudget: aggregation bucket budget"
+                                        + " is over budget. %s",
+                                intBudget);
+                return Optional.empty();
+            }
+
+            aggregateContributionBuckets.createCapacityBucket(id, intBudget);
+        }
+
+        return Optional.of(aggregateContributionBuckets);
     }
 
     private boolean isValidTriggerDataSet(Set<UnsignedLong> triggerDataSet,
@@ -1238,6 +1316,7 @@ public class AsyncSourceFetcher {
         String DESTINATION_LIMIT_ALGORITHM = "destination_limit_algorithm";
         String EVENT_LEVEL_EPSILON = "event_level_epsilon";
         String AGGREGATABLE_DEBUG_REPORTING = "aggregatable_debug_reporting";
+        String AGGREGATABLE_BUCKET_MAX_BUDGET = "aggregatable_bucket_max_budget";
     }
 
     private interface SourceRequestContract {
