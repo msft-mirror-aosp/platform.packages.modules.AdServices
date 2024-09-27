@@ -20,6 +20,7 @@ import android.content.Context;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.adservices.shared.spe.logging.JobServiceLogger;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
+import com.android.adservices.shared.util.Clock;
 
 /** Helper interface providing common expectations for methods on shared classes. */
 public interface SharedMocker {
@@ -35,4 +36,10 @@ public interface SharedMocker {
      * JobServiceLogger#recordOnStopJob(android.app.job.JobParameters, int, boolean)} is called.
      */
     JobServiceLoggingCallback syncRecordOnStopJob(JobServiceLogger logger);
+
+    /** Mocks calls to {@link Clock#currentTimeMillis()}. */
+    void mockCurrentTimeMillis(Clock mockClock, long... mockedValues);
+
+    /** Mocks calls to {@link Clock#elapsedRealtime()}. */
+    void mockElapsedRealtime(Clock mockClock, long... mockedValues);
 }

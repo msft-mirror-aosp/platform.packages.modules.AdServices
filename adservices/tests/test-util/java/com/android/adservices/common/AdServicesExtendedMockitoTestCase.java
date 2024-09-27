@@ -16,6 +16,8 @@
 package com.android.adservices.common;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase.Mocker;
+import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.mockito.StaticClassChecker;
 import com.android.adservices.service.Flags;
