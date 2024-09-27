@@ -13,15 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.mockito;
+package com.android.adservices.common;
 
+import com.android.adservices.common.AdServicesJobServiceTestCase.Mocker;
+import com.android.adservices.mockito.AdServicesJobMockerTestCase;
+import com.android.adservices.mockito.StaticClassChecker;
 import com.android.adservices.service.Flags;
 
-public final class AdServicesMockitoJobMockerTest
-        extends AdServicesJobMockerTestCase<AdServicesMockitoJobMocker> {
+/** Test case for the {@code AdServicesJobServiceTestCase.Mocker} class. */
+public final class AdServicesJobServiceTestCaseMockerTest
+        extends AdServicesJobMockerTestCase<Mocker> {
 
     @Override
-    protected AdServicesMockitoJobMocker getMocker(StaticClassChecker checker, Flags mockFlags) {
-        return new AdServicesMockitoJobMocker(checker);
+    protected Mocker getMocker(StaticClassChecker checker, Flags mockFlags) {
+        return new Mocker(checker, mockFlags);
     }
 }
