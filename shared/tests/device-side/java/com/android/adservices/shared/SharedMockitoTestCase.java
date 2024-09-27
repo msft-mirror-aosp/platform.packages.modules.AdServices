@@ -31,6 +31,9 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.mockito.quality.Strictness;
 
+// NOTE: currently no subclass needs a custom mocker; once they do, this class should be split
+// into a SharedMockerLessMockitoTestCase (similar to AdServiceExtendedMockitoTestCase /
+// AdServicesMockerLessExtendedMockitoTestCase)
 public abstract class SharedMockitoTestCase extends SharedUnitTestCase {
 
     protected final Context mMockContext = mock(Context.class);
