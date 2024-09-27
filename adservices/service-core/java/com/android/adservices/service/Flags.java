@@ -4614,14 +4614,14 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH;
     }
 
-    @ConfigFlag int MEASUREMENT_MAX_LENGTH_PER_AGGREGATABLE_BUCKET = 50;
+    @ConfigFlag int MEASUREMENT_MAX_LENGTH_PER_AGGREGATABLE_BUCKET = 25;
 
     /** Returns max length of an attribution source's aggregatable bucket budget's key. */
     default int getMeasurementMaxLengthPerAggregatableBucket() {
         return MEASUREMENT_MAX_LENGTH_PER_AGGREGATABLE_BUCKET;
     }
 
-    @ConfigFlag int MEASUREMENT_MAX_AGGREGATABLE_BUCKETS_PER_SOURCE_REGISTRATION = 20;
+    @ConfigFlag int MEASUREMENT_MAX_AGGREGATABLE_BUCKETS_PER_SOURCE_REGISTRATION = 25;
 
     /** Returns max size of an attribution source's aggregatable attribution bucket budget list. */
     default int getMeasurementMaxAggregatableBucketsPerSourceRegistration() {
