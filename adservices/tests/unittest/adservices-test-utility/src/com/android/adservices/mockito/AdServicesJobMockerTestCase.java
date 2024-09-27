@@ -61,10 +61,10 @@ public abstract class AdServicesJobMockerTestCase<T extends AdServicesJobMocker>
     public final AdServicesExtendedMockitoRule extendedMockito =
             new AdServicesExtendedMockitoRule.Builder(this).build();
 
-    protected abstract T getMocker(StaticClassChecker checker);
+    protected abstract T getMocker(StaticClassChecker checker, Flags mockFlags);
 
     private T getMocker() {
-        return getMocker(extendedMockito);
+        return getMocker(extendedMockito, mMockFlags);
     }
 
     @Before
