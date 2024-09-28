@@ -25,6 +25,7 @@ import com.android.adservices.shared.common.flags.ModuleSharedFlags;
 import com.android.adservices.shared.spe.logging.JobServiceLogger;
 import com.android.adservices.shared.testing.CallSuper;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
+import com.android.adservices.shared.util.Clock;
 
 import org.junit.Rule;
 import org.mockito.junit.MockitoJUnit;
@@ -59,6 +60,16 @@ public abstract class SharedMockitoTestCase extends SharedUnitTestCase {
         @Override
         public JobServiceLoggingCallback syncRecordOnStopJob(JobServiceLogger logger) {
             return mSharedMocker.syncRecordOnStopJob(logger);
+        }
+
+        @Override
+        public void mockCurrentTimeMillis(Clock mockClock, long... mockedValues) {
+            mSharedMocker.mockCurrentTimeMillis(mockClock, mockedValues);
+        }
+
+        @Override
+        public void mockElapsedRealtime(Clock mockClock, long... mockedValues) {
+            mSharedMocker.mockElapsedRealtime(mockClock, mockedValues);
         }
     }
 
