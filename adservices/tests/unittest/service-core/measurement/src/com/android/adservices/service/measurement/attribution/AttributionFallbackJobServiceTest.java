@@ -497,7 +497,7 @@ public final class AttributionFallbackJobServiceTest
                                         any(), anyBoolean()));
         ExtendedMockito.doNothing()
                 .when(() -> ReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
-        mockGetAdServicesJobServiceLogger(mSpyLogger);
+        mocker.mockGetAdServicesJobServiceLogger(mSpyLogger);
 
         // Execute
         execute.run();
