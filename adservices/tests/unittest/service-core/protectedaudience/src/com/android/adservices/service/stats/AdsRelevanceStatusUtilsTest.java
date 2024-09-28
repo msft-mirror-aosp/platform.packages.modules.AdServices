@@ -16,9 +16,19 @@
 
 package com.android.adservices.service.stats;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_VERY_LARGE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_VERY_SMALL;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.computeSize;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.getCelPpApiNameId;
 
 import static org.junit.Assert.assertEquals;
 
@@ -33,5 +43,28 @@ public class AdsRelevanceStatusUtilsTest {
             assertEquals(i, computeSize(rawValue, buckets));
             rawValue += 10;
         }
+    }
+
+    @Test
+    public void testGetCelPpApiNameId() {
+        assertEquals(
+                getCelPpApiNameId(AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA),
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA);
+
+        assertEquals(
+                getCelPpApiNameId(AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT),
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
+
+        assertEquals(
+                getCelPpApiNameId(AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS),
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS);
+
+        assertEquals(
+                getCelPpApiNameId(AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE),
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED);
+
+        assertEquals(
+                getCelPpApiNameId(AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS),
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED);
     }
 }

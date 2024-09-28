@@ -148,6 +148,7 @@ import com.android.adservices.service.stats.kanon.KAnonInitializeStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonJoinStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonSignJoinStatsConstants;
 import com.android.adservices.service.stats.kanon.KAnonSignStatusStats;
+import com.android.adservices.shared.testing.SkipLoggingUsageRule;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
@@ -212,6 +213,7 @@ import java.util.stream.Collectors;
 @MockStatic(ConsentManager.class)
 @MockStatic(AppImportanceFilter.class)
 @MockStatic(FlagsFactory.class)
+@SkipLoggingUsageRule(reason = "b/355696393")
 public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     private final String PRIVATE_KEY_HEX =
