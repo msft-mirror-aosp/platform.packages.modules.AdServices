@@ -28,6 +28,12 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_AD_SELECTION_CONFIG_REMOTE_OVERRIDES;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__UPDATE_AD_COUNTER_HISTOGRAM;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_SERVICE_AUCTION_SERVER_API_NOT_AVAILABLE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_SERVICE_GET_CALLING_UID_ILLEGAL_STATE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_SERVICE_NULL_ARGUMENT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED;
 
 import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionConfig;
@@ -78,6 +84,7 @@ import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -113,6 +120,7 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.AdsRelevanceExecutionLogger;
 import com.android.adservices.service.stats.AdsRelevanceExecutionLoggerFactory;
+import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
 import com.android.adservices.service.stats.ReportImpressionExecutionLogger;
 import com.android.adservices.service.stats.ReportImpressionExecutionLoggerFactory;
 import com.android.adservices.service.stats.SelectAdsFromOutcomesExecutionLogger;
@@ -402,6 +410,9 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                     inputParams.getCallerPackageName(),
                     STATUS_KILLSWITCH_ENABLED,
                     /*latencyMs=*/ 0);
+            ErrorLogUtil.e(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_SERVICE_AUCTION_SERVER_API_NOT_AVAILABLE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA);
             throw new IllegalStateException(AUCTION_SERVER_API_IS_NOT_AVAILABLE);
         }
 
@@ -416,6 +427,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                     inputParams.getCallerPackageName(),
                     STATUS_INVALID_ARGUMENT,
                     /*latencyMs=*/ 0);
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_SERVICE_NULL_ARGUMENT,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA);
             // Rethrow because we want to fail fast
             throw e;
         }
@@ -468,6 +483,9 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                     inputParams.getCallerPackageName(),
                     STATUS_KILLSWITCH_ENABLED,
                     /* latencyMs= */ 0);
+            ErrorLogUtil.e(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_SERVICE_AUCTION_SERVER_API_NOT_AVAILABLE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
             throw new IllegalStateException(AUCTION_SERVER_API_IS_NOT_AVAILABLE);
         }
 
@@ -482,6 +500,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                     inputParams.getCallerPackageName(),
                     STATUS_INVALID_ARGUMENT,
                     /*latencyMs=*/ 0);
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_SERVICE_NULL_ARGUMENT,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
             // Rethrow because we want to fail fast
             throw e;
         }
@@ -1215,7 +1237,17 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                     callerAppPackageName,
                     STATUS_INTERNAL_ERROR,
                     /*latencyMs=*/ 0);
+            logGetCallingUidCEL(apiNameLoggingId);
             throw illegalStateException;
+        }
+    }
+
+    private void logGetCallingUidCEL(int apiNameLoggingId) {
+        int celApiNameId = AdsRelevanceStatusUtils.getCelPpApiNameId(apiNameLoggingId);
+        if (celApiNameId != AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED) {
+            ErrorLogUtil.e(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_SERVICE_GET_CALLING_UID_ILLEGAL_STATE,
+                    celApiNameId);
         }
     }
 

@@ -25,6 +25,7 @@ import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.mockito.AndroidExtendedMockitoMocker;
 import com.android.adservices.mockito.AndroidStaticMocker;
 import com.android.adservices.mockito.LogInterceptor;
+import com.android.adservices.mockito.StaticClassChecker;
 import com.android.adservices.shared.common.flags.ModuleSharedFlags;
 import com.android.adservices.shared.testing.CallSuper;
 
@@ -61,8 +62,8 @@ public abstract class SharedExtendedMockitoTestCase extends SharedUnitTestCase {
 
         private final AndroidStaticMocker mAndroidMocker;
 
-        private Mocker(AdServicesExtendedMockitoRule rule) {
-            mAndroidMocker = new AndroidExtendedMockitoMocker(rule);
+        Mocker(StaticClassChecker checker) {
+            mAndroidMocker = new AndroidExtendedMockitoMocker(checker);
         }
 
         // AndroidStaticMocker methods

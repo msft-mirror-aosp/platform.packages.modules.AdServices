@@ -59,6 +59,7 @@ import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.shared.spe.logging.JobServiceLogger;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
 import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
+import com.android.adservices.shared.util.Clock;
 import com.android.adservices.spe.AdServicesJobScheduler;
 import com.android.adservices.spe.AdServicesJobServiceFactory;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -329,6 +330,16 @@ public abstract class AdServicesMockerLessExtendedMockitoTestCase<M extends Inte
         @Override
         public JobServiceLoggingCallback syncRecordOnStopJob(JobServiceLogger logger) {
             return mSharedMocker.syncRecordOnStopJob(logger);
+        }
+
+        @Override
+        public void mockCurrentTimeMillis(Clock mockClock, long... mockedValues) {
+            mSharedMocker.mockCurrentTimeMillis(mockClock, mockedValues);
+        }
+
+        @Override
+        public void mockElapsedRealtime(Clock mockClock, long... mockedValues) {
+            mSharedMocker.mockElapsedRealtime(mockClock, mockedValues);
         }
     }
 
