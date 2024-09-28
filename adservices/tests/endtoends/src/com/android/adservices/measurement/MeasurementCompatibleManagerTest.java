@@ -33,8 +33,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
 import android.adservices.adid.AdId;
-import android.adservices.adid.AdIdCompatibleManager;
-import android.adservices.common.AdServicesOutcomeReceiver;
+import android.adservices.adid.AdIdManager;
 import android.adservices.measurement.DeletionParam;
 import android.adservices.measurement.DeletionRequest;
 import android.adservices.measurement.IMeasurementService;
@@ -51,6 +50,7 @@ import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.adservices.measurement.WebTriggerRegistrationRequestInternal;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.net.Uri;
+import android.os.OutcomeReceiver;
 import android.os.RemoteException;
 
 import androidx.annotation.NonNull;
@@ -58,6 +58,7 @@ import androidx.annotation.NonNull;
 import com.android.adservices.AdServicesEndToEndTestCase;
 import com.android.adservices.LogUtil;
 import com.android.adservices.common.annotations.SetMsmtApiAppAllowList;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -74,7 +75,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 @SetMsmtApiAppAllowList
+@RequiresSdkLevelAtLeastS()
+@SuppressWarnings("NewApi")
 public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTestCase {
+
     private static final String CLIENT_PACKAGE_NAME = "com.android.adservices.endtoendtest";
     private static final long TIMEOUT = 5000L;
     private static final long CALLBACK_TIMEOUT = 1000L;
@@ -134,7 +138,7 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
     public void testRegisterSource_BindServiceFailure_propagateErrorCallback() {
         MeasurementCompatibleManager measurementManager = getMeasurementCompatibleManager();
         doThrow(new IllegalStateException()).when(measurementManager).getService();
-        AdServicesOutcomeReceiver callback = mock(AdServicesOutcomeReceiver.class);
+        OutcomeReceiver callback = mock(OutcomeReceiver.class);
         measurementManager.registerSource(
                 Uri.parse("https://example.com"),
                 /* inputEvent = */ null,
@@ -146,7 +150,7 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
 
     @Test
     public void testRegisterSource_adIdEnabled_register() throws Exception {
-        AdIdCompatibleManager adIdManager = mock(AdIdCompatibleManager.class);
+        AdIdManager adIdManager = mock(AdIdManager.class);
         MeasurementCompatibleManager measurementManager =
                 spy(MeasurementCompatibleManager.get(sContext, adIdManager));
 
@@ -164,12 +168,12 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
 
         doAnswer(
                         (invocation) -> {
-                            ((AdServicesOutcomeReceiver) invocation.getArgument(1))
+                            ((OutcomeReceiver) invocation.getArgument(1))
                                     .onResult(new AdId(AD_ID, true));
                             return null;
                         })
                 .when(adIdManager)
-                .getAdId(any(), any());
+                .getAdId(any(), any(OutcomeReceiver.class));
 
         measurementManager.registerSource(
                 Uri.parse("https://example.com"),
@@ -185,7 +189,7 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
 
     @Test
     public void testRegisterSource_adIdZeroOut_register() throws Exception {
-        AdIdCompatibleManager adIdManager = mock(AdIdCompatibleManager.class);
+        AdIdManager adIdManager = mock(AdIdManager.class);
         MeasurementCompatibleManager measurementManager =
                 spy(MeasurementCompatibleManager.get(sContext, adIdManager));
 
@@ -203,12 +207,12 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
 
         doAnswer(
                         (invocation) -> {
-                            ((AdServicesOutcomeReceiver) invocation.getArgument(1))
+                            ((OutcomeReceiver) invocation.getArgument(1))
                                     .onResult(new AdId(AdId.ZERO_OUT, true));
                             return null;
                         })
                 .when(adIdManager)
-                .getAdId(any(), any());
+                .getAdId(any(), any(OutcomeReceiver.class));
 
         measurementManager.registerSource(
                 Uri.parse("https://example.com"),
@@ -223,7 +227,7 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
 
     @Test
     public void testRegisterSource_adIdDisabled_register() throws Exception {
-        AdIdCompatibleManager adIdManager = mock(AdIdCompatibleManager.class);
+        AdIdManager adIdManager = mock(AdIdManager.class);
         MeasurementCompatibleManager measurementManager =
                 spy(MeasurementCompatibleManager.get(sContext, adIdManager));
 
@@ -241,12 +245,12 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
 
         doAnswer(
                         (invocation) -> {
-                            ((AdServicesOutcomeReceiver) invocation.getArgument(1))
+                            ((OutcomeReceiver) invocation.getArgument(1))
                                     .onError(new SecurityException());
                             return null;
                         })
                 .when(adIdManager)
-                .getAdId(any(), any());
+                .getAdId(any(), any(OutcomeReceiver.class));
 
         measurementManager.registerSource(
                 Uri.parse("https://example.com"),
@@ -262,7 +266,7 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
 
     @Test
     public void testRegisterSource_adIdTimeOut_register() throws Exception {
-        AdIdCompatibleManager adIdManager = mock(AdIdCompatibleManager.class);
+        AdIdManager adIdManager = mock(AdIdManager.class);
         MeasurementCompatibleManager measurementManager =
                 spy(MeasurementCompatibleManager.get(sContext, adIdManager));
 
@@ -284,7 +288,7 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
                             return null;
                         })
                 .when(adIdManager)
-                .getAdId(any(), any());
+                .getAdId(any(), any(OutcomeReceiver.class));
 
         measurementManager.registerSource(
                 Uri.parse("https://example.com"),
@@ -301,7 +305,7 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
     public void testRegisterTrigger_BindServiceFailure_propagateErrorCallback() {
         MeasurementCompatibleManager measurementManager = getMeasurementCompatibleManager();
         doThrow(new IllegalStateException()).when(measurementManager).getService();
-        AdServicesOutcomeReceiver callback = mock(AdServicesOutcomeReceiver.class);
+        OutcomeReceiver callback = mock(OutcomeReceiver.class);
 
         measurementManager.registerTrigger(
                 Uri.parse("https://example.com"),
@@ -315,7 +319,7 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
     public void testRegisterWebSource_BindServiceFailure_propagateErrorCallback() {
         MeasurementCompatibleManager measurementManager = getMeasurementCompatibleManager();
         doThrow(new IllegalStateException()).when(measurementManager).getService();
-        AdServicesOutcomeReceiver callback = mock(AdServicesOutcomeReceiver.class);
+        OutcomeReceiver callback = mock(OutcomeReceiver.class);
 
         measurementManager.registerWebSource(
                 buildDefaultWebSourceRegistrationRequest(),
@@ -329,7 +333,7 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
     public void testRegisterWebTrigger_BindServiceFailure_propagateErrorCallback() {
         MeasurementCompatibleManager measurementManager = getMeasurementCompatibleManager();
         doThrow(new IllegalStateException()).when(measurementManager).getService();
-        AdServicesOutcomeReceiver callback = mock(AdServicesOutcomeReceiver.class);
+        OutcomeReceiver callback = mock(OutcomeReceiver.class);
 
         measurementManager.registerWebTrigger(
                 buildDefaultWebTriggerRegistrationRequest(),
@@ -374,9 +378,9 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
 
         mm.registerSource(
                 Uri.parse("https://registration-source"),
-                /* inputEvent = */ null,
+                /* inputEvent= */ null,
                 CALLBACK_EXECUTOR,
-                new AdServicesOutcomeReceiver<>() {
+                new OutcomeReceiver<>() {
                     @Override
                     public void onResult(@NonNull Object result) {
                         anyCountDownLatch.countDown();
@@ -467,7 +471,7 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
         mm.registerWebSource(
                 buildDefaultWebSourceRegistrationRequest(),
                 CALLBACK_EXECUTOR,
-                new AdServicesOutcomeReceiver<>() {
+                new OutcomeReceiver<>() {
                     @Override
                     public void onResult(@NonNull Object result) {
                         anyCountDownLatch.countDown();
@@ -484,7 +488,7 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
 
     @Test
     public void testRegisterWebSource_adIdEnabled_register() throws Exception {
-        AdIdCompatibleManager adIdManager = mock(AdIdCompatibleManager.class);
+        AdIdManager adIdManager = mock(AdIdManager.class);
         MeasurementCompatibleManager measurementManager =
                 spy(MeasurementCompatibleManager.get(sContext, adIdManager));
 
@@ -502,12 +506,12 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
 
         doAnswer(
                         (invocation) -> {
-                            ((AdServicesOutcomeReceiver) invocation.getArgument(1))
+                            ((OutcomeReceiver) invocation.getArgument(1))
                                     .onResult(new AdId(AD_ID, true));
                             return null;
                         })
                 .when(adIdManager)
-                .getAdId(any(), any());
+                .getAdId(any(), any(OutcomeReceiver.class));
 
         measurementManager.registerWebSource(
                 buildDefaultWebSourceRegistrationRequest(),
@@ -522,7 +526,7 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
 
     @Test
     public void testRegisterWebSource_adIdZeroOut_register() throws Exception {
-        AdIdCompatibleManager adIdManager = mock(AdIdCompatibleManager.class);
+        AdIdManager adIdManager = mock(AdIdManager.class);
         MeasurementCompatibleManager measurementManager =
                 spy(MeasurementCompatibleManager.get(sContext, adIdManager));
 
@@ -540,12 +544,12 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
 
         doAnswer(
                         (invocation) -> {
-                            ((AdServicesOutcomeReceiver) invocation.getArgument(1))
+                            ((OutcomeReceiver) invocation.getArgument(1))
                                     .onResult(new AdId(AdId.ZERO_OUT, true));
                             return null;
                         })
                 .when(adIdManager)
-                .getAdId(any(), any());
+                .getAdId(any(), any(OutcomeReceiver.class));
 
         measurementManager.registerWebSource(
                 buildDefaultWebSourceRegistrationRequest(),
@@ -559,7 +563,7 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
 
     @Test
     public void testRegisterWebSource_adIdDisabled_register() throws Exception {
-        AdIdCompatibleManager adIdManager = mock(AdIdCompatibleManager.class);
+        AdIdManager adIdManager = mock(AdIdManager.class);
         MeasurementCompatibleManager measurementManager =
                 spy(MeasurementCompatibleManager.get(sContext, adIdManager));
 
@@ -577,12 +581,12 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
 
         doAnswer(
                         (invocation) -> {
-                            ((AdServicesOutcomeReceiver) invocation.getArgument(1))
+                            ((OutcomeReceiver) invocation.getArgument(1))
                                     .onError(new SecurityException());
                             return null;
                         })
                 .when(adIdManager)
-                .getAdId(any(), any());
+                .getAdId(any(), any(OutcomeReceiver.class));
 
         measurementManager.registerWebSource(
                 buildDefaultWebSourceRegistrationRequest(),
@@ -597,7 +601,7 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
 
     @Test
     public void testRegisterWebSource_adIdTimeOut_register() throws Exception {
-        AdIdCompatibleManager adIdManager = mock(AdIdCompatibleManager.class);
+        AdIdManager adIdManager = mock(AdIdManager.class);
         MeasurementCompatibleManager measurementManager =
                 spy(MeasurementCompatibleManager.get(sContext, adIdManager));
 
@@ -619,7 +623,7 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
                             return null;
                         })
                 .when(adIdManager)
-                .getAdId(any(), any());
+                .getAdId(any(), any(OutcomeReceiver.class));
 
         measurementManager.registerWebSource(
                 buildDefaultWebSourceRegistrationRequest(),
@@ -702,7 +706,7 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
         mm.registerWebTrigger(
                 buildDefaultWebTriggerRegistrationRequest(),
                 CALLBACK_EXECUTOR,
-                new AdServicesOutcomeReceiver<>() {
+                new OutcomeReceiver<>() {
                     @Override
                     public void onResult(@NonNull Object result) {
                         anyCountDownLatch.countDown();
@@ -719,7 +723,7 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
 
     @Test
     public void testRegisterWebTrigger_adIdEnabled_register() throws Exception {
-        AdIdCompatibleManager adIdManager = mock(AdIdCompatibleManager.class);
+        AdIdManager adIdManager = mock(AdIdManager.class);
         MeasurementCompatibleManager measurementManager =
                 spy(MeasurementCompatibleManager.get(sContext, adIdManager));
 
@@ -737,12 +741,12 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
 
         doAnswer(
                         (invocation) -> {
-                            ((AdServicesOutcomeReceiver) invocation.getArgument(1))
+                            ((OutcomeReceiver) invocation.getArgument(1))
                                     .onResult(new AdId(AD_ID, true));
                             return null;
                         })
                 .when(adIdManager)
-                .getAdId(any(), any());
+                .getAdId(any(), any(OutcomeReceiver.class));
 
         measurementManager.registerWebTrigger(
                 buildDefaultWebTriggerRegistrationRequest(),
@@ -757,7 +761,7 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
 
     @Test
     public void testRegisterWebTrigger_adIdZeroOut_register() throws Exception {
-        AdIdCompatibleManager adIdManager = mock(AdIdCompatibleManager.class);
+        AdIdManager adIdManager = mock(AdIdManager.class);
         MeasurementCompatibleManager measurementManager =
                 spy(MeasurementCompatibleManager.get(sContext, adIdManager));
 
@@ -775,12 +779,12 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
 
         doAnswer(
                         (invocation) -> {
-                            ((AdServicesOutcomeReceiver) invocation.getArgument(1))
+                            ((OutcomeReceiver) invocation.getArgument(1))
                                     .onResult(new AdId(AdId.ZERO_OUT, true));
                             return null;
                         })
                 .when(adIdManager)
-                .getAdId(any(), any());
+                .getAdId(any(), any(OutcomeReceiver.class));
 
         measurementManager.registerWebTrigger(
                 buildDefaultWebTriggerRegistrationRequest(),
@@ -794,7 +798,7 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
 
     @Test
     public void testRegisterWebTrigger_adIdDisabled_register() throws Exception {
-        AdIdCompatibleManager adIdManager = mock(AdIdCompatibleManager.class);
+        AdIdManager adIdManager = mock(AdIdManager.class);
         MeasurementCompatibleManager measurementManager =
                 spy(MeasurementCompatibleManager.get(sContext, adIdManager));
 
@@ -812,12 +816,12 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
 
         doAnswer(
                         (invocation) -> {
-                            ((AdServicesOutcomeReceiver) invocation.getArgument(1))
+                            ((OutcomeReceiver) invocation.getArgument(1))
                                     .onError(new SecurityException());
                             return null;
                         })
                 .when(adIdManager)
-                .getAdId(any(), any());
+                .getAdId(any(), any(OutcomeReceiver.class));
 
         measurementManager.registerWebTrigger(
                 buildDefaultWebTriggerRegistrationRequest(),
@@ -832,7 +836,7 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
 
     @Test
     public void testRegisterWebTrigger_adIdTimeOut_register() throws Exception {
-        AdIdCompatibleManager adIdManager = mock(AdIdCompatibleManager.class);
+        AdIdManager adIdManager = mock(AdIdManager.class);
         MeasurementCompatibleManager measurementManager =
                 spy(MeasurementCompatibleManager.get(sContext, adIdManager));
 
@@ -854,7 +858,7 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
                             return null;
                         })
                 .when(adIdManager)
-                .getAdId(any(), any());
+                .getAdId(any(), any(OutcomeReceiver.class));
 
         measurementManager.registerWebTrigger(
                 buildDefaultWebTriggerRegistrationRequest(),
@@ -922,7 +926,7 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
         mm.registerTrigger(
                 Uri.parse("https://registration-trigger"),
                 CALLBACK_EXECUTOR,
-                new AdServicesOutcomeReceiver<>() {
+                new OutcomeReceiver<>() {
                     @Override
                     public void onResult(@NonNull Object result) {
                         anyCountDownLatch.countDown();
@@ -939,7 +943,7 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
 
     @Test
     public void testRegisterTrigger_adIdEnabled_register() throws Exception {
-        AdIdCompatibleManager adIdManager = mock(AdIdCompatibleManager.class);
+        AdIdManager adIdManager = mock(AdIdManager.class);
         MeasurementCompatibleManager measurementManager =
                 spy(MeasurementCompatibleManager.get(sContext, adIdManager));
 
@@ -957,12 +961,12 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
 
         doAnswer(
                         (invocation) -> {
-                            ((AdServicesOutcomeReceiver) invocation.getArgument(1))
+                            ((OutcomeReceiver) invocation.getArgument(1))
                                     .onResult(new AdId(AD_ID, true));
                             return null;
                         })
                 .when(adIdManager)
-                .getAdId(any(), any());
+                .getAdId(any(), any(OutcomeReceiver.class));
 
         measurementManager.registerTrigger(
                 Uri.parse("https://example.com"), /* executor = */ null, /* callback = */ null);
@@ -975,7 +979,7 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
 
     @Test
     public void testRegisterTrigger_adIdZeroOut_register() throws Exception {
-        AdIdCompatibleManager adIdManager = mock(AdIdCompatibleManager.class);
+        AdIdManager adIdManager = mock(AdIdManager.class);
         MeasurementCompatibleManager measurementManager =
                 spy(MeasurementCompatibleManager.get(sContext, adIdManager));
 
@@ -993,12 +997,12 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
 
         doAnswer(
                         (invocation) -> {
-                            ((AdServicesOutcomeReceiver) invocation.getArgument(1))
+                            ((OutcomeReceiver) invocation.getArgument(1))
                                     .onResult(new AdId(AdId.ZERO_OUT, true));
                             return null;
                         })
                 .when(adIdManager)
-                .getAdId(any(), any());
+                .getAdId(any(), any(OutcomeReceiver.class));
 
         measurementManager.registerTrigger(
                 Uri.parse("https://example.com"), /* executor = */ null, /* callback = */ null);
@@ -1010,7 +1014,7 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
 
     @Test
     public void testRegisterTrigger_adIdDisabled_register() throws Exception {
-        AdIdCompatibleManager adIdManager = mock(AdIdCompatibleManager.class);
+        AdIdManager adIdManager = mock(AdIdManager.class);
         MeasurementCompatibleManager measurementManager =
                 spy(MeasurementCompatibleManager.get(sContext, adIdManager));
 
@@ -1028,12 +1032,12 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
 
         doAnswer(
                         (invocation) -> {
-                            ((AdServicesOutcomeReceiver) invocation.getArgument(1))
+                            ((OutcomeReceiver) invocation.getArgument(1))
                                     .onError(new SecurityException());
                             return null;
                         })
                 .when(adIdManager)
-                .getAdId(any(), any());
+                .getAdId(any(), any(OutcomeReceiver.class));
 
         measurementManager.registerTrigger(
                 Uri.parse("https://example.com"), /* executor = */ null, /* callback = */ null);
@@ -1046,7 +1050,7 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
 
     @Test
     public void testRegisterTrigger_adIdTimeOut_register() throws Exception {
-        AdIdCompatibleManager adIdManager = mock(AdIdCompatibleManager.class);
+        AdIdManager adIdManager = mock(AdIdManager.class);
         MeasurementCompatibleManager measurementManager =
                 spy(MeasurementCompatibleManager.get(sContext, adIdManager));
 
@@ -1068,7 +1072,7 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
                             return null;
                         })
                 .when(adIdManager)
-                .getAdId(any(), any());
+                .getAdId(any(), any(OutcomeReceiver.class));
 
         measurementManager.registerTrigger(
                 Uri.parse("https://example.com"), /* executor = */ null, /* callback = */ null);
@@ -1185,7 +1189,7 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
 
         mm.getMeasurementApiStatus(
                 CALLBACK_EXECUTOR,
-                new AdServicesOutcomeReceiver<>() {
+                new OutcomeReceiver<>() {
                     @Override
                     public void onResult(Integer result) {
                         Assert.fail();
@@ -1225,7 +1229,7 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
         CompletableFuture<Exception> future = new CompletableFuture<>();
         mm.getMeasurementApiStatus(
                 CALLBACK_EXECUTOR,
-                new AdServicesOutcomeReceiver<>() {
+                new OutcomeReceiver<>() {
                     @Override
                     public void onResult(Integer result) {
                         Assert.fail();
@@ -1244,7 +1248,7 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
     @Test
     public void testRegisterSourceMulti_adIdDisabled_register() throws Exception {
         // Setup
-        AdIdCompatibleManager adIdManager = mock(AdIdCompatibleManager.class);
+        AdIdManager adIdManager = mock(AdIdManager.class);
         MeasurementCompatibleManager measurementManager =
                 spy(MeasurementCompatibleManager.get(sContext, adIdManager));
 
@@ -1263,11 +1267,10 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
                 .registerSource(captor.capture(), any(), any());
         Answer adIdAnswer =
                 (invocation) -> {
-                    ((AdServicesOutcomeReceiver) invocation.getArgument(1))
-                            .onError(new SecurityException());
+                    ((OutcomeReceiver) invocation.getArgument(1)).onError(new SecurityException());
                     return null;
                 };
-        doAnswer(adIdAnswer).when(adIdManager).getAdId(any(), any());
+        doAnswer(adIdAnswer).when(adIdManager).getAdId(any(), any(OutcomeReceiver.class));
 
         measurementManager.registerSource(
                 buildDefaultAppSourcesRegistrationRequest(),
@@ -1281,7 +1284,7 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
 
     @Test
     public void testRegisterSourceMulti_adIdTimeOut_register() throws Exception {
-        AdIdCompatibleManager adIdManager = mock(AdIdCompatibleManager.class);
+        AdIdManager adIdManager = mock(AdIdManager.class);
         MeasurementCompatibleManager measurementManager =
                 spy(MeasurementCompatibleManager.get(sContext, adIdManager));
 
@@ -1302,7 +1305,7 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
                     Thread.sleep(AD_ID_TIMEOUT);
                     return null;
                 };
-        doAnswer(adIdAnswer).when(adIdManager).getAdId(any(), any());
+        doAnswer(adIdAnswer).when(adIdManager).getAdId(any(), any(OutcomeReceiver.class));
 
         measurementManager.registerSource(
                 buildDefaultAppSourcesRegistrationRequest(),
@@ -1316,7 +1319,7 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
 
     @Test
     public void testRegisterSourceMulti_adIdEnabled_register() throws Exception {
-        AdIdCompatibleManager adIdManager = mock(AdIdCompatibleManager.class);
+        AdIdManager adIdManager = mock(AdIdManager.class);
         MeasurementCompatibleManager measurementManager =
                 spy(MeasurementCompatibleManager.get(sContext, adIdManager));
 
@@ -1334,11 +1337,10 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
 
         Answer adIdAnswer =
                 (invocation) -> {
-                    ((AdServicesOutcomeReceiver) invocation.getArgument(1))
-                            .onResult(new AdId(AD_ID, true));
+                    ((OutcomeReceiver) invocation.getArgument(1)).onResult(new AdId(AD_ID, true));
                     return null;
                 };
-        doAnswer(adIdAnswer).when(adIdManager).getAdId(any(), any());
+        doAnswer(adIdAnswer).when(adIdManager).getAdId(any(), any(OutcomeReceiver.class));
 
         measurementManager.registerSource(
                 buildDefaultAppSourcesRegistrationRequest(),
@@ -1352,7 +1354,7 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
 
     @Test
     public void testRegisterSourceMulti_adIdZeroOut_register() throws Exception {
-        AdIdCompatibleManager adIdManager = mock(AdIdCompatibleManager.class);
+        AdIdManager adIdManager = mock(AdIdManager.class);
         MeasurementCompatibleManager measurementManager =
                 spy(MeasurementCompatibleManager.get(sContext, adIdManager));
 
@@ -1370,11 +1372,11 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
 
         Answer adIdAnswer =
                 (invocation) -> {
-                    ((AdServicesOutcomeReceiver) invocation.getArgument(1))
+                    ((OutcomeReceiver) invocation.getArgument(1))
                             .onResult(new AdId(AdId.ZERO_OUT, true));
                     return null;
                 };
-        doAnswer(adIdAnswer).when(adIdManager).getAdId(any(), any());
+        doAnswer(adIdAnswer).when(adIdManager).getAdId(any(), any(OutcomeReceiver.class));
 
         measurementManager.registerSource(
                 buildDefaultAppSourcesRegistrationRequest(),
@@ -1390,7 +1392,7 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
     public void testRegisterSourceMulti_BindServiceFailure_propagateErrorCallback() {
         MeasurementCompatibleManager measurementManager = getMeasurementCompatibleManager();
         doThrow(new IllegalStateException()).when(measurementManager).getService();
-        AdServicesOutcomeReceiver callback = mock(AdServicesOutcomeReceiver.class);
+        OutcomeReceiver callback = mock(OutcomeReceiver.class);
 
         measurementManager.registerSource(
                 buildDefaultAppSourcesRegistrationRequest(),
@@ -1457,8 +1459,8 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
     private int callMeasurementApiStatus(MeasurementCompatibleManager mm) throws Exception {
         overrideConsentManagerDebugMode();
         CompletableFuture<Integer> future = new CompletableFuture<>();
-        AdServicesOutcomeReceiver<Integer, Exception> callback =
-                new AdServicesOutcomeReceiver<>() {
+        OutcomeReceiver<Integer, Exception> callback =
+                new OutcomeReceiver<>() {
                     @Override
                     public void onResult(Integer result) {
                         future.complete(result);
@@ -1489,7 +1491,7 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
         private static void assertRegisterSourceFromSourceRegistrationRequestThrows() {
             MeasurementCompatibleManager measurementManager = getMeasurementCompatibleManager();
             doThrow(new IllegalStateException()).when(measurementManager).getService();
-            AdServicesOutcomeReceiver callback = mock(AdServicesOutcomeReceiver.class);
+            OutcomeReceiver callback = mock(OutcomeReceiver.class);
 
             assertThrows(
                     IllegalArgumentException.class,
@@ -1503,7 +1505,7 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
         private static void assertRegisterSourceFromUriAndInputEventThrows() {
             MeasurementCompatibleManager measurementManager = getMeasurementCompatibleManager();
             doThrow(new IllegalStateException()).when(measurementManager).getService();
-            AdServicesOutcomeReceiver callback = mock(AdServicesOutcomeReceiver.class);
+            OutcomeReceiver callback = mock(OutcomeReceiver.class);
 
             assertThrows(
                     IllegalArgumentException.class,
@@ -1518,7 +1520,7 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
         private static void assertRegisterWebSourceThrows() {
             MeasurementCompatibleManager measurementManager = getMeasurementCompatibleManager();
             doThrow(new IllegalStateException()).when(measurementManager).getService();
-            AdServicesOutcomeReceiver callback = mock(AdServicesOutcomeReceiver.class);
+            OutcomeReceiver callback = mock(OutcomeReceiver.class);
 
             assertThrows(
                     IllegalArgumentException.class,
@@ -1532,7 +1534,7 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
         private static void assertRegisterWebTriggerThrows() {
             MeasurementCompatibleManager measurementManager = getMeasurementCompatibleManager();
             doThrow(new IllegalStateException()).when(measurementManager).getService();
-            AdServicesOutcomeReceiver callback = mock(AdServicesOutcomeReceiver.class);
+            OutcomeReceiver callback = mock(OutcomeReceiver.class);
 
             assertThrows(
                     IllegalArgumentException.class,

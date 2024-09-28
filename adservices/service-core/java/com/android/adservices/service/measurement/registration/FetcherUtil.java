@@ -62,6 +62,10 @@ public class FetcherUtil {
     static final Pattern HEX_PATTERN = Pattern.compile("\\p{XDigit}+");
     static final String DEFAULT_HEX_STRING = "0x0";
     public static final BigInteger BIG_INTEGER_LONG_MAX_VALUE = BigInteger.valueOf(Long.MAX_VALUE);
+    public static final BigDecimal BIG_DECIMAL_INT_MAX_VALUE =
+            BigDecimal.valueOf(Integer.MAX_VALUE);
+    public static final BigDecimal BIG_DECIMAL_INT_MIN_VALUE =
+            BigDecimal.valueOf(Integer.MIN_VALUE);
 
     /**
      * Determine all redirects.
@@ -181,6 +185,25 @@ public class FetcherUtil {
             }
 
             return Optional.of(bd);
+    }
+
+    /** Extract value of an int from a map. */
+    public static Optional<Integer> extractIntegralInt(JSONObject map, String id) {
+        Optional<BigDecimal> maybeBigDecimal = FetcherUtil.extractIntegralValue(map, id);
+        if (maybeBigDecimal.isEmpty()) {
+            LoggerFactory.getMeasurementLogger()
+                    .d("extractIntegralInt: value for" + " bucket %s is not an integer.", id);
+            return Optional.empty();
+        }
+        BigDecimal integralValue = maybeBigDecimal.get();
+        if (integralValue.compareTo(BIG_DECIMAL_INT_MAX_VALUE) > 0
+                || integralValue.compareTo(BIG_DECIMAL_INT_MIN_VALUE) < 0) {
+            LoggerFactory.getMeasurementLogger()
+                    .d("extractIntegralInt: value is larger than int. %s", integralValue);
+            return Optional.empty();
+        }
+
+        return Optional.of(integralValue.intValue());
     }
 
     private static boolean isValidLookbackWindow(JSONObject obj) {

@@ -17,12 +17,22 @@ package com.android.adservices.common;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
+import com.android.adservices.mockito.AdServicesJobMocker;
+
 import org.junit.Test;
 
 public final class AdServicesJobTestCaseTest extends AdServicesJobServiceTestCase {
 
     @Test
     public void testJobMocker() {
-        assertWithMessage("jobMocker").that(jobMocker).isNotNull();
+        assertWithMessage("mocker").that(mocker).isNotNull();
+
+        // Test parent subclass so we don't need to create one test class for each of the mocker
+        // interfaces it implements
+        expect.withMessage("mocker")
+                .that(mocker)
+                .isInstanceOf(AdServicesMockerLessExtendedMockitoTestCase.InternalMocker.class);
+
+        expect.withMessage("mocker").that(mocker).isInstanceOf(AdServicesJobMocker.class);
     }
 }

@@ -85,9 +85,10 @@ public interface IMeasurementDao {
      *
      * @param registrationId ID of the registration.
      * @param registrationOrigin source registration origin.
-     * @return a list of attribution scopes.
+     * @return an optional list of attribution scopes, empty if no source is found for the provided
+     *     registration ID and reporting origin
      */
-    Set<String> getNavigationAttributionScopesForRegistration(
+    Optional<Set<String>> getAttributionScopesForRegistration(
             @NonNull String registrationId, @NonNull String registrationOrigin)
             throws DatastoreException;
 

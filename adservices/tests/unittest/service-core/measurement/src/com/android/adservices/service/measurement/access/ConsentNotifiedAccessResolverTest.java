@@ -27,6 +27,7 @@ import static org.mockito.Mockito.doReturn;
 import android.adservices.common.AdServicesStatusUtils;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.measurement.CachedFlags;
 
@@ -37,6 +38,7 @@ import org.mockito.Mock;
 public final class ConsentNotifiedAccessResolverTest extends AdServicesMockitoTestCase {
     @Mock private ConsentManager mConsentManager;
     @Mock private UserConsentAccessResolver mUserConsentAccessResolver;
+    @Mock private DebugFlags mMockDebugFlags;
 
     private ConsentNotifiedAccessResolver mConsentNotifiedAccessResolver;
 
@@ -44,8 +46,11 @@ public final class ConsentNotifiedAccessResolverTest extends AdServicesMockitoTe
     public void setup() {
         mConsentNotifiedAccessResolver =
                 new ConsentNotifiedAccessResolver(
-                        mConsentManager, new CachedFlags(mMockFlags), mUserConsentAccessResolver);
-        doReturn(false).when(mMockFlags).getConsentNotifiedDebugMode();
+                        mConsentManager,
+                        new CachedFlags(mMockFlags),
+                        mMockDebugFlags,
+                        mUserConsentAccessResolver);
+        doReturn(false).when(mMockDebugFlags).getConsentNotifiedDebugMode();
         doReturn(new AccessInfo(false, STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET))
                 .when(mUserConsentAccessResolver)
                 .getAccessInfo(mMockContext);
@@ -82,7 +87,7 @@ public final class ConsentNotifiedAccessResolverTest extends AdServicesMockitoTe
     @Test
     public void isAllowed_returnsTrueInDebugMode() {
         // Setup
-        doReturn(true).when(mMockFlags).getConsentNotifiedDebugMode();
+        doReturn(true).when(mMockDebugFlags).getConsentNotifiedDebugMode();
 
         // Assertion
         assertTrue(mConsentNotifiedAccessResolver.getAccessInfo(mMockContext).isAllowedAccess());

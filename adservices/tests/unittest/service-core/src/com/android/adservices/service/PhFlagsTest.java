@@ -48,8 +48,6 @@ import static com.android.adservices.service.Flags.COMPAT_LOGGING_KILL_SWITCH;
 import static com.android.adservices.service.Flags.CONSENT_ALREADY_INTERACTED_FIX_ENABLE;
 import static com.android.adservices.service.Flags.CONSENT_NOTIFICATION_RESET_TOKEN;
 import static com.android.adservices.service.Flags.DEBUG_UX;
-import static com.android.adservices.service.Flags.DEFAULT_ADEXT_READ_TIMEOUT_MS;
-import static com.android.adservices.service.Flags.DEFAULT_ADEXT_WRITE_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_ADID_CACHE_TTL_MS;
 import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED;
@@ -69,7 +67,6 @@ import static com.android.adservices.service.Flags.DEFAULT_CUSTOM_ERROR_CODE_SAM
 import static com.android.adservices.service.Flags.DEFAULT_DEVELOPER_MODE_FEATURE_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_EEA_PAS_UX_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_ADEXT_DATA_SERVICE_APIS;
-import static com.android.adservices.service.Flags.DEFAULT_ENABLE_ADEXT_SERVICE_DEBUG_PROXY;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_ADSERVICES_API_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_BACK_COMPAT_INIT;
@@ -129,14 +126,12 @@ import static com.android.adservices.service.Flags.DISABLE_TOPICS_ENROLLMENT_CHE
 import static com.android.adservices.service.Flags.DOWNLOADER_CONNECTION_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DOWNLOADER_MAX_DOWNLOAD_THREADS;
 import static com.android.adservices.service.Flags.DOWNLOADER_READ_TIMEOUT_MS;
-import static com.android.adservices.service.Flags.ENABLE_ADEXT_SERVICE_CONSENT_DATA;
 import static com.android.adservices.service.Flags.ENABLE_APPSEARCH_CONSENT_DATA;
 import static com.android.adservices.service.Flags.ENABLE_DATABASE_SCHEMA_VERSION_8;
 import static com.android.adservices.service.Flags.ENABLE_DATABASE_SCHEMA_VERSION_9;
 import static com.android.adservices.service.Flags.ENABLE_ENROLLMENT_TEST_SEED;
 import static com.android.adservices.service.Flags.ENABLE_LOGGED_TOPIC;
 import static com.android.adservices.service.Flags.ENABLE_MDD_ENCRYPTION_KEYS;
-import static com.android.adservices.service.Flags.ENABLE_MIGRATION_FROM_ADEXT_SERVICE;
 import static com.android.adservices.service.Flags.ENCRYPTION_KEY_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.Flags.ENCRYPTION_KEY_NETWORK_CONNECT_TIMEOUT_MS;
@@ -449,6 +444,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_JOB_IMMEDIATE_AGG
 import static com.android.adservices.service.Flags.MEASUREMENT_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_MANIFEST_FILE_URL;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE;
+import static com.android.adservices.service.Flags.MEASUREMENT_MAX_AGGREGATABLE_BUCKETS_PER_SOURCE_REGISTRATION;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_AGGREGATE_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_AGGREGATE_KEYS_PER_SOURCE_REGISTRATION;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_AGGREGATE_KEYS_PER_TRIGGER_REGISTRATION;
@@ -467,6 +463,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_MAX_EVENT_REPORTS
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_INSTALL_ATTRIBUTION_WINDOW;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_LENGTH_OF_TRIGGER_CONTEXT_ID;
+import static com.android.adservices.service.Flags.MEASUREMENT_MAX_LENGTH_PER_AGGREGATABLE_BUCKET;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_POST_INSTALL_EXCLUSIVITY_WINDOW;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_REGISTRATIONS_PER_JOB_INVOCATION;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_REGISTRATION_REDIRECTS;
@@ -554,8 +551,6 @@ import static com.android.adservices.service.Flags.UI_EEA_COUNTRIES;
 import static com.android.adservices.service.Flags.UI_FEATURE_TYPE_LOGGING_ENABLED;
 import static com.android.adservices.service.Flags.UI_OTA_RESOURCES_MANIFEST_FILE_URL;
 import static com.android.adservices.service.Flags.UI_OTA_STRINGS_MANIFEST_FILE_URL;
-import static com.android.adservices.service.FlagsConstants.KEY_ADEXT_READ_TIMEOUT_MS;
-import static com.android.adservices.service.FlagsConstants.KEY_ADEXT_WRITE_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ADID_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_APK_SHA_CERTS;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED;
@@ -607,8 +602,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_DOWNLOADER_MAX_D
 import static com.android.adservices.service.FlagsConstants.KEY_DOWNLOADER_READ_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_EEA_PAS_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_APIS;
-import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_DEBUG_PROXY;
-import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ADEXT_SERVICE_CONSENT_DATA;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ADSERVICES_API_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_AD_SERVICES_SYSTEM_API;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA;
@@ -621,7 +614,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_DATABASE_
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_LOGGED_TOPIC;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_MDD_ENCRYPTION_KEYS;
-import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_MIGRATION_FROM_ADEXT_SERVICE;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_TABLET_REGION_FIX;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_U18_APPSEARCH_MIGRATION;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCODED_ERROR_CODE_LIST_PER_SAMPLE_INTERVAL;
@@ -955,6 +947,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MANIFEST_FILE_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_AGGREGATABLE_BUCKETS_PER_SOURCE_REGISTRATION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_AGGREGATE_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_AGGREGATE_KEYS_PER_SOURCE_REGISTRATION;
@@ -982,6 +975,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_FILTER_MAPS_PER_FILTER_SET;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_INSTALL_ATTRIBUTION_WINDOW;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_LENGTH_OF_TRIGGER_CONTEXT_ID;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_LENGTH_PER_AGGREGATABLE_BUCKET;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_POST_INSTALL_EXCLUSIVITY_WINDOW;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_REGISTRATIONS_PER_JOB_INVOCATION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_REGISTRATION_REDIRECTS;
@@ -1092,6 +1086,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_UI_FEATURE_TYPE_
 import static com.android.adservices.service.FlagsConstants.KEY_UI_OTA_RESOURCES_MANIFEST_FILE_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_TOGGLE_SPEED_BUMP_ENABLED;
+import static com.android.adservices.service.FlagsConstantsTest.getAllFlagNameConstants;
 import static com.android.adservices.shared.common.flags.ModuleSharedFlags.ENCODED_ERROR_CODE_LIST_PER_SAMPLE_INTERVAL;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -1100,22 +1095,21 @@ import static org.junit.Assert.assertThrows;
 
 import android.provider.DeviceConfig;
 import android.util.Log;
+import android.util.Pair;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.fixture.TestableSystemProperties;
+import com.android.adservices.shared.testing.common.DumpHelper;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import com.google.common.collect.ImmutableList;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.Writer;
 import java.util.stream.Collectors;
 
 /** Unit tests for {@link com.android.adservices.service.PhFlags} */
@@ -3552,23 +3546,37 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 Flags::getAsyncRegistrationJobQueueIntervalMs);
     }
 
+    // TODO(b/369385082): remove once testDump() is un-ignored
     @Test
-    public void testDump() throws FileNotFoundException {
+    public void testDump_doesntCrash() throws Exception {
         // Trigger the dump to verify no crash
-        PrintWriter printWriter =
-                new PrintWriter(
-                        new Writer() {
-                            @Override
-                            public void write(char[] cbuf, int off, int len) throws IOException {}
+        String dump = DumpHelper.dump((pw) -> mPhFlags.dump(pw, /* args= */ null));
 
-                            @Override
-                            public void flush() throws IOException {}
+        expect.withMessage("dump()").that(dump).isNotEmpty();
+    }
 
-                            @Override
-                            public void close() throws IOException {}
-                        });
-        String[] args = new String[] {};
-        mPhFlags.dump(printWriter, args);
+    @Test
+    @Ignore("TODO(b/369385082): remove @Ignore when all missing values are added")
+    public void testDump() throws Exception {
+        String dump = DumpHelper.dump((pw) -> mPhFlags.dump(pw, /* args= */ null));
+
+        StringBuilder missingFlags = new StringBuilder();
+        int numberMissingFlags = 0;
+        for (Pair<String, String> flag : getAllFlagNameConstants(FlagsConstants.class)) {
+            String name = flag.first;
+            String value = flag.second;
+            if (!dump.contains("\t" + value + " = ")) {
+                // NOTE: not using expect because the value of dump print on each failure would be
+                // hundreds of lines long
+                numberMissingFlags++;
+                missingFlags.append('\n').append(name);
+            }
+        }
+
+        if (numberMissingFlags > 0) {
+            expect.withMessage("dump() is missing %s flags: %s", numberMissingFlags, missingFlags)
+                    .fail();
+        }
     }
 
     @Test
@@ -3841,27 +3849,11 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    public void testOverrideEnableAdExtServiceConsentData() {
-        mFlagsTestHelper.testConfigFlag(
-                KEY_ENABLE_ADEXT_SERVICE_CONSENT_DATA,
-                ENABLE_ADEXT_SERVICE_CONSENT_DATA,
-                Flags::getEnableAdExtServiceConsentData);
-    }
-
-    @Test
     public void testOverrideEnableU18AppsearchMigration() {
         mFlagsTestHelper.testConfigFlag(
                 KEY_ENABLE_U18_APPSEARCH_MIGRATION,
                 DEFAULT_ENABLE_U18_APPSEARCH_MIGRATION,
                 Flags::getEnableU18AppsearchMigration);
-    }
-
-    @Test
-    public void testOverrideEnableMigrationFromAdExtService() {
-        mFlagsTestHelper.testConfigFlag(
-                KEY_ENABLE_MIGRATION_FROM_ADEXT_SERVICE,
-                ENABLE_MIGRATION_FROM_ADEXT_SERVICE,
-                Flags::getEnableMigrationFromAdExtService);
     }
 
     @Test
@@ -5082,14 +5074,6 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    public void testGetEnableAdExtServiceProxy() {
-        mFlagsTestHelper.testConfigFlag(
-                KEY_ENABLE_ADEXT_DATA_SERVICE_DEBUG_PROXY,
-                DEFAULT_ENABLE_ADEXT_SERVICE_DEBUG_PROXY,
-                Flags::getEnableAdExtServiceDebugProxy);
-    }
-
-    @Test
     public void testGetMeasurementNullAggregateReportEnabled() {
         mFlagsTestHelper.testConfigFlag(
                 KEY_MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED,
@@ -5167,6 +5151,22 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH,
                 MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH,
                 Flags::getMeasurementMaxAttributionScopeLength);
+    }
+
+    @Test
+    public void testGetMeasurementMaxLengthPerAggregatableBucket() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_MEASUREMENT_MAX_LENGTH_PER_AGGREGATABLE_BUCKET,
+                MEASUREMENT_MAX_LENGTH_PER_AGGREGATABLE_BUCKET,
+                Flags::getMeasurementMaxLengthPerAggregatableBucket);
+    }
+
+    @Test
+    public void testGetMeasurementMaxAggregatableBucketsPerSourceRegistration() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_MEASUREMENT_MAX_AGGREGATABLE_BUCKETS_PER_SOURCE_REGISTRATION,
+                MEASUREMENT_MAX_AGGREGATABLE_BUCKETS_PER_SOURCE_REGISTRATION,
+                Flags::getMeasurementMaxAggregatableBucketsPerSourceRegistration);
     }
 
     @Test
@@ -5341,22 +5341,6 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_APPSEARCH_READ_TIMEOUT_MS,
                 DEFAULT_APPSEARCH_READ_TIMEOUT_MS,
                 Flags::getAppSearchReadTimeout);
-    }
-
-    @Test
-    public void testGetAdExtWriteTimeoutMs() {
-        mFlagsTestHelper.testConfigFlag(
-                KEY_ADEXT_WRITE_TIMEOUT_MS,
-                DEFAULT_ADEXT_WRITE_TIMEOUT_MS,
-                Flags::getAdExtWriteTimeoutMs);
-    }
-
-    @Test
-    public void testGetAdExtReadTimeoutMs() {
-        mFlagsTestHelper.testConfigFlag(
-                KEY_ADEXT_READ_TIMEOUT_MS,
-                DEFAULT_ADEXT_READ_TIMEOUT_MS,
-                Flags::getAdExtReadTimeoutMs);
     }
 
     @Test

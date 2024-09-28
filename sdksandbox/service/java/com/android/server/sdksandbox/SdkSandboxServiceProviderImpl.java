@@ -18,6 +18,7 @@ package com.android.server.sdksandbox;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.app.sdksandbox.LogUtil;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -110,6 +111,10 @@ class SdkSandboxServiceProviderImpl implements SdkSandboxServiceProvider {
                                     callingPackageName,
                                     sandboxProcessName);
                     if (name == null) {
+                        LogUtil.d(
+                                TAG,
+                                "Failed to load sandbox since ActivityManagerService could not"
+                                        + " resolve sandbox service.");
                         notifyFailedBinding(serviceConnection);
                         return;
                     }
@@ -134,11 +139,13 @@ class SdkSandboxServiceProviderImpl implements SdkSandboxServiceProvider {
                                     Context.BIND_AUTO_CREATE);
                 }
                 if (!bound) {
+                    LogUtil.d(TAG, "Failed to bind SDK sandbox.");
                     mContext.unbindService(serviceConnection);
                     notifyFailedBinding(serviceConnection);
                     return;
                 }
             } catch (RemoteException e) {
+                LogUtil.d(TAG, "Failed to bind SDK sandbox due to: " + e.getMessage());
                 notifyFailedBinding(serviceConnection);
                 return;
             }

@@ -25,9 +25,11 @@ import static com.android.adservices.shared.testing.common.DumpHelper.dump;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import android.os.PersistableBundle;
 import android.util.AtomicFile;
 import android.util.Pair;
 
@@ -45,9 +47,11 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -55,10 +59,16 @@ import java.util.stream.IntStream;
 public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase {
     private static final String VALID_DIR = sContext.getFilesDir().getAbsolutePath();
     private static final String FILENAME = "AtomicFileDatastoreTest.xml";
+
     private static final int DATASTORE_VERSION = 1;
     private static final String TEST_KEY = "key";
     private static final String TEST_KEY_1 = "key1";
     private static final String TEST_KEY_2 = "key2";
+    private static final String TEST_KEY_3 = "key3";
+    private static final String TEST_KEY_4 = "key4";
+    private static final String TEST_KEY_5 = "key5";
+    private static final String TEST_KEY_6 = "key6";
+    private static final String TEST_KEY_7 = "key7";
     private static final String TEST_VERSION_KEY = "version_key";
 
     @Mock private AdServicesErrorLogger mMockAdServicesErrorLogger;
@@ -252,6 +262,56 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
         assertWithMessage("getPreviousStoredVersion()")
                 .that(mDatastore.getPreviousStoredVersion())
                 .isEqualTo(DATASTORE_VERSION);
+    }
+
+    @Test
+    public void testPutBoolean_ioExceptionOccurs_noWriteToFile() throws Exception {
+        datastoreIoExceptionTestHelper(datastore -> datastore.putBoolean(TEST_KEY, true));
+    }
+
+    @Test
+    public void testPutInt_ioExceptionOccurs_noWriteToFile() throws Exception {
+        datastoreIoExceptionTestHelper(datastore -> datastore.putInt(TEST_KEY_1, 6));
+    }
+
+    @Test
+    public void testPutString_ioExceptionOccurs_noWriteToFile() throws Exception {
+        datastoreIoExceptionTestHelper(datastore -> datastore.putString(TEST_KEY_2, "abc"));
+    }
+
+    @Test
+    public void testPutBooleanIfNew_ioExceptionOccurs_noWriteToFile() throws Exception {
+        datastoreIoExceptionTestHelper(datastore -> datastore.putBooleanIfNew(TEST_KEY_5, true));
+    }
+
+    @Test
+    public void testPutIntIfNew_ioExceptionOccurs_noWriteToFile() throws Exception {
+        datastoreIoExceptionTestHelper(datastore -> datastore.putIntIfNew(TEST_KEY_6, 8));
+    }
+
+    @Test
+    public void testPutStringIfNew_ioExceptionOccurs_noWriteToFile() throws Exception {
+        datastoreIoExceptionTestHelper(datastore -> datastore.putStringIfNew(TEST_KEY_7, "hello"));
+    }
+
+    @Test
+    public void testClearAllTrue_ioExceptionOccurs_noWriteToFile() throws Exception {
+        datastoreIoExceptionTestHelper(AtomicFileDatastore::clearAllTrue);
+    }
+
+    @Test
+    public void testClearAllFalse_ioExceptionOccurs_noWriteToFile() throws Exception {
+        datastoreIoExceptionTestHelper(AtomicFileDatastore::clearAllFalse);
+    }
+
+    @Test
+    public void testRemove_ioExceptionOccurs_noWriteToFile() throws Exception {
+        datastoreIoExceptionTestHelper(datastore -> datastore.remove(TEST_KEY_1));
+    }
+
+    @Test
+    public void testRemoveByPrefix_ioExceptionOccurs_noWriteToFile() throws Exception {
+        datastoreIoExceptionTestHelper(datastore -> datastore.removeByPrefix(TEST_KEY));
     }
 
     @Test
@@ -762,5 +822,90 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
         expect.withMessage("contents of dump() (TEST_VERSION_KEY)")
                 .that(dump)
                 .contains(TEST_VERSION_KEY);
+    }
+
+    private static Map<String, Object> readFromAtomicFile(AtomicFile atomicFile) throws Exception {
+        try (ByteArrayInputStream inputStream = new ByteArrayInputStream(atomicFile.readFully())) {
+            PersistableBundle bundleRead = PersistableBundle.readFromStream(inputStream);
+            return bundleRead.keySet().stream()
+                    .collect(Collectors.toMap(key -> key, key -> bundleRead.get(key)));
+        }
+    }
+
+    private void datastoreIoExceptionTestHelper(ThrowingRunnable runnable) throws Exception {
+        AtomicFile atomicFile = spy(new AtomicFile(new File(VALID_DIR, FILENAME)));
+        AtomicFileDatastore datastore =
+                new AtomicFileDatastore(
+                        atomicFile,
+                        DATASTORE_VERSION,
+                        TEST_VERSION_KEY,
+                        mMockAdServicesErrorLogger);
+
+        try {
+            datastore.putBoolean(TEST_KEY, false);
+            datastore.putInt(TEST_KEY_1, 3);
+            datastore.putString(TEST_KEY_2, "bar");
+            datastore.putBoolean(TEST_KEY_3, true);
+            datastore.putBoolean(TEST_KEY_4, true);
+
+            Map<String, Object> expectedMap =
+                    Map.of(
+                            TEST_KEY,
+                            false,
+                            TEST_KEY_1,
+                            3,
+                            TEST_KEY_2,
+                            "bar",
+                            TEST_KEY_3,
+                            true,
+                            TEST_KEY_4,
+                            true,
+                            TEST_VERSION_KEY,
+                            1);
+
+            assertWithMessage("datastore content check")
+                    .that(readFromAtomicFile(atomicFile))
+                    .containsExactlyEntriesIn(expectedMap);
+
+            // No file and local map update when exception occurs
+            when(atomicFile.startWrite()).thenThrow(new IOException("write failure"));
+
+            assertThrows(IOException.class, () -> runnable.run(datastore));
+
+            assertWithMessage("getBoolean(%s)", TEST_KEY)
+                    .that(datastore.getBoolean(TEST_KEY))
+                    .isEqualTo(false);
+            assertWithMessage("getInt(%s)", TEST_KEY_1)
+                    .that(datastore.getInt(TEST_KEY_1))
+                    .isEqualTo(3);
+            assertWithMessage("getString(%s)", TEST_KEY_2)
+                    .that(datastore.getString(TEST_KEY_2))
+                    .isEqualTo("bar");
+            assertWithMessage("getBoolean(%s)", TEST_KEY_3)
+                    .that(datastore.getBoolean(TEST_KEY_3))
+                    .isEqualTo(true);
+            assertWithMessage("getBoolean(%s)", TEST_KEY_4)
+                    .that(datastore.getBoolean(TEST_KEY_4))
+                    .isEqualTo(true);
+
+            assertWithMessage("getBoolean(%s)", TEST_KEY_5)
+                    .that(datastore.getBoolean(TEST_KEY_5))
+                    .isNull();
+            assertWithMessage("getInt(%s)", TEST_KEY_6).that(datastore.getInt(TEST_KEY_6)).isNull();
+            assertWithMessage("getString(%s)", TEST_KEY_7)
+                    .that(datastore.getString(TEST_KEY_7))
+                    .isNull();
+
+            assertWithMessage("datastore content check after write failure")
+                    .that(readFromAtomicFile(atomicFile))
+                    .containsExactlyEntriesIn(expectedMap);
+        } finally {
+            datastore.tearDownForTesting();
+        }
+    }
+
+    @FunctionalInterface
+    private interface ThrowingRunnable {
+        void run(AtomicFileDatastore datastore) throws Exception;
     }
 }

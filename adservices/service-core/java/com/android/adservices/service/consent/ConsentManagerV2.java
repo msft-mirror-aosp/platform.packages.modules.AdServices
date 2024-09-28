@@ -51,6 +51,7 @@ import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.errorlogging.AdServicesErrorLoggerImpl;
 import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.appsearch.AppSearchConsentStorageManager;
@@ -117,6 +118,7 @@ public class ConsentManagerV2 {
     public static final int MANUAL_INTERACTIONS_RECORDED = 1;
 
     private final Flags mFlags;
+    private final DebugFlags mDebugFlags;
     private final TopicsWorker mTopicsWorker;
     private final AtomicFileDatastore mDatastore;
     private final EnrollmentDao mEnrollmentDao;
@@ -150,6 +152,7 @@ public class ConsentManagerV2 {
             @NonNull AppSearchConsentStorageManager appSearchConsentStorageManager,
             @NonNull UserProfileIdManager userProfileIdManager,
             @NonNull Flags flags,
+            @NonNull DebugFlags debugFlags,
             @Flags.ConsentSourceOfTruth int consentSourceOfTruth,
             boolean enableAppsearchConsentData) {
         Objects.requireNonNull(topicsWorker);
@@ -185,6 +188,7 @@ public class ConsentManagerV2 {
         mUserProfileIdManager = userProfileIdManager;
 
         mFlags = flags;
+        mDebugFlags = debugFlags;
         mAppConsentStorageManager = appConsentStorageManager;
 
         mConsentCompositeStorage =
@@ -286,6 +290,7 @@ public class ConsentManagerV2 {
                                     UserProfileIdManager.getInstance(),
                                     // TODO(b/260601944): Remove Flag Instance.
                                     FlagsFactory.getFlags(),
+                                    DebugFlags.getInstance(),
                                     consentSourceOfTruth,
                                     enableAppsearchConsentData);
                 }
@@ -438,7 +443,7 @@ public class ConsentManagerV2 {
      * @return AdServicesApiConsent the consent
      */
     public AdServicesApiConsent getConsent() {
-        if (mFlags.getConsentManagerDebugMode()) {
+        if (mDebugFlags.getConsentManagerDebugMode()) {
             return AdServicesApiConsent.GIVEN;
         }
         return mConsentCompositeStorage.getConsent(AdServicesApiType.ALL_API);
@@ -452,7 +457,7 @@ public class ConsentManagerV2 {
      *     revoked.
      */
     public AdServicesApiConsent getConsent(AdServicesApiType apiType) {
-        if (mFlags.getConsentManagerDebugMode()) {
+        if (mDebugFlags.getConsentManagerDebugMode()) {
             return AdServicesApiConsent.GIVEN;
         }
         return mConsentCompositeStorage.getConsent(apiType);
@@ -1397,7 +1402,7 @@ public class ConsentManagerV2 {
 
     /** get pas conset for measurement */
     public boolean isPasMeasurementConsentGiven() {
-        if (mFlags.getConsentManagerDebugMode()) {
+        if (mDebugFlags.getConsentManagerDebugMode()) {
             return true;
         }
 

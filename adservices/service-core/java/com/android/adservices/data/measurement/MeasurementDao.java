@@ -285,7 +285,7 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public Set<String> getNavigationAttributionScopesForRegistration(
+    public Optional<Set<String>> getAttributionScopesForRegistration(
             @NonNull String registrationId, @NonNull String registrationOrigin)
             throws DatastoreException {
         // Joins Source, SourceDestination and SourceAttributionScope tables on source id.
@@ -306,20 +306,25 @@ class MeasurementDao implements IMeasurementDao {
                         SourceContract.REGISTRATION_ID
                                 + " = "
                                 + DatabaseUtils.sqlEscapeString(registrationId),
-                        SourceContract.SOURCE_TYPE
-                                + " = "
-                                + DatabaseUtils.sqlEscapeString(
-                                        String.valueOf(Source.SourceType.NAVIGATION)),
                         SourceContract.REGISTRATION_ORIGIN
                                 + " = "
                                 + DatabaseUtils.sqlEscapeString(registrationOrigin));
 
-        String query =
+        String countQuery =
+                String.format(
+                        Locale.ENGLISH,
+                        "SELECT COUNT(*) FROM %1$s WHERE " + sourceWhereStatement,
+                        MeasurementTables.SourceContract.TABLE);
+        if (DatabaseUtils.longForQuery(mSQLTransaction.getDatabase(), countQuery, null) == 0) {
+            return Optional.empty();
+        }
+
+        String scopesQuery =
                 String.format(
                         Locale.ENGLISH,
                         "SELECT DISTINCT %1$s" + joinString + " WHERE " + sourceWhereStatement,
                         SourceAttributionScopeContract.ATTRIBUTION_SCOPE);
-        try (Cursor cursor = mSQLTransaction.getDatabase().rawQuery(query, null)) {
+        try (Cursor cursor = mSQLTransaction.getDatabase().rawQuery(scopesQuery, null)) {
             Set<String> attributionScopes = new HashSet<>();
             while (cursor.moveToNext()) {
                 attributionScopes.add(
@@ -327,7 +332,7 @@ class MeasurementDao implements IMeasurementDao {
                                 cursor.getColumnIndexOrThrow(
                                         SourceAttributionScopeContract.ATTRIBUTION_SCOPE)));
             }
-            return attributionScopes;
+            return Optional.of(attributionScopes);
         }
     }
 

@@ -21,19 +21,34 @@ import static com.android.adservices.shared.testing.common.DumpHelper.mockDump;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
 
 import android.app.adservices.AdServicesManager;
 import android.content.Context;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.service.DebugFlags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
+import org.junit.Before;
 import org.junit.Test;
 
+import java.io.PrintWriter;
+
+@MockStatic(FlagsFactory.class)
 public final class AdServicesInternalProviderTest extends AdServicesExtendedMockitoTestCase {
 
     private final AdServicesInternalProvider mProvider = new AdServicesInternalProvider();
+
+    @Before
+    public void setFixtures() {
+        // Need to set it always otherwise testDump() methods would throw
+        mocker.mockGetFlags(mMockFlags);
+    }
 
     @Test
     public void testDump_appContextSingletonNotSet() throws Exception {
@@ -81,5 +96,42 @@ public final class AdServicesInternalProviderTest extends AdServicesExtendedMock
         String dump = dump(pw -> mProvider.dump(/* fd= */ null, pw, /* args= */ null));
 
         assertWithMessage("content of dump()").that(dump).contains(mgrDump);
+    }
+
+    @Test
+    @SpyStatic(DebugFlags.class)
+    public void testDump_includesDebugFlagsDump() throws Exception {
+        DebugFlags mockDebugFlags = mock(DebugFlags.class);
+        mocker.mockGetDebugFlags(mockDebugFlags);
+        String expectedDump = "The Bug is on the Table";
+        // Ideally we should have a Dumper.mockDump() method that could be used below...
+        doAnswer(
+                        (inv) -> {
+                            ((PrintWriter) inv.getArgument(0)).println(expectedDump);
+                            return null;
+                        })
+                .when(mockDebugFlags)
+                .dump(any());
+
+        String dump = dump(pw -> mProvider.dump(/* fd= */ null, pw, /* args= */ null));
+
+        assertWithMessage("content of dump()").that(dump).contains(expectedDump);
+    }
+
+    @Test
+    public void testDump_includesFlagsDump() throws Exception {
+        String expectedDump = "I flag, therefore I am!";
+        // Ideally we should have a Dumper.mockDump() method that could be used below...
+        doAnswer(
+                        (inv) -> {
+                            ((PrintWriter) inv.getArgument(0)).println(expectedDump);
+                            return null;
+                        })
+                .when(mMockFlags)
+                .dump(any(), any());
+
+        String dump = dump(pw -> mProvider.dump(/* fd= */ null, pw, /* args= */ null));
+
+        assertWithMessage("content of dump()").that(dump).contains(expectedDump);
     }
 }

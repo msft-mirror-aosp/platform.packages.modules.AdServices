@@ -146,12 +146,6 @@ public final class CachedFlagsTest {
     }
 
     @Test
-    public void testGetConsentNotifiedDebugMode_flagEnabled_returnsCachedFlag() {
-        setUp(/* enableSessionStableKillSwitches= */ true);
-        assertThat(mFlags.getConsentNotifiedDebugMode()).isEqualTo(CACHED_BOOL_FLAG_VALUE);
-    }
-
-    @Test
     public void testGetEnforceForegroundStatusForMeasurementStatus_flagEnabled_returnsCachedFlag() {
         setUp(/* enableSessionStableKillSwitches= */ true);
         assertThat(mFlags.getEnforceForegroundStatusForMeasurementStatus())
@@ -279,12 +273,6 @@ public final class CachedFlagsTest {
     }
 
     @Test
-    public void testGetConsentNotifiedDebugMode_flagDisabled_returnsNonCachedFlag() {
-        setUp(/* enableSessionStableKillSwitches= */ false);
-        assertThat(mFlags.getConsentNotifiedDebugMode()).isEqualTo(NON_CACHED_BOOL_FLAG_VALUE);
-    }
-
-    @Test
     public void testGetEnforceForegroundStatusForMeasurementStatus_flagDisabled_returnsNonCached() {
         setUp(/* enableSessionStableKillSwitches= */ false);
         assertThat(mFlags.getEnforceForegroundStatusForMeasurementStatus())
@@ -334,7 +322,6 @@ public final class CachedFlagsTest {
         when(mMockFlags.getEnforceForegroundStatusForMeasurementDeleteRegistrations())
                 .thenReturn(booleanValue);
         when(mMockFlags.getMsmtEnableApiStatusAllowListCheck()).thenReturn(booleanValue);
-        when(mMockFlags.getConsentNotifiedDebugMode()).thenReturn(booleanValue);
         when(mMockFlags.getEnforceForegroundStatusForMeasurementStatus()).thenReturn(booleanValue);
         when(mMockFlags.getMsmtApiAppAllowList()).thenReturn(stringValue);
         when(mMockFlags.getMsmtApiAppBlockList()).thenReturn(stringValue);

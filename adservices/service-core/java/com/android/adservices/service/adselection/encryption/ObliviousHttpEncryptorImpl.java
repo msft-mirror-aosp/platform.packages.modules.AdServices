@@ -17,6 +17,12 @@
 package com.android.adservices.service.adselection.encryption;
 
 import static com.android.adservices.service.adselection.encryption.AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__OBLIVIOUS_HTTP_ENCRYPTOR_DECRYPTION_INVALID_KEY_SPEC_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__OBLIVIOUS_HTTP_ENCRYPTOR_DECRYPTION_IO_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__OBLIVIOUS_HTTP_ENCRYPTOR_DECRYPTION_UNSUPPORTED_HPKE_ALGORITHM_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__OBLIVIOUS_HTTP_ENCRYPTOR_ENCRYPTION_IO_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__OBLIVIOUS_HTTP_ENCRYPTOR_ENCRYPTION_UNSUPPORTED_HPKE_ALGORITHM_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE;
 
 import android.net.Uri;
 
@@ -24,6 +30,7 @@ import androidx.annotation.Nullable;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.EncryptionContextDao;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.ohttp.ObliviousHttpClient;
 import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
 import com.android.adservices.ohttp.ObliviousHttpRequest;
@@ -98,6 +105,24 @@ public class ObliviousHttpEncryptorImpl implements ObliviousHttpEncryptor {
             return client.decryptObliviousHttpResponse(encryptedBytes, context);
         } catch (InvalidKeySpecException | UnsupportedHpkeAlgorithmException | IOException e) {
             sLogger.e("Unexpected error during decryption");
+            if (e instanceof InvalidKeySpecException) {
+                ErrorLogUtil.e(
+                        e,
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__OBLIVIOUS_HTTP_ENCRYPTOR_DECRYPTION_INVALID_KEY_SPEC_EXCEPTION,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
+            }
+            if (e instanceof UnsupportedHpkeAlgorithmException) {
+                ErrorLogUtil.e(
+                        e,
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__OBLIVIOUS_HTTP_ENCRYPTOR_DECRYPTION_UNSUPPORTED_HPKE_ALGORITHM_EXCEPTION,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
+            }
+            if (e instanceof IOException) {
+                ErrorLogUtil.e(
+                        e,
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__OBLIVIOUS_HTTP_ENCRYPTOR_DECRYPTION_IO_EXCEPTION,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
+            }
             throw new RuntimeException(e);
         }
     }
@@ -124,10 +149,18 @@ public class ObliviousHttpEncryptorImpl implements ObliviousHttpEncryptor {
             return serializedRequest;
         } catch (UnsupportedHpkeAlgorithmException e) {
             sLogger.e("Unexpected error during Oblivious Http Client creation");
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__OBLIVIOUS_HTTP_ENCRYPTOR_ENCRYPTION_UNSUPPORTED_HPKE_ALGORITHM_EXCEPTION,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
             Tracing.endAsyncSection(Tracing.CREATE_AND_SERIALIZE_REQUEST, traceCookie);
             throw new RuntimeException(e);
         } catch (IOException e) {
             sLogger.e("Unexpected error during Oblivious HTTP Request creation");
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__OBLIVIOUS_HTTP_ENCRYPTOR_ENCRYPTION_IO_EXCEPTION,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
             Tracing.endAsyncSection(Tracing.CREATE_AND_SERIALIZE_REQUEST, traceCookie);
             throw new RuntimeException(e);
         }

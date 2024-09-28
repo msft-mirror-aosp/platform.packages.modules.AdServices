@@ -29,6 +29,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__SOURCE;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -94,6 +95,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -255,6 +257,8 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 .thenReturn(Flags.MEASUREMENT_MAX_REINSTALL_REATTRIBUTION_WINDOW_SECONDS);
         when(mMockFlags.getMeasurementPrivacyEpsilon())
                 .thenReturn(Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON);
+        when(mMockFlags.getMeasurementEnableAggregateContributionBudgetCapacity())
+                .thenReturn(false);
     }
 
     @Test
@@ -670,6 +674,436 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         assertEquals(
                 AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
         assertFalse(fetch.isPresent());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testFetchSource_validAggregateContribution_success() throws Exception {
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        when(mMockFlags.getMeasurementEnableAggregateContributionBudgetCapacity()).thenReturn(true);
+        when(mMockFlags.getMeasurementMaxAggregatableBucketsPerSourceRegistration())
+                .thenReturn(Flags.MEASUREMENT_MAX_AGGREGATABLE_BUCKETS_PER_SOURCE_REGISTRATION);
+        when(mMockFlags.getMeasurementMaxLengthPerAggregatableBucket())
+                .thenReturn(Flags.MEASUREMENT_MAX_LENGTH_PER_AGGREGATABLE_BUCKET);
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource())
+                .thenReturn(MEASUREMENT_MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{"
+                                                + "  \"destination\": \""
+                                                + DEFAULT_DESTINATION
+                                                + "\","
+                                                + "  \"aggregatable_bucket_max_budget\": {"
+                                                + "    \"key1\": 32768,"
+                                                + "    \"key2\": 30000"
+                                                + "  },"
+                                                + "  \"priority\": \""
+                                                + DEFAULT_PRIORITY
+                                                + "\","
+                                                + "  \"expiry\": \""
+                                                + DEFAULT_EXPIRY
+                                                + "\","
+                                                + "  \"source_event_id\": \""
+                                                + DEFAULT_EVENT_ID
+                                                + "\""
+                                                + "}")));
+
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+
+        // Execution
+        AsyncRegistration asyncRegistration = appSourceRegistrationRequest(request);
+        Optional<Source> fetch =
+                mFetcher.fetchSource(asyncRegistration, asyncFetchStatus, asyncRedirects);
+
+        // Assertion
+        assertWithMessage("asyncFetchStatus.getResponseStatus()")
+                .that(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertWithMessage("fetch.isPresent()").that(fetch.isPresent()).isTrue();
+        Source result = fetch.get();
+        assertWithMessage("result.getEnrollmentId()")
+                .that(result.getEnrollmentId())
+                .isEqualTo(ENROLLMENT_ID);
+        assertWithMessage("result.getAppDestinations().get(0).toString()")
+                .that(result.getAppDestinations().get(0).toString())
+                .isEqualTo(DEFAULT_DESTINATION);
+        assertWithMessage("result.getRegistrationOrigin().toString()")
+                .that(result.getRegistrationOrigin().toString())
+                .isEqualTo(DEFAULT_REGISTRATION);
+        assertWithMessage("result.getPriority()")
+                .that(result.getPriority())
+                .isEqualTo(DEFAULT_PRIORITY);
+        assertWithMessage("result.getEventId()")
+                .that(result.getEventId())
+                .isEqualTo(DEFAULT_EVENT_ID);
+        assertWithMessage("result.getAggregateContribution().maybeGetBucketCapacity(\"key1\")")
+                .that(result.getAggregateContributionBuckets().maybeGetBucketCapacity("key1").get())
+                .isEqualTo(32768);
+        assertWithMessage("result.getAggregateContribution().maybeGetBucketCapacity(\"key2\")")
+                .that(result.getAggregateContributionBuckets().maybeGetBucketCapacity("key2").get())
+                .isEqualTo(30000);
+        assertWithMessage(
+                        "result.getAggregateContribution().maybeGetBucketContributions"
+                                + "(\"key1\")")
+                .that(
+                        result.getAggregateContributionBuckets()
+                                .maybeGetBucketContribution("key1")
+                                .get())
+                .isEqualTo(0);
+        assertWithMessage(
+                        "result.getAggregateContribution().maybeGetBucketContributions"
+                                + "(\"key2\")")
+                .that(
+                        result.getAggregateContributionBuckets()
+                                .maybeGetBucketContribution("key2")
+                                .get())
+                .isEqualTo(0);
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testFetchSource_validAggregateContributionWithEnableFlagOff_success()
+            throws Exception {
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{"
+                                                + "  \"destination\": \""
+                                                + DEFAULT_DESTINATION
+                                                + "\","
+                                                + "  \"aggregatable_bucket_max_budget\": {"
+                                                + "    \"key1\": 32768,"
+                                                + "    \"key2\": 30000"
+                                                + "  },"
+                                                + "  \"priority\": \""
+                                                + DEFAULT_PRIORITY
+                                                + "\","
+                                                + "  \"expiry\": \""
+                                                + DEFAULT_EXPIRY
+                                                + "\","
+                                                + "  \"source_event_id\": \""
+                                                + DEFAULT_EVENT_ID
+                                                + "\""
+                                                + "}")));
+
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+
+        // Execution
+        AsyncRegistration asyncRegistration = appSourceRegistrationRequest(request);
+        Optional<Source> fetch =
+                mFetcher.fetchSource(asyncRegistration, asyncFetchStatus, asyncRedirects);
+
+        // Assertion
+        assertWithMessage("asyncFetchStatus.getResponseStatus()")
+                .that(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertWithMessage("fetch.isPresent()").that(fetch.isPresent()).isTrue();
+        Source result = fetch.get();
+        assertWithMessage("result.getEnrollmentId()")
+                .that(result.getEnrollmentId())
+                .isEqualTo(ENROLLMENT_ID);
+        assertWithMessage("result.getAppDestinations().get(0).toString()")
+                .that(result.getAppDestinations().get(0).toString())
+                .isEqualTo(DEFAULT_DESTINATION);
+        assertWithMessage("result.getRegistrationOrigin().toString()")
+                .that(result.getRegistrationOrigin().toString())
+                .isEqualTo(DEFAULT_REGISTRATION);
+        assertWithMessage("result.getPriority()")
+                .that(result.getPriority())
+                .isEqualTo(DEFAULT_PRIORITY);
+        assertWithMessage("result.getEventId()")
+                .that(result.getEventId())
+                .isEqualTo(DEFAULT_EVENT_ID);
+        assertWithMessage("result.getAggregateContributionBuckets()")
+                .that(result.getAggregateContributionBuckets())
+                .isNull();
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testFetchSource_moreAggregateBucketsThanAllowed_fails() throws Exception {
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        when(mMockFlags.getMeasurementEnableAggregateContributionBudgetCapacity()).thenReturn(true);
+        when(mMockFlags.getMeasurementMaxAggregatableBucketsPerSourceRegistration())
+                .thenReturn(Flags.MEASUREMENT_MAX_AGGREGATABLE_BUCKETS_PER_SOURCE_REGISTRATION);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+
+        // Set up JSON
+        Map<String, List<String>> headerFields = new HashMap<>();
+        headerFields.put("Attribution-Reporting-Register-Source", new ArrayList<>());
+        StringBuilder jsonBuilder = new StringBuilder("{");
+        jsonBuilder.append("\"destination\": \"").append(DEFAULT_DESTINATION).append("\",");
+        jsonBuilder.append("\"aggregatable_bucket_max_budget\": {");
+        for (int i = 0;
+                i <= Flags.MEASUREMENT_MAX_AGGREGATABLE_BUCKETS_PER_SOURCE_REGISTRATION;
+                i++) {
+            jsonBuilder.append("\"key").append(i).append("\": 30,");
+        }
+        jsonBuilder.deleteCharAt(jsonBuilder.length() - 1); // Remove the last comma
+        jsonBuilder.append("},");
+        jsonBuilder.append("\"priority\": \"").append(DEFAULT_PRIORITY).append("\",");
+        jsonBuilder.append("\"expiry\": \"").append(DEFAULT_EXPIRY).append("\",");
+        jsonBuilder.append("\"source_event_id\": \"").append(DEFAULT_EVENT_ID).append("\"");
+        jsonBuilder.append("}");
+
+        headerFields.get("Attribution-Reporting-Register-Source").add(jsonBuilder.toString());
+        when(mUrlConnection.getHeaderFields()).thenReturn(headerFields);
+
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+
+        // Execution
+        AsyncRegistration asyncRegistration = appSourceRegistrationRequest(request);
+        Optional<Source> fetch =
+                mFetcher.fetchSource(asyncRegistration, asyncFetchStatus, asyncRedirects);
+
+        // Assertion
+        assertWithMessage("asyncFetchStatus.getResponseStatus()")
+                .that(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertWithMessage("asyncFetchStatus.getEntityStatus()")
+                .that(asyncFetchStatus.getEntityStatus())
+                .isEqualTo(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
+        assertWithMessage("fetch.isPresent()").that(fetch.isPresent()).isFalse();
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testFetchSource_invalidAggregateBucketId_fails() throws Exception {
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        when(mMockFlags.getMeasurementEnableAggregateContributionBudgetCapacity()).thenReturn(true);
+        when(mMockFlags.getMeasurementMaxAggregatableBucketsPerSourceRegistration())
+                .thenReturn(Flags.MEASUREMENT_MAX_AGGREGATABLE_BUCKETS_PER_SOURCE_REGISTRATION);
+        when(mMockFlags.getMeasurementMaxLengthPerAggregatableBucket())
+                .thenReturn(Flags.MEASUREMENT_MAX_LENGTH_PER_AGGREGATABLE_BUCKET);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{"
+                                                + "  \"destination\": \""
+                                                + DEFAULT_DESTINATION
+                                                + "\","
+                                                + "  \"aggregatable_bucket_max_budget\": {"
+                                                + "    \"key1\": 32768,"
+                                                + "    \"key1235467890123456789012345678"
+                                                + "9012345678901234567890\":"
+                                                + " 30000"
+                                                + "  },"
+                                                + "  \"priority\": \""
+                                                + DEFAULT_PRIORITY
+                                                + "\","
+                                                + "  \"expiry\": \""
+                                                + DEFAULT_EXPIRY
+                                                + "\","
+                                                + "  \"source_event_id\": \""
+                                                + DEFAULT_EVENT_ID
+                                                + "\""
+                                                + "}")));
+
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+
+        // Execution
+        AsyncRegistration asyncRegistration = appSourceRegistrationRequest(request);
+        Optional<Source> fetch =
+                mFetcher.fetchSource(asyncRegistration, asyncFetchStatus, asyncRedirects);
+
+        // Assertion
+        assertWithMessage("asyncFetchStatus.getResponseStatus()")
+                .that(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertWithMessage("asyncFetchStatus.getEntityStatus()")
+                .that(asyncFetchStatus.getEntityStatus())
+                .isEqualTo(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
+        assertWithMessage("fetch.isPresent()").that(fetch.isPresent()).isFalse();
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testFetchSource_aggregationBucketBudgetIsZero_fails() throws Exception {
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        when(mMockFlags.getMeasurementEnableAggregateContributionBudgetCapacity()).thenReturn(true);
+        when(mMockFlags.getMeasurementMaxAggregatableBucketsPerSourceRegistration())
+                .thenReturn(Flags.MEASUREMENT_MAX_AGGREGATABLE_BUCKETS_PER_SOURCE_REGISTRATION);
+        when(mMockFlags.getMeasurementMaxLengthPerAggregatableBucket())
+                .thenReturn(Flags.MEASUREMENT_MAX_LENGTH_PER_AGGREGATABLE_BUCKET);
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource())
+                .thenReturn(MEASUREMENT_MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{"
+                                                + "  \"destination\": \""
+                                                + DEFAULT_DESTINATION
+                                                + "\","
+                                                + "  \"aggregatable_bucket_max_budget\": {"
+                                                + "    \"key1\": 0,"
+                                                + "    \"key2\": 32768"
+                                                + "  },"
+                                                + "  \"priority\": \""
+                                                + DEFAULT_PRIORITY
+                                                + "\","
+                                                + "  \"expiry\": \""
+                                                + DEFAULT_EXPIRY
+                                                + "\","
+                                                + "  \"source_event_id\": \""
+                                                + DEFAULT_EVENT_ID
+                                                + "\""
+                                                + "}")));
+
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+
+        // Execution
+        AsyncRegistration asyncRegistration = appSourceRegistrationRequest(request);
+        Optional<Source> fetch =
+                mFetcher.fetchSource(asyncRegistration, asyncFetchStatus, asyncRedirects);
+
+        // Assertion
+        assertWithMessage("asyncFetchStatus.getResponseStatus()")
+                .that(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertWithMessage("asyncFetchStatus.getEntityStatus()")
+                .that(asyncFetchStatus.getEntityStatus())
+                .isEqualTo(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
+        assertWithMessage("fetch.isPresent()").that(fetch.isPresent()).isFalse();
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testFetchSource_aggregationBucketBudgetIsNegative_fails() throws Exception {
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        when(mMockFlags.getMeasurementEnableAggregateContributionBudgetCapacity()).thenReturn(true);
+        when(mMockFlags.getMeasurementMaxAggregatableBucketsPerSourceRegistration())
+                .thenReturn(Flags.MEASUREMENT_MAX_AGGREGATABLE_BUCKETS_PER_SOURCE_REGISTRATION);
+        when(mMockFlags.getMeasurementMaxLengthPerAggregatableBucket())
+                .thenReturn(Flags.MEASUREMENT_MAX_LENGTH_PER_AGGREGATABLE_BUCKET);
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource())
+                .thenReturn(MEASUREMENT_MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{"
+                                                + "  \"destination\": \""
+                                                + DEFAULT_DESTINATION
+                                                + "\","
+                                                + "  \"aggregatable_bucket_max_budget\": {"
+                                                + "    \"key1\": 32768,"
+                                                + "    \"key2\": -30000"
+                                                + "  },"
+                                                + "  \"priority\": \""
+                                                + DEFAULT_PRIORITY
+                                                + "\","
+                                                + "  \"expiry\": \""
+                                                + DEFAULT_EXPIRY
+                                                + "\","
+                                                + "  \"source_event_id\": \""
+                                                + DEFAULT_EVENT_ID
+                                                + "\""
+                                                + "}")));
+
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+
+        // Execution
+        AsyncRegistration asyncRegistration = appSourceRegistrationRequest(request);
+        Optional<Source> fetch =
+                mFetcher.fetchSource(asyncRegistration, asyncFetchStatus, asyncRedirects);
+
+        // Assertion
+        assertWithMessage("asyncFetchStatus.getResponseStatus()")
+                .that(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertWithMessage("asyncFetchStatus.getEntityStatus()")
+                .that(asyncFetchStatus.getEntityStatus())
+                .isEqualTo(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
+        assertWithMessage("fetch.isPresent()").that(fetch.isPresent()).isFalse();
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testFetchSource_aggregationBucketBudgetAboveCap_fails() throws Exception {
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        when(mMockFlags.getMeasurementEnableAggregateContributionBudgetCapacity()).thenReturn(true);
+        when(mMockFlags.getMeasurementMaxAggregatableBucketsPerSourceRegistration())
+                .thenReturn(Flags.MEASUREMENT_MAX_AGGREGATABLE_BUCKETS_PER_SOURCE_REGISTRATION);
+        when(mMockFlags.getMeasurementMaxLengthPerAggregatableBucket())
+                .thenReturn(Flags.MEASUREMENT_MAX_LENGTH_PER_AGGREGATABLE_BUCKET);
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource())
+                .thenReturn(MEASUREMENT_MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{"
+                                                + "  \"destination\": \""
+                                                + DEFAULT_DESTINATION
+                                                + "\","
+                                                + "  \"aggregatable_bucket_max_budget\": {"
+                                                + "    \"key1\": 65537"
+                                                + "  },"
+                                                + "  \"priority\": \""
+                                                + DEFAULT_PRIORITY
+                                                + "\","
+                                                + "  \"expiry\": \""
+                                                + DEFAULT_EXPIRY
+                                                + "\","
+                                                + "  \"source_event_id\": \""
+                                                + DEFAULT_EVENT_ID
+                                                + "\""
+                                                + "}")));
+
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+
+        // Execution
+        AsyncRegistration asyncRegistration = appSourceRegistrationRequest(request);
+        Optional<Source> fetch =
+                mFetcher.fetchSource(asyncRegistration, asyncFetchStatus, asyncRedirects);
+
+        // Assertion
+        assertWithMessage("asyncFetchStatus.getResponseStatus()")
+                .that(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertWithMessage("asyncFetchStatus.getEntityStatus()")
+                .that(asyncFetchStatus.getEntityStatus())
+                .isEqualTo(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
+        assertWithMessage("fetch.isPresent()").that(fetch.isPresent()).isFalse();
         verify(mUrlConnection).setRequestMethod("POST");
     }
 

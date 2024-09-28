@@ -23,7 +23,6 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATASTORE_EXCEPTION_WHILE_RECORDING_NOTIFICATION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_WHILE_GET_CONSENT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_CONSENT_MANAGER_INVALID_CONSENT_SOURCE_OF_TRUTH;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_CONSENT_MANAGER_PPAPI_AND_ADEXT_SERVICE_CONSENT_FAILED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_CONSENT_MANAGER_PPAPI_AND_SYSTEM_SERVER_FLEDGE_CONSENT_CHECK_FAILED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_CONSENT_MANAGER_PPAPI_ONLY_FLEDGE_CONSENT_CHECK_FAILED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PRIVACY_SANDBOX_SAVE_FAILURE;
@@ -70,6 +69,7 @@ import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.errorlogging.AdServicesErrorLoggerImpl;
 import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.appsearch.AppSearchConsentManager;
@@ -140,6 +140,7 @@ public class ConsentManager {
     public static final int MANUAL_INTERACTIONS_RECORDED = 1;
 
     private final Flags mFlags;
+    private final DebugFlags mDebugFlags;
     private final Supplier<TopicsWorker> mTopicsWorkerSupplier;
     private final AtomicFileDatastore mDatastore;
     private final Supplier<AppConsentDao> mAppConsentDaoSupplier;
@@ -173,6 +174,7 @@ public class ConsentManager {
             @NonNull UserProfileIdManager userProfileIdManager,
             @NonNull UxStatesDao uxStatesDao,
             @NonNull Flags flags,
+            @NonNull DebugFlags debugFlags,
             @Flags.ConsentSourceOfTruth int consentSourceOfTruth,
             boolean enableAppsearchConsentData) {
         mTopicsWorkerSupplier =
@@ -208,6 +210,7 @@ public class ConsentManager {
         mUxStatesDao = uxStatesDao;
         mAppSearchConsentManager = appSearchConsentManager;
         mFlags = flags;
+        mDebugFlags = debugFlags;
         mConsentSourceOfTruth = consentSourceOfTruth;
     }
 
@@ -284,6 +287,7 @@ public class ConsentManager {
                                     // TODO(b/260601944): Remove Flag Instance.
                                     UxStatesDao.getInstance(),
                                     FlagsFactory.getFlags(),
+                                    DebugFlags.getInstance(),
                                     consentSourceOfTruth,
                                     enableAppsearchConsentData);
                     LogUtil.d("finish consent manager initialization");
@@ -459,7 +463,7 @@ public class ConsentManager {
         if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
             return ConsentManagerV2.getInstance().getConsent();
         }
-        if (mFlags.getConsentManagerDebugMode()) {
+        if (mDebugFlags.getConsentManagerDebugMode()) {
             return AdServicesApiConsent.GIVEN;
         }
 
@@ -493,7 +497,7 @@ public class ConsentManager {
         if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
             return ConsentManagerV2.getInstance().getConsent(apiType);
         }
-        if (mFlags.getConsentManagerDebugMode()) {
+        if (mDebugFlags.getConsentManagerDebugMode()) {
             return AdServicesApiConsent.GIVEN;
         }
 
@@ -2341,7 +2345,7 @@ public class ConsentManager {
         if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
             return ConsentManagerV2.getInstance().isPasFledgeConsentGiven();
         }
-        if (mFlags.getConsentManagerDebugMode()) {
+        if (mDebugFlags.getConsentManagerDebugMode()) {
             return true;
         }
         if (mFlags.getEeaPasUxEnabled()) {
@@ -2360,7 +2364,7 @@ public class ConsentManager {
         if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
             return ConsentManagerV2.getInstance().isPasMeasurementConsentGiven();
         }
-        if (mFlags.getConsentManagerDebugMode()) {
+        if (mDebugFlags.getConsentManagerDebugMode()) {
             return true;
         }
         if (mFlags.getEeaPasUxEnabled()) {

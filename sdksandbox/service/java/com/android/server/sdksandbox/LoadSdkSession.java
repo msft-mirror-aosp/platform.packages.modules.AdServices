@@ -19,7 +19,6 @@ package com.android.server.sdksandbox;
 import static android.app.sdksandbox.SdkSandboxManager.REQUEST_SURFACE_PACKAGE_SDK_NOT_LOADED;
 import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_AVAILABLE;
 
-
 import android.annotation.IntDef;
 import android.annotation.Nullable;
 import android.app.sdksandbox.ILoadSdkCallback;
@@ -207,6 +206,13 @@ class LoadSdkSession {
         // have it here as well.
         synchronized (mLock) {
             if (getStatus() != LOAD_PENDING) {
+                LogUtil.d(
+                        TAG,
+                        "Load SDK request for "
+                                + mCallingInfo
+                                + ", SDK: "
+                                + mSdkName
+                                + " had already completed, failing");
                 // If the status is not the initial pending load, that means that this load request
                 // had already been performed before and completed (either successfully or
                 // unsuccessfully). Therefore, do not invoke any callback here.
@@ -219,6 +225,8 @@ class LoadSdkSession {
             sandboxLatencyInfo.setSandboxStatus(
                     SandboxLatencyInfo.SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_APP_TO_SANDBOX);
             sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.elapsedRealtime());
+            LogUtil.d(
+                    TAG, "Sandbox is not available - was not able to load SDK for " + mCallingInfo);
             handleLoadFailure(
                     new LoadSdkException(
                             SDK_SANDBOX_PROCESS_NOT_AVAILABLE, "Sandbox is not available"),
@@ -228,6 +236,9 @@ class LoadSdkSession {
 
         sandboxLatencyInfo.setTimeSystemServerCallFinished(mInjector.elapsedRealtime());
         try {
+            LogUtil.d(
+                    TAG,
+                    "Contacting sandbox service to load SDK " + mSdkName + " for " + mCallingInfo);
             service.loadSdk(
                     mCallingInfo.getPackageName(),
                     mSdkProviderInfo.getApplicationInfo(),
@@ -240,6 +251,13 @@ class LoadSdkSession {
         } catch (DeadObjectException e) {
             sandboxLatencyInfo.setSandboxStatus(
                     SandboxLatencyInfo.SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_APP_TO_SANDBOX);
+            LogUtil.d(
+                    TAG,
+                    "Failed to load SDK "
+                            + mSdkName
+                            + " for "
+                            + mCallingInfo
+                            + " as sandbox is dead.");
             handleLoadFailure(
                     new LoadSdkException(
                             SDK_SANDBOX_PROCESS_NOT_AVAILABLE,
@@ -247,6 +265,9 @@ class LoadSdkSession {
                     sandboxLatencyInfo);
         } catch (RemoteException e) {
             String errorMsg = "Failed to load sdk";
+            LogUtil.d(
+                    TAG,
+                    errorMsg + " " + mSdkName + " for " + mCallingInfo + " : " + e.getMessage());
             sandboxLatencyInfo.setSandboxStatus(
                     SandboxLatencyInfo.SANDBOX_STATUS_FAILED_AT_SYSTEM_SERVER_APP_TO_SANDBOX);
             handleLoadFailure(
@@ -276,6 +297,7 @@ class LoadSdkSession {
             }
         }
         try {
+            LogUtil.d(TAG, "SDK " + mSdkName + " successfully loaded, informing " + mCallingInfo);
             mLoadCallback.onLoadSdkSuccess(getSandboxedSdk(), sandboxLatencyInfo);
         } catch (RemoteException e) {
             Log.w(TAG, "Failed to send onLoadSdkSuccess", e);
@@ -303,6 +325,14 @@ class LoadSdkSession {
             }
         }
         try {
+            LogUtil.d(
+                    TAG,
+                    "SDK "
+                            + mSdkName
+                            + " failed to load (error code: "
+                            + exception.getLoadSdkErrorCode()
+                            + "), informing "
+                            + mCallingInfo);
             mLoadCallback.onLoadSdkFailure(exception, sandboxLatencyInfo);
         } catch (RemoteException e) {
             Log.w(TAG, "Failed to send onLoadSdkFailure", e);

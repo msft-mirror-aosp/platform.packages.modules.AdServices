@@ -25,9 +25,14 @@ public final class SharedMockitoTestCaseTest extends SharedMockitoTestCase {
 
     @Test
     public void testFixtures() {
-        assertWithMessage("mMockContext").that(mMockContext).isNotNull();
-        assertWithMessage("mockito").that(mockito).isNotNull();
+        expect.withMessage("mMockContext").that(mMockContext).isNotNull();
+        expect.withMessage("mockito").that(mockito).isNotNull();
+        expect.withMessage("mMockFlags").that(mMockFlags).isNotNull();
+    }
+
+    @Test
+    public void testMocker() {
         assertWithMessage("mocker").that(mocker).isNotNull();
-        assertWithMessage("mMockFlags").that(mMockFlags).isNotNull();
+        expect.withMessage("mocker").that(mocker).isInstanceOf(SharedMocker.class);
     }
 }

@@ -25,6 +25,7 @@ import com.google.errorprone.annotations.concurrent.GuardedBy;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 /** Base implementation for all {@code SyncCallback} classes. */
 public abstract class AbstractSyncCallback implements SyncCallback, FreezableToString {
@@ -40,9 +41,7 @@ public abstract class AbstractSyncCallback implements SyncCallback, FreezableToS
     @GuardedBy("mLock")
     private int mNumberCalls;
 
-    @GuardedBy("mLock")
-    @Nullable
-    private String mFrozenToString;
+    private final AtomicReference<String> mFrozenToString = new AtomicReference<>();
 
     // Used to fail assertCalled() if something bad happened before
     @GuardedBy("mLock")
@@ -67,9 +66,7 @@ public abstract class AbstractSyncCallback implements SyncCallback, FreezableToS
 
     @Override
     public final void freezeToString() {
-        synchronized (mLock) {
-            mFrozenToString = "FROZEN" + toStringLite();
-        }
+        mFrozenToString.set("FROZEN" + toStringLite());
     }
 
     /**
@@ -123,7 +120,7 @@ public abstract class AbstractSyncCallback implements SyncCallback, FreezableToS
     @FormatMethod
     protected final void logV(@FormatString final String msgFmt, @Nullable Object... msgArgs) {
         String msg = String.format(Locale.ENGLISH, msgFmt, msgArgs);
-        mSettings.getLogger().v("%s: %s", mRealCallback, msg);
+        mSettings.getLogger().v("%s: %s", mRealCallback.toStringLite(), msg);
     }
 
     // TODO(b/342448771): make it package protected once classes are moved
@@ -192,20 +189,21 @@ public abstract class AbstractSyncCallback implements SyncCallback, FreezableToS
 
     @Override
     public final String toString() {
-        synchronized (mLock) {
-            if (mFrozenToString != null) {
-                return mFrozenToString;
-            }
-            StringBuilder string =
-                    new StringBuilder("[")
-                            .append(getClass().getSimpleName())
-                            .append(": id=")
-                            .append(mId)
-                            .append(", onAssertCalledException=")
-                            .append(mOnAssertCalledException);
-            customizeToString(string);
-            return string.append(']').toString();
+        String frozenToString = mFrozenToString.get();
+        if (frozenToString != null) {
+            return frozenToString;
         }
+        // Should guard access to mOnAssertCalledException, but we don't care
+        @SuppressWarnings("GuardedBy")
+        StringBuilder string =
+                new StringBuilder("[")
+                        .append(getClass().getSimpleName())
+                        .append(": id=")
+                        .append(mId)
+                        .append(", onAssertCalledException=")
+                        .append(mOnAssertCalledException);
+        customizeToString(string);
+        return string.append(']').toString();
     }
 
     /** Gets a simpler representation of the callback. */

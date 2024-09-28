@@ -138,12 +138,12 @@ public final class JobServiceTest extends SpeMockitoTestCase {
     public void testJobExecutionLifeCycle_succeedThenSucceed() throws Exception {
         TestJobService jobService = new TestJobService(mLogger);
         // Mock clock to return mocked currentTimeStamp in sequence.
-        when(mMockClock.currentTimeMillis())
-                .thenReturn(
-                        START_TIMESTAMP_EXECUTION_1,
-                        END_TIMESTAMP_EXECUTION_1,
-                        START_TIMESTAMP_EXECUTION_2,
-                        END_TIMESTAMP_EXECUTION_2);
+        mocker.mockCurrentTimeMillis(
+                mMockClock,
+                START_TIMESTAMP_EXECUTION_1,
+                END_TIMESTAMP_EXECUTION_1,
+                START_TIMESTAMP_EXECUTION_2,
+                END_TIMESTAMP_EXECUTION_2);
         // onStopJob() is not called, so stop reason is the unavailable value.
         int stopReason = UNAVAILABLE_STOP_REASON;
         // First Execution -- Succeed to execute
@@ -184,12 +184,12 @@ public final class JobServiceTest extends SpeMockitoTestCase {
     public void testJobExecutionLifeCycle_FailWithRetryThenFailWithoutRetry() throws Exception {
         TestJobService jobService = new TestJobService(mLogger);
         // Mock clock to return mocked currentTimeStamp in sequence.
-        when(mMockClock.currentTimeMillis())
-                .thenReturn(
-                        START_TIMESTAMP_EXECUTION_1,
-                        END_TIMESTAMP_EXECUTION_1,
-                        START_TIMESTAMP_EXECUTION_2,
-                        END_TIMESTAMP_EXECUTION_2);
+        mocker.mockCurrentTimeMillis(
+                mMockClock,
+                START_TIMESTAMP_EXECUTION_1,
+                END_TIMESTAMP_EXECUTION_1,
+                START_TIMESTAMP_EXECUTION_2,
+                END_TIMESTAMP_EXECUTION_2);
         // onStopJob() is not called, so stop reason is the unavailable value.
         int stopReason = UNAVAILABLE_STOP_REASON;
         // First Execution -- Fail to execute with retry
@@ -235,12 +235,12 @@ public final class JobServiceTest extends SpeMockitoTestCase {
         // Mock the stop reason on test purpose. It's assigned by JobScheduler in production.
         when(mMockJobParameters.getStopReason()).thenReturn(STOP_REASON);
         // Mock clock to return mocked currentTimeStamp in sequence.
-        when(mMockClock.currentTimeMillis())
-                .thenReturn(
-                        START_TIMESTAMP_EXECUTION_1,
-                        END_TIMESTAMP_EXECUTION_1,
-                        START_TIMESTAMP_EXECUTION_2,
-                        END_TIMESTAMP_EXECUTION_2);
+        mocker.mockCurrentTimeMillis(
+                mMockClock,
+                START_TIMESTAMP_EXECUTION_1,
+                END_TIMESTAMP_EXECUTION_1,
+                START_TIMESTAMP_EXECUTION_2,
+                END_TIMESTAMP_EXECUTION_2);
         // First Execution -- onStopJob() is called with retry
         jobService.setShouldOnStopJobHappen(true);
         jobService.setShouldRetryOnStopJob(true);
@@ -290,12 +290,12 @@ public final class JobServiceTest extends SpeMockitoTestCase {
         // Mock the stop reason on test purpose. It's assigned by JobScheduler in production.
         when(mMockJobParameters.getStopReason()).thenReturn(STOP_REASON);
         // Mock clock to return mocked currentTimeStamp in sequence.
-        when(mMockClock.currentTimeMillis())
-                .thenReturn(
-                        START_TIMESTAMP_EXECUTION_1,
-                        END_TIMESTAMP_EXECUTION_1,
-                        START_TIMESTAMP_EXECUTION_2,
-                        END_TIMESTAMP_EXECUTION_2);
+        mocker.mockCurrentTimeMillis(
+                mMockClock,
+                START_TIMESTAMP_EXECUTION_1,
+                END_TIMESTAMP_EXECUTION_1,
+                START_TIMESTAMP_EXECUTION_2,
+                END_TIMESTAMP_EXECUTION_2);
         // onStopJob() is not called, so stop reason is the unavailable value.
         int stopReason = UNAVAILABLE_STOP_REASON;
         // First Execution -- successful
@@ -358,11 +358,11 @@ public final class JobServiceTest extends SpeMockitoTestCase {
         when(mMockJobParameters.getStopReason()).thenReturn(STOP_REASON);
         // Mock clock to return mocked currentTimeStamp in sequence.
         // Note the first execution is open-ended, so it doesn't have an ending timestamp
-        when(mMockClock.currentTimeMillis())
-                .thenReturn(
-                        START_TIMESTAMP_EXECUTION_1,
-                        START_TIMESTAMP_EXECUTION_2,
-                        END_TIMESTAMP_EXECUTION_2);
+        mocker.mockCurrentTimeMillis(
+                mMockClock,
+                START_TIMESTAMP_EXECUTION_1,
+                START_TIMESTAMP_EXECUTION_2,
+                END_TIMESTAMP_EXECUTION_2);
         // onStopJob() is not called, so stop reason is the unavailable value.
         int stopReason = UNAVAILABLE_STOP_REASON;
         // First Execution -- halted due to system/device issue.
@@ -415,12 +415,12 @@ public final class JobServiceTest extends SpeMockitoTestCase {
     public void testJobExecutionLifeCycle_skipThenSkip() throws Exception {
         TestJobService jobService = new TestJobService(mLogger);
         // Mock clock to return mocked currentTimeStamp in sequence.
-        when(mMockClock.currentTimeMillis())
-                .thenReturn(
-                        START_TIMESTAMP_EXECUTION_1,
-                        END_TIMESTAMP_EXECUTION_1,
-                        START_TIMESTAMP_EXECUTION_2,
-                        END_TIMESTAMP_EXECUTION_2);
+        mocker.mockCurrentTimeMillis(
+                mMockClock,
+                START_TIMESTAMP_EXECUTION_1,
+                END_TIMESTAMP_EXECUTION_1,
+                START_TIMESTAMP_EXECUTION_2,
+                END_TIMESTAMP_EXECUTION_2);
         // onStopJob() is not called, so stop reason is the unavailable value.
         int stopReason = UNAVAILABLE_STOP_REASON;
         // First Execution -- skip to execute

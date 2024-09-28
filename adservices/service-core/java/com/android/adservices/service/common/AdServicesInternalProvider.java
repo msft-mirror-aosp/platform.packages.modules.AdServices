@@ -19,6 +19,8 @@ import android.app.adservices.AdServicesManager;
 import android.content.Context;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.DebugFlags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.shared.common.ApplicationContextProvider;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 
@@ -51,5 +53,10 @@ public final class AdServicesInternalProvider extends ApplicationContextProvider
         }
 
         AdServicesManager.dump(writer);
+
+        writer.println("Flags:");
+        FlagsFactory.getFlags().dump(writer, /* args= */ null);
+
+        DebugFlags.getInstance().dump(writer);
     }
 }

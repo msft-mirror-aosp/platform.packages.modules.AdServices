@@ -58,6 +58,7 @@ import androidx.test.uiautomator.Until;
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
@@ -108,6 +109,7 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
     @Mock private NotificationManagerCompat mNotificationManagerCompat;
     @Mock private ConsentManager mConsentManager;
     @Mock private UxStatesManager mMockUxStatesManager;
+    @Mock private DebugFlags mMockDebugFlags;
 
     @Before
     public void setUp() {
@@ -127,7 +129,7 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         doReturn(GA_UX).when(mMockUxStatesManager).getUx();
         doReturn(true).when(mMockUxStatesManager).getFlag(KEY_NOTIFICATION_DISMISSED_ON_CLICK);
         doReturn(false).when(mMockUxStatesManager).getFlag(KEY_PAS_UX_ENABLED);
-        doReturn(false).when(mMockFlags).getConsentNotificationActivityDebugMode();
+        doReturn(false).when(mMockDebugFlags).getConsentNotificationActivityDebugMode();
         doReturn("").when(mMockFlags).getDebugUx();
         cancelAllPreviousNotifications();
     }
@@ -319,8 +321,8 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         doReturn(true).when(mMockFlags).isEeaDevice();
         doReturn(true).when(mMockFlags).getEnableAdServicesSystemApi();
         doReturn("GA_UX").when(mMockFlags).getDebugUx();
-        doReturn(true).when(mMockFlags).getConsentNotificationActivityDebugMode();
         doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
+        doReturn(true).when(mMockDebugFlags).getConsentNotificationActivityDebugMode();
         doReturn(GA_UX).when(mMockUxStatesManager).getUx();
         doReturn(true).when(mMockUxStatesManager).getFlag(KEY_GA_UX_FEATURE_ENABLED);
         doReturn(false).when(mMockUxStatesManager).getFlag(KEY_NOTIFICATION_DISMISSED_ON_CLICK);
@@ -565,8 +567,8 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         Assume.assumeTrue(SdkLevel.isAtLeastT());
         doReturn(true).when(mMockFlags).getEnableAdServicesSystemApi();
         doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
-        doReturn(true).when(mMockFlags).getConsentNotificationActivityDebugMode();
         doReturn("GA_UX").when(mMockFlags).getDebugUx();
+        doReturn(true).when(mMockDebugFlags).getConsentNotificationActivityDebugMode();
         doReturn(false).when(mMockUxStatesManager).pasUxIsActive(anyBoolean());
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
         doReturn(AdServicesApiConsent.GIVEN)

@@ -20,6 +20,8 @@ import static com.android.adservices.service.adselection.AuctionResultValidator.
 import static com.android.adservices.service.adselection.AuctionResultValidator.BUYER_ENROLLMENT;
 import static com.android.adservices.service.adselection.AuctionResultValidator.NEGATIVE_BID;
 import static com.android.adservices.service.adselection.AuctionResultValidator.NEGATIVE_SCORE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AUCTION_RESULT_VALIDATOR_AD_TECH_NOT_ALLOWED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -29,7 +31,10 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.DBAdDataFixture;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.ValidatorTestUtil;
@@ -40,14 +45,13 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
 
 import java.util.Collection;
 
-public class AuctionResultValidatorTest {
-    @Rule public final MockitoRule mockito = MockitoJUnit.rule();
-
+@SetErrorLogUtilDefaultParams(
+        throwable = ExpectErrorLogUtilWithExceptionCall.Any.class,
+        ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE)
+public class AuctionResultValidatorTest extends AdServicesExtendedMockitoTestCase {
     private static final AdTechIdentifier WINNER_BUYER = CommonFixture.VALID_BUYER_1;
     private static final DBAdData VALID_AD =
             DBAdDataFixture.getValidDbAdDataListByBuyerWithAdRenderId(WINNER_BUYER).get(0);
@@ -117,6 +121,8 @@ public class AuctionResultValidatorTest {
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AUCTION_RESULT_VALIDATOR_AD_TECH_NOT_ALLOWED)
     public void testValidate_buyerNotEnrolled() {
         doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
                 .when(mFledgeAuthorizationFilterMock)

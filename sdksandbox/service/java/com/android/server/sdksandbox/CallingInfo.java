@@ -16,6 +16,7 @@
 
 package com.android.server.sdksandbox;
 
+import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -33,7 +34,7 @@ import java.util.Objects;
 public final class CallingInfo {
 
     private final int mUid;
-    private final String mPackageName;
+    private final @NonNull String mPackageName;
     private final @Nullable IBinder mAppProcessToken;
     private boolean mIsCallFromSdkSandbox;
 

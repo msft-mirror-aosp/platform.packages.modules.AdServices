@@ -25,44 +25,42 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
-import android.annotation.CallSuper;
 import android.app.job.JobParameters;
 import android.app.job.JobService;
 import android.content.Context;
 
+import com.android.adservices.common.AdServicesJobServiceTestCase.Mocker;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.mockito.AdServicesJobMocker;
 import com.android.adservices.mockito.AdServicesMockitoJobMocker;
+import com.android.adservices.mockito.StaticClassChecker;
 import com.android.adservices.service.Flags;
 import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
 import com.android.adservices.spe.AdServicesJobServiceFactory;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 
-/** Base class for tests that exercise {@code JobService} implementations. */
-public abstract class AdServicesJobServiceTestCase extends AdServicesExtendedMockitoTestCase {
+import com.google.common.annotations.VisibleForTesting;
 
-    public final AdServicesJobMocker jobMocker = new AdServicesMockitoJobMocker(extendedMockito);
+/** Base class for tests that exercise {@code JobService} implementations. */
+public abstract class AdServicesJobServiceTestCase
+        extends AdServicesMockerLessExtendedMockitoTestCase<Mocker> {
+
+    @Override
+    protected Mocker newMocker(AdServicesExtendedMockitoRule rule, Flags mockFlags) {
+        return new Mocker(rule, mockFlags);
+    }
 
     // TODO(b/314969513, 354932043): consider inlining and/or renaming helpers below after all
     // classes are refactored.
     /**
      * Convenience method to call {@link
      * AdServicesJobMocker#mockJobSchedulingLogger(AdServicesJobServiceFactory)} using {@link
-     * #jobMocker}
+     * #mocker}
      */
     protected final JobSchedulingLogger mockJobSchedulingLogger(
             AdServicesJobServiceFactory factory) {
-        return jobMocker.mockJobSchedulingLogger(factory);
-    }
-
-    // TODO(b/361555631): rename to testAdServicesJobTestCaseFixtures() and annotate
-    // it with @MetaTest
-    @CallSuper
-    @Override
-    protected void assertValidTestCaseFixtures() throws Exception {
-        super.assertValidTestCaseFixtures();
-
-        assertTestClassHasNoFieldsFromSuperclass(AdServicesJobServiceTestCase.class, "jobMocker");
+        return mocker.mockJobSchedulingLogger(factory);
     }
 
     // TODO(b/314969513): inline methods below once all classes are refactored (and use a common
@@ -71,39 +69,37 @@ public abstract class AdServicesJobServiceTestCase extends AdServicesExtendedMoc
     /**
      * Convenience helper to call {@link
      * AdServicesJobMocker#mockGetAdServicesJobServiceLogger(AdServicesJobServiceLogger)} using
-     * {@code jobMocker}.
+     * {@code mocker}.
      */
     protected final void mockGetAdServicesJobServiceLogger(AdServicesJobServiceLogger logger) {
-        jobMocker.mockGetAdServicesJobServiceLogger(logger);
+        mocker.mockGetAdServicesJobServiceLogger(logger);
     }
 
     /**
      * Convenience helper to call {@link
-     * AdServicesJobMocker#getSpiedAdServicesJobServiceLogger(Context, Flags)} using {@code
-     * jobMocker}.
+     * AdServicesJobMocker#getSpiedAdServicesJobServiceLogger(Context, Flags)} using {@code mocker}.
      */
     protected final AdServicesJobServiceLogger getSpiedAdServicesJobServiceLogger(
             Context context, Flags flags) {
-        return jobMocker.getSpiedAdServicesJobServiceLogger(context, flags);
+        return mocker.getSpiedAdServicesJobServiceLogger(context, flags);
     }
 
     /**
      * Convenience helper to call {@link
-     * AdServicesJobMocker#mockNoOpAdServicesJobServiceLogger(Context, Flags)} using {@code
-     * jobMocker}.
+     * AdServicesJobMocker#mockNoOpAdServicesJobServiceLogger(Context, Flags)} using {@code mocker}.
      */
     protected final AdServicesJobServiceLogger mockAdServicesJobServiceLogger(
             Context context, Flags flags) {
-        return jobMocker.mockNoOpAdServicesJobServiceLogger(context, flags);
+        return mocker.mockNoOpAdServicesJobServiceLogger(context, flags);
     }
 
     /**
      * Convenience helper to call {@link
-     * AdServicesJobMocker#mockNoOpAdServicesJobServiceLogger(Context, Flags)} using {@code
-     * jobMocker}, with {@code mMockFlags}.
+     * AdServicesJobMocker#mockNoOpAdServicesJobServiceLogger(Context, Flags)} using {@code mocker},
+     * with {@code mMockFlags}.
      */
     protected final AdServicesJobServiceLogger mockAdServicesJobServiceLogger(Context context) {
-        return jobMocker.mockNoOpAdServicesJobServiceLogger(context, mMockFlags);
+        return mocker.mockNoOpAdServicesJobServiceLogger(context, mMockFlags);
     }
 
     // TODO(b/296945680): methods below were moved "as is" from MockitoExpectations. They should
@@ -244,5 +240,40 @@ public abstract class AdServicesJobServiceTestCase extends AdServicesExtendedMoc
         doCallRealMethod().when(logger).recordOnStopJob(any(), anyInt(), anyBoolean());
         doCallRealMethod().when(logger).recordJobSkipped(anyInt(), anyInt());
         doCallRealMethod().when(logger).recordJobFinished(anyInt(), anyBoolean(), anyBoolean());
+    }
+
+    public static final class Mocker
+            extends AdServicesMockerLessExtendedMockitoTestCase.InternalMocker
+            implements AdServicesJobMocker {
+
+        private final AdServicesJobMocker mJobMocker;
+
+        @VisibleForTesting
+        Mocker(StaticClassChecker checker, Flags flags) {
+            super(checker, flags);
+            mJobMocker = new AdServicesMockitoJobMocker(checker);
+        }
+
+        @Override
+        public JobSchedulingLogger mockJobSchedulingLogger(AdServicesJobServiceFactory factory) {
+            return mJobMocker.mockJobSchedulingLogger(factory);
+        }
+
+        @Override
+        public AdServicesJobServiceLogger getSpiedAdServicesJobServiceLogger(
+                Context context, Flags flags) {
+            return mJobMocker.getSpiedAdServicesJobServiceLogger(context, flags);
+        }
+
+        @Override
+        public void mockGetAdServicesJobServiceLogger(AdServicesJobServiceLogger logger) {
+            mJobMocker.mockGetAdServicesJobServiceLogger(logger);
+        }
+
+        @Override
+        public AdServicesJobServiceLogger mockNoOpAdServicesJobServiceLogger(
+                Context context, Flags flags) {
+            return mJobMocker.mockNoOpAdServicesJobServiceLogger(context, flags);
+        }
     }
 }

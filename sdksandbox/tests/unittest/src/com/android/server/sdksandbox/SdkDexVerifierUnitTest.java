@@ -61,14 +61,13 @@ public class SdkDexVerifierUnitTest extends DeviceSupportedBaseTest {
 
     private static final Handler MAIN_HANDLER = new Handler(Looper.getMainLooper());
 
+    private final Context mContext =
+            InstrumentationRegistry.getInstrumentation().getTargetContext();
+    private final PackageManager mPackageManager = mContext.getPackageManager();
     private final SdkDexVerifier mVerifier = SdkDexVerifier.getInstance();
-    private PackageManager mPackageManager;
 
     @Before
     public void setUp() {
-        Context ctx = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        mPackageManager = ctx.getPackageManager();
-
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(Manifest.permission.INTERACT_ACROSS_USERS_FULL);
@@ -189,7 +188,11 @@ public class SdkDexVerifierUnitTest extends DeviceSupportedBaseTest {
                                 new SerialDexLoader(new DexParserImpl(), MAIN_HANDLER)));
 
         verifier.startDexVerification(
-                "apk_that_doesn't_get_verified", "com.test.unverified_test_app", 33, callback);
+                "apk_that_doesn't_get_verified",
+                "com.test.unverified_test_app",
+                33,
+                mContext,
+                callback);
 
         assertThat(callback.getLastError()).isNotNull();
         assertThat(callback.getLastError().getMessage())
@@ -200,7 +203,8 @@ public class SdkDexVerifierUnitTest extends DeviceSupportedBaseTest {
     public void startDexVerification_apkNotFound() throws Exception {
         TestOutcomeReceiver callback = new TestOutcomeReceiver();
 
-        mVerifier.startDexVerification("bogusPath", "com.test.nonexistent_test_app", 33, callback);
+        mVerifier.startDexVerification(
+                "bogusPath", "com.test.nonexistent_test_app", 33, mContext, callback);
 
         assertThat(callback.getLastError()).isNotNull();
         assertThat(callback.getLastError().getMessage())
@@ -220,7 +224,7 @@ public class SdkDexVerifierUnitTest extends DeviceSupportedBaseTest {
                                 new SerialDexLoader(new DexParserImpl(), MAIN_HANDLER)));
 
         verifier.startDexVerification(
-                getPackageLocation(TEST_PACKAGENAME), TEST_PACKAGENAME, 33, callback);
+                getPackageLocation(TEST_PACKAGENAME), TEST_PACKAGENAME, 33, mContext, callback);
 
         assertThat(callback.getResult().hasPassed()).isTrue();
         assertThat(callback.getResult().getRestrictedUsages()).isEmpty();
@@ -245,7 +249,7 @@ public class SdkDexVerifierUnitTest extends DeviceSupportedBaseTest {
                                 new SerialDexLoader(new DexParserImpl(), MAIN_HANDLER)));
 
         verifier.startDexVerification(
-                getPackageLocation(TEST_PACKAGENAME), TEST_PACKAGENAME, 33, callback);
+                getPackageLocation(TEST_PACKAGENAME), TEST_PACKAGENAME, 33, mContext, callback);
 
         assertThat(callback.getResult().hasPassed()).isFalse();
         assertThat(callback.getResult().getRestrictedUsages().size()).isGreaterThan(0);

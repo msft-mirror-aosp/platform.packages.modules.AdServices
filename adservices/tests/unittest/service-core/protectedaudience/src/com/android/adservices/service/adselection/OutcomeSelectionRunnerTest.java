@@ -122,7 +122,7 @@ public final class OutcomeSelectionRunnerTest extends AdServicesExtendedMockitoT
     private AdSelectionEntryDao mAdSelectionEntryDao;
     @Mock private AdOutcomeSelector mAdOutcomeSelectorMock;
     private OutcomeSelectionRunner mOutcomeSelectionRunner;
-    private Flags mFakeFlags = new OutcomeSelectionRunnerTestFlags();
+    private Flags mFakeFlags;
     private final AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
     private ListeningExecutorService mBlockingExecutorService;
@@ -140,7 +140,7 @@ public final class OutcomeSelectionRunnerTest extends AdServicesExtendedMockitoT
                                 AdSelectionDatabase.class)
                         .build()
                         .adSelectionEntryDao();
-
+        mFakeFlags = new OutcomeSelectionRunnerTestFlags();
         mOutcomeSelectionRunner =
                 new OutcomeSelectionRunner(
                         CALLER_UID,
@@ -155,7 +155,6 @@ public final class OutcomeSelectionRunnerTest extends AdServicesExtendedMockitoT
                         mAdSelectionServiceFilter,
                         DevContext.createForDevOptionsDisabled(),
                         false);
-
         doNothing()
                 .when(mAdSelectionServiceFilter)
                 .filterRequest(
@@ -351,7 +350,7 @@ public final class OutcomeSelectionRunnerTest extends AdServicesExtendedMockitoT
     @Test
     public void testRunOutcomeSelectionOrchestrationTimeoutFailure() {
         mFakeFlags =
-                new Flags() {
+                new OutcomeSelectionRunnerTestFlags() {
                     @Override
                     public long getAdSelectionSelectingOutcomeTimeoutMs() {
                         return 300;
@@ -536,6 +535,11 @@ public final class OutcomeSelectionRunnerTest extends AdServicesExtendedMockitoT
         @Override
         public long getAdSelectionFromOutcomesOverallTimeoutMs() {
             return EXTENDED_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
+        }
+
+        @Override
+        public boolean getConsentNotificationDebugMode() {
+            return false;
         }
     }
 }

@@ -16,6 +16,14 @@
 
 package com.android.adservices.service.stats;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED;
+
 import android.annotation.IntDef;
 
 import java.lang.annotation.Retention;
@@ -342,4 +350,24 @@ public class AdsRelevanceStatusUtils {
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface TopicsEpochJobBatteryConstraint {}
+
+    /**
+     * Returns the Cel PP API name ID from AdServices API name ID.
+     */
+    public static int getCelPpApiNameId(int apiNameLoggingId) {
+        int celPpApiNameId = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED;
+        switch (apiNameLoggingId) {
+            case AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA:
+                celPpApiNameId = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA;
+                break;
+            case AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT:
+                celPpApiNameId =
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT;
+                break;
+            case AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS:
+                celPpApiNameId = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS;
+                break;
+        }
+        return celPpApiNameId;
+    }
 }

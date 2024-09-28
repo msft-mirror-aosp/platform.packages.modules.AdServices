@@ -370,6 +370,7 @@ public abstract class AbstractAdServicesFlagsSetterRule<
         setLogcatTag(LOGCAT_TAG_MEASUREMENT, LogLevel.VERBOSE);
         setLogcatTag(LOGCAT_TAG_ADID, LogLevel.VERBOSE);
         setLogcatTag(LOGCAT_TAG_APPSETID, LogLevel.VERBOSE);
+        setLogcatTag(LOGCAT_TAG_UI, LogLevel.VERBOSE);
         setLogcatTag(LOGCAT_TAG_KANON, LogLevel.VERBOSE);
         return getThis();
     }

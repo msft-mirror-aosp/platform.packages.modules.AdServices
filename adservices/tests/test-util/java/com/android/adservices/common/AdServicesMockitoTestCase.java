@@ -31,6 +31,9 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.mockito.quality.Strictness;
 
+// NOTE: currently no subclass needs a custom mocker; once they do, this class should be split
+// into a AdServicesMockerLessMockitoTestCase (similar to AdServiceExtendedMockitoTestCase /
+// AdServicesMockerLessExtendedMockitoTestCase)
 /**
  * Base class for all unit tests that use "regular Mockito" (i.e., not {@code ExtendedMockito} - for
  * those, use {@link AdServicesExtendedMockitoTestCase} instead)

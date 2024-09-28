@@ -729,5 +729,10 @@ public final class AdSelectionFailureE2ETest extends AdServicesExtendedMockitoTe
         public long getFledgeAdSelectionBiddingLogicJsVersion() {
             return mBiddingLogicVersion;
         }
+
+        @Override
+        public boolean getConsentNotificationDebugMode() {
+            return false;
+        }
     }
 }

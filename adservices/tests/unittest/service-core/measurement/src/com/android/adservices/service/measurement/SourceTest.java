@@ -109,6 +109,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
         assertNull(source.getAttributedTriggers());
         assertNull(source.getAggregateDebugReportingString());
         assertEquals(0, source.getAggregateDebugReportContributions());
+        assertNull(source.getAggregateContributionBuckets());
     }
 
     @Test
@@ -136,6 +137,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
         String aggregateDebugReportingString =
                 SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT;
         int aggregateDebugReportContributions = 1024;
+        AggregateContributionBuckets aggregateContribution = new AggregateContributionBuckets();
         assertEquals(
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
@@ -196,6 +198,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                         .setEventLevelEpsilon(event_level_epsilon)
                         .setAggregateDebugReportingString(aggregateDebugReportingString)
                         .setAggregateDebugReportContributions(aggregateDebugReportContributions)
+                        .setAggregateContributionBuckets(aggregateContribution)
                         .build(),
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
@@ -256,6 +259,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                         .setEventLevelEpsilon(event_level_epsilon)
                         .setAggregateDebugReportingString(aggregateDebugReportingString)
                         .setAggregateDebugReportContributions(aggregateDebugReportContributions)
+                        .setAggregateContributionBuckets(aggregateContribution)
                         .build());
     }
 
@@ -2465,5 +2469,112 @@ public final class SourceTest extends AdServicesMockitoTestCase {
         assertWithMessage("getInformationGainThreshold() single destination nav")
                 .that(thresholdRetrieved)
                 .isEqualTo(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION);
+    }
+
+    @Test
+    public void testGetAggregateContribution() {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAggregateContributionBuckets(new AggregateContributionBuckets())
+                        .build();
+        AggregateContributionBuckets aggregateContribution = new AggregateContributionBuckets();
+        aggregateContribution.createCapacityBucket("bucket1", 50);
+        aggregateContribution.createCapacityBucket("bucket2", 40);
+        aggregateContribution.addToBucket("bucket1", 5);
+
+        source.getAggregateContributionBuckets().createCapacityBucket("bucket1", 50);
+        source.getAggregateContributionBuckets().createCapacityBucket("bucket2", 40);
+        source.getAggregateContributionBuckets().addToBucket("bucket1", 5);
+
+        assertWithMessage("source.getAggregateContributionBuckets()")
+                .that(source.getAggregateContributionBuckets())
+                .isEqualTo(aggregateContribution);
+    }
+
+    @Test
+    public void testCreateAndMaybeGetBucketCapacity() {
+        AggregateContributionBuckets aggregateContributionBuckets =
+                new AggregateContributionBuckets();
+        aggregateContributionBuckets.createCapacityBucket("bucket1", 10);
+        aggregateContributionBuckets.createCapacityBucket("bucket2", 20);
+        aggregateContributionBuckets.createCapacityBucket("bucket3", 5);
+
+        assertWithMessage("maybeGetBucketCapacity(\"bucket1\")")
+                .that(aggregateContributionBuckets.maybeGetBucketCapacity("bucket1").get())
+                .isEqualTo(10);
+        assertWithMessage("maybeGetBucketCapacity(\"bucket2\")")
+                .that(aggregateContributionBuckets.maybeGetBucketCapacity("bucket2").get())
+                .isEqualTo(20);
+        assertWithMessage("maybeGetBucketCapacity(\"bucket3\")")
+                .that(aggregateContributionBuckets.maybeGetBucketCapacity("bucket3").get())
+                .isEqualTo(5);
+    }
+
+    @Test
+    public void testMaybeGetBucketCapacity_bucketDoesNotExist() {
+        AggregateContributionBuckets aggregateContributionBuckets =
+                new AggregateContributionBuckets();
+
+        assertWithMessage("maybeGetBucketCapacity(\"bucket1\")")
+                .that(aggregateContributionBuckets.maybeGetBucketCapacity("bucket1"))
+                .isEqualTo(Optional.empty());
+    }
+
+    @Test
+    public void testAddToBucket_success() {
+        AggregateContributionBuckets aggregateContributionBuckets =
+                new AggregateContributionBuckets();
+        aggregateContributionBuckets.createCapacityBucket("bucket1", 100);
+
+        assertWithMessage("addToBucket(\"bucket1\", 90)")
+                .that(aggregateContributionBuckets.addToBucket("bucket1", 90))
+                .isTrue();
+    }
+
+    @Test
+    public void testAddToBucket_contributionOverCapacity_fail() {
+        AggregateContributionBuckets aggregateContributionBuckets =
+                new AggregateContributionBuckets();
+        aggregateContributionBuckets.createCapacityBucket("bucket1", 100);
+        aggregateContributionBuckets.addToBucket("bucket1", 65);
+
+        assertWithMessage("addToBucket(\"bucket1\", 40)")
+                .that(aggregateContributionBuckets.addToBucket("bucket1", 40))
+                .isFalse();
+    }
+
+    @Test
+    public void testMaybeGetBucketContributions() {
+        AggregateContributionBuckets aggregateContributionBuckets =
+                new AggregateContributionBuckets();
+        aggregateContributionBuckets.createCapacityBucket("bucket1", 100);
+
+        aggregateContributionBuckets.addToBucket("bucket1", 20);
+        aggregateContributionBuckets.addToBucket("bucket1", 30);
+        aggregateContributionBuckets.addToBucket("bucket1", 10);
+        assertWithMessage("maybeGetBucketContributions(\"bucket1\")")
+                .that(aggregateContributionBuckets.maybeGetBucketContribution("bucket1").get())
+                .isEqualTo(60);
+    }
+
+    @Test
+    public void testMaybeGetBucketContributions_bucketDoesNotExist() {
+        AggregateContributionBuckets aggregateContributionBuckets =
+                new AggregateContributionBuckets();
+
+        assertWithMessage("maybeGetBucketContributions(\"bucket1\")")
+                .that(aggregateContributionBuckets.maybeGetBucketContribution("bucket1"))
+                .isEqualTo(Optional.empty());
+    }
+
+    @Test
+    public void testMaybeGetBucketContributions_bucketHasNoContributions() {
+        AggregateContributionBuckets aggregateContributionBuckets =
+                new AggregateContributionBuckets();
+        aggregateContributionBuckets.createCapacityBucket("bucket1", 100);
+
+        assertWithMessage("maybeGetBucketContributions(\"bucket1\")")
+                .that(aggregateContributionBuckets.maybeGetBucketContribution("bucket1").get())
+                .isEqualTo(0);
     }
 }

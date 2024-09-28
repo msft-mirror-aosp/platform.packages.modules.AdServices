@@ -129,6 +129,7 @@ import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.download.MddJob;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
@@ -138,7 +139,6 @@ import com.android.adservices.service.common.UserProfileIdManager;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.common.feature.PrivacySandboxFeatureType;
 import com.android.adservices.service.encryptionkey.EncryptionKeyJobService;
-import com.android.adservices.service.extdata.AdServicesExtDataStorageServiceManager;
 import com.android.adservices.service.measurement.DeleteExpiredJobService;
 import com.android.adservices.service.measurement.DeleteUninstalledJobService;
 import com.android.adservices.service.measurement.MeasurementImpl;
@@ -251,7 +251,6 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     @Mock private JobScheduler mJobSchedulerMock;
     @Mock private IAdServicesManager mMockIAdServicesManager;
     @Mock private AppSearchConsentManager mAppSearchConsentManagerMock;
-    @Mock private AdServicesExtDataStorageServiceManager mAdServicesExtDataManagerMock;
     @Mock private UserProfileIdManager mUserProfileIdManagerMock;
     @Mock private UxStatesDao mUxStatesDaoMock;
     @Mock private StatsdAdServicesLogger mStatsdAdServicesLoggerMock;
@@ -260,6 +259,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     @Mock private Supplier<AppConsentDao> mAppConsentDaoSupplierMock;
     @Mock private Supplier<EnrollmentDao> mEnrollmentDaoSupplierMock;
     @Mock private Supplier<MeasurementImpl> mMeasurementImplSupplierMock;
+    @Mock private DebugFlags mMockDebugFlags;
 
     @Before
     public void setup() throws IOException {
@@ -284,7 +284,6 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
 
         // Default to use PPAPI consent to test migration-irrelevant logics.
         mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.PPAPI_ONLY);
-
         mocker.mockGetFlags(mMockFlags);
         doReturn(true).when(mMockFlags).getFledgeFrequencyCapFilteringEnabled();
         doReturn(true).when(mMockFlags).getFledgeAppInstallFilteringEnabled();
@@ -3072,6 +3071,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                         mUserProfileIdManagerMock,
                         mUxStatesDaoMock,
                         mMockFlags,
+                        mMockDebugFlags,
                         Flags.PPAPI_ONLY,
                         true);
         doNothing().when(mBlockedTopicsManagerMock).blockTopic(any());
@@ -3568,6 +3568,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                 mUserProfileIdManagerMock,
                 mUxStatesDaoMock,
                 mMockFlags,
+                mMockDebugFlags,
                 consentSourceOfTruth,
                 true);
     }

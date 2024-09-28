@@ -36,7 +36,7 @@ public interface DexParser {
      *
      * @param apkPathFile path to apks containing one or more dex files
      */
-    Map<File, List<String>> getDexFilePaths(File apkPathFile) throws IOException;
+    List<DexEntry> getDexFilePaths(File apkPathFile) throws IOException;
 
     /**
      * Parses the dex file and reads the symbols in, populates data in the DexLoadResult.
@@ -46,4 +46,34 @@ public interface DexParser {
      * @param dexLoadResult sparse array to insert the methods loaded from the dex file
      */
     void loadDexSymbols(File apkFile, String dexEntry, DexSymbols dexSymbols) throws IOException;
+
+    /**
+     * Class that represents a dex entry in a given apk file.
+     */
+    public class DexEntry {
+        private File apkFile;
+        private String dexEntry;
+
+        public DexEntry(File apkFile, String dexEntry) {
+            this.apkFile = apkFile;
+            this.dexEntry = dexEntry;
+        }
+
+        public File getApkFile() {
+            return apkFile;
+        }
+
+        public String getDexEntry() {
+            return dexEntry;
+        }
+
+        public String getEntryFilename() {
+            return dexEntry.substring(dexEntry.lastIndexOf('/') + 1);
+        }
+
+        @Override
+        public String toString() {
+            return apkFile.getName() + "/" + dexEntry;
+        }
+    }
 }

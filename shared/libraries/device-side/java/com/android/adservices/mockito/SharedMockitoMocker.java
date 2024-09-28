@@ -27,6 +27,12 @@ import android.content.Context;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.adservices.shared.spe.logging.JobServiceLogger;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
+import com.android.adservices.shared.util.Clock;
+
+import org.mockito.stubbing.OngoingStubbing;
+
+import java.util.Arrays;
+import java.util.Objects;
 
 /** Implements {@link SharedMocker} using {@code Mockito}. */
 public final class SharedMockitoMocker extends AbstractMocker implements SharedMocker {
@@ -56,5 +62,43 @@ public final class SharedMockitoMocker extends AbstractMocker implements SharedM
                 .recordOnStopJob(any(), anyInt(), anyBoolean());
 
         return callback;
+    }
+
+    @Override
+    public void mockCurrentTimeMillis(Clock mockClock, long... mockedValues) {
+        logV("mockCurrentTimeMillis(%s, %s)", mockClock, Arrays.toString(mockedValues));
+        Objects.requireNonNull(mockClock, "mockClock cannot be null");
+        Objects.requireNonNull(mockedValues, "mockedValues cannot be null");
+
+        unflatLongVararg(when(mockClock.currentTimeMillis()), mockedValues);
+    }
+
+    @Override
+    public void mockElapsedRealtime(Clock mockClock, long... mockedValues) {
+        logV("mockElapsedRealtime(%s, %s)", mockClock, Arrays.toString(mockedValues));
+        Objects.requireNonNull(mockClock, "mockClock cannot be null");
+        Objects.requireNonNull(mockedValues, "mockedValues cannot be null");
+
+        unflatLongVararg(when(mockClock.elapsedRealtime()), mockedValues);
+    }
+
+    // TODO(b/359358687): Move to MockitoHelper / rename / unit test it
+
+    // Mockito's when() supporting passing a single value or a single value plus a vararg, but the
+    // signature of those methods take a T (object), so they cannot be used with primitive types.
+    // Hence, this method provides a "bridge" between helper methods that take long... and Mockito.
+    private static void unflatLongVararg(OngoingStubbing<Long> mockedMethod, long... mockedValues) {
+        Long firstValue = mockedValues[0];
+        if (mockedValues.length == 1) {
+            mockedMethod.thenReturn(firstValue);
+            return;
+        }
+
+        int remainingLength = mockedValues.length - 1;
+        Long[] remainingValues = new Long[remainingLength];
+        for (int i = 0; i < remainingLength; i++) {
+            remainingValues[i] = mockedValues[i + 1];
+        }
+        mockedMethod.thenReturn(firstValue, remainingValues);
     }
 }

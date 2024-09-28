@@ -124,7 +124,6 @@ public class TopicsService extends Service {
     @Override
     public void dump(FileDescriptor fd, PrintWriter writer, String[] args) {
         super.dump(fd, writer, args);
-        FlagsFactory.getFlags().dump(writer, args);
         if (BuildCompatUtils.isDebuggable()) {
             writer.println("Build is Debuggable, dumping information for TopicsService");
             EpochManager.getInstance().dump(writer, args);

@@ -15,11 +15,13 @@
  */
 package com.android.adservices.mockito;
 
+import com.android.adservices.service.Flags;
+
 public final class AdServicesMockitoJobMockerTest
         extends AdServicesJobMockerTestCase<AdServicesMockitoJobMocker> {
 
     @Override
-    protected AdServicesMockitoJobMocker getMocker(StaticClassChecker checker) {
+    protected AdServicesMockitoJobMocker getMocker(StaticClassChecker checker, Flags mockFlags) {
         return new AdServicesMockitoJobMocker(checker);
     }
 }

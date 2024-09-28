@@ -160,7 +160,7 @@ public class AtomicFileDatastore {
             if (out != null) {
                 mAtomicFile.failWrite(out);
             }
-            LogUtil.e(e, "Write to file failed");
+            LogUtil.v("Write to file %s failed", mAtomicFile.getBaseFile());
             mAdServicesErrorLogger.logError(
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ATOMIC_FILE_DATASTORE_WRITE_FAILURE,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
@@ -190,7 +190,7 @@ public class AtomicFileDatastore {
             mPreviousStoredVersion = NO_PREVIOUS_VERSION;
             mLocalMap.clear();
         } catch (IOException e) {
-            LogUtil.e(e, "Read from store file failed");
+            LogUtil.v("Read from store file %s failed", mAtomicFile.getBaseFile());
             mAdServicesErrorLogger.logError(
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ATOMIC_FILE_DATASTORE_READ_FAILURE,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
@@ -248,9 +248,20 @@ public class AtomicFileDatastore {
         checkStringNotEmpty(key, "Key must not be empty");
 
         mWriteLock.lock();
+        Object oldValue = mLocalMap.get(key);
         try {
             mLocalMap.put(key, value);
             writeToFile();
+        } catch (IOException ex) {
+            LogUtil.v(
+                    "put(): failed to write to file %s, reverting value of %s on local map.",
+                    mAtomicFile.getBaseFile(), key);
+            if (oldValue == null) {
+                mLocalMap.remove(key);
+            } else {
+                mLocalMap.put(key, oldValue);
+            }
+            throw ex;
         } finally {
             mWriteLock.unlock();
         }
@@ -322,8 +333,8 @@ public class AtomicFileDatastore {
 
         // Double check that the key wasn't written after the first check
         mWriteLock.lock();
+        Object valueInLocalMap = mLocalMap.get(key);
         try {
-            Object valueInLocalMap = mLocalMap.get(key);
             if (valueInLocalMap != null) {
                 return checkValueType(valueInLocalMap, valueType);
             } else {
@@ -331,6 +342,12 @@ public class AtomicFileDatastore {
                 writeToFile();
                 return value;
             }
+        } catch (IOException ex) {
+            LogUtil.v(
+                    "putIfNew(): failed to write to file %s, removing key %s on local map.",
+                    mAtomicFile.getBaseFile(), key);
+            mLocalMap.remove(key);
+            throw ex;
         } finally {
             mWriteLock.unlock();
         }
@@ -506,9 +523,17 @@ public class AtomicFileDatastore {
         }
 
         mWriteLock.lock();
+        Map<String, Object> previousLocalMap = new HashMap<>(mLocalMap);
         try {
             mLocalMap.clear();
             writeToFile();
+        } catch (IOException ex) {
+            LogUtil.v(
+                    "clear(): failed to clear the file %s, reverting local map back to previous "
+                            + "state.",
+                    mAtomicFile.getBaseFile());
+            mLocalMap.putAll(previousLocalMap);
+            throw ex;
         } finally {
             mWriteLock.unlock();
         }
@@ -516,9 +541,17 @@ public class AtomicFileDatastore {
 
     private void clearByFilter(Object filter) throws IOException {
         mWriteLock.lock();
+        Map<String, Object> previousLocalMap = new HashMap<>(mLocalMap);
         try {
             mLocalMap.entrySet().removeIf(entry -> entry.getValue().equals(filter));
             writeToFile();
+        } catch (IOException ex) {
+            LogUtil.v(
+                    "clearByFilter(): failed to clear keys for filter %s for file %s, reverting"
+                            + " local map back to previous state.",
+                    filter, mAtomicFile.getBaseFile());
+            mLocalMap.putAll(previousLocalMap);
+            throw ex;
         } finally {
             mWriteLock.unlock();
         }
@@ -562,9 +595,18 @@ public class AtomicFileDatastore {
         checkValidKey(key);
 
         mWriteLock.lock();
+        Object oldValue = mLocalMap.get(key);
         try {
             mLocalMap.remove(key);
             writeToFile();
+        } catch (IOException ex) {
+            LogUtil.v(
+                    "remove(): failed to remove key %s in file %s, adding it back",
+                    key, mAtomicFile.getBaseFile());
+            if (oldValue != null) {
+                mLocalMap.put(key, oldValue);
+            }
+            throw ex;
         } finally {
             mWriteLock.unlock();
         }
@@ -585,12 +627,20 @@ public class AtomicFileDatastore {
         checkStringNotEmpty(prefix, "Prefix must not be empty");
 
         mWriteLock.lock();
+        Map<String, Object> previousLocalMap = new HashMap<>(mLocalMap);
         try {
             Set<String> allKeys = mLocalMap.keySet();
             Set<String> keysToDelete =
                     allKeys.stream().filter(s -> s.startsWith(prefix)).collect(Collectors.toSet());
             allKeys.removeAll(keysToDelete); // Modifying the keySet updates the underlying map
             writeToFile();
+        } catch (IOException ex) {
+            LogUtil.v(
+                    "removeByPrefix(): failed to remove key by prefix %s in file %s, adding it"
+                            + " back",
+                    prefix, mAtomicFile.getBaseFile());
+            mLocalMap.putAll(previousLocalMap);
+            throw ex;
         } finally {
             mWriteLock.unlock();
         }
