@@ -51,36 +51,6 @@ public abstract class AdServicesJobServiceTestCase
         return new Mocker(rule, mockFlags);
     }
 
-    // TODO(b/314969513): inline methods below once all classes are refactored (and use a common
-    // mMockFlags instance)
-
-    /**
-     * Convenience helper to call {@link
-     * AdServicesJobMocker#getSpiedAdServicesJobServiceLogger(Context, Flags)} using {@code mocker}.
-     */
-    protected final AdServicesJobServiceLogger getSpiedAdServicesJobServiceLogger(
-            Context context, Flags flags) {
-        return mocker.getSpiedAdServicesJobServiceLogger(context, flags);
-    }
-
-    /**
-     * Convenience helper to call {@link
-     * AdServicesJobMocker#mockNoOpAdServicesJobServiceLogger(Context, Flags)} using {@code mocker}.
-     */
-    protected final AdServicesJobServiceLogger mockAdServicesJobServiceLogger(
-            Context context, Flags flags) {
-        return mocker.mockNoOpAdServicesJobServiceLogger(context, flags);
-    }
-
-    /**
-     * Convenience helper to call {@link
-     * AdServicesJobMocker#mockNoOpAdServicesJobServiceLogger(Context, Flags)} using {@code mocker},
-     * with {@code mMockFlags}.
-     */
-    protected final AdServicesJobServiceLogger mockAdServicesJobServiceLogger(Context context) {
-        return mocker.mockNoOpAdServicesJobServiceLogger(context, mMockFlags);
-    }
-
     // TODO(b/296945680): methods below were moved "as is" from MockitoExpectations. They should
     // be refactored to use a rule (like AdServicesLoggingUsageRule) or moved to
     // AdServicesJobMocker; regardless of the choice, they should be unit tested
