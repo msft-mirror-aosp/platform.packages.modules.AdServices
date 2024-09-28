@@ -159,7 +159,6 @@ public class DebugReportProcessorTest {
         DebugReport debugReport =
                 DebugReport.builder()
                         .setLossDebugReportUri(Uri.parse("http://example.com"))
-                        .setLossDebugReportUri(Uri.parse("http://example.com"))
                         .setCustomAudienceSignals(newDefaultCustomAudienceSignals().build())
                         .build();
 
@@ -180,7 +179,6 @@ public class DebugReportProcessorTest {
         PostAuctionSignals signals = newDefaultPostAuctionSignals().build();
         DebugReport debugReport =
                 DebugReport.builder()
-                        .setLossDebugReportUri(overlyLongUri)
                         .setLossDebugReportUri(overlyLongUri)
                         .setCustomAudienceSignals(newDefaultCustomAudienceSignals().build())
                         .build();
