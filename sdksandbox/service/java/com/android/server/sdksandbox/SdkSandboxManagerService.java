@@ -29,6 +29,7 @@ import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_SERVICE;
 
 import static com.android.adservices.flags.Flags.sdksandboxDumpEffectiveTargetSdkVersion;
 import static com.android.adservices.flags.Flags.sdksandboxInvalidateEffectiveTargetSdkVersionCache;
+import static com.android.adservices.flags.Flags.sdksandboxUseEffectiveTargetSdkVersionForRestrictions;
 import static com.android.sdksandbox.flags.Flags.sandboxActivitySdkBasedContext;
 import static com.android.sdksandbox.flags.Flags.serviceRestrictionPackageNameLogicUpdated;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__FAILURE_SECURITY_EXCEPTION;
@@ -2265,7 +2266,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         return EXTRA_SANDBOXED_ACTIVITY_HANDLER;
     }
 
-    private ArraySet<String> getContentProviderAllowlist() {
+    private ArraySet<String> getContentProviderAllowlist(int sdkSandboxUid) {
         String curWebViewPackageName = WebViewUpdateService.getCurrentWebViewPackageName();
         ArraySet<String> contentProviderAuthoritiesAllowlist = new ArraySet<>();
         // TODO(b/279557220): Make curWebViewPackageName a static variable once fixed.
@@ -2284,11 +2285,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 return contentProviderAuthoritiesAllowlist;
             }
 
-            // TODO(b/271547387): Filter out the allowlist based on targetSdkVersion.
             ArraySet<String> contentProviderAllowlistForTargetSdkVersion =
                     mSdkSandboxSettingsListener
                             .getContentProviderAllowlistPerTargetSdkVersion()
-                            .get(Build.VERSION_CODES.UPSIDE_DOWN_CAKE);
+                            .get(getEffectiveTargetSdkVersionForRestrictions(sdkSandboxUid));
             if (contentProviderAllowlistForTargetSdkVersion != null) {
                 contentProviderAuthoritiesAllowlist.addAll(
                         contentProviderAllowlistForTargetSdkVersion);
@@ -2302,7 +2302,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     // Returns null if an allowlist was not set at all.
     @Nullable
-    private ArraySet<String> getBroadcastReceiverAllowlist() {
+    private ArraySet<String> getBroadcastReceiverAllowlist(int sdkSandboxUid) {
         synchronized (mLock) {
             if (mSdkSandboxSettingsListener.applySdkSandboxRestrictionsNext()) {
                 return mSdkSandboxSettingsListener.getNextBroadcastReceiverAllowlist();
@@ -2315,36 +2315,36 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 return null;
             }
             // TODO(b/271547387): Filter out the allowlist based on targetSdkVersion.
-            return broadcastReceiverAllowlist.get(Build.VERSION_CODES.UPSIDE_DOWN_CAKE);
+            return broadcastReceiverAllowlist.get(
+                    getEffectiveTargetSdkVersionForRestrictions(sdkSandboxUid));
         }
     }
 
     @NonNull
-    private ArraySet<String> getActivityAllowlist() {
+    private ArraySet<String> getActivityAllowlist(int sdkSandboxUid) {
         synchronized (mLock) {
             if (mSdkSandboxSettingsListener.applySdkSandboxRestrictionsNext()
                     && mSdkSandboxSettingsListener.getNextActivityAllowlist() != null) {
                 return mSdkSandboxSettingsListener.getNextActivityAllowlist();
             }
-            return getActivityAllowlistForTargetSdk();
+            return getActivityAllowlistForTargetSdk(sdkSandboxUid);
         }
     }
 
     @NonNull
-    private ArraySet<String> getActivityAllowlistForTargetSdk() {
+    private ArraySet<String> getActivityAllowlistForTargetSdk(int sdkSandboxUid) {
         synchronized (mLock) {
-            if (mSdkSandboxSettingsListener.getActivityAllowlistPerTargetSdkVersion() == null) {
+            ArrayMap<Integer, ArraySet<String>> allowlistPerTargetSdkVersion =
+                    mSdkSandboxSettingsListener.getActivityAllowlistPerTargetSdkVersion();
+            if (allowlistPerTargetSdkVersion == null) {
                 return DEFAULT_ACTIVITY_ALLOWED_ACTIONS;
             }
-            // TODO(b/271547387): Filter out the allowlist based on targetSdkVersion.
             ArraySet<String> activityAllowlistPerTargetSdkVersion =
-                    mSdkSandboxSettingsListener
-                            .getActivityAllowlistPerTargetSdkVersion()
-                            .get(Build.VERSION_CODES.UPSIDE_DOWN_CAKE);
-            if (activityAllowlistPerTargetSdkVersion == null) {
-                return DEFAULT_ACTIVITY_ALLOWED_ACTIONS;
-            }
-            return activityAllowlistPerTargetSdkVersion;
+                    allowlistPerTargetSdkVersion.get(
+                            getEffectiveTargetSdkVersionForRestrictions(sdkSandboxUid));
+            return activityAllowlistPerTargetSdkVersion == null
+                    ? DEFAULT_ACTIVITY_ALLOWED_ACTIONS
+                    : activityAllowlistPerTargetSdkVersion;
         }
     }
 
@@ -2398,7 +2398,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 mSdkSandboxSettingsListener.applySdkSandboxRestrictionsNext()
                         ? mSdkSandboxSettingsListener.getNextServiceAllowlist()
                         : mSdkSandboxSettingsListener.getServiceAllowlistForTargetSdkVersion(
-                                /* targetSdkVersion= */ 34);
+                                /* targetSdkVersion= */ Build.VERSION_CODES.UPSIDE_DOWN_CAKE);
 
         if (allowedServices == null) {
             return false;
@@ -2431,6 +2431,18 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
         }
         return false;
+    }
+
+    private int getEffectiveTargetSdkVersionForRestrictions(int sdkSandboxUid) {
+        int effectiveTargetSdkVersion = Build.VERSION_CODES.UPSIDE_DOWN_CAKE;
+        if (sdksandboxUseEffectiveTargetSdkVersionForRestrictions()) {
+            try {
+                effectiveTargetSdkVersion = getEffectiveTargetSdkVersion(sdkSandboxUid);
+            } catch (PackageManager.NameNotFoundException e) {
+                Log.w(TAG, "Client package not found for sdk sandbox uid: " + sdkSandboxUid);
+            }
+        }
+        return effectiveTargetSdkVersion;
     }
 
     private int getEffectiveTargetSdkVersion(int sdkSandboxUid)
@@ -2525,14 +2537,15 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 return;
             }
 
+            int callingUid = Binder.getCallingUid();
+
             if (StringHelper.doesInputMatchAnyWildcardPattern(
-                    getActivityAllowlist(), intent.getAction())) {
+                    getActivityAllowlist(callingUid), intent.getAction())) {
                 return;
             }
             // During CTS-in-sandbox testing, we store the package name of the instrumented test in
             // the intent identifier to match it against the running instrumentations.
             final String instrumentationPackageName = intent.getIdentifier();
-            final int callingUid = Binder.getCallingUid();
             final int appUid = Process.getAppUidForSdkSandboxUid(callingUid);
             synchronized (mLock) {
                 if (instrumentationPackageName != null
@@ -2562,6 +2575,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 return true;
             }
 
+            int sdkSandboxUid = Binder.getCallingUid();
+
             /**
              * By clearing the calling identity, system server identity is set which allows us to
              * call {@DeviceConfig.getBoolean}
@@ -2571,7 +2586,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             try {
                 return !mSdkSandboxSettingsListener.areRestrictionsEnforced()
                         || StringHelper.doesInputMatchAnyWildcardPattern(
-                                getContentProviderAllowlist(), providerInfo.authority)
+                                getContentProviderAllowlist(sdkSandboxUid), providerInfo.authority)
                         || StringHelper.doesInputMatchAnyWildcardPattern(
                                 mTestCpAllowlist, providerInfo.authority);
             } finally {
@@ -2671,6 +2686,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 return false;
             }
 
+            int sdkSandboxUid = Binder.getCallingUid();
+
             /**
              * By clearing the calling identity, system server identity is set which allows us to
              * call {@DeviceConfig.getBoolean}
@@ -2682,7 +2699,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     return true;
                 }
 
-                ArraySet<String> broadcastReceiverAllowlist = getBroadcastReceiverAllowlist();
+                ArraySet<String> broadcastReceiverAllowlist =
+                        getBroadcastReceiverAllowlist(sdkSandboxUid);
                 // If an allowlist was not set at all, only allow protected broadcasts. Note that
                 // this is different from an empty allowlist (which blocks all BroadcastReceivers).
                 if (broadcastReceiverAllowlist == null) {
