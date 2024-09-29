@@ -21,7 +21,9 @@ import static com.android.adservices.flags.Flags.FLAG_FLEDGE_AD_SELECTION_FILTER
 import static com.android.adservices.flags.Flags.FLAG_FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_ID_ENABLED;
 import static com.android.adservices.flags.Flags.FLAG_FLEDGE_CUSTOM_AUDIENCE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED;
 import static com.android.adservices.flags.Flags.FLAG_FLEDGE_SERVER_AUCTION_MULTI_CLOUD_ENABLED;
+import static com.android.adservices.flags.Flags.FLAG_SDKSANDBOX_DUMP_EFFECTIVE_TARGET_SDK_VERSION;
 import static com.android.adservices.flags.Flags.FLAG_SDKSANDBOX_INVALIDATE_EFFECTIVE_TARGET_SDK_VERSION_CACHE;
+import static com.android.adservices.flags.Flags.FLAG_SDKSANDBOX_USE_EFFECTIVE_TARGET_SDK_VERSION_FOR_RESTRICTIONS;
 
 import android.util.Log;
 import android.util.Pair;
@@ -86,7 +88,18 @@ public final class FlagsConstantsTest extends AdServicesUnitTestCase {
                     // This flag is to guard a feature for trunk stable purpose. The flag guards the
                     // invalidation of the effective target SDK version cache. If any regression is
                     // observed, this feature can be rolled back
-                    FLAG_SDKSANDBOX_INVALIDATE_EFFECTIVE_TARGET_SDK_VERSION_CACHE);
+                    FLAG_SDKSANDBOX_INVALIDATE_EFFECTIVE_TARGET_SDK_VERSION_CACHE,
+
+                    // This flag is to guard a feature for trunk stable purpose. The flag guards the
+                    // dump function to include the effective target SDK version cache. If any
+                    // regression is observed, this feature can be rolled back
+                    FLAG_SDKSANDBOX_DUMP_EFFECTIVE_TARGET_SDK_VERSION,
+
+                    // This flag is to guard a feature for trunk stable purpose. The flag guards the
+                    // using the effective target SDK version when deciding which allowlist should
+                    // be used to apply the restrictions. If any regression is observed, this
+                    // feature can be rolled back
+                    FLAG_SDKSANDBOX_USE_EFFECTIVE_TARGET_SDK_VERSION_FOR_RESTRICTIONS);
 
     /**
      * Map used by {@link #testAllAconfigFlagsAreMapped()} - key is the {@code aconfig} flag name,
@@ -183,7 +196,7 @@ public final class FlagsConstantsTest extends AdServicesUnitTestCase {
         return aconfigToDeviceConfig(aconfigFlag);
     }
 
-    private static List<Pair<String, String>> getAllFlagNameConstants(Class<?> clazz)
+    static List<Pair<String, String>> getAllFlagNameConstants(Class<?> clazz)
             throws IllegalAccessException {
         List<Pair<String, String>> constants = new ArrayList<>();
         for (Field field : clazz.getDeclaredFields()) {

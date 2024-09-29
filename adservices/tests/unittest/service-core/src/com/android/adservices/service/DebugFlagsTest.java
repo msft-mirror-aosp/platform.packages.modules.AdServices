@@ -29,6 +29,8 @@ import static com.android.adservices.service.DebugFlags.DEFAULT_JS_ISOLATE_CONSO
 import static com.android.adservices.service.DebugFlags.DEFAULT_PROTECTED_APP_SIGNALS_CLI_ENABLED;
 import static com.android.adservices.service.DebugFlags.DEFAULT_PROTECTED_APP_SIGNALS_ENCODER_LOGIC_REGISTERED_BROADCAST_ENABLED;
 import static com.android.adservices.service.DebugFlags.DEFAULT_RECORD_TOPICS_COMPLETE_BROADCAST_ENABLED;
+import static com.android.adservices.service.DebugFlags.DUMP_EQUALS;
+import static com.android.adservices.service.DebugFlags.DUMP_PREFIX;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_AD_SELECTION_CLI_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_AD_SERVICES_JS_ISOLATE_CONSOLE_MESSAGES_IN_LOGS_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
@@ -42,14 +44,17 @@ import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_IS_C
 import static com.android.adservices.service.DebugFlagsConstants.KEY_PROTECTED_APP_SIGNALS_CLI_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_PROTECTED_APP_SIGNALS_ENCODER_LOGIC_REGISTERED_BROADCAST_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_RECORD_TOPICS_COMPLETE_BROADCAST_ENABLED;
+import static com.android.adservices.service.FlagsConstantsTest.getAllFlagNameConstants;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import android.util.Log;
+import android.util.Pair;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.fixture.TestableSystemProperties;
+import com.android.adservices.shared.testing.common.DumpHelper;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule;
 
@@ -170,6 +175,29 @@ public final class DebugFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_PROTECTED_APP_SIGNALS_ENCODER_LOGIC_REGISTERED_BROADCAST_ENABLED,
                 DEFAULT_PROTECTED_APP_SIGNALS_ENCODER_LOGIC_REGISTERED_BROADCAST_ENABLED,
                 DebugFlags::getProtectedAppSignalsEncoderLogicRegisteredBroadcastEnabled);
+    }
+
+    @Test
+    public void testDump() throws Exception {
+        String dump = DumpHelper.dump((pw) -> mDebugFlags.dump(pw));
+
+        StringBuilder missingFlags = new StringBuilder();
+        int numberMissingFlags = 0;
+        for (Pair<String, String> flag : getAllFlagNameConstants(DebugFlagsConstants.class)) {
+            String name = flag.first;
+            String value = flag.second;
+            if (!dump.contains(DUMP_PREFIX + value + DUMP_EQUALS)) {
+                // NOTE: not using expect because the value of dump print on each failure would be
+                // dozens of lines long
+                numberMissingFlags++;
+                missingFlags.append('\n').append(name);
+            }
+        }
+
+        if (numberMissingFlags > 0) {
+            expect.withMessage("dump() is missing %s flags: %s", numberMissingFlags, missingFlags)
+                    .fail();
+        }
     }
 
     private void testDebugFlag(
