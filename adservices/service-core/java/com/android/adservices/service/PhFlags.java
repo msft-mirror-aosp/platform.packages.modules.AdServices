@@ -106,8 +106,10 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVEN
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_AGGREGATABLE_BUCKETS_PER_SOURCE_REGISTRATION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPES_PER_SOURCE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_LENGTH_PER_AGGREGATABLE_BUCKET;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REPORTING_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
@@ -3470,6 +3472,20 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public int getMeasurementMaxLengthPerAggregatableBucket() {
+        return getDeviceConfigFlag(
+                KEY_MEASUREMENT_MAX_LENGTH_PER_AGGREGATABLE_BUCKET,
+                MEASUREMENT_MAX_LENGTH_PER_AGGREGATABLE_BUCKET);
+    }
+
+    @Override
+    public int getMeasurementMaxAggregatableBucketsPerSourceRegistration() {
+        return getDeviceConfigFlag(
+                KEY_MEASUREMENT_MAX_AGGREGATABLE_BUCKETS_PER_SOURCE_REGISTRATION,
+                MEASUREMENT_MAX_AGGREGATABLE_BUCKETS_PER_SOURCE_REGISTRATION);
+    }
+
+    @Override
     public boolean getFledgeMeasurementReportAndRegisterEventApiEnabled() {
         return getDeviceConfigFlag(
                 KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED,
@@ -3560,16 +3576,6 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_RVC_POST_OTA_NOTIF_AGE_CHECK
                         + " = "
                         + getRvcPostOtaNotifAgeCheck());
-        writer.println(
-                "\t"
-                        + DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE
-                        + " = "
-                        + getConsentNotificationActivityDebugMode());
-        writer.println(
-                "\t"
-                        + DebugFlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE
-                        + " = "
-                        + getConsentNotifiedDebugMode());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_CONSENT_NOTIFICATION_RESET_TOKEN
@@ -5698,6 +5704,16 @@ public final class PhFlags implements Flags {
                         + getMeasurementMaxAttributionScopesPerSource());
         writer.println(
                 "\t"
+                        + KEY_MEASUREMENT_MAX_LENGTH_PER_AGGREGATABLE_BUCKET
+                        + " = "
+                        + getMeasurementMaxLengthPerAggregatableBucket());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_MAX_AGGREGATABLE_BUCKETS_PER_SOURCE_REGISTRATION
+                        + " = "
+                        + getMeasurementMaxAggregatableBucketsPerSourceRegistration());
+        writer.println(
+                "\t"
                         + KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION
                         + " = "
                         + getMeasurementAttributionScopeMaxInfoGainNavigation());
@@ -6077,9 +6093,6 @@ public final class PhFlags implements Flags {
         uxMap.put(
                 DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE,
                 getConsentNotificationDebugMode());
-        uxMap.put(
-                DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE,
-                getConsentNotificationActivityDebugMode());
         uxMap.put(FlagsConstants.KEY_U18_UX_ENABLED, getU18UxEnabled());
         uxMap.put(
                 FlagsConstants.KEY_NOTIFICATION_DISMISSED_ON_CLICK,
@@ -7231,5 +7244,10 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL,
                 DEFAULT_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL);
+    }
+
+    @Override
+    public boolean getConsentNotificationDebugMode() {
+        return DebugFlags.getInstance().getConsentNotificationDebugMode();
     }
 }

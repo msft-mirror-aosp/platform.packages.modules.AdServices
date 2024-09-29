@@ -24,6 +24,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.VisibleForTesting;
 
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.measurement.CachedFlags;
 
@@ -38,26 +39,31 @@ public class ConsentNotifiedAccessResolver implements IAccessResolver {
     private static final String ERROR_MESSAGE = "Consent notification has not been displayed.";
     private final ConsentManager mConsentManager;
     private final CachedFlags mFlags;
+    private final DebugFlags mDebugFlags;
     @NonNull private final UserConsentAccessResolver mUserConsentAccessResolver;
 
     public ConsentNotifiedAccessResolver(
-            @NonNull ConsentManager consentManager, @NonNull CachedFlags flags) {
-        this(consentManager, flags, new UserConsentAccessResolver(consentManager));
+            @NonNull ConsentManager consentManager,
+            @NonNull CachedFlags flags,
+            @NonNull DebugFlags debugFlags) {
+        this(consentManager, flags, debugFlags, new UserConsentAccessResolver(consentManager));
     }
 
     @VisibleForTesting
     public ConsentNotifiedAccessResolver(
             @NonNull ConsentManager consentManager,
             @NonNull CachedFlags flags,
+            @NonNull DebugFlags debugFlags,
             @NonNull UserConsentAccessResolver userConsentAccessResolver) {
         mConsentManager = consentManager;
         mFlags = flags;
+        mDebugFlags = debugFlags;
         mUserConsentAccessResolver = userConsentAccessResolver;
     }
 
     @Override
     public AccessInfo getAccessInfo(@NonNull Context context) {
-        if (mFlags.getConsentNotifiedDebugMode()) {
+        if (mDebugFlags.getConsentNotifiedDebugMode()) {
             return new AccessInfo(true, AdServicesStatusUtils.STATUS_SUCCESS);
         }
 
