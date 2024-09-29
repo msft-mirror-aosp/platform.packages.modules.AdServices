@@ -161,13 +161,12 @@ package android.adservices.common {
   }
 
   @FlaggedApi("com.android.adservices.flags.adservices_enable_per_module_overrides_api") public final class Module {
-    field public static final int ADID = 6; // 0x6
-    field public static final int MEASUREMENT = 1; // 0x1
-    field public static final int ON_DEVICE_PERSONALIZATION = 5; // 0x5
-    field public static final int PROTECTED_APP_SIGNALS = 3; // 0x3
-    field public static final int PROTECTED_AUDIENCE = 2; // 0x2
-    field public static final int TOPICS = 4; // 0x4
-    field public static final int UNKNOWN = 0; // 0x0
+    field public static final int ADID = 5; // 0x5
+    field public static final int MEASUREMENT = 0; // 0x0
+    field public static final int ON_DEVICE_PERSONALIZATION = 4; // 0x4
+    field public static final int PROTECTED_APP_SIGNALS = 2; // 0x2
+    field public static final int PROTECTED_AUDIENCE = 1; // 0x1
+    field public static final int TOPICS = 3; // 0x3
   }
 
   @FlaggedApi("com.android.adservices.flags.adservices_enable_per_module_overrides_api") public final class NotificationTypeParams implements android.os.Parcelable {

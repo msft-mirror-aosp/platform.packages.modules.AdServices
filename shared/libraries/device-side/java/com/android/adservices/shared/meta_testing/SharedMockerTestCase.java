@@ -17,21 +17,34 @@ package com.android.adservices.shared.meta_testing;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
+import static org.junit.Assert.assertThrows;
+
 import android.content.Context;
 
 import com.android.adservices.mockito.SharedMocker;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.adservices.shared.testing.DeviceSideTestCase;
+import com.android.adservices.shared.util.Clock;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
+import org.mockito.quality.Strictness;
 
+@SuppressWarnings("VisibleForTests") // TODO(b/343741206): Remove suppress warning once fixed.
 /**
  * Base class for all {@link SharedMocker} implementations.
  *
  * @param <T> mocker implementation
  */
 public abstract class SharedMockerTestCase<T extends SharedMocker> extends DeviceSideTestCase {
+
+    @Mock private Clock mMockClock;
+
+    @Rule public final MockitoRule mockito = MockitoJUnit.rule().strictness(Strictness.LENIENT);
 
     protected abstract T getMocker();
 
@@ -41,7 +54,6 @@ public abstract class SharedMockerTestCase<T extends SharedMocker> extends Devic
     }
 
     // TODO(b/285300419): use ApplicationContextSingleton rule / helper instead?
-    @SuppressWarnings("VisibleForTests")
     @Test
     public final void testSetApplicationContextSingleton() {
         Context contextBefore = ApplicationContextSingleton.getForTests();
@@ -59,5 +71,91 @@ public abstract class SharedMockerTestCase<T extends SharedMocker> extends Devic
         } finally {
             ApplicationContextSingleton.setForTests(contextBefore);
         }
+    }
+
+    @Test
+    public final void testMockCurrentTimeMillis_null() {
+        assertThrows(
+                NullPointerException.class,
+                () -> getMocker().mockCurrentTimeMillis(mMockClock, /* mockedValues= */ null));
+        assertThrows(
+                NullPointerException.class,
+                () -> getMocker().mockCurrentTimeMillis(/* mockClock= */ null, 42));
+    }
+
+    @Test
+    public final void testMockCurrentTimeMillis_oneValue() {
+        getMocker().mockCurrentTimeMillis(mMockClock, 42);
+
+        expect.withMessage("clock.currentTimeMillis()")
+                .that(mMockClock.currentTimeMillis())
+                .isEqualTo(42);
+    }
+
+    @Test
+    public final void testMockCurrentTimeMillis_multipleValues() {
+        getMocker().mockCurrentTimeMillis(mMockClock, 4, 8, 15, 16, 23, 42);
+
+        expect.withMessage("1st clock.currentTimeMillis() call")
+                .that(mMockClock.currentTimeMillis())
+                .isEqualTo(4);
+        expect.withMessage("2nd clock.currentTimeMillis() call")
+                .that(mMockClock.currentTimeMillis())
+                .isEqualTo(8);
+        expect.withMessage("3rd clock.currentTimeMillis() call")
+                .that(mMockClock.currentTimeMillis())
+                .isEqualTo(15);
+        expect.withMessage("4th clock.currentTimeMillis() call")
+                .that(mMockClock.currentTimeMillis())
+                .isEqualTo(16);
+        expect.withMessage("5th clock.currentTimeMillis() call")
+                .that(mMockClock.currentTimeMillis())
+                .isEqualTo(23);
+        expect.withMessage("6th clock.currentTimeMillis() call")
+                .that(mMockClock.currentTimeMillis())
+                .isEqualTo(42);
+    }
+
+    @Test
+    public final void testMockElapsedRealtime_null() {
+        assertThrows(
+                NullPointerException.class,
+                () -> getMocker().mockElapsedRealtime(mMockClock, /* mockedValues= */ null));
+        assertThrows(
+                NullPointerException.class,
+                () -> getMocker().mockElapsedRealtime(/* mockClock= */ null, 42));
+    }
+
+    @Test
+    public final void testMockElapsedRealtime_oneValue() {
+        getMocker().mockElapsedRealtime(mMockClock, 42);
+
+        expect.withMessage("clock.elapsedRealtime()")
+                .that(mMockClock.elapsedRealtime())
+                .isEqualTo(42);
+    }
+
+    @Test
+    public final void testMockElapsedRealtime_multipleValues() {
+        getMocker().mockElapsedRealtime(mMockClock, 4, 8, 15, 16, 23, 42);
+
+        expect.withMessage("1st clock.elapsedRealtime() call")
+                .that(mMockClock.elapsedRealtime())
+                .isEqualTo(4);
+        expect.withMessage("2nd clock.elapsedRealtime() call")
+                .that(mMockClock.elapsedRealtime())
+                .isEqualTo(8);
+        expect.withMessage("3rd clock.elapsedRealtime() call")
+                .that(mMockClock.elapsedRealtime())
+                .isEqualTo(15);
+        expect.withMessage("4th clock.elapsedRealtime() call")
+                .that(mMockClock.elapsedRealtime())
+                .isEqualTo(16);
+        expect.withMessage("5th clock.elapsedRealtime() call")
+                .that(mMockClock.elapsedRealtime())
+                .isEqualTo(23);
+        expect.withMessage("6th clock.elapsedRealtime() call")
+                .that(mMockClock.elapsedRealtime())
+                .isEqualTo(42);
     }
 }

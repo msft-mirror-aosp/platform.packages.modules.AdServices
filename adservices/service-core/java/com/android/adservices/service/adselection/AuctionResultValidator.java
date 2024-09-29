@@ -17,6 +17,8 @@
 package com.android.adservices.service.adselection;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AUCTION_RESULT_VALIDATOR_AD_TECH_NOT_ALLOWED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE;
 
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
@@ -25,6 +27,7 @@ import android.net.Uri;
 import android.os.Build;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.Validator;
@@ -95,6 +98,10 @@ public class AuctionResultValidator implements Validator<AuctionResult> {
             } catch (FledgeAuthorizationFilter.AdTechNotAllowedException e) {
                 violations.add(
                         String.format(Locale.ENGLISH, BUYER_ENROLLMENT, auctionResult.getBuyer()));
+                ErrorLogUtil.e(
+                        e,
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AUCTION_RESULT_VALIDATOR_AD_TECH_NOT_ALLOWED,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
             }
         }
 
