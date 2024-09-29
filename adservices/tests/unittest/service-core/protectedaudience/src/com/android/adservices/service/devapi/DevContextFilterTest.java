@@ -16,12 +16,19 @@
 
 package com.android.adservices.service.devapi;
 
+import static com.android.adservices.devapi.DevSessionFixture.IN_PROD;
+
 import static com.google.common.truth.Truth.assertWithMessage;
+import static com.google.common.util.concurrent.Futures.immediateFuture;
 
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.content.ContentResolver;
@@ -32,6 +39,7 @@ import android.os.Process;
 import android.provider.Settings;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.devapi.DevSessionFixture;
 import com.android.adservices.service.common.compat.BuildCompatUtils;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
@@ -48,6 +56,7 @@ public final class DevContextFilterTest extends AdServicesExtendedMockitoTestCas
     @Mock private PackageManager mMockPackageManager;
     @Mock private AppPackageNameRetriever mMockAppPackageNameRetriever;
     @Mock private ContentResolver mMockContentResolver;
+    @Mock private DevSessionDataStore mMockDevSessionDataStore;
 
     private DevContextFilter mDevContextFilter;
 
@@ -55,7 +64,10 @@ public final class DevContextFilterTest extends AdServicesExtendedMockitoTestCas
     public void setUp() {
         mDevContextFilter =
                 new DevContextFilter(
-                        mMockContentResolver, mMockPackageManager, mMockAppPackageNameRetriever);
+                        mMockContentResolver,
+                        mMockPackageManager,
+                        mMockAppPackageNameRetriever,
+                        mMockDevSessionDataStore);
     }
 
     @Test
@@ -63,6 +75,7 @@ public final class DevContextFilterTest extends AdServicesExtendedMockitoTestCas
         enableDeveloperOptions();
         mockPackageNameForUid(APP_UID, APP_PACKAGE);
         mockInstalledApplications(aDebuggableAppInfo());
+        when(mMockDevSessionDataStore.get()).thenReturn(immediateFuture(IN_PROD));
 
         DevContext devContext = mDevContextFilter.createDevContext(APP_UID);
 
@@ -76,7 +89,7 @@ public final class DevContextFilterTest extends AdServicesExtendedMockitoTestCas
     }
 
     @Test
-    public void testCreateDevContextReturnsDevDisabledInstanceIfDeviceIsNotInDeveloperMode()
+    public void testCreateDevContextReturnsDevDisabledInstanceIfDeviceIsNotInDevOptionsEnabled()
             throws Exception {
         disableDeveloperOptions();
         mockPackageNameForUid(APP_UID, APP_PACKAGE);
@@ -104,6 +117,7 @@ public final class DevContextFilterTest extends AdServicesExtendedMockitoTestCas
         // in a debuggable build and Mockito would complain of the not necesasry mock.
         // Not preparing the mock would anyway cause the check method to return false.
         when(BuildCompatUtils.isDebuggable()).thenReturn(true);
+        when(mMockDevSessionDataStore.get()).thenReturn(immediateFuture(IN_PROD));
 
         mockPackageNameForUid(APP_UID, APP_PACKAGE);
         mockInstalledApplications(aDebuggableAppInfo());
@@ -125,6 +139,7 @@ public final class DevContextFilterTest extends AdServicesExtendedMockitoTestCas
         enableDeveloperOptions();
         mockPackageNameForUid(APP_UID, APP_PACKAGE);
         mockInstalledApplications(aNonDebuggableAppInfo());
+        when(mMockDevSessionDataStore.get()).thenReturn(immediateFuture(IN_PROD));
 
         DevContext devContext = mDevContextFilter.createDevContext(APP_UID);
 
@@ -138,10 +153,38 @@ public final class DevContextFilterTest extends AdServicesExtendedMockitoTestCas
     }
 
     @Test
+    public void testCreateDevContextInDevSession() throws Exception {
+        enableDeveloperOptions();
+        mockPackageNameForUid(APP_UID, APP_PACKAGE);
+        mockInstalledApplications(aNonDebuggableAppInfo());
+        DevSession devSession = DevSessionFixture.IN_DEV;
+        doReturn(immediateFuture(devSession)).when(mMockDevSessionDataStore).get();
+
+        DevContext devContext = mDevContextFilter.createDevContext(APP_UID);
+
+        expect.withMessage("Expect DevSession to be valid")
+                .that(devContext.getDevSession())
+                .isEqualTo(devSession);
+        verify(mMockDevSessionDataStore, atLeastOnce()).get();
+    }
+
+    @Test
+    public void testCreateDevContextInDevSessionWithDeveloperOptionsDisabled() throws Exception {
+        mockPackageNameForUid(APP_UID, APP_PACKAGE);
+        mockInstalledApplications(aNonDebuggableAppInfo());
+
+        DevContext devContext = mDevContextFilter.createDevContext(APP_UID);
+
+        expect.that(devContext.getDevSession().getState()).isEqualTo(DevSessionState.IN_PROD);
+        verify(mMockDevSessionDataStore, never()).get();
+    }
+
+    @Test
     public void testCreateDevContextLookupFailed() throws Exception {
         enableDeveloperOptions();
         when(mMockAppPackageNameRetriever.getAppPackageNameForUid(APP_UID))
                 .thenThrow(new IllegalArgumentException("D'OH!"));
+        when(mMockDevSessionDataStore.get()).thenReturn(immediateFuture(IN_PROD));
         mockInstalledApplications(aDebuggableAppInfo());
 
         DevContext devContext = mDevContextFilter.createDevContext(APP_UID);
@@ -159,13 +202,34 @@ public final class DevContextFilterTest extends AdServicesExtendedMockitoTestCas
     }
 
     @Test
+    public void testGetSettingsForCurrentAppWithDeveloperModeFeatureEnabled() {
+        int myUid = Process.myUid();
+        Context context = appContext.get();
+        // Enable development options for the test app
+        setDeveloperOptionsEnabled(context.getContentResolver(), true);
+
+        DevContextFilter nonMockedFilter =
+                DevContextFilter.create(context, /* developerModeFeatureEnabled= */ true);
+        DevContext devContext = nonMockedFilter.createDevContext(myUid);
+
+        assertWithMessage("createDevContext(%s)", myUid).that(devContext).isNotNull();
+        expect.withMessage("devContext.getDevOptionsEnabled()")
+                .that(devContext.getDeviceDevOptionsEnabled())
+                .isTrue();
+        expect.withMessage("devContext.getCallingAppPackageName()")
+                .that(devContext.getCallingAppPackageName())
+                .isEqualTo(context.getPackageName());
+    }
+
+    @Test
     public void testGetSettingsForCurrentApp() {
         int myUid = Process.myUid();
         Context context = appContext.get();
         // Enable development options for the test app
         setDeveloperOptionsEnabled(context.getContentResolver(), true);
 
-        DevContextFilter nonMockedFilter = DevContextFilter.create(context);
+        DevContextFilter nonMockedFilter =
+                DevContextFilter.create(context, /* developerModeFeatureEnabled= */ false);
         DevContext devContext = nonMockedFilter.createDevContext(myUid);
 
         assertWithMessage("createDevContext(%s)", myUid).that(devContext).isNotNull();
@@ -179,7 +243,16 @@ public final class DevContextFilterTest extends AdServicesExtendedMockitoTestCas
 
     @Test
     public void testNoArgCallFailsIfCalledFromNonBinderThread() {
-        DevContextFilter nonMockedFilter = DevContextFilter.create(appContext.get());
+        DevContextFilter nonMockedFilter =
+                DevContextFilter.create(appContext.get(), /* developerModeFeatureEnabled= */ false);
+
+        assertThrows(IllegalStateException.class, nonMockedFilter::createDevContext);
+    }
+
+    @Test
+    public void testNoArgCallFailsIfCalledFromNonBinderThreadWithDeveloperModeFeatureEnabled() {
+        DevContextFilter nonMockedFilter =
+                DevContextFilter.create(appContext.get(), /* developerModeFeatureEnabled= */ true);
 
         assertThrows(IllegalStateException.class, nonMockedFilter::createDevContext);
     }
