@@ -126,6 +126,7 @@ public class Source {
     @Nullable private String mAggregateDebugReportingString;
     @Nullable private AggregateDebugReporting mAggregateDebugReporting;
     private int mAggregateDebugReportContributions;
+    @Nullable private AggregateContributionBuckets mAggregateContributionBuckets;
 
     /**
      * Parses and returns the event_report_windows Returns null if parsing fails or if there is no
@@ -686,7 +687,9 @@ public class Source {
                 && Objects.equals(mEventLevelEpsilon, source.mEventLevelEpsilon)
                 && Objects.equals(
                         mAggregateDebugReportingString, source.mAggregateDebugReportingString)
-                && mAggregateDebugReportContributions == source.mAggregateDebugReportContributions;
+                && mAggregateDebugReportContributions == source.mAggregateDebugReportContributions
+                && Objects.equals(
+                        mAggregateContributionBuckets, source.mAggregateContributionBuckets);
     }
 
     @Override
@@ -744,7 +747,8 @@ public class Source {
                 mDestinationLimitAlgorithm,
                 mEventLevelEpsilon,
                 mAggregateDebugReportingString,
-                mAggregateDebugReportContributions);
+                mAggregateDebugReportContributions,
+                mAggregateContributionBuckets);
     }
 
     public void setAttributionMode(@AttributionMode int attributionMode) {
@@ -1466,6 +1470,14 @@ public class Source {
         return mAggregateDebugReportContributions;
     }
 
+    /**
+     * @return the aggregate contribution object
+     */
+    @Nullable
+    public AggregateContributionBuckets getAggregateContributionBuckets() {
+        return mAggregateContributionBuckets;
+    }
+
     /** Builder for {@link Source}. */
     public static final class Builder {
         private final Source mBuilding;
@@ -1537,6 +1549,7 @@ public class Source {
             builder.setAggregateDebugReportingString(copyFrom.mAggregateDebugReportingString);
             builder.setAggregateDebugReportContributions(
                     copyFrom.mAggregateDebugReportContributions);
+            builder.setAggregateContributionBuckets(copyFrom.mAggregateContributionBuckets);
             return builder;
         }
 
@@ -1960,6 +1973,14 @@ public class Source {
         public Builder setAggregateDebugReportContributions(
                 int aggregateDebugReportingContributions) {
             mBuilding.mAggregateDebugReportContributions = aggregateDebugReportingContributions;
+            return this;
+        }
+
+        /** See {@link Source#getAggregateContributionBuckets()}. */
+        @NonNull
+        public Builder setAggregateContributionBuckets(
+                @Nullable AggregateContributionBuckets aggregateContributionBuckets) {
+            mBuilding.mAggregateContributionBuckets = aggregateContributionBuckets;
             return this;
         }
 

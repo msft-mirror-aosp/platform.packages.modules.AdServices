@@ -586,7 +586,8 @@ public abstract class SyncCallbackTestCase<CB extends SyncCallback & FreezableTo
         }
 
         public LogEntry v(String expectedMessage) {
-            return new LogEntry(LogLevel.VERBOSE, LOG_TAG, mCallback + ": " + expectedMessage);
+            return new LogEntry(
+                    LogLevel.VERBOSE, LOG_TAG, mCallback.toStringLite() + ": " + expectedMessage);
         }
     }
 }

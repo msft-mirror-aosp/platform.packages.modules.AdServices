@@ -5045,6 +5045,11 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
         public boolean getFledgeOnDeviceAuctionKillSwitch() {
             return false;
         }
+
+        @Override
+        public boolean getConsentNotificationDebugMode() {
+            return false;
+        }
     }
 
     private Map<AdTechIdentifier, SignedContextualAds> createContextualAds() {

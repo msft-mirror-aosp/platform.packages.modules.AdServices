@@ -16,10 +16,8 @@
 package com.android.adservices.shared.meta_testing;
 
 import com.android.adservices.shared.testing.AndroidSdk.Level;
-import com.android.adservices.shared.testing.DynamicLogger;
-import com.android.adservices.shared.testing.Logger;
 import com.android.adservices.shared.testing.Nullable;
-import com.android.adservices.shared.testing.device.DeviceGateway;
+import com.android.adservices.shared.testing.device.AbstractDeviceGateway;
 import com.android.adservices.shared.testing.device.ShellCommandInput;
 import com.android.adservices.shared.testing.device.ShellCommandOutput;
 
@@ -31,15 +29,12 @@ import com.google.errorprone.annotations.FormatString;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
-public final class FakeDeviceGateway implements DeviceGateway {
+public final class FakeDeviceGateway extends AbstractDeviceGateway {
 
-    private final Logger mLog = new Logger(DynamicLogger.getInstance(), getClass());
-    private final Map<String, String> mStringResultExpectations = new HashMap<>();
-    private final Map<String, ShellCommandOutput> mCommandOutputExpectations = new HashMap<>();
+    private final Map<String, ShellCommandOutput> mResultExpectations = new HashMap<>();
     private final List<String> mCalls = new ArrayList<>();
 
     @Nullable private Level mSdkLevel;
@@ -52,7 +47,7 @@ public final class FakeDeviceGateway implements DeviceGateway {
         String cmd = String.format(cmdFmt, cmdArgs);
 
         mLog.i("expectCalled: %s => %s", cmd, result);
-        mStringResultExpectations.put(cmd, result);
+        mResultExpectations.put(cmd, new ShellCommandOutput(result));
     }
 
     /** Sets what the given command will return. */
@@ -61,7 +56,7 @@ public final class FakeDeviceGateway implements DeviceGateway {
         Objects.requireNonNull(output, "output cannot be null");
 
         mLog.i("expectCalled: %s => %s", input, output);
-        mCommandOutputExpectations.put(input.getCommand(), output);
+        mResultExpectations.put(input.getCommand(), output);
     }
 
     /** Expects that the given command was called. */
@@ -96,22 +91,6 @@ public final class FakeDeviceGateway implements DeviceGateway {
     }
 
     @Override
-    @FormatMethod
-    public String runShellCommand(@FormatString String cmdFmt, @Nullable Object... cmdArgs) {
-        Objects.requireNonNull(cmdFmt, "cmdFmt cannot be null");
-
-        String cmd = String.format(Locale.ENGLISH, cmdFmt, cmdArgs);
-        mLog.i("runShellCommand(): running %s", cmd);
-
-        mCalls.add(cmd);
-
-        String result = mStringResultExpectations.get(cmd);
-        mLog.i("runShellCommand(): returning %s", result);
-
-        return result;
-    }
-
-    @Override
     public ShellCommandOutput runShellCommandRwe(ShellCommandInput input) {
         Objects.requireNonNull(input, "input cannot be null");
 
@@ -119,7 +98,7 @@ public final class FakeDeviceGateway implements DeviceGateway {
 
         mCalls.add(input.getCommand());
 
-        ShellCommandOutput output = mCommandOutputExpectations.get(input.getCommand());
+        ShellCommandOutput output = mResultExpectations.get(input.getCommand());
         mLog.i("runShellCommandRwe(): returning %s", output);
 
         return output;
@@ -139,10 +118,8 @@ public final class FakeDeviceGateway implements DeviceGateway {
                 + mLog
                 + ", mSdkLevel="
                 + mSdkLevel
-                + ", mStringResultExpectations="
-                + mStringResultExpectations
-                + ", mCommandOutputExpectations="
-                + mCommandOutputExpectations
+                + ", mResultExpectations="
+                + mResultExpectations
                 + ", mCalls="
                 + mCalls
                 + "]";
