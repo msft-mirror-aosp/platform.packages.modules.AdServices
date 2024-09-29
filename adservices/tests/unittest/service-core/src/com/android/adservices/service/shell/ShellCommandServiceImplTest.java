@@ -66,7 +66,7 @@ import com.android.adservices.service.adselection.FrequencyCapAdFiltererNoOpImpl
 import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGenerator;
 import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGeneratorFactory;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
-import com.android.adservices.service.devapi.DevSessionSetter;
+import com.android.adservices.service.devapi.DevSessionController;
 import com.android.adservices.service.shell.adselection.AdSelectionShellCommandFactory;
 import com.android.adservices.service.shell.adselection.ConsentedDebugShellCommand;
 import com.android.adservices.service.shell.customaudience.CustomAudienceListCommand;
@@ -113,7 +113,7 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
     @Mock private EncodingJobRunStatsLogger mEncodingJobRunStatsLogger;
     @Mock private EncoderLogicMetadataDao mEncoderLogicMetadataDao;
     @Mock private AdSelectionEntryDao mAdSelectionEntryDao;
-    @Mock private DevSessionSetter mDevSessionSetter;
+    @Mock private DevSessionController mDevSessionSetter;
 
     private final Flags mFakeFlags = FakeFlagsFactory.getFlagsForTest();
     private ShellCommandServiceImpl mShellCommandService;

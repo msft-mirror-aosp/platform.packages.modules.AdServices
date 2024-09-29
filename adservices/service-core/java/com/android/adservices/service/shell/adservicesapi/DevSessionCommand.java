@@ -20,7 +20,8 @@ import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_DEV
 import static com.android.adservices.service.stats.ShellCommandStats.RESULT_SUCCESS;
 
 import com.android.adservices.LoggerFactory;
-import com.android.adservices.service.devapi.DevSessionSetter;
+import com.android.adservices.service.devapi.DevSessionController;
+import com.android.adservices.service.devapi.DevSessionControllerResult;
 import com.android.adservices.service.shell.AbstractShellCommand;
 import com.android.adservices.service.shell.ShellCommandResult;
 import com.android.adservices.service.stats.ShellCommandStats;
@@ -29,6 +30,7 @@ import com.google.common.annotations.VisibleForTesting;
 
 import java.io.PrintWriter;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -82,10 +84,10 @@ public final class DevSessionCommand extends AbstractShellCommand {
     public static final String OUTPUT_SUCCESS_FORMAT = "Successfully changed developer mode to: %s";
 
     static final int TIMEOUT_SEC = 5;
-    private final DevSessionSetter mDevSessionRefresher;
+    private final DevSessionController mDevSessionController;
 
-    public DevSessionCommand(DevSessionSetter devSessionRefresher) {
-        mDevSessionRefresher = devSessionRefresher;
+    public DevSessionCommand(DevSessionController devSessionController) {
+        mDevSessionController = devSessionController;
     }
 
     @Override
@@ -111,11 +113,15 @@ public final class DevSessionCommand extends AbstractShellCommand {
 
         boolean success;
         try {
+            Future<DevSessionControllerResult> future =
+                    shouldSetDevSessionEnabled
+                            ? mDevSessionController.startDevSession()
+                            : mDevSessionController.endDevSession();
             success =
-                    mDevSessionRefresher
-                            .set(shouldSetDevSessionEnabled)
-                            .get(TIMEOUT_SEC, TimeUnit.SECONDS);
+                    future.get(TIMEOUT_SEC, TimeUnit.SECONDS)
+                            .equals(DevSessionControllerResult.SUCCESS);
         } catch (IllegalStateException e) {
+            // TODO(b/370948289): Handle NO_OP instead ISE.
             sLogger.e(e, ERROR_ALREADY_IN_DEV_MODE);
             err.write(ERROR_ALREADY_IN_DEV_MODE);
             return toShellCommandResult(
