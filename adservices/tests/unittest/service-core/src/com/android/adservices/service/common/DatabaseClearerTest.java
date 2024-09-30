@@ -26,6 +26,8 @@ import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -38,23 +40,32 @@ import org.mockito.Mock;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 
-public final class DatabaseRefresherTest extends AdServicesMockitoTestCase {
+public final class DatabaseClearerTest extends AdServicesMockitoTestCase {
 
     @Mock private CustomAudienceDao mCustomAudienceDao;
     @Mock private FrequencyCapDao mFrequencyCapDao;
     @Mock private AppInstallDao mAppInstallDao;
     @Mock private ProtectedSignalsDao mProtectedSignalsDao;
-    private DatabaseRefresher mDatabaseRefresher;
+    private DatabaseClearer mDatabaseClearer;
 
     @Before
     public void setUp() {
         ListeningExecutorService backgroundExecutor =
                 MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
-        mDatabaseRefresher =
-                new DatabaseRefresher(
+        mDatabaseClearer =
+                new DatabaseClearer(
                         mCustomAudienceDao,
                         mAppInstallDao,
-                        mFrequencyCapDao,
+                        new AdFilteringFeatureFactory(
+                                        mAppInstallDao,
+                                        mFrequencyCapDao,
+                                        new Flags() {
+                                            @Override
+                                            public boolean getFledgeFrequencyCapFilteringEnabled() {
+                                                return true;
+                                            }
+                                        })
+                                .getFrequencyCapDataClearer(),
                         mProtectedSignalsDao,
                         backgroundExecutor);
     }
@@ -62,11 +73,10 @@ public final class DatabaseRefresherTest extends AdServicesMockitoTestCase {
     @Test
     public void testDeleteAllProtectedAudienceAndAppSignals_Data_success() throws Exception {
         ListenableFuture<Void> future =
-                mDatabaseRefresher.deleteAllProtectedAudienceAndAppSignalsData(
-                        /* scheduleCustomAudienceUpdateEnabled= */ true,
-                        /* frequencyCapFilteringEnabled= */ true,
-                        /* appInstallFilteringEnabled= */ true,
-                        /* protectedSignalsCleanupEnabled= */ true);
+                mDatabaseClearer.deleteProtectedAudienceAndAppSignalsData(
+                        /* deleteCustomAudienceUpdate= */ true,
+                        /* deleteAppInstallFiltering= */ true,
+                        /* deleteProtectedSignals= */ true);
         future.get(); // Wait for the future to complete
 
         verify(mCustomAudienceDao, times(1)).deleteAllCustomAudienceData(true);
@@ -85,11 +95,10 @@ public final class DatabaseRefresherTest extends AdServicesMockitoTestCase {
                 ExecutionException.class,
                 () -> {
                     ListenableFuture<Void> future =
-                            mDatabaseRefresher.deleteAllProtectedAudienceAndAppSignalsData(
-                                    /* scheduleCustomAudienceUpdateEnabled= */ true,
-                                    /* frequencyCapFilteringEnabled= */ true,
-                                    /* appInstallFilteringEnabled= */ true,
-                                    /* protectedSignalsCleanupEnabled= */ true);
+                            mDatabaseClearer.deleteProtectedAudienceAndAppSignalsData(
+                                    /* deleteCustomAudienceUpdate= */ true,
+                                    /* deleteAppInstallFiltering= */ true,
+                                    /* deleteProtectedSignals= */ true);
                     future.get(); // Wait for the future to complete
                 });
     }
@@ -104,11 +113,10 @@ public final class DatabaseRefresherTest extends AdServicesMockitoTestCase {
                 ExecutionException.class,
                 () -> {
                     ListenableFuture<Void> future =
-                            mDatabaseRefresher.deleteAllProtectedAudienceAndAppSignalsData(
-                                    /* scheduleCustomAudienceUpdateEnabled= */ true,
-                                    /* frequencyCapFilteringEnabled= */ true,
-                                    /* appInstallFilteringEnabled= */ true,
-                                    /* protectedSignalsCleanupEnabled= */ true);
+                            mDatabaseClearer.deleteProtectedAudienceAndAppSignalsData(
+                                    /* deleteCustomAudienceUpdate= */ true,
+                                    /* deleteAppInstallFiltering= */ true,
+                                    /* deleteProtectedSignals= */ true);
                     future.get();
                 });
     }
@@ -123,11 +131,10 @@ public final class DatabaseRefresherTest extends AdServicesMockitoTestCase {
                 ExecutionException.class,
                 () -> {
                     ListenableFuture<Void> future =
-                            mDatabaseRefresher.deleteAllProtectedAudienceAndAppSignalsData(
-                                    /* scheduleCustomAudienceUpdateEnabled= */ true,
-                                    /* frequencyCapFilteringEnabled= */ true,
-                                    /* appInstallFilteringEnabled= */ true,
-                                    /* protectedSignalsCleanupEnabled= */ true);
+                            mDatabaseClearer.deleteProtectedAudienceAndAppSignalsData(
+                                    /* deleteCustomAudienceUpdate= */ true,
+                                    /* deleteAppInstallFiltering= */ true,
+                                    /* deleteProtectedSignals= */ true);
                     future.get();
                 });
     }
@@ -142,11 +149,10 @@ public final class DatabaseRefresherTest extends AdServicesMockitoTestCase {
                 ExecutionException.class,
                 () -> {
                     ListenableFuture<Void> future =
-                            mDatabaseRefresher.deleteAllProtectedAudienceAndAppSignalsData(
-                                    /* scheduleCustomAudienceUpdateEnabled= */ true,
-                                    /* frequencyCapFilteringEnabled= */ true,
-                                    /* appInstallFilteringEnabled= */ true,
-                                    /* protectedSignalsCleanupEnabled= */ true);
+                            mDatabaseClearer.deleteProtectedAudienceAndAppSignalsData(
+                                    /* deleteCustomAudienceUpdate= */ true,
+                                    /* deleteAppInstallFiltering= */ true,
+                                    /* deleteProtectedSignals= */ true);
                     future.get();
                 });
     }
@@ -170,11 +176,10 @@ public final class DatabaseRefresherTest extends AdServicesMockitoTestCase {
                 ExecutionException.class,
                 () -> {
                     ListenableFuture<Void> future =
-                            mDatabaseRefresher.deleteAllProtectedAudienceAndAppSignalsData(
-                                    /* scheduleCustomAudienceUpdateEnabled= */ true,
-                                    /* frequencyCapFilteringEnabled= */ true,
-                                    /* appInstallFilteringEnabled= */ true,
-                                    /* protectedSignalsCleanupEnabled= */ true);
+                            mDatabaseClearer.deleteProtectedAudienceAndAppSignalsData(
+                                    /* deleteCustomAudienceUpdate= */ true,
+                                    /* deleteAppInstallFiltering= */ true,
+                                    /* deleteProtectedSignals= */ true);
                     future.get();
                 });
     }

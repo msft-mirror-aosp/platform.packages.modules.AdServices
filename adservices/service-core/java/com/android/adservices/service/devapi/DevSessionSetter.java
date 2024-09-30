@@ -16,17 +16,18 @@
 
 package com.android.adservices.service.devapi;
 
-import java.util.concurrent.Future;
+import com.google.common.util.concurrent.ListenableFuture;
 
 /** Provides functionality to reset the AdServices DB. */
-public interface DevSessionRefresher {
+public interface DevSessionSetter {
     /**
-     * Reset the current state of the AdServices database to a fresh state.
+     * Set developer session state and clear the AdServices database.
      *
      * @param setDevSessionEnabled Specifies if development session state should be set to true or
      *     false. In both cases, this method is called to do the actual reset operation.
      * @return A future containing the success or failure of this operation.
-     * @throws IllegalStateException If already in developer mode when trying to enable it.
+     * @throws IllegalStateException If already in developer mode when trying to enable it, or vice
+     *     versa.
      */
-    Future<Boolean> reset(boolean setDevSessionEnabled) throws IllegalStateException;
+    ListenableFuture<Boolean> set(boolean setDevSessionEnabled) throws IllegalStateException;
 }
