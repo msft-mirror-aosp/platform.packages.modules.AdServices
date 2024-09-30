@@ -127,7 +127,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
 
-// TODO(b/290839573) - Remove @RequiresSdkLevelAtLeastS if Topics is enabled on R in the future.
 /** Unit test for {@link com.android.adservices.service.topics.TopicsServiceImpl}. */
 @RequiresSdkLevelAtLeastS(
         reason =
