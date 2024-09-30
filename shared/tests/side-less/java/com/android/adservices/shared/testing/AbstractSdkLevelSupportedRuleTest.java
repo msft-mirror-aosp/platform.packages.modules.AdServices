@@ -28,6 +28,7 @@ import static com.android.adservices.shared.testing.AndroidSdk.Level.U;
 
 import static org.junit.Assert.assertThrows;
 
+import com.android.adservices.shared.meta_testing.SharedSidelessTestCase;
 import com.android.adservices.shared.meta_testing.SimpleStatement;
 import com.android.adservices.shared.testing.AbstractSdkLevelSupportedRule.RequiredRange;
 import com.android.adservices.shared.testing.AndroidSdk.Level;
