@@ -25,7 +25,6 @@ import android.adservices.common.CallerMetadata;
 import android.adservices.common.OutcomeReceiverConverter;
 import android.adservices.common.SandboxedSdkContextUtils;
 import android.annotation.CallbackExecutor;
-import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
 import android.app.sdksandbox.SandboxedSdkContext;
@@ -40,7 +39,6 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
 import com.android.adservices.ServiceBinder;
-import com.android.adservices.flags.Flags;
 import com.android.adservices.shared.common.exception.ServiceUnavailableException;
 
 import java.util.Objects;
@@ -216,7 +214,6 @@ public class AdIdManager {
      * @param executor The executor to run callback.
      * @param callback The callback that's called after adid are available or an error occurs.
      */
-    @FlaggedApi(Flags.FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED)
     @RequiresPermission(ACCESS_ADSERVICES_AD_ID)
     @SuppressWarnings("NewApi")
     @NonNull
