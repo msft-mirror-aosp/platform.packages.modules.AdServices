@@ -20,10 +20,10 @@ package android.adservices.common;
 import android.adservices.common.AdServicesCommonResponse;
 
 /**
- * Callback used by the SetAdServicesModuleOverrides API.
+ * Callback used by the RequestAdServicesModuleUserChoices API.
  * {@hide}
  */
-oneway interface ISetAdServicesModuleOverridesCallback {
+oneway interface IRequestAdServicesModuleUserChoicesCallback {
     void onResult(in AdServicesCommonResponse response);
     void onFailure(int statusCode);
 }
