@@ -34,9 +34,11 @@ import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.mockito.AdServicesDebugFlagsMocker;
 import com.android.adservices.mockito.AdServicesExtendedMockitoMocker;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.mockito.AdServicesFlagsMocker;
+import com.android.adservices.mockito.AdServicesMockitoDebugFlagsMocker;
 import com.android.adservices.mockito.AdServicesMockitoFlagsMocker;
 import com.android.adservices.mockito.AdServicesMockitoMocker;
 import com.android.adservices.mockito.AdServicesPragmaticMocker;
@@ -115,7 +117,7 @@ public abstract class AdServicesMockerLessExtendedMockitoTestCase<M extends Inte
             AdServicesLoggingUsageRule.errorLogUtilUsageRule();
 
     /** Provides common expectations. */
-    public final M mocker = newMocker(extendedMockito, mMockFlags);
+    public final M mocker = newMocker(extendedMockito, mMockFlags, mMockDebugFlags);
 
     /**
      * Gets the {@link AdServicesExtendedMockitoRule} that will be set as the {@code
@@ -136,7 +138,8 @@ public abstract class AdServicesMockerLessExtendedMockitoTestCase<M extends Inte
     }
 
     /** Returns the object that will be referenced by {@code mocker}. */
-    protected abstract M newMocker(AdServicesExtendedMockitoRule rule, Flags mockFlags);
+    protected abstract M newMocker(
+            AdServicesExtendedMockitoRule rule, Flags mockFlags, DebugFlags mockDebugFlags);
 
     /**
      * Creates a new {@link AdServicesExtendedMockitoRule.Builder} with the default properties.
@@ -167,6 +170,7 @@ public abstract class AdServicesMockerLessExtendedMockitoTestCase<M extends Inte
                     AndroidStaticMocker,
                     AdServicesPragmaticMocker,
                     AdServicesFlagsMocker,
+                    AdServicesDebugFlagsMocker,
                     AdServicesStaticMocker,
                     SharedMocker {
 
@@ -174,10 +178,11 @@ public abstract class AdServicesMockerLessExtendedMockitoTestCase<M extends Inte
         private final SharedMocker mSharedMocker = new SharedMockitoMocker();
         private final AdServicesPragmaticMocker mAdServicesMocker = new AdServicesMockitoMocker();
         @Nullable private final AdServicesFlagsMocker mAdServicesFlagsMocker;
+        @Nullable private final AdServicesDebugFlagsMocker mAdServicesDebugFlagsMocker;
         @Nullable private final AndroidStaticMocker mAndroidStaticMocker;
         @Nullable private final AdServicesStaticMocker mAdServicesStaticMocker;
 
-        protected InternalMocker(StaticClassChecker checker, Flags flags) {
+        protected InternalMocker(StaticClassChecker checker, Flags flags, DebugFlags debugFlags) {
             if (checker != null) {
                 mAndroidStaticMocker = new AndroidExtendedMockitoMocker(checker);
                 mAdServicesStaticMocker = new AdServicesExtendedMockitoMocker(checker);
@@ -186,6 +191,8 @@ public abstract class AdServicesMockerLessExtendedMockitoTestCase<M extends Inte
                 mAdServicesStaticMocker = null;
             }
             mAdServicesFlagsMocker = flags != null ? new AdServicesMockitoFlagsMocker(flags) : null;
+            mAdServicesDebugFlagsMocker =
+                    debugFlags != null ? new AdServicesMockitoDebugFlagsMocker(debugFlags) : null;
         }
 
         // AndroidMocker methods
@@ -285,6 +292,12 @@ public abstract class AdServicesMockerLessExtendedMockitoTestCase<M extends Inte
         @Override
         public void mockAllCobaltLoggingFlags(boolean enabled) {
             mAdServicesFlagsMocker.mockAllCobaltLoggingFlags(enabled);
+        }
+
+        // AdServicesDebugFlagsMocker methods
+        @Override
+        public void mockGetConsentManagerDebugMode(boolean value) {
+            mAdServicesDebugFlagsMocker.mockGetConsentManagerDebugMode(value);
         }
 
         // AdServicesStaticMocker methods

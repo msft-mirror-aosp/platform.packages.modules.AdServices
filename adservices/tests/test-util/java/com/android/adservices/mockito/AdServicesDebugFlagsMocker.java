@@ -13,17 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.android.adservices.mockito;
 
 import com.android.adservices.service.DebugFlags;
-import com.android.adservices.service.Flags;
 
-public final class AdServicesMockitoJobMockerTest
-        extends AdServicesJobMockerTestCase<AdServicesMockitoJobMocker> {
+/** Helper interface providing expectations to set the most common AdService debug flags. */
+public interface AdServicesDebugFlagsMocker {
 
-    @Override
-    protected AdServicesMockitoJobMocker getMocker(
-            StaticClassChecker checker, Flags mockFlags, DebugFlags mockDebugFlags) {
-        return new AdServicesMockitoJobMocker(checker);
-    }
+    /** Mocks a call to {@link DebugFlags#getConsentManagerDebugMode()} */
+    void mockGetConsentManagerDebugMode(boolean value);
 }
