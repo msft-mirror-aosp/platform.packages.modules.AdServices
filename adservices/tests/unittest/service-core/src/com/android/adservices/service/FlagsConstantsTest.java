@@ -15,8 +15,11 @@
  */
 package com.android.adservices.service;
 
+import static com.android.adservices.flags.Flags.FLAG_ADSERVICES_ENABLEMENT_CHECK_ENABLED;
 import static com.android.adservices.flags.Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API;
 import static com.android.adservices.flags.Flags.FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED;
+import static com.android.adservices.flags.Flags.FLAG_AD_ID_CACHE_ENABLED;
+import static com.android.adservices.flags.Flags.FLAG_ENABLE_ADSERVICES_API_ENABLED;
 import static com.android.adservices.flags.Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED;
 import static com.android.adservices.flags.Flags.FLAG_FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_ID_ENABLED;
 import static com.android.adservices.flags.Flags.FLAG_FLEDGE_CUSTOM_AUDIENCE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED;
@@ -48,12 +51,29 @@ public final class FlagsConstantsTest extends AdServicesUnitTestCase {
     private static final String ACONFIG_PREFIX = "com.android.adservices.flags.";
 
     private static final String HOW_TO_FIX_IT_MESSAGE =
-            "If this is expected, you might need to change MISSING_FLAGS_ALLOWLIST or"
+            "If this is expected, you might need to change ACONFIG_ONLY_ALLOW_LIST, "
+                    + "MISSING_FLAGS_ALLOWLIST, or"
                     + " NON_CANONICAL_FLAGS (on this file).";
 
     /**
      * List used by {@link #testAllAconfigFlagsAreMapped()}, it contains the name of flags that are
-     * present in the {@code aconfig} file but are missing on {@link FlagsConstants}.
+     * present in the {@code aconfig} file but are not in {@link FlagsConstants} because they are
+     * either SDK Sandbox flags, or launched aconfig flags that have been cleaned up from the java
+     * code.
+     */
+    private static final List<String> ACONFIG_ONLY_ALLOWLIST =
+            List.of(
+                    FLAG_AD_ID_CACHE_ENABLED,
+                    FLAG_ADSERVICES_ENABLEMENT_CHECK_ENABLED,
+                    FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED,
+                    FLAG_ENABLE_ADSERVICES_API_ENABLED,
+                    FLAG_SDKSANDBOX_INVALIDATE_EFFECTIVE_TARGET_SDK_VERSION_CACHE,
+                    FLAG_SDKSANDBOX_DUMP_EFFECTIVE_TARGET_SDK_VERSION);
+
+    /**
+     * List used by {@link #testAllAconfigFlagsAreMapped()}, it contains the name of flags that are
+     * present in the {@code aconfig} file but are missing on {@link FlagsConstants} and need a
+     * justification for not being present there.
      *
      * <p>Add more entries in the bottom, either explaining the reason or using a TODO(b/BUG) that
      * will add the missing {@link com.android.adservices.service.PhFlags} / {@link
@@ -61,11 +81,6 @@ public final class FlagsConstantsTest extends AdServicesUnitTestCase {
      */
     private static final List<String> MISSING_FLAGS_ALLOWLIST =
             List.of(
-                    // FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED guards APIs that are overloaded
-                    // to take android.adservices.common.OutcomeReceiver (instead of
-                    // android.os.OutcomeReceiver) and hence don't need to be checked at runtime.
-                    FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED,
-
                     // TODO(b/347764094): Remove from this allowlist after implementing feature and
                     //  adding matching DeviceConfig flag
                     FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API,
@@ -155,7 +170,8 @@ public final class FlagsConstantsTest extends AdServicesUnitTestCase {
             String expectedDeviceConfigFlag = getExpectedDeviceConfigFlag(aconfigFlag);
             String serviceConstant = reverseServiceFlags.get(expectedDeviceConfigFlag);
             if (serviceConstant == null) {
-                if (MISSING_FLAGS_ALLOWLIST.contains(aconfigFlag)) {
+                if (ACONFIG_ONLY_ALLOWLIST.contains(aconfigFlag)
+                        || MISSING_FLAGS_ALLOWLIST.contains(aconfigFlag)) {
                     Log.i(
                             mTag,
                             "Missing mapping for allowlisted flag ("
