@@ -51,29 +51,8 @@ public abstract class AdServicesJobServiceTestCase
         return new Mocker(rule, mockFlags);
     }
 
-    // TODO(b/314969513, 354932043): consider inlining and/or renaming helpers below after all
-    // classes are refactored.
-    /**
-     * Convenience method to call {@link
-     * AdServicesJobMocker#mockJobSchedulingLogger(AdServicesJobServiceFactory)} using {@link
-     * #mocker}
-     */
-    protected final JobSchedulingLogger mockJobSchedulingLogger(
-            AdServicesJobServiceFactory factory) {
-        return mocker.mockJobSchedulingLogger(factory);
-    }
-
     // TODO(b/314969513): inline methods below once all classes are refactored (and use a common
     // mMockFlags instance)
-
-    /**
-     * Convenience helper to call {@link
-     * AdServicesJobMocker#mockGetAdServicesJobServiceLogger(AdServicesJobServiceLogger)} using
-     * {@code mocker}.
-     */
-    protected final void mockGetAdServicesJobServiceLogger(AdServicesJobServiceLogger logger) {
-        mocker.mockGetAdServicesJobServiceLogger(logger);
-    }
 
     /**
      * Convenience helper to call {@link
