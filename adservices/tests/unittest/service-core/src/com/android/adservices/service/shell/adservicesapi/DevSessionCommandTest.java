@@ -29,15 +29,14 @@ import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_DEV
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.adservices.service.devapi.DevSessionRefresher;
+import com.android.adservices.service.devapi.DevSessionSetter;
 import com.android.adservices.service.shell.ShellCommandTestCase;
 
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.concurrent.Future;
 
 public final class DevSessionCommandTest extends ShellCommandTestCase<DevSessionCommand> {
 
@@ -183,14 +182,14 @@ public final class DevSessionCommandTest extends ShellCommandTestCase<DevSession
         assertThat(mFakeDevSessionRefresher.mDevModeState).isEqualTo(false);
     }
 
-    private static class FakeDevSessionRefresher implements DevSessionRefresher {
+    private static class FakeDevSessionRefresher implements DevSessionSetter {
 
         Boolean mDevModeState = null;
         boolean mReturnValue = true;
         int mNumCalls = 0;
 
         @Override
-        public Future<Boolean> reset(boolean setDevSessionEnabled) {
+        public ListenableFuture<Boolean> set(boolean setDevSessionEnabled) {
             if (mDevModeState != null && setDevSessionEnabled) {
                 throw new IllegalStateException(ERROR_ALREADY_IN_DEV_MODE);
             }

@@ -38,17 +38,6 @@ public abstract class AdServicesJobTestCase
         return new Mocker(rule, mockFlags);
     }
 
-    // TODO(b/314969513): consider inlining after all classes are refactored
-    /**
-     * Convenience method to call {@link
-     * AdServicesJobMocker#mockJobSchedulingLogger(AdServicesJobServiceFactory)} using {@link
-     * #mocker}
-     */
-    protected final JobSchedulingLogger mockJobSchedulingLogger(
-            AdServicesJobServiceFactory factory) {
-        return mocker.mockJobSchedulingLogger(factory);
-    }
-
     public static final class Mocker
             extends AdServicesMockerLessExtendedMockitoTestCase.InternalMocker
             implements AdServicesJobMocker {
