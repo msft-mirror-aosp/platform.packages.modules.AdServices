@@ -84,7 +84,6 @@ import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.download.MddJob;
-import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -167,7 +166,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     @Mock private MeasurementImpl mMockMeasurementImpl;
     @Mock private Throttler mMockThrottler;
     @Mock private DevContextFilter mDevContextFilter;
-    @Mock private DebugFlags mMockDebugFlags;
 
     private MeasurementServiceImpl mMeasurementServiceImpl;
     private Map<Integer, Boolean> mKillSwitchSnapshot;
