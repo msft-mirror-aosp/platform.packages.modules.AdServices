@@ -1442,8 +1442,6 @@ public final class FlagsConstants {
     public static final String KEY_IS_U18_SUPERVISED_ACCOUNT_ENABLED =
             "is_u18_supervised_account_enabled";
 
-    public static final String KEY_AD_ID_CACHE_ENABLED = "ad_id_cache_enabled";
-
     public static final String KEY_AD_ID_FETCHER_TIMEOUT_MS = "ad_id_fetcher_timeout_ms";
 
     // NOTE: retired (it's on by default) - constant is here to keep track (for example, if we move
@@ -1456,11 +1454,6 @@ public final class FlagsConstants {
 
     public static final String KEY_ENABLE_ADEXT_DATA_SERVICE_DEBUG_PROXY =
             "enable_adext_data_service_debug_proxy";
-
-    public static final String KEY_ENABLE_ADSERVICES_API_ENABLED = "enable_adservices_api_enabled";
-
-    public static final String KEY_ADSERVICES_ENABLEMENT_CHECK_ENABLED =
-            "adservices_enablement_check_enabled";
 
     public static final String KEY_BACKGROUND_JOB_SAMPLING_LOGGING_RATE =
             "key_background_job_sampling_logging_rate";
