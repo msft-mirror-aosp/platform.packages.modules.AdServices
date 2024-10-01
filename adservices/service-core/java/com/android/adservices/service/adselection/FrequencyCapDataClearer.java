@@ -14,20 +14,14 @@
  * limitations under the License.
  */
 
-package android.adservices.test.scenario.adservices.iapc;
+package com.android.adservices.service.adselection;
 
-import android.platform.test.scenario.annotation.Scenario;
-
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
-
-import org.junit.Test;
-
-/** The test class to measure the start-up latency for Ad ID API. */
-@Scenario
-@RequiresSdkLevelAtLeastS(reason = "AdServices is only available on S+.")
-public class GetAdIdApiCall extends GetAdIdApiCallBase {
-    @Test
-    public void testGetAdId() throws Exception {
-        measureGetAdIdCall();
-    }
+/** Clears frequency cap data */
+public interface FrequencyCapDataClearer {
+    /**
+     * Clear frequency cap data.
+     *
+     * @return The number of events that was cleared.
+     */
+    Integer clear();
 }

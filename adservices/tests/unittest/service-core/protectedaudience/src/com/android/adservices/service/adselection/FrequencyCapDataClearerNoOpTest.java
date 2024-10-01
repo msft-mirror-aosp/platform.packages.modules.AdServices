@@ -14,20 +14,29 @@
  * limitations under the License.
  */
 
-package android.adservices.test.scenario.adservices.iapc;
+package com.android.adservices.service.adselection;
 
-import android.platform.test.scenario.annotation.Scenario;
+import static com.google.common.truth.Truth.assertThat;
 
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
-
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.MockitoAnnotations;
 
-/** The test class to measure the start-up latency for Ad ID API. */
-@Scenario
-@RequiresSdkLevelAtLeastS(reason = "AdServices is only available on S+.")
-public class GetAdIdApiCall extends GetAdIdApiCallBase {
+public class FrequencyCapDataClearerNoOpTest {
+
+    private FrequencyCapDataClearerNoOp mFrequencyCapDataClearerNoOp;
+
+    @Before
+    public void setUp() {
+        MockitoAnnotations.initMocks(this);
+        mFrequencyCapDataClearerNoOp = new FrequencyCapDataClearerNoOp();
+    }
+
     @Test
-    public void testGetAdId() throws Exception {
-        measureGetAdIdCall();
+    public void testClear() {
+        Integer result = mFrequencyCapDataClearerNoOp.clear();
+
+        // Check that no events were deleted.
+        assertThat(result).isEqualTo(0);
     }
 }

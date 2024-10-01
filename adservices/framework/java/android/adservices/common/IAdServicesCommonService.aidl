@@ -26,8 +26,8 @@ import android.adservices.common.GetAdServicesCommonStatesParams;
 import android.adservices.common.IAdServicesCommonCallback;
 import android.adservices.common.IAdServicesCommonStatesCallback;
 import android.adservices.common.IEnableAdServicesCallback;
-import android.adservices.common.ISetAdServicesModuleOverridesCallback;
-import android.adservices.common.ISetAdServicesModuleUserChoicesCallback;
+import android.adservices.common.IRequestAdServicesModuleOverridesCallback;
+import android.adservices.common.IRequestAdServicesModuleUserChoicesCallback;
 
 import android.adservices.common.IUpdateAdIdCallback;
 import android.adservices.common.NotificationTypeParams;
@@ -57,13 +57,13 @@ interface IAdServicesCommonService {
         in CallerMetadata callerMetadata,
         in IAdServicesCommonStatesCallback callback);
 
-    void setAdServicesModuleOverrides(
+    void requestAdServicesModuleOverrides(
         in List<AdServicesModuleState> adServicesModuleStateList,
         in NotificationTypeParams notificationType,
-        in ISetAdServicesModuleOverridesCallback callback);
+        in IRequestAdServicesModuleOverridesCallback callback);
 
-    void setAdServicesModuleUserChoices(
+    void requestAdServicesModuleUserChoices(
         in List<AdServicesModuleUserChoice> adServicesModuleUserChoiceList,
-        in ISetAdServicesModuleUserChoicesCallback callback);
+        in IRequestAdServicesModuleUserChoicesCallback callback);
 
 }

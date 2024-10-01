@@ -1,3 +1,4 @@
+
 /*
  * Copyright (C) 2024 The Android Open Source Project
  *
@@ -14,20 +15,15 @@
  * limitations under the License.
  */
 
-package android.adservices.test.scenario.adservices.iapc;
+package android.adservices.common;
 
-import android.platform.test.scenario.annotation.Scenario;
+import android.adservices.common.AdServicesCommonResponse;
 
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
-
-import org.junit.Test;
-
-/** The test class to measure the start-up latency for Ad ID API. */
-@Scenario
-@RequiresSdkLevelAtLeastS(reason = "AdServices is only available on S+.")
-public class GetAdIdApiCall extends GetAdIdApiCallBase {
-    @Test
-    public void testGetAdId() throws Exception {
-        measureGetAdIdCall();
-    }
+/**
+ * Callback used by the RequestAdServicesModuleOverrides API.
+ * {@hide}
+ */
+oneway interface IRequestAdServicesModuleOverridesCallback {
+    void onResult(in AdServicesCommonResponse response);
+    void onFailure(int statusCode);
 }
