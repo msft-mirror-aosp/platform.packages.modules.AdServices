@@ -73,7 +73,7 @@ public final class AdServicesEnrollmentTest extends AdServicesCtsTestCase
         ListenableFuture<Integer> responseFuture =
                 CallbackToFutureAdapter.getFuture(
                         completer -> {
-                            commonManager.setAdServicesModuleOverrides(
+                            commonManager.requestAdServicesModuleOverrides(
                                     adServicesModuleStateList,
                                     notificationTypeParams,
                                     AdServicesExecutors.getLightWeightExecutor(),

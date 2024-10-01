@@ -466,7 +466,7 @@ public final class AggregateFallbackReportingJobServiceTest
                 .when(DatastoreManagerFactory::getDatastoreManager);
         ExtendedMockito.doNothing()
                 .when(() -> AggregateFallbackReportingJobService.schedule(any(), any()));
-        mockGetAdServicesJobServiceLogger(mSpyLogger);
+        mocker.mockGetAdServicesJobServiceLogger(mSpyLogger);
 
         // Execute
         execute.run();

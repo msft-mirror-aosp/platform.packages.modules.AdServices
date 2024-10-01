@@ -19,7 +19,7 @@ package com.android.adservices.service.shell.adservicesapi;
 import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_DEV_SESSION;
 import static com.android.adservices.service.stats.ShellCommandStats.RESULT_SUCCESS;
 
-import com.android.adservices.service.devapi.DevSessionRefresher;
+import com.android.adservices.service.devapi.DevSessionSetter;
 import com.android.adservices.service.shell.AbstractShellCommand;
 import com.android.adservices.service.shell.ShellCommandResult;
 import com.android.adservices.service.stats.ShellCommandStats;
@@ -79,9 +79,9 @@ public final class DevSessionCommand extends AbstractShellCommand {
     public static final String OUTPUT_SUCCESS_FORMAT = "Successfully changed developer mode to: %s";
 
     static final int TIMEOUT_SEC = 5;
-    private final DevSessionRefresher mDevSessionRefresher;
+    private final DevSessionSetter mDevSessionRefresher;
 
-    public DevSessionCommand(DevSessionRefresher devSessionRefresher) {
+    public DevSessionCommand(DevSessionSetter devSessionRefresher) {
         mDevSessionRefresher = devSessionRefresher;
     }
 
@@ -107,7 +107,7 @@ public final class DevSessionCommand extends AbstractShellCommand {
         try {
             success =
                     mDevSessionRefresher
-                            .reset(shouldSetDevSessionEnabled)
+                            .set(shouldSetDevSessionEnabled)
                             .get(TIMEOUT_SEC, TimeUnit.SECONDS);
         } catch (IllegalStateException e) {
             err.write(ERROR_ALREADY_IN_DEV_MODE);
