@@ -85,6 +85,7 @@ public abstract class AdServicesMockerLessExtendedMockitoTestCase<M extends Inte
     @Mock protected Context mMockContext;
 
     protected final Flags mMockFlags = mock(Flags.class);
+    protected final DebugFlags mMockDebugFlags = mock(DebugFlags.class);
 
     /** Spy the {@link AdServicesUnitTestCase#mContext} */
     @Spy protected final Context mSpyContext = mContext;

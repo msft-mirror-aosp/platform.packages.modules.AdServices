@@ -33,7 +33,6 @@ import com.google.protobuf.ExtensionRegistryLite;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Future;
 
 /** DataStore for {@link DevSession} state. */
 public final class DevSessionDataStore {
@@ -82,7 +81,7 @@ public final class DevSessionDataStore {
     /**
      * @return {@code true} if dev session is active.
      */
-    public Future<Boolean> isDevSessionActive() {
+    public ListenableFuture<Boolean> isDevSessionActive() {
         ListenableFuture<DevSession> devSessionFuture = mDevSessionDataStore.getDataAsync();
         return Futures.transform(
                 devSessionFuture,
@@ -95,7 +94,7 @@ public final class DevSessionDataStore {
      *
      * @return Future for completion.
      */
-    public Future<Void> startDevSession(Instant expiry) {
+    public ListenableFuture<Void> startDevSession(Instant expiry) {
         return setDevSessionExpiry(expiry);
     }
 
@@ -104,11 +103,11 @@ public final class DevSessionDataStore {
      *
      * @return Future for completion.
      */
-    public Future<Void> endDevSession() {
+    public ListenableFuture<Void> endDevSession() {
         return setDevSessionExpiry(Instant.EPOCH);
     }
 
-    private Future<Void> setDevSessionExpiry(Instant expires) {
+    private ListenableFuture<Void> setDevSessionExpiry(Instant expires) {
         ListenableFuture<DevSession> updateFuture =
                 mDevSessionDataStore.updateDataAsync(
                         data ->

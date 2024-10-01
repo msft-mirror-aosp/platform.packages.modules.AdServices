@@ -50,6 +50,12 @@ public final class AdServicesExtendedMockitoTestCaseTest extends AdServicesExten
     }
 
     @Test
+    public void testMockFlags() {
+        expect.withMessage("mMockFlags").that(mMockFlags).isNotNull();
+        expect.withMessage("mMockDebugFlags").that(mMockDebugFlags).isNotNull();
+    }
+
+    @Test
     public void testMocker() {
         assertWithMessage("mocker").that(mocker).isNotNull();
         expect.withMessage("mocker").that(mocker).isInstanceOf(SharedMocker.class);

@@ -1,4 +1,3 @@
-
 /*
  * Copyright (C) 2024 The Android Open Source Project
  *
@@ -15,15 +14,17 @@
  * limitations under the License.
  */
 
-package android.adservices.common;
+package com.android.adservices.service.adselection;
 
-import android.adservices.common.AdServicesCommonResponse;
+import com.android.adservices.LoggerFactory;
 
-/**
- * Callback used by the SetAdServicesModuleUserChoices API.
- * {@hide}
- */
-oneway interface ISetAdServicesModuleUserChoicesCallback {
-    void onResult(in AdServicesCommonResponse response);
-    void onFailure(int statusCode);
+final class FrequencyCapDataClearerNoOp implements FrequencyCapDataClearer {
+
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
+
+    @Override
+    public Integer clear() {
+        sLogger.v("NoOpFrequencyCapDataClearer.clear()");
+        return 0; // No events were cleared.
+    }
 }
