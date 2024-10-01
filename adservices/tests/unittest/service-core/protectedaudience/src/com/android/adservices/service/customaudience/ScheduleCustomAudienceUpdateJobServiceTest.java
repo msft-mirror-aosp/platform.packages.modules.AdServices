@@ -137,7 +137,8 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
                 };
         mocker.mockGetFlags(flagsWithScheduleUpdateDisabled);
         AdServicesJobServiceLogger logger =
-                mockAdServicesJobServiceLogger(mContext, flagsWithScheduleUpdateDisabled);
+                mocker.mockNoOpAdServicesJobServiceLogger(
+                        mContext, flagsWithScheduleUpdateDisabled);
         JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
         testOnStartJobFlagDisabled();
@@ -204,7 +205,7 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
                 };
         mocker.mockGetFlags(flagsWithGaUxEnabled);
         AdServicesJobServiceLogger logger =
-                mockAdServicesJobServiceLogger(mContext, flagsWithGaUxEnabled);
+                mocker.mockNoOpAdServicesJobServiceLogger(mContext, flagsWithGaUxEnabled);
         JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
         testOnStartJobConsentRevokedGaUxEnabled();
@@ -319,7 +320,8 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
                     }
                 };
         mocker.mockGetFlags(flags);
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(mContext, flags);
+        AdServicesJobServiceLogger logger =
+                mocker.mockNoOpAdServicesJobServiceLogger(mContext, flags);
         JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);
         JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
@@ -348,7 +350,8 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
                     }
                 };
         mocker.mockGetFlags(flags);
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(mContext, flags);
+        AdServicesJobServiceLogger logger =
+                mocker.mockNoOpAdServicesJobServiceLogger(mContext, flags);
         JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);
         JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
@@ -456,7 +459,8 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
 
     @Test
     public void testOnStopJob() throws InterruptedException {
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(mContext);
+        AdServicesJobServiceLogger logger =
+                mocker.mockNoOpAdServicesJobServiceLogger(mContext, mMockFlags);
         JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
         doReturn(mUpdateWorker).when(ScheduleCustomAudienceUpdateWorker::getInstance);
@@ -609,7 +613,8 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
 
     @Test
     public void testOnStartJobShouldDisableJobTrue() {
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(mContext);
+        AdServicesJobServiceLogger logger =
+                mocker.mockNoOpAdServicesJobServiceLogger(mContext, mMockFlags);
 
         doReturn(true)
                 .when(

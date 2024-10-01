@@ -116,7 +116,7 @@ public class EpochJobServiceTest extends AdServicesJobServiceTestCase {
 
         doReturn(mJobScheduler).when(mSpyEpochJobService).getSystemService(JobScheduler.class);
 
-        mSpyLogger = mockAdServicesJobServiceLogger(mContext, mMockFlags);
+        mSpyLogger = mocker.mockNoOpAdServicesJobServiceLogger(mContext, mMockFlags);
 
         // By default, do not use SPE.
         when(mMockFlags.getSpeOnEpochJobEnabled()).thenReturn(false);

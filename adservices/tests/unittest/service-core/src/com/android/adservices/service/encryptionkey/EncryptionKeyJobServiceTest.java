@@ -81,7 +81,7 @@ public final class EncryptionKeyJobServiceTest extends AdServicesJobServiceTestC
         mocker.mockGetFlags(mMockFlags);
         mSpyService = spy(new EncryptionKeyJobService());
 
-        mSpyLogger = getSpiedAdServicesJobServiceLogger(mContext, mMockFlags);
+        mSpyLogger = mocker.getSpiedAdServicesJobServiceLogger(mContext, mMockFlags);
 
         setDefaultExpectations();
     }
