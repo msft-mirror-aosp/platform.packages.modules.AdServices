@@ -300,6 +300,11 @@ public abstract class AdServicesMockerLessExtendedMockitoTestCase<M extends Inte
             mAdServicesDebugFlagsMocker.mockGetConsentManagerDebugMode(value);
         }
 
+        @Override
+        public void mockGetConsentNotificationDebugMode(boolean value) {
+            mAdServicesDebugFlagsMocker.mockGetConsentNotificationDebugMode(value);
+        }
+
         // AdServicesStaticMocker methods
 
         @Override
