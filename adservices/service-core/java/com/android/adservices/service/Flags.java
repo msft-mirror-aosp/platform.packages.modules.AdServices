@@ -4910,6 +4910,13 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_ENABLE_MIN_REPORT_LIFESPAN_FOR_UNINSTALL;
     }
 
+    @FeatureFlag boolean MEASUREMENT_ENABLE_INSTALL_ATTRIBUTION_ON_S = false;
+
+    /** Returns whether to enable install attribution on S feature. */
+    default boolean getMeasurementEnableInstallAttributionOnS() {
+        return MEASUREMENT_ENABLE_INSTALL_ATTRIBUTION_ON_S;
+    }
+
     /** Flag to enable context id for triggers */
     boolean MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID = false;
 

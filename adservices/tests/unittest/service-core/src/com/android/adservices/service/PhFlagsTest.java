@@ -386,6 +386,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_FAKE_REPOR
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT;
+import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_INSTALL_ATTRIBUTION_ON_S;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_LOOKBACK_WINDOW_FILTER;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_MIN_REPORT_LIFESPAN_FOR_UNINSTALL;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK;
@@ -887,6 +888,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENAB
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_INSTALL_ATTRIBUTION_ON_S;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_LOOKBACK_WINDOW_FILTER;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_MIN_REPORT_LIFESPAN_FOR_UNINSTALL;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK;
@@ -5298,6 +5300,14 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_MEASUREMENT_MIN_REPORT_LIFESPAN_FOR_UNINSTALL_SECONDS,
                 MEASUREMENT_MIN_REPORT_LIFESPAN_FOR_UNINSTALL_SECONDS,
                 Flags::getMeasurementMinReportLifespanForUninstallSeconds);
+    }
+
+    @Test
+    public void testGetMeasurementEnableInstallAttributionOnS() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_MEASUREMENT_ENABLE_INSTALL_ATTRIBUTION_ON_S,
+                MEASUREMENT_ENABLE_INSTALL_ATTRIBUTION_ON_S,
+                Flags::getMeasurementEnableInstallAttributionOnS);
     }
 
     @Test

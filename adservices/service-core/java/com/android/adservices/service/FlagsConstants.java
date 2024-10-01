@@ -1371,6 +1371,9 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_MIN_REPORT_LIFESPAN_FOR_UNINSTALL_SECONDS =
             "Measurement__min_report_lifespan_for_uninstall_seconds";
 
+    public static final String KEY_MEASUREMENT_ENABLE_INSTALL_ATTRIBUTION_ON_S =
+            "Measurement__enable_install_attribution_on_s";
+
     public static final String KEY_MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK =
             "measurement_enable_navigation_reporting_origin_check";
 
