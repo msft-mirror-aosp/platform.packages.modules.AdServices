@@ -158,7 +158,7 @@ public final class BackgroundFetchJobTest extends AdServicesJobTestCase {
         int resultCode = SCHEDULING_RESULT_CODE_SUCCESSFUL;
         when(mMockFlags.getSpeOnBackgroundFetchJobEnabled()).thenReturn(false);
         JobSchedulingLogger mockedLogger =
-                mockJobSchedulingLogger(mMockAdServicesJobServiceFactory);
+                mocker.mockJobSchedulingLogger(mMockAdServicesJobServiceFactory);
         doReturn(resultCode)
                 .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), anyBoolean()));
 

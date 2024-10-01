@@ -57,7 +57,7 @@ public final class AdServicesEnrollmentCtsRootTest extends AdServicesCtsTestCase
     }
 
     @Test
-    public void testSetAdServicesModuleOverrides() throws Exception {
+    public void testRequestAdServicesModuleOverrides() throws Exception {
 
         List<AdServicesModuleState> adServicesModuleStateList = new ArrayList<>();
         adServicesModuleStateList.add(
@@ -72,7 +72,7 @@ public final class AdServicesEnrollmentCtsRootTest extends AdServicesCtsTestCase
         ListenableFuture<Integer> responseFuture =
                 CallbackToFutureAdapter.getFuture(
                         completer -> {
-                            mCommonManager.setAdServicesModuleOverrides(
+                            mCommonManager.requestAdServicesModuleOverrides(
                                     adServicesModuleStateList,
                                     notificationTypeParams,
                                     Executors.newCachedThreadPool(),
@@ -87,14 +87,14 @@ public final class AdServicesEnrollmentCtsRootTest extends AdServicesCtsTestCase
                                             completer.set(AdServicesStatusUtils.STATUS_IO_ERROR);
                                         }
                                     });
-                            return "setAdServicesModuleOverrides";
+                            return "requestAdServicesModuleOverrides";
                         });
         int response = responseFuture.get();
         expect.that(response).isEqualTo(AdServicesStatusUtils.STATUS_SUCCESS);
     }
 
     @Test
-    public void testSetAdServicesModuleUserChoices() throws Exception {
+    public void testRequestAdServicesModuleUserChoices() throws Exception {
 
         List<AdServicesModuleUserChoice> adServicesModuleUserChoices =
                 List.of(
@@ -106,7 +106,7 @@ public final class AdServicesEnrollmentCtsRootTest extends AdServicesCtsTestCase
         ListenableFuture<Integer> responseFuture =
                 CallbackToFutureAdapter.getFuture(
                         completer -> {
-                            mCommonManager.setAdServicesModuleUserChoices(
+                            mCommonManager.requestAdServicesModuleUserChoices(
                                     adServicesModuleUserChoices,
                                     Executors.newCachedThreadPool(),
                                     new AdServicesOutcomeReceiver<>() {
@@ -120,7 +120,7 @@ public final class AdServicesEnrollmentCtsRootTest extends AdServicesCtsTestCase
                                             completer.set(AdServicesStatusUtils.STATUS_IO_ERROR);
                                         }
                                     });
-                            return "setAdServicesModuleUserChoices";
+                            return "requestAdServicesModuleUserChoices";
                         });
         int response = responseFuture.get();
         expect.that(response).isEqualTo(AdServicesStatusUtils.STATUS_SUCCESS);

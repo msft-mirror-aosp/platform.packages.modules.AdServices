@@ -91,7 +91,7 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
                         .setNotificationType(NotificationTypeParams.NOTIFICATION_ONGOING)
                         .build();
 
-        mCommonManager.setAdServicesModuleOverrides(
+        mCommonManager.requestAdServicesModuleOverrides(
                 adServicesModuleStateList, params, CALLBACK_EXECUTOR, receiver);
 
         receiver.assertFailure(AdServicesException.class);
@@ -110,7 +110,7 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
         List<AdServicesModuleUserChoice> adServicesModuleUserChoiceList =
                 Arrays.asList(adServicesModuleUserChoice);
 
-        mCommonManager.setAdServicesModuleUserChoices(
+        mCommonManager.requestAdServicesModuleUserChoices(
                 adServicesModuleUserChoiceList, CALLBACK_EXECUTOR, receiver);
 
         receiver.assertFailure(AdServicesException.class);
@@ -253,7 +253,7 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
 
     @Test
     @RequiresSdkLevelAtLeastS
-    public void testSetAdServicesModuleOverrides() {
+    public void testRequestAdServicesModuleOverrides() {
         AdServicesOutcomeReceiverForTests<AdServicesCommonResponse> receiver =
                 new AdServicesOutcomeReceiverForTests<>();
 
@@ -273,7 +273,7 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
         expect.that(params.getNotificationType())
                 .isEqualTo(NotificationTypeParams.NOTIFICATION_ONGOING);
 
-        mCommonManager.setAdServicesModuleOverrides(
+        mCommonManager.requestAdServicesModuleOverrides(
                 adServicesModuleStateList, params, CALLBACK_EXECUTOR, receiver);
         String errorMsg = "error msg";
         AdServicesCommonResponse response =
@@ -288,7 +288,7 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
 
     @Test
     @RequiresSdkLevelAtLeastS
-    public void testSetAdServicesModuleUserChoiceOverrides() {
+    public void testRequestAdServicesModuleUserChoiceOverrides() {
         AdServicesOutcomeReceiverForTests<AdServicesCommonResponse> receiver =
                 new AdServicesOutcomeReceiverForTests<>();
 
@@ -303,7 +303,7 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
         expect.that(adServicesModuleUserChoice.getModule()).isEqualTo(TOPICS);
         expect.that(adServicesModuleUserChoice.getUserChoice()).isEqualTo(USER_CHOICE_OPTED_OUT);
 
-        mCommonManager.setAdServicesModuleUserChoices(
+        mCommonManager.requestAdServicesModuleUserChoices(
                 adServicesModuleUserChoiceList, CALLBACK_EXECUTOR, receiver);
     }
 }

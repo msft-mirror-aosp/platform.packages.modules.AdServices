@@ -1075,13 +1075,19 @@ public abstract class E2EAbstractTest extends AdServicesUnitTestCase {
         SQLiteDatabase db = DbTestUtil.getMeasurementDbHelperForTest().getWritableDatabase();
         List<String> tableNames =
                 ImmutableList.of(
+                        "msmt_async_registration_contract",
                         "msmt_source",
                         "msmt_source_destination",
+                        "msmt_source_attribution_scope",
                         "msmt_trigger",
-                        "msmt_attribution",
                         "msmt_event_report",
+                        "msmt_attribution",
                         "msmt_aggregate_report",
-                        "msmt_async_registration_contract",
+                        "msmt_aggregate_encryption_key",
+                        "msmt_debug_report",
+                        "msmt_aggregatable_debug_report_budget_tracker",
+                        "msmt_xna_ignored_sources",
+                        "msmt_key_value_data",
                         "msmt_app_report_history");
         for (String tableName : tableNames) {
             result.append("\n" + tableName + ":\n");
