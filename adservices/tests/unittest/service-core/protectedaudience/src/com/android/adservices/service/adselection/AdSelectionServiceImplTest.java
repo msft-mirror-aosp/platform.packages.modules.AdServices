@@ -11014,8 +11014,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                 mAdServicesLoggerMock, never(), apiName, appPackageName, resultCode);
     }
 
-    // TODO(b/314969513): move mockCreateDevContext() methods below to AdServicesMocker
-
     private void mockCreateDevContext(DevContextFilter mockFilter, String callingAppPackageName) {
         mockCreateDevContext(
                 mockFilter,
@@ -11026,7 +11024,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
         when(mockFilter.createDevContext()).thenReturn(devContext);
     }
 
-    // TODO(b/314969513, 323000746): move verifyLogFledgeApiCallStatsAnyLatency() methods below to
+    // TODO(b/370117835, 323000746): move verifyLogFledgeApiCallStatsAnyLatency() methods below to
     // AdServicesMocker or new logging rule / infra
 
     private void verifyLogFledgeApiCallStatsAnyLatency(

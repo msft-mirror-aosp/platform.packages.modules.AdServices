@@ -13,17 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.mockito;
 
-import com.android.adservices.service.DebugFlags;
-import com.android.adservices.service.Flags;
+package com.android.adservices.service.adselection;
 
-public final class AdServicesMockitoJobMockerTest
-        extends AdServicesJobMockerTestCase<AdServicesMockitoJobMocker> {
-
-    @Override
-    protected AdServicesMockitoJobMocker getMocker(
-            StaticClassChecker checker, Flags mockFlags, DebugFlags mockDebugFlags) {
-        return new AdServicesMockitoJobMocker(checker);
-    }
+/** Clears frequency cap data */
+public interface FrequencyCapDataClearer {
+    /**
+     * Clear frequency cap data.
+     *
+     * @return The number of events that was cleared.
+     */
+    Integer clear();
 }

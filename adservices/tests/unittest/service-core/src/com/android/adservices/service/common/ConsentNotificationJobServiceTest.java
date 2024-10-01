@@ -104,7 +104,7 @@ public final class ConsentNotificationJobServiceTest extends AdServicesJobServic
         when(mMockFlags.getConsentNotificationIntervalBeginMs()).thenReturn(mIntervalBeginMs);
         when(mMockFlags.getConsentNotificationMinimalDelayBeforeIntervalEnds())
                 .thenReturn(mMinimalDelayBeforeIntervalEnds);
-        mSpyLogger = mockAdServicesJobServiceLogger(mContext, mMockFlags);
+        mSpyLogger = mocker.mockNoOpAdServicesJobServiceLogger(mContext, mMockFlags);
         ExtendedMockito.doReturn(mUxStatesManager).when(UxStatesManager::getInstance);
         ExtendedMockito.doReturn(mConsentManager).when(ConsentManager::getInstance);
 

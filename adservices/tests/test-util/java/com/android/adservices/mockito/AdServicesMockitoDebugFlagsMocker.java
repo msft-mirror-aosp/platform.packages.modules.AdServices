@@ -15,15 +15,25 @@
  */
 package com.android.adservices.mockito;
 
-import com.android.adservices.service.DebugFlags;
-import com.android.adservices.service.Flags;
+import static org.mockito.Mockito.when;
 
-public final class AdServicesMockitoJobMockerTest
-        extends AdServicesJobMockerTestCase<AdServicesMockitoJobMocker> {
+import com.android.adservices.service.DebugFlags;
+
+import java.util.Objects;
+
+/** {@link AdServicesDebugFlagsMocker} implementation that uses {@code Mockito}. */
+public final class AdServicesMockitoDebugFlagsMocker extends AbstractMocker
+        implements AdServicesDebugFlagsMocker {
+
+    private final DebugFlags mDebugFlags;
+
+    public AdServicesMockitoDebugFlagsMocker(DebugFlags debugFlags) {
+        this.mDebugFlags = Objects.requireNonNull(debugFlags, "DebugFlags cannot be null");
+    }
 
     @Override
-    protected AdServicesMockitoJobMocker getMocker(
-            StaticClassChecker checker, Flags mockFlags, DebugFlags mockDebugFlags) {
-        return new AdServicesMockitoJobMocker(checker);
+    public void mockGetConsentManagerDebugMode(boolean value) {
+        logV("mockGetConsentManagerDebugMode(%b)", value);
+        when(mDebugFlags.getConsentManagerDebugMode()).thenReturn(value);
     }
 }
