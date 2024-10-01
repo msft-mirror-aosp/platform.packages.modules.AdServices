@@ -57,8 +57,8 @@ import android.adservices.common.GetAdServicesCommonStatesParams;
 import android.adservices.common.IAdServicesCommonCallback;
 import android.adservices.common.IAdServicesCommonStatesCallback;
 import android.adservices.common.IEnableAdServicesCallback;
-import android.adservices.common.ISetAdServicesModuleOverridesCallback;
-import android.adservices.common.ISetAdServicesModuleUserChoicesCallback;
+import android.adservices.common.IRequestAdServicesModuleOverridesCallback;
+import android.adservices.common.IRequestAdServicesModuleUserChoicesCallback;
 import android.adservices.common.IUpdateAdIdCallback;
 import android.adservices.common.IsAdServicesEnabledResult;
 import android.adservices.common.NotificationTypeParams;
@@ -974,7 +974,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
     }
 
     @Test
-    public void testSetAdServicesModuleOverrides() throws Exception {
+    public void testRequestAdServicesModuleOverrides() throws Exception {
         ExtendedMockito.doReturn(true)
                 .when(
                         () ->
@@ -983,13 +983,13 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
 
         ExtendedMockito.doReturn(mConsentManager).when(ConsentManager::getInstance);
 
-        SetAdServicesModuleOverridesCallback callback =
-                new SetAdServicesModuleOverridesCallback(BINDER_CONNECTION_TIMEOUT_MS);
+        RequestAdServicesModuleOverridesCallback callback =
+                new RequestAdServicesModuleOverridesCallback(BINDER_CONNECTION_TIMEOUT_MS);
         List<AdServicesModuleState> adServicesModuleStates =
                 List.of(
                         new AdServicesModuleState.Builder().setModule(1).setModuleState(2).build(),
                         new AdServicesModuleState.Builder().setModule(2).setModuleState(3).build());
-        mCommonService.setAdServicesModuleOverrides(
+        mCommonService.requestAdServicesModuleOverrides(
                 adServicesModuleStates,
                 new NotificationTypeParams.Builder()
                         .setNotificationType(NotificationTypeParams.NOTIFICATION_ONGOING)
@@ -1010,8 +1010,8 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
                                         any(), any()));
         ExtendedMockito.doReturn(mConsentManager).when(ConsentManager::getInstance);
 
-        SetAdServicesModuleUserChoicesCallback callback =
-                new SetAdServicesModuleUserChoicesCallback(BINDER_CONNECTION_TIMEOUT_MS);
+        RequestAdServicesModuleUserChoicesCallback callback =
+                new RequestAdServicesModuleUserChoicesCallback(BINDER_CONNECTION_TIMEOUT_MS);
         List<AdServicesModuleUserChoice> adServicesModuleUserChoices =
                 List.of(
                         new AdServicesModuleUserChoice.Builder()
@@ -1022,7 +1022,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
                                 .setModule(2)
                                 .setUserChoice(3)
                                 .build());
-        mCommonService.setAdServicesModuleUserChoices(adServicesModuleUserChoices, callback);
+        mCommonService.requestAdServicesModuleUserChoices(adServicesModuleUserChoices, callback);
         AdServicesCommonResponse response = callback.assertSuccess();
         assertThat(response.getStatusCode()).isEqualTo(STATUS_SUCCESS);
         verify(mConsentManager, atLeastOnce()).setUserChoices(eq(adServicesModuleUserChoices));
@@ -1075,18 +1075,18 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
         }
     }
 
-    private static final class SetAdServicesModuleOverridesCallback
+    private static final class RequestAdServicesModuleOverridesCallback
             extends IntFailureSyncCallback<AdServicesCommonResponse>
-            implements ISetAdServicesModuleOverridesCallback {
-        private SetAdServicesModuleOverridesCallback(long timeoutMs) {
+            implements IRequestAdServicesModuleOverridesCallback {
+        private RequestAdServicesModuleOverridesCallback(long timeoutMs) {
             super(timeoutMs);
         }
     }
 
-    private static final class SetAdServicesModuleUserChoicesCallback
+    private static final class RequestAdServicesModuleUserChoicesCallback
             extends IntFailureSyncCallback<AdServicesCommonResponse>
-            implements ISetAdServicesModuleUserChoicesCallback {
-        private SetAdServicesModuleUserChoicesCallback(long timeoutMs) {
+            implements IRequestAdServicesModuleUserChoicesCallback {
+        private RequestAdServicesModuleUserChoicesCallback(long timeoutMs) {
             super(timeoutMs);
         }
     }

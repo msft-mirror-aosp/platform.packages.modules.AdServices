@@ -22,13 +22,27 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
+import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.data.adselection.AppInstallDao;
+import com.android.adservices.data.adselection.FrequencyCapDao;
+import com.android.adservices.data.adselection.SharedStorageDatabase;
+import com.android.adservices.data.customaudience.CustomAudienceDatabase;
+import com.android.adservices.data.signals.ProtectedSignalsDatabase;
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
+import com.android.adservices.service.common.DatabaseClearer;
+import com.android.adservices.service.devapi.DevSessionDataStore;
+import com.android.adservices.service.devapi.DevSessionSetter;
+import com.android.adservices.service.devapi.DevSessionSetterImpl;
 import com.android.adservices.service.shell.AdServicesShellCommandHandler;
+import com.android.adservices.service.shell.NoOpShellCommand;
 import com.android.adservices.service.shell.ShellCommand;
 import com.android.adservices.service.shell.ShellCommandFactory;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableSet;
 
+import java.time.Clock;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -40,20 +54,43 @@ public final class AdServicesApiShellCommandFactory implements ShellCommandFacto
     public static final String COMMAND_PREFIX = "adservices-api";
 
     private final Map<String, ShellCommand> mAllCommandsMap;
+    private final boolean mDeveloperModeFeatureEnabled;
 
     @VisibleForTesting
-    public AdServicesApiShellCommandFactory() {
+    public AdServicesApiShellCommandFactory(
+            DevSessionSetter devSessionSetter, boolean developerModeFeatureEnabled) {
         Set<ShellCommand> allCommands =
-                ImmutableSet.of(new EnableAdServicesCommand(), new ResetConsentCommand());
+                ImmutableSet.of(
+                        new EnableAdServicesCommand(),
+                        new ResetConsentCommand(),
+                        new DevSessionCommand(devSessionSetter));
         mAllCommandsMap =
                 allCommands.stream()
                         .collect(
                                 Collectors.toMap(
                                         ShellCommand::getCommandName, Function.identity()));
+        mDeveloperModeFeatureEnabled = developerModeFeatureEnabled;
     }
 
     public static ShellCommandFactory getInstance() {
-        return new AdServicesApiShellCommandFactory();
+        AppInstallDao appInstallDao = SharedStorageDatabase.getInstance().appInstallDao();
+        FrequencyCapDao frequencyCapDao = SharedStorageDatabase.getInstance().frequencyCapDao();
+        return new AdServicesApiShellCommandFactory(
+                new DevSessionSetterImpl(
+                        new DatabaseClearer(
+                                CustomAudienceDatabase.getInstance().customAudienceDao(),
+                                SharedStorageDatabase.getInstance().appInstallDao(),
+                                new AdFilteringFeatureFactory(
+                                                appInstallDao,
+                                                frequencyCapDao,
+                                                FlagsFactory.getFlags())
+                                        .getFrequencyCapDataClearer(),
+                                ProtectedSignalsDatabase.getInstance().protectedSignalsDao(),
+                                AdServicesExecutors.getBackgroundExecutor()),
+                        DevSessionDataStore.getInstance(),
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        Clock.systemUTC()),
+                FlagsFactory.getFlags().getDeveloperModeFeatureEnabled());
     }
 
     @Nullable
@@ -62,10 +99,15 @@ public final class AdServicesApiShellCommandFactory implements ShellCommandFacto
         if (!mAllCommandsMap.containsKey(cmd)) {
             Log.d(
                     AdServicesShellCommandHandler.TAG,
-                    String.format("Invalid command for Custom Audience Shell Factory: %s", cmd));
+                    String.format("Invalid command for Ad Services API Shell Factory: %s", cmd));
             return null;
         }
-        return mAllCommandsMap.get(cmd);
+
+        ShellCommand command = mAllCommandsMap.get(cmd);
+        if (DevSessionCommand.CMD.equals(cmd) && !mDeveloperModeFeatureEnabled) {
+            return new NoOpShellCommand(cmd, command.getMetricsLoggerCommand());
+        }
+        return command;
     }
 
     @Override

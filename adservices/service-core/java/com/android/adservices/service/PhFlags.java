@@ -6784,20 +6784,6 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getEnableAdservicesApiEnabled() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_ENABLE_ADSERVICES_API_ENABLED,
-                DEFAULT_ENABLE_ADSERVICES_API_ENABLED);
-    }
-
-    @Override
-    public boolean getAdservicesEnablementCheckEnabled() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_ADSERVICES_ENABLEMENT_CHECK_ENABLED,
-                DEFAULT_ADSERVICES_ENABLEMENT_CHECK_ENABLED);
-    }
-
-    @Override
     public int getBackgroundJobSamplingLoggingRate() {
         int loggingRatio =
                 getDeviceConfigFlag(

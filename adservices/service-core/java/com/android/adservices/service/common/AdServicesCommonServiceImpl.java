@@ -64,8 +64,8 @@ import android.adservices.common.IAdServicesCommonCallback;
 import android.adservices.common.IAdServicesCommonService;
 import android.adservices.common.IAdServicesCommonStatesCallback;
 import android.adservices.common.IEnableAdServicesCallback;
-import android.adservices.common.ISetAdServicesModuleOverridesCallback;
-import android.adservices.common.ISetAdServicesModuleUserChoicesCallback;
+import android.adservices.common.IRequestAdServicesModuleOverridesCallback;
+import android.adservices.common.IRequestAdServicesModuleUserChoicesCallback;
 import android.adservices.common.IUpdateAdIdCallback;
 import android.adservices.common.IsAdServicesEnabledResult;
 import android.adservices.common.NotificationTypeParams;
@@ -511,10 +511,10 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
     /** Sets AdServices feature states. */
     @Override
     @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
-    public void setAdServicesModuleOverrides(
+    public void requestAdServicesModuleOverrides(
             List<AdServicesModuleState> adServicesModuleStateList,
             NotificationTypeParams notificationType,
-            ISetAdServicesModuleOverridesCallback callback) {
+            IRequestAdServicesModuleOverridesCallback callback) {
 
         boolean authorizedCaller = PermissionHelper.hasModifyAdServicesStatePermission(mContext);
         sBackgroundExecutor.execute(
@@ -536,7 +536,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
 
                     } catch (Exception e) {
                         LogUtil.e(
-                                "setAdServicesModuleOverrides() failed to complete: "
+                                "requestAdServicesModuleOverrides() failed to complete: "
                                         + e.getMessage());
                         try {
                             callback.onFailure(STATUS_INTERNAL_ERROR);
@@ -550,9 +550,9 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
     /** Sets AdServices feature user choices. */
     @Override
     @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
-    public void setAdServicesModuleUserChoices(
+    public void requestAdServicesModuleUserChoices(
             List<AdServicesModuleUserChoice> adServicesFeatureUserChoiceList,
-            ISetAdServicesModuleUserChoicesCallback callback) {
+            IRequestAdServicesModuleUserChoicesCallback callback) {
 
         boolean authorizedCaller = PermissionHelper.hasModifyAdServicesStatePermission(mContext);
 
@@ -566,7 +566,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                         }
                         ConsentManager consentManager = ConsentManager.getInstance();
                         consentManager.setUserChoices(adServicesFeatureUserChoiceList);
-                        LogUtil.i("setAdServicesModuleUserChoices");
+                        LogUtil.i("requestAdServicesModuleUserChoices");
                         callback.onResult(
                                 new AdServicesCommonResponse.Builder()
                                         .setStatusCode(STATUS_SUCCESS)
@@ -574,7 +574,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
 
                     } catch (Exception e) {
                         LogUtil.e(
-                                "setAdServicesModuleUserChoices() failed to complete: "
+                                "requestAdServicesModuleUserChoices() failed to complete: "
                                         + e.getMessage());
                     }
                 });
