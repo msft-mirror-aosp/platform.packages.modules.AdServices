@@ -17,6 +17,7 @@ package com.android.adservices.service;
 
 import static com.android.adservices.flags.Flags.FLAG_ADSERVICES_ENABLEMENT_CHECK_ENABLED;
 import static com.android.adservices.flags.Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API;
+import static com.android.adservices.flags.Flags.FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_DEPRECATED;
 import static com.android.adservices.flags.Flags.FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED;
 import static com.android.adservices.flags.Flags.FLAG_AD_ID_CACHE_ENABLED;
 import static com.android.adservices.flags.Flags.FLAG_ENABLE_ADSERVICES_API_ENABLED;
@@ -65,6 +66,7 @@ public final class FlagsConstantsTest extends AdServicesUnitTestCase {
             List.of(
                     FLAG_AD_ID_CACHE_ENABLED,
                     FLAG_ADSERVICES_ENABLEMENT_CHECK_ENABLED,
+                    FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_DEPRECATED,
                     FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED,
                     FLAG_ENABLE_ADSERVICES_API_ENABLED,
                     FLAG_SDKSANDBOX_INVALIDATE_EFFECTIVE_TARGET_SDK_VERSION_CACHE,

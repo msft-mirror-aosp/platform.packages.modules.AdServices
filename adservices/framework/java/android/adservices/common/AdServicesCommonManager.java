@@ -153,11 +153,14 @@ public class AdServicesCommonManager {
      * or not. This API is for Android R, and uses the AdServicesOutcomeReceiver class because
      * OutcomeReceiver is not available.
      *
+     * @deprecated use {@link #isAdServicesEnabled(Executor, OutcomeReceiver)} instead. Android R is
      *     no longer supported.
      * @hide
      */
     @SystemApi
     @RequiresPermission(anyOf = {ACCESS_ADSERVICES_STATE, ACCESS_ADSERVICES_STATE_COMPAT})
+    @Deprecated
+    @FlaggedApi(Flags.FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_DEPRECATED)
     @SuppressWarnings("NewApi")
     public void isAdServicesEnabled(
             @NonNull @CallbackExecutor Executor executor,
@@ -425,11 +428,14 @@ public class AdServicesCommonManager {
      * </ul>
      *
      * @param adServicesStates parcel containing relevant AdServices state variables.
+     * @deprecated use {@link #enableAdServices(AdServicesStates, Executor, OutcomeReceiver)}
      *     instead. Android R is no longer supported.
      * @hide
      */
     @SystemApi
     @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
+    @Deprecated
+    @FlaggedApi(Flags.FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_DEPRECATED)
     @SuppressWarnings("NewApi")
     public void enableAdServices(
             @NonNull AdServicesStates adServicesStates,
@@ -455,12 +461,15 @@ public class AdServicesCommonManager {
      * @throws IllegalStateException when service is not available or the feature is not enabled, or
      *     if there is any {@code Binder} invocation error.
      * @throws SecurityException when the caller is not authorized to call this API.
+     * @deprecated use {@link #updateAdId(UpdateAdIdRequest, Executor, OutcomeReceiver)} instead.
      *     Android R is no longer supported.
      * @hide
      */
     // TODO(b/295205476): Move exceptions into the callback.
     @SystemApi
     @RequiresPermission(anyOf = {UPDATE_PRIVILEGED_AD_ID, UPDATE_PRIVILEGED_AD_ID_COMPAT})
+    @Deprecated
+    @FlaggedApi(Flags.FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_DEPRECATED)
     @SuppressWarnings("NewApi")
     public void updateAdId(
             @NonNull UpdateAdIdRequest updateAdIdRequest,
