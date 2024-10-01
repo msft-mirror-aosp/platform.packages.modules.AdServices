@@ -113,6 +113,7 @@ android_app {
         proguard_flags_files: ["proguard.flags"],
     },
     apex_available: ["com.android.adservices"],
+    updatable: true,
 }
 
 // Assets needs to be bundled via this android_library since our classes in service-core needs to
