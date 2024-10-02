@@ -1662,9 +1662,7 @@ public class ConsentManager {
         AppConsents appConsents = null;
         try {
             // Exit if migration has happened.
-            SharedPreferences sharedPreferences =
-                    context.getSharedPreferences(
-                            ConsentConstants.SHARED_PREFS_CONSENT, Context.MODE_PRIVATE);
+            SharedPreferences sharedPreferences = getPrefs(context);
             // If we migrated data to system server either from PPAPI or from AppSearch, do not
             // attempt another migration of data to system server.
             boolean shouldSkipMigration =
@@ -1758,9 +1756,7 @@ public class ConsentManager {
     static void clearPpApiConsent(
             @NonNull Context context, @NonNull AtomicFileDatastore datastore) {
         // Exit if PPAPI consent has cleared.
-        SharedPreferences sharedPreferences =
-                context.getSharedPreferences(
-                        ConsentConstants.SHARED_PREFS_CONSENT, Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = getPrefs(context);
         if (sharedPreferences.getBoolean(
                 ConsentConstants.SHARED_PREFS_KEY_PPAPI_HAS_CLEARED, /* defValue */ false)) {
             return;
@@ -1795,9 +1791,7 @@ public class ConsentManager {
         Objects.requireNonNull(context, "context cannot be null");
         Objects.requireNonNull(sharedPreferenceKey, "sharedPreferenceKey cannot be null");
 
-        SharedPreferences sharedPreferences =
-                context.getSharedPreferences(
-                        ConsentConstants.SHARED_PREFS_CONSENT, Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = getPrefs(context);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putBoolean(sharedPreferenceKey, false);
 
@@ -1897,9 +1891,7 @@ public class ConsentManager {
             // in AppSearch), initialize T+ consent data so that we don't show notification twice
             // (after
             // OTA upgrade).
-            SharedPreferences sharedPreferences =
-                    context.getSharedPreferences(
-                            ConsentConstants.SHARED_PREFS_CONSENT, Context.MODE_PRIVATE);
+            SharedPreferences sharedPreferences = getPrefs(context);
             // If we did not migrate notification data, we should not attempt to migrate anything.
             if (!appSearchConsentManager.migrateConsentDataIfNeeded(
                     sharedPreferences, datastore, adServicesManager, appConsentDao)) {
@@ -2625,5 +2617,11 @@ public class ConsentManager {
     private static String getAppSearchExceptionMessage(String illegalAction) {
         return String.format(
                 "Attempting to %s using APPSEARCH_ONLY consent source of truth!", illegalAction);
+    }
+
+    @SuppressWarnings("AvoidSharedPreferences") // Legacy usage
+    private static SharedPreferences getPrefs(Context context) {
+        return context.getSharedPreferences(
+                ConsentConstants.SHARED_PREFS_CONSENT, Context.MODE_PRIVATE);
     }
 }
