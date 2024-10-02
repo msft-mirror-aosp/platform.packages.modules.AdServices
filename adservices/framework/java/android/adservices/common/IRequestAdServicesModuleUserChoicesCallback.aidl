@@ -17,13 +17,11 @@
 
 package android.adservices.common;
 
-import android.adservices.common.AdServicesCommonResponse;
-
 /**
  * Callback used by the RequestAdServicesModuleUserChoices API.
  * {@hide}
  */
 oneway interface IRequestAdServicesModuleUserChoicesCallback {
-    void onResult(in AdServicesCommonResponse response);
+    void onSuccess();
     void onFailure(int statusCode);
 }

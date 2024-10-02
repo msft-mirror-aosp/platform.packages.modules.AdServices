@@ -16,7 +16,6 @@
 package com.android.adservices.tests.enrollmentctsroot;
 
 import android.adservices.common.AdServicesCommonManager;
-import android.adservices.common.AdServicesCommonResponse;
 import android.adservices.common.AdServicesModuleState;
 import android.adservices.common.AdServicesModuleUserChoice;
 import android.adservices.common.AdServicesOutcomeReceiver;
@@ -78,8 +77,8 @@ public final class AdServicesEnrollmentCtsRootTest extends AdServicesCtsTestCase
                                     Executors.newCachedThreadPool(),
                                     new AdServicesOutcomeReceiver<>() {
                                         @Override
-                                        public void onResult(AdServicesCommonResponse result) {
-                                            completer.set(result.getStatusCode());
+                                        public void onResult(Void result) {
+                                            completer.set(AdServicesStatusUtils.STATUS_SUCCESS);
                                         }
 
                                         @Override
@@ -111,8 +110,8 @@ public final class AdServicesEnrollmentCtsRootTest extends AdServicesCtsTestCase
                                     Executors.newCachedThreadPool(),
                                     new AdServicesOutcomeReceiver<>() {
                                         @Override
-                                        public void onResult(AdServicesCommonResponse result) {
-                                            completer.set(result.getStatusCode());
+                                        public void onResult(Void result) {
+                                            completer.set(null);
                                         }
 
                                         @Override
