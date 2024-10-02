@@ -17,6 +17,7 @@ package com.android.adservices.common;
 
 import com.android.adservices.shared.testing.HostSideSdkLevelSupportRule;
 import com.android.adservices.shared.testing.HostSideTestCase;
+import com.android.tradefed.testtype.IDeviceTest;
 
 import org.junit.Rule;
 
