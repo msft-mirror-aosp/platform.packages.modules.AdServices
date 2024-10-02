@@ -60,6 +60,7 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdTechUriValidator;
@@ -117,6 +118,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
     @NonNull private final DevContextFilter mDevContextFilter;
     @NonNull private final AdServicesLogger mAdServicesLogger;
     @NonNull private final Flags mFlags;
+    @NonNull private final DebugFlags mDebugFlags;
     @NonNull private final CallingAppUidSupplier mCallingAppUidSupplier;
     @NonNull private final ProtectedSignalsServiceFilter mProtectedSignalsServiceFilter;
     @NonNull private final EnrollmentDao mEnrollmentDao;
@@ -150,6 +152,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                 AdServicesExecutors.getBackgroundExecutor(),
                 AdServicesLoggerImpl.getInstance(),
                 FlagsFactory.getFlags(),
+                DebugFlags.getInstance(),
                 CallingAppUidSupplierBinderImpl.create(),
                 new ProtectedSignalsServiceFilter(
                         context,
@@ -185,6 +188,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
             @NonNull ExecutorService executorService,
             @NonNull AdServicesLogger adServicesLogger,
             @NonNull Flags flags,
+            @NonNull DebugFlags debugFlags,
             @NonNull CallingAppUidSupplier callingAppUidSupplier,
             @NonNull ProtectedSignalsServiceFilter protectedSignalsServiceFilter,
             @NonNull EnrollmentDao enrollmentDao,
@@ -207,6 +211,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
         mExecutorService = executorService;
         mAdServicesLogger = adServicesLogger;
         mFlags = flags;
+        mDebugFlags = debugFlags;
         mCallingAppUidSupplier = callingAppUidSupplier;
         mProtectedSignalsServiceFilter = protectedSignalsServiceFilter;
         mEnrollmentDao = enrollmentDao;
@@ -329,7 +334,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                                     // TODO (b/327187357): Move per-API/per-app consent into the
                                     //  filter
                                     /* enforceConsent= */ false,
-                                    !mFlags.getConsentNotificationDebugMode(),
+                                    !mDebugFlags.getConsentNotificationDebugMode(),
                                     callerUid,
                                     apiName,
                                     PROTECTED_SIGNAL_API_UPDATE_SIGNALS,

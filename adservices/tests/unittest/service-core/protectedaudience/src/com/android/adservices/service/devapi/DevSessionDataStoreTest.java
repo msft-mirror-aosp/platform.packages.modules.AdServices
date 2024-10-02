@@ -16,23 +16,19 @@
 
 package com.android.adservices.service.devapi;
 
-import android.adservices.common.CommonFixture;
-
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.devapi.DevSessionFixture;
 
 import org.junit.Before;
 import org.junit.Test;
 
-import java.time.Clock;
-import java.time.ZoneId;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 public final class DevSessionDataStoreTest extends AdServicesUnitTestCase {
 
-    private static final int TIMEOUT_SEC = 2;
-    private final Clock mClock = Clock.fixed(CommonFixture.FIXED_NOW, ZoneId.systemDefault());
+    private static final int TIMEOUT_SEC = 5;
     private DevSessionDataStore mDevSessionDataStore;
 
     @Before
@@ -42,35 +38,23 @@ public final class DevSessionDataStoreTest extends AdServicesUnitTestCase {
                         mContext,
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
-                        mClock,
                         getTestInvocationId() + "_" + DevSessionDataStore.FILE_NAME);
     }
 
     @Test
-    public void testStartDevSession() throws Exception {
-        wait(mDevSessionDataStore.startDevSession(CommonFixture.FIXED_NEXT_ONE_DAY));
+    public void testSetAndGetDevSession() throws Exception {
+        wait(mDevSessionDataStore.set(DevSessionFixture.IN_DEV));
 
-        expect.withMessage("Dev session should be active")
-                .that(wait(mDevSessionDataStore.isDevSessionActive()))
-                .isTrue();
+        expect.withMessage("DevSession future")
+                .that(wait(mDevSessionDataStore.get()))
+                .isEqualTo(DevSessionFixture.IN_DEV);
     }
 
     @Test
-    public void testDevSessionExpires() throws Exception {
-        wait(mDevSessionDataStore.startDevSession(CommonFixture.FIXED_EARLIER_ONE_DAY));
+    public void testGetDevSessionWithoutSet() throws Exception {
+        DevSession devSession = wait(mDevSessionDataStore.get());
 
-        expect.withMessage("Dev session should be inactive")
-                .that(wait(mDevSessionDataStore.isDevSessionActive()))
-                .isFalse();
-    }
-
-    @Test
-    public void testEndDevSession() throws Exception {
-        wait(mDevSessionDataStore.endDevSession());
-
-        expect.withMessage("Dev session should be inactive")
-                .that(wait(mDevSessionDataStore.isDevSessionActive()))
-                .isFalse();
+        expect.withMessage("DevSession future").that(devSession).isEqualTo(DevSession.UNKNOWN);
     }
 
     private static <T> T wait(Future<T> future) throws Exception {
