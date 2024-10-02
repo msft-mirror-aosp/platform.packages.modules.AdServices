@@ -16,11 +16,18 @@
 
 package com.android.adservices.mockito;
 
-import com.android.adservices.service.DebugFlags;
-
 /** Helper interface providing expectations to set the most common AdService debug flags. */
 public interface AdServicesDebugFlagsMocker {
 
-    /** Mocks a call to {@link DebugFlags#getConsentManagerDebugMode()} */
+    /**
+     * Mocks a call to {@link
+     * com.android.adservices.service.DebugFlags#getConsentManagerDebugMode()}
+     */
     void mockGetConsentManagerDebugMode(boolean value);
+
+    /**
+     * Mocks a call to {@link
+     * com.android.adservices.service.DebugFlags#getConsentNotificationDebugMode()}
+     */
+    void mockGetConsentNotificationDebugMode(boolean value);
 }

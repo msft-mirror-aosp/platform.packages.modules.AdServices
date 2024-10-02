@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.enrollment;
 
-
 import android.content.Context;
 import android.content.SharedPreferences;
 
@@ -24,7 +23,6 @@ import com.android.adservices.service.stats.AdServicesEnrollmentTransactionStats
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
-
 
 /** Util class for all enrollment-related classes */
 public class EnrollmentUtil {
@@ -51,15 +49,13 @@ public class EnrollmentUtil {
 
     /** Get build ID from shared preference */
     public int getBuildId() {
-        SharedPreferences prefs =
-                mContext.getSharedPreferences(ENROLLMENT_SHARED_PREF, Context.MODE_PRIVATE);
+        SharedPreferences prefs = getPrefs();
         return prefs.getInt(BUILD_ID, /* defaultValue */ -1);
     }
 
     /** Get file group status from shared preference */
     public int getFileGroupStatus() {
-        SharedPreferences prefs =
-                mContext.getSharedPreferences(ENROLLMENT_SHARED_PREF, Context.MODE_PRIVATE);
+        SharedPreferences prefs = getPrefs();
         return prefs.getInt(FILE_GROUP_STATUS, /* defaultValue */ 0);
     }
 
@@ -157,5 +153,10 @@ public class EnrollmentUtil {
             AdServicesEnrollmentTransactionStats.TransactionStatus status,
             int dataSourceRecordCount) {
         logTransactionStats(logger, statsBuilder, status, 0, 0, dataSourceRecordCount);
+    }
+
+    @SuppressWarnings("AvoidSharedPreferences") // Legacy usage
+    private SharedPreferences getPrefs() {
+        return mContext.getSharedPreferences(ENROLLMENT_SHARED_PREF, Context.MODE_PRIVATE);
     }
 }

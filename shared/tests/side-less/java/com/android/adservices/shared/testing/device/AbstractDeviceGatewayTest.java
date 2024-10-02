@@ -18,8 +18,8 @@ package com.android.adservices.shared.testing.device;
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.shared.meta_testing.FakeDeviceGateway;
+import com.android.adservices.shared.meta_testing.SharedSidelessTestCase;
 import com.android.adservices.shared.testing.AndroidSdk.Level;
-import com.android.adservices.shared.testing.SharedSidelessTestCase;
 
 import org.junit.Test;
 
