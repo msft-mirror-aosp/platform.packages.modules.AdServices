@@ -16,14 +16,12 @@
 package com.android.adservices.mockito;
 
 import com.android.adservices.service.DebugFlags;
-import com.android.adservices.service.Flags;
 
-public final class AdServicesMockitoJobMockerTest
-        extends AdServicesJobMockerTestCase<AdServicesMockitoJobMocker> {
+public final class AdServicesMockitoDebugFlagsMockerTest
+        extends AdServicesDebugFlagsMockerTestCase<AdServicesDebugFlagsMocker> {
 
     @Override
-    protected AdServicesMockitoJobMocker getMocker(
-            StaticClassChecker checker, Flags mockFlags, DebugFlags mockDebugFlags) {
-        return new AdServicesMockitoJobMocker(checker);
+    protected AdServicesDebugFlagsMocker getMocker(DebugFlags debugFlags) {
+        return new AdServicesMockitoDebugFlagsMocker(debugFlags);
     }
 }
