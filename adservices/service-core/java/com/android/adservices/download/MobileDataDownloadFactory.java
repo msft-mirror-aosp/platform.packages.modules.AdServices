@@ -234,6 +234,7 @@ public class MobileDataDownloadFactory {
 
     private static DownloadMetadataStore getDownloadMetadataStore() {
         Context context = ApplicationContextSingleton.get();
+        @SuppressWarnings("AvoidSharedPreferences") // Legacy usage
         SharedPreferences sharedPrefs =
                 context.getSharedPreferences(MDD_METADATA_SHARED_PREFERENCES, Context.MODE_PRIVATE);
         DownloadMetadataStore downloadMetadataStore =

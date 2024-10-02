@@ -1073,23 +1073,7 @@ public abstract class E2EAbstractTest extends AdServicesUnitTestCase {
     protected static String getDatastoreState() {
         StringBuilder result = new StringBuilder();
         SQLiteDatabase db = DbTestUtil.getMeasurementDbHelperForTest().getWritableDatabase();
-        List<String> tableNames =
-                ImmutableList.of(
-                        "msmt_async_registration_contract",
-                        "msmt_source",
-                        "msmt_source_destination",
-                        "msmt_source_attribution_scope",
-                        "msmt_trigger",
-                        "msmt_event_report",
-                        "msmt_attribution",
-                        "msmt_aggregate_report",
-                        "msmt_aggregate_encryption_key",
-                        "msmt_debug_report",
-                        "msmt_aggregatable_debug_report_budget_tracker",
-                        "msmt_xna_ignored_sources",
-                        "msmt_key_value_data",
-                        "msmt_app_report_history");
-        for (String tableName : tableNames) {
+        for (String tableName : getMeasurementTableNames(db)) {
             result.append("\n" + tableName + ":\n");
             result.append(getTableState(db, tableName));
         }
@@ -1100,6 +1084,20 @@ public abstract class E2EAbstractTest extends AdServicesUnitTestCase {
             result.append(getTableState(enrollmentDb, tableName));
         }
         return result.toString();
+    }
+
+    private static List<String> getMeasurementTableNames(SQLiteDatabase db) {
+        List<String> tableNames = new ArrayList<>();
+        try (Cursor cursor =
+                db.rawQuery(
+                        "SELECT name FROM sqlite_master WHERE type = 'table' AND name LIKE"
+                                + " 'msmt_%';",
+                        null)) {
+            while (cursor.moveToNext()) {
+                tableNames.add(cursor.getString(cursor.getColumnIndex("name")));
+            }
+        }
+        return tableNames;
     }
 
     private static String getTableState(SQLiteDatabase db, String tableName) {

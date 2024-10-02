@@ -15,6 +15,7 @@
  */
 package com.android.adservices.shared.testing;
 
+import com.android.adservices.shared.meta_testing.SharedSidelessTestCase;
 import com.android.adservices.shared.testing.AbstractSdkLevelSupportedRule.RequiredRange;
 import com.android.adservices.shared.testing.AndroidSdk.Range;
 
