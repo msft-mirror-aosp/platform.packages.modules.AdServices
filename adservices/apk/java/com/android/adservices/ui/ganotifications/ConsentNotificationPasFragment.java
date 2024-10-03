@@ -159,6 +159,14 @@ public class ConsentNotificationPasFragment extends Fragment {
                     });
             ((TextView) requireActivity().findViewById(R.id.learn_more_from_privacy_policy2))
                     .setMovementMethod(LinkMovementMethod.getInstance());
+            // initialize hyperlink in 1st section
+            ((TextView) requireActivity().findViewById(R.id.notificationUI_pas_app_body2_part2))
+                    .setMovementMethod(LinkMovementMethod.getInstance());
+        } else {
+            ((TextView)
+                            requireActivity()
+                                    .findViewById(R.id.notificationUI_pas_combined_dropdown_body6))
+                    .setMovementMethod(LinkMovementMethod.getInstance());
         }
 
         Button leftControlButton = requireActivity().findViewById(R.id.leftControlButton);
