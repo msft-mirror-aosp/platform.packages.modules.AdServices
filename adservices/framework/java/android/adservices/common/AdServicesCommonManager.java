@@ -326,7 +326,7 @@ public class AdServicesCommonManager {
             @NonNull List<AdServicesModuleState> adServicesModuleStateList,
             @NonNull NotificationTypeParams notificationType,
             @NonNull @CallbackExecutor Executor executor,
-            @NonNull AdServicesOutcomeReceiver<AdServicesCommonResponse, Exception> callback) {
+            @NonNull AdServicesOutcomeReceiver<Void, Exception> callback) {
         Objects.requireNonNull(adServicesModuleStateList);
         Objects.requireNonNull(notificationType);
         Objects.requireNonNull(executor);
@@ -343,9 +343,8 @@ public class AdServicesCommonManager {
                     notificationType,
                     new IRequestAdServicesModuleOverridesCallback.Stub() {
                         @Override
-                        public void onResult(AdServicesCommonResponse adServicesCommonResponse)
-                                throws RemoteException {
-                            callback.onResult(adServicesCommonResponse);
+                        public void onSuccess() throws RemoteException {
+                            callback.onResult(null);
                         }
 
                         @Override
@@ -380,7 +379,7 @@ public class AdServicesCommonManager {
     public void requestAdServicesModuleUserChoices(
             @NonNull List<AdServicesModuleUserChoice> adServicesModuleUserChoiceList,
             @NonNull @CallbackExecutor Executor executor,
-            @NonNull AdServicesOutcomeReceiver<AdServicesCommonResponse, Exception> callback) {
+            @NonNull AdServicesOutcomeReceiver<Void, Exception> callback) {
         Objects.requireNonNull(adServicesModuleUserChoiceList);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(callback);
@@ -395,9 +394,8 @@ public class AdServicesCommonManager {
                     adServicesModuleUserChoiceList,
                     new IRequestAdServicesModuleUserChoicesCallback.Stub() {
                         @Override
-                        public void onResult(AdServicesCommonResponse adServicesCommonResponse)
-                                throws RemoteException {
-                            callback.onResult(adServicesCommonResponse);
+                        public void onSuccess() throws RemoteException {
+                            callback.onResult(null);
                         }
 
                         @Override

@@ -31,8 +31,6 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Pair;
 
-import androidx.test.filters.MediumTest;
-
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
@@ -56,7 +54,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /** Unit tests for {@link com.android.adservices.data.topics.TopicsDao} */
-@MediumTest
 @RequiresSdkLevelAtLeastS
 @SetErrorLogUtilDefaultParams(
         throwable = Any.class,

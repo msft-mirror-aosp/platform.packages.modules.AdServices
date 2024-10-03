@@ -20,7 +20,6 @@ import static com.android.adservices.service.shell.adservicesapi.EnableAdService
 import static com.android.adservices.service.shell.adservicesapi.ResetConsentCommand.CMD_RESET_CONSENT_DATA;
 
 import android.adservices.common.AdServicesCommonManager;
-import android.adservices.common.AdServicesCommonResponse;
 import android.adservices.common.AdServicesModuleState;
 import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.common.NotificationTypeParams;
@@ -77,11 +76,10 @@ public final class AdServicesEnrollmentTest extends AdServicesCtsTestCase
                                     adServicesModuleStateList,
                                     notificationTypeParams,
                                     AdServicesExecutors.getLightWeightExecutor(),
-                                    new AdServicesOutcomeReceiver<
-                                            AdServicesCommonResponse, Exception>() {
+                                    new AdServicesOutcomeReceiver<Void, Exception>() {
                                         @Override
-                                        public void onResult(AdServicesCommonResponse result) {
-                                            completer.set(1);
+                                        public void onResult(Void unused) {
+                                            completer.set(null);
                                         }
 
                                         @Override
