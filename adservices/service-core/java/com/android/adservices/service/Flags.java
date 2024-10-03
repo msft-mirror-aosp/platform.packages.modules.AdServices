@@ -5029,6 +5029,14 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING;
     }
 
+    /** Flag for enabling measurement debug keys privacy enforcement */
+    @FeatureFlag boolean MEASUREMENT_ENABLE_BOTH_SIDE_DEBUG_KEYS_IN_REPORTS = false;
+
+    /** Returns whether measurement debug keys privacy enforcement is enabled. */
+    default boolean getMeasurementEnableBothSideDebugKeysInReports() {
+        return MEASUREMENT_ENABLE_BOTH_SIDE_DEBUG_KEYS_IN_REPORTS;
+    }
+
     /**
      * Default value for if events will be registered as a source of attribution in addition to
      * being reported.
