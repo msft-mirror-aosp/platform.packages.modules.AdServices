@@ -17,6 +17,7 @@
 package com.android.adservices.service.devapi;
 
 import static com.android.adservices.service.devapi.DevSessionControllerResult.FAILURE;
+import static com.android.adservices.service.devapi.DevSessionControllerResult.NO_OP;
 import static com.android.adservices.service.devapi.DevSessionControllerResult.SUCCESS;
 import static com.android.adservices.service.devapi.DevSessionState.IN_DEV;
 import static com.android.adservices.service.devapi.DevSessionState.IN_PROD;
@@ -27,6 +28,7 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.common.DatabaseClearer;
 
 import com.google.common.util.concurrent.FluentFuture;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.IOException;
@@ -78,10 +80,7 @@ public final class DevSessionControllerImpl implements DevSessionController {
                             DevSessionState state = devSession.getState();
                             if (!setDevSessionEnabled && state == IN_PROD
                                     || setDevSessionEnabled && state == IN_DEV) {
-                                throw new IllegalStateException(
-                                        "dev session already in desired state");
-                                // TODO(b/370948289): Return NO_OP instead of throwing ISE.
-                                // return DevSessionControllerResult.NO_OP;
+                                return Futures.immediateFuture(NO_OP);
                             }
                             // Note that transitory states can go in either direction, so we ignore
                             // them when doing the check below.
