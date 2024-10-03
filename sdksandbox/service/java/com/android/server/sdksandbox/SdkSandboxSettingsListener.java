@@ -18,6 +18,7 @@ package com.android.server.sdksandbox;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.app.sdksandbox.LogUtil;
 import android.content.Context;
 import android.provider.DeviceConfig;
 import android.text.TextUtils;
@@ -41,6 +42,7 @@ import com.google.protobuf.Parser;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 class SdkSandboxSettingsListener implements DeviceConfig.OnPropertiesChangedListener {
 
@@ -92,6 +94,20 @@ class SdkSandboxSettingsListener implements DeviceConfig.OnPropertiesChangedList
     private final Context mContext;
     private final Object mLock = new Object();
     private final SdkSandboxManagerService mSdkSandboxManagerService;
+
+    // Properties for which we log the onPropertiesChanged values
+    private static final Set<String> LOGGED_PROPERTIES =
+            Set.of(
+                    PROPERTY_DISABLE_SDK_SANDBOX,
+                    PROPERTY_ENFORCE_RESTRICTIONS,
+                    PROPERTY_BROADCASTRECEIVER_ALLOWLIST,
+                    PROPERTY_NEXT_BROADCASTRECEIVER_ALLOWLIST,
+                    PROPERTY_CONTENTPROVIDER_ALLOWLIST,
+                    PROPERTY_NEXT_CONTENTPROVIDER_ALLOWLIST,
+                    PROPERTY_SERVICES_ALLOWLIST,
+                    PROPERTY_NEXT_SERVICE_ALLOWLIST,
+                    PROPERTY_ACTIVITY_ALLOWLIST,
+                    PROPERTY_NEXT_ACTIVITY_ALLOWLIST);
 
     @GuardedBy("mLock")
     private boolean mKillSwitchEnabled =
@@ -186,6 +202,16 @@ class SdkSandboxSettingsListener implements DeviceConfig.OnPropertiesChangedList
                     continue;
                 }
 
+                boolean propertyIsLogged = LOGGED_PROPERTIES.contains(name);
+                if (propertyIsLogged) {
+                    LogUtil.d(
+                            TAG,
+                            "DeviceConfig property change received for name: "
+                                    + name
+                                    + ", to value: "
+                                    + properties.getString(name, ""));
+                }
+
                 switch (name) {
                     case PROPERTY_DISABLE_SDK_SANDBOX:
                         boolean killSwitchPreviouslyEnabled = mKillSwitchEnabled;
@@ -257,6 +283,9 @@ class SdkSandboxSettingsListener implements DeviceConfig.OnPropertiesChangedList
                                                 PROPERTY_NEXT_ACTIVITY_ALLOWLIST, null));
                         break;
                     default:
+                }
+                if (propertyIsLogged) {
+                    LogUtil.d(TAG, "DeviceConfig property change applied for name: " + name);
                 }
             }
         }
