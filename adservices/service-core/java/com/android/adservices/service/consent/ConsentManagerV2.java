@@ -1385,7 +1385,6 @@ public class ConsentManagerV2 {
         ConsentMigrationStats consentMigrationStats =
                 ConsentMigrationStats.builder()
                         .setMigrationType(migrationType)
-                        .setMigrationStatus(migrationStatus)
                         // When appConsents is null we log it as a failure
                         .setMigrationStatus(
                                 appConsents != null
