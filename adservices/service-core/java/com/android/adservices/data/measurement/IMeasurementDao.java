@@ -610,6 +610,9 @@ public interface IMeasurementDao {
     AsyncRegistration fetchNextQueuedAsyncRegistration(int retryLimit, Set<Uri> failedOrigins)
             throws DatastoreException;
 
+    /** Get all the records from the SourceContract and SourceDestination tables. */
+    List<Source> fetchAllSourceRegistrations() throws DatastoreException;
+
     /**
      * Insert/Update the supplied {@link KeyValueData} object
      *

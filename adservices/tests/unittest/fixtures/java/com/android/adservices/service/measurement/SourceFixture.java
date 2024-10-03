@@ -153,6 +153,7 @@ public final class SourceFixture {
         public static final Source.DestinationLimitAlgorithm DESTINATION_LIMIT_ALGORITHM =
                 Source.DestinationLimitAlgorithm.FIFO;
         public static final Double EVENT_LEVEL_EPSILON = 12D;
+        public static final int STATUS = Source.Status.ACTIVE;
         public static final String AGGREGATE_DEBUG_REPORT =
                 "{\"budget\":1024,"
                         + "\"key_piece\":\"0x100\","
