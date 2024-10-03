@@ -19,7 +19,7 @@ package com.android.adservices.service.shell.adservicesapi;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
-import com.android.adservices.service.devapi.DevSessionSetter;
+import com.android.adservices.service.devapi.DevSessionController;
 import com.android.adservices.service.shell.NoOpShellCommand;
 import com.android.adservices.service.shell.ShellCommand;
 import com.android.adservices.service.shell.ShellCommandFactory;
@@ -31,7 +31,7 @@ import org.mockito.Mock;
 public final class AdServicesApiShellCommandFactoryTest extends AdServicesMockitoTestCase {
 
     private ShellCommandFactory mFactory;
-    @Mock DevSessionSetter mDevSessionSetter;
+    @Mock DevSessionController mDevSessionSetter;
 
     @Before
     public void setup() {

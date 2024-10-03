@@ -50,7 +50,6 @@ import static com.android.adservices.service.ui.constants.DebugMessages.SET_AD_S
 import static com.android.adservices.service.ui.constants.DebugMessages.UNAUTHORIZED_CALLER_MESSAGE;
 
 import android.adservices.adid.AdId;
-import android.adservices.common.AdServicesCommonResponse;
 import android.adservices.common.AdServicesCommonStates;
 import android.adservices.common.AdServicesCommonStatesResponse;
 import android.adservices.common.AdServicesModuleState;
@@ -218,9 +217,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                             return;
                         }
 
-                        SharedPreferences preferences =
-                                mContext.getSharedPreferences(
-                                        ADSERVICES_STATUS_SHARED_PREFERENCE, Context.MODE_PRIVATE);
+                        SharedPreferences preferences = getPrefs();
 
                         int adServiceEntryPointStatusInt =
                                 adServicesEntryPointEnabled
@@ -284,9 +281,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
             ConsentManager consentManager = ConsentManager.getInstance();
             if (!consentManager.wasGaUxNotificationDisplayed()) {
                 // Check Beta notification displayed and user opt-in, we will re-consent
-                SharedPreferences preferences =
-                        mContext.getSharedPreferences(
-                                ADSERVICES_STATUS_SHARED_PREFERENCE, Context.MODE_PRIVATE);
+                SharedPreferences preferences = getPrefs();
                 // Check the setAdServicesEnabled was called before
                 if (preferences.contains(KEY_ADSERVICES_ENTRY_POINT_STATUS)
                         && consentManager.getConsent().isGiven()) {
@@ -527,10 +522,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                         }
                         ConsentManager consentManager = ConsentManager.getInstance();
                         consentManager.setModuleStates(adServicesModuleStateList);
-                        callback.onResult(
-                                new AdServicesCommonResponse.Builder()
-                                        .setStatusCode(STATUS_SUCCESS)
-                                        .build());
+                        callback.onSuccess();
 
                         // TODO(361411984): Add the notification trigger logic
 
@@ -567,10 +559,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                         ConsentManager consentManager = ConsentManager.getInstance();
                         consentManager.setUserChoices(adServicesFeatureUserChoiceList);
                         LogUtil.i("requestAdServicesModuleUserChoices");
-                        callback.onResult(
-                                new AdServicesCommonResponse.Builder()
-                                        .setStatusCode(STATUS_SUCCESS)
-                                        .build());
+                        callback.onSuccess();
 
                     } catch (Exception e) {
                         LogUtil.e(
@@ -627,5 +616,11 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                         .setApiEnabled(apiEnabled)
                         .setSuccess(success)
                         .build());
+    }
+
+    @SuppressWarnings("AvoidSharedPreferences") // Legacy usage
+    private SharedPreferences getPrefs() {
+        return mContext.getSharedPreferences(
+                ADSERVICES_STATUS_SHARED_PREFERENCE, Context.MODE_PRIVATE);
     }
 }

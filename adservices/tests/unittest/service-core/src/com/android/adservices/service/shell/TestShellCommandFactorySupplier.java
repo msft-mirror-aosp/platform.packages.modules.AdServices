@@ -27,7 +27,7 @@ import com.android.adservices.service.adselection.AuctionServerDataCompressor;
 import com.android.adservices.service.adselection.BuyerInputGenerator;
 import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGenerator;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
-import com.android.adservices.service.devapi.DevSessionSetter;
+import com.android.adservices.service.devapi.DevSessionController;
 import com.android.adservices.service.shell.adselection.AdSelectionShellCommandFactory;
 import com.android.adservices.service.shell.adservicesapi.AdServicesApiShellCommandFactory;
 import com.android.adservices.service.shell.customaudience.CustomAudienceShellCommandFactory;
@@ -64,7 +64,7 @@ public class TestShellCommandFactorySupplier extends ShellCommandFactorySupplier
     private final EncoderLogicMetadataDao mEncoderLogicMetadataDao;
     private final ConsentedDebugConfigurationGenerator mConsentedDebugConfigurationGenerator;
     private final AdSelectionEntryDao mAdSelectionEntryDao;
-    private final DevSessionSetter mDevSessionSetter;
+    private final DevSessionController mDevSessionSetter;
 
     TestShellCommandFactorySupplier(
             boolean isCustomAudienceCLiEnabled,
@@ -83,7 +83,7 @@ public class TestShellCommandFactorySupplier extends ShellCommandFactorySupplier
             EncoderLogicMetadataDao encoderLogicMetadataDao,
             ConsentedDebugConfigurationGenerator consentedDebugConfigurationGenerator,
             AdSelectionEntryDao adSelectionEntryDao,
-            DevSessionSetter devSessionSetter) {
+            DevSessionController devSessionSetter) {
         mIsCustomAudienceCliEnabled = isCustomAudienceCLiEnabled;
         mIsConsentedDebugCliEnabled = isConsentedDebugCliEnabled;
         mIsSignalsCliEnabled = isSignalsCliEnabled;

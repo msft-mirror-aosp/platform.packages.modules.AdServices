@@ -79,7 +79,7 @@ public final class EpochJobTest extends AdServicesJobTestCase {
     @Test
     public void testGetExecutionFuture() throws Exception {
         ListenableFuture<ExecutionResult> executionFuture =
-                mEpochJob.getExecutionFuture(sContext, mMockParams);
+                mEpochJob.getExecutionFuture(mContext, mMockParams);
 
         assertThat(executionFuture.get()).isEqualTo(SUCCESS);
 

@@ -27,7 +27,6 @@ import static com.android.adservices.shared.testing.AndroidSdk.RVC;
 
 import android.adservices.adid.AdId;
 import android.adservices.common.AdServicesCommonManager;
-import android.adservices.common.AdServicesCommonResponse;
 import android.adservices.common.AdServicesCommonStatesResponse;
 import android.adservices.common.AdServicesModuleState;
 import android.adservices.common.AdServicesModuleUserChoice;
@@ -78,7 +77,7 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
     @Test
     @RequiresSdkRange(atMost = RVC)
     public void testSetAdServicesModuleOverrides_onR_invokesCallbackOnError() throws Exception {
-        AdServicesOutcomeReceiverForTests<AdServicesCommonResponse> receiver =
+        AdServicesOutcomeReceiverForTests<Void> receiver =
                 new AdServicesOutcomeReceiverForTests<>();
         AdServicesModuleState moduleState =
                 new AdServicesModuleState.Builder()
@@ -100,7 +99,7 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
     @Test
     @RequiresSdkRange(atMost = RVC)
     public void testSetAdServicesModuleUserChoices_onR_invokesCallbackOnError() throws Exception {
-        AdServicesOutcomeReceiverForTests<AdServicesCommonResponse> receiver =
+        AdServicesOutcomeReceiverForTests<Void> receiver =
                 new AdServicesOutcomeReceiverForTests<>();
         AdServicesModuleUserChoice adServicesModuleUserChoice =
                 new AdServicesModuleUserChoice.Builder()
@@ -254,7 +253,7 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
     @Test
     @RequiresSdkLevelAtLeastS
     public void testRequestAdServicesModuleOverrides() {
-        AdServicesOutcomeReceiverForTests<AdServicesCommonResponse> receiver =
+        AdServicesOutcomeReceiverForTests<Void> receiver =
                 new AdServicesOutcomeReceiverForTests<>();
 
         AdServicesModuleState moduleState =
@@ -276,20 +275,12 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
         mCommonManager.requestAdServicesModuleOverrides(
                 adServicesModuleStateList, params, CALLBACK_EXECUTOR, receiver);
         String errorMsg = "error msg";
-        AdServicesCommonResponse response =
-                new AdServicesCommonResponse.Builder()
-                        .setErrorMessage(errorMsg)
-                        .setStatusCode(1)
-                        .build();
-
-        expect.that(response.getErrorMessage()).isEqualTo(errorMsg);
-        expect.that(response.getStatusCode()).isEqualTo(1);
     }
 
     @Test
     @RequiresSdkLevelAtLeastS
     public void testRequestAdServicesModuleUserChoiceOverrides() {
-        AdServicesOutcomeReceiverForTests<AdServicesCommonResponse> receiver =
+        AdServicesOutcomeReceiverForTests<Void> receiver =
                 new AdServicesOutcomeReceiverForTests<>();
 
         AdServicesModuleUserChoice adServicesModuleUserChoice =

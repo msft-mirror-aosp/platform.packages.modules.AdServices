@@ -33,6 +33,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.annotation.NonNull;
@@ -162,6 +163,14 @@ public final class JobServiceTest extends SpeMockitoTestCase {
 
         callback1.assertCalled();
 
+        verify(mLogger)
+                .logJobStatsHelper(
+                        JOB_ID,
+                        Latency_EXECUTION_1,
+                        PERIOD_EXECUTION_1,
+                        AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SUCCESSFUL,
+                        stopReason);
+
         // Second Execution -- Succeed to execute
         jobService.setOnSuccessCallback(true);
         AnswerSyncCallback<Void> callback2 = AnswerSyncCallback.forSingleVoidAnswer();
@@ -208,6 +217,14 @@ public final class JobServiceTest extends SpeMockitoTestCase {
         jobService.onStartJob(mMockJobParameters);
 
         callback1.assertCalled();
+
+        verify(mLogger)
+                .logJobStatsHelper(
+                        JOB_ID,
+                        Latency_EXECUTION_1,
+                        PERIOD_EXECUTION_1,
+                        AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__FAILED_WITH_RETRY,
+                        stopReason);
 
         // Second Execution -- Fail to execute without retry
         jobService.setOnSuccessCallback(false);
@@ -264,6 +281,14 @@ public final class JobServiceTest extends SpeMockitoTestCase {
 
         callback1.assertCalled();
 
+        verify(mLogger)
+                .logJobStatsHelper(
+                        JOB_ID,
+                        Latency_EXECUTION_1,
+                        PERIOD_EXECUTION_1,
+                        AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__ONSTOP_CALLED_WITH_RETRY,
+                        expectedStopReason);
+
         // Second Execution -- onStopJob() is called without retry
         jobService.setShouldOnStopJobHappen(true);
         jobService.setShouldRetryOnStopJob(false);
@@ -313,6 +338,14 @@ public final class JobServiceTest extends SpeMockitoTestCase {
         jobService.onStartJob(mMockJobParameters);
 
         callback1.assertCalled();
+
+        verify(mLogger)
+                .logJobStatsHelper(
+                        JOB_ID,
+                        Latency_EXECUTION_1,
+                        PERIOD_EXECUTION_1,
+                        AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SUCCESSFUL,
+                        stopReason);
 
         // Second Execution -- halted due to system/device issue.
         // Set the flag shouldOnStopJobHappen to true to stop executing onStartJob(), but do not
@@ -438,6 +471,14 @@ public final class JobServiceTest extends SpeMockitoTestCase {
         jobService.onStartJob(mMockJobParameters);
 
         callback1.assertCalled();
+
+        verify(mLogger)
+                .logJobStatsHelper(
+                        JOB_ID,
+                        Latency_EXECUTION_1,
+                        PERIOD_EXECUTION_1,
+                        AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON,
+                        stopReason);
 
         // Second Execution -- Succeed to execute
         jobService.setShouldSkip(true);
