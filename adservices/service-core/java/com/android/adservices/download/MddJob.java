@@ -39,6 +39,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.download.EnrollmentDataDownloadManager.DownloadStatus;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.AdPackageDenyResolver;
 import com.android.adservices.shared.proto.JobPolicy;
 import com.android.adservices.shared.proto.JobPolicy.NetworkType;
 import com.android.adservices.shared.spe.JobServiceConstants.JobSchedulingResultCode;
@@ -148,6 +149,12 @@ public final class MddJob implements JobWorker {
                                     unusedFutureEncryption =
                                             EncryptionDataDownloadManager.getInstance()
                                                     .readAndInsertEncryptionDataFromMdd();
+                            if (FlagsFactory.getFlags().getEnablePackageDenyJobOnMddDownload()) {
+                                ListenableFuture<AdPackageDenyResolver.PackageDenyMddProcessStatus>
+                                        unusedFuturePackageDenyMddProcessStatus =
+                                                AdPackageDenyResolver.getInstance()
+                                                        .loadDenyDataFromMdd();
+                            }
                             return SUCCESS;
                         },
                         AdServicesExecutors.getBlockingExecutor());
