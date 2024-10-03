@@ -347,6 +347,11 @@ public abstract class AdServicesMockerLessExtendedMockitoTestCase<M extends Inte
         }
 
         @Override
+        public void mockSetApplicationContextSingleton(Context context) {
+            mSharedMocker.mockSetApplicationContextSingleton(context);
+        }
+
+        @Override
         public JobServiceLoggingCallback syncRecordOnStopJob(JobServiceLogger logger) {
             return mSharedMocker.syncRecordOnStopJob(logger);
         }

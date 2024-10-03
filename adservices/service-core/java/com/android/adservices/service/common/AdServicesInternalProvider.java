@@ -24,6 +24,8 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.shared.common.ApplicationContextProvider;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
 
@@ -32,6 +34,9 @@ import java.io.PrintWriter;
  * not associated with a service).
  */
 public final class AdServicesInternalProvider extends ApplicationContextProvider {
+
+    @VisibleForTesting static final String DUMP_ARG_FULL_QUIET = "--quiet";
+    @VisibleForTesting static final String DUMP_ARG_SHORT_QUIET = "-q";
 
     @Override
     public boolean onCreate() {
@@ -42,9 +47,24 @@ public final class AdServicesInternalProvider extends ApplicationContextProvider
     @SuppressWarnings("NewApi")
     @Override
     public void dump(FileDescriptor fd, PrintWriter writer, String[] args) {
+        boolean quiet = false;
+        if (args != null) {
+            for (int i = 0; i < args.length; i++) {
+                String arg = args[i];
+                switch (arg) {
+                    case DUMP_ARG_SHORT_QUIET:
+                    case DUMP_ARG_FULL_QUIET:
+                        quiet = true;
+                        break;
+                    default:
+                        LogUtil.w("invalid arg at index %d: %s", i, arg);
+                }
+            }
+        }
+
         try {
             Context appContext = ApplicationContextSingleton.get();
-            writer.printf("ApplicationContextSingleton: %s\n", appContext);
+            writer.printf("ApplicationContext: %s\n", appContext);
             if (appContext != null) {
                 AppManifestConfigMetricsLogger.dump(appContext, writer);
             }
@@ -54,9 +74,9 @@ public final class AdServicesInternalProvider extends ApplicationContextProvider
 
         AdServicesManager.dump(writer);
 
-        writer.println("Flags:");
-        FlagsFactory.getFlags().dump(writer, /* args= */ null);
-
-        DebugFlags.getInstance().dump(writer);
+        if (!quiet) {
+            FlagsFactory.getFlags().dump(writer, args);
+            DebugFlags.getInstance().dump(writer);
+        }
     }
 }
