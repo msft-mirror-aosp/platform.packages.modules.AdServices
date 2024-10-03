@@ -49,7 +49,7 @@ import com.android.adservices.service.adselection.CompressedBuyerInputCreatorFac
 import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGenerator;
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
-import com.android.adservices.service.devapi.DevSessionSetter;
+import com.android.adservices.service.devapi.DevSessionController;
 import com.android.adservices.service.shell.adselection.ConsentedDebugShellCommand;
 import com.android.adservices.service.shell.adselection.GetAdSelectionDataCommand;
 import com.android.adservices.service.shell.adselection.ViewAuctionResultCommand;
@@ -116,7 +116,7 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
     @Mock private ProtectedSignalsArgument mProtectedSignalsArgument;
     @Mock private SignalsProviderAndArgumentFactory mSignalsProviderAndArgumentFactory;
     @Mock private AdSelectionEntryDao mAdSelectionEntryDao;
-    @Mock private DevSessionSetter mDevSessionSetter;
+    @Mock private DevSessionController mDevSessionSetter;
 
     private ShellCommandFactorySupplier mShellCommandFactorySupplier;
 

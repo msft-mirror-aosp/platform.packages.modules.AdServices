@@ -21,9 +21,6 @@ import com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledMod
 import com.android.adservices.shared.testing.device.DeviceConfigShellCmdImpl;
 import com.android.adservices.shared.testing.device.HostSideDeviceGateway;
 
-// TODO(b/370596037): not really working yet because TestDeviceHelper is not set (as this is a
-// class rule). Will need to either make it (optionally) a normal rule, or create a custom
-// subclass of JarHostTest
 /**
  * Default implementation of {@link AbstractFlagsPreparerClassRule} for device-side tests.
  *
