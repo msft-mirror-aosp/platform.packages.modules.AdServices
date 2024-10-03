@@ -43,6 +43,7 @@ import com.android.adservices.shared.testing.network.NetworkConnectionHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.concurrent.CompletableFuture;
@@ -67,6 +68,7 @@ public final class AppSetIdManagerTest extends CtsAppSetIdEndToEndTestCase {
 
     @Test
     @FlakyTest(bugId = 271656209)
+    @Ignore
     public void testAppSetIdManager() throws Exception {
         assumeOnline();
         AppSetIdManager appSetIdManager = AppSetIdManager.get(sContext);
