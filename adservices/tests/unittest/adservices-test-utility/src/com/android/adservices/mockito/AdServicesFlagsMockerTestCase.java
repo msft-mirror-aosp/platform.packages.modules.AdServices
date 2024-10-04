@@ -107,4 +107,13 @@ public abstract class AdServicesFlagsMockerTestCase<T extends AdServicesFlagsMoc
                 .that(mMockFlags.getAdservicesReleaseStageForCobalt())
                 .isEqualTo("DEBUG");
     }
+
+    @Test
+    public void testMockGetDeveloperModeFeatureEnabled() {
+        getMocker().mockGetDeveloperModeFeatureEnabled(true);
+
+        boolean result = mMockFlags.getDeveloperModeFeatureEnabled();
+
+        expect.withMessage("flags.getDeveloperModeFeatureEnabled()").that(result).isTrue();
+    }
 }
