@@ -215,9 +215,12 @@ public class AdIdManager {
      *
      * @param executor The executor to run callback.
      * @param callback The callback that's called after adid are available or an error occurs.
+     * @deprecated use {@link #getAdId(Executor, OutcomeReceiver)} instead. Android R is no longer
+     *     supported.
      */
-    @FlaggedApi(Flags.FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED)
     @RequiresPermission(ACCESS_ADSERVICES_AD_ID)
+    @Deprecated
+    @FlaggedApi(Flags.FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_DEPRECATED)
     @SuppressWarnings("NewApi")
     @NonNull
     public void getAdId(

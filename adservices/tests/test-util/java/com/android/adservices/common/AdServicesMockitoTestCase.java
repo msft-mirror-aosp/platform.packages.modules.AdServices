@@ -60,8 +60,13 @@ public abstract class AdServicesMockitoTestCase extends AdServicesUnitTestCase {
         private final AndroidMocker mAndroidMocker = new AndroidMockitoMocker();
 
         @Override
-        public void mockQueryIntentService(PackageManager pm, ResolveInfo... resolveInfos) {
-            mAndroidMocker.mockQueryIntentService(pm, resolveInfos);
+        public void mockQueryIntentService(PackageManager mockPm, ResolveInfo... resolveInfos) {
+            mAndroidMocker.mockQueryIntentService(mockPm, resolveInfos);
+        }
+
+        @Override
+        public void mockGetApplicationContext(Context mockContext, Context appContext) {
+            mAndroidMocker.mockGetApplicationContext(mockContext, appContext);
         }
     }
 

@@ -107,6 +107,7 @@ import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.RecreateJSSandboxIsolateRule;
 import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
@@ -130,6 +131,7 @@ import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adid.AdIdCacheManager;
@@ -202,6 +204,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @SpyStatic(FlagsFactory.class)
+@SpyStatic(DebugFlags.class)
 @MockStatic(BackgroundJobsManager.class)
 @MockStatic(ConsentManager.class)
 @MockStatic(AppImportanceFilter.class)
@@ -321,6 +324,10 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
     @Rule(order = 12)
     public final MockWebServerRule mockWebServerRule = MockWebServerRuleFactory.createForHttps();
 
+    @Rule(order = 13)
+    public final RecreateJSSandboxIsolateRule recreateJSSandboxIsolateRule =
+            new RecreateJSSandboxIsolateRule();
+
     @Mock private ConsentManager mConsentManagerMock;
     @Mock private FledgeConsentFilter mFledgeConsentFilterMock;
     // This object access some system APIs
@@ -368,6 +375,8 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
     @Before
     public void setUp() throws Exception {
         mocker.mockGetFlags(DEFAULT_FLAGS);
+        mocker.mockGetDebugFlags(mMockDebugFlags);
+        mocker.mockGetConsentNotificationDebugMode(false);
 
         mFledgeAllowListsFilterSpy =
                 spy(new FledgeAllowListsFilter(DEFAULT_FLAGS, mAdServicesLoggerMock));
@@ -4903,6 +4912,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         mAdServicesLoggerMock,
                         mAppImportanceFilterMock,
                         flags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
                                 mSpyContext,
@@ -5726,11 +5736,6 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
         @Override
         public String getPpapiAppAllowList() {
             return CommonFixture.TEST_PACKAGE_NAME;
-        }
-
-        @Override
-        public boolean getConsentNotificationDebugMode() {
-            return false;
         }
     }
 }

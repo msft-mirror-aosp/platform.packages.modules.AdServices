@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.measurement;
 
-import static android.adservices.common.AdServicesStatusUtils.STATUS_ADSERVICES_DISABLED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED;
@@ -36,7 +35,6 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REGISTER_TRIGGER;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REGISTER_WEB_SOURCE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REGISTER_WEB_TRIGGER;
-import static com.android.adservices.shared.testing.AndroidSdk.RVC;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -108,7 +106,6 @@ import com.android.adservices.service.measurement.reporting.VerboseDebugReportin
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
-import com.android.adservices.shared.testing.annotations.RequiresSdkRange;
 import com.android.adservices.shared.testing.concurrency.SimpleSyncCallback;
 import com.android.adservices.shared.util.Clock;
 import com.android.compatibility.common.util.TestUtils;
@@ -151,6 +148,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @SpyStatic(AsyncRegistrationFallbackJob.class)
 @SpyStatic(VerboseDebugReportingFallbackJobService.class)
 @SpyStatic(DebugReportingFallbackJobService.class)
+@RequiresSdkLevelAtLeastS()
 public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoTestCase {
 
     private static final Uri APP_DESTINATION = Uri.parse("android-app://test.app-destination");
@@ -184,88 +182,11 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkRange(atMost = RVC)
-    public void testRegister_onR_invokesCallbackOnFailure() throws Exception {
-        runWithMocks(
-                Api.REGISTER_SOURCE,
-                new AccessDenier(),
-                () -> registerSourceAndAssertFailure(STATUS_ADSERVICES_DISABLED));
-    }
-
-    @Test
-    @RequiresSdkRange(atMost = RVC)
-    public void testRegisterWebSource_onR_invokesCallbackOnFailure() throws Exception {
-        runWithMocks(
-                Api.REGISTER_WEB_SOURCE,
-                new AccessDenier(),
-                () -> registerWebSourceAndAssertFailure(STATUS_ADSERVICES_DISABLED));
-    }
-
-    @Test
-    @RequiresSdkRange(atMost = RVC)
-    public void testRegisterSource_onR_invokesCallbackOnFailure() throws Exception {
-        runWithMocks(
-                Api.REGISTER_SOURCES,
-                new AccessDenier(),
-                () -> registerSourcesAndAssertFailure(STATUS_ADSERVICES_DISABLED));
-    }
-
-    @Test
-    @RequiresSdkRange(atMost = RVC)
-    public void testRegisterWebTrigger_onR_invokesCallbackOnFailure() throws Exception {
-        runWithMocks(
-                Api.REGISTER_WEB_TRIGGER,
-                new AccessDenier(),
-                () -> registerWebTriggerAndAssertFailure(STATUS_ADSERVICES_DISABLED));
-    }
-
-    @Test
-    @RequiresSdkRange(atMost = RVC)
-    public void testDeleteRegistrations_onR_invokesCallbackOnFailure() throws Exception {
-        runWithMocks(
-                Api.DELETE_REGISTRATIONS,
-                new AccessDenier(),
-                () -> deleteRegistrationsAndAssertFailure(STATUS_ADSERVICES_DISABLED));
-    }
-
-    @Test
-    @RequiresSdkRange(atMost = RVC)
-    public void testSchedulePeriodicJobs_onR_invokesCallbackOnFailure() throws Exception {
-        final List<MeasurementErrorResponse> errorContainer = new ArrayList<>();
-        mMeasurementServiceImpl = createServiceWithMocks();
-        mMeasurementServiceImpl.schedulePeriodicJobs(
-                new IMeasurementCallback.Stub() {
-                    @Override
-                    public void onResult() throws RemoteException {}
-
-                    @Override
-                    public void onFailure(MeasurementErrorResponse responseParcel)
-                            throws RemoteException {
-                        errorContainer.add(responseParcel);
-                    }
-                });
-
-        expect.that(errorContainer.size()).isEqualTo(1);
-        expect.that(errorContainer.get(0).getStatusCode()).isEqualTo(STATUS_ADSERVICES_DISABLED);
-    }
-
-    @Test
-    @RequiresSdkRange(atMost = RVC)
-    public void testGetMeasurementApiStatus_onR_disabled() throws Exception {
-        runWithMocks(
-                Api.STATUS,
-                new AccessDenier().deniedByKillSwitch(),
-                this::getMeasurementApiStatusAndAssertFailure);
-    }
-
-    @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterSource_success() throws Exception {
         runWithMocks(Api.REGISTER_SOURCE, new AccessDenier(), this::registerSourceAndAssertSuccess);
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterSource_sessionStableEnabledAndKillSwitchFlipOn_success()
             throws Exception {
         when(mMockFlags.getMeasurementEnableSessionStableKillSwitches()).thenReturn(true);
@@ -280,7 +201,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterSource_sessionStableDisabledAndKillSwitchFlipOn_failureByKillSwitch()
             throws Exception {
         when(mMockFlags.getMeasurementEnableSessionStableKillSwitches()).thenReturn(false);
@@ -295,7 +215,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterSource_sessionStableEnabledAndKillSwitchFlipOff_failureByKillSwitch()
             throws Exception {
         when(mMockFlags.getMeasurementEnableSessionStableKillSwitches()).thenReturn(true);
@@ -310,7 +229,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterSource_sessionStableDisabledAndKillSwitchFlipOff_success()
             throws Exception {
         when(mMockFlags.getMeasurementEnableSessionStableKillSwitches()).thenReturn(false);
@@ -402,7 +320,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterSource_failureByDevContextAccessResolver() throws Exception {
         runWithMocks(
                 Api.REGISTER_SOURCE,
@@ -413,7 +330,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterSource_failureByDevContextAccessResolver_logFailureReason()
             throws Exception {
         runWithMocks(
@@ -425,7 +341,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterSource_failureByAppPackageMsmtApiAccessResolver() throws Exception {
         runWithMocks(
                 Api.REGISTER_SOURCE,
@@ -436,7 +351,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterSource_failureByAppPackageMsmtApiAccessResolver_logFailureReason()
             throws Exception {
         runWithMocks(
@@ -449,7 +363,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterSource_failureByAttributionPermissionResolver() throws Exception {
         runWithMocks(
                 Api.REGISTER_SOURCE,
@@ -458,7 +371,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterSource_failureByConsentResolver() throws Exception {
         runWithMocks(
                 Api.REGISTER_SOURCE,
@@ -467,7 +379,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterSource_failureByConsentNotifiedResolver() throws Exception {
         runWithMocks(
                 Api.REGISTER_SOURCE,
@@ -478,7 +389,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterSource_failureByForegroundEnforcementAccessResolver() throws Exception {
         runWithMocks(
                 Api.REGISTER_SOURCE,
@@ -487,7 +397,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterSource_failureByForegroundEnforcementAccessResolver_logFailureReason()
             throws Exception {
         runWithMocks(
@@ -499,7 +408,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterSource_failureByKillSwitchAccessResolver() throws Exception {
         runWithMocks(
                 Api.REGISTER_SOURCE,
@@ -508,7 +416,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterSource_failureByThrottler() throws Exception {
         runWithMocks(
                 Api.REGISTER_SOURCE,
@@ -517,14 +424,12 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterTrigger_success() throws Exception {
         runWithMocks(
                 Api.REGISTER_TRIGGER, new AccessDenier(), this::registerTriggerAndAssertSuccess);
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterTrigger_consentNotNotifiedButConsentGiven_success() throws Exception {
         runWithMocks(
                 Api.REGISTER_TRIGGER,
@@ -533,7 +438,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterTrigger_sessionStableEnabledAndKillSwitchFlipOn_success()
             throws Exception {
         when(mMockFlags.getMeasurementEnableSessionStableKillSwitches()).thenReturn(true);
@@ -548,7 +452,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterTrigger_sessionStableDisabledAndKillSwitchFlipOn_failureByKillSwitch()
             throws Exception {
         when(mMockFlags.getMeasurementEnableSessionStableKillSwitches()).thenReturn(false);
@@ -562,7 +465,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testTriggerSource_sessionStableEnabledAndKillSwitchFlipOff_failureByKillSwitch()
             throws Exception {
         when(mMockFlags.getMeasurementEnableSessionStableKillSwitches()).thenReturn(true);
@@ -576,7 +478,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterTrigger_sessionStableDisabledAndKillSwitchFlipOff_success()
             throws Exception {
         when(mMockFlags.getMeasurementEnableSessionStableKillSwitches()).thenReturn(false);
@@ -644,7 +545,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterTrigger_failureByDevContextAccessResolver() throws Exception {
         runWithMocks(
                 Api.REGISTER_TRIGGER,
@@ -655,7 +555,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterTrigger_failureByAppPackageMsmtApiAccessResolver() throws Exception {
         runWithMocks(
                 Api.REGISTER_TRIGGER,
@@ -666,7 +565,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterTrigger_failureByAttributionPermissionResolver() throws Exception {
         runWithMocks(
                 Api.REGISTER_TRIGGER,
@@ -675,7 +573,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterTrigger_failureByConsentResolver() throws Exception {
         runWithMocks(
                 Api.REGISTER_TRIGGER,
@@ -684,7 +581,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterTrigger_failureByConsentNotifiedResolver() throws Exception {
         runWithMocks(
                 Api.REGISTER_TRIGGER,
@@ -695,7 +591,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterTrigger_failureByForegroundEnforcementAccessResolver()
             throws Exception {
         runWithMocks(
@@ -705,7 +600,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterTrigger_failureByKillSwitchAccessResolver() throws Exception {
         runWithMocks(
                 Api.REGISTER_TRIGGER,
@@ -714,7 +608,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterTrigger_failureByThrottler() throws Exception {
         runWithMocks(
                 Api.REGISTER_TRIGGER,
@@ -723,7 +616,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegister_invalidRequest_throwException() {
         assertThrows(
                 NullPointerException.class,
@@ -735,7 +627,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegister_invalidCallerMetadata_throwException() {
         assertThrows(
                 NullPointerException.class,
@@ -747,7 +638,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegister_invalidCallback_throwException() {
         assertThrows(
                 NullPointerException.class,
@@ -759,7 +649,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testDeleteRegistrations_success() throws Exception {
         runWithMocks(
                 Api.DELETE_REGISTRATIONS,
@@ -768,7 +657,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testDeleteRegistrations_sessionStableEnabledAndKillSwitchFlipOn_success()
             throws Exception {
         when(mMockFlags.getMeasurementEnableSessionStableKillSwitches()).thenReturn(true);
@@ -784,7 +672,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void
             testDeleteRegistrations_sessionStableDisabledAndKillSwitchFlipOn_failureByKillSwitch()
                     throws Exception {
@@ -801,7 +688,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void
             testDeleteRegistrations_sessionStableEnabledAndKillSwitchFlipOff_failureByKillSwitch()
                     throws Exception {
@@ -818,7 +704,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testDeleteRegistrations_sessionStableDisabledAndKillSwitchFlipOff_success()
             throws Exception {
         when(mMockFlags.getMeasurementEnableSessionStableKillSwitches()).thenReturn(false);
@@ -882,7 +767,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testDeleteRegistrations_failureByAppPackageMsmtApiAccessResolver()
             throws Exception {
         runWithMocks(
@@ -894,7 +778,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testDeleteRegistrations_failureByAppPackageWebContextClientAccessResolver()
             throws Exception {
         runWithMocks(
@@ -906,7 +789,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testDeleteRegistrations_failureByForegroundEnforcementAccessResolver()
             throws Exception {
         runWithMocks(
@@ -916,7 +798,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testDeleteRegistrations_failureByKillSwitchAccessResolver() throws Exception {
         runWithMocks(
                 Api.DELETE_REGISTRATIONS,
@@ -925,7 +806,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testDeleteRegistrations_failureByThrottler() throws Exception {
         runWithMocks(
                 Api.DELETE_REGISTRATIONS,
@@ -934,7 +814,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testDeleteRegistrations_invalidRequest_throwException() {
         assertThrows(
                 NullPointerException.class,
@@ -946,7 +825,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testDeleteRegistrations_invalidCallerMetadata_throwException() {
         assertThrows(
                 NullPointerException.class,
@@ -958,7 +836,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testDeleteRegistrations_invalidCallback_throwException() {
         assertThrows(
                 NullPointerException.class,
@@ -970,13 +847,11 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testGetMeasurementApiStatus_success() throws Exception {
         runWithMocks(Api.STATUS, new AccessDenier(), this::getMeasurementApiStatusAndAssertSuccess);
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testGetMsmtApiStatus_sessionStableEnabledAndKillSwitchFlipOn_success()
             throws Exception {
         when(mMockFlags.getMeasurementEnableSessionStableKillSwitches()).thenReturn(true);
@@ -991,7 +866,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testGetMsmtApiStatus_sessionStableDisabledAndKillSwitchFlipOn_failureByKillSwitch()
             throws Exception {
         when(mMockFlags.getMeasurementEnableSessionStableKillSwitches()).thenReturn(false);
@@ -1006,7 +880,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testGetMsmtApiStatus_sessionStableEnabledAndKillSwitchFlipOff_failureByKillSwitch()
             throws Exception {
         when(mMockFlags.getMeasurementEnableSessionStableKillSwitches()).thenReturn(true);
@@ -1021,7 +894,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testGetMsmtApiStatus_sessionStableDisabledAndKillSwitchFlipOff_success()
             throws Exception {
         when(mMockFlags.getMeasurementEnableSessionStableKillSwitches()).thenReturn(false);
@@ -1056,7 +928,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testGetMeasurementApiStatus_consentNotNotifiedButConsentGiven_success()
             throws Exception {
         runWithMocks(
@@ -1066,7 +937,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testGetMeasurementApiStatus_EnableApiStatusAllowListCheck_success()
             throws Exception {
         when(mMockFlags.getMsmtEnableApiStatusAllowListCheck()).thenReturn(true);
@@ -1112,7 +982,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testGetMeasurementApiStatus_failureByAppPackageMsmtApiAccessResolver()
             throws Exception {
         runWithMocks(
@@ -1122,7 +991,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testGetMeasurementApiStatus_enabledAppPackageMsmtApiAccessResolver_flagAllowList()
             throws Exception {
         when(mMockFlags.getMsmtEnableApiStatusAllowListCheck()).thenReturn(true);
@@ -1133,7 +1001,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testGetMeasurementApiStatus_failureByForegroundEnforcementAccessResolver()
             throws Exception {
         runWithMocks(
@@ -1143,7 +1010,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void
             testGetMeasurementApiStatus_failureByForegroundEnforcementAccessResolver_flagAllowList()
                     throws Exception {
@@ -1155,7 +1021,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testGetMeasurementApiStatus_failureByKillSwitchAccessResolver() throws Exception {
         runWithMocks(
                 Api.STATUS,
@@ -1164,7 +1029,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testGetMeasurementApiStatus_failureByKillSwitchAccessResolver_flagAllowList()
             throws Exception {
         when(mMockFlags.getMsmtEnableApiStatusAllowListCheck()).thenReturn(true);
@@ -1175,7 +1039,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testGetMeasurementApiStatus_failureByConsentAccessResolver() throws Exception {
         runWithMocks(
                 Api.STATUS,
@@ -1184,7 +1047,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testGetMeasurementApiStatus_failureByConsentAccessResolver_flagAllowList()
             throws Exception {
         when(mMockFlags.getMsmtEnableApiStatusAllowListCheck()).thenReturn(true);
@@ -1195,7 +1057,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testGetMeasurementApiStatus_failureByConsentNotifiedAccessResolver()
             throws Exception {
         runWithMocks(
@@ -1205,7 +1066,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testGetMeasurementApiStatus_invalidRequest_throwException() {
         assertThrows(
                 NullPointerException.class,
@@ -1217,7 +1077,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testGetMeasurementApiStatus_invalidRequest_throwException_flagAllowList() {
         when(mMockFlags.getMsmtEnableApiStatusAllowListCheck()).thenReturn(true);
         assertThrows(
@@ -1230,7 +1089,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testGetMeasurementApiStatus_invalidCallerMetadata_throwException() {
         assertThrows(
                 NullPointerException.class,
@@ -1242,7 +1100,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testGetMeasurementApiStatus_invalidCallerMetadata_throwException_flagAllowList() {
         when(mMockFlags.getMsmtEnableApiStatusAllowListCheck()).thenReturn(true);
         assertThrows(
@@ -1255,7 +1112,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testGetMeasurementApiStatus_invalidCallback_throwException() {
         assertThrows(
                 NullPointerException.class,
@@ -1267,7 +1123,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testGetMeasurementApiStatus_invalidCallback_throwException_flagAllowList() {
         when(mMockFlags.getMsmtEnableApiStatusAllowListCheck()).thenReturn(true);
         assertThrows(
@@ -1280,7 +1135,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void registerWebSource_success() throws Exception {
         runWithMocks(
                 Api.REGISTER_WEB_SOURCE,
@@ -1289,7 +1143,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterWebSource_sessionStableEnabledAndKillSwitchFlipOn_success()
             throws Exception {
         when(mMockFlags.getMeasurementEnableSessionStableKillSwitches()).thenReturn(true);
@@ -1305,7 +1158,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterWebSource_sessionStableDisabledAndKillSwitchFlipOn_failureByKillSwitch()
             throws Exception {
         when(mMockFlags.getMeasurementEnableSessionStableKillSwitches()).thenReturn(false);
@@ -1321,7 +1173,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterWebSource_sessionStableEnabledAndKillSwitchFlipOff_failureByKillSwitch()
             throws Exception {
         when(mMockFlags.getMeasurementEnableSessionStableKillSwitches()).thenReturn(true);
@@ -1337,7 +1188,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterWebSource_sessionStableDisabledAndKillSwitchFlipOff_success()
             throws Exception {
         when(mMockFlags.getMeasurementEnableSessionStableKillSwitches()).thenReturn(false);
@@ -1377,7 +1227,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void registerWebSource_consentNotNotifiedButConsentGiven_success() throws Exception {
         runWithMocks(
                 Api.REGISTER_WEB_SOURCE,
@@ -1409,14 +1258,12 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void registerSources_success() throws Exception {
         runWithMocks(
                 Api.REGISTER_SOURCES, new AccessDenier(), this::registerSourcesAndAssertSuccess);
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterSources_sessionStableEnabledAndKillSwitchFlipOn_success()
             throws Exception {
         when(mMockFlags.getMeasurementEnableSessionStableKillSwitches()).thenReturn(true);
@@ -1431,7 +1278,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterSources_sessionStableDisabledAndKillSwitchFlipOn_failureByKillSwitch()
             throws Exception {
         when(mMockFlags.getMeasurementEnableSessionStableKillSwitches()).thenReturn(false);
@@ -1446,7 +1292,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterSources_sessionStableEnabledAndKillSwitchFlipOff_failureByKillSwitch()
             throws Exception {
         when(mMockFlags.getMeasurementEnableSessionStableKillSwitches()).thenReturn(true);
@@ -1461,7 +1306,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterSources_sessionStableDisabledAndKillSwitchFlipOff_success()
             throws Exception {
         when(mMockFlags.getMeasurementEnableSessionStableKillSwitches()).thenReturn(false);
@@ -1500,7 +1344,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void registerSources_consentGivenButNotificationNotShown_success() throws Exception {
         runWithMocks(
                 Api.REGISTER_SOURCES,
@@ -1532,7 +1375,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterSources_failureByDevContextAccessResolver() throws Exception {
         runWithMocks(
                 Api.REGISTER_SOURCES,
@@ -1543,7 +1385,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterSources_failureByAppPackageMsmtApiAccessResolver() throws Exception {
         runWithMocks(
                 Api.REGISTER_SOURCES,
@@ -1554,7 +1395,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterSources_failureByAttributionPermissionResolver() throws Exception {
         runWithMocks(
                 Api.REGISTER_SOURCES,
@@ -1563,7 +1403,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterSources_failureByConsentResolver() throws Exception {
         runWithMocks(
                 Api.REGISTER_SOURCES,
@@ -1572,7 +1411,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterSources_failureByConsentNotifiedResolver() throws Exception {
         runWithMocks(
                 Api.REGISTER_SOURCES,
@@ -1583,7 +1421,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterSources_failureByForegroundEnforcementAccessResolver()
             throws Exception {
         runWithMocks(
@@ -1593,7 +1430,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterSources_failureByKillSwitchAccessResolver() throws Exception {
         runWithMocks(
                 Api.REGISTER_SOURCES,
@@ -1602,7 +1438,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterSources_failureByThrottler() throws Exception {
         runWithMocks(
                 Api.REGISTER_SOURCES,
@@ -1611,7 +1446,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void registerSources_invalidRequest_throwException() {
         assertThrows(
                 NullPointerException.class,
@@ -1623,7 +1457,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void registerSources_invalidCallerMetadata_throwException() {
         assertThrows(
                 NullPointerException.class,
@@ -1635,7 +1468,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void registerSources_invalidCallback_throwException() {
         assertThrows(
                 NullPointerException.class,
@@ -1647,7 +1479,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterWebSource_failureByDevContextAccessResolver() throws Exception {
         runWithMocks(
                 Api.REGISTER_WEB_SOURCE,
@@ -1658,7 +1489,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterWebSource_failureByAppPackageMsmtApiAccessResolver() throws Exception {
         runWithMocks(
                 Api.REGISTER_WEB_SOURCE,
@@ -1669,7 +1499,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterWebSource_failureByAppPackageWebContextClientAccessResolver()
             throws Exception {
         runWithMocks(
@@ -1681,7 +1510,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterWebSource_failureByAttributionPermissionResolver() throws Exception {
         runWithMocks(
                 Api.REGISTER_WEB_SOURCE,
@@ -1690,7 +1518,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterWebSource_failureByConsentResolver() throws Exception {
         runWithMocks(
                 Api.REGISTER_WEB_SOURCE,
@@ -1699,7 +1526,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterWebSource_failureByConsentNotifiedResolver() throws Exception {
         runWithMocks(
                 Api.REGISTER_WEB_SOURCE,
@@ -1710,7 +1536,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterWebSource_failureByForegroundEnforcementAccessResolver()
             throws Exception {
         runWithMocks(
@@ -1720,7 +1545,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterWebSource_failureByKillSwitchAccessResolver() throws Exception {
         runWithMocks(
                 Api.REGISTER_WEB_SOURCE,
@@ -1729,7 +1553,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterWebSource_failureByThrottler() throws Exception {
         runWithMocks(
                 Api.REGISTER_WEB_SOURCE,
@@ -1738,7 +1561,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void registerWebSource_invalidRequest_throwException() {
         assertThrows(
                 NullPointerException.class,
@@ -1750,7 +1572,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void registerWebSource_invalidCallerMetadata_throwException() {
         assertThrows(
                 NullPointerException.class,
@@ -1762,7 +1583,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void registerWebSource_invalidCallback_throwException() {
         assertThrows(
                 NullPointerException.class,
@@ -1774,7 +1594,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void registerWebTrigger_success() throws Exception {
         runWithMocks(
                 Api.REGISTER_WEB_TRIGGER,
@@ -1783,7 +1602,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterWebTrigger_sessionStableEnabledAndKillSwitchFlipOn_success()
             throws Exception {
         when(mMockFlags.getMeasurementEnableSessionStableKillSwitches()).thenReturn(true);
@@ -1799,7 +1617,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void
             testRegisterWebTrigger_sessionStableDisabledAndKillSwitchFlipOn_failureByKillSwitch()
                     throws Exception {
@@ -1816,7 +1633,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void
             testRegisterWebTrigger_sessionStableEnabledAndKillSwitchFlipOff_failureByKillSwitch()
                     throws Exception {
@@ -1833,7 +1649,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterWebTrigger_sessionStableDisabledAndKillSwitchFlipOff_success()
             throws Exception {
         when(mMockFlags.getMeasurementEnableSessionStableKillSwitches()).thenReturn(false);
@@ -1873,7 +1688,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void registerWebTrigger_consentNotNotifiedButConsentGivensuccess() throws Exception {
         runWithMocks(
                 Api.REGISTER_WEB_TRIGGER,
@@ -1935,7 +1749,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterWebTrigger_failureByDevContextAccessResolver() throws Exception {
         runWithMocks(
                 Api.REGISTER_WEB_TRIGGER,
@@ -1946,7 +1759,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterWebTrigger_failureByAppPackageMsmtApiAccessResolver() throws Exception {
         runWithMocks(
                 Api.REGISTER_WEB_TRIGGER,
@@ -1957,7 +1769,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterWebTrigger_failureByAttributionPermissionResolver() throws Exception {
         runWithMocks(
                 Api.REGISTER_WEB_TRIGGER,
@@ -1966,7 +1777,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterWebTrigger_failureByConsentResolver() throws Exception {
         runWithMocks(
                 Api.REGISTER_WEB_TRIGGER,
@@ -1975,7 +1785,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterWebTrigger_failureByConsentNotifiedResolver() throws Exception {
         runWithMocks(
                 Api.REGISTER_WEB_TRIGGER,
@@ -1986,7 +1795,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterWebTrigger_failureByForegroundEnforcementAccessResolver()
             throws Exception {
         runWithMocks(
@@ -1996,7 +1804,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterWebTrigger_failureByKillSwitchAccessResolver() throws Exception {
         runWithMocks(
                 Api.REGISTER_WEB_TRIGGER,
@@ -2005,7 +1812,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testRegisterWebTrigger_failureByThrottler() throws Exception {
         runWithMocks(
                 Api.REGISTER_WEB_TRIGGER,
@@ -2014,7 +1820,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void registerWebTrigger_invalidRequest_throwException() {
         assertThrows(
                 NullPointerException.class,
@@ -2026,7 +1831,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void registerWebTrigger_invalidCallerMetadata_throwException() {
         assertThrows(
                 NullPointerException.class,
@@ -2038,7 +1842,6 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void registerWebTrigger_invalidCallback_throwException() {
         assertThrows(
                 NullPointerException.class,

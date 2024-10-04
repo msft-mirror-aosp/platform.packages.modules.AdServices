@@ -19,8 +19,6 @@ package com.android.adservices.service;
 import static com.android.adservices.service.CommonDebugFlags.DEFAULT_ADSERVICES_SHELL_COMMAND_ENABLED;
 import static com.android.adservices.service.CommonFlagsConstants.KEY_ADSERVICES_SHELL_COMMAND_ENABLED;
 
-import android.util.Log;
-
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.fixture.TestableSystemProperties;
@@ -59,7 +57,7 @@ public final class CommonDebugFlagsTest extends AdServicesExtendedMockitoTestCas
     }
 
     private void setSystemProperty(String name, String value) {
-        Log.v(mTag, "setSystemProperty(): " + name + "=" + value);
+        mLog.v("setSystemProperty(): %s=%s", name, value);
         TestableSystemProperties.set(PhFlags.getSystemPropertyName(name), "" + value);
     }
 }
