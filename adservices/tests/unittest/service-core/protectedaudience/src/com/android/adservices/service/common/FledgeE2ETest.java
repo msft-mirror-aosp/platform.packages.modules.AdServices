@@ -107,6 +107,7 @@ import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.RecreateJSSandboxIsolateRule;
 import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
@@ -322,6 +323,10 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
 
     @Rule(order = 12)
     public final MockWebServerRule mockWebServerRule = MockWebServerRuleFactory.createForHttps();
+
+    @Rule(order = 13)
+    public final RecreateJSSandboxIsolateRule recreateJSSandboxIsolateRule =
+            new RecreateJSSandboxIsolateRule();
 
     @Mock private ConsentManager mConsentManagerMock;
     @Mock private FledgeConsentFilter mFledgeConsentFilterMock;
