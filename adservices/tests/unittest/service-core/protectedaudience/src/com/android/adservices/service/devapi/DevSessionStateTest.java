@@ -16,29 +16,25 @@
 
 package com.android.adservices.service.devapi;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.service.proto.DevSessionStorage.State;
 
 import org.junit.Test;
+
+import java.util.Arrays;
 
 public final class DevSessionStateTest extends AdServicesUnitTestCase {
 
     @Test
     public void testEnumValuesMatchProto() {
         for (DevSessionState devSessionState : DevSessionState.values()) {
-            // Order is not guaranteed so loop through to find the correct match.
-            boolean foundMatch = false;
-            for (State state : State.values()) {
-                if (devSessionState.getOrdinal() == state.getNumber()
-                        && devSessionState.name().equals(state.name())) {
-                    foundMatch = true;
-                    break;
-                }
-            }
-            if (!foundMatch) {
-                expect.withMessage("No matching proto enum value found for %s", devSessionState)
-                        .fail();
-            }
+            State storageSessionState = State.forNumber(devSessionState.ordinal());
+
+            assertNotNull(storageSessionState);
+            assertEquals(storageSessionState.name(), devSessionState.name());
         }
     }
 
@@ -46,21 +42,17 @@ public final class DevSessionStateTest extends AdServicesUnitTestCase {
     public void testProtoValuesMatchEnum() {
         for (State state : State.values()) {
             if (state == State.UNRECOGNIZED) {
-                // Skip the check for corrupted proto states.
-                continue;
+                continue; // Skip the check for corrupted proto states.
             }
-            boolean foundMatch = false;
-            for (DevSessionState devSessionState : DevSessionState.values()) {
-                if (devSessionState.getOrdinal() == state.getNumber()
-                        && devSessionState.name().equals(state.name())) {
-                    foundMatch = true;
-                    break;
-                }
-            }
-            if (!foundMatch) {
-                expect.withMessage("No matching DevSessionState enum value found for %s", state)
-                        .fail();
-            }
+            boolean foundMatch =
+                    Arrays.stream(DevSessionState.values())
+                            .anyMatch(
+                                    devSessionState ->
+                                            devSessionState.getOrdinal() == state.getNumber()
+                                                    && devSessionState.name().equals(state.name()));
+            expect.withMessage("No matching DevSessionState enum value found for " + state.name())
+                    .that(foundMatch)
+                    .isTrue();
         }
     }
 }

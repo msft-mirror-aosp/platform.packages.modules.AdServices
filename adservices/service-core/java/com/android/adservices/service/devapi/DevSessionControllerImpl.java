@@ -78,8 +78,8 @@ public final class DevSessionControllerImpl implements DevSessionController {
                                     devSession, setDevSessionEnabled);
 
                             DevSessionState state = devSession.getState();
-                            if (!setDevSessionEnabled && state == IN_PROD
-                                    || setDevSessionEnabled && state == IN_DEV) {
+                            if ((!setDevSessionEnabled && state == IN_PROD)
+                                    || (setDevSessionEnabled && state == IN_DEV)) {
                                 return Futures.immediateFuture(NO_OP);
                             }
                             // Note that transitory states can go in either direction, so we ignore
@@ -95,8 +95,9 @@ public final class DevSessionControllerImpl implements DevSessionController {
                         mLightWeightExecutor);
     }
 
-    private FluentFuture<DevSessionControllerResult> handleDevToProd() {
-        return setDevSessionState(TRANSITIONING_DEV_TO_PROD)
+    @SuppressWarnings("FutureReturnValueIgnored") // TODO(b/331285831): fix this
+    private ListenableFuture<DevSessionControllerResult> handleDevToProd() {
+        return FluentFuture.from(setDevSessionState(TRANSITIONING_DEV_TO_PROD))
                 .transform(this::clearDatabase, mLightWeightExecutor)
                 .transform(
                         unused -> {
@@ -113,8 +114,9 @@ public final class DevSessionControllerImpl implements DevSessionController {
                         mLightWeightExecutor);
     }
 
-    private FluentFuture<DevSessionControllerResult> handleProdOrRecoveryToDev() {
-        return setDevSessionState(TRANSITIONING_PROD_TO_DEV)
+    @SuppressWarnings("FutureReturnValueIgnored") // TODO(b/331285831): fix this
+    private ListenableFuture<DevSessionControllerResult> handleProdOrRecoveryToDev() {
+        return FluentFuture.from(setDevSessionState(TRANSITIONING_PROD_TO_DEV))
                 .transform(this::clearDatabase, mLightWeightExecutor)
                 .transform(
                         unused -> {
@@ -131,18 +133,16 @@ public final class DevSessionControllerImpl implements DevSessionController {
                         mLightWeightExecutor);
     }
 
-    private FluentFuture<DevSession> setDevSessionState(DevSessionState desiredState) {
+    private ListenableFuture<DevSession> setDevSessionState(DevSessionState desiredState) {
         sLogger.d("Beginning setDevSessionState(%s)", desiredState);
-        return FluentFuture.from(
-                mDevSessionDataStore.set(DevSession.builder().setState(desiredState).build()));
+        return mDevSessionDataStore.set(DevSession.builder().setState(desiredState).build());
     }
 
-    private FluentFuture<Void> clearDatabase(DevSession unused) {
+    private ListenableFuture<Void> clearDatabase(DevSession unused) {
         sLogger.d("Beginning clearDatabase()");
-        return FluentFuture.from(
-                mDatabaseClearer.deleteProtectedAudienceAndAppSignalsData(
-                        /* deleteCustomAudienceUpdate= */ true,
-                        /* deleteAppInstallFiltering= */ true,
-                        /* deleteProtectedSignals= */ true));
+        return mDatabaseClearer.deleteProtectedAudienceAndAppSignalsData(
+                /* deleteCustomAudienceUpdate= */ true,
+                /* deleteAppInstallFiltering= */ true,
+                /* deleteProtectedSignals= */ true);
     }
 }
