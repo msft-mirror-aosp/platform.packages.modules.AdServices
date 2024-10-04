@@ -17,7 +17,10 @@
 package com.android.adservices.service;
 
 import static com.android.adservices.service.CommonDebugFlags.DEFAULT_ADSERVICES_SHELL_COMMAND_ENABLED;
-import static com.android.adservices.service.CommonFlagsConstants.KEY_ADSERVICES_SHELL_COMMAND_ENABLED;
+import static com.android.adservices.service.CommonDebugFlags.DUMP_EQUALS;
+import static com.android.adservices.service.CommonDebugFlags.DUMP_PREFIX;
+import static com.android.adservices.service.CommonDebugFlagsConstants.KEY_ADSERVICES_SHELL_COMMAND_ENABLED;
+import static com.android.adservices.shared.meta_testing.FlagsTestLittleHelper.expectDumpHasAllFlags;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
@@ -42,6 +45,15 @@ public final class CommonDebugFlagsTest extends AdServicesExtendedMockitoTestCas
                 KEY_ADSERVICES_SHELL_COMMAND_ENABLED,
                 DEFAULT_ADSERVICES_SHELL_COMMAND_ENABLED,
                 CommonDebugFlags::getAdServicesShellCommandEnabled);
+    }
+
+    @Test
+    public void testDump() throws Exception {
+        expectDumpHasAllFlags(
+                expect,
+                CommonDebugFlagsConstants.class,
+                pw -> mCommonDebugFlags.dump(pw),
+                flag -> (DUMP_PREFIX + flag.second + DUMP_EQUALS));
     }
 
     private void testDebugFlag(
