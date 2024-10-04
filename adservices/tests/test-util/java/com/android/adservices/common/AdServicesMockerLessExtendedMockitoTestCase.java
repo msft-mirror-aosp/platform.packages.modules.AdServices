@@ -198,8 +198,13 @@ public abstract class AdServicesMockerLessExtendedMockitoTestCase<M extends Inte
         // AndroidMocker methods
 
         @Override
-        public void mockQueryIntentService(PackageManager pm, ResolveInfo... resolveInfos) {
-            mAndroidMocker.mockQueryIntentService(pm, resolveInfos);
+        public void mockQueryIntentService(PackageManager mockPm, ResolveInfo... resolveInfos) {
+            mAndroidMocker.mockQueryIntentService(mockPm, resolveInfos);
+        }
+
+        @Override
+        public void mockGetApplicationContext(Context mockContext, Context appContext) {
+            mAndroidMocker.mockGetApplicationContext(mockContext, appContext);
         }
 
         // AndroidStaticMocker methods
@@ -294,6 +299,11 @@ public abstract class AdServicesMockerLessExtendedMockitoTestCase<M extends Inte
             mAdServicesFlagsMocker.mockAllCobaltLoggingFlags(enabled);
         }
 
+        @Override
+        public void mockGetDeveloperModeFeatureEnabled(boolean value) {
+            mAdServicesFlagsMocker.mockGetDeveloperModeFeatureEnabled(value);
+        }
+
         // AdServicesDebugFlagsMocker methods
         @Override
         public void mockGetConsentManagerDebugMode(boolean value) {
@@ -344,6 +354,11 @@ public abstract class AdServicesMockerLessExtendedMockitoTestCase<M extends Inte
         @Override
         public Context setApplicationContextSingleton() {
             return mSharedMocker.setApplicationContextSingleton();
+        }
+
+        @Override
+        public void mockSetApplicationContextSingleton(Context context) {
+            mSharedMocker.mockSetApplicationContextSingleton(context);
         }
 
         @Override
