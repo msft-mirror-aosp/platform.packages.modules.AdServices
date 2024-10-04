@@ -21,6 +21,7 @@ import static android.adservices.adselection.CustomAudienceBiddingInfoFixture.DA
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_OWNER;
 
 import static com.android.adservices.data.adselection.AdSelectionDatabase.DATABASE_NAME;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED;
 import static com.android.adservices.service.adselection.AdSelectionScriptEngine.NUM_BITS_STOCHASTIC_ROUNDING;
 import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_KEY;
 import static com.android.adservices.service.adselection.ImpressionReporterLegacy.CALLER_PACKAGE_NAME_MISMATCH;
@@ -106,6 +107,7 @@ import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.RecreateJSSandboxIsolateRule;
 import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
@@ -164,6 +166,7 @@ import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.signals.EgressConfigurationGenerator;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
+import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.testutils.FetchCustomAudienceTestSyncCallback;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -205,6 +208,7 @@ import java.util.stream.Collectors;
 @MockStatic(AppImportanceFilter.class)
 @MockStatic(DebugReportSenderJobService.class)
 @MockStatic(BackgroundFetchJob.class)
+@SetFlagDisabled(KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED)
 public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
     public static final String CUSTOM_AUDIENCE_SEQ_1 = "/ca1";
     public static final String CUSTOM_AUDIENCE_SEQ_2 = "/ca2";
@@ -317,6 +321,10 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
 
     @Rule(order = 12)
     public final MockWebServerRule mockWebServerRule = MockWebServerRuleFactory.createForHttps();
+
+    @Rule(order = 13)
+    public final RecreateJSSandboxIsolateRule recreateJSSandboxIsolateRule =
+            new RecreateJSSandboxIsolateRule();
 
     @Mock private ConsentManager mConsentManagerMock;
     @Mock private FledgeConsentFilter mFledgeConsentFilterMock;
@@ -1274,12 +1282,13 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         + "}";
         String biddingLogicJs =
                 "function generateBid(ad, auction_signals, per_buyer_signals,"
-                    + " trusted_bidding_signals, contextual_signals, custom_audience_signals) { \n"
-                    + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
-                    + "}\n"
-                    + "function reportWin(ad_selection_signals, per_buyer_signals,"
-                    + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
-                    + " return {'status': 0, 'results': {'reporting_uri': '"
+                        + " trusted_bidding_signals, contextual_signals, custom_audience_signals)"
+                        + " { \n"
+                        + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
+                        + "}\n"
+                        + "function reportWin(ad_selection_signals, per_buyer_signals,"
+                        + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
+                        + " return {'status': 0, 'results': {'reporting_uri': '"
                         + BUYER_REPORTING_PATH
                         + "' } };\n"
                         + "}";
@@ -1672,12 +1681,13 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         + "}";
         String biddingLogicJs =
                 "function generateBid(ad, auction_signals, per_buyer_signals,"
-                    + " trusted_bidding_signals, contextual_signals, custom_audience_signals) { \n"
-                    + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
-                    + "}\n"
-                    + "function reportWin(ad_selection_signals, per_buyer_signals,"
-                    + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
-                    + " return {'status': 0, 'results': {'reporting_uri': '"
+                        + " trusted_bidding_signals, contextual_signals, custom_audience_signals)"
+                        + " { \n"
+                        + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
+                        + "}\n"
+                        + "function reportWin(ad_selection_signals, per_buyer_signals,"
+                        + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
+                        + " return {'status': 0, 'results': {'reporting_uri': '"
                         + BUYER_REPORTING_PATH
                         + "' } };\n"
                         + "}";
