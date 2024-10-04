@@ -150,6 +150,8 @@ public final class FlagsConstants {
             "Cobalt__fall_back_to_default_base_registry";
     public static final String KEY_COBALT__IGNORED_REPORT_ID_LIST =
             "Cobalt__ignored_report_id_list";
+    public static final String KEY_COBALT__ENABLE_API_CALL_RESPONSE_LOGGING =
+            "Cobalt__enable_api_call_response_logging";
 
     // Measurement keys
     public static final String KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS =
