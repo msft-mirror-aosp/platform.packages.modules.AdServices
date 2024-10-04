@@ -32,6 +32,7 @@ import org.junit.runner.Description;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
+@SuppressWarnings("VisibleForTests") // TODO(b/343741206): Remove suppress warning once fixed.
 /**
  * Base class for {@link AbstractFlagsPreparerClassRule} implementations.
  *
@@ -71,7 +72,8 @@ public abstract class AbstractFlagsPreparerClassRuleTestCase<
         assertThrows(
                 NullPointerException.class,
                 () -> newRule(/* deviceConfig= */ null, mModeDuringTest));
-        assertThrows(NullPointerException.class, () -> newRule(mDeviceConfig, /* mode= */ null));
+        assertThrows(
+                NullPointerException.class, () -> newRule(mDeviceConfig, /* syncMode= */ null));
     }
 
     @Test
