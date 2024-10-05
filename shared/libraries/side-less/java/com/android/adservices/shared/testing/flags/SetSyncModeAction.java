@@ -29,6 +29,7 @@ public final class SetSyncModeAction extends DeviceConfigAction {
     private SyncDisabledModeForTest mPreviousMode;
     private final SyncDisabledModeForTest mMode;
 
+    /** Default constructor. */
     public SetSyncModeAction(
             Logger logger, DeviceConfig deviceConfig, SyncDisabledModeForTest mode) {
         super(logger, deviceConfig);
