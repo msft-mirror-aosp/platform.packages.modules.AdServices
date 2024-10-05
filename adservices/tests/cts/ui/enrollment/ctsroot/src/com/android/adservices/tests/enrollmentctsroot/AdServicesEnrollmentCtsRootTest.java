@@ -21,7 +21,7 @@ import android.adservices.common.AdServicesModuleUserChoice;
 import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.Module;
-import android.adservices.common.NotificationTypeParams;
+import android.adservices.common.NotificationType;
 
 import androidx.concurrent.futures.CallbackToFutureAdapter;
 
@@ -64,16 +64,13 @@ public final class AdServicesEnrollmentCtsRootTest extends AdServicesCtsTestCase
                         .setModule(Module.MEASUREMENT)
                         .setModuleState(AdServicesModuleState.MODULE_STATE_ENABLED)
                         .build());
-        NotificationTypeParams notificationTypeParams =
-                new NotificationTypeParams.Builder()
-                        .setNotificationType(NotificationTypeParams.NOTIFICATION_ONGOING)
-                        .build();
+        int notificationType = NotificationType.NOTIFICATION_ONGOING;
         ListenableFuture<Integer> responseFuture =
                 CallbackToFutureAdapter.getFuture(
                         completer -> {
                             mCommonManager.requestAdServicesModuleOverrides(
                                     adServicesModuleStateList,
-                                    notificationTypeParams,
+                                    notificationType,
                                     Executors.newCachedThreadPool(),
                                     new AdServicesOutcomeReceiver<>() {
                                         @Override

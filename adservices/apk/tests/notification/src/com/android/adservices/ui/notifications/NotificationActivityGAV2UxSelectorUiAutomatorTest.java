@@ -69,6 +69,7 @@ public final class NotificationActivityGAV2UxSelectorUiAutomatorTest extends AdS
     @Before
     public void setup() {
         Assume.assumeTrue(SdkLevel.isAtLeastS());
+        Assume.assumeTrue(NotificationActivityTestUtil.isNotificationIntentInstalled(true));
     }
 
     @Test
