@@ -38,6 +38,8 @@ import com.android.adservices.ui.util.AdServicesUiTestCase;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.adservices.ui.util.NotificationActivityTestUtil;
 
+import org.junit.Assume;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -60,6 +62,11 @@ public final class NotificationActivityU18UxSelectorUiAutomatorTest extends AdSe
     @BeforeClass
     public static void classSetup() throws Exception {
         NotificationActivityTestUtil.setupBeforeTests();
+    }
+
+    @Before
+    public void setup() throws Exception {
+        Assume.assumeTrue(NotificationActivityTestUtil.isNotificationIntentInstalled(true));
     }
 
     @Test
