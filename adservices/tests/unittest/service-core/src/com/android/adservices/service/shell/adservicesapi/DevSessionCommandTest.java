@@ -163,22 +163,6 @@ public final class DevSessionCommandTest extends ShellCommandTestCase<DevSession
     }
 
     @Test
-    public void testRun_startDevSessionInDevSession_throwsError() {
-        mFakeDevSessionController.mDevModeState = true;
-
-        Result result =
-                run(
-                        new DevSessionCommand(mFakeDevSessionController),
-                        COMMAND_PREFIX,
-                        CMD,
-                        SUB_CMD_START,
-                        ARG_ERASE_DB);
-
-        assertThat(result.mOut).isEmpty();
-        assertThat(result.mErr).isEqualTo(ERROR_ALREADY_IN_DEV_MODE);
-    }
-
-    @Test
     public void testRun_endDevSession_resetIsCalled() {
         mFakeDevSessionController.mReturnValue = SUCCESS;
 
@@ -196,6 +180,44 @@ public final class DevSessionCommandTest extends ShellCommandTestCase<DevSession
         assertThat(mFakeDevSessionController.mDevModeState).isEqualTo(false);
     }
 
+    @Test
+    public void testRun_startDevSessionInDevSession_returnsNoOpError() {
+        mFakeDevSessionController.mDevModeState = true;
+        mFakeDevSessionController.mReturnValue = DevSessionControllerResult.NO_OP;
+
+        Result result =
+                run(
+                        new DevSessionCommand(mFakeDevSessionController),
+                        COMMAND_PREFIX,
+                        CMD,
+                        SUB_CMD_START,
+                        ARG_ERASE_DB);
+
+        assertThat(result.mErr).isEqualTo(ERROR_ALREADY_IN_DEV_MODE);
+        assertThat(result.mOut).isEmpty();
+        assertThat(mFakeDevSessionController.mNumCalls).isEqualTo(1);
+        assertThat(mFakeDevSessionController.mDevModeState).isEqualTo(true);
+    }
+
+    @Test
+    public void testRun_endDevSessionOutOfDevSession_returnsNoOpError() {
+        mFakeDevSessionController.mDevModeState = false;
+        mFakeDevSessionController.mReturnValue = DevSessionControllerResult.NO_OP;
+
+        Result result =
+                run(
+                        new DevSessionCommand(mFakeDevSessionController),
+                        COMMAND_PREFIX,
+                        CMD,
+                        SUB_CMD_END,
+                        ARG_ERASE_DB);
+
+        assertThat(result.mErr).isEqualTo(ERROR_ALREADY_IN_DEV_MODE);
+        assertThat(result.mOut).isEmpty();
+        assertThat(mFakeDevSessionController.mNumCalls).isEqualTo(1);
+        assertThat(mFakeDevSessionController.mDevModeState).isEqualTo(false);
+    }
+
     private static class FakeDevSessionController implements DevSessionController {
 
         Boolean mDevModeState = null;
@@ -204,9 +226,6 @@ public final class DevSessionCommandTest extends ShellCommandTestCase<DevSession
 
         @Override
         public ListenableFuture<DevSessionControllerResult> startDevSession() {
-            if (mDevModeState != null && mDevModeState) {
-                throw new IllegalStateException(ERROR_ALREADY_IN_DEV_MODE);
-            }
             mDevModeState = true;
             mNumCalls += 1;
             return Futures.immediateFuture(mReturnValue);
