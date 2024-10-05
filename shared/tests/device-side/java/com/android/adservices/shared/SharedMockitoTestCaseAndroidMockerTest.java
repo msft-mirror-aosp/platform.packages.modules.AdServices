@@ -13,12 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.adservices.shared;
 
-package android.adservices.common;
+import com.android.adservices.shared.SharedMockitoTestCase.Mocker;
+import com.android.adservices.shared.meta_testing.AndroidMockerTestCase;
 
 /**
- * Defines the notification type for adservices apis consent.
- *
- * @hide
+ * Unit tests for {@link SharedMockitoTestCase.Mocker}'s implementation of {@link
+ * AndroidMockerTestCase com.android.adservices.mockito.AndroidMocker}.
  */
-parcelable NotificationTypeParams;
+public final class SharedMockitoTestCaseAndroidMockerTest extends AndroidMockerTestCase<Mocker> {
+
+    @Override
+    protected Mocker getMocker() {
+        return new Mocker();
+    }
+}

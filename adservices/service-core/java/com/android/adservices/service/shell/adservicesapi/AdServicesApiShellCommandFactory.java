@@ -31,9 +31,9 @@ import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
 import com.android.adservices.service.common.DatabaseClearer;
+import com.android.adservices.service.devapi.DevSessionController;
+import com.android.adservices.service.devapi.DevSessionControllerImpl;
 import com.android.adservices.service.devapi.DevSessionDataStore;
-import com.android.adservices.service.devapi.DevSessionSetter;
-import com.android.adservices.service.devapi.DevSessionSetterImpl;
 import com.android.adservices.service.shell.AdServicesShellCommandHandler;
 import com.android.adservices.service.shell.NoOpShellCommand;
 import com.android.adservices.service.shell.ShellCommand;
@@ -42,7 +42,6 @@ import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableSet;
 
-import java.time.Clock;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -58,7 +57,7 @@ public final class AdServicesApiShellCommandFactory implements ShellCommandFacto
 
     @VisibleForTesting
     public AdServicesApiShellCommandFactory(
-            DevSessionSetter devSessionSetter, boolean developerModeFeatureEnabled) {
+            DevSessionController devSessionSetter, boolean developerModeFeatureEnabled) {
         Set<ShellCommand> allCommands =
                 ImmutableSet.of(
                         new EnableAdServicesCommand(),
@@ -76,7 +75,7 @@ public final class AdServicesApiShellCommandFactory implements ShellCommandFacto
         AppInstallDao appInstallDao = SharedStorageDatabase.getInstance().appInstallDao();
         FrequencyCapDao frequencyCapDao = SharedStorageDatabase.getInstance().frequencyCapDao();
         return new AdServicesApiShellCommandFactory(
-                new DevSessionSetterImpl(
+                new DevSessionControllerImpl(
                         new DatabaseClearer(
                                 CustomAudienceDatabase.getInstance().customAudienceDao(),
                                 SharedStorageDatabase.getInstance().appInstallDao(),
@@ -88,8 +87,7 @@ public final class AdServicesApiShellCommandFactory implements ShellCommandFacto
                                 ProtectedSignalsDatabase.getInstance().protectedSignalsDao(),
                                 AdServicesExecutors.getBackgroundExecutor()),
                         DevSessionDataStore.getInstance(),
-                        AdServicesExecutors.getLightWeightExecutor(),
-                        Clock.systemUTC()),
+                        AdServicesExecutors.getLightWeightExecutor()),
                 FlagsFactory.getFlags().getDeveloperModeFeatureEnabled());
     }
 

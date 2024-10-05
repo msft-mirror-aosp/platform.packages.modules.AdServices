@@ -15,6 +15,9 @@
  */
 package com.android.adservices.measurement;
 
+import static com.android.adservices.measurement.MeasurementManagerUtil.buildDefaultAppSourcesRegistrationRequest;
+import static com.android.adservices.measurement.MeasurementManagerUtil.buildDefaultWebSourceRegistrationRequest;
+import static com.android.adservices.measurement.MeasurementManagerUtil.buildDefaultWebTriggerRegistrationRequest;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -40,13 +43,8 @@ import android.adservices.measurement.IMeasurementService;
 import android.adservices.measurement.MeasurementCompatibleManager;
 import android.adservices.measurement.MeasurementManager;
 import android.adservices.measurement.RegistrationRequest;
-import android.adservices.measurement.SourceRegistrationRequest;
 import android.adservices.measurement.SourceRegistrationRequestInternal;
-import android.adservices.measurement.WebSourceParams;
-import android.adservices.measurement.WebSourceRegistrationRequest;
 import android.adservices.measurement.WebSourceRegistrationRequestInternal;
-import android.adservices.measurement.WebTriggerParams;
-import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.adservices.measurement.WebTriggerRegistrationRequestInternal;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.net.Uri;
@@ -67,7 +65,6 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.stubbing.Answer;
 
-import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
@@ -395,22 +392,6 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
         assertThat(anyCountDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
     }
 
-    private static WebSourceRegistrationRequest buildDefaultWebSourceRegistrationRequest() {
-        WebSourceParams webSourceParams =
-                new WebSourceParams.Builder(Uri.parse("https://example.com"))
-                        .setDebugKeyAllowed(false)
-                        .build();
-
-        return new WebSourceRegistrationRequest.Builder(
-                        Collections.singletonList(webSourceParams),
-                        Uri.parse("https://example.com"))
-                .setInputEvent(null)
-                .setAppDestination(Uri.parse("android-app://com.example"))
-                .setWebDestination(Uri.parse("https://example.com"))
-                .setVerifiedDestination(null)
-                .build();
-    }
-
     @Test
     public void testRegisterWebSource_callingApp_expectedAttributionSource() throws Exception {
         MeasurementCompatibleManager mm = getMeasurementCompatibleManager();
@@ -633,17 +614,6 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
         assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
         expect.that(captor.getValue().isAdIdPermissionGranted()).isFalse();
         expect.that(captor.getValue().getAppPackageName()).isEqualTo(getPackageName());
-    }
-
-    private static WebTriggerRegistrationRequest buildDefaultWebTriggerRegistrationRequest() {
-        WebTriggerParams webTriggerParams =
-                new WebTriggerParams.Builder(Uri.parse("https://example.com"))
-                        .setDebugKeyAllowed(false)
-                        .build();
-        return new WebTriggerRegistrationRequest.Builder(
-                        Collections.singletonList(webTriggerParams),
-                        Uri.parse("https://example.com"))
-                .build();
     }
 
     @Test
@@ -1445,15 +1415,6 @@ public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTe
     @Test
     public void testRegisterWebTrigger_callbackProvidedWithoutExecutor_throwsIllegalArgException() {
         RvcGuardUberHackPlusPlus.assertRegisterWebTriggerThrows();
-    }
-
-    private static SourceRegistrationRequest buildDefaultAppSourcesRegistrationRequest() {
-        return new SourceRegistrationRequest.Builder(
-                        java.util.Arrays.asList(
-                                Uri.parse("https://example1.com"),
-                                Uri.parse("https://example2.com")))
-                .setInputEvent(null)
-                .build();
     }
 
     private int callMeasurementApiStatus(MeasurementCompatibleManager mm) throws Exception {
