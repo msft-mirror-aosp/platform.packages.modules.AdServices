@@ -20,9 +20,9 @@ import static com.android.adservices.devapi.DevSessionFixture.IN_DEV;
 import static com.android.adservices.devapi.DevSessionFixture.IN_PROD;
 import static com.android.adservices.devapi.DevSessionFixture.TRANSITIONING_DEV_TO_PROD;
 import static com.android.adservices.devapi.DevSessionFixture.TRANSITIONING_PROD_TO_DEV;
+import static com.android.adservices.service.devapi.DevSessionControllerResult.NO_OP;
 import static com.android.adservices.service.devapi.DevSessionControllerResult.SUCCESS;
 
-import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verifyZeroInteractions;
@@ -38,7 +38,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -48,11 +47,11 @@ public class DevSessionControllerImplTest extends AdServicesMockitoTestCase {
 
     @Mock private DatabaseClearer mMockDatabaseClearer;
     @Mock private DevSessionDataStore mMockDevSessionDataStore;
-    private DevSessionControllerImpl mDevSessionSetter;
+    private DevSessionControllerImpl mDevSessionController;
 
     @Before
     public void setUp() {
-        mDevSessionSetter =
+        mDevSessionController =
                 new DevSessionControllerImpl(
                         mMockDatabaseClearer,
                         mMockDevSessionDataStore,
@@ -73,7 +72,7 @@ public class DevSessionControllerImplTest extends AdServicesMockitoTestCase {
                 .thenReturn(Futures.immediateFuture(TRANSITIONING_PROD_TO_DEV))
                 .thenReturn(Futures.immediateFuture(IN_DEV));
 
-        Future<DevSessionControllerResult> resultFuture = mDevSessionSetter.startDevSession();
+        Future<DevSessionControllerResult> resultFuture = mDevSessionController.startDevSession();
 
         expect.withMessage("DevSession future").that(wait(resultFuture)).isEqualTo(SUCCESS);
     }
@@ -87,7 +86,7 @@ public class DevSessionControllerImplTest extends AdServicesMockitoTestCase {
                 .thenReturn(Futures.immediateFuture(TRANSITIONING_DEV_TO_PROD))
                 .thenReturn(Futures.immediateFuture(IN_PROD));
 
-        Future<DevSessionControllerResult> resultFuture = mDevSessionSetter.startDevSession();
+        Future<DevSessionControllerResult> resultFuture = mDevSessionController.startDevSession();
 
         expect.withMessage("DevSession future").that(wait(resultFuture)).isEqualTo(SUCCESS);
     }
@@ -100,36 +99,28 @@ public class DevSessionControllerImplTest extends AdServicesMockitoTestCase {
                 .thenReturn(Futures.immediateFuture(TRANSITIONING_PROD_TO_DEV))
                 .thenReturn(Futures.immediateFuture(IN_DEV));
 
-        Future<DevSessionControllerResult> resultFuture = mDevSessionSetter.startDevSession();
+        Future<DevSessionControllerResult> resultFuture = mDevSessionController.startDevSession();
 
         expect.withMessage("DevSession future").that(wait(resultFuture)).isEqualTo(SUCCESS);
     }
 
     @Test
-    public void startDevSession_withDevSessionActive_throwsException() throws Exception {
+    public void startDevSession_withDevSessionActive_returnsNoOp() throws Exception {
         when(mMockDevSessionDataStore.get()).thenReturn(Futures.immediateFuture(IN_DEV));
 
-        Future<DevSessionControllerResult> resultFuture = mDevSessionSetter.startDevSession();
+        Future<DevSessionControllerResult> resultFuture = mDevSessionController.startDevSession();
 
-        try {
-            wait(resultFuture);
-        } catch (ExecutionException e) {
-            assertTrue(e.getCause() instanceof IllegalStateException);
-        }
+        expect.withMessage("DevSession future").that(wait(resultFuture)).isEqualTo(NO_OP);
         verifyZeroInteractions(mMockDatabaseClearer);
     }
 
     @Test
-    public void startDevSession_withDevSessionActiveButExpired_throwsException() throws Exception {
+    public void startDevSession_withDevSessionActiveButExpired_returnsNoOp() throws Exception {
         when(mMockDevSessionDataStore.get()).thenReturn(Futures.immediateFuture(IN_DEV));
 
-        Future<DevSessionControllerResult> resultFuture = mDevSessionSetter.startDevSession();
+        Future<DevSessionControllerResult> resultFuture = mDevSessionController.startDevSession();
 
-        try {
-            wait(resultFuture);
-        } catch (ExecutionException e) {
-            assertTrue(e.getCause() instanceof IllegalStateException);
-        }
+        expect.withMessage("DevSession future").that(wait(resultFuture)).isEqualTo(NO_OP);
         verifyZeroInteractions(mMockDatabaseClearer);
     }
 
@@ -140,7 +131,7 @@ public class DevSessionControllerImplTest extends AdServicesMockitoTestCase {
                 .thenReturn(Futures.immediateFuture(TRANSITIONING_DEV_TO_PROD))
                 .thenReturn(Futures.immediateFuture(IN_PROD));
 
-        Future<DevSessionControllerResult> resultFuture = mDevSessionSetter.endDevSession();
+        Future<DevSessionControllerResult> resultFuture = mDevSessionController.endDevSession();
 
         expect.withMessage("DevSession future").that(wait(resultFuture)).isEqualTo(SUCCESS);
     }
@@ -153,7 +144,7 @@ public class DevSessionControllerImplTest extends AdServicesMockitoTestCase {
                 .thenReturn(Futures.immediateFuture(TRANSITIONING_DEV_TO_PROD))
                 .thenReturn(Futures.immediateFuture(IN_PROD));
 
-        Future<DevSessionControllerResult> resultFuture = mDevSessionSetter.endDevSession();
+        Future<DevSessionControllerResult> resultFuture = mDevSessionController.endDevSession();
 
         expect.withMessage("DevSession future").that(wait(resultFuture)).isEqualTo(SUCCESS);
     }
@@ -166,22 +157,18 @@ public class DevSessionControllerImplTest extends AdServicesMockitoTestCase {
                 .thenReturn(Futures.immediateFuture(TRANSITIONING_DEV_TO_PROD))
                 .thenReturn(Futures.immediateFuture(IN_DEV));
 
-        Future<DevSessionControllerResult> resultFuture = mDevSessionSetter.endDevSession();
+        Future<DevSessionControllerResult> resultFuture = mDevSessionController.endDevSession();
 
         expect.withMessage("DevSession future").that(wait(resultFuture)).isEqualTo(SUCCESS);
     }
 
     @Test
-    public void endDevSession_withDevSessionDisabled_throwsException() throws Exception {
+    public void endDevSession_withDevSessionDisabled_returnsNoOp() throws Exception {
         when(mMockDevSessionDataStore.get()).thenReturn(Futures.immediateFuture(IN_PROD));
 
-        Future<DevSessionControllerResult> resultFuture = mDevSessionSetter.endDevSession();
+        Future<DevSessionControllerResult> resultFuture = mDevSessionController.endDevSession();
 
-        try {
-            wait(resultFuture);
-        } catch (ExecutionException e) {
-            assertTrue(e.getCause() instanceof IllegalStateException);
-        }
+        expect.withMessage("DevSession future").that(wait(resultFuture)).isEqualTo(NO_OP);
         verifyZeroInteractions(mMockDatabaseClearer);
     }
 
