@@ -13,22 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package android.adservices.common;
-
-import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
-import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+package com.android.adservices.common;
 
 import org.junit.Test;
 
-@RequiresSdkLevelAtLeastS()
-public final class AndroidRCommonUtilTest extends AdServicesUnitTestCase {
+public final class AdServicesCtsTestCaseTest extends AdServicesCtsTestCase {
 
     @Test
-    public void testInvokeCallbackOnErrorOnRvc_onSPlus() throws Exception {
-        AdServicesOutcomeReceiverForTests callback = new AdServicesOutcomeReceiverForTests();
-
-        expect.that(AndroidRCommonUtil.invokeCallbackOnErrorOnRvc(callback)).isFalse();
+    public void testAdServicesCtsTestCaseFixtures() {
+        expect.withMessage("sFlagsPreparer").that(sFlagsPreparer).isNotNull();
+        expect.withMessage("flags").that(flags).isNotNull();
     }
 }

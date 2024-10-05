@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,22 +16,19 @@
 package com.android.adservices.service;
 
 /**
- * Defines constants used by {@code CommonFlags}.
+ * Defines constants used by {@code CommonDebugFlags}.
  *
  * <p><b>NOTE: </b>cannot have any dependency on Android or other AdServices code.
  *
  * @hide
  */
-public final class CommonFlagsConstants {
+public final class CommonDebugFlagsConstants {
 
-    // AdServices Namespace String from DeviceConfig class is not available in S Minus
-    public static final String NAMESPACE_ADSERVICES = "adservices";
-
-    private CommonFlagsConstants() {
+    private CommonDebugFlagsConstants() {
         throw new UnsupportedOperationException("Contains only static constants");
     }
 
-    // Whether AdServices system service is enabled
-    public static final String KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED =
-            "adservice_system_service_enabled";
+    // Whether Adservices Shell Command interface is enabled
+    public static final String KEY_ADSERVICES_SHELL_COMMAND_ENABLED =
+            "adservices_shell_command_enabled";
 }

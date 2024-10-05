@@ -15,11 +15,13 @@
  */
 package com.android.adservices.service.common;
 
+import android.app.Application;
 import android.app.adservices.AdServicesManager;
 import android.content.Context;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.DebugFlags;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.shared.common.ApplicationContextProvider;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
@@ -28,6 +30,7 @@ import com.google.common.annotations.VisibleForTesting;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
+import java.util.Objects;
 
 /**
  * Provider used to set the application context singleton and other common stuff (like dumping data
@@ -38,10 +41,24 @@ public final class AdServicesInternalProvider extends ApplicationContextProvider
     @VisibleForTesting static final String DUMP_ARG_FULL_QUIET = "--quiet";
     @VisibleForTesting static final String DUMP_ARG_SHORT_QUIET = "-q";
 
+    private final Flags mFlags;
+
+    public AdServicesInternalProvider() {
+        this(FlagsFactory.getFlags());
+    }
+
+    @VisibleForTesting
+    AdServicesInternalProvider(Flags flags) {
+        mFlags = Objects.requireNonNull(flags, "flags cannot be null");
+    }
+
     @Override
-    public boolean onCreate() {
-        LogUtil.d("AdServicesInternalProvider.onCreate()");
-        return super.onCreate();
+    protected void setApplicationContext(Context context) {
+        if (mFlags.getDeveloperModeFeatureEnabled()) {
+            ApplicationContextSingleton.setAs(new AdServicesApplicationContext(context));
+            return;
+        }
+        super.setApplicationContext(context);
     }
 
     @SuppressWarnings("NewApi")
@@ -62,10 +79,15 @@ public final class AdServicesInternalProvider extends ApplicationContextProvider
             }
         }
 
+        writer.printf("App process: %s\n", Application.getProcessName());
+
         try {
             Context appContext = ApplicationContextSingleton.get();
             writer.printf("ApplicationContext: %s\n", appContext);
             if (appContext != null) {
+                if (appContext instanceof AdServicesApplicationContext) {
+                    ((AdServicesApplicationContext) appContext).dump(writer, args);
+                }
                 AppManifestConfigMetricsLogger.dump(appContext, writer);
             }
         } catch (Exception e) {
@@ -75,8 +97,12 @@ public final class AdServicesInternalProvider extends ApplicationContextProvider
         AdServicesManager.dump(writer);
 
         if (!quiet) {
-            FlagsFactory.getFlags().dump(writer, args);
-            DebugFlags.getInstance().dump(writer);
+            writer.printf("\nFlags (from %s):\n", mFlags.getClass().getName());
+            mFlags.dump(writer, args);
+
+            DebugFlags debugFlags = DebugFlags.getInstance();
+            writer.printf("\nDebugFlags (from %s):\n", debugFlags.getClass().getName());
+            debugFlags.dump(writer);
         }
     }
 }
