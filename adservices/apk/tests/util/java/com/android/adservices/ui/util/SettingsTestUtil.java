@@ -29,6 +29,7 @@ import static com.android.adservices.ui.util.ApkTestUtil.getConsentSwitch;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
+import android.content.Intent;
 import android.os.Build;
 import android.os.RemoteException;
 import android.util.Log;
@@ -46,6 +47,7 @@ public final class SettingsTestUtil {
     private static final String TAG = SettingsTestUtil.class.getSimpleName();
     private static final int WINDOW_LAUNCH_TIMEOUT = 2_000;
     private static final int PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS = 2_000;
+    private static final String PRIVACY_SANDBOX_UI = "android.adservices.ui.SETTINGS";
 
     public static void settingsRemoveMainToggleAndMeasurementEntryTestUtil(UiDevice device) {
         ApkTestUtil.launchSettingView(device, LAUNCH_TIMEOUT);
@@ -547,5 +549,11 @@ public final class SettingsTestUtil {
     public static void pressBack(UiDevice device) {
         Log.d(TAG, "pressBack()");
         device.pressBack();
+    }
+
+    /** Check if intent has package and activity installed. */
+    public static boolean isSettingsIntentInstalled() {
+        Intent intent = ApkTestUtil.getIntent(PRIVACY_SANDBOX_UI);
+        return ApkTestUtil.isIntentInstalled(intent);
     }
 }

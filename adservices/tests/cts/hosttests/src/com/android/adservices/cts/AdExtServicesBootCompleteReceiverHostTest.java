@@ -18,6 +18,7 @@ package com.android.adservices.cts;
 
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABLED;
 import static com.android.adservices.shared.testing.AndroidSdk.PRE_T;
+import static com.android.adservices.shared.testing.AndroidSdk.SC;
 import static com.android.adservices.shared.testing.TestDeviceHelper.startActivity;
 
 import com.android.adservices.common.AdServicesHostSideTestCase;
@@ -41,7 +42,7 @@ import java.util.function.Predicate;
  * activities to enabled on Android S devices
  */
 @RunWith(DeviceJUnit4ClassRunner.class)
-@RequiresSdkRange(atMost = PRE_T, reason = "It's for S only")
+@RequiresSdkRange(atLeast = SC, atMost = PRE_T, reason = "It's for S only")
 @SetFlagEnabled(KEY_ADSERVICES_ENABLED)
 public final class AdExtServicesBootCompleteReceiverHostTest extends AdServicesHostSideTestCase {
     private static final String LOGCAT_COMMAND = "logcat -s adservices";

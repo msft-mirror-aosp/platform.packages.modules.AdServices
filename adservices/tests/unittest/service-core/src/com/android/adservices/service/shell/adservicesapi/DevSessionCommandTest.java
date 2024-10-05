@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.shell.adservicesapi;
 
+import static com.android.adservices.service.devapi.DevSessionControllerResult.FAILURE;
+import static com.android.adservices.service.devapi.DevSessionControllerResult.SUCCESS;
 import static com.android.adservices.service.shell.adservicesapi.AdServicesApiShellCommandFactory.COMMAND_PREFIX;
 import static com.android.adservices.service.shell.adservicesapi.DevSessionCommand.ARG_ERASE_DB;
 import static com.android.adservices.service.shell.adservicesapi.DevSessionCommand.CMD;
@@ -26,34 +28,30 @@ import static com.android.adservices.service.shell.adservicesapi.DevSessionComma
 import static com.android.adservices.service.shell.adservicesapi.DevSessionCommand.SUB_CMD_END;
 import static com.android.adservices.service.shell.adservicesapi.DevSessionCommand.SUB_CMD_START;
 import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_DEV_SESSION;
+import static com.android.adservices.shared.testing.concurrency.DeviceSideConcurrencyHelper.sleep;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.adservices.service.devapi.DevSessionRefresher;
+import com.android.adservices.service.devapi.DevSessionController;
+import com.android.adservices.service.devapi.DevSessionControllerResult;
 import com.android.adservices.service.shell.ShellCommandTestCase;
 
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 
-import org.junit.Before;
 import org.junit.Test;
-
-import java.util.concurrent.Future;
 
 public final class DevSessionCommandTest extends ShellCommandTestCase<DevSessionCommand> {
 
-    private FakeDevSessionRefresher mFakeDevSessionRefresher;
+    private final FakeDevSessionController mFakeDevSessionController =
+            new FakeDevSessionController();
 
     private static final int EXPECTED_COMMAND = COMMAND_DEV_SESSION;
-
-    @Before
-    public void setUp() {
-        mFakeDevSessionRefresher = new FakeDevSessionRefresher();
-    }
 
     @Test
     public void testRun_withoutEnableOrDisable_returnsHelp() {
         runAndExpectInvalidArgument(
-                new DevSessionCommand(mFakeDevSessionRefresher),
+                new DevSessionCommand(mFakeDevSessionController),
                 DevSessionCommand.HELP,
                 EXPECTED_COMMAND,
                 CMD);
@@ -62,7 +60,7 @@ public final class DevSessionCommandTest extends ShellCommandTestCase<DevSession
     @Test
     public void testRun_withUnknownSubCommand_returnsHelp() {
         runAndExpectInvalidArgument(
-                new DevSessionCommand(mFakeDevSessionRefresher),
+                new DevSessionCommand(mFakeDevSessionController),
                 DevSessionCommand.HELP,
                 EXPECTED_COMMAND,
                 CMD,
@@ -73,35 +71,39 @@ public final class DevSessionCommandTest extends ShellCommandTestCase<DevSession
     public void testRun_startDevSessionWithoutAcknowledgement_returnsErrorMessage() {
         Result result =
                 run(
-                        new DevSessionCommand(mFakeDevSessionRefresher),
+                        new DevSessionCommand(mFakeDevSessionController),
                         COMMAND_PREFIX,
                         CMD,
                         SUB_CMD_START);
 
         assertThat(result.mErr).startsWith(ERROR_NEED_ACKNOWLEDGEMENT);
         assertThat(result.mOut).isEmpty();
-        assertThat(mFakeDevSessionRefresher.mNumCalls).isEqualTo(0);
+        assertThat(mFakeDevSessionController.mNumCalls).isEqualTo(0);
     }
 
     @Test
     public void testRun_endDevSessionWithoutAcknowledgement_returnsErrorMessage() {
+        mFakeDevSessionController.mReturnValue = FAILURE;
+
         Result result =
                 run(
-                        new DevSessionCommand(mFakeDevSessionRefresher),
+                        new DevSessionCommand(mFakeDevSessionController),
                         COMMAND_PREFIX,
                         CMD,
                         SUB_CMD_END);
 
         assertThat(result.mErr).startsWith(ERROR_NEED_ACKNOWLEDGEMENT);
         assertThat(result.mOut).isEmpty();
-        assertThat(mFakeDevSessionRefresher.mNumCalls).isEqualTo(0);
+        assertThat(mFakeDevSessionController.mNumCalls).isEqualTo(0);
     }
 
     @Test
     public void testRun_startDevSession_resetIsCalled() {
+        mFakeDevSessionController.mReturnValue = SUCCESS;
+
         Result result =
                 run(
-                        new DevSessionCommand(mFakeDevSessionRefresher),
+                        new DevSessionCommand(mFakeDevSessionController),
                         COMMAND_PREFIX,
                         CMD,
                         SUB_CMD_START,
@@ -109,17 +111,17 @@ public final class DevSessionCommandTest extends ShellCommandTestCase<DevSession
 
         assertThat(result.mOut).isEqualTo(String.format(OUTPUT_SUCCESS_FORMAT, true));
         assertThat(result.mErr).isEmpty();
-        assertThat(mFakeDevSessionRefresher.mNumCalls).isEqualTo(1);
-        assertThat(mFakeDevSessionRefresher.mDevModeState).isEqualTo(true);
+        assertThat(mFakeDevSessionController.mNumCalls).isEqualTo(1);
+        assertThat(mFakeDevSessionController.mDevModeState).isEqualTo(true);
     }
 
     @Test
     public void testRun_startDevSession_throwsErrorOnFailure() {
-        mFakeDevSessionRefresher.mReturnValue = false;
+        mFakeDevSessionController.mReturnValue = FAILURE;
 
         Result result =
                 run(
-                        new DevSessionCommand(mFakeDevSessionRefresher),
+                        new DevSessionCommand(mFakeDevSessionController),
                         COMMAND_PREFIX,
                         CMD,
                         SUB_CMD_START,
@@ -134,12 +136,21 @@ public final class DevSessionCommandTest extends ShellCommandTestCase<DevSession
         Result result =
                 run(
                         new DevSessionCommand(
-                                setDevSessionEnabled -> {
-                                    try {
-                                        Thread.sleep(DevSessionCommand.TIMEOUT_SEC);
-                                        return Futures.immediateFuture(false);
-                                    } catch (InterruptedException e) {
-                                        return Futures.immediateFuture(false);
+                                new DevSessionController() {
+                                    @Override
+                                    public ListenableFuture<DevSessionControllerResult>
+                                            startDevSession() throws IllegalStateException {
+                                        sleep(
+                                                DevSessionCommand.TIMEOUT_SEC,
+                                                "sleeping to allow timeout");
+                                        return Futures.immediateFuture(FAILURE);
+                                    }
+
+                                    @Override
+                                    public ListenableFuture<DevSessionControllerResult>
+                                            endDevSession() throws IllegalStateException {
+                                        // Should not trigger this code path.
+                                        return Futures.immediateFuture(FAILURE);
                                     }
                                 }),
                         COMMAND_PREFIX,
@@ -152,26 +163,12 @@ public final class DevSessionCommandTest extends ShellCommandTestCase<DevSession
     }
 
     @Test
-    public void testRun_startDevSessionInDevSession_throwsError() {
-        mFakeDevSessionRefresher.mDevModeState = true;
-
-        Result result =
-                run(
-                        new DevSessionCommand(mFakeDevSessionRefresher),
-                        COMMAND_PREFIX,
-                        CMD,
-                        SUB_CMD_START,
-                        ARG_ERASE_DB);
-
-        assertThat(result.mOut).isEmpty();
-        assertThat(result.mErr).isEqualTo(ERROR_ALREADY_IN_DEV_MODE);
-    }
-
-    @Test
     public void testRun_endDevSession_resetIsCalled() {
+        mFakeDevSessionController.mReturnValue = SUCCESS;
+
         Result result =
                 run(
-                        new DevSessionCommand(mFakeDevSessionRefresher),
+                        new DevSessionCommand(mFakeDevSessionController),
                         COMMAND_PREFIX,
                         CMD,
                         SUB_CMD_END,
@@ -179,22 +176,65 @@ public final class DevSessionCommandTest extends ShellCommandTestCase<DevSession
 
         assertThat(result.mOut).isEqualTo(String.format(OUTPUT_SUCCESS_FORMAT, false));
         assertThat(result.mErr).isEmpty();
-        assertThat(mFakeDevSessionRefresher.mNumCalls).isEqualTo(1);
-        assertThat(mFakeDevSessionRefresher.mDevModeState).isEqualTo(false);
+        assertThat(mFakeDevSessionController.mNumCalls).isEqualTo(1);
+        assertThat(mFakeDevSessionController.mDevModeState).isEqualTo(false);
     }
 
-    private static class FakeDevSessionRefresher implements DevSessionRefresher {
+    @Test
+    public void testRun_startDevSessionInDevSession_returnsNoOpError() {
+        mFakeDevSessionController.mDevModeState = true;
+        mFakeDevSessionController.mReturnValue = DevSessionControllerResult.NO_OP;
+
+        Result result =
+                run(
+                        new DevSessionCommand(mFakeDevSessionController),
+                        COMMAND_PREFIX,
+                        CMD,
+                        SUB_CMD_START,
+                        ARG_ERASE_DB);
+
+        assertThat(result.mErr).isEqualTo(ERROR_ALREADY_IN_DEV_MODE);
+        assertThat(result.mOut).isEmpty();
+        assertThat(mFakeDevSessionController.mNumCalls).isEqualTo(1);
+        assertThat(mFakeDevSessionController.mDevModeState).isEqualTo(true);
+    }
+
+    @Test
+    public void testRun_endDevSessionOutOfDevSession_returnsNoOpError() {
+        mFakeDevSessionController.mDevModeState = false;
+        mFakeDevSessionController.mReturnValue = DevSessionControllerResult.NO_OP;
+
+        Result result =
+                run(
+                        new DevSessionCommand(mFakeDevSessionController),
+                        COMMAND_PREFIX,
+                        CMD,
+                        SUB_CMD_END,
+                        ARG_ERASE_DB);
+
+        assertThat(result.mErr).isEqualTo(ERROR_ALREADY_IN_DEV_MODE);
+        assertThat(result.mOut).isEmpty();
+        assertThat(mFakeDevSessionController.mNumCalls).isEqualTo(1);
+        assertThat(mFakeDevSessionController.mDevModeState).isEqualTo(false);
+    }
+
+    private static class FakeDevSessionController implements DevSessionController {
 
         Boolean mDevModeState = null;
-        boolean mReturnValue = true;
+        DevSessionControllerResult mReturnValue = DevSessionControllerResult.UNKNOWN;
         int mNumCalls = 0;
 
         @Override
-        public Future<Boolean> reset(boolean setDevSessionEnabled) {
-            if (mDevModeState != null && setDevSessionEnabled) {
-                throw new IllegalStateException(ERROR_ALREADY_IN_DEV_MODE);
-            }
-            mDevModeState = setDevSessionEnabled;
+        public ListenableFuture<DevSessionControllerResult> startDevSession() {
+            mDevModeState = true;
+            mNumCalls += 1;
+            return Futures.immediateFuture(mReturnValue);
+        }
+
+        @Override
+        public ListenableFuture<DevSessionControllerResult> endDevSession()
+                throws IllegalStateException {
+            mDevModeState = false;
             mNumCalls += 1;
             return Futures.immediateFuture(mReturnValue);
         }

@@ -18,6 +18,8 @@ package com.android.server.adservices;
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_MANAGER;
 import static android.app.adservices.AdServicesManager.AD_SERVICES_SYSTEM_SERVICE;
 
+import static com.android.adservices.service.CommonDebugFlagsConstants.KEY_ADSERVICES_SHELL_COMMAND_ENABLED;
+
 import android.adservices.common.AdServicesPermissions;
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
@@ -45,7 +47,6 @@ import android.provider.DeviceConfig;
 import android.util.ArrayMap;
 import android.util.Dumpable;
 
-import com.android.adservices.service.CommonFlagsConstants;
 import com.android.adservices.shared.system.SystemContextSingleton;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
@@ -858,8 +859,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         if (!isShellCmdEnabled()) {
             LogUtil.d(
                     "handleShellCommand(%s): disabled by flag %s",
-                    Arrays.toString(args),
-                    CommonFlagsConstants.KEY_ADSERVICES_SHELL_COMMAND_ENABLED);
+                    Arrays.toString(args), KEY_ADSERVICES_SHELL_COMMAND_ENABLED);
             return super.handleShellCommand(in, out, err, args);
         }
 

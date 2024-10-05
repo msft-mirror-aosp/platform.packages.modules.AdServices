@@ -136,6 +136,20 @@ public final class AdFilteringFeatureFactory {
     }
 
     /**
+     * Gets the {@link FrequencyCapDataClearer} implementation to use, dependent on whether the ad
+     * filtering feature is enabled.
+     *
+     * @return The desired {@link FrequencyCapDataClearer} to use.
+     */
+    public FrequencyCapDataClearer getFrequencyCapDataClearer() {
+        if (mIsFledgeFrequencyCapFilteringEnabled) {
+            return new FrequencyCapDataClearerImpl(mFrequencyCapDao);
+        } else {
+            return new FrequencyCapDataClearerNoOp();
+        }
+    }
+
+    /**
      * Gets the {@link AdCounterHistogramUpdater} implementation to use, dependent on whether the ad
      * filtering feature is enabled.
      *

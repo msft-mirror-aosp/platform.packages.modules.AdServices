@@ -18,13 +18,16 @@ package com.android.adservices.common;
 import com.android.adservices.common.AdServicesJobTestCase.Mocker;
 import com.android.adservices.mockito.AdServicesJobMockerTestCase;
 import com.android.adservices.mockito.StaticClassChecker;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 
+@SuppressWarnings("VisibleForTests") // TODO(b/343741206): Remove suppress warning once fixed.
 /** Test case for the {@code AdServicesJobSTestCase.Mocker} class. */
 public final class AdServicesJobTestCaseMockerTest extends AdServicesJobMockerTestCase<Mocker> {
 
     @Override
-    protected Mocker getMocker(StaticClassChecker checker, Flags mockFlags) {
-        return new Mocker(checker, mockFlags);
+    protected Mocker getMocker(
+            StaticClassChecker checker, Flags mockFlags, DebugFlags mockDebugFlags) {
+        return new Mocker(checker, mockFlags, mockDebugFlags);
     }
 }

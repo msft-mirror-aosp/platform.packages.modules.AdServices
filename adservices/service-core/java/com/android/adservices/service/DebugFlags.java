@@ -50,9 +50,6 @@ import java.io.PrintWriter;
 public final class DebugFlags extends CommonDebugFlags {
     private static final DebugFlags sInstance = new DebugFlags();
 
-    @VisibleForTesting static final String DUMP_PREFIX = "  ";
-    @VisibleForTesting static final String DUMP_EQUALS = " = ";
-
     /** Default for if FLEDGE app signals CLI is enabled. */
     @VisibleForTesting static final boolean DEFAULT_PROTECTED_APP_SIGNALS_CLI_ENABLED = false;
 
@@ -204,13 +201,10 @@ public final class DebugFlags extends CommonDebugFlags {
                 DEFAULT_JS_ISOLATE_CONSOLE_MESSAGES_IN_LOGS_ENABLED);
     }
 
-    private void dump(PrintWriter pw, String key, boolean value) {
-        pw.printf("%s%s%s%b\n", DUMP_PREFIX, key, DUMP_EQUALS, value);
-    }
-
-    /** Dumps the internal state. */
+    @Override
     public void dump(PrintWriter pw) {
-        pw.println("DebugFlags:");
+        super.dump(pw);
+
         dump(pw, KEY_CONSENT_NOTIFICATION_DEBUG_MODE, getConsentNotificationDebugMode());
         dump(pw, KEY_CONSENT_NOTIFIED_DEBUG_MODE, getConsentNotifiedDebugMode());
         dump(

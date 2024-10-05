@@ -108,6 +108,7 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.DbTestUtil;
+import com.android.adservices.common.RecreateJSSandboxIsolateRule;
 import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
@@ -648,6 +649,10 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
     @Rule(order = 12)
     public final MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
+
+    @Rule(order = 13)
+    public final RecreateJSSandboxIsolateRule recreateJSSandboxIsolateRule =
+            new RecreateJSSandboxIsolateRule();
 
     // Mocking DevContextFilter to test behavior with and without override api authorization
     @Mock private DevContextFilter mDevContextFilter;

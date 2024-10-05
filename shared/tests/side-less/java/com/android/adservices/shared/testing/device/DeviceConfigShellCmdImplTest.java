@@ -25,8 +25,8 @@ import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.shared.meta_testing.FakeDeviceGateway;
 import com.android.adservices.shared.meta_testing.FakeLogger;
+import com.android.adservices.shared.meta_testing.SharedSidelessTestCase;
 import com.android.adservices.shared.testing.AndroidSdk.Level;
-import com.android.adservices.shared.testing.SharedSidelessTestCase;
 import com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest;
 
 import org.junit.Test;

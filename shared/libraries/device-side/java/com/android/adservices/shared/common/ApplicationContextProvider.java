@@ -17,17 +17,33 @@ package com.android.adservices.shared.common;
 
 import android.content.ContentProvider;
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
+import android.util.Log;
 
 /** Provider used to set the application context on {@link ApplicationContextSingleton}. */
 public class ApplicationContextProvider extends ContentProvider {
 
-    @Override
-    public boolean onCreate() {
-        ApplicationContextSingleton.set(getContext());
+    private static final String TAG = ApplicationContextProvider.class.getSimpleName();
 
+    @Override
+    public final boolean onCreate() {
+        Context context = getContext();
+        Log.i(TAG, "onCreate(): setting application context from " + context);
+        setApplicationContext(context);
         return true;
+    }
+
+    /**
+     * Called {@code onCreate()} to set the {@link ApplicationContextSingleton application context
+     * singleton}.
+     *
+     * <p>Subclasses can override it to set custom context and/or do extra initialization {@code
+     * onCreate()}.
+     */
+    protected void setApplicationContext(Context context) {
+        ApplicationContextSingleton.set(context);
     }
 
     // ContentProvider API methods - not used.

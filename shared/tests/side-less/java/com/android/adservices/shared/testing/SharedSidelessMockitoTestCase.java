@@ -15,6 +15,8 @@
  */
 package com.android.adservices.shared.testing;
 
+import com.android.adservices.shared.meta_testing.SharedSidelessTestCase;
+
 import org.junit.Rule;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;

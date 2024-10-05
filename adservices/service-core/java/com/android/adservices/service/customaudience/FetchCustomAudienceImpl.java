@@ -48,6 +48,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBCustomAudienceQuarantine;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdRenderIdValidator;
 import com.android.adservices.service.common.AdTechIdentifierValidator;
@@ -148,6 +149,7 @@ public class FetchCustomAudienceImpl {
 
     public FetchCustomAudienceImpl(
             @NonNull Flags flags,
+            @NonNull DebugFlags debugFlags,
             @NonNull Clock clock,
             @NonNull AdServicesLogger adServicesLogger,
             @NonNull ExecutorService executor,
@@ -158,6 +160,7 @@ public class FetchCustomAudienceImpl {
             @NonNull FrequencyCapAdDataValidator frequencyCapAdDataValidator,
             @NonNull AdRenderIdValidator adRenderIdValidator,
             @NonNull AdDataConversionStrategy adDataConversionStrategy) {
+        Objects.requireNonNull(debugFlags);
         Objects.requireNonNull(flags);
         Objects.requireNonNull(clock);
         Objects.requireNonNull(adServicesLogger);
@@ -256,7 +259,7 @@ public class FetchCustomAudienceImpl {
                                 mFledgeCustomAudienceMaxAdsSizeB,
                                 mFledgeCustomAudienceMaxNumAds));
 
-        mEnforceNotification = !flags.getConsentNotificationDebugMode();
+        mEnforceNotification = !debugFlags.getConsentNotificationDebugMode();
     }
 
     /** Adds a user to a fetched custom audience. */

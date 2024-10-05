@@ -31,10 +31,6 @@ public final class CommonFlagsConstants {
         throw new UnsupportedOperationException("Contains only static constants");
     }
 
-    // Whether Adservices Shell Command interface is enabled
-    public static final String KEY_ADSERVICES_SHELL_COMMAND_ENABLED =
-            "adservices_shell_command_enabled";
-
     // Whether AdServices system service is enabled
     public static final String KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED =
             "adservice_system_service_enabled";

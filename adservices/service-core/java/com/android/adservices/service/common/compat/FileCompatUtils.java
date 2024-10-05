@@ -88,6 +88,7 @@ public final class FileCompatUtils {
      * returns a Sharedpreferences for the given context, name, and mode, while ensuring the
      * filename is prepended with "adservices" on S-.
      */
+    @SuppressWarnings("AvoidSharedPreferences") // Legacy usage
     public static SharedPreferences getSharedPreferencesHelper(
             Context context, String name, int mode) {
         return context.getSharedPreferences(getAdservicesFilename(name), mode);

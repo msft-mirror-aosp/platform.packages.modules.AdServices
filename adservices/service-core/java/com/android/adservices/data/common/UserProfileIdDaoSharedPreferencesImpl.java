@@ -63,8 +63,7 @@ public class UserProfileIdDaoSharedPreferencesImpl implements UserProfileIdDao {
                 Context context = ApplicationContextSingleton.get();
                 sUserProfileIdDao =
                         new UserProfileIdDaoSharedPreferencesImpl(
-                                context.getSharedPreferences(STORAGE_NAME, Context.MODE_PRIVATE),
-                                Clock.getInstance());
+                                getPrefs(context), Clock.getInstance());
             }
             return sUserProfileIdDao;
         }
@@ -97,5 +96,10 @@ public class UserProfileIdDaoSharedPreferencesImpl implements UserProfileIdDao {
     @Override
     public void deleteStorage() {
         mSharedPreferences.edit().clear().commit();
+    }
+
+    @SuppressWarnings("AvoidSharedPreferences") // Legacy usage
+    private static SharedPreferences getPrefs(Context context) {
+        return context.getSharedPreferences(STORAGE_NAME, Context.MODE_PRIVATE);
     }
 }

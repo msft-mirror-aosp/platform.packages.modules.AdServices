@@ -81,7 +81,7 @@ public final class EncryptionKeyJobServiceTest extends AdServicesJobServiceTestC
         mocker.mockGetFlags(mMockFlags);
         mSpyService = spy(new EncryptionKeyJobService());
 
-        mSpyLogger = getSpiedAdServicesJobServiceLogger(mContext, mMockFlags);
+        mSpyLogger = mocker.getSpiedAdServicesJobServiceLogger(mContext, mMockFlags);
 
         setDefaultExpectations();
     }
@@ -285,7 +285,7 @@ public final class EncryptionKeyJobServiceTest extends AdServicesJobServiceTestC
         doReturn(mock(EnrollmentDao.class)).when(EnrollmentDao::getInstance);
         doReturn(mock(EncryptionKeyDao.class)).when(EncryptionKeyDao::getInstance);
         doNothing().when(() -> EncryptionKeyJobService.schedule(any(), any()));
-        mockGetAdServicesJobServiceLogger(mSpyLogger);
+        mocker.mockGetAdServicesJobServiceLogger(mSpyLogger);
     }
 
     private void enableKillSwitch() {

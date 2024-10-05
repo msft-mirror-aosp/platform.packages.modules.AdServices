@@ -34,6 +34,7 @@ import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.mockito.AdServicesJobMocker;
 import com.android.adservices.mockito.AdServicesMockitoJobMocker;
 import com.android.adservices.mockito.StaticClassChecker;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
@@ -47,59 +48,9 @@ public abstract class AdServicesJobServiceTestCase
         extends AdServicesMockerLessExtendedMockitoTestCase<Mocker> {
 
     @Override
-    protected Mocker newMocker(AdServicesExtendedMockitoRule rule, Flags mockFlags) {
-        return new Mocker(rule, mockFlags);
-    }
-
-    // TODO(b/314969513, 354932043): consider inlining and/or renaming helpers below after all
-    // classes are refactored.
-    /**
-     * Convenience method to call {@link
-     * AdServicesJobMocker#mockJobSchedulingLogger(AdServicesJobServiceFactory)} using {@link
-     * #mocker}
-     */
-    protected final JobSchedulingLogger mockJobSchedulingLogger(
-            AdServicesJobServiceFactory factory) {
-        return mocker.mockJobSchedulingLogger(factory);
-    }
-
-    // TODO(b/314969513): inline methods below once all classes are refactored (and use a common
-    // mMockFlags instance)
-
-    /**
-     * Convenience helper to call {@link
-     * AdServicesJobMocker#mockGetAdServicesJobServiceLogger(AdServicesJobServiceLogger)} using
-     * {@code mocker}.
-     */
-    protected final void mockGetAdServicesJobServiceLogger(AdServicesJobServiceLogger logger) {
-        mocker.mockGetAdServicesJobServiceLogger(logger);
-    }
-
-    /**
-     * Convenience helper to call {@link
-     * AdServicesJobMocker#getSpiedAdServicesJobServiceLogger(Context, Flags)} using {@code mocker}.
-     */
-    protected final AdServicesJobServiceLogger getSpiedAdServicesJobServiceLogger(
-            Context context, Flags flags) {
-        return mocker.getSpiedAdServicesJobServiceLogger(context, flags);
-    }
-
-    /**
-     * Convenience helper to call {@link
-     * AdServicesJobMocker#mockNoOpAdServicesJobServiceLogger(Context, Flags)} using {@code mocker}.
-     */
-    protected final AdServicesJobServiceLogger mockAdServicesJobServiceLogger(
-            Context context, Flags flags) {
-        return mocker.mockNoOpAdServicesJobServiceLogger(context, flags);
-    }
-
-    /**
-     * Convenience helper to call {@link
-     * AdServicesJobMocker#mockNoOpAdServicesJobServiceLogger(Context, Flags)} using {@code mocker},
-     * with {@code mMockFlags}.
-     */
-    protected final AdServicesJobServiceLogger mockAdServicesJobServiceLogger(Context context) {
-        return mocker.mockNoOpAdServicesJobServiceLogger(context, mMockFlags);
+    protected final Mocker newMocker(
+            AdServicesExtendedMockitoRule rule, Flags mockFlags, DebugFlags mockDebugFlags) {
+        return new Mocker(rule, mockFlags, mockDebugFlags);
     }
 
     // TODO(b/296945680): methods below were moved "as is" from MockitoExpectations. They should
@@ -249,8 +200,8 @@ public abstract class AdServicesJobServiceTestCase
         private final AdServicesJobMocker mJobMocker;
 
         @VisibleForTesting
-        Mocker(StaticClassChecker checker, Flags flags) {
-            super(checker, flags);
+        Mocker(StaticClassChecker checker, Flags mockFlags, DebugFlags mockDebugFlags) {
+            super(checker, mockFlags, mockDebugFlags);
             mJobMocker = new AdServicesMockitoJobMocker(checker);
         }
 

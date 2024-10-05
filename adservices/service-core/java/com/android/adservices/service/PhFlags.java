@@ -3557,7 +3557,7 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public void dump(@NonNull PrintWriter writer, @Nullable String[] args) {
+    public void dump(PrintWriter writer, @Nullable String[] args) {
         writer.println("\t" + FlagsConstants.KEY_PAS_UX_ENABLED + " = " + getPasUxEnabled());
         writer.println(
                 "\t"
@@ -6781,20 +6781,6 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_APIS,
                 DEFAULT_ENABLE_ADEXT_DATA_SERVICE_APIS);
-    }
-
-    @Override
-    public boolean getEnableAdservicesApiEnabled() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_ENABLE_ADSERVICES_API_ENABLED,
-                DEFAULT_ENABLE_ADSERVICES_API_ENABLED);
-    }
-
-    @Override
-    public boolean getAdservicesEnablementCheckEnabled() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_ADSERVICES_ENABLEMENT_CHECK_ENABLED,
-                DEFAULT_ADSERVICES_ENABLEMENT_CHECK_ENABLED);
     }
 
     @Override

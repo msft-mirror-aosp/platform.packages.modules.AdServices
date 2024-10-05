@@ -130,7 +130,7 @@ public final class MddJobServiceTest extends AdServicesJobServiceTestCase {
 
         doReturn(JOB_SCHEDULER).when(mSpyMddJobService).getSystemService(JobScheduler.class);
 
-        mLogger = mockAdServicesJobServiceLogger(mContext, mMockFlags);
+        mLogger = mocker.mockNoOpAdServicesJobServiceLogger(mContext, mMockFlags);
 
         // MDD Task Tag.
         PersistableBundle bundle = new PersistableBundle();

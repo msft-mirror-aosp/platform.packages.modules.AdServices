@@ -18,6 +18,8 @@ package com.android.adservices.shared.testing;
 import static com.android.adservices.shared.testing.Logger.LogLevel.ERROR;
 import static com.android.adservices.shared.testing.Logger.LogLevel.INFO;
 
+import com.android.adservices.shared.meta_testing.SharedSidelessTestCase;
+
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;

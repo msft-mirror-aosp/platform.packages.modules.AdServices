@@ -120,7 +120,7 @@ public class DevContextFilter {
     public DevContext createDevContext(int callingAppUid) {
         String callingAppPackage = null;
         // TODO(b/363472834): Propagate developer mode state from the DB.
-        DevContext.Builder builder = DevContext.builder().setDevSessionActive(false);
+        DevContext.Builder builder = DevContext.builder().setDevSession(DevSession.UNKNOWN);
 
         if (!isDeveloperMode()) {
             // Since developer mode is off, we don't want to look up the app name; OTOH, we need to

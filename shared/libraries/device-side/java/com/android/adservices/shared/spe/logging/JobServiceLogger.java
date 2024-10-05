@@ -254,8 +254,7 @@ public class JobServiceLogger {
         String executionPeriodKey = getExecutionPeriodKey(jobId);
         String jobStopTimestampKey = getJobStopTimestampKey(jobId);
 
-        SharedPreferences sharedPreferences =
-                mContext.getSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS, Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = getPrefs();
         SharedPreferences.Editor editor = sharedPreferences.edit();
 
         long jobStartExecutionTimestamp;
@@ -395,8 +394,7 @@ public class JobServiceLogger {
      */
     @VisibleForTesting
     public void persistJobExecutionData(int jobId, long startJobTimestamp) {
-        SharedPreferences sharedPreferences =
-                mContext.getSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS, Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = getPrefs();
 
         String jobStartTimestampKey = getJobStartTimestampKey(jobId);
         String executionPeriodKey = getExecutionPeriodKey(jobId);
@@ -529,5 +527,10 @@ public class JobServiceLogger {
         int loggingRatio = mFlags.getBackgroundJobSamplingLoggingRate();
 
         return sRandom.nextInt(MAX_PERCENTAGE) < loggingRatio;
+    }
+
+    @SuppressWarnings("AvoidSharedPreferences") // Legacy usage
+    private SharedPreferences getPrefs() {
+        return mContext.getSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS, Context.MODE_PRIVATE);
     }
 }

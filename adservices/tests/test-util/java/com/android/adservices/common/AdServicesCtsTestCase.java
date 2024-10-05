@@ -16,7 +16,9 @@
 package com.android.adservices.common;
 
 import com.android.adservices.common.annotations.SetDefaultLogcatTags;
+import com.android.adservices.shared.testing.CallSuper;
 
+import org.junit.ClassRule;
 import org.junit.Rule;
 
 /**
@@ -41,6 +43,10 @@ public abstract class AdServicesCtsTestCase extends AdServicesTestCase {
     protected static final String LOGCAT_TAG_ADID = LOGCAT_TAG_ADSERVICES + ".adid";
     protected static final String LOGCAT_TAG_APPSETID = LOGCAT_TAG_ADSERVICES + ".appsetid";
 
+    @ClassRule
+    public static final AdServicesFlagsPreparerClassRule sFlagsPreparer =
+            new AdServicesFlagsPreparerClassRule();
+
     @Rule(order = 5)
     public final AdServicesFlagsSetterRule flags = getAdServicesFlagsSetterRule();
 
@@ -54,5 +60,14 @@ public abstract class AdServicesCtsTestCase extends AdServicesTestCase {
      */
     protected AdServicesFlagsSetterRule getAdServicesFlagsSetterRule() {
         return AdServicesFlagsSetterRule.newInstance();
+    }
+
+    @CallSuper
+    @Override
+    protected void assertValidTestCaseFixtures() throws Exception {
+        super.assertValidTestCaseFixtures();
+
+        assertTestClassHasNoFieldsFromSuperclass(
+                AdServicesCtsTestCase.class, "sFlagsPreparer", "flags");
     }
 }

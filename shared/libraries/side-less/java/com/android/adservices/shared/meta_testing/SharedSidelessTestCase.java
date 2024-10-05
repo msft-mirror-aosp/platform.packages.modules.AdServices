@@ -13,9 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.shared.testing;
+package com.android.adservices.shared.meta_testing;
 
+import com.android.adservices.shared.testing.AbstractProcessLifeguardRule;
+import com.android.adservices.shared.testing.DynamicLogger;
 import com.android.adservices.shared.testing.Logger.RealLogger;
+import com.android.adservices.shared.testing.SidelessTestCase;
 
 import org.junit.Rule;
 

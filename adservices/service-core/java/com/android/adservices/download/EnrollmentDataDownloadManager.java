@@ -165,6 +165,8 @@ public class EnrollmentDataDownloadManager {
 
         ClientFile enrollmentDataFile = FileGroupAndBuildIdPair.first;
         String fileGroupBuildId = FileGroupAndBuildIdPair.second;
+
+        @SuppressWarnings("AvoidSharedPreferences") // Legacy usage
         SharedPreferences sharedPrefs =
                 mContext.getSharedPreferences(
                         ENROLLMENT_FILE_READ_STATUS_SHARED_PREFERENCES, Context.MODE_PRIVATE);
@@ -403,6 +405,8 @@ public class EnrollmentDataDownloadManager {
     private void commitFileGroupDataToSharedPref(ClientFileGroup fileGroup) {
         Long buildId = fileGroup.getBuildId();
         ClientFileGroup.Status fileGroupStatus = fileGroup.getStatus();
+
+        @SuppressWarnings("AvoidSharedPreferences") // Legacy usage
         SharedPreferences prefs =
                 mContext.getSharedPreferences(ENROLLMENT_SHARED_PREF, Context.MODE_PRIVATE);
         SharedPreferences.Editor edit = prefs.edit();

@@ -720,7 +720,7 @@ public final class AsyncRegistrationQueueJobServiceTest
                 .when(DatastoreManagerFactory::getDatastoreManager);
         ExtendedMockito.doReturn(mMockJobInfo)
                 .when(() -> AsyncRegistrationQueueJobService.buildJobInfo(any(), any()));
-        mockGetAdServicesJobServiceLogger(mSpyLogger);
+        mocker.mockGetAdServicesJobServiceLogger(mSpyLogger);
         // Execute
         execute.run();
     }

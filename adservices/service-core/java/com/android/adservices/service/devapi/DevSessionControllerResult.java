@@ -14,13 +14,18 @@
  * limitations under the License.
  */
 
-package android.adservices.common;
+package com.android.adservices.service.devapi;
 
 /**
- * This interface defines the generic response of SetNotification API's.
- * An AdServicesCommonResponse is a Parcelable object that contains a status code and a nullable
- * error message.
- *
- * {@hide}
+ * Result codes for {@link com.android.adservices.service.devapi.DevSessionController} operations.
  */
-parcelable AdServicesCommonResponse;
+public enum DevSessionControllerResult {
+    /** The operation result is unknown. */
+    UNKNOWN,
+    /** The operation (either moving to IN_DEV or IN_PROD) was a success. */
+    SUCCESS,
+    /** The operation (either moving to IN_DEV or IN_PROD) was a failure. */
+    FAILURE,
+    /** The operation was no-op (e.g. requested IN_DEV while already _DEV), so nothing happened. */
+    NO_OP,
+}

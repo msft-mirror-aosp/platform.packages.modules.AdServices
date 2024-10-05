@@ -16,12 +16,9 @@
 
 package android.adservices.test.scenario.adservices.iapc;
 
-import static com.android.adservices.service.FlagsConstants.KEY_AD_ID_CACHE_ENABLED;
-
 import android.platform.test.scenario.annotation.Scenario;
 
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
-import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 
 import org.junit.Test;
 
@@ -30,7 +27,6 @@ import org.junit.Test;
 @RequiresSdkLevelAtLeastS(reason = "AdServices is only available on S+.")
 public class GetAdIdApiCall extends GetAdIdApiCallBase {
     @Test
-    @SetFlagEnabled(KEY_AD_ID_CACHE_ENABLED)
     public void testGetAdId() throws Exception {
         measureGetAdIdCall();
     }

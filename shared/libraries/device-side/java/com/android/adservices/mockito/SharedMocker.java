@@ -31,6 +31,9 @@ public interface SharedMocker {
      */
     Context setApplicationContextSingleton();
 
+    /** Mocks {@link ApplicationContextSingleton#get()}. */
+    void mockSetApplicationContextSingleton(Context context);
+
     /**
      * Mocks {@link android.app.job.JobService}'s execution to wait until {@link
      * JobServiceLogger#recordOnStopJob(android.app.job.JobParameters, int, boolean)} is called.

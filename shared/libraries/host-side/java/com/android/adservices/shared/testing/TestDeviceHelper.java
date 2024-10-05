@@ -45,7 +45,9 @@ public final class TestDeviceHelper {
 
     /** Sets the singleton. */
     public static void setTestDevice(ITestDevice device) {
-        sDevice.set(Objects.requireNonNull(device));
+        Objects.requireNonNull(device, "device cannot be null");
+        sLogger.i("Setting singleton as %s", device);
+        sDevice.set(device);
     }
 
     /** Gets the singleton. */

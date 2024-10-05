@@ -60,7 +60,9 @@ import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.CallingAppUidSupplier;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.ProtectedSignalsServiceFilter;
@@ -75,6 +77,7 @@ import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogg
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -93,6 +96,8 @@ import java.util.concurrent.ExecutorService;
 @SetErrorLogUtilDefaultParams(
         throwable = ExpectErrorLogUtilWithExceptionCall.Any.class,
         ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS)
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(DebugFlags.class)
 public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMockitoTestCase {
 
     private static final int API_NAME = AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS;
@@ -126,6 +131,7 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
     @Before
     public void setup() {
         mFakeFlags = new ProtectedSignalsServiceImplTestFlags();
+        mocker.mockGetDebugFlags(mMockDebugFlags);
         logApiCallStatsCallback = mocker.mockLogApiCallStats(mAdServicesLoggerMock);
 
         mProtectedSignalsService =
@@ -138,6 +144,7 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
                         DIRECT_EXECUTOR,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         mCallingAppUidSupplierMock,
                         mProtectedSignalsServiceFilterMock,
                         mEnrollmentDaoMock,
@@ -222,14 +229,7 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
     @SuppressWarnings("FutureReturnValueIgnored")
     @Test
     public void testUpdateSignalsSuccessWithUXNotificationNotEnforced() throws Exception {
-        Flags flagsWithUXNotificationEnforcementDisabled =
-                new ProtectedSignalsServiceImplTestFlags() {
-                    @Override
-                    public boolean getConsentNotificationDebugMode() {
-                        return true;
-                    }
-                };
-
+        mocker.mockGetConsentNotificationDebugMode(true);
         when(mProtectedSignalsServiceFilterMock.filterRequestAndExtractIdentifier(
                         eq(URI),
                         eq(PACKAGE),
@@ -252,7 +252,8 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
                         mDevContextFilterMock,
                         DIRECT_EXECUTOR,
                         mAdServicesLoggerMock,
-                        flagsWithUXNotificationEnforcementDisabled,
+                        mFakeFlags,
+                        mMockDebugFlags,
                         mCallingAppUidSupplierMock,
                         mProtectedSignalsServiceFilterMock,
                         mEnrollmentDaoMock,
@@ -604,11 +605,6 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
         @Override
         public boolean getPasProductMetricsV1Enabled() {
             return true;
-        }
-
-        @Override
-        public boolean getConsentNotificationDebugMode() {
-            return false;
         }
     }
 }

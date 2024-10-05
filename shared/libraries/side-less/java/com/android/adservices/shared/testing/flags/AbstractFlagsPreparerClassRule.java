@@ -15,11 +15,15 @@
  */
 package com.android.adservices.shared.testing.flags;
 
+import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest.UNSUPPORTED;
+
 import com.android.adservices.shared.testing.AbstractRule;
 import com.android.adservices.shared.testing.Logger.RealLogger;
 import com.android.adservices.shared.testing.TestHelper;
 import com.android.adservices.shared.testing.device.DeviceConfig;
 import com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest;
+
+import com.google.common.annotations.VisibleForTesting;
 
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -44,10 +48,16 @@ public abstract class AbstractFlagsPreparerClassRule extends AbstractRule {
 
         mDeviceConfig = Objects.requireNonNull(deviceConfig, "deviceConfig cannot be null");
         mMode = Objects.requireNonNull(mode, "mode cannot be null");
+        if (mode.equals(UNSUPPORTED)) {
+            throw new IllegalArgumentException("invalid mode: " + mode);
+        }
     }
 
+    // TODO(b/370596037): should be protected, but it's used by
+    // AbstractFlagsPreparerClassRuleTestCase, which is located in the meta_testing package
+    @VisibleForTesting
     @Override
-    protected void evaluate(Statement base, Description description) throws Throwable {
+    public final void evaluate(Statement base, Description description) throws Throwable {
         TestHelper.throwIfTest(description);
 
         SyncDisabledModeForTest modeBefore = null;

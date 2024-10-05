@@ -106,7 +106,7 @@ public final class MaintenanceJobServiceTest extends AdServicesJobServiceTestCas
 
         mocker.mockGetFlags(mMockFlags);
 
-        mSpyLogger = mockAdServicesJobServiceLogger(mContext, mMockFlags);
+        mSpyLogger = mocker.mockNoOpAdServicesJobServiceLogger(mContext, mMockFlags);
     }
 
     @After

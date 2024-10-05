@@ -41,6 +41,7 @@ import android.os.Process;
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.devapi.DevSessionFixture;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.consent.ConsentManager;
@@ -740,7 +741,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                                 DevContext.builder()
                                         .setDeviceDevOptionsEnabled(true)
                                         .setCallingAppPackageName(CALLER_PACKAGE_NAME)
-                                        .setDevSessionActive(false)
+                                        .setDevSession(DevSessionFixture.IN_PROD)
                                         .build()));
     }
 }

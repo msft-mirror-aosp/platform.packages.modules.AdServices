@@ -179,7 +179,8 @@ public abstract class DeviceSideTestCase extends SidelessTestCase {
                 "mocker",
                 "sInlineCleaner",
                 "sSpyContext",
-                "mMockFlags");
+                "mMockFlags",
+                "mMockDebugFlags");
         testInstance.assertTestClassHasNoSuchField(
                 "mContextMock", "should use existing mMockContext instead");
         testInstance.assertTestClassHasNoSuchField(

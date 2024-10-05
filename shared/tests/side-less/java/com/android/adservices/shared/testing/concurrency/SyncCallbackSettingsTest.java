@@ -23,8 +23,8 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.shared.meta_testing.FakeLogger;
+import com.android.adservices.shared.meta_testing.SharedSidelessTestCase;
 import com.android.adservices.shared.testing.Logger;
-import com.android.adservices.shared.testing.SharedSidelessTestCase;
 
 import org.junit.Test;
 

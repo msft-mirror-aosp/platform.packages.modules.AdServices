@@ -103,6 +103,7 @@ import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
 import com.android.adservices.data.customaudience.DBPartialCustomAudience;
 import com.android.adservices.data.customaudience.DBScheduledCustomAudienceUpdate;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
@@ -153,6 +154,7 @@ import java.util.stream.Collectors;
 
 @RequiresSdkLevelAtLeastS()
 @SpyStatic(FlagsFactory.class)
+@SpyStatic(DebugFlags.class)
 @SpyStatic(ScheduleCustomAudienceUpdateJobService.class)
 @MockStatic(BackgroundFetchJob.class)
 public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedMockitoTestCase {
@@ -320,6 +322,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         mAdServicesLoggerMock,
                         mAppImportanceFilter,
                         COMMON_FLAGS_WITH_FILTERS_ENABLED,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
                                 mContext,
@@ -397,6 +400,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         mAdServicesLoggerMock,
                         mAppImportanceFilter,
                         COMMON_FLAGS_WITH_FILTERS_ENABLED,
+                        mMockDebugFlags,
                         CallingAppUidSupplierFailureImpl.create(),
                         new CustomAudienceServiceFilter(
                                 mContext,
@@ -1246,6 +1250,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         mAdServicesLoggerMock,
                         mAppImportanceFilter,
                         COMMON_FLAGS_WITH_FILTERS_ENABLED,
+                        mMockDebugFlags,
                         CallingAppUidSupplierFailureImpl.create(),
                         new CustomAudienceServiceFilter(
                                 mContext,
@@ -3565,6 +3570,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 mAdServicesLoggerMock,
                                 mAppImportanceFilter,
                                 flagsWithLowRateLimit,
+                                mMockDebugFlags,
                                 CallingAppUidSupplierProcessImpl.create(),
                                 new CustomAudienceServiceFilter(
                                         mContext,
@@ -3746,6 +3752,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         mAdServicesLoggerMock,
                         mAppImportanceFilter,
                         flags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
                                 mContext,

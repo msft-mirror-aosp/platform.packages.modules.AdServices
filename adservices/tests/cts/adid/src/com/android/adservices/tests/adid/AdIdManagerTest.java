@@ -16,13 +16,11 @@
 package com.android.adservices.tests.adid;
 
 import static com.android.adservices.AdServicesCommon.ACTION_ADID_PROVIDER_SERVICE;
-import static com.android.adservices.shared.testing.AndroidSdk.RVC;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import android.adservices.adid.AdId;
 import android.adservices.adid.AdIdManager;
-import android.adservices.exceptions.AdServicesException;
 import android.os.LimitExceededException;
 import android.util.Log;
 
@@ -34,7 +32,6 @@ import com.android.adservices.common.annotations.RequiresAndroidServiceAvailable
 import com.android.adservices.shared.testing.OutcomeReceiverForTests;
 import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
-import com.android.adservices.shared.testing.annotations.RequiresSdkRange;
 import com.android.adservices.shared.testing.concurrency.FailableResultSyncCallback;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -46,6 +43,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 @RequiresAndroidServiceAvailable(intentAction = ACTION_ADID_PROVIDER_SERVICE)
+@RequiresSdkLevelAtLeastS()
 public final class AdIdManagerTest extends AdServicesCtsTestCase
         implements CtsAdIdEndToEndTestFlags {
 
@@ -63,18 +61,6 @@ public final class AdIdManagerTest extends AdServicesCtsTestCase
     }
 
     @Test
-    @RequiresSdkRange(atMost = RVC)
-    public void testAdIdManager_getAdId_onR_invokesCallbackOnError() throws Exception {
-        AdServicesOutcomeReceiverForTests<AdId> callback =
-                new AdServicesOutcomeReceiverForTests<>();
-
-        mAdIdManager.getAdId(sCallbackExecutor, callback);
-
-        callback.assertFailure(AdServicesException.class);
-    }
-
-    @Test
-    @RequiresSdkLevelAtLeastS()
     public void testAdIdManager_outcomeReceiver() throws Exception {
         OutcomeReceiverForTests<AdId> callback = new OutcomeReceiverForTests<>();
         mAdIdManager.getAdId(sCallbackExecutor, callback);
@@ -82,7 +68,6 @@ public final class AdIdManagerTest extends AdServicesCtsTestCase
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     public void testAdIdManager_customReceiver() throws Exception {
         AdServicesOutcomeReceiverForTests<AdId> callback =
                 new AdServicesOutcomeReceiverForTests<>();
@@ -102,7 +87,6 @@ public final class AdIdManagerTest extends AdServicesCtsTestCase
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     @FlakyTest(bugId = 322812739)
     public void testAdIdManager_verifyRateLimitReached() throws Exception {
         // Rate limit hasn't reached yet
@@ -172,7 +156,6 @@ public final class AdIdManagerTest extends AdServicesCtsTestCase
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     @RequiresLowRamDevice
     public void testAdIdManager_whenDeviceNotSupported_outcomeReceiver() throws Exception {
         AdIdManager adIdManager = AdIdManager.get(sContext);
@@ -184,7 +167,6 @@ public final class AdIdManagerTest extends AdServicesCtsTestCase
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     @RequiresLowRamDevice
     public void testAdIdManager_whenDeviceNotSupported_customReceiver() throws Exception {
         AdIdManager adIdManager = AdIdManager.get(sContext);

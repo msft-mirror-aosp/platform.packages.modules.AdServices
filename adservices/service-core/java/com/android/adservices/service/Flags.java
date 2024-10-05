@@ -5124,20 +5124,6 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     /**
-     * Default value to determine whether {@link
-     * android.adservices.common.AdServicesCommonManager#enableAdServices} is enabled.
-     */
-    boolean DEFAULT_ENABLE_ADSERVICES_API_ENABLED = true;
-
-    /**
-     * Returns whether {@link android.adservices.common.AdServicesCommonManager#enableAdServices} is
-     * enabled.
-     */
-    default boolean getEnableAdservicesApiEnabled() {
-        return DEFAULT_ENABLE_ADSERVICES_API_ENABLED;
-    }
-
-    /**
      * Default value to determine whether AdServicesExtDataStorageService related APIs are enabled.
      */
     boolean DEFAULT_ENABLE_ADEXT_DATA_SERVICE_APIS = true;
@@ -5145,20 +5131,6 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns whether AdServicesExtDataStorageService related APIs are enabled. */
     default boolean getEnableAdExtDataServiceApis() {
         return DEFAULT_ENABLE_ADEXT_DATA_SERVICE_APIS;
-    }
-
-    /**
-     * Default value to determine whether {@link
-     * android.adservices.common.AdServicesCommonManager#isAdServicesEnabled} is enabled.
-     */
-    boolean DEFAULT_ADSERVICES_ENABLEMENT_CHECK_ENABLED = true;
-
-    /**
-     * Returns whether {@link android.adservices.common.AdServicesCommonManager#isAdServicesEnabled}
-     * is enabled.
-     */
-    default boolean getAdservicesEnablementCheckEnabled() {
-        return DEFAULT_ADSERVICES_ENABLEMENT_CHECK_ENABLED;
     }
 
     /**

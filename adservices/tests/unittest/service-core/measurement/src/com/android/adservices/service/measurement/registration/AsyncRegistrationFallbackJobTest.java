@@ -120,7 +120,7 @@ public final class AsyncRegistrationFallbackJobTest extends AdServicesJobTestCas
         int resultCode = SCHEDULING_RESULT_CODE_SUCCESSFUL;
         when(mMockFlags.getSpeOnAsyncRegistrationFallbackJobEnabled()).thenReturn(false);
         JobSchedulingLogger mockedLogger =
-                mockJobSchedulingLogger(mMockAdServicesJobServiceFactory);
+                mocker.mockJobSchedulingLogger(mMockAdServicesJobServiceFactory);
         doReturn(resultCode)
                 .when(() -> AsyncRegistrationFallbackJobService.scheduleIfNeeded(anyBoolean()));
 

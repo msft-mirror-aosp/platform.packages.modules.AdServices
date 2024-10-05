@@ -27,6 +27,8 @@ import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.ui.util.AdServicesUiTestCase;
 import com.android.adservices.ui.util.SettingsTestUtil;
 
+import org.junit.Assume;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -39,6 +41,11 @@ import org.junit.Test;
 public final class SettingsGaUiAutomatorTest extends AdServicesUiTestCase {
     @Rule(order = 11)
     public final AdServicesFlagsSetterRule flags = AdServicesFlagsSetterRule.newInstance();
+
+    @Before
+    public void setup() throws Exception {
+        Assume.assumeTrue(SettingsTestUtil.isSettingsIntentInstalled());
+    }
 
     @Test
     public void settingsRemoveMainToggleAndMeasurementEntryTest() {

@@ -40,6 +40,7 @@ import android.os.Process;
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.devapi.DevSessionFixture;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.consent.ConsentManager;
@@ -454,10 +455,9 @@ public final class AdSelectionServiceFilterTest extends AdServicesMockitoTestCas
                                         MY_UID,
                                         API_NAME,
                                         Throttler.ApiKey.UNKNOWN,
-                                        DevContext.builder()
+                                        DevContext.builder(CALLER_PACKAGE_NAME)
                                                 .setDeviceDevOptionsEnabled(true)
-                                                .setCallingAppPackageName(CALLER_PACKAGE_NAME)
-                                                .setDevSessionActive(false)
+                                                .setDevSession(DevSessionFixture.IN_PROD)
                                                 .build()));
 
         assertThat(exception)

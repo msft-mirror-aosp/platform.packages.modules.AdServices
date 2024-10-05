@@ -27,7 +27,6 @@ import static org.mockito.Mockito.doReturn;
 import android.adservices.common.AdServicesStatusUtils;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
-import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.measurement.CachedFlags;
 
@@ -38,7 +37,6 @@ import org.mockito.Mock;
 public final class ConsentNotifiedAccessResolverTest extends AdServicesMockitoTestCase {
     @Mock private ConsentManager mConsentManager;
     @Mock private UserConsentAccessResolver mUserConsentAccessResolver;
-    @Mock private DebugFlags mMockDebugFlags;
 
     private ConsentNotifiedAccessResolver mConsentNotifiedAccessResolver;
 

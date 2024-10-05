@@ -87,7 +87,7 @@ import java.util.List;
 @SpyStatic(TopicsScheduleEpochJobSettingReportedStatsLogger.class)
 @RequiresSdkLevelAtLeastS
 @SetErrorLogUtilDefaultParams(ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS)
-public class EpochJobServiceTest extends AdServicesJobServiceTestCase {
+public final class EpochJobServiceTest extends AdServicesJobServiceTestCase {
     private static final int TOPICS_EPOCH_JOB_ID = TOPICS_EPOCH_JOB.getJobId();
     // Set a minimum delay of 1 hour so scheduled jobs don't run immediately
     private static final long MINIMUM_SCHEDULING_DELAY_MS = 60L * 60L * 1000L;
@@ -116,7 +116,7 @@ public class EpochJobServiceTest extends AdServicesJobServiceTestCase {
 
         doReturn(mJobScheduler).when(mSpyEpochJobService).getSystemService(JobScheduler.class);
 
-        mSpyLogger = mockAdServicesJobServiceLogger(mContext, mMockFlags);
+        mSpyLogger = mocker.mockNoOpAdServicesJobServiceLogger(mContext, mMockFlags);
 
         // By default, do not use SPE.
         when(mMockFlags.getSpeOnEpochJobEnabled()).thenReturn(false);
@@ -174,9 +174,9 @@ public class EpochJobServiceTest extends AdServicesJobServiceTestCase {
         assertThat(EpochJobService.scheduleIfNeeded(/* forceSchedule */ false))
                 .isEqualTo(SCHEDULING_RESULT_CODE_SKIPPED);
         JobInfo pendingJobInfo2 = mJobScheduler.getPendingJob(TOPICS_EPOCH_JOB_ID);
-        assertThat(pendingJobInfo2).isNotNull();
-        assertThat(pendingJobInfo2.isRequireCharging()).isFalse();
-        assertThat(pendingJobInfo2.isRequireBatteryNotLow()).isTrue();
+        expect.that(pendingJobInfo2).isNotNull();
+        expect.that(pendingJobInfo2.isRequireCharging()).isFalse();
+        expect.that(pendingJobInfo2.isRequireBatteryNotLow()).isTrue();
     }
 
     @Test
@@ -229,25 +229,26 @@ public class EpochJobServiceTest extends AdServicesJobServiceTestCase {
         verify(mSpyAdServicesLogger, times(2))
                 .logTopicsScheduleEpochJobSettingReportedStats(argumentCaptor.capture());
         List<TopicsScheduleEpochJobSettingReportedStats> stats = argumentCaptor.getAllValues();
+        assertThat(stats).hasSize(2);
 
         TopicsScheduleEpochJobSettingReportedStats firstScheduledEpochJobStats = stats.get(0);
-        assertThat(firstScheduledEpochJobStats.getRescheduleEpochJobStatus())
+        expect.that(firstScheduledEpochJobStats.getRescheduleEpochJobStatus())
                 .isEqualTo(TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_UNSET);
-        assertThat(firstScheduledEpochJobStats.getPreviousEpochJobSetting())
+        expect.that(firstScheduledEpochJobStats.getPreviousEpochJobSetting())
                 .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING);
-        assertThat(firstScheduledEpochJobStats.getCurrentEpochJobSetting())
+        expect.that(firstScheduledEpochJobStats.getCurrentEpochJobSetting())
                 .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING);
-        assertThat(firstScheduledEpochJobStats.getScheduleIfNeededEpochJobStatus())
+        expect.that(firstScheduledEpochJobStats.getScheduleIfNeededEpochJobStatus())
                 .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_REQUIRES_CHARGING);
 
         TopicsScheduleEpochJobSettingReportedStats secondScheduledEpochJobStats = stats.get(1);
-        assertThat(secondScheduledEpochJobStats.getRescheduleEpochJobStatus())
+        expect.that(secondScheduledEpochJobStats.getRescheduleEpochJobStatus())
                 .isEqualTo(TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_UNSET);
-        assertThat(secondScheduledEpochJobStats.getPreviousEpochJobSetting())
+        expect.that(secondScheduledEpochJobStats.getPreviousEpochJobSetting())
                 .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING);
-        assertThat(secondScheduledEpochJobStats.getCurrentEpochJobSetting())
+        expect.that(secondScheduledEpochJobStats.getCurrentEpochJobSetting())
                 .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING);
-        assertThat(secondScheduledEpochJobStats.getScheduleIfNeededEpochJobStatus())
+        expect.that(secondScheduledEpochJobStats.getScheduleIfNeededEpochJobStatus())
                 .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_REQUIRES_BATTERY_NOT_LOW);
     }
 
@@ -309,13 +310,13 @@ public class EpochJobServiceTest extends AdServicesJobServiceTestCase {
         verify(mSpyAdServicesLogger)
                 .logTopicsScheduleEpochJobSettingReportedStats(argumentCaptor.capture());
         TopicsScheduleEpochJobSettingReportedStats stats = argumentCaptor.getValue();
-        assertThat(stats.getRescheduleEpochJobStatus())
+        expect.that(stats.getRescheduleEpochJobStatus())
                 .isEqualTo(TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_UNSET);
-        assertThat(stats.getPreviousEpochJobSetting())
+        expect.that(stats.getPreviousEpochJobSetting())
                 .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING);
-        assertThat(stats.getCurrentEpochJobSetting())
+        expect.that(stats.getCurrentEpochJobSetting())
                 .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING);
-        assertThat(stats.getScheduleIfNeededEpochJobStatus())
+        expect.that(stats.getScheduleIfNeededEpochJobStatus())
                 .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_REQUIRES_BATTERY_NOT_LOW);
     }
 
@@ -455,8 +456,8 @@ public class EpochJobServiceTest extends AdServicesJobServiceTestCase {
         // Verify the JobScheduler has scheduled a new background job with new JobInfo.
         verify(mMockJobScheduler).schedule(argumentCaptor.capture());
         assertThat(argumentCaptor.getValue()).isNotNull();
-        assertThat(argumentCaptor.getValue().isRequireCharging()).isFalse();
-        assertThat(argumentCaptor.getValue().isRequireBatteryNotLow()).isTrue();
+        expect.that(argumentCaptor.getValue().isRequireCharging()).isFalse();
+        expect.that(argumentCaptor.getValue().isRequireBatteryNotLow()).isTrue();
     }
 
     @Test
@@ -548,13 +549,13 @@ public class EpochJobServiceTest extends AdServicesJobServiceTestCase {
         verify(mSpyAdServicesLogger)
                 .logTopicsScheduleEpochJobSettingReportedStats(argumentCaptor.capture());
         TopicsScheduleEpochJobSettingReportedStats stats = argumentCaptor.getValue();
-        assertThat(stats.getRescheduleEpochJobStatus())
+        expect.that(stats.getRescheduleEpochJobStatus())
                 .isEqualTo(TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_SKIP_RESCHEDULE_EMPTY_JOB_SCHEDULER);
-        assertThat(stats.getPreviousEpochJobSetting())
+        expect.that(stats.getPreviousEpochJobSetting())
                 .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING);
-        assertThat(stats.getCurrentEpochJobSetting())
+        expect.that(stats.getCurrentEpochJobSetting())
                 .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING);
-        assertThat(stats.getScheduleIfNeededEpochJobStatus())
+        expect.that(stats.getScheduleIfNeededEpochJobStatus())
                 .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING);
     }
 
@@ -588,13 +589,13 @@ public class EpochJobServiceTest extends AdServicesJobServiceTestCase {
         verify(mSpyAdServicesLogger)
                 .logTopicsScheduleEpochJobSettingReportedStats(argumentCaptor.capture());
         TopicsScheduleEpochJobSettingReportedStats stats = argumentCaptor.getValue();
-        assertThat(stats.getRescheduleEpochJobStatus())
+        expect.that(stats.getRescheduleEpochJobStatus())
                 .isEqualTo(TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_SKIP_RESCHEDULE_EMPTY_PENDING_JOB);
-        assertThat(stats.getPreviousEpochJobSetting())
+        expect.that(stats.getPreviousEpochJobSetting())
                 .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING);
-        assertThat(stats.getCurrentEpochJobSetting())
+        expect.that(stats.getCurrentEpochJobSetting())
                 .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING);
-        assertThat(stats.getScheduleIfNeededEpochJobStatus())
+        expect.that(stats.getScheduleIfNeededEpochJobStatus())
                 .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING);
     }
 
@@ -635,13 +636,13 @@ public class EpochJobServiceTest extends AdServicesJobServiceTestCase {
         verify(mSpyAdServicesLogger)
                 .logTopicsScheduleEpochJobSettingReportedStats(argumentCaptor.capture());
         TopicsScheduleEpochJobSettingReportedStats stats = argumentCaptor.getValue();
-        assertThat(stats.getRescheduleEpochJobStatus())
+        expect.that(stats.getRescheduleEpochJobStatus())
                 .isEqualTo(TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_RESCHEDULE_SUCCESS);
-        assertThat(stats.getPreviousEpochJobSetting())
+        expect.that(stats.getPreviousEpochJobSetting())
                 .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_REQUIRES_CHARGING);
-        assertThat(stats.getCurrentEpochJobSetting())
+        expect.that(stats.getCurrentEpochJobSetting())
                 .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_REQUIRES_BATTERY_NOT_LOW);
-        assertThat(stats.getScheduleIfNeededEpochJobStatus())
+        expect.that(stats.getScheduleIfNeededEpochJobStatus())
                 .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_REQUIRES_BATTERY_NOT_LOW);
     }
 

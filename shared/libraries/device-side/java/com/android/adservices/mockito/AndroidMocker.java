@@ -16,6 +16,8 @@
 
 package com.android.adservices.mockito;
 
+import android.annotation.Nullable;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 
@@ -31,5 +33,8 @@ public interface AndroidMocker {
      * PackageManager#queryIntentServices(android.content.Intent,
      * android.content.pm.PackageManager.ResolveInfoFlags)}, passing any argument.
      */
-    void mockQueryIntentService(PackageManager pm, ResolveInfo... resolveInfos);
+    void mockQueryIntentService(PackageManager mockPm, ResolveInfo... resolveInfos);
+
+    /** Mocks a call to {@link Context#getApplicationContext()}. */
+    void mockGetApplicationContext(Context mockContext, @Nullable Context appContext);
 }

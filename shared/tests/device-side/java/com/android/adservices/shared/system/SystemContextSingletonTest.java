@@ -16,7 +16,6 @@
 package com.android.adservices.shared.system;
 
 import static org.junit.Assert.assertThrows;
-import static org.mockito.Mockito.when;
 
 import android.content.Context;
 
@@ -94,9 +93,5 @@ public final class SystemContextSingletonTest extends SharedMockitoTestCase {
         Context previous = SystemContextSingleton.setForTests(mMockOtherContext);
 
         expect.withMessage("result of setForTests()").that(previous).isSameInstanceAs(mMockContext);
-    }
-
-    static void mockAppContext(Context context, Context appContext) {
-        when(context.getApplicationContext()).thenReturn(appContext);
     }
 }

@@ -49,6 +49,14 @@ public final class SharedMockitoMocker extends AbstractMocker implements SharedM
     }
 
     @Override
+    public void mockSetApplicationContextSingleton(Context context) {
+        Objects.requireNonNull(context, "context cannot be null");
+        logV("mockSetApplicationContextSingleton(%s)", context);
+
+        ApplicationContextSingleton.setForTests(context);
+    }
+
+    @Override
     public JobServiceLoggingCallback syncRecordOnStopJob(JobServiceLogger logger) {
         JobServiceLoggingCallback callback = new JobServiceLoggingCallback();
 

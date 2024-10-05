@@ -65,12 +65,15 @@ public final class NotificationActivityGAV2UiAutomatorTest extends AdServicesUiT
     @Before
     public void setup() {
         Assume.assumeTrue(SdkLevel.isAtLeastS());
+        Assume.assumeTrue(
+                NotificationActivityTestUtil.isNotificationIntentInstalled(appContext.get(), true));
     }
 
     @Test
     @FlakyTest(bugId = 302607350)
     public void moreButtonTest() throws Exception {
-        NotificationActivityTestUtil.startActivity(/* isEuActivity= */ true, mDevice);
+        NotificationActivityTestUtil.startActivity(
+                appContext.get(), /* isEuActivity= */ true, mDevice);
         NotificationActivityTestUtil.clickMoreToBottom(mDevice);
 
         UiObject2 leftControlButton =
@@ -87,7 +90,8 @@ public final class NotificationActivityGAV2UiAutomatorTest extends AdServicesUiT
 
     @Test
     public void euAcceptFlowTest() throws Exception {
-        NotificationActivityTestUtil.startActivity(/* isEuActivity= */ true, mDevice);
+        NotificationActivityTestUtil.startActivity(
+                appContext.get(), /* isEuActivity= */ true, mDevice);
         NotificationActivityTestUtil.clickMoreToBottom(mDevice);
 
         UiObject2 leftControlButton =
@@ -135,7 +139,8 @@ public final class NotificationActivityGAV2UiAutomatorTest extends AdServicesUiT
     @Test
     @FlakyTest(bugId = 302607350)
     public void rowClickGotItTest() throws Exception {
-        NotificationActivityTestUtil.startActivity(/* isEuActivity= */ false, mDevice);
+        NotificationActivityTestUtil.startActivity(
+                appContext.get(), /* isEuActivity= */ false, mDevice);
         NotificationActivityTestUtil.clickMoreToBottom(mDevice);
 
         UiObject2 leftControlButton =
@@ -167,7 +172,8 @@ public final class NotificationActivityGAV2UiAutomatorTest extends AdServicesUiT
     @Test
     @FlakyTest(bugId = 302607350)
     public void rowClickSettingsTest() throws Exception {
-        NotificationActivityTestUtil.startActivity(/* isEuActivity= */ false, mDevice);
+        NotificationActivityTestUtil.startActivity(
+                appContext.get(), /* isEuActivity= */ false, mDevice);
         NotificationActivityTestUtil.clickMoreToBottom(mDevice);
 
         UiObject2 leftControlButton =

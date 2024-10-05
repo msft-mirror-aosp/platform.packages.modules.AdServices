@@ -79,7 +79,7 @@ public final class EpochJobTest extends AdServicesJobTestCase {
     @Test
     public void testGetExecutionFuture() throws Exception {
         ListenableFuture<ExecutionResult> executionFuture =
-                mEpochJob.getExecutionFuture(sContext, mMockParams);
+                mEpochJob.getExecutionFuture(mContext, mMockParams);
 
         assertThat(executionFuture.get()).isEqualTo(SUCCESS);
 
@@ -117,7 +117,8 @@ public final class EpochJobTest extends AdServicesJobTestCase {
     public void testSchedule_legacy() {
         int resultCode = SCHEDULING_RESULT_CODE_SUCCESSFUL;
         when(mMockFlags.getSpeOnEpochJobEnabled()).thenReturn(false);
-        JobSchedulingLogger logger = mockJobSchedulingLogger(mMockAdServicesJobServiceFactory);
+        JobSchedulingLogger logger =
+                mocker.mockJobSchedulingLogger(mMockAdServicesJobServiceFactory);
         doReturn(resultCode).when(() -> EpochJobService.scheduleIfNeeded(anyBoolean()));
 
         EpochJob.schedule();

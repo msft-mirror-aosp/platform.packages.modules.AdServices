@@ -70,6 +70,7 @@ java_defaults {
         "androidx.test.core",
         "androidx.test.runner",
         "auto_value_annotations",
+        "compatibility-device-util-axt",
         "truth",
     ],
     libs: [

@@ -19,6 +19,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.when;
 
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 
@@ -32,16 +33,26 @@ import java.util.Objects;
 public final class AndroidMockitoMocker extends AbstractMocker implements AndroidMocker {
 
     @Override
-    public void mockQueryIntentService(PackageManager pm, ResolveInfo... resolveInfos) {
-        Objects.requireNonNull(pm, "PackageManager cannot be null");
-        Objects.requireNonNull(resolveInfos, "ResolveInfo... cannot be null");
-
+    public void mockQueryIntentService(PackageManager mockPm, ResolveInfo... resolveInfos) {
         List<ResolveInfo> list = resolveInfos == null ? null : Arrays.asList(resolveInfos);
-        logV("mockQueryIntentService(%s, %s): returning %s", pm, resolveInfos, list);
+        logV("mockQueryIntentService(%s, %s)", mockPm, list);
 
-        when(pm.queryIntentServices(any(), anyInt())).thenReturn(list);
+        Objects.requireNonNull(mockPm, "mockPm cannot be null");
+        Objects.requireNonNull(resolveInfos, "resolveInfos cannot be null");
+        assertIsMock("mockPm", mockPm);
+
+        when(mockPm.queryIntentServices(any(), anyInt())).thenReturn(list);
         if (SdkLevel.isAtLeastT()) {
-            when(pm.queryIntentServices(any(), any())).thenReturn(list);
+            when(mockPm.queryIntentServices(any(), any())).thenReturn(list);
         }
+    }
+
+    @Override
+    public void mockGetApplicationContext(Context mockContext, Context appContext) {
+        logV("mockGetApplicationContext(%s, %s)", mockContext, appContext);
+        Objects.requireNonNull(mockContext, "mockContext cannot be null");
+        assertIsMock("mockContext", mockContext);
+
+        when(mockContext.getApplicationContext()).thenReturn(appContext);
     }
 }

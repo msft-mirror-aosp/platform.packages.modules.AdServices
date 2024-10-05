@@ -209,7 +209,6 @@ public final class DevContextFilterTest extends AdServicesExtendedMockitoTestCas
         return result;
     }
 
-    // TODO(b/314969513): move to mocker
     private void mockInstalledApplications(ApplicationInfo applicationInfo)
             throws PackageManager.NameNotFoundException {
         if (sdkLevel.isAtLeastT()) {
@@ -222,7 +221,6 @@ public final class DevContextFilterTest extends AdServicesExtendedMockitoTestCas
         }
     }
 
-    // TODO(b/314969513): move to mocker
     private void mockPackageNameForUid(int uid, String packageName) {
         when(mMockAppPackageNameRetriever.getAppPackageNameForUid(uid)).thenReturn(packageName);
     }

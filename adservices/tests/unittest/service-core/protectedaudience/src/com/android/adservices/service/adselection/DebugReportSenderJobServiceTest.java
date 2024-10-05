@@ -118,7 +118,7 @@ public final class DebugReportSenderJobServiceTest extends AdServicesJobServiceT
                 new DebugReportSenderJobServiceTestFlags.FlagsWithAdSelectionDisabled();
         mocker.mockGetFlags(mFlagsWithDisabledBgFetch);
         AdServicesJobServiceLogger logger =
-                mockAdServicesJobServiceLogger(mContext, mFlagsWithDisabledBgFetch);
+                mocker.mockNoOpAdServicesJobServiceLogger(mContext, mFlagsWithDisabledBgFetch);
         JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
         testOnStartJobFlagDisabled();
@@ -320,7 +320,8 @@ public final class DebugReportSenderJobServiceTest extends AdServicesJobServiceT
         mocker.mockGetFlags(flagsWithGaUxDisabledLoggingEnabled);
 
         AdServicesJobServiceLogger logger =
-                mockAdServicesJobServiceLogger(mContext, flagsWithGaUxDisabledLoggingEnabled);
+                mocker.mockNoOpAdServicesJobServiceLogger(
+                        mContext, flagsWithGaUxDisabledLoggingEnabled);
         JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);
         JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
@@ -399,7 +400,8 @@ public final class DebugReportSenderJobServiceTest extends AdServicesJobServiceT
     public void testOnStopJob() throws Exception {
         Flags flags = new DebugReportSenderJobServiceTestFlags.FlagsWithGaUxDisabled();
         mocker.mockGetFlags(flags);
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(mContext, flags);
+        AdServicesJobServiceLogger logger =
+                mocker.mockNoOpAdServicesJobServiceLogger(mContext, flags);
         JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
         testOnStopJobCallsStopWork();
@@ -411,7 +413,8 @@ public final class DebugReportSenderJobServiceTest extends AdServicesJobServiceT
     public void testOnStartJobConsentRevokedGaUxEnabledWithLogging() throws Exception {
         Flags flags = new DebugReportSenderJobServiceTestFlags.FlagsWithGaUxEnabled();
         mocker.mockGetFlags(flags);
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(mContext, flags);
+        AdServicesJobServiceLogger logger =
+                mocker.mockNoOpAdServicesJobServiceLogger(mContext, flags);
         JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);
         JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
@@ -427,7 +430,8 @@ public final class DebugReportSenderJobServiceTest extends AdServicesJobServiceT
         Flags flags = new DebugReportSenderJobServiceTestFlags.FlagsWithGaUxDisabled();
         mocker.mockGetFlags(flags);
 
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(mContext, flags);
+        AdServicesJobServiceLogger logger =
+                mocker.mockNoOpAdServicesJobServiceLogger(mContext, flags);
         JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);
         JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
@@ -438,7 +442,8 @@ public final class DebugReportSenderJobServiceTest extends AdServicesJobServiceT
 
     @Test
     public void testOnStartJobShouldDisableJobTrue() {
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(mContext);
+        AdServicesJobServiceLogger logger =
+                mocker.mockNoOpAdServicesJobServiceLogger(mContext, mMockFlags);
 
         doReturn(true)
                 .when(

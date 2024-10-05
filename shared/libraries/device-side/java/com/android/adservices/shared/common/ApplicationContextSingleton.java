@@ -54,20 +54,32 @@ public final class ApplicationContextSingleton {
      * Sets the application context singleton (as the {@link Context#getApplicationContext()
      * application context} from {@code context}).
      *
-     * @throws IllegalStateException if the singleton was already {@link #set(Context) set} and it
-     *     is not the same as the {@link Context#getApplicationContext() application context} from
-     *     {@code context}).
+     * @throws IllegalStateException if the singleton was already set (by this method or {@link
+     *     #setAs(Context)}) and the effective application context is different.
      */
     public static void set(Context context) {
-        Context appContext =
-                Objects.requireNonNull(context, "context cannot be null").getApplicationContext();
-
+        Objects.requireNonNull(context, "context cannot be null");
+        Context appContext = context.getApplicationContext();
         Preconditions.checkArgument(
                 appContext != null, "Context (%s) does not have an application context", context);
+        set("set()", appContext);
+    }
 
+    /**
+     * Sets the application context singleton as the {@code context}).
+     *
+     * @throws IllegalStateException if the singleton was already set (by this method or {@link
+     *     #set(Context)}) and the effective application context is different.
+     */
+    public static void setAs(Context context) {
+        Objects.requireNonNull(context, "context cannot be null");
+        set("setAs()", context);
+    }
+
+    private static void set(String methodName, Context appContext) {
         // Set if it's not set yet
         if (sContext.compareAndSet(null, appContext)) {
-            LogUtil.i("Set singleton context as %s", appContext);
+            LogUtil.i("%s: set singleton context as %s", methodName, appContext);
             return;
         }
 
@@ -78,9 +90,7 @@ public final class ApplicationContextSingleton {
             throw new IllegalStateException(
                     "Trying to set app context as "
                             + appContext
-                            + " (from "
-                            + context
-                            + "), when it was already set as "
+                            + " when it was already set as "
                             + currentAppContext);
         }
     }

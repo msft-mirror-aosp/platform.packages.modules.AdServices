@@ -28,6 +28,7 @@ android_test {
     ],
     libs: [
         "framework-adservices-lib", // Needed to test fake ServiceBinder implementations
+        "framework-configinfrastructure.stubs.module_lib",
     ],
     static_libs: [
         "adservices-test-utility",
