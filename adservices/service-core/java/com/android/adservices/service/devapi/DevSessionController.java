@@ -26,10 +26,8 @@ public interface DevSessionController {
      *
      * @return A {@link DevSessionControllerResult} containing the status of the operation. See that
      *     enum for more info on each result code's meaning.
-     * @throws IllegalStateException If the current {@link DevSession} is already in {@link
-     *     DevSessionState#IN_DEV} when trying to move to that state.
+     * @throws IllegalStateException If the current {@link DevSession} could not be retrieved.
      */
-    // TODO(b/370948289): Return NO_OP instead of throwing ISE.
     ListenableFuture<DevSessionControllerResult> startDevSession();
 
     /**
@@ -38,9 +36,7 @@ public interface DevSessionController {
      *
      * @return A {@link DevSessionControllerResult} containing the status of the operation. See that
      *     enum for more info on each result code's meaning.
-     * @throws IllegalStateException If the current {@link DevSession} is already in {@link
-     *     DevSessionState#IN_PROD} when trying to move to that state.
+     * @throws IllegalStateException If the current {@link DevSession} could not be retrieved.
      */
-    // TODO(b/370948289): Return NO_OP instead of throwing ISE.
     ListenableFuture<DevSessionControllerResult> endDevSession();
 }
