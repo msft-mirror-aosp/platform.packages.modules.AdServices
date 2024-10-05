@@ -421,8 +421,9 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED =
             "measurement_verbose_debug_reporting_fallback_job_persisted";
 
-    static final String KEY_MEASUREMENT_REPORT_RETRY_LIMIT = "measurement_report_retry_limit";
-    static final String KEY_MEASUREMENT_REPORT_RETRY_LIMIT_ENABLED =
+    public static final String KEY_MEASUREMENT_REPORT_RETRY_LIMIT =
+            "measurement_report_retry_limit";
+    public static final String KEY_MEASUREMENT_REPORT_RETRY_LIMIT_ENABLED =
             "measurement_report_retry_limit_enabled";
     public static final String KEY_MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST =
             "measurement_app_package_name_logging_allowlist";

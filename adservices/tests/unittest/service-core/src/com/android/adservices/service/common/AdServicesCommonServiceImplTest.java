@@ -44,7 +44,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
-import android.adservices.common.AdServicesCommonResponse;
 import android.adservices.common.AdServicesCommonStatesResponse;
 import android.adservices.common.AdServicesModuleState;
 import android.adservices.common.AdServicesModuleUserChoice;
@@ -61,12 +60,13 @@ import android.adservices.common.IRequestAdServicesModuleOverridesCallback;
 import android.adservices.common.IRequestAdServicesModuleUserChoicesCallback;
 import android.adservices.common.IUpdateAdIdCallback;
 import android.adservices.common.IsAdServicesEnabledResult;
-import android.adservices.common.NotificationTypeParams;
+import android.adservices.common.NotificationType;
 import android.adservices.common.UpdateAdIdRequest;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.os.RemoteException;
 import android.telephony.TelephonyManager;
 
 import androidx.test.filters.FlakyTest;
@@ -990,14 +990,9 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
                         new AdServicesModuleState.Builder().setModule(1).setModuleState(2).build(),
                         new AdServicesModuleState.Builder().setModule(2).setModuleState(3).build());
         mCommonService.requestAdServicesModuleOverrides(
-                adServicesModuleStates,
-                new NotificationTypeParams.Builder()
-                        .setNotificationType(NotificationTypeParams.NOTIFICATION_ONGOING)
-                        .build(),
-                callback);
+                adServicesModuleStates, NotificationType.NOTIFICATION_ONGOING, callback);
 
-        AdServicesCommonResponse response = callback.assertSuccess();
-        assertThat(response.getStatusCode()).isEqualTo(STATUS_SUCCESS);
+        callback.assertSuccess();
         verify(mConsentManager, atLeastOnce()).setModuleStates(eq(adServicesModuleStates));
     }
 
@@ -1023,8 +1018,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
                                 .setUserChoice(3)
                                 .build());
         mCommonService.requestAdServicesModuleUserChoices(adServicesModuleUserChoices, callback);
-        AdServicesCommonResponse response = callback.assertSuccess();
-        assertThat(response.getStatusCode()).isEqualTo(STATUS_SUCCESS);
+        callback.assertSuccess();
         verify(mConsentManager, atLeastOnce()).setUserChoices(eq(adServicesModuleUserChoices));
     }
 
@@ -1076,18 +1070,28 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
     }
 
     private static final class RequestAdServicesModuleOverridesCallback
-            extends IntFailureSyncCallback<AdServicesCommonResponse>
+            extends IntFailureSyncCallback<Void>
             implements IRequestAdServicesModuleOverridesCallback {
         private RequestAdServicesModuleOverridesCallback(long timeoutMs) {
             super(timeoutMs);
         }
+
+        @Override
+        public void onSuccess() throws RemoteException {
+            super.onResult(null);
+        }
     }
 
     private static final class RequestAdServicesModuleUserChoicesCallback
-            extends IntFailureSyncCallback<AdServicesCommonResponse>
+            extends IntFailureSyncCallback<Void>
             implements IRequestAdServicesModuleUserChoicesCallback {
         private RequestAdServicesModuleUserChoicesCallback(long timeoutMs) {
             super(timeoutMs);
+        }
+
+        @Override
+        public void onSuccess() throws RemoteException {
+            super.onResult(null);
         }
     }
 

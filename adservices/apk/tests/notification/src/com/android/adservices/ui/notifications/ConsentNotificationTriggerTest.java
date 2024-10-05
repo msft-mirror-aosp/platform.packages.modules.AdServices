@@ -71,6 +71,7 @@ import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.enrollment.collection.GaUxEnrollmentChannelCollection;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.ui.util.ApkTestUtil;
+import com.android.adservices.ui.util.NotificationActivityTestUtil;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -394,9 +395,7 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         UiObject rightControlButton =
                 getPageElement(
                         sDevice, R.string.notificationUI_confirmation_right_control_button_text);
-        UiObject moreButton = getPageElement(sDevice, R.string.notificationUI_more_button_text);
-        verifyControlsAndMoreButtonAreDisplayed(leftControlButton, rightControlButton, moreButton);
-        Thread.sleep(LAUNCH_TIMEOUT);
+        NotificationActivityTestUtil.clickMoreToBottom(sDevice);
         rightControlButton.click();
         Thread.sleep(LAUNCH_TIMEOUT);
         assertThat(mNotificationManager.getActiveNotifications()).hasLength(0);
@@ -606,24 +605,6 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         UiObject2 expectedNewFledgeBodyText =
                 ApkTestUtil.getElement(sDevice, R.string.settingsUI_pas_apps_view_body_text);
         assertNotNull(expectedNewFledgeBodyText, R.string.settingsUI_pas_apps_view_body_text);
-    }
-
-    private void verifyControlsAndMoreButtonAreDisplayed(
-            UiObject leftControlButton, UiObject rightControlButton, UiObject moreButton)
-            throws UiObjectNotFoundException, InterruptedException {
-        UiObject scrollView =
-                sDevice.findObject(new UiSelector().className("android.widget.ScrollView"));
-
-        if (scrollView.isScrollable()) {
-            assertThat(leftControlButton.exists()).isFalse();
-            assertThat(rightControlButton.exists()).isFalse();
-            assertThat(moreButton.exists()).isTrue();
-
-            while (moreButton.exists()) {
-                moreButton.click();
-                Thread.sleep(2000);
-            }
-        }
     }
 
     private void cancelAllPreviousNotifications() {

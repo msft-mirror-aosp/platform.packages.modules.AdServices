@@ -20,8 +20,10 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import android.app.Instrumentation;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.graphics.Point;
 import android.util.Log;
 
@@ -244,5 +246,47 @@ public class ApkTestUtil {
         } catch (RuntimeException e) {
             LogUtil.e("Failed to take screenshot: " + e.getMessage());
         }
+    }
+
+    /** Get the intent with the intent string pass in. */
+    public static Intent getIntent(String intentString) {
+        Intent intent = new Intent(intentString);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        return intent;
+    }
+
+    /** Check if intent has package and activity installed. */
+    public static boolean isIntentInstalled(Intent intent) {
+        ResolveInfo info =
+                ApplicationProvider.getApplicationContext()
+                        .getPackageManager()
+                        .resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY);
+        if (info != null) {
+            LogUtil.i(
+                    "package %s and activity %s get for the intent %s",
+                    info.activityInfo.applicationInfo.packageName,
+                    info.activityInfo.name,
+                    intent.getAction());
+        } else {
+            LogUtil.e("no package and activity found for this intent %s", intent.getAction());
+        }
+        return info != null;
+    }
+
+    /** Check if intent has package and activity installed with context provided. */
+    public static boolean isIntentInstalled(Context context, Intent intent) {
+        ResolveInfo info =
+                context.getPackageManager()
+                        .resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY);
+        if (info != null) {
+            LogUtil.i(
+                    "package %s and activity %s get for the intent %s",
+                    info.activityInfo.applicationInfo.packageName,
+                    info.activityInfo.name,
+                    intent.getAction());
+        } else {
+            LogUtil.e("no package and activity found for this intent %s", intent.getAction());
+        }
+        return info != null;
     }
 }

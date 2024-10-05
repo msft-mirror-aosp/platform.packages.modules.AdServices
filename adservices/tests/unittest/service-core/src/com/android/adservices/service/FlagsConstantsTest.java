@@ -17,6 +17,7 @@ package com.android.adservices.service;
 
 import static com.android.adservices.flags.Flags.FLAG_ADSERVICES_ENABLEMENT_CHECK_ENABLED;
 import static com.android.adservices.flags.Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API;
+import static com.android.adservices.flags.Flags.FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_DEPRECATED;
 import static com.android.adservices.flags.Flags.FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED;
 import static com.android.adservices.flags.Flags.FLAG_AD_ID_CACHE_ENABLED;
 import static com.android.adservices.flags.Flags.FLAG_ENABLE_ADSERVICES_API_ENABLED;
@@ -27,6 +28,7 @@ import static com.android.adservices.flags.Flags.FLAG_FLEDGE_SERVER_AUCTION_MULT
 import static com.android.adservices.flags.Flags.FLAG_SDKSANDBOX_DUMP_EFFECTIVE_TARGET_SDK_VERSION;
 import static com.android.adservices.flags.Flags.FLAG_SDKSANDBOX_INVALIDATE_EFFECTIVE_TARGET_SDK_VERSION_CACHE;
 import static com.android.adservices.flags.Flags.FLAG_SDKSANDBOX_USE_EFFECTIVE_TARGET_SDK_VERSION_FOR_RESTRICTIONS;
+import static com.android.adservices.shared.meta_testing.FlagsTestLittleHelper.getAllFlagNameConstants;
 
 import android.util.Log;
 import android.util.Pair;
@@ -36,8 +38,6 @@ import com.android.internal.util.Preconditions;
 
 import org.junit.Test;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -65,6 +65,7 @@ public final class FlagsConstantsTest extends AdServicesUnitTestCase {
             List.of(
                     FLAG_AD_ID_CACHE_ENABLED,
                     FLAG_ADSERVICES_ENABLEMENT_CHECK_ENABLED,
+                    FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_DEPRECATED,
                     FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_ENABLED,
                     FLAG_ENABLE_ADSERVICES_API_ENABLED,
                     FLAG_SDKSANDBOX_INVALIDATE_EFFECTIVE_TARGET_SDK_VERSION_CACHE,
@@ -210,23 +211,5 @@ public final class FlagsConstantsTest extends AdServicesUnitTestCase {
             return nonCanonical;
         }
         return aconfigToDeviceConfig(aconfigFlag);
-    }
-
-    static List<Pair<String, String>> getAllFlagNameConstants(Class<?> clazz)
-            throws IllegalAccessException {
-        List<Pair<String, String>> constants = new ArrayList<>();
-        for (Field field : clazz.getDeclaredFields()) {
-            int modifiers = field.getModifiers();
-            if (Modifier.isStatic(modifiers)
-                    && Modifier.isFinal(modifiers)
-                    && (field.getType().equals(String.class))) {
-                String name = field.getName();
-                if (name.startsWith("KEY_") || name.startsWith("FLAG_")) {
-                    String value = (String) field.get(null);
-                    constants.add(new Pair<>(name, value));
-                }
-            }
-        }
-        return constants;
     }
 }

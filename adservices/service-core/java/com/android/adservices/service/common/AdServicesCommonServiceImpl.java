@@ -50,7 +50,6 @@ import static com.android.adservices.service.ui.constants.DebugMessages.SET_AD_S
 import static com.android.adservices.service.ui.constants.DebugMessages.UNAUTHORIZED_CALLER_MESSAGE;
 
 import android.adservices.adid.AdId;
-import android.adservices.common.AdServicesCommonResponse;
 import android.adservices.common.AdServicesCommonStates;
 import android.adservices.common.AdServicesCommonStatesResponse;
 import android.adservices.common.AdServicesModuleState;
@@ -68,7 +67,7 @@ import android.adservices.common.IRequestAdServicesModuleOverridesCallback;
 import android.adservices.common.IRequestAdServicesModuleUserChoicesCallback;
 import android.adservices.common.IUpdateAdIdCallback;
 import android.adservices.common.IsAdServicesEnabledResult;
-import android.adservices.common.NotificationTypeParams;
+import android.adservices.common.NotificationType;
 import android.adservices.common.UpdateAdIdRequest;
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
@@ -509,7 +508,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
     @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
     public void requestAdServicesModuleOverrides(
             List<AdServicesModuleState> adServicesModuleStateList,
-            NotificationTypeParams notificationType,
+            @NotificationType.NotificationTypeCode int notificationType,
             IRequestAdServicesModuleOverridesCallback callback) {
 
         boolean authorizedCaller = PermissionHelper.hasModifyAdServicesStatePermission(mContext);
@@ -523,10 +522,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                         }
                         ConsentManager consentManager = ConsentManager.getInstance();
                         consentManager.setModuleStates(adServicesModuleStateList);
-                        callback.onResult(
-                                new AdServicesCommonResponse.Builder()
-                                        .setStatusCode(STATUS_SUCCESS)
-                                        .build());
+                        callback.onSuccess();
 
                         // TODO(361411984): Add the notification trigger logic
 
@@ -563,10 +559,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                         ConsentManager consentManager = ConsentManager.getInstance();
                         consentManager.setUserChoices(adServicesFeatureUserChoiceList);
                         LogUtil.i("requestAdServicesModuleUserChoices");
-                        callback.onResult(
-                                new AdServicesCommonResponse.Builder()
-                                        .setStatusCode(STATUS_SUCCESS)
-                                        .build());
+                        callback.onSuccess();
 
                     } catch (Exception e) {
                         LogUtil.e(

@@ -3557,7 +3557,7 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public void dump(@NonNull PrintWriter writer, @Nullable String[] args) {
+    public void dump(PrintWriter writer, @Nullable String[] args) {
         writer.println("\t" + FlagsConstants.KEY_PAS_UX_ENABLED + " = " + getPasUxEnabled());
         writer.println(
                 "\t"

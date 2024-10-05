@@ -17,6 +17,8 @@ package com.android.adservices.mockito;
 
 import android.util.Log;
 
+import com.android.adservices.shared.testing.mockito.MockitoHelper;
+
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 
@@ -36,6 +38,12 @@ public abstract class AbstractMocker {
             // Typically happens when the object being passed to a mock method is mal-formed; for
             // example, a ResolveInfo without a component name
             Log.w(TAG, mTag + ".logV(fmt=" + fmt + ", args=...): failed to generate string: " + e);
+        }
+    }
+
+    protected void assertIsMock(String what, Object mock) {
+        if (!MockitoHelper.isMock(mock)) {
+            throw new IllegalArgumentException(what + " is not a mock: " + mock);
         }
     }
 }
