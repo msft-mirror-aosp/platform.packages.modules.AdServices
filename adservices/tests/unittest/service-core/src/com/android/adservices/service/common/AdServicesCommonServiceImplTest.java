@@ -60,7 +60,7 @@ import android.adservices.common.IRequestAdServicesModuleOverridesCallback;
 import android.adservices.common.IRequestAdServicesModuleUserChoicesCallback;
 import android.adservices.common.IUpdateAdIdCallback;
 import android.adservices.common.IsAdServicesEnabledResult;
-import android.adservices.common.NotificationTypeParams;
+import android.adservices.common.NotificationType;
 import android.adservices.common.UpdateAdIdRequest;
 import android.content.ComponentName;
 import android.content.Context;
@@ -990,11 +990,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
                         new AdServicesModuleState.Builder().setModule(1).setModuleState(2).build(),
                         new AdServicesModuleState.Builder().setModule(2).setModuleState(3).build());
         mCommonService.requestAdServicesModuleOverrides(
-                adServicesModuleStates,
-                new NotificationTypeParams.Builder()
-                        .setNotificationType(NotificationTypeParams.NOTIFICATION_ONGOING)
-                        .build(),
-                callback);
+                adServicesModuleStates, NotificationType.NOTIFICATION_ONGOING, callback);
 
         callback.assertSuccess();
         verify(mConsentManager, atLeastOnce()).setModuleStates(eq(adServicesModuleStates));
