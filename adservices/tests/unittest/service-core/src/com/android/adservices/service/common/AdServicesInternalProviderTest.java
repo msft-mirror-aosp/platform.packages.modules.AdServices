@@ -15,39 +15,87 @@
  */
 package com.android.adservices.service.common;
 
+import static com.android.adservices.service.common.AdServicesInternalProvider.DUMP_ARG_FULL_QUIET;
+import static com.android.adservices.service.common.AdServicesInternalProvider.DUMP_ARG_SHORT_QUIET;
 import static com.android.adservices.shared.testing.common.DumpHelper.dump;
 import static com.android.adservices.shared.testing.common.DumpHelper.mockDump;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mock;
 
+import android.annotation.Nullable;
+import android.app.Application;
 import android.app.adservices.AdServicesManager;
 import android.content.Context;
+import android.content.pm.ProviderInfo;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.DebugFlags;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
+import com.android.adservices.shared.testing.mockito.MockitoHelper;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
-import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.PrintWriter;
 
-@MockStatic(FlagsFactory.class)
 public final class AdServicesInternalProviderTest extends AdServicesExtendedMockitoTestCase {
 
-    private final AdServicesInternalProvider mProvider = new AdServicesInternalProvider();
+    private AdServicesInternalProvider mProvider;
+
+    @Before
+    @After
+    public void resetApplicationContextSingleton() {
+        ApplicationContextSingleton.setForTests(/* context= */ null);
+    }
 
     @Before
     public void setFixtures() {
-        // Need to set it always otherwise testDump() methods would throw
-        mocker.mockGetFlags(mMockFlags);
+        mProvider = new AdServicesInternalProvider(mMockFlags);
+    }
+
+    @Test
+    public void testCustomApplicationContextOnSingleton_disabled() {
+        mockAdservicesApplicationContextFlagEnabled(false);
+
+        initializeProvider(mContext);
+
+        Context appContext = ApplicationContextSingleton.get();
+        assertWithMessage("ApplicationContextSingleton.get()").that(appContext).isNotNull();
+        expect.withMessage("ApplicationContextSingleton.get()")
+                .that(appContext)
+                .isNotInstanceOf(AdServicesApplicationContext.class);
+    }
+
+    @Test
+    public void testCustomApplicationContextOnSingleton_enabled() {
+        mockAdservicesApplicationContextFlagEnabled(true);
+
+        initializeProvider(mContext);
+
+        Context appContext = ApplicationContextSingleton.get();
+        assertWithMessage("ApplicationContextSingleton.get()")
+                .that(appContext)
+                .isInstanceOf(AdServicesApplicationContext.class);
+        AdServicesApplicationContext customContext =
+                AdServicesApplicationContext.class.cast(appContext);
+        expect.withMessage("base context")
+                .that(customContext.getBaseContext())
+                .isSameInstanceAs(mContext);
+    }
+
+    @Test
+    public void testDump_genericInfo() throws Exception {
+        String dump = dump(pw -> mProvider.dump(/* fd= */ null, pw, /* args= */ null));
+
+        assertWithMessage("content of dump()")
+                .that(dump)
+                .contains("App process: " + Application.getProcessName());
     }
 
     @Test
@@ -69,11 +117,25 @@ public final class AdServicesInternalProviderTest extends AdServicesExtendedMock
 
         assertWithMessage("content of dump()")
                 .that(dump)
-                .contains("ApplicationContextSingleton: " + appContext);
+                .contains("ApplicationContext: " + appContext);
     }
 
     @Test
-    @SpyStatic(AppManifestConfigMetricsLogger.class)
+    public void testDump_appContextSingletonSet_customApplicationContext() throws Exception {
+        mockAdservicesApplicationContextFlagEnabled(true);
+        initializeProvider(mContext);
+
+        AdServicesApplicationContext appContext =
+                AdServicesApplicationContext.class.cast(ApplicationContextSingleton.get());
+        String expectedDump = dump(pw -> appContext.dump(pw, /* args= */ null));
+
+        String dump = dump(pw -> mProvider.dump(/* fd= */ null, pw, /* args= */ null));
+
+        assertWithMessage("content of dump()").that(dump).contains(expectedDump);
+    }
+
+    @Test
+    @MockStatic(AppManifestConfigMetricsLogger.class)
     public void testDump_includesAppManifestConfigMetricsLogger() throws Exception {
         mocker.setApplicationContextSingleton();
         String amcmDump = "I dump, therefore I am";
@@ -88,7 +150,7 @@ public final class AdServicesInternalProviderTest extends AdServicesExtendedMock
     }
 
     @Test
-    @SpyStatic(AdServicesManager.class)
+    @MockStatic(AdServicesManager.class)
     public void testDump_includesAdservicesManagerDump() throws Exception {
         String mgrDump = "A Manager dumps no Name";
         mockDump(() -> AdServicesManager.dump(any()), /* pwArgIndex= */ 0, mgrDump);
@@ -99,19 +161,10 @@ public final class AdServicesInternalProviderTest extends AdServicesExtendedMock
     }
 
     @Test
-    @SpyStatic(DebugFlags.class)
+    @MockStatic(DebugFlags.class)
     public void testDump_includesDebugFlagsDump() throws Exception {
-        DebugFlags mockDebugFlags = mock(DebugFlags.class);
-        mocker.mockGetDebugFlags(mockDebugFlags);
         String expectedDump = "The Bug is on the Table";
-        // Ideally we should have a Dumper.mockDump() method that could be used below...
-        doAnswer(
-                        (inv) -> {
-                            ((PrintWriter) inv.getArgument(0)).println(expectedDump);
-                            return null;
-                        })
-                .when(mockDebugFlags)
-                .dump(any());
+        mockDebugFlagsDump(expectedDump);
 
         String dump = dump(pw -> mProvider.dump(/* fd= */ null, pw, /* args= */ null));
 
@@ -121,17 +174,71 @@ public final class AdServicesInternalProviderTest extends AdServicesExtendedMock
     @Test
     public void testDump_includesFlagsDump() throws Exception {
         String expectedDump = "I flag, therefore I am!";
-        // Ideally we should have a Dumper.mockDump() method that could be used below...
+        mockFlagsDump(expectedDump, "Arg", "h", "!");
+
+        String dump =
+                dump(pw -> mProvider.dump(/* fd= */ null, pw, new String[] {"Arg", "h", "!"}));
+
+        assertWithMessage("content of dump()").that(dump).contains(expectedDump);
+    }
+
+    @Test
+    @MockStatic(DebugFlags.class)
+    public void testDump_argShortQuiet() throws Exception {
+        testDumpQuiet(DUMP_ARG_SHORT_QUIET);
+    }
+
+    @Test
+    @MockStatic(DebugFlags.class)
+    public void testDump_argFullQuiet() throws Exception {
+        testDumpQuiet(DUMP_ARG_FULL_QUIET);
+    }
+
+    private void testDumpQuiet(String arg) throws Exception {
+        String flagsDump = "Don't bother me, I'm flaggy";
+        mockFlagsDump(flagsDump);
+        String debugFlagsDump = "Don't bother me, I'm debuggy";
+        mockDebugFlagsDump(debugFlagsDump);
+
+        String dump = dump(pw -> mProvider.dump(/* fd= */ null, pw, new String[] {arg}));
+
+        // Don't need to assert everything that's dumped, just what it isn't...
+        assertWithMessage("content of dump()").that(dump).doesNotContain(flagsDump);
+        assertWithMessage("content of dump()").that(dump).doesNotContain(debugFlagsDump);
+    }
+
+    private void initializeProvider(Context context) {
+        // attachInfo() will trigger onCreate()
+        mProvider.attachInfo(context, new ProviderInfo());
+    }
+
+    private void mockAdservicesApplicationContextFlagEnabled(boolean value) {
+        mocker.mockGetDeveloperModeFeatureEnabled(value);
+    }
+
+    // TODO(b/371064777): Ideally we should have a DumpHelper.mockDump() method that could be used
+    // below...
+
+    private void mockDebugFlagsDump(String dump) {
+        mocker.mockGetDebugFlags(mMockDebugFlags);
         doAnswer(
                         (inv) -> {
-                            ((PrintWriter) inv.getArgument(0)).println(expectedDump);
+                            mLog.d("%s", MockitoHelper.toString(inv));
+                            ((PrintWriter) inv.getArgument(0)).println(dump);
+                            return null;
+                        })
+                .when(mMockDebugFlags)
+                .dump(any());
+    }
+
+    private void mockFlagsDump(String dump, @Nullable String... args) {
+        doAnswer(
+                        (inv) -> {
+                            mLog.d("%s", MockitoHelper.toString(inv));
+                            ((PrintWriter) inv.getArgument(0)).println(dump);
                             return null;
                         })
                 .when(mMockFlags)
-                .dump(any(), any());
-
-        String dump = dump(pw -> mProvider.dump(/* fd= */ null, pw, /* args= */ null));
-
-        assertWithMessage("content of dump()").that(dump).contains(expectedDump);
+                .dump(any(), eq(args));
     }
 }

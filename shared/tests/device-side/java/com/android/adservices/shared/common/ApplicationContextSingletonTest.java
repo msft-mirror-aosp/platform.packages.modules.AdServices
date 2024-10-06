@@ -16,7 +16,6 @@
 package com.android.adservices.shared.common;
 
 import static org.junit.Assert.assertThrows;
-import static org.mockito.Mockito.when;
 
 import android.content.Context;
 
@@ -54,7 +53,7 @@ public final class ApplicationContextSingletonTest extends SharedMockitoTestCase
 
     @Test
     public void testSet_nullAppContext() {
-        mockAppContext(mMockContext, /* appContext= */ null);
+        mocker.mockGetApplicationContext(mMockContext, /* appContext= */ null);
 
         assertThrows(
                 IllegalArgumentException.class,
@@ -63,7 +62,7 @@ public final class ApplicationContextSingletonTest extends SharedMockitoTestCase
 
     @Test
     public void testSet_once() {
-        mockAppContext(mMockContext, mMockAppContext);
+        mocker.mockGetApplicationContext(mMockContext, mMockAppContext);
 
         ApplicationContextSingleton.set(mMockContext);
 
@@ -74,8 +73,8 @@ public final class ApplicationContextSingletonTest extends SharedMockitoTestCase
 
     @Test
     public void testSet_twiceSameAppContext() {
-        mockAppContext(mMockContext, mMockAppContext);
-        mockAppContext(mMockOtherContext, mMockAppContext);
+        mocker.mockGetApplicationContext(mMockContext, mMockAppContext);
+        mocker.mockGetApplicationContext(mMockOtherContext, mMockAppContext);
 
         ApplicationContextSingleton.set(mMockContext);
         ApplicationContextSingleton.set(mMockOtherContext);
@@ -87,8 +86,8 @@ public final class ApplicationContextSingletonTest extends SharedMockitoTestCase
 
     @Test
     public void testSet_twiceDifferentAppContexts() {
-        mockAppContext(mMockContext, mMockAppContext);
-        mockAppContext(mMockOtherContext, mMockOtherAppContext);
+        mocker.mockGetApplicationContext(mMockContext, mMockAppContext);
+        mocker.mockGetApplicationContext(mMockOtherContext, mMockOtherAppContext);
 
         ApplicationContextSingleton.set(mMockContext);
         assertThrows(
@@ -101,15 +100,49 @@ public final class ApplicationContextSingletonTest extends SharedMockitoTestCase
     }
 
     @Test
-    public void testSetForTests() {
-        ApplicationContextSingleton.setForTests(mMockContext);
+    public void testSetAs_nullContext() {
+        assertThrows(NullPointerException.class, () -> ApplicationContextSingleton.setAs(null));
+    }
+
+    @Test
+    public void testSetAs() {
+        ApplicationContextSingleton.setAs(mMockContext);
 
         expect.withMessage("get()")
                 .that(ApplicationContextSingleton.get())
                 .isSameInstanceAs(mMockContext);
     }
 
-    static void mockAppContext(Context context, Context appContext) {
-        when(context.getApplicationContext()).thenReturn(appContext);
+    @Test
+    public void testSetAs_twiceSameContext() {
+        ApplicationContextSingleton.setAs(mMockContext);
+        ApplicationContextSingleton.setAs(mMockContext);
+
+        expect.withMessage("get()")
+                .that(ApplicationContextSingleton.get())
+                .isSameInstanceAs(mMockContext);
+    }
+
+    @Test
+    public void testSetAs_twiceDifferentContexts() {
+        ApplicationContextSingleton.setAs(mMockContext);
+        assertThrows(
+                IllegalStateException.class,
+                () -> ApplicationContextSingleton.setAs(mMockOtherContext));
+
+        expect.withMessage("get()")
+                .that(ApplicationContextSingleton.get())
+                .isSameInstanceAs(mMockContext);
+    }
+
+    // Note: in theory we should test combinations of set() and setAs(), but it'd be an overkill...
+
+    @Test
+    public void testSetForTests() {
+        ApplicationContextSingleton.setForTests(mMockContext);
+
+        expect.withMessage("get()")
+                .that(ApplicationContextSingleton.get())
+                .isSameInstanceAs(mMockContext);
     }
 }

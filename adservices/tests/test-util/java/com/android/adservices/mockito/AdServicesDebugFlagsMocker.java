@@ -14,11 +14,20 @@
  * limitations under the License.
  */
 
-package android.adservices.common;
+package com.android.adservices.mockito;
 
-/**
- * Defines the notification type for adservices apis consent.
- *
- * @hide
- */
-parcelable NotificationTypeParams;
+/** Helper interface providing expectations to set the most common AdService debug flags. */
+public interface AdServicesDebugFlagsMocker {
+
+    /**
+     * Mocks a call to {@link
+     * com.android.adservices.service.DebugFlags#getConsentManagerDebugMode()}
+     */
+    void mockGetConsentManagerDebugMode(boolean value);
+
+    /**
+     * Mocks a call to {@link
+     * com.android.adservices.service.DebugFlags#getConsentNotificationDebugMode()}
+     */
+    void mockGetConsentNotificationDebugMode(boolean value);
+}

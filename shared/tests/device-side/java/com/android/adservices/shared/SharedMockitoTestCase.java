@@ -18,7 +18,11 @@ package com.android.adservices.shared;
 import static org.mockito.Mockito.mock;
 
 import android.content.Context;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 
+import com.android.adservices.mockito.AndroidMocker;
+import com.android.adservices.mockito.AndroidMockitoMocker;
 import com.android.adservices.mockito.SharedMocker;
 import com.android.adservices.mockito.SharedMockitoMocker;
 import com.android.adservices.shared.common.flags.ModuleSharedFlags;
@@ -46,15 +50,21 @@ public abstract class SharedMockitoTestCase extends SharedUnitTestCase {
     /** Provides common expectations. */
     public final Mocker mocker = new Mocker();
 
-    public static final class Mocker implements SharedMocker {
+    public static final class Mocker implements SharedMocker, AndroidMocker {
 
         private final SharedMocker mSharedMocker = new SharedMockitoMocker();
+        private final AndroidMocker mAndroidMocker = new AndroidMockitoMocker();
 
         // SharedMocker methods
 
         @Override
         public Context setApplicationContextSingleton() {
             return mSharedMocker.setApplicationContextSingleton();
+        }
+
+        @Override
+        public void mockSetApplicationContextSingleton(Context context) {
+            mSharedMocker.mockSetApplicationContextSingleton(context);
         }
 
         @Override
@@ -70,6 +80,18 @@ public abstract class SharedMockitoTestCase extends SharedUnitTestCase {
         @Override
         public void mockElapsedRealtime(Clock mockClock, long... mockedValues) {
             mSharedMocker.mockElapsedRealtime(mockClock, mockedValues);
+        }
+
+        // AndroidMocker methods
+
+        @Override
+        public void mockQueryIntentService(PackageManager mockPm, ResolveInfo... resolveInfos) {
+            mAndroidMocker.mockQueryIntentService(mockPm, resolveInfos);
+        }
+
+        @Override
+        public void mockGetApplicationContext(Context mockContext, Context appContext) {
+            mAndroidMocker.mockGetApplicationContext(mockContext, appContext);
         }
     }
 

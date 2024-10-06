@@ -89,6 +89,7 @@ android_test {
     name: "AdServicesServiceCoreUnitTests",
     srcs: [
         "src/**/*.java",
+        ":adservices-shared-device-side-flags-meta-testing-sources",
     ],
     exclude_srcs: [
         // The tests below are interacting with the JsSandbox singleton and should
@@ -250,6 +251,7 @@ android_test {
     defaults: ["AdExtServices-ServiceCoreUnitTest-Defaults"],
     srcs: [
         "src/**/*.java",
+        ":adservices-shared-device-side-flags-meta-testing-sources",
     ],
     exclude_srcs: [
         // The tests below are interacting with the JsSandbox singleton and should

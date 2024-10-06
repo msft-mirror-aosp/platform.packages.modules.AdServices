@@ -28,23 +28,24 @@ import org.junit.Test;
 
 /** Unit tests for {@link ModuleSharedFlags}. */
 public final class ModuleSharedFlagsTest extends SharedUnitTestCase {
-    private static final ModuleSharedFlags sFlags = new ModuleSharedFlags() {};
+
+    private final ModuleSharedFlags mFlags = new ModuleSharedFlags() {};
 
     @Test
     public void testGetBackgroundJobsLoggingEnabled() {
-        assertThat(sFlags.getBackgroundJobsLoggingEnabled())
+        assertThat(mFlags.getBackgroundJobsLoggingEnabled())
                 .isEqualTo(BACKGROUND_JOB_LOGGING_ENABLED);
     }
 
     @Test
     public void testGetBackgroundJobSamplingLoggingRate() {
-        assertThat(sFlags.getBackgroundJobSamplingLoggingRate())
+        assertThat(mFlags.getBackgroundJobSamplingLoggingRate())
                 .isEqualTo(BACKGROUND_JOB_SAMPLING_LOGGING_RATE);
     }
 
     @Test
     public void testGetErrorCodeSampleInterval() {
-        assertThat(sFlags.getEncodedErrorCodeListPerSampleInterval())
+        assertThat(mFlags.getEncodedErrorCodeListPerSampleInterval())
                 .isEqualTo(ENCODED_ERROR_CODE_LIST_PER_SAMPLE_INTERVAL);
     }
 

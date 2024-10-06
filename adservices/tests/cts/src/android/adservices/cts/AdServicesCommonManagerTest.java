@@ -23,24 +23,19 @@ import static android.adservices.common.Module.TOPICS;
 
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED;
-import static com.android.adservices.shared.testing.AndroidSdk.RVC;
 
 import android.adservices.adid.AdId;
 import android.adservices.common.AdServicesCommonManager;
-import android.adservices.common.AdServicesCommonResponse;
 import android.adservices.common.AdServicesCommonStatesResponse;
 import android.adservices.common.AdServicesModuleState;
 import android.adservices.common.AdServicesModuleUserChoice;
-import android.adservices.common.AdServicesStates;
-import android.adservices.common.NotificationTypeParams;
+import android.adservices.common.NotificationType;
 import android.adservices.common.UpdateAdIdRequest;
-import android.adservices.exceptions.AdServicesException;
 
 import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
 import com.android.adservices.common.annotations.SetPpapiAppAllowList;
 import com.android.adservices.shared.testing.OutcomeReceiverForTests;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
-import com.android.adservices.shared.testing.annotations.RequiresSdkRange;
 import com.android.adservices.shared.testing.annotations.SetFlagFalse;
 
 import org.junit.Before;
@@ -52,6 +47,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 @SetPpapiAppAllowList
+@RequiresSdkLevelAtLeastS
 public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCase {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
@@ -65,95 +61,7 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
     }
 
     @Test
-    @RequiresSdkRange(atMost = RVC)
-    public void testIsAdServicesEnabled_onR_invokesCallbackOnError() throws Exception {
-        AdServicesOutcomeReceiverForTests<Boolean> receiver =
-                new AdServicesOutcomeReceiverForTests<>();
-
-        mCommonManager.isAdServicesEnabled(CALLBACK_EXECUTOR, receiver);
-
-        receiver.assertFailure(AdServicesException.class);
-    }
-
-    @Test
-    @RequiresSdkRange(atMost = RVC)
-    public void testSetAdServicesModuleOverrides_onR_invokesCallbackOnError() throws Exception {
-        AdServicesOutcomeReceiverForTests<AdServicesCommonResponse> receiver =
-                new AdServicesOutcomeReceiverForTests<>();
-        AdServicesModuleState moduleState =
-                new AdServicesModuleState.Builder()
-                        .setModule(MEASUREMENT)
-                        .setModuleState(MODULE_STATE_ENABLED)
-                        .build();
-        List<AdServicesModuleState> adServicesModuleStateList = Arrays.asList(moduleState);
-        NotificationTypeParams params =
-                new NotificationTypeParams.Builder()
-                        .setNotificationType(NotificationTypeParams.NOTIFICATION_ONGOING)
-                        .build();
-
-        mCommonManager.setAdServicesModuleOverrides(
-                adServicesModuleStateList, params, CALLBACK_EXECUTOR, receiver);
-
-        receiver.assertFailure(AdServicesException.class);
-    }
-
-    @Test
-    @RequiresSdkRange(atMost = RVC)
-    public void testSetAdServicesModuleUserChoices_onR_invokesCallbackOnError() throws Exception {
-        AdServicesOutcomeReceiverForTests<AdServicesCommonResponse> receiver =
-                new AdServicesOutcomeReceiverForTests<>();
-        AdServicesModuleUserChoice adServicesModuleUserChoice =
-                new AdServicesModuleUserChoice.Builder()
-                        .setModule(TOPICS)
-                        .setUserChoice(USER_CHOICE_OPTED_OUT)
-                        .build();
-        List<AdServicesModuleUserChoice> adServicesModuleUserChoiceList =
-                Arrays.asList(adServicesModuleUserChoice);
-
-        mCommonManager.setAdServicesModuleUserChoices(
-                adServicesModuleUserChoiceList, CALLBACK_EXECUTOR, receiver);
-
-        receiver.assertFailure(AdServicesException.class);
-    }
-
-    @Test
-    @RequiresSdkRange(atMost = RVC)
-    public void testEnableAdServices_onR_invokesCallbackOnError() throws Exception {
-        AdServicesOutcomeReceiverForTests<Boolean> receiver =
-                new AdServicesOutcomeReceiverForTests<>();
-        AdServicesStates states = new AdServicesStates.Builder().build();
-
-        mCommonManager.enableAdServices(states, CALLBACK_EXECUTOR, receiver);
-
-        receiver.assertFailure(AdServicesException.class);
-    }
-
-    @Test
-    @RequiresSdkRange(atMost = RVC)
-    public void testUpdateAdId_onR_invokesCallbackOnError() throws Exception {
-        AdServicesOutcomeReceiverForTests<Boolean> receiver =
-                new AdServicesOutcomeReceiverForTests<>();
-        UpdateAdIdRequest request = new UpdateAdIdRequest.Builder(AdId.ZERO_OUT).build();
-
-        mCommonManager.updateAdId(request, CALLBACK_EXECUTOR, receiver);
-
-        receiver.assertFailure(AdServicesException.class);
-    }
-
-    @Test
-    @RequiresSdkRange(atMost = RVC)
-    public void testGetAdServicesCommonStates_onR_invokesCallbackOnError() throws Exception {
-        AdServicesOutcomeReceiverForTests<AdServicesCommonStatesResponse> receiver =
-                new AdServicesOutcomeReceiverForTests<>();
-
-        mCommonManager.getAdservicesCommonStates(CALLBACK_EXECUTOR, receiver);
-
-        receiver.assertFailure(AdServicesException.class);
-    }
-
-    @Test
     @SetFlagFalse(KEY_ADSERVICES_ENABLED)
-    @RequiresSdkLevelAtLeastS
     public void testStatusManagerNotAuthorized_outcomeReceiver() throws Exception {
         // At beginning, Sdk1 receives a false status.
         OutcomeReceiverForTests<Boolean> receiver = new OutcomeReceiverForTests<>();
@@ -164,7 +72,6 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testSetStatusEnabledNotExecuted_outcomeReceiver() throws Exception {
         mCommonManager.setAdServicesEnabled(true, true);
         OutcomeReceiverForTests<Boolean> receiver = new OutcomeReceiverForTests<>();
@@ -176,7 +83,6 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
 
     @Test
     @SetFlagFalse(KEY_ADSERVICES_ENABLED)
-    @RequiresSdkLevelAtLeastS
     public void testStatusManagerNotAuthorized_customReceiver() throws Exception {
         // At beginning, Sdk1 receives a false status.
         AdServicesOutcomeReceiverForTests<Boolean> receiver =
@@ -188,7 +94,6 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testSetStatusEnabledNotExecuted_customReceiver() throws Exception {
         mCommonManager.setAdServicesEnabled(true, true);
         AdServicesOutcomeReceiverForTests<Boolean> receiver =
@@ -200,7 +105,6 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testUpdateAdIdCache_notAuthorized_outcomeReceiver() throws Exception {
         UpdateAdIdRequest request = new UpdateAdIdRequest.Builder(AdId.ZERO_OUT).build();
         OutcomeReceiverForTests<Boolean> receiver = new OutcomeReceiverForTests<>();
@@ -211,7 +115,6 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testUpdateAdIdCache_notAuthorized_customReceiver() throws Exception {
         AdServicesOutcomeReceiverForTests<Boolean> receiver =
                 new AdServicesOutcomeReceiverForTests<>();
@@ -223,7 +126,6 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     // TODO(b/328794632): Need a real CTS test to successfully call the system API.
     public void testUpdateAdIdCache_coverage() {
         UpdateAdIdRequest request =
@@ -241,7 +143,6 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
 
     @Test
     @SetFlagFalse(KEY_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED)
-    @RequiresSdkLevelAtLeastS
     public void testGetAdservicesCommonStates_notEnabled_sPlus() throws Exception {
         AdServicesOutcomeReceiverForTests<AdServicesCommonStatesResponse> receiver =
                 new AdServicesOutcomeReceiverForTests<>();
@@ -252,9 +153,8 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
-    public void testSetAdServicesModuleOverrides() {
-        AdServicesOutcomeReceiverForTests<AdServicesCommonResponse> receiver =
+    public void testRequestAdServicesModuleOverrides() {
+        AdServicesOutcomeReceiverForTests<Void> receiver =
                 new AdServicesOutcomeReceiverForTests<>();
 
         AdServicesModuleState moduleState =
@@ -266,30 +166,17 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
 
         expect.that(moduleState.getModule()).isEqualTo(MEASUREMENT);
         expect.that(moduleState.getModuleState()).isEqualTo(MODULE_STATE_ENABLED);
-        NotificationTypeParams params =
-                new NotificationTypeParams.Builder()
-                        .setNotificationType(NotificationTypeParams.NOTIFICATION_ONGOING)
-                        .build();
-        expect.that(params.getNotificationType())
-                .isEqualTo(NotificationTypeParams.NOTIFICATION_ONGOING);
+        int params = NotificationType.NOTIFICATION_ONGOING;
+        expect.that(params).isEqualTo(NotificationType.NOTIFICATION_ONGOING);
 
-        mCommonManager.setAdServicesModuleOverrides(
+        mCommonManager.requestAdServicesModuleOverrides(
                 adServicesModuleStateList, params, CALLBACK_EXECUTOR, receiver);
         String errorMsg = "error msg";
-        AdServicesCommonResponse response =
-                new AdServicesCommonResponse.Builder()
-                        .setErrorMessage(errorMsg)
-                        .setStatusCode(1)
-                        .build();
-
-        expect.that(response.getErrorMessage()).isEqualTo(errorMsg);
-        expect.that(response.getStatusCode()).isEqualTo(1);
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
-    public void testSetAdServicesModuleUserChoiceOverrides() {
-        AdServicesOutcomeReceiverForTests<AdServicesCommonResponse> receiver =
+    public void testRequestAdServicesModuleUserChoiceOverrides() {
+        AdServicesOutcomeReceiverForTests<Void> receiver =
                 new AdServicesOutcomeReceiverForTests<>();
 
         AdServicesModuleUserChoice adServicesModuleUserChoice =
@@ -303,7 +190,7 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
         expect.that(adServicesModuleUserChoice.getModule()).isEqualTo(TOPICS);
         expect.that(adServicesModuleUserChoice.getUserChoice()).isEqualTo(USER_CHOICE_OPTED_OUT);
 
-        mCommonManager.setAdServicesModuleUserChoices(
+        mCommonManager.requestAdServicesModuleUserChoices(
                 adServicesModuleUserChoiceList, CALLBACK_EXECUTOR, receiver);
     }
 }

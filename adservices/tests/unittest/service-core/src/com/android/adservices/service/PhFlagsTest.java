@@ -51,7 +51,6 @@ import static com.android.adservices.service.Flags.DEBUG_UX;
 import static com.android.adservices.service.Flags.DEFAULT_ADID_CACHE_TTL_MS;
 import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED;
-import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_ENABLEMENT_CHECK_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_VERSION_MAPPINGS;
 import static com.android.adservices.service.Flags.DEFAULT_AD_ID_FETCHER_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_AD_SERVICES_JS_SCRIPT_ENGINE_MAX_RETRY_ATTEMPTS;
@@ -67,7 +66,6 @@ import static com.android.adservices.service.Flags.DEFAULT_CUSTOM_ERROR_CODE_SAM
 import static com.android.adservices.service.Flags.DEFAULT_DEVELOPER_MODE_FEATURE_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_EEA_PAS_UX_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_ADEXT_DATA_SERVICE_APIS;
-import static com.android.adservices.service.Flags.DEFAULT_ENABLE_ADSERVICES_API_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_BACK_COMPAT_INIT;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_CONSENT_MANAGER_V2;
@@ -556,7 +554,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_APK_S
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABLEMENT_CHECK_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_RELEASE_STAGE_FOR_COBALT;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_VERSION_MAPPINGS;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_ID_API_APP_BLOCK_LIST;
@@ -602,7 +599,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_DOWNLOADER_MAX_D
 import static com.android.adservices.service.FlagsConstants.KEY_DOWNLOADER_READ_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_EEA_PAS_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_APIS;
-import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ADSERVICES_API_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_AD_SERVICES_SYSTEM_API;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_BACK_COMPAT;
@@ -1086,8 +1082,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_UI_FEATURE_TYPE_
 import static com.android.adservices.service.FlagsConstants.KEY_UI_OTA_RESOURCES_MANIFEST_FILE_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_TOGGLE_SPEED_BUMP_ENABLED;
-import static com.android.adservices.service.FlagsConstantsTest.getAllFlagNameConstants;
 import static com.android.adservices.shared.common.flags.ModuleSharedFlags.ENCODED_ERROR_CODE_LIST_PER_SAMPLE_INTERVAL;
+import static com.android.adservices.shared.meta_testing.FlagsTestLittleHelper.expectDumpHasAllFlags;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -1095,7 +1091,6 @@ import static org.junit.Assert.assertThrows;
 
 import android.provider.DeviceConfig;
 import android.util.Log;
-import android.util.Pair;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
@@ -3558,25 +3553,11 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     @Test
     @Ignore("TODO(b/369385082): remove @Ignore when all missing values are added")
     public void testDump() throws Exception {
-        String dump = DumpHelper.dump((pw) -> mPhFlags.dump(pw, /* args= */ null));
-
-        StringBuilder missingFlags = new StringBuilder();
-        int numberMissingFlags = 0;
-        for (Pair<String, String> flag : getAllFlagNameConstants(FlagsConstants.class)) {
-            String name = flag.first;
-            String value = flag.second;
-            if (!dump.contains("\t" + value + " = ")) {
-                // NOTE: not using expect because the value of dump print on each failure would be
-                // hundreds of lines long
-                numberMissingFlags++;
-                missingFlags.append('\n').append(name);
-            }
-        }
-
-        if (numberMissingFlags > 0) {
-            expect.withMessage("dump() is missing %s flags: %s", numberMissingFlags, missingFlags)
-                    .fail();
-        }
+        expectDumpHasAllFlags(
+                expect,
+                FlagsConstants.class,
+                pw -> mPhFlags.dump(pw, /* args= */ null),
+                flag -> ("\t" + flag.second + " = "));
     }
 
     @Test
@@ -5298,22 +5279,6 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    public void testGetEnableAdservicesApiEnabled() {
-        mFlagsTestHelper.testConfigFlag(
-                KEY_ENABLE_ADSERVICES_API_ENABLED,
-                DEFAULT_ENABLE_ADSERVICES_API_ENABLED,
-                Flags::getEnableAdservicesApiEnabled);
-    }
-
-    @Test
-    public void testGetAdservicesEnablementCheckEnabled() {
-        mFlagsTestHelper.testConfigFlag(
-                KEY_ADSERVICES_ENABLEMENT_CHECK_ENABLED,
-                DEFAULT_ADSERVICES_ENABLEMENT_CHECK_ENABLED,
-                Flags::getAdservicesEnablementCheckEnabled);
-    }
-
-    @Test
     public void testGetBackgroundJobSamplingLoggingRate() {
         mFlagsTestHelper.testPositiveConfigFlag(
                 KEY_BACKGROUND_JOB_SAMPLING_LOGGING_RATE,
@@ -5871,6 +5836,16 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 Flags::getMddPackageDenyRegistryManifestFileUrl);
     }
 
+    @Test
+    public void testGetAdIdCacheTtl() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_AD_ID_CACHE_TTL_MS, DEFAULT_ADID_CACHE_TTL_MS, Flags::getAdIdCacheTtlMs);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // NOTE: do NOT add new tests below, only helper methods                                      //
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
     private void setMeasurementKillSwitch(boolean value) {
         setAdservicesFlag(KEY_MEASUREMENT_KILL_SWITCH, value);
     }
@@ -5923,9 +5898,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mockGetAdServicesFlag(KEY_GLOBAL_BLOCKED_TOPIC_IDS, blockedTopicIds);
     }
 
-    @Test
-    public void testGetAdIdCacheTtl() {
-        mFlagsTestHelper.testConfigFlag(
-                KEY_AD_ID_CACHE_TTL_MS, DEFAULT_ADID_CACHE_TTL_MS, Flags::getAdIdCacheTtlMs);
-    }
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // NOTE: do NOT add new tests below, only helper methods                                      //
+    ////////////////////////////////////////////////////////////////////////////////////////////////
 }

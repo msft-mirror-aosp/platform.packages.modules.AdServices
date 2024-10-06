@@ -1747,7 +1747,8 @@ class AttributionJobHandler {
                 mDebugReportApi.scheduleTriggerDebugReport(
                         source,
                         trigger,
-                        String.valueOf(count),
+                        String.valueOf(
+                                mFlags.getMeasurementMaxDistinctReportingOriginsInAttribution()),
                         measurementDao,
                         DebugReportApi.Type.TRIGGER_REPORTING_ORIGIN_LIMIT);
                 mAdrApi.scheduleTriggerAttributionErrorWithSourceDebugReport(
