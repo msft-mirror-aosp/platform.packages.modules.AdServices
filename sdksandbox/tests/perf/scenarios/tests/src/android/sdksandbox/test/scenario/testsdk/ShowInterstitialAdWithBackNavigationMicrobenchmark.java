@@ -14,24 +14,21 @@
  * limitations under the License.
  */
 
-package android.adservices.test.scenario.adservices.iapc;
+package android.sdksandbox.test.scenario.testsdk;
 
 import android.platform.test.microbenchmark.Microbenchmark;
 import android.platform.test.rule.DropCachesRule;
 import android.platform.test.rule.KillAppsRule;
 
-import com.android.adservices.common.AdServicesSupportHelper;
-
 import org.junit.Rule;
+import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 
-/** The {@link Microbenchmark} class for Ad ID API call, with disabling the Ad ID cache. */
 @RunWith(Microbenchmark.class)
-public final class GetAdIdApiCallCacheDisabledMicrobenchmark extends GetAdIdApiCallCacheDisabled {
-    @Rule(order = 12)
-    public KillAppsRule killAppsRule =
-            new KillAppsRule(AdServicesSupportHelper.getInstance().getAdServicesPackageName());
+public class ShowInterstitialAdWithBackNavigationMicrobenchmark
+        extends ShowInterstitialAdWithBackNavigation {
 
-    @Rule(order = 13)
-    public DropCachesRule dropCachesRule = new DropCachesRule();
+    @Rule(order = 0)
+    public RuleChain rules =
+            RuleChain.outerRule(new KillAppsRule(sPackageName)).around(new DropCachesRule());
 }

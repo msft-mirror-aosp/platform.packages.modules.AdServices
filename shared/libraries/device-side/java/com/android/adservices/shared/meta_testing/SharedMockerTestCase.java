@@ -65,9 +65,30 @@ public abstract class SharedMockerTestCase<T extends SharedMocker> extends Devic
             expect.withMessage("context.getApplicationContext()")
                     .that(context.getApplicationContext())
                     .isSameInstanceAs(context);
-            expect.withMessage("ApplicationContextSingleton.getForTests()")
+            expect.withMessage("ApplicationContextSingleton.get()")
                     .that(ApplicationContextSingleton.get())
                     .isSameInstanceAs(context);
+        } finally {
+            ApplicationContextSingleton.setForTests(contextBefore);
+        }
+    }
+
+    @Test
+    public void testMockSetApplicationContextSingleton_null() {
+        assertThrows(
+                NullPointerException.class,
+                () -> getMocker().mockSetApplicationContextSingleton(null));
+    }
+
+    @Test
+    public void testMockSetApplicationContextSingleton() {
+        Context contextBefore = ApplicationContextSingleton.getForTests();
+        try {
+            getMocker().mockSetApplicationContextSingleton(mContext);
+
+            expect.withMessage("ApplicationContextSingleton.get()")
+                    .that(ApplicationContextSingleton.get())
+                    .isSameInstanceAs(mContext);
         } finally {
             ApplicationContextSingleton.setForTests(contextBefore);
         }

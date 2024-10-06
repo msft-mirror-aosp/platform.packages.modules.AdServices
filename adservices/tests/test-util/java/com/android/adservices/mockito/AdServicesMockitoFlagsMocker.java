@@ -21,7 +21,7 @@ import com.android.adservices.service.Flags;
 
 import java.util.Objects;
 
-/** {@link AdServicesPragmaticMocker} implementation that uses {@code Mockito}. */
+/** {@link AdServicesFlagsMocker} implementation that uses {@code Mockito}. */
 public final class AdServicesMockitoFlagsMocker extends AbstractMocker
         implements AdServicesFlagsMocker {
 
@@ -62,5 +62,11 @@ public final class AdServicesMockitoFlagsMocker extends AbstractMocker
         mockGetCobaltLoggingEnabled(enabled);
         mockGetAppNameApiErrorCobaltLoggingEnabled(enabled);
         mockGetAdservicesReleaseStageForCobalt("DEBUG");
+    }
+
+    @Override
+    public void mockGetDeveloperModeFeatureEnabled(boolean value) {
+        logV("mockGetDeveloperModeFeatureEnabled(%b)", value);
+        when(mFlags.getDeveloperModeFeatureEnabled()).thenReturn(value);
     }
 }

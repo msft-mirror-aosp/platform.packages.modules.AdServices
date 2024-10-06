@@ -22,6 +22,7 @@ import android.content.pm.ResolveInfo;
 
 import com.android.adservices.mockito.AndroidMocker;
 import com.android.adservices.mockito.AndroidMockitoMocker;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 
 import org.junit.Rule;
@@ -41,8 +42,8 @@ import org.mockito.quality.Strictness;
 public abstract class AdServicesMockitoTestCase extends AdServicesUnitTestCase {
 
     @Mock protected Context mMockContext;
-
     @Mock protected Flags mMockFlags;
+    @Mock protected DebugFlags mMockDebugFlags;
 
     /** Spy the {@link AdServicesUnitTestCase#mContext} */
     @Spy protected final Context mSpyContext = mContext;
@@ -59,8 +60,13 @@ public abstract class AdServicesMockitoTestCase extends AdServicesUnitTestCase {
         private final AndroidMocker mAndroidMocker = new AndroidMockitoMocker();
 
         @Override
-        public void mockQueryIntentService(PackageManager pm, ResolveInfo... resolveInfos) {
-            mAndroidMocker.mockQueryIntentService(pm, resolveInfos);
+        public void mockQueryIntentService(PackageManager mockPm, ResolveInfo... resolveInfos) {
+            mAndroidMocker.mockQueryIntentService(mockPm, resolveInfos);
+        }
+
+        @Override
+        public void mockGetApplicationContext(Context mockContext, Context appContext) {
+            mAndroidMocker.mockGetApplicationContext(mockContext, appContext);
         }
     }
 

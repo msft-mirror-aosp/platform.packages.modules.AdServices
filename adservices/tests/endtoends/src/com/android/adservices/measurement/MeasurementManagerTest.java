@@ -15,9 +15,11 @@
  */
 package com.android.adservices.measurement;
 
+import static com.android.adservices.measurement.MeasurementManagerUtil.buildDefaultAppSourcesRegistrationRequest;
+import static com.android.adservices.measurement.MeasurementManagerUtil.buildDefaultWebSourceRegistrationRequest;
+import static com.android.adservices.measurement.MeasurementManagerUtil.buildDefaultWebTriggerRegistrationRequest;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE;
-import static com.android.adservices.shared.testing.AndroidSdk.RVC;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -29,14 +31,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import android.adservices.common.AdServicesOutcomeReceiver;
-import android.adservices.exceptions.AdServicesException;
 import android.adservices.measurement.DeletionRequest;
 import android.adservices.measurement.MeasurementCompatibleManager;
 import android.adservices.measurement.MeasurementManager;
 import android.adservices.measurement.SourceRegistrationRequest;
-import android.adservices.measurement.WebSourceParams;
 import android.adservices.measurement.WebSourceRegistrationRequest;
-import android.adservices.measurement.WebTriggerParams;
 import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.net.Uri;
 import android.os.OutcomeReceiver;
@@ -44,10 +43,8 @@ import android.os.OutcomeReceiver;
 import androidx.annotation.NonNull;
 
 import com.android.adservices.AdServicesEndToEndTestCase;
-import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
 import com.android.adservices.common.annotations.SetMsmtApiAppAllowList;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
-import com.android.adservices.shared.testing.annotations.RequiresSdkRange;
 import com.android.adservices.shared.testing.junit.SafeAndroidJUnitRunner;
 
 import org.junit.Assert;
@@ -55,8 +52,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
@@ -64,6 +59,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 @SetMsmtApiAppAllowList
+@RequiresSdkLevelAtLeastS()
 @RunWith(SafeAndroidJUnitRunner.class)
 @SuppressWarnings("NewApi")
 public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
@@ -76,92 +72,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkRange(atMost = RVC)
-    public void testRegisterSourceUri_onR_invokesCallbackOnError() throws Exception {
-        MeasurementManager mm = getMeasurementManager();
-        AdServicesOutcomeReceiverForTests callback = new AdServicesOutcomeReceiverForTests();
-
-        mm.registerSource(
-                Uri.parse("https://registration-source"),
-                /* inputEvent= */ null,
-                CALLBACK_EXECUTOR,
-                callback);
-
-        callback.assertFailure(AdServicesException.class);
-    }
-
-    @Test
-    @RequiresSdkRange(atMost = RVC)
-    public void testRegisterSourceRequest_onR_invokesCallbackOnError() throws Exception {
-        MeasurementManager mm = getMeasurementManager();
-        SourceRegistrationRequest request = buildDefaultAppSourcesRegistrationRequest();
-        AdServicesOutcomeReceiverForTests callback = new AdServicesOutcomeReceiverForTests();
-
-        mm.registerSource(request, CALLBACK_EXECUTOR, callback);
-
-        callback.assertFailure(AdServicesException.class);
-    }
-
-    @Test
-    @RequiresSdkRange(atMost = RVC)
-    public void testRegisterWebSource_onR_invokesCallbackOnError() throws Exception {
-        MeasurementManager mm = getMeasurementManager();
-        AdServicesOutcomeReceiverForTests callback = new AdServicesOutcomeReceiverForTests();
-
-        mm.registerWebSource(
-                buildDefaultWebSourceRegistrationRequest(), CALLBACK_EXECUTOR, callback);
-
-        callback.assertFailure(AdServicesException.class);
-    }
-
-    @Test
-    @RequiresSdkRange(atMost = RVC)
-    public void testRegisterWebTrigger_onR_invokesCallbackOnError() throws Exception {
-        MeasurementManager mm = getMeasurementManager();
-        AdServicesOutcomeReceiverForTests callback = new AdServicesOutcomeReceiverForTests();
-
-        mm.registerWebTrigger(
-                buildDefaultWebTriggerRegistrationRequest(), CALLBACK_EXECUTOR, callback);
-
-        callback.assertFailure(AdServicesException.class);
-    }
-
-    @Test
-    @RequiresSdkRange(atMost = RVC)
-    public void testRegisterTrigger_onR_invokesCallbackOnError() throws Exception {
-        MeasurementManager mm = getMeasurementManager();
-        AdServicesOutcomeReceiverForTests callback = new AdServicesOutcomeReceiverForTests();
-
-        mm.registerTrigger(Uri.parse("https://registration-trigger"), CALLBACK_EXECUTOR, callback);
-
-        callback.assertFailure(AdServicesException.class);
-    }
-
-    @Test
-    @RequiresSdkRange(atMost = RVC)
-    public void testDeleteRegistrations_onR_invokesCallbackOnError() throws Exception {
-        MeasurementManager mm = getMeasurementManager();
-        DeletionRequest request = new DeletionRequest.Builder().build();
-        AdServicesOutcomeReceiverForTests callback = new AdServicesOutcomeReceiverForTests();
-
-        mm.deleteRegistrations(request, CALLBACK_EXECUTOR, callback);
-
-        callback.assertFailure(AdServicesException.class);
-    }
-
-    @Test
-    @RequiresSdkRange(atMost = RVC)
-    public void testGetMeasurementApiStatus_onR_invokesCallbackOnError() throws Exception {
-        MeasurementManager mm = getMeasurementManager();
-        AdServicesOutcomeReceiverForTests callback = new AdServicesOutcomeReceiverForTests();
-
-        mm.getMeasurementApiStatus(CALLBACK_EXECUTOR, callback);
-
-        callback.assertFailure(AdServicesException.class);
-    }
-
-    @Test
-    @RequiresSdkLevelAtLeastS
     public void testRegisterSource_executorAndCallbackCalled() throws Exception {
         MeasurementManager mm = getMeasurementManager();
         CountDownLatch anyCountDownLatch = new CountDownLatch(1);
@@ -186,7 +96,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testRegisterSource_executorAndCallbackCalled_customReceiver() throws Exception {
         MeasurementManager mm = getMeasurementManager();
         CountDownLatch anyCountDownLatch = new CountDownLatch(1);
@@ -210,24 +119,7 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
         assertThat(anyCountDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
     }
 
-    private WebSourceRegistrationRequest buildDefaultWebSourceRegistrationRequest() {
-        WebSourceParams webSourceParams =
-                new WebSourceParams.Builder(Uri.parse("https://example.com"))
-                        .setDebugKeyAllowed(false)
-                        .build();
-
-        return new WebSourceRegistrationRequest.Builder(
-                Collections.singletonList(webSourceParams),
-                Uri.parse("https://example.com"))
-                .setInputEvent(null)
-                .setAppDestination(Uri.parse("android-app://com.example"))
-                .setWebDestination(Uri.parse("https://example.com"))
-                .setVerifiedDestination(null)
-                .build();
-    }
-
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testRegisterWebSource_executorAndCallbackCalled() throws Exception {
         MeasurementManager mm = getMeasurementManager();
         CountDownLatch anyCountDownLatch = new CountDownLatch(1);
@@ -251,7 +143,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testRegisterWebSource_executorAndCallbackCalled_customReceiver() throws Exception {
         MeasurementManager mm = getMeasurementManager();
         CountDownLatch anyCountDownLatch = new CountDownLatch(1);
@@ -274,19 +165,7 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
         assertThat(anyCountDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
     }
 
-    private WebTriggerRegistrationRequest buildDefaultWebTriggerRegistrationRequest() {
-        WebTriggerParams webTriggerParams =
-                new WebTriggerParams.Builder(Uri.parse("https://example.com"))
-                        .setDebugKeyAllowed(false)
-                        .build();
-        return new WebTriggerRegistrationRequest.Builder(
-                        Collections.singletonList(webTriggerParams),
-                        Uri.parse("https://example.com"))
-                .build();
-    }
-
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testRegisterWebTrigger_executorAndCallbackCalled() throws Exception {
         MeasurementManager mm = getMeasurementManager();
         CountDownLatch anyCountDownLatch = new CountDownLatch(1);
@@ -310,7 +189,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testRegisterWebTrigger_executorAndCallbackCalled_customReceiver() throws Exception {
         MeasurementManager mm = getMeasurementManager();
         CountDownLatch anyCountDownLatch = new CountDownLatch(1);
@@ -334,7 +212,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testRegisterTrigger_executorAndCallbackCalled() throws Exception {
         MeasurementManager mm = getMeasurementManager();
         CountDownLatch anyCountDownLatch = new CountDownLatch(1);
@@ -358,7 +235,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testRegisterTrigger_executorAndCallbackCalled_customReceiver() throws Exception {
         MeasurementManager mm = getMeasurementManager();
         CountDownLatch anyCountDownLatch = new CountDownLatch(1);
@@ -382,7 +258,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testDeleteRegistrations_nullExecutor_throwNullPointerException() {
         MeasurementManager mm = getMeasurementManager();
         assertThrows(
@@ -396,7 +271,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testDeleteRegistrations_nullExecutor_throwNullPointerException_customReceiver() {
         MeasurementManager mm = getMeasurementManager();
 
@@ -411,7 +285,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testDeleteRegistrations_nullCallback_throwNullPointerException() {
         MeasurementManager mm = getMeasurementManager();
         assertThrows(
@@ -424,7 +297,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testDeleteRegistrations_nullCallback_throwNullPointerException_customReceiver() {
         MeasurementManager mm = getMeasurementManager();
 
@@ -439,7 +311,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testGetMeasurementApiStatus() throws Exception {
         MeasurementManager mm = getMeasurementManager();
         overrideConsentNotifiedDebugMode();
@@ -464,7 +335,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testGetMeasurementApiStatus_customReceiver() throws Exception {
         MeasurementManager mm = getMeasurementManager();
         overrideConsentNotifiedDebugMode();
@@ -489,7 +359,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testGetMeasurementApiStatus_nullExecutor_throwNullPointerException() {
         MeasurementManager mm = getMeasurementManager();
         overrideConsentManagerDebugMode();
@@ -503,7 +372,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void
             testGetMeasurementApiStatus_nullExecutor_throwNullPointerException_customReceiver() {
         MeasurementManager mm = getMeasurementManager();
@@ -518,7 +386,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testGetMeasurementApiStatus_nullCallback_throwNullPointerException() {
         MeasurementManager mm = getMeasurementManager();
         overrideConsentManagerDebugMode();
@@ -532,7 +399,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void
             testGetMeasurementApiStatus_nullCallback_throwNullPointerException_customReceiver() {
         MeasurementManager mm = getMeasurementManager();
@@ -550,7 +416,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     // implementation object correctly. They all mock the implementation.
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testRegisterSource() {
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
@@ -565,7 +430,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testRegisterSource_SPlus() {
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
@@ -580,7 +444,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testRegisterSource_propagatesExecutor() {
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
@@ -595,7 +458,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testRegisterSource_propagatesExecutor_SPlus() {
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
@@ -610,7 +472,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testRegisterSource_propagatesCallback() {
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
@@ -623,7 +484,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testRegisterSource_propagatesCallback_SPlus() {
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
@@ -639,7 +499,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testRegisterWebSource() {
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
@@ -653,7 +512,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testRegisterWebSource_SPlus() {
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
@@ -670,7 +528,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testRegisterWebTrigger() {
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
@@ -684,7 +541,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testRegisterWebTrigger_SPlus() {
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
@@ -701,7 +557,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testRegisterTrigger() {
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
@@ -715,7 +570,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testRegisterTrigger_SPlus() {
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
@@ -732,7 +586,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testDeleteRegistrations() {
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
@@ -746,7 +599,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testDeleteRegistrations_SPlus() {
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
@@ -763,7 +615,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testGetMeasurementApiStatus_MockImpl() {
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
@@ -776,7 +627,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testGetMeasurementApiStatus_MockImpl_SPlus() {
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
@@ -799,7 +649,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testRegisterSourceMultiple() {
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
@@ -813,7 +662,6 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testRegisterSourceMultiple_SPlus() {
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
@@ -829,17 +677,7 @@ public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
         verifyNoMoreInteractions(impl);
     }
 
-    private SourceRegistrationRequest buildDefaultAppSourcesRegistrationRequest() {
-        return new SourceRegistrationRequest.Builder(
-                        List.of(
-                                Uri.parse("https://example1.com"),
-                                Uri.parse("https://example2.com")))
-                .setInputEvent(null)
-                .build();
-    }
-
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testUnbindFromService() {
         MeasurementCompatibleManager impl = mock(MeasurementCompatibleManager.class);
         MeasurementManager mm = new MeasurementManager(impl);
