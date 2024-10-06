@@ -55,6 +55,7 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.AdDataConversionStrategyFactory;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
@@ -96,6 +97,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
     @NonNull private final AdServicesLogger mAdServicesLogger;
     @NonNull private final AppImportanceFilter mAppImportanceFilter;
     @NonNull private final Flags mFlags;
+    @NonNull private final DebugFlags mDebugFlags;
     @NonNull private final CallingAppUidSupplier mCallingAppUidSupplier;
 
     @NonNull private final CustomAudienceServiceFilter mCustomAudienceServiceFilter;
@@ -118,6 +120,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                         context,
                         () -> FlagsFactory.getFlags().getForegroundStatuslLevelForValidation()),
                 FlagsFactory.getFlags(),
+                DebugFlags.getInstance(),
                 CallingAppUidSupplierBinderImpl.create(),
                 new CustomAudienceServiceFilter(
                         context,
@@ -157,6 +160,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             @NonNull AdServicesLogger adServicesLogger,
             @NonNull AppImportanceFilter appImportanceFilter,
             @NonNull Flags flags,
+            @NonNull DebugFlags debugFlags,
             @NonNull CallingAppUidSupplier callingAppUidSupplier,
             @NonNull CustomAudienceServiceFilter customAudienceServiceFilter,
             @NonNull AdFilteringFeatureFactory adFilteringFeatureFactory) {
@@ -178,6 +182,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         mAdServicesLogger = adServicesLogger;
         mAppImportanceFilter = appImportanceFilter;
         mFlags = flags;
+        mDebugFlags = debugFlags;
         mCallingAppUidSupplier = callingAppUidSupplier;
         mCustomAudienceServiceFilter = customAudienceServiceFilter;
         mAdFilteringFeatureFactory = adFilteringFeatureFactory;
@@ -326,6 +331,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                     FetchCustomAudienceImpl impl =
                             new FetchCustomAudienceImpl(
                                     mFlags,
+                                    mDebugFlags,
                                     // TODO(b/235841960): Align on internal Clock usage.
                                     Clock.systemUTC(),
                                     mAdServicesLogger,

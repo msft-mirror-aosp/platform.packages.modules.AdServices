@@ -393,7 +393,7 @@ public final class DebugReportingJobServiceTest
         ExtendedMockito.doReturn(mMockDatastoreManager)
                 .when(DatastoreManagerFactory::getDatastoreManager);
         ExtendedMockito.doNothing().when(() -> DebugReportingJobService.schedule(any(), any()));
-        mockGetAdServicesJobServiceLogger(mSpyLogger);
+        mocker.mockGetAdServicesJobServiceLogger(mSpyLogger);
 
         // Execute
         execute.run();

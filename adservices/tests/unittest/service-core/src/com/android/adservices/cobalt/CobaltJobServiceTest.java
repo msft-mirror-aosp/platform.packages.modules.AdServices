@@ -85,7 +85,7 @@ public final class CobaltJobServiceTest extends AdServicesJobServiceTestCase {
         doReturn(JOB_SCHEDULER).when(mSpyCobaltJobService).getSystemService(JobScheduler.class);
         mockCobaltLoggingFlags();
 
-        mLogger = mockAdServicesJobServiceLogger(mContext, mMockFlags);
+        mLogger = mocker.mockNoOpAdServicesJobServiceLogger(mContext, mMockFlags);
     }
 
     @After

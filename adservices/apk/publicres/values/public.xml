@@ -1032,4 +1032,12 @@
     <public type="id" name="how_it_works_expander" id="0x7f087f9d" />
     <public type="id" name="blocked_topics_button" id="0x7f087f9c" />
     <public type="id" name="topics_preference" id="0x7f087f9b" />
+    <public type="string" name="permlab_accessAdServicesAdSelection" id="0x7f017ce9" />
+    <public type="string" name="permdesc_accessAdServicesAdSelection" id="0x7f017ce8" />
+    <public type="string" name="permlab_accessAdServicesProtectedSignals" id="0x7f017ce7" />
+    <public type="string" name="permdesc_accessAdServicesProtectedSignals" id="0x7f017ce6" />
+    <public type="string" name="notificationUI_pas_combined_dropdown_subtitle3" id="0x7f017ce5" />
+    <public type="string" name="notificationUI_pas_combined_dropdown_body6" id="0x7f017ce4" />
+    <public type="string" name="notificationUI_pas_app_body2_part2" id="0x7f017ce3" />
+    <public type="string" name="notificationUI_pas_learn_more_msmt_link" id="0x7f017ce2" />
 </resources>

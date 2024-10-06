@@ -236,10 +236,10 @@ public final class OnDeviceClassifierTest extends AdServicesExtendedMockitoTestC
         // TODO (after b/264446621): Check all topics once server-side tests also use TFLite model.
         // Expected top 10: 10253, 10230, 10284, 10237, 10227, 10257, 10165, 10028, 10330, 10047
         assertThat(classifications.get(appPackage1))
-                .containsAtLeastElementsIn(createRealTopics(Arrays.asList(10253)));
+                .containsAtLeastElementsIn(createRealTopics(List.of(10253)));
         // Expected top 10: 10227, 10225, 10235, 10230, 10238, 10253, 10247, 10254, 10234, 10229
         assertThat(classifications.get(appPackage2))
-                .containsAtLeastElementsIn(createRealTopics(Arrays.asList(10227)));
+                .containsAtLeastElementsIn(createRealTopics(List.of(10227)));
 
         // Verify logged atom.
         verify(mLogger, times(2)).logEpochComputationClassifierStats(argument.capture());
@@ -463,10 +463,10 @@ public final class OnDeviceClassifierTest extends AdServicesExtendedMockitoTestC
         // Check different expected scores for different descriptions.
         // Expected top 10: 10253, 10230, 10284, 10237, 10227, 10257, 10165, 10028, 10330, 10047
         assertThat(firstClassifications.get(appPackage1))
-                .containsAtLeastElementsIn(createRealTopics(Arrays.asList(10253)));
+                .containsAtLeastElementsIn(createRealTopics(List.of(10253)));
         // Expected top 10: 10227, 10225, 10235, 10230, 10238, 10253, 10247, 10254, 10234, 10229
         assertThat(secondClassifications.get(appPackage1))
-                .containsAtLeastElementsIn(createRealTopics(Arrays.asList(10227)));
+                .containsAtLeastElementsIn(createRealTopics(List.of(10227)));
     }
 
     @Test

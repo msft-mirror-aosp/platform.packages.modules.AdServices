@@ -217,6 +217,29 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
         assertThrows(exceptionClass, () -> mDatastore.remove(key));
 
         assertThrows(exceptionClass, () -> mDatastore.removeByPrefix(key));
+
+        assertThrows(
+                exceptionClass,
+                () -> mDatastore.update(updateOperation -> updateOperation.putBoolean(key, true)));
+        assertThrows(
+                exceptionClass,
+                () -> mDatastore.update(updateOperation -> updateOperation.putInt(key, 7)));
+        assertThrows(
+                exceptionClass,
+                () -> mDatastore.update(updateOperation -> updateOperation.putString(key, "foo")));
+        assertThrows(
+                exceptionClass,
+                () ->
+                        mDatastore.update(
+                                updateOperation -> updateOperation.putBooleanIfNew(key, true)));
+        assertThrows(
+                exceptionClass,
+                () -> mDatastore.update(updateOperation -> updateOperation.putIntIfNew(key, 7)));
+        assertThrows(
+                exceptionClass,
+                () ->
+                        mDatastore.update(
+                                updateOperation -> updateOperation.putStringIfNew(key, "foo")));
     }
 
     @Test
@@ -312,6 +335,14 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
     @Test
     public void testRemoveByPrefix_ioExceptionOccurs_noWriteToFile() throws Exception {
         datastoreIoExceptionTestHelper(datastore -> datastore.removeByPrefix(TEST_KEY));
+    }
+
+    @Test
+    public void testUpdate_ioExceptionOccurs_noWriteToFile() throws Exception {
+        datastoreIoExceptionTestHelper(
+                datastore ->
+                        datastore.update(
+                                updateOperation -> updateOperation.putBoolean(TEST_KEY, true)));
     }
 
     @Test
@@ -811,6 +842,160 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
                     .that(mDatastore.getBoolean(item.first))
                     .isEqualTo(item.second);
         }
+    }
+
+    @Test
+    public void testUpdate() throws Exception {
+        AtomicFile atomicFile = spy(new AtomicFile(new File(VALID_DIR, FILENAME)));
+        AtomicFileDatastore datastore =
+                new AtomicFileDatastore(
+                        atomicFile,
+                        DATASTORE_VERSION,
+                        TEST_VERSION_KEY,
+                        mMockAdServicesErrorLogger);
+        try {
+            datastore.update(
+                    updateOperation -> {
+                        updateOperation.putBoolean(TEST_KEY, false);
+                        updateOperation.putInt(TEST_KEY_1, 3);
+                        updateOperation.putString(TEST_KEY_2, "bar");
+                        updateOperation.putBooleanIfNew(TEST_KEY, true);
+                        updateOperation.putIntIfNew(TEST_KEY_1, 2);
+                        updateOperation.putStringIfNew(TEST_KEY_2, "newBar");
+                        updateOperation.putBooleanIfNew(TEST_KEY_3, true);
+                        updateOperation.putIntIfNew(TEST_KEY_4, 7);
+                        updateOperation.putStringIfNew(TEST_KEY_5, "foo");
+                    });
+
+            Map<String, Object> expectedMap =
+                    Map.of(
+                            TEST_KEY,
+                            false,
+                            TEST_KEY_1,
+                            3,
+                            TEST_KEY_2,
+                            "bar",
+                            TEST_KEY_3,
+                            true,
+                            TEST_KEY_4,
+                            7,
+                            TEST_KEY_5,
+                            "foo",
+                            TEST_VERSION_KEY,
+                            1);
+
+            assertWithMessage("getBoolean(%s)", TEST_KEY)
+                    .that(datastore.getBoolean(TEST_KEY))
+                    .isEqualTo(false);
+            assertWithMessage("getInt(%s)", TEST_KEY_1)
+                    .that(datastore.getInt(TEST_KEY_1))
+                    .isEqualTo(3);
+            assertWithMessage("getString(%s)", TEST_KEY_2)
+                    .that(datastore.getString(TEST_KEY_2))
+                    .isEqualTo("bar");
+            assertWithMessage("getBoolean(%s)", TEST_KEY_3)
+                    .that(datastore.getBoolean(TEST_KEY_3))
+                    .isEqualTo(true);
+            assertWithMessage("getInt(%s)", TEST_KEY_4)
+                    .that(datastore.getInt(TEST_KEY_4))
+                    .isEqualTo(7);
+
+            assertWithMessage("getString(%s)", TEST_KEY_5)
+                    .that(datastore.getString(TEST_KEY_5))
+                    .isEqualTo("foo");
+
+            assertWithMessage("datastore content check")
+                    .that(readFromAtomicFile(atomicFile))
+                    .containsExactlyEntriesIn(expectedMap);
+
+            verify(atomicFile).startWrite();
+        } finally {
+            datastore.tearDownForTesting();
+        }
+    }
+
+    @Test
+    public void testUpdate_noUpdateOnSameData() throws Exception {
+        AtomicFile atomicFile = spy(new AtomicFile(new File(VALID_DIR, FILENAME)));
+        AtomicFileDatastore datastore =
+                new AtomicFileDatastore(
+                        atomicFile,
+                        DATASTORE_VERSION,
+                        TEST_VERSION_KEY,
+                        mMockAdServicesErrorLogger);
+
+        try {
+            datastore.update(
+                    updateOperation -> {
+                        updateOperation.putBoolean(TEST_KEY, false);
+                        updateOperation.putInt(TEST_KEY_1, 3);
+                        updateOperation.putString(TEST_KEY_2, "bar");
+                        updateOperation.putBooleanIfNew(TEST_KEY_3, true);
+                        updateOperation.putIntIfNew(TEST_KEY_4, 7);
+                        updateOperation.putStringIfNew(TEST_KEY_5, "foo");
+                    });
+
+            verify(atomicFile).startWrite();
+
+            // verify no update to file if writing the same data
+            datastore.update(
+                    updateOperation -> {
+                        updateOperation.putBoolean(TEST_KEY, false);
+                        updateOperation.putInt(TEST_KEY_1, 3);
+                        updateOperation.putString(TEST_KEY_2, "bar");
+                        updateOperation.putBooleanIfNew(TEST_KEY_3, true);
+                        updateOperation.putIntIfNew(TEST_KEY_4, 7);
+                        updateOperation.putStringIfNew(TEST_KEY_5, "foo");
+                    });
+            verify(atomicFile).startWrite();
+        } finally {
+            datastore.tearDownForTesting();
+        }
+    }
+
+    @Test
+    public void testUpdate_putIfType_overwriteIncorrectWrite() throws Exception {
+        mDatastore.update(
+                updateOperation -> {
+                    updateOperation.putBoolean(TEST_KEY, false);
+                    updateOperation.putInt(TEST_KEY_1, 3);
+                    updateOperation.putString(TEST_KEY_2, "foo");
+                });
+
+        assertThrows(
+                IllegalStateException.class,
+                () ->
+                        mDatastore.update(
+                                updateOperation -> updateOperation.putIntIfNew(TEST_KEY, 5)));
+        assertThrows(
+                IllegalStateException.class,
+                () ->
+                        mDatastore.update(
+                                updateOperation ->
+                                        updateOperation.putStringIfNew(TEST_KEY, "test")));
+        assertThrows(
+                IllegalStateException.class,
+                () ->
+                        mDatastore.update(
+                                updateOperation ->
+                                        updateOperation.putBooleanIfNew(TEST_KEY_1, true)));
+        assertThrows(
+                IllegalStateException.class,
+                () ->
+                        mDatastore.update(
+                                updateOperation ->
+                                        updateOperation.putStringIfNew(TEST_KEY_1, "test")));
+        assertThrows(
+                IllegalStateException.class,
+                () ->
+                        mDatastore.update(
+                                updateOperation ->
+                                        updateOperation.putBooleanIfNew(TEST_KEY_2, true)));
+        assertThrows(
+                IllegalStateException.class,
+                () ->
+                        mDatastore.update(
+                                updateOperation -> updateOperation.putIntIfNew(TEST_KEY_2, 6)));
     }
 
     private void assertCommonDumpContents(String dump, String prefix) {

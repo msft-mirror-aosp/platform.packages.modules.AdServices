@@ -153,12 +153,14 @@ public class AdServicesCommonManager {
      * or not. This API is for Android R, and uses the AdServicesOutcomeReceiver class because
      * OutcomeReceiver is not available.
      *
+     * @deprecated use {@link #isAdServicesEnabled(Executor, OutcomeReceiver)} instead. Android R is
      *     no longer supported.
      * @hide
      */
     @SystemApi
-    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLEMENT_CHECK_ENABLED)
     @RequiresPermission(anyOf = {ACCESS_ADSERVICES_STATE, ACCESS_ADSERVICES_STATE_COMPAT})
+    @Deprecated
+    @FlaggedApi(Flags.FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_DEPRECATED)
     @SuppressWarnings("NewApi")
     public void isAdServicesEnabled(
             @NonNull @CallbackExecutor Executor executor,
@@ -275,7 +277,7 @@ public class AdServicesCommonManager {
 
     /**
      * Broadcast action: notify that a consent notification has been displayed to the user, and the
-     * user consent choices can be set by calling {@link #setAdServicesModuleUserChoices()}.
+     * user consent choices can be set by calling {@link #requestAdServicesModuleUserChoices()}.
      *
      * @hide
      */
@@ -288,7 +290,7 @@ public class AdServicesCommonManager {
     /**
      * Activity Action: Open the consent landing page activity. In the activity, user consent
      * choices can be set, depending on user action, by calling {@link
-     * #setAdServicesModuleUserChoices()}.
+     * #requestAdServicesModuleUserChoices()}.
      *
      * <p>Input: nothing
      *
@@ -310,7 +312,7 @@ public class AdServicesCommonManager {
      * those PPAPIs will not operate for that user.
      *
      * <p>A notification type is also required to determine what type of notification should be
-     * shown to the user to notify them of these changes. The NotificationTypeParams can be Ongoing,
+     * shown to the user to notify them of these changes. The NotificationType can be Ongoing,
      * Regular, or None.
      *
      * @param adServicesModuleStateList parcel containing state information for modules.
@@ -322,13 +324,12 @@ public class AdServicesCommonManager {
     @SystemApi
     @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
     @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
-    public void setAdServicesModuleOverrides(
+    public void requestAdServicesModuleOverrides(
             @NonNull List<AdServicesModuleState> adServicesModuleStateList,
-            @NonNull NotificationTypeParams notificationType,
+            @NotificationType.NotificationTypeCode int notificationType,
             @NonNull @CallbackExecutor Executor executor,
-            @NonNull AdServicesOutcomeReceiver<AdServicesCommonResponse, Exception> callback) {
+            @NonNull AdServicesOutcomeReceiver<Void, Exception> callback) {
         Objects.requireNonNull(adServicesModuleStateList);
-        Objects.requireNonNull(notificationType);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(callback);
 
@@ -338,14 +339,13 @@ public class AdServicesCommonManager {
 
         final IAdServicesCommonService service = getService();
         try {
-            service.setAdServicesModuleOverrides(
+            service.requestAdServicesModuleOverrides(
                     adServicesModuleStateList,
                     notificationType,
-                    new ISetAdServicesModuleOverridesCallback.Stub() {
+                    new IRequestAdServicesModuleOverridesCallback.Stub() {
                         @Override
-                        public void onResult(AdServicesCommonResponse adServicesCommonResponse)
-                                throws RemoteException {
-                            callback.onResult(adServicesCommonResponse);
+                        public void onSuccess() throws RemoteException {
+                            callback.onResult(null);
                         }
 
                         @Override
@@ -377,10 +377,10 @@ public class AdServicesCommonManager {
     @SystemApi
     @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
     @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
-    public void setAdServicesModuleUserChoices(
+    public void requestAdServicesModuleUserChoices(
             @NonNull List<AdServicesModuleUserChoice> adServicesModuleUserChoiceList,
             @NonNull @CallbackExecutor Executor executor,
-            @NonNull AdServicesOutcomeReceiver<AdServicesCommonResponse, Exception> callback) {
+            @NonNull AdServicesOutcomeReceiver<Void, Exception> callback) {
         Objects.requireNonNull(adServicesModuleUserChoiceList);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(callback);
@@ -391,13 +391,12 @@ public class AdServicesCommonManager {
 
         final IAdServicesCommonService service = getService();
         try {
-            service.setAdServicesModuleUserChoices(
+            service.requestAdServicesModuleUserChoices(
                     adServicesModuleUserChoiceList,
-                    new ISetAdServicesModuleUserChoicesCallback.Stub() {
+                    new IRequestAdServicesModuleUserChoicesCallback.Stub() {
                         @Override
-                        public void onResult(AdServicesCommonResponse adServicesCommonResponse)
-                                throws RemoteException {
-                            callback.onResult(adServicesCommonResponse);
+                        public void onSuccess() throws RemoteException {
+                            callback.onResult(null);
                         }
 
                         @Override
@@ -428,12 +427,14 @@ public class AdServicesCommonManager {
      * </ul>
      *
      * @param adServicesStates parcel containing relevant AdServices state variables.
+     * @deprecated use {@link #enableAdServices(AdServicesStates, Executor, OutcomeReceiver)}
      *     instead. Android R is no longer supported.
      * @hide
      */
     @SystemApi
-    @FlaggedApi(Flags.FLAG_ENABLE_ADSERVICES_API_ENABLED)
     @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
+    @Deprecated
+    @FlaggedApi(Flags.FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_DEPRECATED)
     @SuppressWarnings("NewApi")
     public void enableAdServices(
             @NonNull AdServicesStates adServicesStates,
@@ -459,13 +460,15 @@ public class AdServicesCommonManager {
      * @throws IllegalStateException when service is not available or the feature is not enabled, or
      *     if there is any {@code Binder} invocation error.
      * @throws SecurityException when the caller is not authorized to call this API.
+     * @deprecated use {@link #updateAdId(UpdateAdIdRequest, Executor, OutcomeReceiver)} instead.
      *     Android R is no longer supported.
      * @hide
      */
     // TODO(b/295205476): Move exceptions into the callback.
     @SystemApi
-    @FlaggedApi(Flags.FLAG_AD_ID_CACHE_ENABLED)
     @RequiresPermission(anyOf = {UPDATE_PRIVILEGED_AD_ID, UPDATE_PRIVILEGED_AD_ID_COMPAT})
+    @Deprecated
+    @FlaggedApi(Flags.FLAG_ADSERVICES_OUTCOMERECEIVER_R_API_DEPRECATED)
     @SuppressWarnings("NewApi")
     public void updateAdId(
             @NonNull UpdateAdIdRequest updateAdIdRequest,
@@ -494,7 +497,6 @@ public class AdServicesCommonManager {
      * @hide
      */
     @SystemApi
-    @FlaggedApi(Flags.FLAG_AD_ID_CACHE_ENABLED)
     @RequiresPermission(anyOf = {UPDATE_PRIVILEGED_AD_ID, UPDATE_PRIVILEGED_AD_ID_COMPAT})
     @RequiresApi(Build.VERSION_CODES.S)
     public void updateAdId(
