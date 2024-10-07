@@ -29,6 +29,8 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.common.SdkRuntimeUtil;
 import com.android.adservices.service.common.compat.BuildCompatUtils;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
+import com.android.adservices.service.shell.adservicesapi.AdServicesApiShellCommandFactory;
+import com.android.adservices.service.shell.adservicesapi.DevSessionCommand;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Locale;
@@ -54,6 +56,29 @@ public class DevContextFilter {
             "dev.context.for.unknown.app.with.uid_%d";
 
     private static final long DEV_SESSION_LOOKUP_SEC = 3;
+
+    private static final String DEV_MODE_SESSION_END_COMMAND =
+            String.format(
+                    "cmd adservices_manager %s %s %s %s",
+                    AdServicesApiShellCommandFactory.COMMAND_PREFIX,
+                    DevSessionCommand.CMD,
+                    DevSessionCommand.SUB_CMD_END,
+                    DevSessionCommand.ARG_ERASE_DB);
+
+    private static final String ERROR_TRANSITIONING_HELP =
+            String.format(
+                    "If this error persists, run `%s` to exit the dev session. Note this will clear"
+                            + " the AdServices database.",
+                    DEV_MODE_SESSION_END_COMMAND);
+    private static final String ERROR_CALLERS_MUST_BE_DEBUGGABLE =
+            "Callers during a dev session must have android:debuggable=\"true\" in their manifest! "
+                    + ERROR_TRANSITIONING_HELP;
+    private static final String ERROR_TRANSITIONING_TO_PROD_MODE =
+            "Callers are not allowed during the transition from dev mode. "
+                    + ERROR_TRANSITIONING_HELP;
+    private static final String ERROR_TRANSITIONING_TO_DEV_MODE =
+            "Callers are not allowed during the transition to dev mode. "
+                    + ERROR_TRANSITIONING_HELP;
 
     private final ContentResolver mContentResolver;
     private final AppPackageNameRetriever mAppPackageNameRetriever;
@@ -119,13 +144,17 @@ public class DevContextFilter {
 
     /**
      * Creates a {@link DevContext} for the current binder call. It is assumed to be called by APIs
-     * after having collected the caller UID in the API thread..
+     * after having collected the caller UID in the API thread.
      *
      * @return A dev context specifying if the developer options are enabled for this API call or a
      *     context with developer options disabled if there is any error retrieving info for the
      *     calling application.
      * @throws IllegalStateException if the current thread is not currently executing an incoming
      *     transaction.
+     * @throws SecurityException If the calling app is non-debuggable during a dev session. In this
+     *     state a {@link DevContext} is invalid and cannot be constructed.
+     * @throws IllegalStateException If currently entering or exiting a dev session and PPAPIs are
+     *     not available at this time.
      */
     public DevContext createDevContext() throws IllegalStateException {
         return createDevContextFromCallingUid(Binder.getCallingUidOrThrow());
@@ -138,6 +167,10 @@ public class DevContextFilter {
      * @return A dev context specifying if the developer options are enabled for this API call or a
      *     context with developer options disabled if there is any error retrieving info for the
      *     calling application.
+     * @throws SecurityException If the calling app is non-debuggable during a dev session. In this
+     *     state a {@link DevContext} is invalid and cannot be constructed.
+     * @throws IllegalStateException If currently entering or exiting a dev session and PPAPIs are
+     *     not available at this time.
      */
     public DevContext createDevContextFromCallingUid(int callingUid) {
         return createDevContext(SdkRuntimeUtil.getCallingAppUid(callingUid));
@@ -150,9 +183,14 @@ public class DevContextFilter {
      * @return A dev context specifying if the developer options are enabled for this API call or a
      *     context with developer options disabled if there is any error retrieving info for the
      *     calling application.
+     * @throws SecurityException If the calling app is non-debuggable during a dev session. In this
+     *     state a {@link DevContext} is invalid and cannot be constructed.
+     * @throws IllegalStateException If currently entering or exiting a dev session and PPAPIs are
+     *     not available at this time.
      */
     @VisibleForTesting
-    public DevContext createDevContext(int callingAppUid) {
+    public DevContext createDevContext(int callingAppUid)
+            throws SecurityException, IllegalStateException {
         String callingAppPackage = null;
         boolean isDeviceDevOptionsEnabledOrDebuggable = isDeviceDevOptionsEnabledOrDebuggable();
         DevContext.Builder builder =
@@ -196,18 +234,22 @@ public class DevContextFilter {
                     .build();
         }
         builder.setCallingAppPackageName(callingAppPackage);
-        if (!isDebuggable(callingAppPackage)) {
-            LogUtil.v(
-                    "createDevContext(%d): app %s not debuggable, creating DevContext as disabled",
-                    callingAppUid, callingAppPackage);
-            builder.setDeviceDevOptionsEnabled(false);
-        } else {
+        boolean isCallerDebuggable = isDebuggable(callingAppPackage);
+        if (isCallerDebuggable) {
             LogUtil.v(
                     "createDevContext(%d): creating DevContext for calling app with package %s",
                     callingAppUid, callingAppPackage);
             builder.setDeviceDevOptionsEnabled(true);
+        } else {
+            LogUtil.v(
+                    "createDevContext(%d): app %s not debuggable, creating DevContext as disabled",
+                    callingAppUid, callingAppPackage);
+
+            builder.setDeviceDevOptionsEnabled(false);
         }
-        return builder.build();
+        DevContext devContext = builder.build();
+        validateDevSessionStateOrThrow(devContext.getDevSession().getState(), isCallerDebuggable);
+        return devContext;
     }
 
     /**
@@ -250,6 +292,21 @@ public class DevContextFilter {
         return Settings.Global.getInt(
                         mContentResolver, Settings.Global.DEVELOPMENT_SETTINGS_ENABLED, 0)
                 != 0;
+    }
+
+    private void validateDevSessionStateOrThrow(
+            DevSessionState devSessionState, boolean isCallerDebuggable)
+            throws SecurityException, IllegalStateException {
+        if (devSessionState.equals(DevSessionState.IN_DEV) && !isCallerDebuggable) {
+            throw new SecurityException(ERROR_CALLERS_MUST_BE_DEBUGGABLE);
+        }
+
+        if (devSessionState.equals(DevSessionState.TRANSITIONING_PROD_TO_DEV)) {
+            throw new IllegalStateException(ERROR_TRANSITIONING_TO_DEV_MODE);
+        }
+        if (devSessionState.equals(DevSessionState.TRANSITIONING_DEV_TO_PROD)) {
+            throw new IllegalStateException(ERROR_TRANSITIONING_TO_PROD_MODE);
+        }
     }
 
     private DevSession getDevSession(boolean isDeviceDevOptionsEnabledOrDebuggable) {
