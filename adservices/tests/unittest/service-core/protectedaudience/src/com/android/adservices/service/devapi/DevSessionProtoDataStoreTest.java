@@ -26,7 +26,7 @@ import org.junit.Test;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-public final class DevSessionDataStoreTest extends AdServicesUnitTestCase {
+public final class DevSessionProtoDataStoreTest extends AdServicesUnitTestCase {
 
     private static final int TIMEOUT_SEC = 5;
     private DevSessionDataStore mDevSessionDataStore;
@@ -34,11 +34,11 @@ public final class DevSessionDataStoreTest extends AdServicesUnitTestCase {
     @Before
     public void setUp() {
         mDevSessionDataStore =
-                new DevSessionDataStore(
+                new DevSessionProtoDataStore(
                         mContext,
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
-                        getTestInvocationId() + "_" + DevSessionDataStore.FILE_NAME);
+                        getTestInvocationId() + "_" + DevSessionProtoDataStore.FILE_NAME);
     }
 
     @Test
