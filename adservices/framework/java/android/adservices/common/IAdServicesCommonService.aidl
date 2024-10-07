@@ -30,8 +30,6 @@ import android.adservices.common.IRequestAdServicesModuleOverridesCallback;
 import android.adservices.common.IRequestAdServicesModuleUserChoicesCallback;
 
 import android.adservices.common.IUpdateAdIdCallback;
-import android.adservices.common.NotificationTypeParams;
-
 
 import android.adservices.common.UpdateAdIdRequest;
 import android.net.Uri;
@@ -59,7 +57,7 @@ interface IAdServicesCommonService {
 
     void requestAdServicesModuleOverrides(
         in List<AdServicesModuleState> adServicesModuleStateList,
-        in NotificationTypeParams notificationType,
+        in int notificationType,
         in IRequestAdServicesModuleOverridesCallback callback);
 
     void requestAdServicesModuleUserChoices(

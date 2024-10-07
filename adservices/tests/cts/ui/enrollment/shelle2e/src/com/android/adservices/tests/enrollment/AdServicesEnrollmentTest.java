@@ -22,7 +22,6 @@ import static com.android.adservices.service.shell.adservicesapi.ResetConsentCom
 import android.adservices.common.AdServicesCommonManager;
 import android.adservices.common.AdServicesModuleState;
 import android.adservices.common.AdServicesOutcomeReceiver;
-import android.adservices.common.NotificationTypeParams;
 import android.util.Log;
 
 import androidx.concurrent.futures.CallbackToFutureAdapter;
@@ -67,14 +66,13 @@ public final class AdServicesEnrollmentTest extends AdServicesCtsTestCase
         List<AdServicesModuleState> adServicesModuleStateList = new ArrayList<>();
         adServicesModuleStateList.add(
                 new AdServicesModuleState.Builder().setModule(1).setModuleState(0).build());
-        NotificationTypeParams notificationTypeParams =
-                new NotificationTypeParams.Builder().setNotificationType(1).build();
+        int notificationType = 1;
         ListenableFuture<Integer> responseFuture =
                 CallbackToFutureAdapter.getFuture(
                         completer -> {
                             commonManager.requestAdServicesModuleOverrides(
                                     adServicesModuleStateList,
-                                    notificationTypeParams,
+                                    notificationType,
                                     AdServicesExecutors.getLightWeightExecutor(),
                                     new AdServicesOutcomeReceiver<Void, Exception>() {
                                         @Override
