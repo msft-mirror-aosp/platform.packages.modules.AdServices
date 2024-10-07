@@ -6691,13 +6691,10 @@ public class MeasurementDaoTest {
             assertEquals(asyncRegistration.getRegistrant(), validAsyncRegistration.getRegistrant());
             assertNotNull(asyncRegistration.getSourceType());
             assertEquals(asyncRegistration.getSourceType(), validAsyncRegistration.getSourceType());
-            assertNotNull(asyncRegistration.getDebugKeyAllowed());
             assertEquals(
                     asyncRegistration.getDebugKeyAllowed(),
                     validAsyncRegistration.getDebugKeyAllowed());
-            assertNotNull(asyncRegistration.getRetryCount());
             assertEquals(asyncRegistration.getRetryCount(), validAsyncRegistration.getRetryCount());
-            assertNotNull(asyncRegistration.getRequestTime());
             assertEquals(
                     asyncRegistration.getRequestTime(), validAsyncRegistration.getRequestTime());
             assertNotNull(asyncRegistration.getOsDestination());
@@ -6708,7 +6705,6 @@ public class MeasurementDaoTest {
             assertEquals(
                     asyncRegistration.getRegistrationUri(),
                     validAsyncRegistration.getRegistrationUri());
-            assertNotNull(asyncRegistration.getDebugKeyAllowed());
             assertEquals(
                     asyncRegistration.getDebugKeyAllowed(),
                     validAsyncRegistration.getDebugKeyAllowed());
