@@ -42,10 +42,10 @@ public final class DevSessionCommand extends AbstractShellCommand {
             "WARNING: Enabling a development session will cause the AdServices database to be "
                     + "reset to a factory new state.";
 
-    public static final String CMD = "dev-session";
-    public static final String SUB_CMD_START = "start";
-    public static final String SUB_CMD_END = "end";
-    public static final String ARG_ERASE_DB = "--erase-db";
+    @VisibleForTesting public static final String CMD = "dev-session";
+    @VisibleForTesting public static final String SUB_CMD_START = "start";
+    @VisibleForTesting public static final String SUB_CMD_END = "end";
+    @VisibleForTesting public static final String ARG_ERASE_DB = "--erase-db";
 
     @VisibleForTesting
     public static final String HELP =
