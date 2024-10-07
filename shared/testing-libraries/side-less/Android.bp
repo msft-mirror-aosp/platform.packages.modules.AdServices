@@ -32,7 +32,7 @@ filegroup {
         "java/com/android/adservices/shared/testing/**/*.java",
     ],
     visibility: [
-        "//packages/modules/AdServices/shared/libraries:__subpackages__",
+        "//packages/modules/AdServices/shared/testing-libraries:__subpackages__",
     ],
 }
 
@@ -42,7 +42,7 @@ filegroup {
         "java/com/android/adservices/shared/testing/TestNamer.java",
     ],
     visibility: [
-        "//packages/modules/AdServices/shared/libraries:__subpackages__",
+        "//packages/modules/AdServices/shared/testing-libraries:__subpackages__",
     ],
 }
 
