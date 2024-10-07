@@ -20,6 +20,7 @@ import static android.adservices.common.AdServicesModuleState.MODULE_STATE_ENABL
 import static android.adservices.common.AdServicesModuleUserChoice.USER_CHOICE_OPTED_OUT;
 import static android.adservices.common.Module.MEASUREMENT;
 import static android.adservices.common.Module.TOPICS;
+import static android.adservices.common.NotificationType.NOTIFICATION_ONGOING;
 
 import static com.android.adservices.shared.testing.AndroidSdk.RVC;
 
@@ -29,7 +30,6 @@ import android.adservices.common.AdServicesCommonStatesResponse;
 import android.adservices.common.AdServicesModuleState;
 import android.adservices.common.AdServicesModuleUserChoice;
 import android.adservices.common.AdServicesStates;
-import android.adservices.common.NotificationTypeParams;
 import android.adservices.common.UpdateAdIdRequest;
 import android.adservices.exceptions.AdServicesException;
 
@@ -77,13 +77,9 @@ public final class AdServicesCommonManagerRvcTest extends CtsAdServicesDeviceTes
                         .setModuleState(MODULE_STATE_ENABLED)
                         .build();
         List<AdServicesModuleState> adServicesModuleStateList = Arrays.asList(moduleState);
-        NotificationTypeParams params =
-                new NotificationTypeParams.Builder()
-                        .setNotificationType(NotificationTypeParams.NOTIFICATION_ONGOING)
-                        .build();
 
         mCommonManager.requestAdServicesModuleOverrides(
-                adServicesModuleStateList, params, CALLBACK_EXECUTOR, receiver);
+                adServicesModuleStateList, NOTIFICATION_ONGOING, CALLBACK_EXECUTOR, receiver);
 
         receiver.assertFailure(AdServicesException.class);
     }
