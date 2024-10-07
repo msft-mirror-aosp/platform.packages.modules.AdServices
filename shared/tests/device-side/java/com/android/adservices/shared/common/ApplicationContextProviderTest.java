@@ -15,8 +15,6 @@
  */
 package com.android.adservices.shared.common;
 
-import static com.android.adservices.shared.common.ApplicationContextSingletonTest.mockAppContext;
-
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
@@ -27,16 +25,23 @@ import android.platform.test.annotations.DisabledOnRavenwood;
 
 import com.android.adservices.shared.SharedMockitoTestCase;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
-// TODO(b/335935200): RavenwoodBaseContext.getApplicationContext() not supported
-@DisabledOnRavenwood(blockedBy = Context.class)
+@DisabledOnRavenwood(blockedBy = android.content.ContentProvider.class)
 public final class ApplicationContextProviderTest extends SharedMockitoTestCase {
 
     private final ApplicationContextProvider mProvider = new ApplicationContextProvider();
 
     @Mock private Context mMockAppContext;
+
+    @Before
+    @After
+    public void testApplicationContextSingleton() {
+        ApplicationContextSingleton.setForTests(/* context= */ null);
+    }
 
     @Test
     public void testContextProviderApiMethods() {
@@ -70,8 +75,7 @@ public final class ApplicationContextProviderTest extends SharedMockitoTestCase 
 
     @Test
     public void testOnCreate_setsSingleton() {
-        ApplicationContextSingleton.setForTests(/* context= */ null);
-        mockAppContext(mMockContext, mMockAppContext);
+        mocker.mockGetApplicationContext(mMockContext, mMockAppContext);
         mProvider.attachInfo(mMockContext, new ProviderInfo());
 
         assertWithMessage("result of onCreate()").that(mProvider.onCreate()).isTrue();
@@ -79,5 +83,22 @@ public final class ApplicationContextProviderTest extends SharedMockitoTestCase 
         assertWithMessage("ApplicationContextSingleton.get()")
                 .that(ApplicationContextSingleton.get())
                 .isSameInstanceAs(mMockAppContext);
+    }
+
+    @Test
+    public void testOnCreate_setsSingleton_overriddenBySubclass() {
+        ApplicationContextProvider provider =
+                new ApplicationContextProvider() {
+                    @Override
+                    protected void setApplicationContext(Context context) {
+                        ApplicationContextSingleton.setAs(mContext);
+                    }
+                };
+
+        assertWithMessage("result of onCreate()").that(provider.onCreate()).isTrue();
+
+        assertWithMessage("ApplicationContextSingleton.get()")
+                .that(ApplicationContextSingleton.get())
+                .isSameInstanceAs(mContext);
     }
 }

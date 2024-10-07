@@ -16,6 +16,10 @@
 
 package com.android.adservices.service.signals;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_ENCODED_PAYLOAD_SIZE_EXCEEDS_LIMITS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_VALIDATE_AND_PERSIST_ENCODED_PAYLOAD_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS;
+
 import android.adservices.common.AdTechIdentifier;
 import android.os.Trace;
 
@@ -27,6 +31,7 @@ import com.android.adservices.data.signals.DBSignalsUpdateMetadata;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.EncoderLogicHandler;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
 import com.android.adservices.service.stats.pas.EncodingExecutionLogHelper;
@@ -60,7 +65,8 @@ public class PeriodicEncodingJobRunner {
     /**
      * Create a periodic encoding job runner.
      *
-     * @param signalsProvider Provider to access signals data stored on the device.
+     * @param signalsProviderAndArgumentFactory Factory which allows access to signals data stored
+     *     on the device.
      * @param protectedSignalsDao DAO for underlying raw signals tables.
      * @param scriptEngine Wrapper over JSScriptEngine for evaluating user-defined scripts.
      * @param encoderLogicMaximumFailure Maximum number of tolerable failures in encoding logic.
@@ -72,7 +78,7 @@ public class PeriodicEncodingJobRunner {
      * @param lightWeightExecutor Executor for lightweight tasks.
      */
     public PeriodicEncodingJobRunner(
-            SignalsProvider signalsProvider,
+            SignalsProviderAndArgumentFactory signalsProviderAndArgumentFactory,
             ProtectedSignalsDao protectedSignalsDao,
             SignalsScriptEngine scriptEngine,
             int encoderLogicMaximumFailure,
@@ -80,9 +86,8 @@ public class PeriodicEncodingJobRunner {
             EncoderLogicHandler encoderLogicHandler,
             EncodedPayloadDao encodedPayloadDao,
             ListeningExecutorService backgroundExecutor,
-            ListeningExecutorService lightWeightExecutor,
-            ProtectedSignalsArgument protectedSignalsArgument) {
-        mSignalsProvider = signalsProvider;
+            ListeningExecutorService lightWeightExecutor) {
+        mSignalsProvider = signalsProviderAndArgumentFactory.getSignalsProvider();
         mProtectedSignalsDao = protectedSignalsDao;
         mScriptEngine = scriptEngine;
         mEncoderLogicMaximumFailure = encoderLogicMaximumFailure;
@@ -91,7 +96,7 @@ public class PeriodicEncodingJobRunner {
         mEncodedPayloadDao = encodedPayloadDao;
         mBackgroundExecutor = backgroundExecutor;
         mLightWeightExecutor = lightWeightExecutor;
-        mProtectedSignalsArgument = protectedSignalsArgument;
+        mProtectedSignalsArgument = signalsProviderAndArgumentFactory.getProtectedSignalsArgument();
     }
 
     /**
@@ -192,6 +197,10 @@ public class PeriodicEncodingJobRunner {
                                     "Exception trying to validate and persist encoded payload for"
                                             + " buyer: %s",
                                     buyer);
+                            ErrorLogUtil.e(
+                                    e,
+                                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_VALIDATE_AND_PERSIST_ENCODED_PAYLOAD_FAILURE,
+                                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS);
                             logHelper.setStatus(
                                     AdsRelevanceStatusUtils.JS_RUN_STATUS_OTHER_FAILURE);
                             logHelper.finish();
@@ -213,6 +222,9 @@ public class PeriodicEncodingJobRunner {
                 // Do not persist encoded payload if the encoding logic violates the size
                 // constraints
                 sLogger.e("Buyer:%s encoded payload exceeded max size limit", buyer);
+                ErrorLogUtil.e(
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_ENCODED_PAYLOAD_SIZE_EXCEEDS_LIMITS,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS);
                 throw new IllegalArgumentException("Payload size exceeds limits.");
             }
 

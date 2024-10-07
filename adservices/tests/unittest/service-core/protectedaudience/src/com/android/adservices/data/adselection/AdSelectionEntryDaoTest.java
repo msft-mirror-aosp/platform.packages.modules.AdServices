@@ -23,6 +23,8 @@ import static android.adservices.adselection.DataHandlersFixture.TEST_PACKAGE_NA
 import static android.adservices.adselection.DataHandlersFixture.WINNING_CUSTOM_AUDIENCE_ALL_FIELDS_SET;
 import static android.adservices.adselection.DataHandlersFixture.getDBAdSelectionResultForCaAllFieldsWithId;
 
+import static com.android.adservices.data.adselection.DBRegisteredAdInteractionFixture.toRegisteredAdInteraction;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
@@ -48,6 +50,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.adselection.datahandlers.AdSelectionInitialization;
 import com.android.adservices.data.adselection.datahandlers.AdSelectionResultBidAndUri;
+import com.android.adservices.data.adselection.datahandlers.RegisteredAdInteraction;
 import com.android.adservices.data.adselection.datahandlers.ReportingComputationData;
 import com.android.adservices.data.adselection.datahandlers.ReportingData;
 import com.android.adservices.data.adselection.datahandlers.WinningCustomAudience;
@@ -1465,6 +1468,79 @@ public class AdSelectionEntryDaoTest {
                 0,
                 mAdSelectionEntryDao.getNumRegisteredAdInteractionsPerAdSelectionAndDestination(
                         AD_SELECTION_ID_2, SELLER_DESTINATION));
+    }
+
+    @Test
+    public void testListRegisteredAdInteractionsWithEmptyTable() {
+        List<RegisteredAdInteraction> adInteractions =
+                mAdSelectionEntryDao.listRegisteredAdInteractions(
+                        DB_REGISTERED_INTERACTION_SELLER_CLICK_1.getAdSelectionId(),
+                        BUYER_DESTINATION);
+
+        assertThat(adInteractions).isEmpty();
+    }
+
+    @Test
+    public void testListRegisteredAdInteractionsWithSingleInteraction() {
+        mAdSelectionEntryDao.persistDBRegisteredAdInteractions(
+                ImmutableList.of(DB_REGISTERED_INTERACTION_SELLER_CLICK_1));
+
+        List<RegisteredAdInteraction> adInteractions =
+                mAdSelectionEntryDao.listRegisteredAdInteractions(
+                        DB_REGISTERED_INTERACTION_SELLER_CLICK_1.getAdSelectionId(),
+                        SELLER_DESTINATION);
+
+        assertThat(adInteractions)
+                .containsExactly(
+                        toRegisteredAdInteraction(DB_REGISTERED_INTERACTION_SELLER_CLICK_1));
+    }
+
+    @Test
+    public void testListRegisteredAdInteractionsWithIncorrectAdSelectionId() {
+        mAdSelectionEntryDao.persistDBRegisteredAdInteractions(
+                ImmutableList.of(DB_REGISTERED_INTERACTION_SELLER_CLICK_1));
+
+        List<RegisteredAdInteraction> adInteractions =
+                mAdSelectionEntryDao.listRegisteredAdInteractions(
+                        DB_AD_SELECTION_2.getAdSelectionId(), SELLER_DESTINATION);
+
+        assertThat(adInteractions).isEmpty();
+    }
+
+    @Test
+    public void testListRegisteredAdInteractionsWithMultipleValidAdSelectionIds() {
+        mAdSelectionEntryDao.persistDBRegisteredAdInteractions(
+                ImmutableList.of(
+                        DB_REGISTERED_INTERACTION_SELLER_CLICK_2,
+                        DB_REGISTERED_INTERACTION_BUYER_1));
+
+        List<RegisteredAdInteraction> adInteractions =
+                mAdSelectionEntryDao.listRegisteredAdInteractions(
+                        DB_REGISTERED_INTERACTION_BUYER_1.getAdSelectionId(), BUYER_DESTINATION);
+
+        assertThat(adInteractions)
+                .containsExactly(toRegisteredAdInteraction(DB_REGISTERED_INTERACTION_BUYER_1));
+    }
+
+    @Test
+    public void testListRegisteredAdInteractionsWithBuyerAndSeller() {
+        List<DBRegisteredAdInteraction> adInteractions =
+                ImmutableList.of(
+                        DB_REGISTERED_INTERACTION_SELLER_CLICK_1,
+                        DB_REGISTERED_INTERACTION_BUYER_1);
+        mAdSelectionEntryDao.persistDBRegisteredAdInteractions(adInteractions);
+
+        assertThat(
+                        mAdSelectionEntryDao.listRegisteredAdInteractions(
+                                DB_REGISTERED_INTERACTION_SELLER_CLICK_1.getAdSelectionId(),
+                                SELLER_DESTINATION))
+                .containsExactly(
+                        toRegisteredAdInteraction(DB_REGISTERED_INTERACTION_SELLER_CLICK_1));
+        assertThat(
+                        mAdSelectionEntryDao.listRegisteredAdInteractions(
+                                DB_REGISTERED_INTERACTION_BUYER_1.getAdSelectionId(),
+                                BUYER_DESTINATION))
+                .containsExactly(toRegisteredAdInteraction(DB_REGISTERED_INTERACTION_BUYER_1));
     }
 
     @Test

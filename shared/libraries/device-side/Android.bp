@@ -31,6 +31,8 @@ java_library {
         "framework-annotations-lib",
     ],
     static_libs: [
+        "adservices-shared-error-logging",
+        "adservices-statsd",
         "adservices-shared-util",
         "modules-utils-build",
         "modules-utils-preconditions",
@@ -49,6 +51,49 @@ java_library {
         extra_check_modules: ["AdServicesProdLintChecker"],
         baseline_filename: "lint-baseline-adservices-shared-storage.xml", // TODO(b/356688417): Clean up baseline file.
     },
+}
+
+java_library {
+    name: "adservices-shared-datastore",
+    min_sdk_version: "30",
+    sdk_version: "module_current",
+    srcs: [
+        "java/com/android/adservices/shared/datastore/**/*.java",
+        "java/com/android/adservices/shared/datastore/**/*.kt",
+    ],
+    static_libs: [
+        "libprotobuf-java-lite",
+        "androidx.datastore_datastore",
+        "androidx.datastore_datastore-guava",
+    ],
+    apex_available: [
+        "com.android.adservices",
+        "com.android.extservices",
+        "com.android.ondevicepersonalization",
+    ],
+}
+
+java_library {
+    name: "adservices-statsd",
+    sdk_version: "module_current",
+    min_sdk_version: "30",
+    srcs: [
+        ":statslog-adservices-java-gen",
+    ],
+    libs: [
+        "androidx.annotation_annotation",
+        "framework-statsd.stubs.module_lib",
+    ],
+    visibility: [
+        "//packages/modules/AdServices:__subpackages__",
+        "//packages/modules/ExtServices:__subpackages__",
+        "//packages/modules/OnDevicePersonalization:__subpackages__",
+    ],
+    apex_available: [
+        "com.android.adservices",
+        "com.android.extservices",
+        "com.android.ondevicepersonalization",
+    ],
 }
 
 java_library {
@@ -144,6 +189,7 @@ java_library {
     ],
     exclude_srcs: [
         "java/com/android/adservices/shared/common/exception/*.java",
+        "java/com/android/adservices/shared/common/system/*.java",
     ],
     static_libs: [
         "adservices-shared-util",
@@ -180,6 +226,37 @@ java_library {
     },
 }
 
+// Provides helper to be used only by system-server classes
+java_library {
+    name: "adservices-shared-system-common",
+    min_sdk_version: "33",
+    sdk_version: "module_current",
+    srcs: [
+        "java/com/android/adservices/shared/system/**/*.java",
+    ],
+    libs: [
+        "error_prone_annotations", // for @FormatMethod
+        "framework-annotations-lib", // for @VisibleForTesting
+    ],
+    apex_available: [
+        "com.android.adservices",
+        // extservices doesn't have system-server classes
+        "com.android.ondevicepersonalization",
+    ],
+    visibility: [
+        // Available for its own tests...
+        "//packages/modules/AdServices/shared/tests/device-side:__subpackages__",
+
+        // ... and system-server projects
+        "//packages/modules/AdServices/adservices/service:__subpackages__",
+        "//packages/modules/AdServices/sdksandbox/service:__subpackages__",
+        "//packages/modules/OnDevicePersonalization/systemservice:__subpackages__",
+    ],
+    lint: {
+        extra_check_modules: ["AdServicesProdLintChecker"],
+    },
+}
+
 filegroup {
     name: "adservices-shared-flag-annotation-sources",
     srcs: [
@@ -198,11 +275,13 @@ java_library {
     min_sdk_version: "30",
     sdk_version: "module_current",
     srcs: [
-        "java/com/android/adservices/shared/proto/**/*.java",
+        "java/com/android/adservices/shared/util/ProtoParser.java",
+        "java/com/android/adservices/shared/errorlogging/AdServicesErrorLogger.java",
     ],
     static_libs: [
         "adservices-shared-proto-lite",
         "adservices-shared-util",
+        "adservices-statsd",
     ],
     libs: [
         "framework-annotations-lib",
@@ -237,7 +316,7 @@ java_library {
         "truth",
     ],
     libs: [
-        "framework-connectivity",
+        "framework-connectivity.stubs.module_lib",
     ],
     visibility: [
         "//packages/modules/AdServices:__subpackages__",
@@ -379,6 +458,9 @@ java_library {
     srcs: [
         "java/com/android/adservices/shared/util/*.java",
     ],
+    exclude_srcs: [
+        "java/com/android/adservices/shared/util/ProtoParser.java",
+    ],
     libs: [
         "framework-annotations-lib",
     ],
@@ -396,6 +478,36 @@ java_library {
     },
 }
 
+// Note: This lib contains an example for datastore usage which is used for testing the proto data
+// store. This should be not added as a production code dependency.
+java_library {
+    name: "adservices-datastore_testing",
+    sdk_version: "module_current",
+    proto: {
+        type: "lite",
+        include_dirs: [
+            "external/protobuf/java",
+            "external/protobuf/src",
+        ],
+        canonical_path_from_root: false, // Use relative path instead of Android root
+    },
+    srcs: [
+        "java/com/android/adservices/shared/datastore_testing/*.java",
+        "java/com/android/adservices/shared/datastore_testing/*.proto",
+        ":libprotobuf-internal-protos",
+    ],
+    static_libs: [
+        "adservices-shared-common",
+        "adservices-shared-datastore",
+    ],
+    visibility: [
+        "//packages/modules/AdServices/shared/tests:__subpackages__",
+    ],
+    lint: {
+        extra_check_modules: ["AdServicesProdLintChecker"],
+    },
+}
+
 // Shared test classes used to test shared test classes - Malkovich!
 filegroup {
     name: "adservices-shared-device-side-meta-testing-sources",
@@ -406,5 +518,18 @@ filegroup {
         "//packages/modules/AdServices/shared/tests:__subpackages__",
         // Explicitly add each package below - don't use __subpackages__
         "//packages/modules/AdServices/adservices/tests/unittest/adservices-test-utility",
+    ],
+}
+
+// Shared test classes used to test shared test classes - Malkovich!
+filegroup {
+    name: "adservices-shared-device-side-flags-meta-testing-sources",
+    srcs: [
+        "java/com/android/adservices/shared/meta_testing/FlagsTestLittleHelper.java",
+    ],
+    visibility: [
+        "//packages/modules/AdServices/shared/tests:__subpackages__",
+        // Explicitly add each package below - don't use __subpackages__
+        "//packages/modules/AdServices/adservices/tests/unittest/service-core",
     ],
 }

@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.measurement;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
@@ -29,10 +31,13 @@ import android.net.Uri;
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
+import com.android.adservices.service.measurement.aggregation.AggregatableKeyValue;
+import com.android.adservices.service.measurement.aggregation.AggregatableValuesConfig;
+import com.android.adservices.service.measurement.aggregation.AggregateDebugReportData;
+import com.android.adservices.service.measurement.aggregation.AggregateDebugReporting;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
+import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.util.UnsignedLong;
-
-import com.google.common.truth.Truth;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -45,6 +50,8 @@ import org.mockito.junit.MockitoJUnitRunner;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -127,7 +134,7 @@ public class TriggerTest {
                         .setStatus(Trigger.Status.PENDING)
                         .setRegistrant(Uri.parse("android-app://com.example.abc"))
                         .setAggregateTriggerData(aggregateTriggerDatas.toString())
-                        .setAggregateValues(values.toString())
+                        .setAggregateValuesString(values.toString())
                         .setFilters(TOP_LEVEL_FILTERS_JSON_STRING)
                         .setNotFilters(TOP_LEVEL_FILTERS_JSON_STRING)
                         .setDebugKey(DEBUG_KEY)
@@ -144,6 +151,11 @@ public class TriggerTest {
                                 TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN)
                         .setAttributionScopesString(
                                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_SCOPES)
+                        .setAggregatableFilteringIdMaxBytes(
+                                TriggerFixture.ValidTriggerParams
+                                        .AGGREGATABLE_FILTERING_ID_MAX_BYTES)
+                        .setAggregateDebugReportingString(
+                                TriggerFixture.ValidTriggerParams.AGGREGATE_DEBUG_REPORT)
                         .build(),
                 TriggerFixture.getValidTriggerBuilder()
                         .setEnrollmentId("enrollment-id")
@@ -158,7 +170,7 @@ public class TriggerTest {
                         .setStatus(Trigger.Status.PENDING)
                         .setRegistrant(Uri.parse("android-app://com.example.abc"))
                         .setAggregateTriggerData(aggregateTriggerDatas.toString())
-                        .setAggregateValues(values.toString())
+                        .setAggregateValuesString(values.toString())
                         .setFilters(TOP_LEVEL_FILTERS_JSON_STRING)
                         .setNotFilters(TOP_LEVEL_FILTERS_JSON_STRING)
                         .setDebugKey(DEBUG_KEY)
@@ -175,6 +187,11 @@ public class TriggerTest {
                                 TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN)
                         .setAttributionScopesString(
                                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_SCOPES)
+                        .setAggregatableFilteringIdMaxBytes(
+                                TriggerFixture.ValidTriggerParams
+                                        .AGGREGATABLE_FILTERING_ID_MAX_BYTES)
+                        .setAggregateDebugReportingString(
+                                TriggerFixture.ValidTriggerParams.AGGREGATE_DEBUG_REPORT)
                         .build());
     }
 
@@ -235,11 +252,14 @@ public class TriggerTest {
         values1.put("campaignCounts", 32768);
         JSONObject values2  = new JSONObject();
         values2.put("geoValue", 1664);
-        assertNotEquals(
-                TriggerFixture.getValidTriggerBuilder()
-                        .setAggregateValues(values1.toString()).build(),
-                TriggerFixture.getValidTriggerBuilder()
-                        .setAggregateValues(values2.toString()).build());
+        assertThat(
+                        TriggerFixture.getValidTriggerBuilder()
+                                .setAggregateValuesString(values1.toString())
+                                .build())
+                .isNotEqualTo(
+                        TriggerFixture.getValidTriggerBuilder()
+                                .setAggregateValuesString(values2.toString())
+                                .build());
         assertNotEquals(
                 TriggerFixture.getValidTriggerBuilder()
                         .setFilters(TOP_LEVEL_FILTERS_JSON_STRING).build(),
@@ -322,6 +342,23 @@ public class TriggerTest {
         assertNotEquals(
                 TriggerFixture.getValidTriggerBuilder().setAttributionScopesString("1").build(),
                 TriggerFixture.getValidTriggerBuilder().setAttributionScopesString("2").build());
+        assertNotEquals(
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAggregatableFilteringIdMaxBytes(1)
+                        .build(),
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAggregatableFilteringIdMaxBytes(2)
+                        .build());
+        assertThat(
+                        TriggerFixture.getValidTriggerBuilder()
+                                .setAggregateDebugReportingString(
+                                        "{\"budget\":1024,\"key_piece\":\"0x1\"}")
+                                .build())
+                .isNotEqualTo(
+                        TriggerFixture.getValidTriggerBuilder()
+                                .setAggregateDebugReportingString(
+                                        "{\"budget\":1024,\"key_piece\":\"0x2\"}")
+                                .build());
     }
 
     @Test
@@ -358,7 +395,7 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.TRIGGER_TIME,
                 TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS,
                 TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA,
-                TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
+                TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES_STRING,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY,
@@ -373,7 +410,7 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.TRIGGER_TIME,
                 TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS,
                 TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA,
-                TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
+                TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES_STRING,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY,
@@ -392,7 +429,7 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.TRIGGER_TIME,
                 TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS,
                 TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA,
-                TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
+                TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES_STRING,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY,
@@ -411,7 +448,7 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.TRIGGER_TIME,
                 TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS,
                 TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA,
-                TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
+                TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES_STRING,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY,
@@ -426,7 +463,7 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.TRIGGER_TIME,
                 TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS,
                 TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA,
-                TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
+                TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES_STRING,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY,
@@ -445,7 +482,7 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.TRIGGER_TIME,
                 TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS,
                 TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA,
-                TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
+                TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES_STRING,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY,
@@ -464,7 +501,7 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.TRIGGER_TIME,
                 TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS,
                 TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA,
-                TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
+                TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES_STRING,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY,
@@ -476,12 +513,16 @@ public class TriggerTest {
 
     @Test
     public void testAggregatableAttributionTrigger() throws Exception {
-        final Map<String, Integer> values = Map.of("foo", 93);
+        when(mFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true, false);
+        AggregatableKeyValue value = new AggregatableKeyValue.Builder(93).build();
+        final Map<String, AggregatableKeyValue> values = Map.of("foo", value);
+        final AggregatableValuesConfig aggregatableValuesConfig =
+                new AggregatableValuesConfig.Builder(values).build();
         final List<AggregateTriggerData> triggerData =
                 List.of(new AggregateTriggerData.Builder().build());
         final AggregatableAttributionTrigger attributionTrigger =
                 new AggregatableAttributionTrigger.Builder()
-                        .setValues(values)
+                        .setValueConfigs(List.of(aggregatableValuesConfig))
                         .setTriggerData(triggerData)
                         .build();
 
@@ -494,12 +535,21 @@ public class TriggerTest {
                 trigger.getAggregatableAttributionTrigger(mFlags);
         assertTrue(aggregatableAttributionTrigger.isPresent());
         assertNotNull(aggregatableAttributionTrigger.get().getTriggerData());
-        assertEquals(values, aggregatableAttributionTrigger.get().getValues());
+        assertEquals(
+                values.get("foo").getValue(),
+                aggregatableAttributionTrigger
+                        .get()
+                        .getValueConfigs()
+                        .get(0)
+                        .getValues()
+                        .get("foo")
+                        .getValue());
         assertEquals(triggerData, aggregatableAttributionTrigger.get().getTriggerData());
     }
 
     @Test
     public void testParseAggregateTrigger() throws JSONException {
+        when(mFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true, false);
         JSONArray triggerDatas = new JSONArray();
         JSONObject jsonObject1 = new JSONObject();
         jsonObject1.put("key_piece", "0x400");
@@ -537,7 +587,7 @@ public class TriggerTest {
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
                         .setAggregateTriggerData(triggerDatas.toString())
-                        .setAggregateValues(values.toString())
+                        .setAggregateValuesString(values.toString())
                         .setAggregateDeduplicationKeys(aggregateDedupKeys.toString())
                         .build();
         Optional<AggregatableAttributionTrigger> aggregatableAttributionTrigger =
@@ -571,9 +621,17 @@ public class TriggerTest {
         assertEquals(aggregateTrigger.getTriggerData().get(1).getSourceKeys().size(), 2);
         assertTrue(aggregateTrigger.getTriggerData().get(1).getSourceKeys().contains("geoValue"));
         assertTrue(aggregateTrigger.getTriggerData().get(1).getSourceKeys().contains("noMatch"));
-        assertEquals(aggregateTrigger.getValues().size(), 2);
-        assertEquals(aggregateTrigger.getValues().get("campaignCounts").intValue(), 32768);
-        assertEquals(aggregateTrigger.getValues().get("geoValue").intValue(), 1664);
+        assertThat(aggregateTrigger.getValueConfigs().size()).isEqualTo(1);
+        assertThat(
+                        aggregateTrigger
+                                .getValueConfigs()
+                                .get(0)
+                                .getValues()
+                                .get("campaignCounts")
+                                .getValue())
+                .isEqualTo(32768);
+        assertThat(aggregateTrigger.getValueConfigs().get(0).getValues().get("geoValue").getValue())
+                .isEqualTo(1664);
         assertEquals(
                 aggregateTrigger
                         .getTriggerData()
@@ -900,7 +958,119 @@ public class TriggerTest {
                         .setId("triggerId1")
                         .setAttributionScopesString("[\"1\", \"2\"]")
                         .build();
-        Truth.assertThat(trigger.getAttributionScopes()).containsExactly("1", "2");
+        assertThat(trigger.getAttributionScopes()).containsExactly("1", "2");
+    }
+
+    @Test
+    public void testParseAggregateTrigger_aggregateValueFiltersJsonArrayParses_success()
+            throws Exception {
+        when(mFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true);
+        String validAggregatableValues =
+                "[{\"values\":{\"campaignCounts\":32768, \"geoValue\":1664}},{\"values\":{\"a\":1,"
+                        + " \"b\":2, \"c\":3}}]";
+        // Verify aggregatable values string gets parsed into AggregatableValuesConfig.
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAggregateValuesString(validAggregatableValues)
+                        .build();
+        Optional<AggregatableAttributionTrigger> aggregatableAttributionTrigger =
+                trigger.getAggregatableAttributionTrigger(mFlags);
+        assertThat(aggregatableAttributionTrigger).isNotNull();
+        assertThat(aggregatableAttributionTrigger.get().getValueConfigs().size())
+                .isEqualTo(2);
+        assertThat(aggregatableAttributionTrigger.get().getValueConfigs().get(0).getValues().size())
+                .isEqualTo(2);
+        assertThat(aggregatableAttributionTrigger.get().getValueConfigs().get(1).getValues().size())
+                .isEqualTo(3);
+    }
+
+    @Test
+    public void testParseAggregateTrigger_aggregateValueFiltersFlagOffJsonArray_fails()
+            throws JSONException {
+        String invalidAggregatableValuesWithFlagOff =
+                "[{\"values\":{\"campaignCounts\":32768, \"geoValue\":1664}},{\"values\":{\"a\":1,"
+                        + " \"b\":2, \"c\":3}}]";
+        // Aggregate Values in Trigger table is persisted in JSONArray string format.
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAggregateValuesString(invalidAggregatableValuesWithFlagOff)
+                        .build();
+        // Values are not parsable and trigger is rejected.
+        assertThat(trigger.getAggregatableAttributionTrigger(mFlags))
+                .isEqualTo(Optional.empty());
+    }
+
+    @Test
+    public void aggregateDebugReport_parsing_asExpected() throws JSONException {
+        // Setup
+        String aggregateDebugReport =
+                "{\"key_piece\":\"0x222\","
+                        + "\"debug_data\":["
+                        + "{"
+                        + "\"types\": [\"trigger-aggregate-insufficient-budget\", "
+                        + "\"trigger-aggregate-deduplicated\"],"
+                        + "\"key_piece\": \"0x333\","
+                        + "\"value\": 333"
+                        + "},"
+                        + "{"
+                        + "\"types\": [\"trigger-aggregate-report-window-passed\", "
+                        + "\"trigger-event-low-priority\"],"
+                        + "\"key_piece\": \"0x444\","
+                        + "\"value\": 444"
+                        + "},"
+                        + "{"
+                        + "\"types\": [\"unspecified\"],"
+                        + "\"key_piece\": \"0x555\","
+                        + "\"value\": 555"
+                        + "}"
+                        + "],"
+                        + "\"aggregation_coordinator_origin\":\"https://aws.example\"}";
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setAggregateDebugReportingString(aggregateDebugReport)
+                        .build();
+
+        // Execution
+        AggregateDebugReportData debugData1 =
+                new AggregateDebugReportData.Builder(
+                                new HashSet<>(
+                                        Arrays.asList(
+                                                DebugReportApi.Type
+                                                        .TRIGGER_AGGREGATE_INSUFFICIENT_BUDGET
+                                                        .getValue(),
+                                                DebugReportApi.Type.TRIGGER_AGGREGATE_DEDUPLICATED
+                                                        .getValue())),
+                                new BigInteger("333", 16),
+                                333)
+                        .build();
+        AggregateDebugReportData debugData2 =
+                new AggregateDebugReportData.Builder(
+                                new HashSet<>(
+                                        Arrays.asList(
+                                                DebugReportApi.Type
+                                                        .TRIGGER_AGGREGATE_REPORT_WINDOW_PASSED
+                                                        .getValue(),
+                                                DebugReportApi.Type.TRIGGER_EVENT_LOW_PRIORITY
+                                                        .getValue())),
+                                new BigInteger("444", 16),
+                                444)
+                        .build();
+        AggregateDebugReportData debugData3 =
+                new AggregateDebugReportData.Builder(
+                                Collections.singleton(DebugReportApi.Type.UNSPECIFIED.getValue()),
+                                new BigInteger("555", 16),
+                                555)
+                        .build();
+
+        // Assertion
+        assertThat(source.getAggregateDebugReportingObject())
+                .isEqualTo(
+                        new AggregateDebugReporting.Builder(
+                                        0,
+                                        new BigInteger("222", 16),
+                                        Arrays.asList(debugData1, debugData2, debugData3),
+                                        Uri.parse("https://aws.example"))
+                                .build());
     }
 
     private void assertInvalidTriggerArguments(
@@ -928,7 +1098,7 @@ public class TriggerTest {
                                 .setTriggerTime(triggerTime)
                                 .setEventTriggers(eventTriggers)
                                 .setAggregateTriggerData(aggregateTriggerData)
-                                .setAggregateValues(aggregateValues)
+                                .setAggregateValuesString(aggregateValues)
                                 .setFilters(filters)
                                 .setNotFilters(notFilters)
                                 .setDebugKey(debugKey)

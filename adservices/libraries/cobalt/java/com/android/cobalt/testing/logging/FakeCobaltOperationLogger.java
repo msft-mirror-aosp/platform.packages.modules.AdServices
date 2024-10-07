@@ -18,8 +18,6 @@ package com.android.cobalt.testing.logging;
 
 import android.util.Pair;
 
-import androidx.annotation.VisibleForTesting;
-
 import com.android.cobalt.logging.CobaltOperationLogger;
 
 import java.util.HashMap;
@@ -29,24 +27,60 @@ import java.util.Map;
 public final class FakeCobaltOperationLogger implements CobaltOperationLogger {
 
     private final Map<Pair<Integer, Integer>, Integer> mStringBufferMaxExceededOccurrences;
+    private final Map<Pair<Integer, Integer>, Integer> mEventVectorBufferMaxExceededOccurrences;
+    private final Map<Pair<Integer, Integer>, Integer> mMaxValueExceededOccurrences;
 
     public FakeCobaltOperationLogger() {
         mStringBufferMaxExceededOccurrences = new HashMap<Pair<Integer, Integer>, Integer>();
+        mEventVectorBufferMaxExceededOccurrences = new HashMap<Pair<Integer, Integer>, Integer>();
+        mMaxValueExceededOccurrences = new HashMap<Pair<Integer, Integer>, Integer>();
     }
 
     /**
-     * NoOp log that a Cobalt logging event exceeds the string buffer max. Increment the count of
-     * this function being called for (metricId, reportId).
+     * NoOp logs that a Cobalt logging event exceeds the string buffer max. Increments the
+     * occurrences of string buffer max was exceeded for (metricId, reportId).
      */
-    @VisibleForTesting
     public void logStringBufferMaxExceeded(int metricId, int reportId) {
         Pair<Integer, Integer> key = new Pair<Integer, Integer>(metricId, reportId);
         mStringBufferMaxExceededOccurrences.compute(key, (k, v) -> (v == null) ? 1 : v + 1);
     }
 
-    /** Returns the total occurrences of string buffer max was exceed for (metricId, reportId). */
+    /** Returns the total occurrences of string buffer max was exceeded for (metricId, reportId). */
     public int getNumStringBufferMaxExceededOccurrences(int metricId, int reportId) {
         return mStringBufferMaxExceededOccurrences.getOrDefault(
+                new Pair<Integer, Integer>(metricId, reportId), 0);
+    }
+
+    /**
+     * NoOp logs that a Cobalt logging event exceeds the event vector buffer max. Increments the
+     * occurrences of event vector buffer max was exceeded for (metricId, reportId).
+     */
+    public void logEventVectorBufferMaxExceeded(int metricId, int reportId) {
+        Pair<Integer, Integer> key = new Pair<Integer, Integer>(metricId, reportId);
+        mEventVectorBufferMaxExceededOccurrences.compute(key, (k, v) -> (v == null) ? 1 : v + 1);
+    }
+
+    /**
+     * Returns the total occurrences of event vector buffer max was exceeded for (metricId,
+     * reportId).
+     */
+    public int getNumEventVectorBufferMaxExceededOccurrences(int metricId, int reportId) {
+        return mEventVectorBufferMaxExceededOccurrences.getOrDefault(
+                new Pair<Integer, Integer>(metricId, reportId), 0);
+    }
+
+    /**
+     * NoOp logs that a Cobalt logging event exceeds the max value when calculating its private
+     * index. Increments the occurrences of max value was exceeded for (metricId, reportId).
+     */
+    public void logMaxValueExceeded(int metricId, int reportId) {
+        Pair<Integer, Integer> key = new Pair<Integer, Integer>(metricId, reportId);
+        mMaxValueExceededOccurrences.compute(key, (k, v) -> (v == null) ? 1 : v + 1);
+    }
+
+    /** Returns the total occurrences of max value was exceeded for (metricId, reportId). */
+    public int getNumMaxValueExceededOccurrences(int metricId, int reportId) {
+        return mMaxValueExceededOccurrences.getOrDefault(
                 new Pair<Integer, Integer>(metricId, reportId), 0);
     }
 }

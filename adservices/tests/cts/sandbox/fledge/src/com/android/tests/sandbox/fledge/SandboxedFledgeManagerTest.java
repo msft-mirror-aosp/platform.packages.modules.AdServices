@@ -16,6 +16,7 @@
 
 package com.android.tests.sandbox.fledge;
 
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
 import static com.android.tests.sandbox.fledge.SandboxedFledgeManagerTest.PROPERTY_DISABLE_SDK_SANDBOX;
@@ -35,6 +36,7 @@ import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.annotations.SetPpapiAppAllowList;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 
@@ -52,6 +54,7 @@ import java.util.concurrent.TimeoutException;
 @SetFlagEnabled(KEY_ADSERVICES_ENABLED)
 @SetFlagEnabled(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
 @SetFlagDisabled(PROPERTY_DISABLE_SDK_SANDBOX)
+@EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
 @SetPpapiAppAllowList
 public final class SandboxedFledgeManagerTest extends CtsSandboxedFledgeManagerTestCase {
     public static final String PROPERTY_DISABLE_SDK_SANDBOX = "disable_sdk_sandbox";
@@ -72,7 +75,7 @@ public final class SandboxedFledgeManagerTest extends CtsSandboxedFledgeManagerT
         DevContext devContext = DevContextFilter.create(sContext).createDevContext(Process.myUid());
         boolean isDebuggable = devContextFilter.isDebuggable(devContext.getCallingAppPackageName());
         boolean isDeveloperMode = devContextFilter.isDeveloperMode();
-        mHasAccessToDevOverrides = devContext.getDevOptionsEnabled();
+        mHasAccessToDevOverrides = devContext.getDeviceDevOptionsEnabled();
         mAccessStatus =
                 String.format("Debuggable: %b\n", isDebuggable)
                         + String.format("Developer options on: %b", isDeveloperMode);

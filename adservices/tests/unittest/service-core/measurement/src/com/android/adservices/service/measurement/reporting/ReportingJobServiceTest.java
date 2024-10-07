@@ -22,6 +22,9 @@ import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_REQ
 import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS;
 import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_SERVICE_MIN_EXECUTION_WINDOW_MILLIS;
 import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_REPORTING_JOB;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+
+import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -32,10 +35,8 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -81,15 +82,14 @@ import java.util.Optional;
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(AdServicesJobServiceLogger.class)
 @MockStatic(ServiceCompatUtils.class)
-public final class ReportingJobServiceTest extends MeasurementJobServiceTestCase {
+public final class ReportingJobServiceTest
+        extends MeasurementJobServiceTestCase<ReportingJobService> {
     private static final int MEASUREMENT_REPORTING_JOB_ID = MEASUREMENT_REPORTING_JOB.getJobId();
     private static final long WAIT_IN_MILLIS = 200L;
 
     @Mock private AdServicesErrorLogger mErrorLogger;
     @Mock private IMeasurementDao mMeasurementDao;
     @Mock private ITransaction mTransaction;
-
-    private ReportingJobService mSpyService;
 
     private final class FakeDatastoreManager extends DatastoreManager {
         private FakeDatastoreManager() {
@@ -112,18 +112,21 @@ public final class ReportingJobServiceTest extends MeasurementJobServiceTestCase
         }
     }
 
+    @Override
+    protected ReportingJobService getSpiedService() {
+        return new ReportingJobService();
+    }
+
     @Before
     public void setUp() {
-        mSpyService = spy(ReportingJobService.class);
         doReturn(mContext.getPackageName()).when(mMockContext).getPackageName();
         doReturn(mContext.getPackageManager()).when(mMockContext).getPackageManager();
         doReturn(mMockJobScheduler).when(mMockContext).getSystemService(JobScheduler.class);
         doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
         doReturn(mMockContext).when(mSpyService).getApplicationContext();
         doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
-        ExtendedMockito.doReturn(new FakeDatastoreManager())
-                .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        doReturn(new FakeDatastoreManager()).when(DatastoreManagerFactory::getDatastoreManager);
+        doReturn(mMockFlags).when(FlagsFactory::getFlags);
         doReturn(MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS)
                 .when(mMockFlags)
                 .getMeasurementReportingJobServiceBatchWindowMillis();
@@ -139,7 +142,7 @@ public final class ReportingJobServiceTest extends MeasurementJobServiceTestCase
         doReturn(MEASUREMENT_REPORTING_JOB_PERSISTED)
                 .when(mMockFlags)
                 .getMeasurementReportingJobPersisted();
-        mockGetAdServicesJobServiceLogger(mSpyLogger);
+        mocker.mockGetAdServicesJobServiceLogger(mSpyLogger);
     }
 
     @Test
@@ -459,17 +462,7 @@ public final class ReportingJobServiceTest extends MeasurementJobServiceTestCase
     }
 
     @Test
-    public void onStartJob_featureDisabled_withoutLogging() throws Exception {
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
-
-        onStartJob_featureDisabled();
-
-        verifyLoggingNotHappened(mSpyLogger);
-    }
-
-    @Test
     public void onStartJob_featureDisabled_withLogging() throws Exception {
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
         JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
 
         onStartJob_featureDisabled();
@@ -478,17 +471,7 @@ public final class ReportingJobServiceTest extends MeasurementJobServiceTestCase
     }
 
     @Test
-    public void onStartJob_featureEnabled_withoutLogging() throws Exception {
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
-
-        onStartJob_featureEnabled();
-
-        verifyLoggingNotHappened(mSpyLogger);
-    }
-
-    @Test
     public void onStartJob_featureEnabled_withLogging() throws Exception {
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
         JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(mSpyLogger);
         JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
 
@@ -498,19 +481,27 @@ public final class ReportingJobServiceTest extends MeasurementJobServiceTestCase
     }
 
     @Test
-    public void onStartJob_shouldDisableJobTrue_withoutLogging() throws Exception {
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
+    public void onStartJob_shouldDisableJobTrue() throws Exception {
+        // Setup
+        when(mMockDatastoreManager.runInTransactionWithResult(any())).thenReturn(Optional.empty());
+        when(mMockDatastoreManager.runInTransaction(any())).thenReturn(true);
+        doReturn(mMockDatastoreManager).when(DatastoreManagerFactory::getDatastoreManager);
+        doReturn(true)
+                .when(
+                        () ->
+                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
+                                        any(Context.class)));
 
-        onStartJob_shouldDisableJobTrue();
+        JobServiceCallback callback = new JobServiceCallback().expectJobFinished(mSpyService);
 
-        verifyLoggingNotHappened(mSpyLogger);
-    }
+        // Execute
+        boolean result = mSpyService.onStartJob(mock(JobParameters.class));
 
-    @Test
-    public void onStartJob_shouldDisableJobTrue_withLoggingEnabled() throws Exception {
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
+        // Validate
+        assertThat(result).isFalse();
 
-        onStartJob_shouldDisableJobTrue();
+        callback.assertJobFinished();
+        verify(mSpyService).jobFinished(any(), eq(false));
 
         // Verify logging has not happened even though logging is enabled because this
         // field is not logged
@@ -540,8 +531,7 @@ public final class ReportingJobServiceTest extends MeasurementJobServiceTestCase
         enableFeature();
         doReturn(Optional.empty()).when(mMockDatastoreManager).runInTransactionWithResult(any());
         doReturn(true).when(mMockDatastoreManager).runInTransaction(any());
-        ExtendedMockito.doReturn(mMockDatastoreManager)
-                .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
+        doReturn(mMockDatastoreManager).when(DatastoreManagerFactory::getDatastoreManager);
         // Return a null job scheduler to short circuit scheduling
         doReturn(null).when(mMockContext).getSystemService(JobScheduler.class);
 
@@ -562,30 +552,6 @@ public final class ReportingJobServiceTest extends MeasurementJobServiceTestCase
         verify(mSpyService).jobFinished(any(), anyBoolean());
         ExtendedMockito.verify(() -> ReportingJobService.scheduleIfNeeded(any(), eq(false)));
         verify(mMockJobScheduler, never()).cancel(eq(MEASUREMENT_REPORTING_JOB_ID));
-    }
-
-    private void onStartJob_shouldDisableJobTrue() throws Exception {
-        // Setup
-        doReturn(Optional.empty()).when(mMockDatastoreManager).runInTransactionWithResult(any());
-        doReturn(true).when(mMockDatastoreManager).runInTransaction(any());
-        ExtendedMockito.doReturn(mMockDatastoreManager)
-                .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
-        ExtendedMockito.doReturn(true)
-                .when(
-                        () ->
-                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
-                                        any(Context.class)));
-
-        JobServiceCallback callback = new JobServiceCallback().expectJobFinished(mSpyService);
-
-        // Execute
-        boolean result = mSpyService.onStartJob(mock(JobParameters.class));
-
-        // Validate
-        assertFalse(result);
-
-        callback.assertJobFinished();
-        verify(mSpyService).jobFinished(any(), eq(false));
     }
 
     private void mockGettingLastExecutionTime(long time) throws DatastoreException {
@@ -614,16 +580,8 @@ public final class ReportingJobServiceTest extends MeasurementJobServiceTestCase
                 .thenReturn(nextExecutionTimeKV);
     }
 
-    private void enableFeature() {
-        toggleFeatureFlag(true);
-    }
-
-    private void disableFeature() {
-        toggleFeatureFlag(false);
-    }
-
-    private void toggleFeatureFlag(boolean value) {
-        ExtendedMockito.doReturn(value).when(mMockFlags).getMeasurementReportingJobServiceEnabled();
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+    @Override
+    protected void toggleFeature(boolean value) {
+        when(mMockFlags.getMeasurementReportingJobServiceEnabled()).thenReturn(value);
     }
 }

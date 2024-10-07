@@ -18,10 +18,10 @@ package com.android.adservices.service.common;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_UNSPECIFIED;
 import static com.android.adservices.service.common.AppManifestConfigCall.apiToString;
 import static com.android.adservices.service.common.AppManifestConfigCall.resultToString;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_MANIFEST_CONFIG_LOGGING_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -162,7 +162,10 @@ public final class AppManifestConfigMetricsLogger {
         }
     }
 
-    @SuppressWarnings("NewAdServicesFile") // PREFS_NAME already called FileCompatUtils
+    @SuppressWarnings({
+        "NewAdServicesFile", // PREFS_NAME already called FileCompatUtils
+        "AvoidSharedPreferences" // Legacy Usage
+    })
     private static SharedPreferences getPrefs(Context context) {
         return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
     }

@@ -19,24 +19,12 @@ package com.android.adservices.ui.notifications;
 import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_NOTIFICATION_DISMISSED_ON_CLICK;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_UX_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_RVC_UX_ENABLED;
 import static com.android.adservices.service.consent.ConsentManager.NO_MANUAL_INTERACTIONS_RECORDED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_AD_ID_STATE__AD_ID_DISABLED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_CONSENT__MEASUREMENT_DEFAULT_OPT_OUT;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_CONSENT__PP_API_DEFAULT_OPT_OUT;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__FIRST_CONSENT_NOTIFICATION_CHANNEL;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__PAS_FIRST_NOTIFICATION_CHANNEL;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__PAS_RENOTIFY_NOTIFICATION_CHANNEL;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__RVC_POST_OTA_NOTIFICATION_CHANNEL;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__GA_UX;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__GA_UX_WITH_PAS;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__RVC_UX;
 import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.BETA_UX;
 import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.GA_UX;
-import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.RVC_UX;
 import static com.android.adservices.ui.util.ApkTestUtil.getPageElement;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
@@ -81,9 +69,9 @@ import com.android.adservices.service.stats.UIStats;
 import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.enrollment.collection.GaUxEnrollmentChannelCollection;
-import com.android.adservices.service.ui.enrollment.collection.RvcUxEnrollmentChannelCollection;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.ui.util.ApkTestUtil;
+import com.android.adservices.ui.util.NotificationActivityTestUtil;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -140,7 +128,7 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         doReturn(GA_UX).when(mMockUxStatesManager).getUx();
         doReturn(true).when(mMockUxStatesManager).getFlag(KEY_NOTIFICATION_DISMISSED_ON_CLICK);
         doReturn(false).when(mMockUxStatesManager).getFlag(KEY_PAS_UX_ENABLED);
-        doReturn(false).when(mMockFlags).getConsentNotificationActivityDebugMode();
+        doReturn(false).when(mMockDebugFlags).getConsentNotificationActivityDebugMode();
         doReturn("").when(mMockFlags).getDebugUx();
         cancelAllPreviousNotifications();
     }
@@ -332,8 +320,8 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         doReturn(true).when(mMockFlags).isEeaDevice();
         doReturn(true).when(mMockFlags).getEnableAdServicesSystemApi();
         doReturn("GA_UX").when(mMockFlags).getDebugUx();
-        doReturn(true).when(mMockFlags).getConsentNotificationActivityDebugMode();
         doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
+        doReturn(true).when(mMockDebugFlags).getConsentNotificationActivityDebugMode();
         doReturn(GA_UX).when(mMockUxStatesManager).getUx();
         doReturn(true).when(mMockUxStatesManager).getFlag(KEY_GA_UX_FEATURE_ENABLED);
         doReturn(false).when(mMockUxStatesManager).getFlag(KEY_NOTIFICATION_DISMISSED_ON_CLICK);
@@ -407,9 +395,7 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         UiObject rightControlButton =
                 getPageElement(
                         sDevice, R.string.notificationUI_confirmation_right_control_button_text);
-        UiObject moreButton = getPageElement(sDevice, R.string.notificationUI_more_button_text);
-        verifyControlsAndMoreButtonAreDisplayed(leftControlButton, rightControlButton, moreButton);
-        Thread.sleep(LAUNCH_TIMEOUT);
+        NotificationActivityTestUtil.clickMoreToBottom(sDevice);
         rightControlButton.click();
         Thread.sleep(LAUNCH_TIMEOUT);
         assertThat(mNotificationManager.getActiveNotifications()).hasLength(0);
@@ -431,221 +417,6 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         verify(mConsentManager, times(2)).getDefaultConsent();
         verify(mConsentManager, times(2)).getDefaultAdIdState();
         verify(mConsentManager).recordNotificationDisplayed(true);
-    }
-
-    @Test
-    public void testRowNotification_rvcUxFlagEnabled()
-            throws InterruptedException, UiObjectNotFoundException {
-        testRvcUxNotification(false);
-    }
-
-    @Test
-    public void testEuNotification_rvcUxFlagEnabled()
-            throws InterruptedException, UiObjectNotFoundException {
-        testRvcUxNotification(true);
-    }
-
-    private void testRvcUxNotification(boolean isEeaDevice)
-            throws InterruptedException, UiObjectNotFoundException {
-        doReturn(isEeaDevice).when(mMockFlags).isEeaDevice();
-        doReturn(true).when(mMockFlags).getEnableAdServicesSystemApi();
-        doReturn(true).when(mMockUxStatesManager).getFlag(KEY_RVC_UX_ENABLED);
-        doReturn(RVC_UX).when(mMockUxStatesManager).getUx();
-        doReturn(RvcUxEnrollmentChannelCollection.FIRST_CONSENT_NOTIFICATION_CHANNEL)
-                .when(mMockUxStatesManager)
-                .getEnrollmentChannel();
-        doReturn(true).when(mMockFlags).isEeaDeviceFeatureEnabled();
-        doReturn(true).when(mMockFlags).getEnableTabletRegionFix();
-
-        final String expectedTitle =
-                mSpyContext.getString(R.string.notificationUI_u18_notification_title);
-        final String expectedContent =
-                mSpyContext.getString(R.string.notificationUI_u18_notification_content);
-
-        ConsentNotificationTrigger.showConsentNotification(mSpyContext, isEeaDevice);
-        Thread.sleep(1000); // wait 1s to make sure that Notification is displayed.
-
-        ArgumentCaptor<UIStats> argument = ArgumentCaptor.forClass(UIStats.class);
-        verify(mAdServicesLogger, times(2)).logUIStats(argument.capture());
-
-        assertThat(argument.getValue().getCode()).isEqualTo(AD_SERVICES_SETTINGS_USAGE_REPORTED);
-        if (isEeaDevice) {
-            assertThat(argument.getValue().getRegion())
-                    .isEqualTo(AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU);
-            assertThat(argument.getValue().getDefaultConsent())
-                    .isEqualTo(
-                            AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_CONSENT__MEASUREMENT_DEFAULT_OPT_OUT);
-        } else {
-            assertThat(argument.getValue().getRegion())
-                    .isEqualTo(AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW);
-            assertThat(argument.getValue().getDefaultConsent())
-                    .isEqualTo(
-                            AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_CONSENT__MEASUREMENT_DEFAULT_OPT_OUT);
-        }
-        assertThat(argument.getValue().getDefaultAdIdState())
-                .isEqualTo(
-                        AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_AD_ID_STATE__AD_ID_DISABLED);
-        assertThat(argument.getValue().getUx())
-                .isEqualTo(AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__RVC_UX);
-        assertThat(argument.getValue().getEnrollmentChannel())
-                .isEqualTo(
-                        AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__FIRST_CONSENT_NOTIFICATION_CHANNEL);
-
-        verify(mConsentManager, times(2)).getMeasurementDefaultConsent();
-        verify(mConsentManager, times(2)).getDefaultAdIdState();
-        if (isEeaDevice) {
-            verify(mConsentManager).recordMeasurementDefaultConsent(false);
-            verify(mConsentManager).disable(mSpyContext, AdServicesApiType.MEASUREMENTS);
-        } else {
-            verify(mConsentManager).recordMeasurementDefaultConsent(true);
-            verify(mConsentManager).enable(mSpyContext, AdServicesApiType.MEASUREMENTS);
-        }
-        verify(mConsentManager).setU18NotificationDisplayed(true);
-
-        assertThat(mNotificationManager.getActiveNotifications()).hasLength(1);
-        final Notification notification =
-                mNotificationManager.getActiveNotifications()[0].getNotification();
-        assertThat(notification.getChannelId()).isEqualTo(NOTIFICATION_CHANNEL_ID);
-        assertThat(notification.extras.getCharSequence(Notification.EXTRA_TITLE).toString())
-                .isEqualTo(expectedTitle);
-        assertThat(notification.extras.getCharSequence(Notification.EXTRA_TEXT).toString())
-                .isEqualTo(expectedContent);
-        assertThat(Notification.FLAG_AUTO_CANCEL & notification.flags)
-                .isEqualTo(Notification.FLAG_AUTO_CANCEL);
-
-        UiObject scroller = getNotificationTrayScroller();
-        UiObject notificationCard =
-                scroller.getChild(
-                        new UiSelector()
-                                .text(
-                                        mSpyContext.getString(
-                                                R.string.notificationUI_u18_notification_title)));
-        assertThat(notificationCard.exists()).isTrue();
-
-        notificationCard.click();
-        Thread.sleep(LAUNCH_TIMEOUT);
-        assertThat(mNotificationManager.getActiveNotifications()).hasLength(0);
-    }
-
-    @Test
-    public void testRvcPostOtaRowNotification()
-            throws InterruptedException, UiObjectNotFoundException {
-        testRvcPostOtaNotification(false);
-    }
-
-    @Test
-    public void testRvcPostOtaEuNotification()
-            throws InterruptedException, UiObjectNotFoundException {
-        testRvcPostOtaNotification(true);
-    }
-
-    private void testRvcPostOtaNotification(boolean isEeaDevice)
-            throws InterruptedException, UiObjectNotFoundException {
-        doReturn(isEeaDevice).when(mMockFlags).isEeaDevice();
-        doReturn(true).when(mMockFlags).getEnableAdServicesSystemApi();
-        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
-        doReturn(true).when(mMockUxStatesManager).getFlag(KEY_GA_UX_FEATURE_ENABLED);
-        // Rvc users have GA Ux on S+ after OTA
-        doReturn(GA_UX).when(mMockUxStatesManager).getUx();
-        // Rvc users have RVC_POST_OTA_CHANNEL on S+ after OTA
-        doReturn(GaUxEnrollmentChannelCollection.RVC_POST_OTA_CHANNEL)
-                .when(mMockUxStatesManager)
-                .getEnrollmentChannel();
-        doReturn(true).when(mMockFlags).isEeaDeviceFeatureEnabled();
-        doReturn(true).when(mMockFlags).getEnableTabletRegionFix();
-
-        final String expectedTitle =
-                mSpyContext.getString(
-                        isEeaDevice
-                                ? R.string.notificationUI_notification_ga_title_eu_v2
-                                : R.string.notificationUI_notification_ga_title_v2);
-        final String expectedContent =
-                mSpyContext.getString(
-                        isEeaDevice
-                                ? R.string.notificationUI_notification_ga_content_eu_v2
-                                : R.string.notificationUI_notification_ga_content_v2);
-
-        ConsentNotificationTrigger.showConsentNotification(mSpyContext, isEeaDevice);
-        Thread.sleep(1000); // wait 1s to make sure that Notification is displayed.
-
-        ArgumentCaptor<UIStats> argument = ArgumentCaptor.forClass(UIStats.class);
-        verify(mAdServicesLogger, times(2)).logUIStats(argument.capture());
-
-        assertThat(argument.getValue().getCode()).isEqualTo(AD_SERVICES_SETTINGS_USAGE_REPORTED);
-        if (isEeaDevice) {
-            assertThat(argument.getValue().getRegion())
-                    .isEqualTo(AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU);
-            assertThat(argument.getValue().getDefaultConsent())
-                    .isEqualTo(
-                            AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_CONSENT__PP_API_DEFAULT_OPT_OUT);
-        } else {
-            assertThat(argument.getValue().getRegion())
-                    .isEqualTo(AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW);
-            assertThat(argument.getValue().getDefaultConsent())
-                    .isEqualTo(
-                            AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_CONSENT__PP_API_DEFAULT_OPT_OUT);
-        }
-        assertThat(argument.getValue().getDefaultAdIdState())
-                .isEqualTo(
-                        AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_AD_ID_STATE__AD_ID_DISABLED);
-        assertThat(argument.getValue().getUx())
-                .isEqualTo(AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__GA_UX);
-        assertThat(argument.getValue().getEnrollmentChannel())
-                .isEqualTo(
-                        AD_SERVICES_SETTINGS_USAGE_REPORTED__ENROLLMENT_CHANNEL__RVC_POST_OTA_NOTIFICATION_CHANNEL);
-
-        verify(mConsentManager, times(2)).getDefaultConsent();
-        verify(mConsentManager, times(2)).getDefaultAdIdState();
-        if (isEeaDevice) {
-            verify(mConsentManager).recordTopicsDefaultConsent(false);
-            verify(mConsentManager).recordFledgeDefaultConsent(false);
-            verify(mConsentManager).recordMeasurementDefaultConsent(false);
-            verify(mConsentManager).disable(mSpyContext, AdServicesApiType.FLEDGE);
-            verify(mConsentManager).disable(mSpyContext, AdServicesApiType.TOPICS);
-            verify(mConsentManager).disable(mSpyContext, AdServicesApiType.MEASUREMENTS);
-        } else {
-            verify(mConsentManager).recordTopicsDefaultConsent(true);
-            verify(mConsentManager).recordFledgeDefaultConsent(true);
-            verify(mConsentManager).recordMeasurementDefaultConsent(true);
-            verify(mConsentManager).enable(mSpyContext, AdServicesApiType.MEASUREMENTS);
-            verify(mConsentManager).enable(mSpyContext, AdServicesApiType.TOPICS);
-            verify(mConsentManager).enable(mSpyContext, AdServicesApiType.FLEDGE);
-        }
-        verify(mConsentManager).recordGaUxNotificationDisplayed(true);
-
-        assertThat(mNotificationManager.getActiveNotifications()).hasLength(1);
-        final Notification notification =
-                mNotificationManager.getActiveNotifications()[0].getNotification();
-        assertThat(notification.getChannelId()).isEqualTo(NOTIFICATION_CHANNEL_ID);
-        assertThat(notification.extras.getCharSequence(Notification.EXTRA_TITLE).toString())
-                .isEqualTo(expectedTitle);
-        assertThat(notification.extras.getCharSequence(Notification.EXTRA_TEXT).toString())
-                .isEqualTo(expectedContent);
-        if (isEeaDevice) {
-            assertThat(Notification.FLAG_ONGOING_EVENT & notification.flags)
-                .isEqualTo(Notification.FLAG_ONGOING_EVENT);
-            assertThat(Notification.FLAG_NO_CLEAR & notification.flags)
-                .isEqualTo(Notification.FLAG_NO_CLEAR);
-        }
-        assertThat(Notification.FLAG_AUTO_CANCEL & notification.flags)
-                .isEqualTo(Notification.FLAG_AUTO_CANCEL);
-
-        UiObject scroller = getNotificationTrayScroller();
-        UiObject notificationCard =
-                scroller.getChild(
-                        new UiSelector()
-                                .text(
-                                        mSpyContext.getString(
-                                                isEeaDevice
-                                                        ? R.string
-                                                                .notificationUI_notification_ga_title_eu_v2
-                                                        : R.string
-                                                                .notificationUI_notification_ga_title_v2)));
-        assertThat(notificationCard.exists()).isTrue();
-
-        notificationCard.click();
-        Thread.sleep(LAUNCH_TIMEOUT);
-        assertThat(mNotificationManager.getActiveNotifications()).hasLength(0);
     }
 
     @NonNull
@@ -793,8 +564,8 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         Assume.assumeTrue(SdkLevel.isAtLeastT());
         doReturn(true).when(mMockFlags).getEnableAdServicesSystemApi();
         doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
-        doReturn(true).when(mMockFlags).getConsentNotificationActivityDebugMode();
         doReturn("GA_UX").when(mMockFlags).getDebugUx();
+        doReturn(true).when(mMockDebugFlags).getConsentNotificationActivityDebugMode();
         doReturn(false).when(mMockUxStatesManager).pasUxIsActive(anyBoolean());
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
         doReturn(AdServicesApiConsent.GIVEN)
@@ -834,24 +605,6 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         UiObject2 expectedNewFledgeBodyText =
                 ApkTestUtil.getElement(sDevice, R.string.settingsUI_pas_apps_view_body_text);
         assertNotNull(expectedNewFledgeBodyText, R.string.settingsUI_pas_apps_view_body_text);
-    }
-
-    private void verifyControlsAndMoreButtonAreDisplayed(
-            UiObject leftControlButton, UiObject rightControlButton, UiObject moreButton)
-            throws UiObjectNotFoundException, InterruptedException {
-        UiObject scrollView =
-                sDevice.findObject(new UiSelector().className("android.widget.ScrollView"));
-
-        if (scrollView.isScrollable()) {
-            assertThat(leftControlButton.exists()).isFalse();
-            assertThat(rightControlButton.exists()).isFalse();
-            assertThat(moreButton.exists()).isTrue();
-
-            while (moreButton.exists()) {
-                moreButton.click();
-                Thread.sleep(2000);
-            }
-        }
     }
 
     private void cancelAllPreviousNotifications() {

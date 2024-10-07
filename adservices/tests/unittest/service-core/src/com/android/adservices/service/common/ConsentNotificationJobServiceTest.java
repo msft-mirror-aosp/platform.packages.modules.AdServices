@@ -32,7 +32,6 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -46,20 +45,16 @@ import android.content.pm.PackageManager;
 import android.os.PersistableBundle;
 
 import com.android.adservices.common.AdServicesJobServiceTestCase;
-import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
-import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
-import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -96,9 +91,9 @@ public final class ConsentNotificationJobServiceTest extends AdServicesJobServic
     @Mock private SharedPreferences.Editor mEditor;
     @Mock UxStatesManager mUxStatesManager;
     private AdServicesJobServiceLogger mSpyLogger;
-    private long mIntervalEndMs = Duration.ofHours(17).toMillis();
-    private long mIntervalBeginMs = Duration.ofHours(9).toMillis();
-    private long mMinimalDelayBeforeIntervalEnds = Duration.ofHours(1).toMillis();
+    private final long mIntervalEndMs = Duration.ofHours(17).toMillis();
+    private final long mIntervalBeginMs = Duration.ofHours(9).toMillis();
+    private final long mMinimalDelayBeforeIntervalEnds = Duration.ofHours(1).toMillis();
 
     /** Initialize static spies. */
     @Before
@@ -109,27 +104,16 @@ public final class ConsentNotificationJobServiceTest extends AdServicesJobServic
         when(mMockFlags.getConsentNotificationIntervalBeginMs()).thenReturn(mIntervalBeginMs);
         when(mMockFlags.getConsentNotificationMinimalDelayBeforeIntervalEnds())
                 .thenReturn(mMinimalDelayBeforeIntervalEnds);
-        mSpyLogger = mockAdServicesJobServiceLogger(mContext, mMockFlags);
-        ExtendedMockito.doReturn(mUxStatesManager).when(() -> UxStatesManager.getInstance());
-        ExtendedMockito.doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
+        mSpyLogger = mocker.mockNoOpAdServicesJobServiceLogger(mContext, mMockFlags);
+        ExtendedMockito.doReturn(mUxStatesManager).when(UxStatesManager::getInstance);
+        ExtendedMockito.doReturn(mConsentManager).when(ConsentManager::getInstance);
 
         mConsentNotificationJobService.setConsentManager(mConsentManager);
         mConsentNotificationJobService.setUxStatesManager(mUxStatesManager);
     }
 
-    /** Test successful onStart method execution. */
-    @Test
-    public void testOnStartJobAsyncUtilExecute_withoutLogging() throws Exception {
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
-
-        testOnStartJobAsyncUtilExecute();
-
-        verifyLoggingNotHappened(mSpyLogger);
-    }
-
     @Test
     public void testOnStartJobAsyncUtilExecute_withLogging() throws Exception {
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
         JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(mSpyLogger);
         JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mSpyLogger);
 
@@ -185,7 +169,7 @@ public final class ConsentNotificationJobServiceTest extends AdServicesJobServic
 
         doReturn(mPackageManager).when(mConsentNotificationJobService).getPackageManager();
         mConsentNotificationJobService.setConsentManager(consentManager);
-        doReturn(consentManager).when(() -> ConsentManager.getInstance());
+        doReturn(consentManager).when(ConsentManager::getInstance);
         Mockito.doReturn(true).when(mUxStatesManager).isEeaDevice();
         when(mMockJobParameters.getExtras()).thenReturn(mPersistableBundle);
         when(mPersistableBundle.getBoolean(eq(ADID_ENABLE_STATUS), anyBoolean())).thenReturn(true);
@@ -210,42 +194,25 @@ public final class ConsentNotificationJobServiceTest extends AdServicesJobServic
     }
 
     @Test
-    public void testOnStartJobShouldDisableJobTrue_withoutLogging() {
-        mocker.mockGetFlags(mMockFlags);
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
+    public void testOnStartJobShouldDisableJobTrue() {
+        mockServiceCompatUtilDisableJob(true);
+        doReturn(mMockJobScheduler)
+                .when(mConsentNotificationJobService)
+                .getSystemService(JobScheduler.class);
+        doNothing().when(mConsentNotificationJobService).jobFinished(mMockJobParameters, false);
 
-        testOnStartJobShouldDisableJobTrue();
+        assertThat(mConsentNotificationJobService.onStartJob(mMockJobParameters)).isFalse();
 
-        verifyLoggingNotHappened(mSpyLogger);
-    }
-
-    @Test
-    public void testOnStartJobShouldDisableJobTrue_withLoggingEnabled() {
-        mocker.mockGetFlags(mMockFlags);
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
-
-        testOnStartJobShouldDisableJobTrue();
+        verify(mConsentNotificationJobService).jobFinished(mMockJobParameters, false);
+        verifyNoMoreInteractions(mConsentManager);
 
         // Verify logging has not happened even though logging is enabled because this field is not
         // logged
         verifyLoggingNotHappened(mSpyLogger);
     }
 
-    /** Test successful onStop method execution. */
-    @Test
-    public void testOnStopJob_withoutLogging() {
-        mocker.mockGetFlags(mMockFlags);
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ true);
-
-        testOnStopJob();
-
-        verifyLoggingNotHappened(mSpyLogger);
-    }
-
     @Test
     public void testOnStopJob_withLogging() throws Exception {
-        mocker.mockGetFlags(mMockFlags);
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, /* overrideValue= */ false);
         JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
 
         testOnStopJob();
@@ -408,55 +375,6 @@ public final class ConsentNotificationJobServiceTest extends AdServicesJobServic
         verify(mAdservicesSyncUtil, times(1)).execute(any(Context.class), any(Boolean.class));
     }
 
-    @Test
-    public void testRecordDefaultConsent_OnRVC_RecordMsmtDefaultConsentIsCalled() throws Exception {
-        when(mConsentManager.getUx()).thenReturn(PrivacySandboxUxCollection.RVC_UX);
-        mockRecordDefaultConsent();
-        verify(mConsentManager).recordMeasurementDefaultConsent(anyBoolean());
-        verify(mConsentManager, never()).recordDefaultConsent(anyBoolean());
-    }
-
-    @Test
-    public void testRecordDefaultConsent_OnNotRVC_RecordDefaultConsentIsCalled() throws Exception {
-        when(mConsentManager.getUx()).thenReturn(PrivacySandboxUxCollection.UNSUPPORTED_UX);
-        mockRecordDefaultConsent();
-        verify(mConsentManager, never()).recordMeasurementDefaultConsent(anyBoolean());
-        verify(mConsentManager).recordDefaultConsent(anyBoolean());
-    }
-
-    @Test
-    public void testRecordDefaultConsent_NotRVC_onRFixEnabled_RecordMsmtDefaultConsentIsCalled()
-            throws Exception {
-        Assume.assumeFalse(SdkLevel.isAtLeastS());
-        doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
-        when(mMockFlags.getRNotificationDefaultConsentFixEnabled()).thenReturn(true);
-        when(mConsentManager.getUx()).thenReturn(PrivacySandboxUxCollection.UNSUPPORTED_UX);
-        mockRecordDefaultConsent();
-        verify(mConsentManager).recordMeasurementDefaultConsent(anyBoolean());
-        verify(mConsentManager, never()).recordDefaultConsent(anyBoolean());
-    }
-
-    @Test
-    public void testRecordDefaultConsent_OnNotRVC_onS_FixEnabled_RecordDefaultConsentIsCalled()
-            throws Exception {
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
-        when(mMockFlags.getRNotificationDefaultConsentFixEnabled()).thenReturn(true);
-        mockRecordDefaultConsent();
-        verify(mConsentManager, never()).recordMeasurementDefaultConsent(anyBoolean());
-        verify(mConsentManager).recordDefaultConsent(anyBoolean());
-    }
-
-    private void mockRecordDefaultConsent() throws Exception {
-        mockServiceCompatUtilDisableJob(false);
-        doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        when(mMockJobParameters.getExtras()).thenReturn(mPersistableBundle);
-        when(mPersistableBundle.getBoolean(eq(ADID_ENABLE_STATUS), anyBoolean())).thenReturn(true);
-        when(mPersistableBundle.getBoolean(eq(RE_CONSENT_STATUS), anyBoolean())).thenReturn(false);
-        mConsentNotificationJobService.setConsentManager(mConsentManager);
-        doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
-        mockJobFinished();
-    }
-
     private void testOnStartJobAsyncUtilExecute() throws Exception {
         mockServiceCompatUtilDisableJob(false);
         doReturn(mMockFlags).when(FlagsFactory::getFlags);
@@ -471,7 +389,7 @@ public final class ConsentNotificationJobServiceTest extends AdServicesJobServic
         doNothing().when(consentManager).recordNotificationDisplayed(true);
         doNothing().when(consentManager).recordGaUxNotificationDisplayed(true);
         mConsentNotificationJobService.setConsentManager(consentManager);
-        doReturn(consentManager).when(() -> ConsentManager.getInstance());
+        doReturn(consentManager).when(ConsentManager::getInstance);
         Mockito.doReturn(true).when(mUxStatesManager).isEeaDevice();
         when(mMockJobParameters.getExtras()).thenReturn(mPersistableBundle);
         when(mPersistableBundle.getBoolean(anyString(), anyBoolean())).thenReturn(true);
@@ -491,19 +409,6 @@ public final class ConsentNotificationJobServiceTest extends AdServicesJobServic
 
         verify(mAdservicesSyncUtil).execute(any(Context.class), any(Boolean.class));
         verify(mConsentNotificationJobService).jobFinished(mMockJobParameters, false);
-    }
-
-    private void testOnStartJobShouldDisableJobTrue() {
-        mockServiceCompatUtilDisableJob(true);
-        doReturn(mMockJobScheduler)
-                .when(mConsentNotificationJobService)
-                .getSystemService(JobScheduler.class);
-        doNothing().when(mConsentNotificationJobService).jobFinished(mMockJobParameters, false);
-
-        assertThat(mConsentNotificationJobService.onStartJob(mMockJobParameters)).isFalse();
-
-        verify(mConsentNotificationJobService).jobFinished(mMockJobParameters, false);
-        verifyNoMoreInteractions(mConsentManager);
     }
 
     private void testOnStopJob() {

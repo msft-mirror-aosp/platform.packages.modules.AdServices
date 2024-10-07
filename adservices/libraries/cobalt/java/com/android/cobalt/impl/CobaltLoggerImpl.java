@@ -18,7 +18,6 @@ package com.android.cobalt.impl;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-import android.annotation.NonNull;
 import android.util.Log;
 
 import com.android.cobalt.CobaltLogger;
@@ -26,7 +25,7 @@ import com.android.cobalt.data.DataService;
 import com.android.cobalt.data.EventVector;
 import com.android.cobalt.data.ReportKey;
 import com.android.cobalt.domain.Project;
-import com.android.cobalt.logging.CobaltOperationLogger;
+import com.android.cobalt.domain.ReportIdentifier;
 import com.android.cobalt.system.CobaltClock;
 import com.android.cobalt.system.SystemClock;
 import com.android.cobalt.system.SystemData;
@@ -37,6 +36,7 @@ import com.google.cobalt.ReleaseStage;
 import com.google.cobalt.ReportDefinition;
 import com.google.cobalt.ReportDefinition.ReportType;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -58,17 +58,17 @@ public final class CobaltLoggerImpl implements CobaltLogger {
     private final SystemData mSystemData;
     private final ExecutorService mExecutor;
     private final SystemClock mSystemClock;
+    private final ImmutableSet<ReportIdentifier> mReportsToIgnore;
     private final boolean mEnabled;
-    private final CobaltOperationLogger mOperationLogger;
 
     public CobaltLoggerImpl(
-            @NonNull Project project,
-            @NonNull ReleaseStage releaseStage,
-            @NonNull DataService dataService,
-            @NonNull SystemData systemData,
-            @NonNull ExecutorService executor,
-            @NonNull SystemClock systemClock,
-            @NonNull CobaltOperationLogger operationLogger,
+            Project project,
+            ReleaseStage releaseStage,
+            DataService dataService,
+            SystemData systemData,
+            ExecutorService executor,
+            SystemClock systemClock,
+            Iterable<ReportIdentifier> reportsToIgnore,
             boolean enabled) {
         mProject = Objects.requireNonNull(project);
         mReleaseStage = Objects.requireNonNull(releaseStage);
@@ -76,7 +76,7 @@ public final class CobaltLoggerImpl implements CobaltLogger {
         mSystemData = Objects.requireNonNull(systemData);
         mExecutor = Objects.requireNonNull(executor);
         mSystemClock = Objects.requireNonNull(systemClock);
-        mOperationLogger = Objects.requireNonNull(operationLogger);
+        mReportsToIgnore = ImmutableSet.copyOf(reportsToIgnore);
         mEnabled = enabled;
     }
 
@@ -216,6 +216,15 @@ public final class CobaltLoggerImpl implements CobaltLogger {
                 // Don't log a report that is not enabled for the current release stage.
                 continue;
             }
+            if (mReportsToIgnore.contains(
+                    ReportIdentifier.create(
+                            mProject.getCustomerId(),
+                            mProject.getProjectId(),
+                            metric.getId(),
+                            report.getId()))) {
+                continue;
+            }
+
             ReportKey reportKey =
                     ReportKey.create(
                             mProject.getCustomerId(),
@@ -253,6 +262,15 @@ public final class CobaltLoggerImpl implements CobaltLogger {
                 // Don't log a report that is not enabled for the current release stage.
                 continue;
             }
+            if (mReportsToIgnore.contains(
+                    ReportIdentifier.create(
+                            mProject.getCustomerId(),
+                            mProject.getProjectId(),
+                            metric.getId(),
+                            report.getId()))) {
+                continue;
+            }
+
             ReportKey reportKey =
                     ReportKey.create(
                             mProject.getCustomerId(),
@@ -269,8 +287,7 @@ public final class CobaltLoggerImpl implements CobaltLogger {
                                 eventVector,
                                 report.getEventVectorBufferMax(),
                                 report.getStringBufferMax(),
-                                stringValue,
-                                mOperationLogger));
+                                stringValue));
             }
         }
 

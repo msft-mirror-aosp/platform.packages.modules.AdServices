@@ -32,7 +32,7 @@ android_library {
         "framework-adservices-lib",
     ],
     libs: [
-        "android.test.base",
+        "android.test.base.stubs.system",
     ],
     visibility: [
         "//packages/modules/AdServices/adservices:__subpackages__",

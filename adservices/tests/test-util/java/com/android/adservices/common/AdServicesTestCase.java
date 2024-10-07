@@ -15,6 +15,7 @@
  */
 package com.android.adservices.common;
 
+import com.android.adservices.shared.testing.CallSuper;
 import com.android.adservices.shared.testing.DeviceSideTestCase;
 
 import org.junit.Rule;
@@ -24,8 +25,6 @@ import org.junit.Rule;
 /** Superclass for all other "base classes" on {@code AdServices} projects. */
 abstract class AdServicesTestCase extends DeviceSideTestCase {
 
-    private static final String TAG = AdServicesTestCase.class.getSimpleName();
-
     @Rule(order = 1)
     public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
             new AdServicesDeviceSupportedRule();
@@ -33,5 +32,14 @@ abstract class AdServicesTestCase extends DeviceSideTestCase {
     @Override
     public final String getTestName() {
         return processLifeguard.getTestName();
+    }
+
+    @CallSuper
+    @Override
+    protected void assertValidTestCaseFixtures() throws Exception {
+        super.assertValidTestCaseFixtures();
+
+        assertTestClassHasNoFieldsFromSuperclass(
+                AdServicesTestCase.class, "adServicesDeviceSupportedRule");
     }
 }

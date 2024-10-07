@@ -55,6 +55,7 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.AdDataConversionStrategyFactory;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
@@ -96,6 +97,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
     @NonNull private final AdServicesLogger mAdServicesLogger;
     @NonNull private final AppImportanceFilter mAppImportanceFilter;
     @NonNull private final Flags mFlags;
+    @NonNull private final DebugFlags mDebugFlags;
     @NonNull private final CallingAppUidSupplier mCallingAppUidSupplier;
 
     @NonNull private final CustomAudienceServiceFilter mCustomAudienceServiceFilter;
@@ -108,7 +110,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
     private CustomAudienceServiceImpl(@NonNull Context context) {
         this(
                 context,
-                CustomAudienceImpl.getInstance(context),
+                CustomAudienceImpl.getInstance(),
                 FledgeAuthorizationFilter.create(context, AdServicesLoggerImpl.getInstance()),
                 ConsentManager.getInstance(),
                 DevContextFilter.create(context),
@@ -118,6 +120,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                         context,
                         () -> FlagsFactory.getFlags().getForegroundStatuslLevelForValidation()),
                 FlagsFactory.getFlags(),
+                DebugFlags.getInstance(),
                 CallingAppUidSupplierBinderImpl.create(),
                 new CustomAudienceServiceFilter(
                         context,
@@ -134,11 +137,10 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                         new FledgeAllowListsFilter(
                                 FlagsFactory.getFlags(), AdServicesLoggerImpl.getInstance()),
                         new FledgeApiThrottleFilter(
-                                Throttler.getInstance(FlagsFactory.getFlags()),
-                                AdServicesLoggerImpl.getInstance())),
+                                Throttler.getInstance(), AdServicesLoggerImpl.getInstance())),
                 new AdFilteringFeatureFactory(
-                        SharedStorageDatabase.getInstance(context).appInstallDao(),
-                        SharedStorageDatabase.getInstance(context).frequencyCapDao(),
+                        SharedStorageDatabase.getInstance().appInstallDao(),
+                        SharedStorageDatabase.getInstance().frequencyCapDao(),
                         FlagsFactory.getFlags()));
     }
 
@@ -158,6 +160,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             @NonNull AdServicesLogger adServicesLogger,
             @NonNull AppImportanceFilter appImportanceFilter,
             @NonNull Flags flags,
+            @NonNull DebugFlags debugFlags,
             @NonNull CallingAppUidSupplier callingAppUidSupplier,
             @NonNull CustomAudienceServiceFilter customAudienceServiceFilter,
             @NonNull AdFilteringFeatureFactory adFilteringFeatureFactory) {
@@ -179,6 +182,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         mAdServicesLogger = adServicesLogger;
         mAppImportanceFilter = appImportanceFilter;
         mFlags = flags;
+        mDebugFlags = debugFlags;
         mCallingAppUidSupplier = callingAppUidSupplier;
         mCustomAudienceServiceFilter = customAudienceServiceFilter;
         mAdFilteringFeatureFactory = adFilteringFeatureFactory;
@@ -251,6 +255,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                         ownerPackageName,
                         mFlags.getEnforceForegroundStatusForFledgeCustomAudience(),
                         false,
+                        !mFlags.getConsentNotificationDebugMode(),
                         callerUid,
                         apiName,
                         FLEDGE_API_JOIN_CUSTOM_AUDIENCE,
@@ -326,6 +331,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                     FetchCustomAudienceImpl impl =
                             new FetchCustomAudienceImpl(
                                     mFlags,
+                                    mDebugFlags,
                                     // TODO(b/235841960): Align on internal Clock usage.
                                     Clock.systemUTC(),
                                     mAdServicesLogger,
@@ -489,6 +495,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                         ownerPackageName,
                         mFlags.getEnforceForegroundStatusForFledgeCustomAudience(),
                         false,
+                        !mFlags.getConsentNotificationDebugMode(),
                         callerUid,
                         apiName,
                         FLEDGE_API_LEAVE_CUSTOM_AUDIENCE,
@@ -566,7 +573,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
 
         DevContext devContext = mDevContextFilter.createDevContext();
 
-        if (!devContext.getDevOptionsEnabled()) {
+        if (!devContext.getDeviceDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
                     apiName,
                     devContext.getCallingAppPackageName(),
@@ -633,7 +640,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
 
         DevContext devContext = mDevContextFilter.createDevContext();
 
-        if (!devContext.getDevOptionsEnabled()) {
+        if (!devContext.getDeviceDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
                     apiName,
                     devContext.getCallingAppPackageName(),
@@ -688,7 +695,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
 
         DevContext devContext = mDevContextFilter.createDevContext();
 
-        if (!devContext.getDevOptionsEnabled()) {
+        if (!devContext.getDeviceDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
                     apiName,
                     devContext.getCallingAppPackageName(),

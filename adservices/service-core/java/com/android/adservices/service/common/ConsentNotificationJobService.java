@@ -18,10 +18,7 @@ package com.android.adservices.service.common;
 
 import static com.android.adservices.data.common.AdservicesEntryPointConstant.FIRST_ENTRY_REQUEST_TIMESTAMP;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__LOAD_MDD_FILE_GROUP_FAILURE;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__UNSUPPORTED_UX;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX;
-import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.RVC_UX;
-import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.U18_UX;
 import static com.android.adservices.spe.AdServicesJobInfo.CONSENT_NOTIFICATION_JOB;
 
 import android.app.job.JobInfo;
@@ -47,7 +44,6 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
-import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 
 import com.google.android.libraries.mobiledatadownload.GetFileGroupRequest;
@@ -61,7 +57,6 @@ import java.util.concurrent.ExecutionException;
  * Consent Notification job. This will be run every day during acceptable hours (provided by PH
  * flags) to trigger the Notification for Privacy Sandbox.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class ConsentNotificationJobService extends JobService {
     static final int CONSENT_NOTIFICATION_JOB_ID = CONSENT_NOTIFICATION_JOB.getJobId();
@@ -83,9 +78,7 @@ public class ConsentNotificationJobService extends JobService {
         long deadline = calculateDeadline(Calendar.getInstance(TimeZone.getDefault()));
         LogUtil.d("initial delay is " + initialDelay + ", deadline is " + deadline);
 
-        SharedPreferences sharedPref =
-                context.getSharedPreferences(
-                        ADSERVICES_STATUS_SHARED_PREFERENCE, Context.MODE_PRIVATE);
+        SharedPreferences sharedPref = getPrefs(context);
 
         long currentTimestamp = System.currentTimeMillis();
         long firstEntryRequestTimestamp =
@@ -230,25 +223,8 @@ public class ConsentNotificationJobService extends JobService {
                 "ConsentNotificationJobService states. isAdIdEnabled: %s, isEeaDevice: %s,"
                         + " isEeaNotification: %s.",
                 mConsentManager.isAdIdEnabled(), mUxStatesManager.isEeaDevice(), isEeaNotification);
-        PrivacySandboxUxCollection privacySandboxUxCollection = mConsentManager.getUx();
-        boolean isRNotificationDefaultConsentFixEnabled =
-                FlagsFactory.getFlags().getRNotificationDefaultConsentFixEnabled();
-        if (privacySandboxUxCollection == RVC_UX
-                || (isRNotificationDefaultConsentFixEnabled
-                        && Build.VERSION.SDK_INT == Build.VERSION_CODES.R)) {
-            // On R, only Measurement default consent is needed.
-            if (isRNotificationDefaultConsentFixEnabled
-                    && privacySandboxUxCollection != RVC_UX
-                    && privacySandboxUxCollection != U18_UX) {
-                LogUtil.e("Unsupported UX Enum on Android R " + privacySandboxUxCollection);
-                ErrorLogUtil.e(
-                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__UNSUPPORTED_UX,
-                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX);
-            }
-            mConsentManager.recordMeasurementDefaultConsent(!isEeaNotification);
-        } else {
-            mConsentManager.recordDefaultConsent(!isEeaNotification);
-        }
+        mConsentManager.recordDefaultConsent(!isEeaNotification);
+
         boolean reConsentStatus = params.getExtras().getBoolean(RE_CONSENT_STATUS, false);
 
         AdServicesExecutors.getBackgroundExecutor()
@@ -361,5 +337,11 @@ public class ConsentNotificationJobService extends JobService {
         }
         LogUtil.d("OTA resources are not yet downloaded.");
         return;
+    }
+
+    @SuppressWarnings("AvoidSharedPreferences") // Legacy usage
+    private static SharedPreferences getPrefs(Context context) {
+        return context.getSharedPreferences(
+                ADSERVICES_STATUS_SHARED_PREFERENCE, Context.MODE_PRIVATE);
     }
 }

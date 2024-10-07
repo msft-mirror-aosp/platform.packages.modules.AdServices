@@ -59,7 +59,7 @@ android_library {
         "error_prone_annotations",
         "framework-adservices-lib",
         "framework-annotations-lib",
-        "framework-configinfrastructure",
+        "framework-configinfrastructure.stubs.module_lib",
         "junit",
     ],
     static_libs: [
@@ -125,6 +125,12 @@ filegroup {
         "java/com/android/adservices/mockito/AdServicesJobMocker.java",
         // ... and implementation
         "java/com/android/adservices/mockito/AdServicesMockitoJobMocker.java",
+        // Flags-related - interface and implementation
+        "java/com/android/adservices/mockito/AdServicesFlagsMocker.java",
+        "java/com/android/adservices/mockito/AdServicesDebugFlagsMocker.java",
+        // ... and implementation
+        "java/com/android/adservices/mockito/AdServicesMockitoFlagsMocker.java",
+        "java/com/android/adservices/mockito/AdServicesMockitoDebugFlagsMocker.java",
     ],
     path: "java",
     visibility: [

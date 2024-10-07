@@ -19,10 +19,12 @@ import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.ResolveInfoFlags;
 import android.content.pm.ResolveInfo;
+import android.platform.test.annotations.DisabledOnRavenwood;
 
 import com.android.adservices.mockito.AndroidMocker;
 import com.android.adservices.shared.testing.DeviceSideTestCase;
@@ -52,6 +54,7 @@ public abstract class AndroidMockerTestCase<T extends AndroidMocker> extends Dev
     // Cannot initialize right away is it's only available on T+
     private ResolveInfoFlags mResolveInfoFlags;
     @Mock private PackageManager mMockPm;
+    @Mock private Context mMockContext;
 
     @Rule public final MockitoRule mockito = MockitoJUnit.rule().strictness(Strictness.LENIENT);
 
@@ -100,6 +103,18 @@ public abstract class AndroidMockerTestCase<T extends AndroidMocker> extends Dev
         }
     }
 
+    // TODO(b/335935200): context.getPackageManager() is not available on Ravenwood
+    @DisabledOnRavenwood(blockedBy = Context.class)
+    @Test
+    public final void testQueryIntentService_notMock() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        getMocker()
+                                .mockQueryIntentService(
+                                        mContext.getPackageManager(), new ResolveInfo[] {null}));
+    }
+
     @Test
     public final void testQueryIntentService_noArgs() {
         getMocker().mockQueryIntentService(mMockPm);
@@ -135,5 +150,41 @@ public abstract class AndroidMockerTestCase<T extends AndroidMocker> extends Dev
                     .containsExactly(info1, info2)
                     .inOrder();
         }
+    }
+
+    @Test
+    public final void testMockGetApplicationContext_null() {
+        assertThrows(
+                NullPointerException.class,
+                () -> getMocker().mockGetApplicationContext(/* mockContext= */ null, mMockContext));
+    }
+
+    @Test
+    public final void testMockGetApplicationContext_notMock() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> getMocker().mockGetApplicationContext(mContext, mContext));
+    }
+
+    // TODO(b/335935200): context.getApplicationContext() is not available on Ravenwood
+    @DisabledOnRavenwood(blockedBy = Context.class)
+    @Test
+    public final void testMockGetApplicationContext() {
+        getMocker().mockGetApplicationContext(mMockContext, mContext);
+
+        var actual = mMockContext.getApplicationContext();
+
+        expect.withMessage("getApplicationContext()").that(actual).isSameInstanceAs(mContext);
+    }
+
+    // TODO(b/335935200): context.getApplicationContext() is not available on Ravenwood
+    @DisabledOnRavenwood(blockedBy = Context.class)
+    @Test
+    public final void testMockGetApplicationContext_nullAppContext() {
+        getMocker().mockGetApplicationContext(mMockContext, /* appContex= */ null);
+
+        var actual = mMockContext.getApplicationContext();
+
+        expect.withMessage("getApplicationContext()").that(actual).isNull();
     }
 }

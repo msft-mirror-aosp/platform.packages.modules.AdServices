@@ -16,11 +16,13 @@
 
 package com.android.adservices.service;
 
-import static com.android.adservices.service.CommonFlagsConstants.KEY_ADSERVICES_SHELL_COMMAND_ENABLED;
+import static com.android.adservices.service.CommonDebugFlagsConstants.KEY_ADSERVICES_SHELL_COMMAND_ENABLED;
 
 import android.os.SystemProperties;
 
 import com.android.internal.annotations.VisibleForTesting;
+
+import java.io.PrintWriter;
 
 /**
  * Common debug flags shared between system-server and service that are only used for development /
@@ -35,21 +37,34 @@ import com.android.internal.annotations.VisibleForTesting;
  *
  * @hide
  */
+@SuppressWarnings("AvoidSystemPropertiesUsage") // Helper / infra class
 public abstract class CommonDebugFlags {
     private static final String SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX = "debug.adservices.";
 
     @VisibleForTesting static final boolean DEFAULT_ADSERVICES_SHELL_COMMAND_ENABLED = false;
 
+    @VisibleForTesting static final String DUMP_PREFIX = "  ";
+    @VisibleForTesting static final String DUMP_EQUALS = " = ";
+
     public boolean getAdServicesShellCommandEnabled() {
-        return getDebugFlag(
+        return getBoolean(
                 KEY_ADSERVICES_SHELL_COMMAND_ENABLED, DEFAULT_ADSERVICES_SHELL_COMMAND_ENABLED);
     }
 
-    static boolean getDebugFlag(String name, boolean defaultValue) {
+    static boolean getBoolean(String name, boolean defaultValue) {
         return SystemProperties.getBoolean(getSystemPropertyName(name), defaultValue);
     }
 
     private static String getSystemPropertyName(String key) {
         return SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + key;
+    }
+
+    protected void dump(PrintWriter pw, String key, boolean value) {
+        pw.printf("%s%s%s%b\n", DUMP_PREFIX, key, DUMP_EQUALS, value);
+    }
+
+    /** Dumps the internal state. */
+    public void dump(PrintWriter pw) {
+        dump(pw, KEY_ADSERVICES_SHELL_COMMAND_ENABLED, getAdServicesShellCommandEnabled());
     }
 }

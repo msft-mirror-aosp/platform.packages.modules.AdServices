@@ -43,6 +43,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 @RequiresAndroidServiceAvailable(intentAction = ACTION_ADID_PROVIDER_SERVICE)
+@RequiresSdkLevelAtLeastS()
 public final class AdIdManagerTest extends AdServicesCtsTestCase
         implements CtsAdIdEndToEndTestFlags {
 
@@ -60,15 +61,14 @@ public final class AdIdManagerTest extends AdServicesCtsTestCase
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS(reason = "OutcomeReceiver is not available on R")
-    public void testAdIdManager_SPlus() throws Exception {
+    public void testAdIdManager_outcomeReceiver() throws Exception {
         OutcomeReceiverForTests<AdId> callback = new OutcomeReceiverForTests<>();
         mAdIdManager.getAdId(sCallbackExecutor, callback);
         validateAdIdManagerTestResults(callback);
     }
 
     @Test
-    public void testAdIdManager_R() throws Exception {
+    public void testAdIdManager_customReceiver() throws Exception {
         AdServicesOutcomeReceiverForTests<AdId> callback =
                 new AdServicesOutcomeReceiverForTests<>();
         mAdIdManager.getAdId(sCallbackExecutor, callback);
@@ -157,8 +157,7 @@ public final class AdIdManagerTest extends AdServicesCtsTestCase
 
     @Test
     @RequiresLowRamDevice
-    @RequiresSdkLevelAtLeastS(reason = "OutcomeReceiver is not available on R")
-    public void testAdIdManager_whenDeviceNotSupported_SPlus() throws Exception {
+    public void testAdIdManager_whenDeviceNotSupported_outcomeReceiver() throws Exception {
         AdIdManager adIdManager = AdIdManager.get(sContext);
         assertWithMessage("adIdManager").that(adIdManager).isNotNull();
         OutcomeReceiverForTests<AdId> receiver = new OutcomeReceiverForTests<>();
@@ -169,7 +168,7 @@ public final class AdIdManagerTest extends AdServicesCtsTestCase
 
     @Test
     @RequiresLowRamDevice
-    public void testAdIdManager_whenDeviceNotSupported_R() throws Exception {
+    public void testAdIdManager_whenDeviceNotSupported_customReceiver() throws Exception {
         AdIdManager adIdManager = AdIdManager.get(sContext);
         assertWithMessage("adIdManager").that(adIdManager).isNotNull();
         AdServicesOutcomeReceiverForTests<AdId> receiver =

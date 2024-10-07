@@ -16,6 +16,9 @@
 
 package com.android.adservices.service.signals;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_FAILED_PER_BUYER_ENCODING;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS;
+
 import android.adservices.common.AdTechIdentifier;
 import android.content.Context;
 
@@ -28,6 +31,7 @@ import com.android.adservices.data.signals.EncoderLogicHandler;
 import com.android.adservices.data.signals.EncoderLogicMetadataDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -95,7 +99,6 @@ public final class PeriodicEncodingJobWorker {
             EncoderLogicHandler encoderLogicHandler,
             EncoderLogicMetadataDao encoderLogicMetadataDao,
             EncodedPayloadDao encodedPayloadDao,
-            SignalsProviderImpl signalStorageManager,
             ProtectedSignalsDao protectedSignalsDao,
             SignalsScriptEngine scriptEngine,
             ListeningExecutorService backgroundExecutor,
@@ -103,8 +106,7 @@ public final class PeriodicEncodingJobWorker {
             Flags flags,
             EnrollmentDao enrollmentDao,
             Clock clock,
-            AdServicesLogger adServicesLogger,
-            ProtectedSignalsArgument protectedSignalsArgument) {
+            AdServicesLogger adServicesLogger) {
         mEncoderLogicHandler = encoderLogicHandler;
         mEncoderLogicMetadataDao = encoderLogicMetadataDao;
         mEncodedPayloadDao = encodedPayloadDao;
@@ -118,7 +120,8 @@ public final class PeriodicEncodingJobWorker {
         mPerBuyerEncodingTimeoutMs = mFlags.getPasScriptExecutionTimeoutMs();
         mPeriodicEncodingJobRunner =
                 new PeriodicEncodingJobRunner(
-                        signalStorageManager,
+                        new SignalsProviderAndArgumentFactory(
+                                protectedSignalsDao, flags.getPasEncodingJobImprovementsEnabled()),
                         protectedSignalsDao,
                         scriptEngine,
                         mFlags.getProtectedSignalsMaxJsFailureExecutionOnCertainVersionBeforeStop(),
@@ -126,8 +129,7 @@ public final class PeriodicEncodingJobWorker {
                         mEncoderLogicHandler,
                         mEncodedPayloadDao,
                         mBackgroundExecutor,
-                        mLightWeightExecutor,
-                        protectedSignalsArgument);
+                        mLightWeightExecutor);
     }
 
     /**
@@ -152,15 +154,10 @@ public final class PeriodicEncodingJobWorker {
                                     AdServicesExecutors.getLightWeightExecutor())
                             .createRetryStrategy(
                                     flags.getAdServicesJsScriptEngineMaxRetryAttempts());
-            ProtectedSignalsArgument protectedSignalsArgument =
-                    flags.getPasEncodingJobImprovementsEnabled()
-                            ? new ProtectedSignalsArgumentFastImpl()
-                            : new ProtectedSignalsArgumentImpl();
             return new PeriodicEncodingJobWorker(
                     new EncoderLogicHandler(context),
                     signalsDatabase.getEncoderLogicMetadataDao(),
                     signalsDatabase.getEncodedPayloadDao(),
-                    new SignalsProviderImpl(signalsDatabase.protectedSignalsDao()),
                     signalsDatabase.protectedSignalsDao(),
                     new SignalsScriptEngine(
                             flags::getIsolateMaxHeapSizeBytes,
@@ -173,8 +170,7 @@ public final class PeriodicEncodingJobWorker {
                     flags,
                     EnrollmentDao.getInstance(),
                     Clock.getInstance(),
-                    AdServicesLoggerImpl.getInstance(),
-                    protectedSignalsArgument);
+                    AdServicesLoggerImpl.getInstance());
         }
     }
 
@@ -291,6 +287,10 @@ public final class PeriodicEncodingJobWorker {
                         (e) -> {
                             handleFailedPerBuyerEncoding(metadata);
                             encodingJobRunStatsLogger.addOneSignalEncodingFailures();
+                            ErrorLogUtil.e(
+                                    e,
+                                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_FAILED_PER_BUYER_ENCODING,
+                                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS);
                             return null;
                         },
                         mLightWeightExecutor);

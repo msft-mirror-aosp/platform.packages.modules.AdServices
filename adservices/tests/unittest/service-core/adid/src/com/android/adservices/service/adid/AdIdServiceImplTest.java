@@ -48,6 +48,7 @@ import android.adservices.adid.GetAdIdParam;
 import android.adservices.adid.GetAdIdResult;
 import android.adservices.adid.IGetAdIdCallback;
 import android.adservices.common.CallerMetadata;
+import android.adservices.common.CommonFixture;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -67,6 +68,7 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.shared.testing.IntFailureSyncCallback;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.util.Clock;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -88,14 +90,14 @@ import java.util.concurrent.TimeUnit;
 @SetErrorLogUtilDefaultParams(
         throwable = Any.class,
         ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID)
+@RequiresSdkLevelAtLeastS()
 public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase {
-    private static final String TEST_APP_PACKAGE_NAME = "com.android.adservices.servicecoretest";
+    private static final String TEST_APP_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     private static final String INVALID_PACKAGE_NAME = "com.do_not_exists";
     private static final String SOME_SDK_NAME = "SomeSdkName";
     private static final int BINDER_CONNECTION_TIMEOUT_MS = 5_000;
     private static final int LOGGER_EVENT_TIMEOUT_MS = 5_000;
     private static final String SDK_PACKAGE_NAME = "test_package_name";
-    private static final String ADID_API_ALLOW_LIST = "com.android.adservices.servicecoretest";
     // See android.os.Process, that FIRST_SDK_SANDBOX_UID = 20000 and LAST_SDK_SANDBOX_UID = 29999.
     private static final int SANDBOX_UID = 25000;
 
@@ -105,7 +107,7 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
     private GetAdIdParam mRequest;
 
     @Mock private PackageManager mMockPackageManager;
-    @Mock private Clock mClock;
+    @Mock private Clock mMockClock;
     @Mock private Context mMockSdkContext;
     @Mock private Throttler mMockThrottler;
     @Mock private AdIdServiceImpl mAdIdServiceImpl;
@@ -117,7 +119,10 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
         mAdIdWorker = new AdIdWorker(adIdCacheManager);
         Mockito.doReturn(null).when(adIdCacheManager).getService();
 
-        when(mClock.elapsedRealtime()).thenReturn(150L, 200L);
+        // NOTE: it looks like the statement below is not needed anymore - tests would pass even if
+        // it's removed
+        mocker.mockCurrentTimeMillis(mMockClock, 150L, 200L);
+
         mCallerMetadata = new CallerMetadata.Builder().setBinderElapsedTimestamp(100L).build();
         mRequest =
                 new GetAdIdParam.Builder()
@@ -142,7 +147,7 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
         mocker.mockGetFlags(mMockFlags);
         mocker.mockGetCallingUidOrThrow(); // expected calling by its test uid by default
 
-        mocker.mockAllCobaltLoggingFlags(mMockFlags, false);
+        mocker.mockAllCobaltLoggingFlags(false);
     }
 
     @Test
@@ -337,7 +342,7 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
                         context,
                         mAdIdWorker,
                         mSpyAdServicesLogger,
-                        mClock,
+                        mMockClock,
                         mMockFlags,
                         mMockThrottler,
                         mMockAppImportanceFilter);
@@ -399,7 +404,7 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
                 mSpyContext,
                 mAdIdWorker,
                 mSpyAdServicesLogger,
-                mClock,
+                mMockClock,
                 mMockFlags,
                 mMockThrottler,
                 mMockAppImportanceFilter);
@@ -411,7 +416,7 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
                 mMockSdkContext,
                 mAdIdWorker,
                 mSpyAdServicesLogger,
-                mClock,
+                mMockClock,
                 mMockFlags,
                 mMockThrottler,
                 mMockAppImportanceFilter);

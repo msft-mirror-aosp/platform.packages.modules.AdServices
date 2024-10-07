@@ -24,6 +24,10 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="4553614196392171">"AdServices Attribution API へのアクセスをアプリに許可します。"</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="4365562651019065480">"AdServices Custom Audience API へのアクセス"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="6713089438953075862">"AdServices Custom Audience API へのアクセスをアプリに許可します。"</string>
+    <string name="permlab_accessAdServicesAdSelection" msgid="672819511145374384">"AdServices Ad Selection API へのアクセス"</string>
+    <string name="permdesc_accessAdServicesAdSelection" msgid="6095291420798129879">"AdServices Ad Selection API へのアクセスをアプリに許可します。"</string>
+    <string name="permlab_accessAdServicesProtectedSignals" msgid="147489803040522247">"AdServices Protected Signals API へのアクセス"</string>
+    <string name="permdesc_accessAdServicesProtectedSignals" msgid="2320760922272886523">"AdServices Protected Signals API へのアクセスをアプリに許可します。"</string>
     <string name="permlab_accessAdServicesAdId" msgid="1615451959935917231">"AdId API へのアクセス"</string>
     <string name="permdesc_accessAdServicesAdId" msgid="6145143976659732220">"AdId API へのアクセスをアプリに許可します。"</string>
     <string name="permlab_accessAdServicesConsent" msgid="4218463631288201212">"AdServices Consent API へのアクセス"</string>
@@ -355,7 +359,7 @@
     <string name="topic10092" msgid="3748598147176261608">"バン、ミニバン"</string>
     <string name="topic10093" msgid="4427294934418177183">"レッカー、ロードサービス"</string>
     <string name="topic10094" msgid="2377839138225502290">"交通安全"</string>
-    <string name="topic10095" msgid="84682415803421329">"自動車部品、アクセサリ"</string>
+    <string name="topic10095" msgid="84682415803421329">"自動車部品、アクセサリー"</string>
     <string name="topic10096" msgid="8920802377602814882">"自動車修理、メンテナンス"</string>
     <string name="topic10097" msgid="1171171183482751335">"自動車販売"</string>
     <string name="topic10098" msgid="2079957196489295765">"中古車"</string>

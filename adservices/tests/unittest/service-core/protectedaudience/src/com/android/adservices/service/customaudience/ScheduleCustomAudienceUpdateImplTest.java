@@ -89,12 +89,13 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
         when(mMockFlags.getFledgeScheduleCustomAudienceUpdateEnabled()).thenReturn(true);
         when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(eq(PACKAGE)))
                 .thenReturn(false);
-        mDevContext = DevContext.builder(PACKAGE).setDevOptionsEnabled(false).build();
+        mDevContext = DevContext.builder(PACKAGE).setDeviceDevOptionsEnabled(false).build();
         when(mCustomAudienceServiceFilterMock.filterRequestAndExtractIdentifier(
                         eq(UPDATE_URI),
                         eq(PACKAGE),
                         eq(false),
                         eq(false),
+                        eq(true),
                         eq(true),
                         eq(mCallingAppUid),
                         eq(API_NAME),
@@ -114,6 +115,7 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
 
         when(mMockFlags.getDisableFledgeEnrollmentCheck()).thenReturn(false);
         when(mMockFlags.getEnforceForegroundStatusForSignals()).thenReturn(true);
+        when(mMockFlags.getConsentNotificationDebugMode()).thenReturn(false);
 
         doNothing()
                 .when(
@@ -144,6 +146,59 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
                         eq(false),
                         eq(false),
                         eq(true),
+                        eq(true),
+                        eq(mCallingAppUid),
+                        eq(API_NAME),
+                        eq(FLEDGE_API_SCHEDULE_CUSTOM_AUDIENCE_UPDATE),
+                        eq(mDevContext));
+
+        verify(mCustomAudienceDaoMock)
+                .insertScheduledUpdateAndPartialCustomAudienceList(
+                        mUpdateCaptor.capture(), mListArgumentCaptor.capture(), eq(false));
+        assertEquals(BUYER, mUpdateCaptor.getValue().getBuyer());
+        assertTrue(mListArgumentCaptor.getValue().isEmpty());
+        assertTrue(callback.isSuccess());
+    }
+
+    @Test
+    public void
+            testScheduleCustomAudienceUpdate_withShouldReplacePendingUpdateFalse_SuccessWithUXNotificationEnforcementDisabled()
+                    throws Exception {
+        when(mMockFlags.getConsentNotificationDebugMode()).thenReturn(true);
+
+        when(mCustomAudienceServiceFilterMock.filterRequestAndExtractIdentifier(
+                        eq(UPDATE_URI),
+                        eq(PACKAGE),
+                        eq(false),
+                        eq(false),
+                        eq(true),
+                        eq(false),
+                        eq(mCallingAppUid),
+                        eq(API_NAME),
+                        eq(FLEDGE_API_SCHEDULE_CUSTOM_AUDIENCE_UPDATE),
+                        eq(mDevContext)))
+                .thenReturn(BUYER);
+
+        ScheduleCustomAudienceUpdateInput input =
+                new ScheduleCustomAudienceUpdateInput.Builder(
+                                UPDATE_URI,
+                                PACKAGE,
+                                Duration.ofMinutes(50),
+                                Collections.emptyList())
+                        .setShouldReplacePendingUpdates(false)
+                        .build();
+
+        ScheduleUpdateTestCallback callback =
+                callScheduleUpdate(input, mScheduleCustomAudienceUpdateImpl);
+
+        verify(mCustomAudienceServiceFilterMock)
+                .filterRequestAndExtractIdentifier(
+                        eq(UPDATE_URI),
+                        eq(PACKAGE),
+                        eq(false),
+                        eq(false),
+                        eq(true),
+                        eq(false),
                         eq(mCallingAppUid),
                         eq(API_NAME),
                         eq(FLEDGE_API_SCHEDULE_CUSTOM_AUDIENCE_UPDATE),
@@ -179,6 +234,7 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
                         eq(false),
                         eq(false),
                         eq(true),
+                        eq(true),
                         eq(mCallingAppUid),
                         eq(API_NAME),
                         eq(FLEDGE_API_SCHEDULE_CUSTOM_AUDIENCE_UPDATE),
@@ -212,6 +268,7 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
                         eq(PACKAGE),
                         eq(false),
                         eq(false),
+                        eq(true),
                         eq(true),
                         eq(mCallingAppUid),
                         eq(API_NAME),
@@ -253,6 +310,7 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
                         eq(false),
                         eq(false),
                         eq(true),
+                        eq(true),
                         eq(mCallingAppUid),
                         eq(API_NAME),
                         eq(FLEDGE_API_SCHEDULE_CUSTOM_AUDIENCE_UPDATE),
@@ -278,6 +336,7 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
                         eq(PACKAGE),
                         eq(false),
                         eq(false),
+                        eq(true),
                         eq(true),
                         eq(mCallingAppUid),
                         eq(API_NAME),

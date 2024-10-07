@@ -30,6 +30,7 @@ import com.android.adservices.LogUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,7 +38,7 @@ import java.util.Map;
  * Container object that has enrollment data. Should not be used as storage. This is only a helper
  * class to more easily read/write enrollment data.
  */
-public class EnrollmentData {
+public class EnrollmentData implements Serializable {
     private final Map<Integer, Integer> mModuleStates = new HashMap<>();
 
     private final Map<Integer, Integer> mUserChoices = new HashMap<>();
@@ -50,15 +51,6 @@ public class EnrollmentData {
      */
     public static String serialize(EnrollmentData data) {
         return new Gson().toJson(data);
-    }
-
-    /**
-     * Serializes module enrollment state data to string.
-     *
-     * @return Serialized string.
-     */
-    public String serialize() {
-        return serialize(this);
     }
 
     /**
@@ -137,4 +129,5 @@ public class EnrollmentData {
             @ModuleCode int moduleCode, @ModuleUserChoiceCode int userChoiceCode) {
         mUserChoices.put(moduleCode, userChoiceCode);
     }
+
 }

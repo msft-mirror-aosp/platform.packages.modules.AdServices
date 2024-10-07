@@ -17,6 +17,8 @@ package com.android.adservices.shared.testing;
 
 import static org.junit.Assert.assertThrows;
 
+import com.android.adservices.shared.meta_testing.SharedSidelessTestCase;
+
 import com.google.common.truth.StandardSubjectBuilder;
 
 import org.junit.Test;

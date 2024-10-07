@@ -25,8 +25,21 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_TIMEOUT;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
+import static com.android.adservices.common.logging.ErrorLogUtilCallback.mockErrorLogUtilWithThrowable;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_AUCTION_RESULT_HAS_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_INVALID_AD_TECH_URI;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_INVALID_INTERACTION_URI;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_MISMATCH_INITIALIZATION_INFO;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_FAILURE_INVALID_ARGUMENT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_FAILURE_TIMEOUT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NULL_INITIALIZATION_INFO;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_PROCESSING_KANON_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_RESULT_IS_CHAFF;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_REVOKED_CONSENT_FILTER_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_TIMEOUT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT;
 import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplFixture.BINDER_ELAPSED_TIMESTAMP;
 import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplFixture.PERSIST_AD_SELECTION_RESULT_END_TIMESTAMP;
 import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplFixture.PERSIST_AD_SELECTION_RESULT_OVERALL_LATENCY_MS;
@@ -69,6 +82,10 @@ import android.os.RemoteException;
 import androidx.room.Room;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.logging.ErrorLogUtilCallback;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
@@ -106,6 +123,7 @@ import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.DestinationRegisteredBeaconsReportedStats;
 import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledStats;
+import com.android.adservices.shared.testing.SkipLoggingUsageRule;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 import com.android.adservices.shared.util.Clock;
@@ -137,6 +155,9 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 @SpyStatic(FlagsFactory.class)
 @RequiresSdkLevelAtLeastS
+@SetErrorLogUtilDefaultParams(
+        throwable = ExpectErrorLogUtilWithExceptionCall.Any.class,
+        ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT)
 public final class PersistAdSelectionResultRunnerTest extends AdServicesExtendedMockitoTestCase {
     private static final int CALLER_UID = Process.myUid();
     private static final String SHA256 = "SHA-256";
@@ -435,7 +456,8 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
         mPayloadFormatter =
                 AuctionServerPayloadFormatterFactory.createPayloadFormatter(
                         AuctionServerPayloadFormatterV0.VERSION,
-                        mFakeFlags.getFledgeAuctionServerPayloadBucketSizes());
+                        mFakeFlags.getFledgeAuctionServerPayloadBucketSizes(),
+                        /* sellerConfiguration= */ null);
         mDataCompressor = new AuctionServerDataCompressorGzip();
 
         mOverallTimeout = FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS;
@@ -719,6 +741,10 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_INVALID_AD_TECH_URI)
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_INVALID_INTERACTION_URI)
     public void testRunner_persistRemarketingResult_withInvalidSellerReportingUriSuccess()
             throws Exception {
         mocker.mockGetFlags(mFakeFlags);
@@ -826,6 +852,10 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_INVALID_AD_TECH_URI)
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_INVALID_INTERACTION_URI)
     public void testRunner_persistAppInstallResult_withInvalidSellerReportingUriSuccess()
             throws Exception {
         mocker.mockGetFlags(mFakeFlags);
@@ -932,6 +962,10 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_INVALID_AD_TECH_URI)
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_INVALID_INTERACTION_URI)
     public void testRunner_persistRemarketingResult_withInvalidBuyerReportingUriSuccess()
             throws Exception {
         mocker.mockGetFlags(mFakeFlags);
@@ -1234,6 +1268,8 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_RESULT_IS_CHAFF)
     public void testRunner_persistChaffResult_nothingPersisted() throws Exception {
         mocker.mockGetFlags(mFakeFlags);
         mockPersistAdSelectionResultWithFledgeAuctionServerExecutionLogger();
@@ -1285,6 +1321,10 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_FAILURE_INVALID_ARGUMENT)
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_AUCTION_RESULT_HAS_ERROR)
     public void testRunner_persistResultWithError_throwsException() throws Exception {
         mocker.mockGetFlags(mFakeFlags);
 
@@ -1318,6 +1358,10 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_FAILURE_TIMEOUT)
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_TIMEOUT)
     public void testRunner_persistTimesOut_throwsException() throws Exception {
         mocker.mockGetFlags(mFakeFlags);
 
@@ -1374,6 +1418,8 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_REVOKED_CONSENT_FILTER_EXCEPTION)
     public void testRunner_revokedUserConsent_returnsEmptyResult() throws InterruptedException {
         mocker.mockGetFlags(mFakeFlags);
 
@@ -1383,6 +1429,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         eq(SELLER),
                         eq(CALLER_PACKAGE_NAME),
                         eq(false),
+                        eq(true),
                         eq(true),
                         eq(CALLER_UID),
                         eq(AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT),
@@ -1410,6 +1457,92 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_REVOKED_CONSENT_FILTER_EXCEPTION)
+    public void testRunner_revokedUserConsent_returnsEmptyResult_UXNotificationEnforcementDisabled()
+            throws InterruptedException {
+        Flags flagsWithUXConsentEnforcementDisabled =
+                new PersistAdSelectionResultRunnerTestFlags() {
+                    @Override
+                    public boolean getConsentNotificationDebugMode() {
+                        return true;
+                    }
+                };
+
+        mocker.mockGetFlags(flagsWithUXConsentEnforcementDisabled);
+
+        doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
+                .when(mAdSelectionServiceFilterMock)
+                .filterRequest(
+                        eq(SELLER),
+                        eq(CALLER_PACKAGE_NAME),
+                        eq(false),
+                        eq(true),
+                        eq(false),
+                        eq(CALLER_UID),
+                        eq(AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT),
+                        eq(Throttler.ApiKey.FLEDGE_API_PERSIST_AD_SELECTION_RESULT),
+                        eq(DevContext.createForDevOptionsDisabled()));
+
+        PersistAdSelectionResultInput inputParams =
+                new PersistAdSelectionResultInput.Builder()
+                        .setSeller(SELLER)
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionResult(CIPHER_TEXT_BYTES)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+
+        PersistAdSelectionResultRunner persistAdSelectionResultRunner =
+                new PersistAdSelectionResultRunner(
+                        mObliviousHttpEncryptorMock,
+                        mAdSelectionEntryDaoSpy,
+                        mCustomAudienceDaoMock,
+                        mAdSelectionServiceFilterMock,
+                        mBackgroundExecutorService,
+                        mLightweightExecutorService,
+                        mScheduledExecutor,
+                        CALLER_UID,
+                        DevContext.createForDevOptionsDisabled(),
+                        mOverallTimeout,
+                        mForceContinueOnAbsentOwner,
+                        mReportingLimits,
+                        mAdCounterHistogramUpdaterSpy,
+                        mAuctionResultValidator,
+                        flagsWithUXConsentEnforcementDisabled,
+                        mAdServicesLoggerSpy,
+                        mAdsRelevanceExecutionLogger,
+                        mKAnonSignJoinFactoryMock);
+
+        PersistAdSelectionResultTestCallback callback =
+                invokePersistAdSelectionResult(persistAdSelectionResultRunner, inputParams);
+
+        Assert.assertTrue(callback.mIsSuccess);
+        Assert.assertNotNull(callback.mPersistAdSelectionResultResponse);
+        Assert.assertEquals(
+                AD_SELECTION_ID, callback.mPersistAdSelectionResultResponse.getAdSelectionId());
+        Assert.assertEquals(Uri.EMPTY, callback.mPersistAdSelectionResultResponse.getAdRenderUri());
+        verifyZeroInteractions(mCustomAudienceDaoMock);
+        verifyZeroInteractions(mObliviousHttpEncryptorMock);
+        verifyZeroInteractions(mAdSelectionEntryDaoSpy);
+
+        verify(mAdSelectionServiceFilterMock)
+                .filterRequest(
+                        eq(SELLER),
+                        eq(CALLER_PACKAGE_NAME),
+                        eq(false),
+                        eq(true),
+                        eq(false),
+                        eq(CALLER_UID),
+                        eq(AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT),
+                        eq(Throttler.ApiKey.FLEDGE_API_PERSIST_AD_SELECTION_RESULT),
+                        eq(DevContext.createForDevOptionsDisabled()));
+    }
+
+    @Test
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NULL_INITIALIZATION_INFO)
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_FAILURE_INVALID_ARGUMENT)
     public void testRunner_persistResultWithNotEnrolledBuyer_throwsException() throws Exception {
         mockPersistAdSelectionResultWithFledgeAuctionServerExecutionLogger();
         Mockito.doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
@@ -1434,6 +1567,10 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_MISMATCH_INITIALIZATION_INFO)
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_FAILURE_INVALID_ARGUMENT)
     public void testRunner_persistResultWithWrongSeller_throwsException() throws Exception {
         mocker.mockGetFlags(mFakeFlags);
         mockPersistAdSelectionResultWithFledgeAuctionServerExecutionLogger();
@@ -1474,6 +1611,10 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_FAILURE_INVALID_ARGUMENT)
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_MISMATCH_INITIALIZATION_INFO)
     public void testRunner_persistResultWithWrongCallerPackage_throwsException() throws Exception {
         mocker.mockGetFlags(mFakeFlags);
         mockPersistAdSelectionResultWithFledgeAuctionServerExecutionLogger();
@@ -1514,6 +1655,8 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_INVALID_INTERACTION_URI)
     public void testRunner_persistResultWithLongInteractionKeyAndUri_throwsException()
             throws Exception {
         mocker.mockGetFlags(mFakeFlags);
@@ -1684,8 +1827,14 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
     }
 
     @Test
+    // TODO (b/355696393): Enhance rule to verify log calls that happen in the background.
+    @SkipLoggingUsageRule(reason = "Using ErrorLogUtilCallback as logging happens in background.")
     public void testRunner_kanonSignJoinManagerThrowsException_persistSelectionRunnerIsSuccessful()
             throws Exception {
+        // Do not move this into setup as it will conflict with ErrorLogUtil mocking behavior
+        // required by the AdServicesLoggingUsageRule.
+        ErrorLogUtilCallback mErrorLogUtilWithThrowableCallback = mockErrorLogUtilWithThrowable();
+
         Flags flagsWithKAnonEnabled =
                 new PersistAdSelectionResultRunnerTestFlagsForKAnon(true, 100);
         doReturn(flagsWithKAnonEnabled).when(FlagsFactory::getFlags);
@@ -1721,6 +1870,11 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
         PersistAdSelectionResultTestCallback callback =
                 invokePersistAdSelectionResult(persistAdSelectionResultRunner, inputParams);
         countDownLatch.await();
+
+        mErrorLogUtilWithThrowableCallback.assertReceived(
+                expect,
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_PROCESSING_KANON_ERROR,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
 
         Assert.assertTrue(callback.mIsSuccess);
     }
@@ -1968,6 +2122,11 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
         @Override
         public boolean getPasExtendedMetricsEnabled() {
             return PAS_EXTENDED_METRICS_ENABLED_IN_TEST;
+        }
+
+        @Override
+        public boolean getConsentNotificationDebugMode() {
+            return false;
         }
     }
 

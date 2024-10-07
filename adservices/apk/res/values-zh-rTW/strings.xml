@@ -24,6 +24,10 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="4553614196392171">"允許應用程式存取 AdServices Attribution API。"</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="4365562651019065480">"存取 AdServices Custom Audience API"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="6713089438953075862">"允許應用程式存取 AdServices Custom Audience API。"</string>
+    <string name="permlab_accessAdServicesAdSelection" msgid="672819511145374384">"存取 AdServices Ad Selection API"</string>
+    <string name="permdesc_accessAdServicesAdSelection" msgid="6095291420798129879">"允許應用程式存取 AdServices Ad Selection API。"</string>
+    <string name="permlab_accessAdServicesProtectedSignals" msgid="147489803040522247">"存取 AdServices Protected Signals API"</string>
+    <string name="permdesc_accessAdServicesProtectedSignals" msgid="2320760922272886523">"允許應用程式存取 AdServices Protected Signals API。"</string>
     <string name="permlab_accessAdServicesAdId" msgid="1615451959935917231">"AdID API 存取權"</string>
     <string name="permdesc_accessAdServicesAdId" msgid="6145143976659732220">"允許應用程式存取 AdID API。"</string>
     <string name="permlab_accessAdServicesConsent" msgid="4218463631288201212">"存取 AdServices Consent API"</string>
@@ -590,7 +594,7 @@
     <string name="topic10327" msgid="3594488251348215868">"相片與影片分享"</string>
     <string name="topic10328" msgid="5431605505487660527">"相片與圖片分享"</string>
     <string name="topic10329" msgid="2949598007790820705">"影片分享"</string>
-    <string name="topic10330" msgid="4210169032750748349">"外觀"</string>
+    <string name="topic10330" msgid="4210169032750748349">"造型"</string>
     <string name="topic10331" msgid="9148081156366912077">"社群網路應用程式與外掛程式"</string>
     <string name="topic10332" msgid="1812925257476776861">"社群網路"</string>
     <string name="topic10333" msgid="5793613565022694596">"人文與社會"</string>

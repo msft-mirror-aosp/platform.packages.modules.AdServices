@@ -35,6 +35,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.WebAddresses;
+import com.android.adservices.service.measurement.AggregateContributionBuckets;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.MeasurementHttpClient;
 import com.android.adservices.service.measurement.Source;
@@ -60,11 +61,13 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -90,7 +93,7 @@ public class AsyncSourceFetcher {
                 context,
                 EnrollmentDao.getInstance(),
                 FlagsFactory.getFlags(),
-                DatastoreManagerFactory.getDatastoreManager(context),
+                DatastoreManagerFactory.getDatastoreManager(),
                 new DebugReportApi(context, FlagsFactory.getFlags()));
     }
 
@@ -501,6 +504,7 @@ public class AsyncSourceFetcher {
         }
 
         if (mFlags.getMeasurementEnableAttributionScope()
+                && !json.isNull(SourceHeaderContract.ATTRIBUTION_SCOPES)
                 && !populateAttributionScopeFields(json, builder)) {
             return false;
         }
@@ -583,53 +587,72 @@ public class AsyncSourceFetcher {
                 builder.setEventLevelEpsilon((double) mFlags.getMeasurementPrivacyEpsilon());
             }
         }
+        if (mFlags.getMeasurementEnableAggregateDebugReporting()
+                && !json.isNull(SourceHeaderContract.AGGREGATABLE_DEBUG_REPORTING)) {
+            Optional<String> validAggregateDebugReporting =
+                    FetcherUtil.getValidAggregateDebugReportingWithBudget(
+                            json.getJSONObject(SourceHeaderContract.AGGREGATABLE_DEBUG_REPORTING),
+                            mFlags);
+            if (validAggregateDebugReporting.isPresent()) {
+                builder.setAggregateDebugReportingString(validAggregateDebugReporting.get());
+            } else {
+                LoggerFactory.getMeasurementLogger()
+                        .d("parseSource: aggregatable debug reporting is invalid.");
+            }
+        }
+        if (mFlags.getMeasurementEnableAggregateContributionBudgetCapacity()
+                && !json.isNull(SourceHeaderContract.AGGREGATABLE_BUCKET_MAX_BUDGET)) {
+            Optional<AggregateContributionBuckets> maybeAggregateContributionBuckets =
+                    parseAggregatableBucketBudget(
+                            json.getJSONObject(
+                                    SourceHeaderContract.AGGREGATABLE_BUCKET_MAX_BUDGET));
+            if (maybeAggregateContributionBuckets.isEmpty()) {
+                LoggerFactory.getMeasurementLogger()
+                        .e(
+                                String.format(
+                                        "parseValidateSource: Invalid"
+                                                + " aggregatable_bucket_max_budget in %s header.",
+                                        SourceHeaderContract
+                                                .HEADER_ATTRIBUTION_REPORTING_REGISTER_SOURCE));
+                return false;
+            }
+            builder.setAggregateContributionBuckets(maybeAggregateContributionBuckets.get());
+        }
         return true;
     }
 
     // Populates attribution scope fields if they are available.
     // Returns false if the json fields are invalid.
     // Note returning true doesn't indicate whether the fields are populated or not.
-    private boolean populateAttributionScopeFields(JSONObject json, Source.Builder builder)
+    private boolean populateAttributionScopeFields(JSONObject parentJson, Source.Builder builder)
             throws JSONException {
-        // Parses attribution scopes.
-        List<String> attributionScopes = new ArrayList<>();
-        if (!json.isNull(SourceHeaderContract.ATTRIBUTION_SCOPES)) {
-            Optional<List<String>> maybeAttributionScopes =
-                    FetcherUtil.extractStringArray(
-                            json,
-                            SourceHeaderContract.ATTRIBUTION_SCOPES,
-                            mFlags.getMeasurementMaxAttributionScopesPerSource(),
-                            mFlags.getMeasurementMaxAttributionScopeLength());
-            if (maybeAttributionScopes.isEmpty()) {
-                return false;
-            }
-            attributionScopes = maybeAttributionScopes.get();
+        JSONObject json = parentJson.getJSONObject(SourceHeaderContract.ATTRIBUTION_SCOPES);
+        if (json.isNull(SourceHeaderContract.ATTRIBUTION_SCOPE_LIMIT)
+                || json.isNull(SourceHeaderContract.ATTRIBUTION_SCOPES_VALUES)) {
+            LoggerFactory.getMeasurementLogger()
+                    .e("Attribution scope limit and values should be set for attribution scopes");
+            return false;
         }
 
-        // Parses attribution scope limit, can be optional.
-        if (json.isNull(SourceHeaderContract.ATTRIBUTION_SCOPE_LIMIT)) {
-            if (!attributionScopes.isEmpty()) {
-                LoggerFactory.getMeasurementLogger()
-                        .e(
-                                "Attribution scope limit should be set if attribution scopes are "
-                                        + "not empty.");
-                return false;
-            }
-            if (!json.isNull(SourceHeaderContract.MAX_EVENT_STATES)) {
-                LoggerFactory.getMeasurementLogger()
-                        .e(
-                                "Attribution scope limit should be set if max event states is "
-                                        + "set.");
-                return false;
-            }
-            return true;
-        }
+        // Parses attribution scope limit.
         Optional<Long> maybeAttributionScopeLimit =
                 FetcherUtil.extractLong(json, SourceHeaderContract.ATTRIBUTION_SCOPE_LIMIT);
         if (maybeAttributionScopeLimit.isEmpty()) {
             return false;
         }
         long attributionScopeLimit = maybeAttributionScopeLimit.get();
+
+        // Parses attribution scopes values.
+        Optional<List<String>> maybeAttributionScopes =
+                FetcherUtil.extractStringArray(
+                        json,
+                        SourceHeaderContract.ATTRIBUTION_SCOPES_VALUES,
+                        mFlags.getMeasurementMaxAttributionScopesPerSource(),
+                        mFlags.getMeasurementMaxAttributionScopeLength());
+        if (maybeAttributionScopes.isEmpty()) {
+            return false;
+        }
+        List<String> attributionScopes = maybeAttributionScopes.get();
 
         // Parses max event states, can be optional, fallback to default max event states.
         long maxEventStates = Source.DEFAULT_MAX_EVENT_STATES;
@@ -670,6 +693,64 @@ public class AsyncSourceFetcher {
         builder.setAttributionScopes(attributionScopes);
         builder.setMaxEventStates(maxEventStates);
         return true;
+    }
+
+    private Optional<AggregateContributionBuckets> parseAggregatableBucketBudget(
+            JSONObject aggregationBucketBudget) {
+        if (aggregationBucketBudget.length()
+                > mFlags.getMeasurementMaxAggregatableBucketsPerSourceRegistration()) {
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "parseAggregatableBucketBudget: more buckets than permitted. %s",
+                            aggregationBucketBudget.length());
+            return Optional.empty();
+        }
+        AggregateContributionBuckets aggregateContributionBuckets =
+                new AggregateContributionBuckets();
+
+        Iterator<String> keys = aggregationBucketBudget.keys();
+        while (keys.hasNext()) {
+            String id = keys.next();
+            if (id.length() > mFlags.getMeasurementMaxLengthPerAggregatableBucket()) {
+                LoggerFactory.getMeasurementLogger()
+                        .d(
+                                "parseAggregatableBucketBudget: aggregation bucket ID is invalid."
+                                        + " %s",
+                                id);
+                return Optional.empty();
+            }
+            Optional<Integer> maybeIntBudget =
+                    FetcherUtil.extractIntegralInt(aggregationBucketBudget, id);
+            if (maybeIntBudget.isEmpty()) {
+                LoggerFactory.getMeasurementLogger()
+                        .d(
+                                "parseAggregatableBucketBudget: aggregation bucket budget"
+                                        + " isn't an integer. %s",
+                                id);
+                return Optional.empty();
+            }
+            int intBudget = maybeIntBudget.get();
+            if (intBudget <= 0) {
+                LoggerFactory.getMeasurementLogger()
+                        .d(
+                                "parseAggregatableBucketBudget: aggregation bucket budget"
+                                        + " is non positive. %s",
+                                intBudget);
+                return Optional.empty();
+            }
+            if (intBudget > mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()) {
+                LoggerFactory.getMeasurementLogger()
+                        .d(
+                                "parseAggregatableBucketBudget: aggregation bucket budget"
+                                        + " is over budget. %s",
+                                intBudget);
+                return Optional.empty();
+            }
+
+            aggregateContributionBuckets.createCapacityBucket(id, intBudget);
+        }
+
+        return Optional.of(aggregateContributionBuckets);
     }
 
     private boolean isValidTriggerDataSet(Set<UnsignedLong> triggerDataSet,
@@ -898,6 +979,7 @@ public class AsyncSourceFetcher {
         LoggerFactory.getMeasurementLogger()
                 .d("Source ArDebug permission enabled %b", arDebugPermission);
         Source.Builder builder = new Source.Builder();
+        builder.setId(UUID.randomUUID().toString());
         builder.setRegistrationId(asyncRegistration.getRegistrationId());
         builder.setPublisher(getBaseUri(asyncRegistration.getTopOrigin()));
         builder.setEnrollmentId(enrollmentId);
@@ -1227,11 +1309,14 @@ public class AsyncSourceFetcher {
         String TRIGGER_DATA_MATCHING = "trigger_data_matching";
         String TRIGGER_DATA = "trigger_data";
         String ATTRIBUTION_SCOPES = "attribution_scopes";
-        String ATTRIBUTION_SCOPE_LIMIT = "attribution_scope_limit";
+        String ATTRIBUTION_SCOPE_LIMIT = "limit";
+        String ATTRIBUTION_SCOPES_VALUES = "values";
         String MAX_EVENT_STATES = "max_event_states";
         String DESTINATION_LIMIT_PRIORITY = "destination_limit_priority";
         String DESTINATION_LIMIT_ALGORITHM = "destination_limit_algorithm";
         String EVENT_LEVEL_EPSILON = "event_level_epsilon";
+        String AGGREGATABLE_DEBUG_REPORTING = "aggregatable_debug_reporting";
+        String AGGREGATABLE_BUCKET_MAX_BUDGET = "aggregatable_bucket_max_budget";
     }
 
     private interface SourceRequestContract {

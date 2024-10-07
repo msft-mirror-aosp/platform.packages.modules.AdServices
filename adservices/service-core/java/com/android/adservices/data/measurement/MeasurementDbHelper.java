@@ -16,7 +16,6 @@
 
 package com.android.adservices.data.measurement;
 
-import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.ContentValues;
 import android.content.Context;
@@ -60,13 +59,18 @@ import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV3
 import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV38;
 import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV39;
 import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV40;
+import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV41;
+import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV42;
+import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV43;
 import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV7;
 import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV8;
 import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV9;
 import com.android.adservices.service.common.compat.FileCompatUtils;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
+import com.google.errorprone.annotations.concurrent.GuardedBy;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -76,34 +80,37 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /** Database Helper for Measurement database. */
-public class MeasurementDbHelper extends SQLiteOpenHelper {
+public final class MeasurementDbHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME =
             FileCompatUtils.getAdservicesFilename("adservices_msmt.db");
-    public static final int CURRENT_DATABASE_VERSION = 40;
+    public static final int CURRENT_DATABASE_VERSION = 43;
     public static final int OLD_DATABASE_FINAL_VERSION = 6;
 
-    private static MeasurementDbHelper sSingleton = null;
+    private static final Object LOCK = new Object();
+
+    @GuardedBy("LOCK")
+    private static MeasurementDbHelper sSingleton;
+
     private final File mDbFile;
     private final int mDbVersion;
     private final DbHelper mDbHelper;
 
     @VisibleForTesting
-    public MeasurementDbHelper(
-            @NonNull Context context, @NonNull String dbName, int dbVersion, DbHelper dbHelper) {
+    public MeasurementDbHelper(Context context, String dbName, int dbVersion, DbHelper dbHelper) {
         super(context, dbName, null, dbVersion);
         mDbFile = FileCompatUtils.getDatabasePathHelper(context, dbName);
-        this.mDbVersion = dbVersion;
-        this.mDbHelper = dbHelper;
+        mDbVersion = dbVersion;
+        mDbHelper = dbHelper;
     }
 
     /** Returns an instance of the DbHelper given a context. */
-    @NonNull
-    public static MeasurementDbHelper getInstance(@NonNull Context ctx) {
-        synchronized (MeasurementDbHelper.class) {
+    public static MeasurementDbHelper getInstance() {
+        synchronized (LOCK) {
             if (sSingleton == null) {
+                Context context = ApplicationContextSingleton.get();
                 sSingleton =
                         new MeasurementDbHelper(
-                                ctx,
+                                context,
                                 DATABASE_NAME,
                                 CURRENT_DATABASE_VERSION,
                                 DbHelper.getInstance());
@@ -191,7 +198,10 @@ public class MeasurementDbHelper extends SQLiteOpenHelper {
                 new MeasurementDbMigratorV37(),
                 new MeasurementDbMigratorV38(),
                 new MeasurementDbMigratorV39(),
-                new MeasurementDbMigratorV40());
+                new MeasurementDbMigratorV40(),
+                new MeasurementDbMigratorV41(),
+                new MeasurementDbMigratorV42(),
+                new MeasurementDbMigratorV43());
     }
 
     private boolean hasAllV6MeasurementTables(SQLiteDatabase db) {

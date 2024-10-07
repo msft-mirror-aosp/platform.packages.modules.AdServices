@@ -25,6 +25,7 @@ import android.util.Log;
 
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
+import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
@@ -72,8 +73,10 @@ public class AdSelectionShellCommandFactory implements ShellCommandFactory {
             ConsentedDebugConfigurationDao consentedDebugConfigurationDao,
             BuyerInputGenerator buyerInputGenerator,
             AuctionServerDataCompressor auctionServerDataCompressor,
-            ConsentedDebugConfigurationGenerator consentedDebugConfigurationGenerator) {
+            ConsentedDebugConfigurationGenerator consentedDebugConfigurationGenerator,
+            AdSelectionEntryDao adSelectionEntryDao) {
         Objects.requireNonNull(consentedDebugConfigurationDao);
+        Objects.requireNonNull(adSelectionEntryDao);
 
         mIsConsentedDebugCliEnabled = isConsentedDebugCliEnabled;
         mIsAdSelectionCliEnabled = isAdSelectionCliEnabled;
@@ -83,7 +86,8 @@ public class AdSelectionShellCommandFactory implements ShellCommandFactory {
                         new GetAdSelectionDataCommand(
                                 buyerInputGenerator,
                                 auctionServerDataCompressor,
-                                consentedDebugConfigurationGenerator));
+                                consentedDebugConfigurationGenerator),
+                        new ViewAuctionResultCommand(adSelectionEntryDao));
         mAllCommandsMap =
                 allCommands.stream()
                         .collect(
@@ -91,12 +95,10 @@ public class AdSelectionShellCommandFactory implements ShellCommandFactory {
                                         ShellCommand::getCommandName, Function.identity()));
     }
 
-    /**
-     * @return an instance of the {@link AdSelectionShellCommandFactory}.
-     */
-    public static AdSelectionShellCommandFactory getInstance(
+    /** Gets a new {@link AdSelectionShellCommandFactory} instance. */
+    public static AdSelectionShellCommandFactory newInstance(
             DebugFlags debugFlags, Flags flags, Context context) {
-        SharedStorageDatabase sharedStorageDatabase = SharedStorageDatabase.getInstance(context);
+        SharedStorageDatabase sharedStorageDatabase = SharedStorageDatabase.getInstance();
         AuctionServerDataCompressor auctionServerDataCompressor =
                 AuctionServerDataCompressorFactory.getDataCompressor(
                         flags.getFledgeAuctionServerCompressionAlgorithmVersion());
@@ -114,7 +116,7 @@ public class AdSelectionShellCommandFactory implements ShellCommandFactory {
                         compressedBuyerInputCreatorHelper,
                         dataCompressor,
                         flags.getFledgeGetAdSelectionDataSellerConfigurationEnabled(),
-                        CustomAudienceDatabase.getInstance(context).customAudienceDao(),
+                        CustomAudienceDatabase.getInstance().customAudienceDao(),
                         ProtectedSignalsDatabase.getInstance().getEncodedPayloadDao(),
                         CompressedBuyerInputCreatorNoOptimizations.VERSION,
                         flags.getFledgeGetAdSelectionDataMaxNumEntirePayloadCompressions(),
@@ -134,8 +136,10 @@ public class AdSelectionShellCommandFactory implements ShellCommandFactory {
                                         flags)
                                 .getAppInstallAdFilterer(),
                         compressedBuyerInputCreatorFactory);
+        AdSelectionDatabase adSelectionDatabase = AdSelectionDatabase.getInstance();
         ConsentedDebugConfigurationDao consentedDebugConfigurationDao =
-                AdSelectionDatabase.getInstance(context).consentedDebugConfigurationDao();
+                adSelectionDatabase.consentedDebugConfigurationDao();
+        AdSelectionEntryDao adSelectionEntryDao = adSelectionDatabase.adSelectionEntryDao();
         ConsentedDebugConfigurationGenerator consentedDebugConfigurationGenerator =
                 new ConsentedDebugConfigurationGeneratorFactory(
                                 debugFlags.getFledgeAuctionServerConsentedDebuggingEnabled(),
@@ -147,7 +151,8 @@ public class AdSelectionShellCommandFactory implements ShellCommandFactory {
                 consentedDebugConfigurationDao,
                 buyerInputGenerator,
                 auctionServerDataCompressor,
-                consentedDebugConfigurationGenerator);
+                consentedDebugConfigurationGenerator,
+                adSelectionEntryDao);
     }
 
     @SuppressLint("VisibleForTests")
@@ -172,7 +177,7 @@ public class AdSelectionShellCommandFactory implements ShellCommandFactory {
                 }
                 return command;
             }
-            case GetAdSelectionDataCommand.CMD -> {
+            case GetAdSelectionDataCommand.CMD, ViewAuctionResultCommand.CMD -> {
                 if (!mIsAdSelectionCliEnabled) {
                     return new NoOpShellCommand(
                             cmd, command.getMetricsLoggerCommand(), KEY_AD_SELECTION_CLI_ENABLED);

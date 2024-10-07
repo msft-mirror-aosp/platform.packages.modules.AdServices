@@ -27,25 +27,24 @@ import static com.google.common.truth.Truth.assertWithMessage;
 
 import android.content.Intent;
 
-import androidx.test.filters.SmallTest;
-
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
-@SmallTest
+@RequiresSdkLevelAtLeastS()
 @SpyStatic(AdServicesBackCompatInit.class)
 @SetErrorLogUtilDefaultParams(
         throwable = Any.class,
         errorCode =
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__BACK_COMPAT_INIT_BOOT_COMPLETED_RECEIVER_FAILURE,
         ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON)
-public class AdExtBootCompletedReceiverTest extends AdServicesExtendedMockitoTestCase {
+public final class AdExtBootCompletedReceiverTest extends AdServicesExtendedMockitoTestCase {
     @Mock private AdServicesBackCompatInit mMockBackCompatInit;
     @Spy private AdExtBootCompletedReceiver mSpyReceiver;
 

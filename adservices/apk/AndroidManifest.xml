@@ -58,10 +58,26 @@
                 android:description="@string/permdesc_accessAdServicesAttribution"
                 android:protectionLevel="normal"/>
 
+    <!--
+        Permissions directly related to running ad auctions include those for the Custom Audience,
+        Ad Selection, and Protected Signals APIs.
+    -->
     <!-- Allows an application to access AdServices Custom Audience APIs. -->
     <permission android:name="android.permission.ACCESS_ADSERVICES_CUSTOM_AUDIENCE"
                 android:label="@string/permlab_accessAdServicesCustomAudience"
                 android:description="@string/permdesc_accessAdServicesCustomAudience"
+                android:protectionLevel="normal"/>
+
+    <!-- Allows an application to access AdServices Ad Selection APIs. -->
+    <permission android:name="android.permission.ACCESS_ADSERVICES_AD_SELECTION"
+                android:label="@string/permlab_accessAdServicesAdSelection"
+                android:description="@string/permdesc_accessAdServicesAdSelection"
+                android:protectionLevel="normal"/>
+
+    <!-- Allows an application to access AdServices Protected Signals APIs. -->
+    <permission android:name="android.permission.ACCESS_ADSERVICES_PROTECTED_SIGNALS"
+                android:label="@string/permlab_accessAdServicesProtectedSignals"
+                android:description="@string/permdesc_accessAdServicesProtectedSignals"
                 android:protectionLevel="normal"/>
 
     <!-- Allows an application to access AdServices Ad Id API. -->
@@ -135,6 +151,21 @@
         android:supportsRtl="true"
         android:icon="@drawable/ic_android_icon"
         android:theme="@style/FilterTouches">
+
+        <!--
+            This provider must be initialized first (before the other providers), hence
+            the higher android:initOrder.
+            NOTE: in theory the order of components (provider / activity / service)
+            shouldn't matter, but it doesn't hurt to define it first, just in case...
+        -->
+        <provider
+            android:name=
+                "com.android.adservices.service.common.AdServicesInternalProvider"
+            android:authorities="com.android.adservices.provider.internal"
+            android:exported="false"
+            android:initOrder="999999999"
+        />
+
         <!-- Activity for the main view of Adservices Settings UI-->
         <activity
             android:name="com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity"
@@ -466,23 +497,24 @@
             </intent-filter>
         </receiver>
 
+        <!--
+            NOTE: all providers must have initOrder lower than AdServicesInternalProvider's
+            (higher numbers are initialized first)
+        -->
+
         <provider
             android:name=
                 "com.android.adservices.service.measurement.attribution.TriggerContentProvider"
             android:authorities="com.android.adservices.provider.trigger"
             android:exported="false"
+            android:initOrder="100"
         />
         <provider
             android:name=
                 "com.android.adservices.service.measurement.registration.AsyncRegistrationContentProvider"
             android:authorities="com.android.adservices.provider.asyncregistration"
             android:exported="false"
-        />
-        <provider
-            android:name=
-                "com.android.adservices.service.common.AdServicesInternalProvider"
-            android:authorities="com.android.adservices.provider.internal"
-            android:exported="false"
+            android:initOrder="50"
         />
     </application>
 </manifest>

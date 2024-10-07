@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import android.annotation.Nullable;
 import android.content.Context;
 import android.net.Uri;
 
@@ -44,28 +45,16 @@ public abstract class MeasurementReportSender {
         mNetworkConnection = new MeasurementHttpClient(context);
     }
 
-    /**
-     * Sends an event report to the reporting origin.
-     */
-    public int sendReport(Uri adTechDomain, JSONObject reportJson)
+    /** Sends an event report to the reporting origin with headers. */
+    public int sendReportWithHeaders(
+            Uri adTechDomain, JSONObject reportJson, @Nullable Map<String, String> headers)
             throws IOException {
         int returnCode;
         URL reportingFullUrl = createReportingFullUrl(adTechDomain);
-
         HttpURLConnection urlConnection = createHttpUrlConnection(reportingFullUrl);
-        returnCode = sendReportPostRequest(urlConnection, reportJson);
-        return returnCode;
-    }
-
-    /** Sends an event report to the reporting origin with extra headers. */
-    public int sendReportWithExtraHeaders(
-            Uri adTechDomain, JSONObject reportJson, Map<String, String> headers)
-            throws IOException {
-        int returnCode;
-        URL reportingFullUrl = createReportingFullUrl(adTechDomain);
-
-        HttpURLConnection urlConnection = createHttpUrlConnection(reportingFullUrl);
-        headers.forEach(urlConnection::setRequestProperty);
+        if (headers != null && !headers.isEmpty()) {
+            headers.forEach(urlConnection::setRequestProperty);
+        }
         returnCode = sendReportPostRequest(urlConnection, reportJson);
         return returnCode;
     }

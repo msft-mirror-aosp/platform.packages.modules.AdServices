@@ -105,6 +105,7 @@ import com.android.adservices.service.measurement.reporting.EventReportingJobSer
 import com.android.adservices.service.measurement.reporting.VerboseDebugReportingFallbackJobService;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ApiCallStats;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.concurrency.SimpleSyncCallback;
 import com.android.adservices.shared.util.Clock;
 import com.android.compatibility.common.util.TestUtils;
@@ -147,6 +148,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @SpyStatic(AsyncRegistrationFallbackJob.class)
 @SpyStatic(VerboseDebugReportingFallbackJobService.class)
 @SpyStatic(DebugReportingFallbackJobService.class)
+@RequiresSdkLevelAtLeastS()
 public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoTestCase {
 
     private static final Uri APP_DESTINATION = Uri.parse("android-app://test.app-destination");
@@ -241,6 +243,7 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS()
     public void testSchedulePeriodicJobs_success() throws Exception {
         SimpleSyncCallback callback = new SimpleSyncCallback();
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
@@ -2029,6 +2032,7 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
                 mMockConsentManager,
                 mMockThrottler,
                 new CachedFlags(mMockFlags),
+                mMockDebugFlags,
                 mMockAdServicesLogger,
                 mMockAppImportanceFilter,
                 mDevContextFilter,

@@ -23,6 +23,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.staticMockMarker;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.util.concurrent.Futures.immediateFailedFuture;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 
@@ -109,55 +110,9 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
     }
 
     @Test
-    public void testOnStartJobFlagDisabled_withoutLogging() {
-        Flags flagsWithScheduleUpdateDisabledWithoutLogging =
-                new Flags() {
-                    @Override
-                    public boolean getBackgroundJobsLoggingKillSwitch() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getFledgeScheduleCustomAudienceUpdateEnabled() {
-                        return false;
-                    }
-
-                    @Override
-                    public long getFledgeScheduleCustomAudienceUpdateJobPeriodMs() {
-                        throw new IllegalStateException(
-                                "This configured value should not be called");
-                    }
-
-                    @Override
-                    public long getFledgeScheduleCustomAudienceUpdateJobFlexMs() {
-                        throw new IllegalStateException(
-                                "This configured value should not be called");
-                    }
-
-                    @Override
-                    public boolean getGlobalKillSwitch() {
-                        return false;
-                    }
-                };
-        doReturn(flagsWithScheduleUpdateDisabledWithoutLogging).when(FlagsFactory::getFlags);
-        AdServicesJobServiceLogger logger =
-                mockAdServicesJobServiceLogger(
-                        sContext, flagsWithScheduleUpdateDisabledWithoutLogging);
-
-        testOnStartJobFlagDisabled();
-
-        verifyLoggingNotHappened(logger);
-    }
-
-    @Test
     public void testOnStartJobFlagDisabled_withLogging() throws InterruptedException {
-        Flags flagsWithScheduleUpdateDisabledWithLogging =
+        Flags flagsWithScheduleUpdateDisabled =
                 new Flags() {
-                    @Override
-                    public boolean getBackgroundJobsLoggingKillSwitch() {
-                        return false;
-                    }
-
                     @Override
                     public boolean getFledgeScheduleCustomAudienceUpdateEnabled() {
                         return false;
@@ -180,10 +135,10 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
                         return false;
                     }
                 };
-        doReturn(flagsWithScheduleUpdateDisabledWithLogging).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(flagsWithScheduleUpdateDisabled);
         AdServicesJobServiceLogger logger =
-                mockAdServicesJobServiceLogger(
-                        sContext, flagsWithScheduleUpdateDisabledWithLogging);
+                mocker.mockNoOpAdServicesJobServiceLogger(
+                        mContext, flagsWithScheduleUpdateDisabled);
         JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
         testOnStartJobFlagDisabled();
@@ -202,7 +157,7 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
                 };
 
         doReturn(flagsWithGaUxDisabled).when(FlagsFactory::getFlags);
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
+        doReturn(mConsentManagerMock).when(ConsentManager::getInstance);
         doReturn(AdServicesApiConsent.REVOKED)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -230,40 +185,12 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
     }
 
     @Test
-    public void testOnStartJobConsentRevokedGaUxEnabled_withoutLogging() {
-        Flags flagsWithGaUxEnabledLoggingDisabled =
-                new Flags() {
-                    @Override
-                    public boolean getGaUxFeatureEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getBackgroundJobsLoggingKillSwitch() {
-                        return true;
-                    }
-                };
-        doReturn(flagsWithGaUxEnabledLoggingDisabled).when(FlagsFactory::getFlags);
-        AdServicesJobServiceLogger logger =
-                mockAdServicesJobServiceLogger(sContext, flagsWithGaUxEnabledLoggingDisabled);
-
-        testOnStartJobConsentRevokedGaUxEnabled();
-
-        verifyLoggingNotHappened(logger);
-    }
-
-    @Test
     public void testOnStartJobConsentRevokedGaUxEnabled_withLogging() throws InterruptedException {
-        Flags flagsWithGaUxEnabledLoggingEnabled =
+        Flags flagsWithGaUxEnabled =
                 new Flags() {
                     @Override
                     public boolean getGaUxFeatureEnabled() {
                         return true;
-                    }
-
-                    @Override
-                    public boolean getBackgroundJobsLoggingKillSwitch() {
-                        return false;
                     }
 
                     @Override
@@ -276,9 +203,9 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
                         return false;
                     }
                 };
-        doReturn(flagsWithGaUxEnabledLoggingEnabled).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(flagsWithGaUxEnabled);
         AdServicesJobServiceLogger logger =
-                mockAdServicesJobServiceLogger(sContext, flagsWithGaUxEnabledLoggingEnabled);
+                mocker.mockNoOpAdServicesJobServiceLogger(mContext, flagsWithGaUxEnabled);
         JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
         testOnStartJobConsentRevokedGaUxEnabled();
@@ -346,11 +273,11 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
                     }
                 };
         doReturn(flagsWithKillSwitchOff).when(FlagsFactory::getFlags);
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
+        doReturn(mConsentManagerMock).when(ConsentManager::getInstance);
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
-        doReturn(mUpdateWorker).when(() -> ScheduleCustomAudienceUpdateWorker.getInstance(any()));
+        doReturn(mUpdateWorker).when(ScheduleCustomAudienceUpdateWorker::getInstance);
         doReturn(FluentFuture.from(immediateFuture(null)))
                 .when(mUpdateWorker)
                 .updateCustomAudience();
@@ -367,8 +294,7 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
         assertTrue(mUpdateServiceSpy.onStartJob(mJobParametersMock));
         jobFinishedCountDown.await();
 
-        ExtendedMockito.verify(
-                () -> ScheduleCustomAudienceUpdateWorker.getInstance(mUpdateServiceSpy));
+        ExtendedMockito.verify(ScheduleCustomAudienceUpdateWorker::getInstance);
         verify(mUpdateWorker).updateCustomAudience();
         verify(mUpdateServiceSpy).jobFinished(mJobParametersMock, false);
         verifyNoMoreInteractions(staticMockMarker(ScheduleCustomAudienceUpdateWorker.class));
@@ -376,16 +302,11 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
 
     @Test
     public void testOnStartJobUpdateSuccess_withLogging() throws InterruptedException {
-        Flags flagsWithLogging =
+        Flags flags =
                 new Flags() {
                     @Override
                     public boolean getGaUxFeatureEnabled() {
                         return true;
-                    }
-
-                    @Override
-                    public boolean getBackgroundJobsLoggingKillSwitch() {
-                        return false;
                     }
 
                     @Override
@@ -398,9 +319,9 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
                         return false;
                     }
                 };
-        doReturn(flagsWithLogging).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(flags);
         AdServicesJobServiceLogger logger =
-                mockAdServicesJobServiceLogger(sContext, flagsWithLogging);
+                mocker.mockNoOpAdServicesJobServiceLogger(mContext, flags);
         JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);
         JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
@@ -410,50 +331,12 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
     }
 
     @Test
-    public void testOnStartJobUpdateTimeoutHandled_withoutLogging() throws InterruptedException {
-        Flags flagsWithoutLogging =
-                new Flags() {
-                    @Override
-                    public boolean getGaUxFeatureEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getBackgroundJobsLoggingKillSwitch() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getFledgeScheduleCustomAudienceUpdateEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getGlobalKillSwitch() {
-                        return false;
-                    }
-                };
-        doReturn(flagsWithoutLogging).when(FlagsFactory::getFlags);
-        AdServicesJobServiceLogger logger =
-                mockAdServicesJobServiceLogger(sContext, flagsWithoutLogging);
-
-        testOnStartJobUpdateTimeoutHandled();
-
-        verifyLoggingNotHappened(logger);
-    }
-
-    @Test
     public void testOnStartJobUpdateTimeoutHandled_withLogging() throws InterruptedException {
-        Flags flagsWithLogging =
+        Flags flags =
                 new Flags() {
                     @Override
                     public boolean getGaUxFeatureEnabled() {
                         return true;
-                    }
-
-                    @Override
-                    public boolean getBackgroundJobsLoggingKillSwitch() {
-                        return false;
                     }
 
                     @Override
@@ -466,9 +349,9 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
                         return false;
                     }
                 };
-        doReturn(flagsWithLogging).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(flags);
         AdServicesJobServiceLogger logger =
-                mockAdServicesJobServiceLogger(sContext, flagsWithLogging);
+                mocker.mockNoOpAdServicesJobServiceLogger(mContext, flags);
         JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);
         JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
@@ -499,9 +382,9 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
                     }
                 };
         doReturn(flagsEnabledScheduleUpdate).when(FlagsFactory::getFlags);
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
+        doReturn(mConsentManagerMock).when(ConsentManager::getInstance);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
-        doReturn(mUpdateWorker).when(() -> ScheduleCustomAudienceUpdateWorker.getInstance(any()));
+        doReturn(mUpdateWorker).when(ScheduleCustomAudienceUpdateWorker::getInstance);
         doReturn(
                         FluentFuture.from(
                                 immediateFailedFuture(new InterruptedException("testing timeout"))))
@@ -518,8 +401,7 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
         assertTrue(mUpdateServiceSpy.onStartJob(mJobParametersMock));
         jobFinishedCountDown.await();
 
-        ExtendedMockito.verify(
-                () -> ScheduleCustomAudienceUpdateWorker.getInstance(mUpdateServiceSpy));
+        ExtendedMockito.verify(ScheduleCustomAudienceUpdateWorker::getInstance);
         verify(mUpdateWorker).updateCustomAudience();
         verify(mUpdateServiceSpy).jobFinished(mJobParametersMock, false);
         verifyNoMoreInteractions(staticMockMarker(ScheduleCustomAudienceUpdateWorker.class));
@@ -547,9 +429,9 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
                     }
                 };
         doReturn(flagsEnabledScheduleUpdate).when(FlagsFactory::getFlags);
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
+        doReturn(mConsentManagerMock).when(ConsentManager::getInstance);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
-        doReturn(mUpdateWorker).when(() -> ScheduleCustomAudienceUpdateWorker.getInstance(any()));
+        doReturn(mUpdateWorker).when(ScheduleCustomAudienceUpdateWorker::getInstance);
 
         doReturn(
                         FluentFuture.from(
@@ -569,49 +451,19 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
         assertTrue(mUpdateServiceSpy.onStartJob(mJobParametersMock));
         jobFinishedCountDown.await();
 
-        ExtendedMockito.verify(
-                () -> ScheduleCustomAudienceUpdateWorker.getInstance(mUpdateServiceSpy));
+        ExtendedMockito.verify(ScheduleCustomAudienceUpdateWorker::getInstance);
         verify(mUpdateWorker).updateCustomAudience();
         verify(mUpdateServiceSpy).jobFinished(mJobParametersMock, false);
         verifyNoMoreInteractions(staticMockMarker(ScheduleCustomAudienceUpdateWorker.class));
     }
 
     @Test
-    public void testOnStopJobCallsStopWork_withoutLogging() {
-        Flags flagsWithoutLogging =
-                new Flags() {
-                    @Override
-                    public boolean getBackgroundJobsLoggingKillSwitch() {
-                        return true;
-                    }
-                };
-        doReturn(flagsWithoutLogging).when(FlagsFactory::getFlags);
+    public void testOnStopJob() throws InterruptedException {
         AdServicesJobServiceLogger logger =
-                mockAdServicesJobServiceLogger(sContext, flagsWithoutLogging);
-
-        doReturn(mUpdateWorker).when(() -> ScheduleCustomAudienceUpdateWorker.getInstance(any()));
-        doNothing().when(mUpdateWorker).stopWork();
-        assertTrue(mUpdateServiceSpy.onStopJob(mJobParametersMock));
-        verify(mUpdateWorker).stopWork();
-
-        verifyLoggingNotHappened(logger);
-    }
-
-    @Test
-    public void testOnStopJob_withLogging() throws InterruptedException {
-        Flags flagsWithLogging =
-                new Flags() {
-                    @Override
-                    public boolean getBackgroundJobsLoggingKillSwitch() {
-                        return false;
-                    }
-                };
-        doReturn(flagsWithLogging).when(FlagsFactory::getFlags);
-        AdServicesJobServiceLogger logger =
-                mockAdServicesJobServiceLogger(sContext, flagsWithLogging);
+                mocker.mockNoOpAdServicesJobServiceLogger(mContext, mMockFlags);
         JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
-        doReturn(mUpdateWorker).when(() -> ScheduleCustomAudienceUpdateWorker.getInstance(any()));
+        doReturn(mUpdateWorker).when(ScheduleCustomAudienceUpdateWorker::getInstance);
         doNothing().when(mUpdateWorker).stopWork();
         assertTrue(mUpdateServiceSpy.onStopJob(mJobParametersMock));
         verify(mUpdateWorker).stopWork();
@@ -760,37 +612,37 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
     }
 
     @Test
-    public void testOnStartJob_shouldDisableJobTrue_withoutLogging() {
-        Flags flagsWithoutLogging =
-                new Flags() {
-                    @Override
-                    public boolean getBackgroundJobsLoggingKillSwitch() {
-                        return true;
-                    }
-                };
-        doReturn(flagsWithoutLogging).when(FlagsFactory::getFlags);
+    public void testOnStartJobShouldDisableJobTrue() {
         AdServicesJobServiceLogger logger =
-                mockAdServicesJobServiceLogger(sContext, flagsWithoutLogging);
+                mocker.mockNoOpAdServicesJobServiceLogger(mContext, mMockFlags);
 
-        testOnStartJobShouldDisableJobTrue();
+        doReturn(true)
+                .when(
+                        () ->
+                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
+                                        any(Context.class)));
+        doReturn(JOB_SCHEDULER).when(mUpdateServiceSpy).getSystemService(JobScheduler.class);
+        doNothing().when(mUpdateServiceSpy).jobFinished(mJobParametersMock, false);
 
-        verifyLoggingNotHappened(logger);
-    }
+        // Schedule the job to assert after starting that the scheduled job has been cancelled
+        JobInfo existingJobInfo =
+                new JobInfo.Builder(
+                                SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_ID,
+                                new ComponentName(
+                                        mContext, ScheduleCustomAudienceUpdateJobService.class))
+                        .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
+                        .build();
+        JOB_SCHEDULER.schedule(existingJobInfo);
+        assertThat(JOB_SCHEDULER.getPendingJob(SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_ID))
+                .isNotNull();
 
-    @Test
-    public void testOnStartJob_shouldDisableJobTrue_withLoggingEnabled() {
-        Flags flagsWithLogging =
-                new Flags() {
-                    @Override
-                    public boolean getBackgroundJobsLoggingKillSwitch() {
-                        return false;
-                    }
-                };
-        doReturn(flagsWithLogging).when(FlagsFactory::getFlags);
-        AdServicesJobServiceLogger logger =
-                mockAdServicesJobServiceLogger(sContext, flagsWithLogging);
+        assertThat(mUpdateServiceSpy.onStartJob(mJobParametersMock)).isFalse();
 
-        testOnStartJobShouldDisableJobTrue();
+        assertThat(JOB_SCHEDULER.getPendingJob(SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_ID))
+                .isNull();
+        verify(mUpdateWorker, never()).updateCustomAudience();
+        verify(mUpdateServiceSpy).jobFinished(mJobParametersMock, false);
+        verifyNoMoreInteractions(staticMockMarker(ScheduleCustomAudienceUpdateWorker.class));
 
         // Verify logging has not happened even though logging is enabled because this field is not
         // logged
@@ -800,9 +652,9 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
     private void testOnStartJobUpdateTimeoutHandled() throws InterruptedException {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
+        doReturn(mConsentManagerMock).when(ConsentManager::getInstance);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
-        doReturn(mUpdateWorker).when(() -> ScheduleCustomAudienceUpdateWorker.getInstance(any()));
+        doReturn(mUpdateWorker).when(ScheduleCustomAudienceUpdateWorker::getInstance);
         doReturn(FluentFuture.from(immediateFailedFuture(new TimeoutException("testing timeout"))))
                 .when(mUpdateWorker)
                 .updateCustomAudience();
@@ -817,38 +669,8 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
         assertTrue(mUpdateServiceSpy.onStartJob(mJobParametersMock));
         jobFinishedCountDown.await();
 
-        ExtendedMockito.verify(
-                () -> ScheduleCustomAudienceUpdateWorker.getInstance(mUpdateServiceSpy));
+        ExtendedMockito.verify(ScheduleCustomAudienceUpdateWorker::getInstance);
         verify(mUpdateWorker).updateCustomAudience();
-        verify(mUpdateServiceSpy).jobFinished(mJobParametersMock, false);
-        verifyNoMoreInteractions(staticMockMarker(ScheduleCustomAudienceUpdateWorker.class));
-    }
-
-    private void testOnStartJobShouldDisableJobTrue() {
-        doReturn(true)
-                .when(
-                        () ->
-                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
-                                        any(Context.class)));
-        doReturn(JOB_SCHEDULER).when(mUpdateServiceSpy).getSystemService(JobScheduler.class);
-        doNothing().when(mUpdateServiceSpy).jobFinished(mJobParametersMock, false);
-
-        // Schedule the job to assert after starting that the scheduled job has been cancelled
-        JobInfo existingJobInfo =
-                new JobInfo.Builder(
-                                SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_ID,
-                                new ComponentName(
-                                        sContext, ScheduleCustomAudienceUpdateJobService.class))
-                        .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
-                        .build();
-        JOB_SCHEDULER.schedule(existingJobInfo);
-        assertNotNull(
-                JOB_SCHEDULER.getPendingJob(SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_ID));
-
-        assertFalse(mUpdateServiceSpy.onStartJob(mJobParametersMock));
-
-        assertNull(JOB_SCHEDULER.getPendingJob(SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_ID));
-        verify(mUpdateWorker, never()).updateCustomAudience();
         verify(mUpdateServiceSpy).jobFinished(mJobParametersMock, false);
         verifyNoMoreInteractions(staticMockMarker(ScheduleCustomAudienceUpdateWorker.class));
     }
@@ -856,11 +678,11 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
     private void testOnStartJobUpdateSuccess() throws InterruptedException {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
+        doReturn(mConsentManagerMock).when(ConsentManager::getInstance);
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
-        doReturn(mUpdateWorker).when(() -> ScheduleCustomAudienceUpdateWorker.getInstance(any()));
+        doReturn(mUpdateWorker).when(ScheduleCustomAudienceUpdateWorker::getInstance);
         doReturn(FluentFuture.from(immediateFuture(null)))
                 .when(mUpdateWorker)
                 .updateCustomAudience();
@@ -875,8 +697,7 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
         assertTrue(mUpdateServiceSpy.onStartJob(mJobParametersMock));
         jobFinishedCountDown.await();
 
-        ExtendedMockito.verify(
-                () -> ScheduleCustomAudienceUpdateWorker.getInstance(mUpdateServiceSpy));
+        ExtendedMockito.verify(ScheduleCustomAudienceUpdateWorker::getInstance);
         verify(mUpdateWorker).updateCustomAudience();
         verify(mUpdateServiceSpy).jobFinished(mJobParametersMock, false);
         verifyNoMoreInteractions(staticMockMarker(ScheduleCustomAudienceUpdateWorker.class));
@@ -907,7 +728,7 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
     }
 
     private void testOnStartJobConsentRevokedGaUxEnabled() {
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
+        doReturn(mConsentManagerMock).when(ConsentManager::getInstance);
         doReturn(AdServicesApiConsent.REVOKED)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);

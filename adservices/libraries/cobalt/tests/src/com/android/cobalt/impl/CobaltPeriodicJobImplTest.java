@@ -38,6 +38,7 @@ import com.android.cobalt.data.EventVector;
 import com.android.cobalt.data.ReportKey;
 import com.android.cobalt.data.TestOnlyDao;
 import com.android.cobalt.domain.Project;
+import com.android.cobalt.domain.ReportIdentifier;
 import com.android.cobalt.logging.CobaltOperationLogger;
 import com.android.cobalt.observations.PrivacyGenerator;
 import com.android.cobalt.system.SystemData;
@@ -249,6 +250,7 @@ public class CobaltPeriodicJobImplTest {
     private Encrypter mEncrypter;
     private CobaltPeriodicJob mPeriodicJob;
     private CobaltOperationLogger mOperationLogger;
+    private ImmutableList<ReportIdentifier> mReportsToIgnore = ImmutableList.of();
     private boolean mEnabled = true;
 
     private static ImmutableList<String> apiKeysOf(ImmutableList<Envelope> envelopes) {
@@ -285,7 +287,8 @@ public class CobaltPeriodicJobImplTest {
     public void manualSetUp() throws ExecutionException, InterruptedException {
         mCobaltDatabase = Room.inMemoryDatabaseBuilder(CONTEXT, CobaltDatabase.class).build();
         mTestOnlyDao = mCobaltDatabase.testOnlyDao();
-        mDataService = new DataService(EXECUTOR, mCobaltDatabase);
+        mOperationLogger = new FakeCobaltOperationLogger();
+        mDataService = new DataService(EXECUTOR, mCobaltDatabase, mOperationLogger);
         mSecureRandom = new ConstantFakeSecureRandom();
         mPrivacyGenerator = new PrivacyGenerator(mSecureRandom);
         mClock = new FakeSystemClock();
@@ -307,8 +310,9 @@ public class CobaltPeriodicJobImplTest {
                         mEncrypter,
                         ByteString.copyFrom(API_KEY.getBytes(UTF_8)),
                         UPLOAD_DONE_DELAY,
+                        mOperationLogger,
+                        mReportsToIgnore,
                         mEnabled);
-        mOperationLogger = new FakeCobaltOperationLogger();
 
         mClock.set(LOG_TIME);
         mDataService.loggerEnabled(ENABLED_TIME).get();
@@ -1101,8 +1105,7 @@ public class CobaltPeriodicJobImplTest {
                             EVENT_VECTOR_1,
                             /* eventVectorBufferMax= */ 0,
                             /* stringBufferMax= */ 0,
-                            "STRING_A",
-                            mOperationLogger)
+                            "STRING_A")
                     .get();
             mDataService
                     .aggregateString(
@@ -1112,8 +1115,7 @@ public class CobaltPeriodicJobImplTest {
                             EVENT_VECTOR_1,
                             /* eventVectorBufferMax= */ 0,
                             /* stringBufferMax= */ 0,
-                            "STRING_A",
-                            mOperationLogger)
+                            "STRING_A")
                     .get();
         }
 
@@ -1127,8 +1129,7 @@ public class CobaltPeriodicJobImplTest {
                             EVENT_VECTOR_2,
                             /* eventVectorBufferMax= */ 0,
                             /* stringBufferMax= */ 0,
-                            "STRING_A",
-                            mOperationLogger)
+                            "STRING_A")
                     .get();
             mDataService
                     .aggregateString(
@@ -1138,8 +1139,7 @@ public class CobaltPeriodicJobImplTest {
                             EVENT_VECTOR_2,
                             /* eventVectorBufferMax= */ 0,
                             /* stringBufferMax= */ 0,
-                            "STRING_A",
-                            mOperationLogger)
+                            "STRING_A")
                     .get();
         }
 
@@ -1153,8 +1153,7 @@ public class CobaltPeriodicJobImplTest {
                             EVENT_VECTOR_1,
                             /* eventVectorBufferMax= */ 0,
                             /* stringBufferMax= */ 0,
-                            "STRING_B",
-                            mOperationLogger)
+                            "STRING_B")
                     .get();
             mDataService
                     .aggregateString(
@@ -1164,8 +1163,7 @@ public class CobaltPeriodicJobImplTest {
                             EVENT_VECTOR_1,
                             /* eventVectorBufferMax= */ 0,
                             /* stringBufferMax= */ 0,
-                            "STRING_B",
-                            mOperationLogger)
+                            "STRING_B")
                     .get();
 
             mDataService
@@ -1176,8 +1174,7 @@ public class CobaltPeriodicJobImplTest {
                             EVENT_VECTOR_1,
                             /* eventVectorBufferMax= */ 0,
                             /* stringBufferMax= */ 0,
-                            "STRING_B",
-                            mOperationLogger)
+                            "STRING_B")
                     .get();
             mDataService
                     .aggregateString(
@@ -1187,8 +1184,7 @@ public class CobaltPeriodicJobImplTest {
                             EVENT_VECTOR_1,
                             /* eventVectorBufferMax= */ 0,
                             /* stringBufferMax= */ 0,
-                            "STRING_B",
-                            mOperationLogger)
+                            "STRING_B")
                     .get();
         }
 
@@ -1368,8 +1364,7 @@ public class CobaltPeriodicJobImplTest {
                             EVENT_VECTOR_2,
                             /* eventVectorBufferMax= */ 0,
                             /* stringBufferMax= */ 0,
-                            "STRING_A",
-                            mOperationLogger)
+                            "STRING_A")
                     .get();
         }
 
@@ -1453,5 +1448,81 @@ public class CobaltPeriodicJobImplTest {
                                                         stringHistogram, RANDOM_BYTES))
                                         .setContributionId(RANDOM_BYTES)
                                         .build()));
+    }
+
+    @Test
+    public void testGenerateAggregatedObservations_reportsToIgnore_skipsObservationGeneration()
+            throws Exception {
+        // Setup the periodic job to ignore REPORT_1.
+        mReportsToIgnore =
+                ImmutableList.of(
+                        ReportIdentifier.create(
+                                (int) REPORT_1.customerId(),
+                                (int) REPORT_1.projectId(),
+                                (int) REPORT_1.metricId(),
+                                (int) REPORT_1.reportId()));
+        manualSetUp();
+
+        mClock.set(UPLOAD_TIME);
+        mPeriodicJob.generateAggregatedObservations().get();
+
+        // Verify the last sent day index was updated for all reports except the ignored reports.
+        assertThat(mTestOnlyDao.queryLastSentDayIndex(REPORT_1))
+                .isEqualTo(Optional.of(LOG_TIME_DAY - 1));
+        assertThat(mTestOnlyDao.queryLastSentDayIndex(REPORT_2))
+                .isEqualTo(Optional.of(LOG_TIME_DAY));
+        assertThat(mTestOnlyDao.queryLastSentDayIndex(REPORT_3))
+                .isEqualTo(Optional.of(LOG_TIME_DAY));
+        assertThat(mTestOnlyDao.queryLastSentDayIndex(REPORT_4))
+                .isEqualTo(Optional.of(LOG_TIME_DAY));
+    }
+
+    @Test
+    public void testGenerateAggregatedObservations_reportIgnored_afterInitialObservationGeneration()
+            throws Exception {
+        manualSetUp();
+        mClock.set(UPLOAD_TIME);
+
+        mPeriodicJob.generateAggregatedObservations().get();
+
+        // Setup the periodic job to ignore REPORT_1.
+        mReportsToIgnore =
+                ImmutableList.of(
+                        ReportIdentifier.create(
+                                (int) REPORT_1.customerId(),
+                                (int) REPORT_1.projectId(),
+                                (int) REPORT_1.metricId(),
+                                (int) REPORT_1.reportId()));
+        mPeriodicJob =
+                new CobaltPeriodicJobImpl(
+                        mProject,
+                        RELEASE_STAGE,
+                        mDataService,
+                        EXECUTOR,
+                        SCHEDULED_EXECUTOR,
+                        mClock,
+                        mSystemData,
+                        mPrivacyGenerator,
+                        mSecureRandom,
+                        mUploader,
+                        mEncrypter,
+                        ByteString.copyFrom(API_KEY.getBytes(UTF_8)),
+                        UPLOAD_DONE_DELAY,
+                        mOperationLogger,
+                        mReportsToIgnore,
+                        mEnabled);
+
+        mClock.set(UPLOAD_TIME.plus(Duration.ofDays(1)));
+        mPeriodicJob.generateAggregatedObservations().get();
+
+        // Verify the last sent day index was updated for all reports except the ignored report.
+        assertThat(mTestOnlyDao.queryLastSentDayIndex(REPORT_1))
+                .isEqualTo(Optional.of(LOG_TIME_DAY));
+        assertThat(mTestOnlyDao.queryLastSentDayIndex(REPORT_2))
+                .isEqualTo(Optional.of(LOG_TIME_DAY + 1));
+        assertThat(mTestOnlyDao.queryLastSentDayIndex(REPORT_3))
+                .isEqualTo(Optional.of(LOG_TIME_DAY + 1));
+        assertThat(mTestOnlyDao.queryLastSentDayIndex(REPORT_4))
+                .isEqualTo(Optional.of(LOG_TIME_DAY + 1));
     }
 }

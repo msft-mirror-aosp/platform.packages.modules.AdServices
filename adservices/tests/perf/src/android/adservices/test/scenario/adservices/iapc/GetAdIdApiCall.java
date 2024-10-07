@@ -16,21 +16,17 @@
 
 package android.adservices.test.scenario.adservices.iapc;
 
-import static com.android.adservices.service.FlagsConstants.KEY_AD_ID_CACHE_ENABLED;
-
 import android.platform.test.scenario.annotation.Scenario;
 
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastR;
-import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Test;
 
 /** The test class to measure the start-up latency for Ad ID API. */
 @Scenario
-@RequiresSdkLevelAtLeastR(reason = "AdServices is only available on R+.")
+@RequiresSdkLevelAtLeastS(reason = "AdServices is only available on S+.")
 public class GetAdIdApiCall extends GetAdIdApiCallBase {
     @Test
-    @SetFlagEnabled(KEY_AD_ID_CACHE_ENABLED)
     public void testGetAdId() throws Exception {
         measureGetAdIdCall();
     }

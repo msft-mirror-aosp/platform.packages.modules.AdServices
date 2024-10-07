@@ -39,10 +39,7 @@ import com.android.adservices.service.shell.NoOpShellCommand;
 import com.android.adservices.service.shell.ShellCommand;
 import com.android.adservices.service.shell.ShellCommandFactory;
 import com.android.adservices.service.signals.PeriodicEncodingJobRunner;
-import com.android.adservices.service.signals.ProtectedSignalsArgument;
-import com.android.adservices.service.signals.ProtectedSignalsArgumentFastImpl;
-import com.android.adservices.service.signals.ProtectedSignalsArgumentImpl;
-import com.android.adservices.service.signals.SignalsProviderImpl;
+import com.android.adservices.service.signals.SignalsProviderAndArgumentFactory;
 import com.android.adservices.service.signals.SignalsScriptEngine;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.pas.EncodingExecutionLogHelper;
@@ -67,19 +64,16 @@ public class SignalsShellCommandFactory implements ShellCommandFactory {
 
     public SignalsShellCommandFactory(
             boolean isSignalsCliEnabled,
-            ProtectedSignalsDao protectedSignalsDao,
+            SignalsProviderAndArgumentFactory signalsProviderAndArgumentFactory,
             PeriodicEncodingJobRunner encodingJobRunner,
             EncoderLogicHandler encoderLogicHandler,
             EncodingExecutionLogHelper encodingExecutionLogHelper,
             EncodingJobRunStatsLogger encodingJobRunStatsLogger,
-            EncoderLogicMetadataDao encoderLogicMetadataDao,
-            ProtectedSignalsArgument protectedSignalsArgument) {
+            EncoderLogicMetadataDao encoderLogicMetadataDao) {
         mIsSignalsCliEnabled = isSignalsCliEnabled;
         Set<ShellCommand> allCommandsMap =
                 ImmutableSet.of(
-                        new GenerateInputForEncodingCommand(
-                                new SignalsProviderImpl(protectedSignalsDao),
-                                protectedSignalsArgument),
+                        new GenerateInputForEncodingCommand(signalsProviderAndArgumentFactory),
                         new TriggerEncodingCommand(
                                 encodingJobRunner,
                                 encoderLogicHandler,
@@ -93,24 +87,21 @@ public class SignalsShellCommandFactory implements ShellCommandFactory {
                                         ShellCommand::getCommandName, Function.identity()));
     }
 
-    /**
-     * @return an instance of the {@link SignalsShellCommandFactory}.
-     */
-    public static ShellCommandFactory getInstance(
+    /** Gets a new {@link SignalsShellCommandFactory} instance. */
+    public static ShellCommandFactory newInstance(
             DebugFlags debugFlags,
             ProtectedSignalsDao protectedSignalsDao,
             Flags flags,
             Context context) {
         EncoderLogicHandler encoderLogicHandler = new EncoderLogicHandler(context);
-        ProtectedSignalsArgument protectedSignalsArgument =
-                flags.getPasEncodingJobImprovementsEnabled()
-                        ? new ProtectedSignalsArgumentFastImpl()
-                        : new ProtectedSignalsArgumentImpl();
+        SignalsProviderAndArgumentFactory signalsProviderAndArgumentFactory =
+                new SignalsProviderAndArgumentFactory(
+                        protectedSignalsDao, flags.getPasEncodingJobImprovementsEnabled());
         return new SignalsShellCommandFactory(
                 debugFlags.getProtectedAppSignalsCommandsEnabled(),
-                protectedSignalsDao,
+                signalsProviderAndArgumentFactory,
                 new PeriodicEncodingJobRunner(
-                        new SignalsProviderImpl(protectedSignalsDao),
+                        signalsProviderAndArgumentFactory,
                         protectedSignalsDao,
                         new SignalsScriptEngine(
                                 flags::getIsolateMaxHeapSizeBytes,
@@ -121,8 +112,7 @@ public class SignalsShellCommandFactory implements ShellCommandFactory {
                         encoderLogicHandler,
                         ProtectedSignalsDatabase.getInstance().getEncodedPayloadDao(),
                         AdServicesExecutors.getBackgroundExecutor(),
-                        AdServicesExecutors.getLightWeightExecutor(),
-                        protectedSignalsArgument),
+                        AdServicesExecutors.getLightWeightExecutor()),
                 encoderLogicHandler,
                 new EncodingExecutionLogHelperImpl(
                         AdServicesLoggerImpl.getInstance(),
@@ -130,8 +120,7 @@ public class SignalsShellCommandFactory implements ShellCommandFactory {
                         EnrollmentDao.getInstance()),
                 new EncodingJobRunStatsLoggerImpl(
                         AdServicesLoggerImpl.getInstance(), EncodingJobRunStats.builder()),
-                ProtectedSignalsDatabase.getInstance().getEncoderLogicMetadataDao(),
-                protectedSignalsArgument);
+                ProtectedSignalsDatabase.getInstance().getEncoderLogicMetadataDao());
     }
 
     private static RetryStrategy getRetryStrategy(Flags flags) {

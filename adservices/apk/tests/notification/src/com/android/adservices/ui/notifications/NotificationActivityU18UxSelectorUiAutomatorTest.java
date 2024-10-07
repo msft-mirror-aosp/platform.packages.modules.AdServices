@@ -33,16 +33,20 @@ import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.ui.util.AdServicesUiTestCase;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.adservices.ui.util.NotificationActivityTestUtil;
 
+import org.junit.Assume;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(AndroidJUnit4.class)
+@RequiresSdkLevelAtLeastS(reason = "Cannot run on R with Consent Source of truth removed")
 public final class NotificationActivityU18UxSelectorUiAutomatorTest extends AdServicesUiTestCase {
 
     @Rule(order = 11)
@@ -58,6 +62,11 @@ public final class NotificationActivityU18UxSelectorUiAutomatorTest extends AdSe
     @BeforeClass
     public static void classSetup() throws Exception {
         NotificationActivityTestUtil.setupBeforeTests();
+    }
+
+    @Before
+    public void setup() throws Exception {
+        Assume.assumeTrue(NotificationActivityTestUtil.isNotificationIntentInstalled(true));
     }
 
     @Test

@@ -28,6 +28,7 @@ import static com.android.adservices.service.topics.BlockedTopicsManager.handleB
 import static com.android.adservices.service.topics.BlockedTopicsManager.mayClearPpApiBlockedTopics;
 import static com.android.adservices.service.topics.BlockedTopicsManager.mayMigratePpApiBlockedTopicsToSystemService;
 import static com.android.adservices.service.topics.BlockedTopicsManager.resetSharedPreference;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -37,7 +38,6 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.app.adservices.AdServicesManager;
@@ -59,10 +59,10 @@ import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.appsearch.AppSearchConsentManager;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
-import com.android.modules.utils.build.SdkLevel;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -76,7 +76,7 @@ import java.util.List;
 @SetErrorLogUtilDefaultParams(
         throwable = IllegalStateException.class,
         ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS)
-public class BlockedTopicsManagerTest extends AdServicesExtendedMockitoTestCase {
+public final class BlockedTopicsManagerTest extends AdServicesExtendedMockitoTestCase {
     private static final long TAXONOMY_VERSION = 1L;
     private static final long MODEL_VERSION = 1L;
     private static final Topic TOPIC =
@@ -207,25 +207,6 @@ public class BlockedTopicsManagerTest extends AdServicesExtendedMockitoTestCase 
     @ExpectErrorLogUtilWithExceptionCall(
             errorCode =
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_RECORD_BLOCKED_TOPICS_FAILURE)
-    public void testBlockTopic_withPpapiAndAdExtDataServiceOnly_throwsException() throws Exception {
-        BlockedTopicsManager blockedTopicsManager =
-                getSpiedBlockedTopicsManager(
-                        Flags.PPAPI_AND_ADEXT_SERVICE, /* enableAppSearchConsent= */ true);
-
-        Exception e =
-                assertThrows(RuntimeException.class, () -> blockedTopicsManager.blockTopic(TOPIC));
-        assertThat(e).hasCauseThat().isNotNull();
-        assertThat(e).hasCauseThat().isInstanceOf(IllegalStateException.class);
-        assertThat(e)
-                .hasCauseThat()
-                .hasMessageThat()
-                .startsWith("Invalid state: Attempting to block topic");
-    }
-
-    @Test
-    @ExpectErrorLogUtilWithExceptionCall(
-            errorCode =
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_RECORD_BLOCKED_TOPICS_FAILURE)
     public void testBlockTopic_withAppSearchOnly_throwsException() throws Exception {
         Exception thrown = new IllegalStateException("test");
         ExtendedMockito.doThrow(thrown).when(mAppSearchConsentManager).blockTopic(any());
@@ -236,26 +217,6 @@ public class BlockedTopicsManagerTest extends AdServicesExtendedMockitoTestCase 
         Exception e =
                 assertThrows(RuntimeException.class, () -> blockedTopicsManager.blockTopic(TOPIC));
         assertThat(e).hasCauseThat().isSameInstanceAs(thrown);
-    }
-
-    @Test
-    @ExpectErrorLogUtilWithExceptionCall(
-            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_REMOVE_BLOCKED_TOPIC_FAILURE)
-    public void testUnblockTopic_withPpapiAndAdExtDataServiceOnly_throwsException()
-            throws Exception {
-        BlockedTopicsManager blockedTopicsManager =
-                getSpiedBlockedTopicsManager(
-                        Flags.PPAPI_AND_ADEXT_SERVICE, /* enableAppSearchConsent= */ true);
-
-        Exception e =
-                assertThrows(
-                        RuntimeException.class, () -> blockedTopicsManager.unblockTopic(TOPIC));
-        assertThat(e).hasCauseThat().isNotNull();
-        assertThat(e).hasCauseThat().isInstanceOf(IllegalStateException.class);
-        assertThat(e)
-                .hasCauseThat()
-                .hasMessageThat()
-                .startsWith("Invalid state: Attempting to unblock topic");
     }
 
     @Test
@@ -277,26 +238,6 @@ public class BlockedTopicsManagerTest extends AdServicesExtendedMockitoTestCase 
     @Test
     @ExpectErrorLogUtilWithExceptionCall(
             errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_GET_BLOCKED_TOPIC_FAILURE)
-    public void testRetrieveAllBlockedTopics_withPpapiAndAdExtDataServiceOnly_throwsException()
-            throws Exception {
-        BlockedTopicsManager blockedTopicsManager =
-                getSpiedBlockedTopicsManager(
-                        Flags.PPAPI_AND_ADEXT_SERVICE, /* enableAppSearchConsent= */ true);
-
-        Exception e =
-                assertThrows(
-                        RuntimeException.class, blockedTopicsManager::retrieveAllBlockedTopics);
-        assertThat(e).hasCauseThat().isNotNull();
-        assertThat(e).hasCauseThat().isInstanceOf(IllegalStateException.class);
-        assertThat(e)
-                .hasCauseThat()
-                .hasMessageThat()
-                .startsWith("Invalid state: Attempting to retrieve blocked topics");
-    }
-
-    @Test
-    @ExpectErrorLogUtilWithExceptionCall(
-            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_GET_BLOCKED_TOPIC_FAILURE)
     public void testRetrieveAllBlockedTopics_withAppSearchOnly_throwsException() throws Exception {
         Exception thrown = new IllegalStateException("test");
         ExtendedMockito.doThrow(thrown).when(mAppSearchConsentManager).retrieveAllBlockedTopics();
@@ -308,26 +249,6 @@ public class BlockedTopicsManagerTest extends AdServicesExtendedMockitoTestCase 
                 assertThrows(
                         RuntimeException.class, blockedTopicsManager::retrieveAllBlockedTopics);
         assertThat(e).hasCauseThat().isSameInstanceAs(thrown);
-    }
-
-    @Test
-    @ExpectErrorLogUtilWithExceptionCall(
-            errorCode =
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_CLEAR_ALL_BLOCKED_TOPICS_IN_SYSTEM_SERVER_FAILURE)
-    public void testClearAllBlockedTopics_withPpapiAndAdExtDataServiceOnly_throwsException()
-            throws Exception {
-        BlockedTopicsManager blockedTopicsManager =
-                getSpiedBlockedTopicsManager(
-                        Flags.PPAPI_AND_ADEXT_SERVICE, /* enableAppSearchConsent= */ true);
-
-        Exception e =
-                assertThrows(RuntimeException.class, blockedTopicsManager::clearAllBlockedTopics);
-        assertThat(e).hasCauseThat().isNotNull();
-        assertThat(e).hasCauseThat().isInstanceOf(IllegalStateException.class);
-        assertThat(e)
-                .hasCauseThat()
-                .hasMessageThat()
-                .startsWith("Invalid state: Attempting to clear blocked topics");
     }
 
     @Test
@@ -471,9 +392,9 @@ public class BlockedTopicsManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
+    @RequiresSdkLevelAtLeastT
     public void testHandleBlockedTopicsMigrationIfNeeded_PpApiOnly() {
         // Handle migration tests are only valid for T+.
-        Assume.assumeTrue(SdkLevel.isAtLeastT());
         MockitoSession session =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(BlockedTopicsManager.class)
@@ -494,22 +415,21 @@ public class BlockedTopicsManagerTest extends AdServicesExtendedMockitoTestCase 
         handleBlockedTopicsMigrationIfNeeded(
                 mSpyContext, mTopicsDao, mAdServicesManager, blockedTopicsSourceOfTruth);
 
-        ExtendedMockito.verify(
-                () -> resetSharedPreference(mSpyContext, SHARED_PREFS_KEY_HAS_MIGRATED));
-        ExtendedMockito.verify(
+        verify(() -> resetSharedPreference(mSpyContext, SHARED_PREFS_KEY_HAS_MIGRATED));
+        verify(
                 () ->
                         mayMigratePpApiBlockedTopicsToSystemService(
                                 mSpyContext, mTopicsDao, mAdServicesManager),
                 times(0));
-        ExtendedMockito.verify(() -> mayClearPpApiBlockedTopics(mSpyContext, mTopicsDao), times(0));
+        verify(() -> mayClearPpApiBlockedTopics(mSpyContext, mTopicsDao), times(0));
 
         session.finishMocking();
     }
 
     @Test
+    @RequiresSdkLevelAtLeastT
     public void testHandleBlockedTopicsMigrationIfNeeded_SystemServerOnly() {
         // Handle migration tests are only valid for T+.
-        Assume.assumeTrue(SdkLevel.isAtLeastT());
         MockitoSession session =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(BlockedTopicsManager.class)
@@ -530,28 +450,20 @@ public class BlockedTopicsManagerTest extends AdServicesExtendedMockitoTestCase 
         handleBlockedTopicsMigrationIfNeeded(
                 mSpyContext, mTopicsDao, mAdServicesManager, blockedTopicsSourceOfTruth);
 
-        ExtendedMockito.verify(
-                () -> resetSharedPreference(mSpyContext, SHARED_PREFS_KEY_HAS_MIGRATED), times(0));
-        ExtendedMockito.verify(
+        verify(() -> resetSharedPreference(mSpyContext, SHARED_PREFS_KEY_HAS_MIGRATED), times(0));
+        verify(
                 () ->
                         mayMigratePpApiBlockedTopicsToSystemService(
                                 mSpyContext, mTopicsDao, mAdServicesManager));
-        ExtendedMockito.verify(() -> mayClearPpApiBlockedTopics(mSpyContext, mTopicsDao));
+        verify(() -> mayClearPpApiBlockedTopics(mSpyContext, mTopicsDao));
 
         session.finishMocking();
     }
 
     @Test
+    @RequiresSdkLevelAtLeastT
+    @SpyStatic(BlockedTopicsManager.class)
     public void testHandleBlockedTopicsMigrationIfNeeded_PpApiAndSystemServer() {
-        // Handle migration tests are only valid for T+.
-        Assume.assumeTrue(SdkLevel.isAtLeastT());
-        MockitoSession session =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(BlockedTopicsManager.class)
-                        .strictness(Strictness.WARN)
-                        .initMocks(this)
-                        .startMocking();
-
         int blockedTopicsSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
         ExtendedMockito.doNothing()
                 .when(() -> resetSharedPreference(mSpyContext, SHARED_PREFS_KEY_HAS_MIGRATED));
@@ -565,15 +477,12 @@ public class BlockedTopicsManagerTest extends AdServicesExtendedMockitoTestCase 
         handleBlockedTopicsMigrationIfNeeded(
                 mSpyContext, mTopicsDao, mAdServicesManager, blockedTopicsSourceOfTruth);
 
-        ExtendedMockito.verify(
-                () -> resetSharedPreference(mSpyContext, SHARED_PREFS_KEY_HAS_MIGRATED), times(0));
-        ExtendedMockito.verify(
+        verify(() -> resetSharedPreference(mSpyContext, SHARED_PREFS_KEY_HAS_MIGRATED), times(0));
+        verify(
                 () ->
                         mayMigratePpApiBlockedTopicsToSystemService(
                                 mSpyContext, mTopicsDao, mAdServicesManager));
-        ExtendedMockito.verify(() -> mayClearPpApiBlockedTopics(mSpyContext, mTopicsDao), times(0));
-
-        session.finishMocking();
+        verify(() -> mayClearPpApiBlockedTopics(mSpyContext, mTopicsDao), times(0));
     }
 
     private BlockedTopicsManager getSpiedBlockedTopicsManager(
@@ -602,13 +511,8 @@ public class BlockedTopicsManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
+    @SpyStatic(BlockedTopicsManager.class)
     public void testHandleBlockedTopicsMigrationIfNeeded_ExtServices() {
-        MockitoSession session =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(BlockedTopicsManager.class)
-                        .strictness(Strictness.WARN)
-                        .initMocks(this)
-                        .startMocking();
         ExtendedMockito.doNothing()
                 .when(() -> resetSharedPreference(mSpyContext, SHARED_PREFS_KEY_HAS_MIGRATED));
         ExtendedMockito.doNothing()
@@ -621,21 +525,14 @@ public class BlockedTopicsManagerTest extends AdServicesExtendedMockitoTestCase 
                 .when(mSpyContext)
                 .getPackageName();
 
-        try {
-            handleBlockedTopicsMigrationIfNeeded(mSpyContext, mTopicsDao, mAdServicesManager, 2);
+        handleBlockedTopicsMigrationIfNeeded(mSpyContext, mTopicsDao, mAdServicesManager, 2);
 
-            ExtendedMockito.verify(
-                    () -> resetSharedPreference(mSpyContext, SHARED_PREFS_KEY_HAS_MIGRATED),
-                    never());
-            ExtendedMockito.verify(
-                    () ->
-                            mayMigratePpApiBlockedTopicsToSystemService(
-                                    mSpyContext, mTopicsDao, mAdServicesManager),
-                    never());
-            ExtendedMockito.verify(
-                    () -> mayClearPpApiBlockedTopics(mSpyContext, mTopicsDao), never());
-        } finally {
-            session.finishMocking();
-        }
+        verify(() -> resetSharedPreference(mSpyContext, SHARED_PREFS_KEY_HAS_MIGRATED), never());
+        verify(
+                () ->
+                        mayMigratePpApiBlockedTopicsToSystemService(
+                                mSpyContext, mTopicsDao, mAdServicesManager),
+                never());
+        verify(() -> mayClearPpApiBlockedTopics(mSpyContext, mTopicsDao), never());
     }
 }

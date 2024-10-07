@@ -58,7 +58,7 @@ public class BackgroundFetchJob implements JobWorker {
     @Override
     public ListenableFuture<ExecutionResult> getExecutionFuture(
             Context context, ExecutionRuntimeParameters executionRuntimeParameters) {
-        return BackgroundFetchWorker.getInstance(context)
+        return BackgroundFetchWorker.getInstance()
                 .runBackgroundFetch()
                 .transform(voidResult -> SUCCESS, AdServicesExecutors.getBackgroundExecutor());
     }

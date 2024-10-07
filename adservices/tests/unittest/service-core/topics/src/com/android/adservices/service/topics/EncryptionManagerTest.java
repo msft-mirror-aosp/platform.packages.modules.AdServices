@@ -186,10 +186,10 @@ public final class EncryptionManagerTest extends AdServicesExtendedMockitoTestCa
 
         // Verify EncryptedTopic is not empty.
         assertThat(optionalEncryptedTopic.isPresent()).isTrue();
-        assertThat(optionalEncryptedTopic.get().getEncryptedTopic()).isNotEmpty();
+        expect.that(optionalEncryptedTopic.get().getEncryptedTopic()).isNotEmpty();
         // Verify test key used to override has been used.
-        assertThat(optionalEncryptedTopic.get().getKeyIdentifier()).isEqualTo(overrideTestKey);
-        assertThat(optionalEncryptedTopic.get().getEncapsulatedKey()).isNotEmpty();
+        expect.that(optionalEncryptedTopic.get().getKeyIdentifier()).isEqualTo(overrideTestKey);
+        expect.that(optionalEncryptedTopic.get().getEncapsulatedKey()).isNotEmpty();
     }
 
     @Test

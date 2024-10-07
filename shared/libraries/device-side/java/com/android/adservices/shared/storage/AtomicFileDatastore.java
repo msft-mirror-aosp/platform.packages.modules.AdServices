@@ -16,6 +16,9 @@
 
 package com.android.adservices.shared.storage;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ATOMIC_FILE_DATASTORE_READ_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ATOMIC_FILE_DATASTORE_WRITE_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 import static com.android.adservices.shared.util.LogUtil.DEBUG;
 import static com.android.adservices.shared.util.LogUtil.VERBOSE;
 import static com.android.adservices.shared.util.Preconditions.checkState;
@@ -26,6 +29,7 @@ import android.annotation.Nullable;
 import android.os.PersistableBundle;
 import android.util.AtomicFile;
 
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.util.LogUtil;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
@@ -66,6 +70,7 @@ public class AtomicFileDatastore {
     public static final int NO_PREVIOUS_VERSION = -1;
 
     private final int mDatastoreVersion;
+    private final AdServicesErrorLogger mAdServicesErrorLogger;
 
     private final ReadWriteLock mReadWriteLock = new ReentrantReadWriteLock();
     private final Lock mReadLock = mReadWriteLock.readLock();
@@ -78,16 +83,38 @@ public class AtomicFileDatastore {
     private int mPreviousStoredVersion;
 
     public AtomicFileDatastore(
-            String parentPath, String filename, int datastoreVersion, String versionKey) {
-        this(newFile(parentPath, filename), datastoreVersion, versionKey);
+            String parentPath,
+            String filename,
+            int datastoreVersion,
+            String versionKey,
+            AdServicesErrorLogger adServicesErrorLogger) {
+        this(newFile(parentPath, filename), datastoreVersion, versionKey, adServicesErrorLogger);
     }
 
-    public AtomicFileDatastore(File file, int datastoreVersion, String versionKey) {
-        mAtomicFile = new AtomicFile(Objects.requireNonNull(file));
+    public AtomicFileDatastore(
+            File file,
+            int datastoreVersion,
+            String versionKey,
+            AdServicesErrorLogger adServicesErrorLogger) {
+        this(
+                new AtomicFile(Objects.requireNonNull(file)),
+                datastoreVersion,
+                versionKey,
+                adServicesErrorLogger);
+    }
+
+    @VisibleForTesting
+    AtomicFileDatastore(
+            AtomicFile atomicFile,
+            int datastoreVersion,
+            String versionKey,
+            AdServicesErrorLogger adServicesErrorLogger) {
+        mAtomicFile = atomicFile;
         mDatastoreVersion =
                 checkArgumentNonnegative(datastoreVersion, "Version must not be negative");
 
         mVersionKey = Objects.requireNonNull(versionKey);
+        mAdServicesErrorLogger = Objects.requireNonNull(adServicesErrorLogger);
     }
 
     /**
@@ -109,13 +136,13 @@ public class AtomicFileDatastore {
         // In the future, this could be a good place for upgrade/rollback for schemas
     }
 
-    // Writes the class member map to a PersistableBundle which is then written to file.
+    // Writes the {@code localMap} to a PersistableBundle which is then written to file.
     @GuardedBy("mWriteLock")
-    private void writeToFile() throws IOException {
+    private void writeToFile(Map<String, Object> localMap) throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         PersistableBundle bundleToWrite = new PersistableBundle();
 
-        for (Map.Entry<String, Object> entry : mLocalMap.entrySet()) {
+        for (Map.Entry<String, Object> entry : localMap.entrySet()) {
             addToBundle(bundleToWrite, entry.getKey(), entry.getValue());
         }
 
@@ -132,7 +159,10 @@ public class AtomicFileDatastore {
             if (out != null) {
                 mAtomicFile.failWrite(out);
             }
-            LogUtil.e(e, "Write to file failed");
+            LogUtil.v("Write to file %s failed", mAtomicFile.getBaseFile());
+            mAdServicesErrorLogger.logError(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ATOMIC_FILE_DATASTORE_WRITE_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
             throw e;
         }
     }
@@ -159,7 +189,10 @@ public class AtomicFileDatastore {
             mPreviousStoredVersion = NO_PREVIOUS_VERSION;
             mLocalMap.clear();
         } catch (IOException e) {
-            LogUtil.e(e, "Read from store file failed");
+            LogUtil.v("Read from store file %s failed", mAtomicFile.getBaseFile());
+            mAdServicesErrorLogger.logError(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ATOMIC_FILE_DATASTORE_READ_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
             throw e;
         }
     }
@@ -214,9 +247,20 @@ public class AtomicFileDatastore {
         checkStringNotEmpty(key, "Key must not be empty");
 
         mWriteLock.lock();
+        Object oldValue = mLocalMap.get(key);
         try {
             mLocalMap.put(key, value);
-            writeToFile();
+            writeToFile(mLocalMap);
+        } catch (IOException ex) {
+            LogUtil.v(
+                    "put(): failed to write to file %s, reverting value of %s on local map.",
+                    mAtomicFile.getBaseFile(), key);
+            if (oldValue == null) {
+                mLocalMap.remove(key);
+            } else {
+                mLocalMap.put(key, oldValue);
+            }
+            throw ex;
         } finally {
             mWriteLock.unlock();
         }
@@ -288,15 +332,21 @@ public class AtomicFileDatastore {
 
         // Double check that the key wasn't written after the first check
         mWriteLock.lock();
+        Object valueInLocalMap = mLocalMap.get(key);
         try {
-            Object valueInLocalMap = mLocalMap.get(key);
             if (valueInLocalMap != null) {
                 return checkValueType(valueInLocalMap, valueType);
             } else {
                 mLocalMap.put(key, value);
-                writeToFile();
+                writeToFile(mLocalMap);
                 return value;
             }
+        } catch (IOException ex) {
+            LogUtil.v(
+                    "putIfNew(): failed to write to file %s, removing key %s on local map.",
+                    mAtomicFile.getBaseFile(), key);
+            mLocalMap.remove(key);
+            throw ex;
         } finally {
             mWriteLock.unlock();
         }
@@ -472,9 +522,17 @@ public class AtomicFileDatastore {
         }
 
         mWriteLock.lock();
+        Map<String, Object> previousLocalMap = new HashMap<>(mLocalMap);
         try {
             mLocalMap.clear();
-            writeToFile();
+            writeToFile(mLocalMap);
+        } catch (IOException ex) {
+            LogUtil.v(
+                    "clear(): failed to clear the file %s, reverting local map back to previous "
+                            + "state.",
+                    mAtomicFile.getBaseFile());
+            mLocalMap.putAll(previousLocalMap);
+            throw ex;
         } finally {
             mWriteLock.unlock();
         }
@@ -482,9 +540,17 @@ public class AtomicFileDatastore {
 
     private void clearByFilter(Object filter) throws IOException {
         mWriteLock.lock();
+        Map<String, Object> previousLocalMap = new HashMap<>(mLocalMap);
         try {
             mLocalMap.entrySet().removeIf(entry -> entry.getValue().equals(filter));
-            writeToFile();
+            writeToFile(mLocalMap);
+        } catch (IOException ex) {
+            LogUtil.v(
+                    "clearByFilter(): failed to clear keys for filter %s for file %s, reverting"
+                            + " local map back to previous state.",
+                    filter, mAtomicFile.getBaseFile());
+            mLocalMap.putAll(previousLocalMap);
+            throw ex;
         } finally {
             mWriteLock.unlock();
         }
@@ -528,9 +594,18 @@ public class AtomicFileDatastore {
         checkValidKey(key);
 
         mWriteLock.lock();
+        Object oldValue = mLocalMap.get(key);
         try {
             mLocalMap.remove(key);
-            writeToFile();
+            writeToFile(mLocalMap);
+        } catch (IOException ex) {
+            LogUtil.v(
+                    "remove(): failed to remove key %s in file %s, adding it back",
+                    key, mAtomicFile.getBaseFile());
+            if (oldValue != null) {
+                mLocalMap.put(key, oldValue);
+            }
+            throw ex;
         } finally {
             mWriteLock.unlock();
         }
@@ -551,12 +626,44 @@ public class AtomicFileDatastore {
         checkStringNotEmpty(prefix, "Prefix must not be empty");
 
         mWriteLock.lock();
+        Map<String, Object> previousLocalMap = new HashMap<>(mLocalMap);
         try {
             Set<String> allKeys = mLocalMap.keySet();
             Set<String> keysToDelete =
                     allKeys.stream().filter(s -> s.startsWith(prefix)).collect(Collectors.toSet());
             allKeys.removeAll(keysToDelete); // Modifying the keySet updates the underlying map
-            writeToFile();
+            writeToFile(mLocalMap);
+        } catch (IOException ex) {
+            LogUtil.v(
+                    "removeByPrefix(): failed to remove key by prefix %s in file %s, adding it"
+                            + " back",
+                    prefix, mAtomicFile.getBaseFile());
+            mLocalMap.putAll(previousLocalMap);
+            throw ex;
+        } finally {
+            mWriteLock.unlock();
+        }
+    }
+
+    /**
+     * Updates the file and local map by applying the {@code transform} to the most recently
+     * persisted value.
+     *
+     * @param transform The {@link BatchUpdateOperation} to apply to the data.
+     * @throws IOException if file write fails
+     */
+    public void update(BatchUpdateOperation transform) throws IOException {
+        mWriteLock.lock();
+        try {
+            BatchUpdaterImpl updater = new BatchUpdaterImpl(mLocalMap);
+            transform.apply(updater);
+
+            // Write to file if contents in map are changed
+            if (updater.isChanged()) {
+                writeToFile(updater.mUpdatedCachedData);
+                mLocalMap.clear();
+                mLocalMap.putAll(updater.mUpdatedCachedData);
+            }
         } finally {
             mWriteLock.unlock();
         }
@@ -646,11 +753,140 @@ public class AtomicFileDatastore {
         checkStringNotEmpty(key, "Key must not be empty");
     }
 
-    private <T> T checkValueType(Object valueInLocalMap, Class<T> expectedType) {
+    private static <T> T checkValueType(Object valueInLocalMap, Class<T> expectedType) {
         checkState(
                 expectedType.isInstance(valueInLocalMap),
                 "Value returned is not of %s type",
                 expectedType.getSimpleName());
         return expectedType.cast(valueInLocalMap);
+    }
+
+    /** A functional interface to perform batch operations on the datastore */
+    @FunctionalInterface
+    public interface BatchUpdateOperation {
+        /**
+         * Represents series of update operations to be applied on the datastore using the provided
+         * {@link BatchUpdater}.
+         */
+        void apply(BatchUpdater updater);
+    }
+
+    /**
+     * Interface for staging batch update operations on a datastore.
+     *
+     * <p>Provides methods for adding different data types (boolean, int , String) to a batch update
+     * operation.
+     */
+    public interface BatchUpdater {
+        /**
+         * Adds a boolean value to be updated in the batch operation.
+         *
+         * @throws IllegalArgumentException if {@code key} is an empty string
+         */
+        void putBoolean(String key, boolean value);
+
+        /**
+         * Adds an integer value to be updated in the batch operation.
+         *
+         * @throws IllegalArgumentException if {@code key} is an empty string
+         */
+        void putInt(String key, int value);
+
+        /**
+         * Adds a String value to be updated in the batch operation.
+         *
+         * @throws IllegalArgumentException if {@code key} is an empty string
+         */
+        void putString(String key, String value);
+
+        /**
+         * Adds a boolean value only if the key does not already exist to be updated in the batch
+         * operation.
+         *
+         * @throws IllegalArgumentException if {@code key} is an empty string
+         */
+        void putBooleanIfNew(String key, boolean value);
+
+        /**
+         * Adds an integer value only if the key does not already exist to be updated in the batch
+         * operation.
+         *
+         * @throws IllegalArgumentException if {@code key} is an empty string
+         */
+        void putIntIfNew(String key, int value);
+
+        /**
+         * Adds a String value only if the key does not already exist to be updated in the batch
+         * operation.
+         *
+         * @throws IllegalArgumentException if {@code key} is an empty string
+         */
+        void putStringIfNew(String key, String value);
+    }
+
+    private static final class BatchUpdaterImpl implements BatchUpdater {
+        private final Map<String, Object> mUpdatedCachedData;
+        private boolean mChanged;
+
+        BatchUpdaterImpl(Map<String, Object> localMap) {
+            mUpdatedCachedData = new HashMap<>(localMap);
+        }
+
+        @Override
+        public void putBoolean(String key, boolean value) {
+            putInternal(key, value);
+        }
+
+        @Override
+        public void putInt(String key, int value) {
+            putInternal(key, value);
+        }
+
+        @Override
+        public void putString(String key, String value) {
+            putInternal(key, value);
+        }
+
+        @Override
+        public void putBooleanIfNew(String key, boolean value) {
+            putIfNewInternal(key, value, Boolean.class);
+        }
+
+        @Override
+        public void putIntIfNew(String key, int value) {
+            putIfNewInternal(key, value, Integer.class);
+        }
+
+        @Override
+        public void putStringIfNew(String key, String value) {
+            putIfNewInternal(key, value, String.class);
+        }
+
+        boolean isChanged() {
+            return mChanged;
+        }
+
+        private void putInternal(String key, Object value) {
+            Objects.requireNonNull(key, "key should not be null");
+            checkStringNotEmpty(key, "Key must not be empty");
+            Object oldValue = mUpdatedCachedData.get(key);
+            if (!value.equals(oldValue)) {
+                mUpdatedCachedData.put(key, value);
+                mChanged = true;
+            }
+        }
+
+        private <T> void putIfNewInternal(String key, T value, Class<T> valueType) {
+            Objects.requireNonNull(key, "key should not be null");
+            checkStringNotEmpty(key, "Key must not be empty");
+
+            Object valueInLocalMap = mUpdatedCachedData.get(key);
+            if (valueInLocalMap != null) {
+                checkValueType(valueInLocalMap, valueType);
+                return;
+            }
+            mUpdatedCachedData.put(key, value);
+            mChanged = true;
+        }
     }
 }

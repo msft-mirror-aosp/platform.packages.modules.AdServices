@@ -32,18 +32,21 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.annotation.NonNull;
 import android.app.job.JobParameters;
 import android.app.job.JobService;
+import android.content.Context;
+import android.platform.test.annotations.DisabledOnRavenwood;
 
 import androidx.test.filters.FlakyTest;
 
-import com.android.adservices.shared.SharedExtendedMockitoTestCase;
-import com.android.adservices.shared.common.flags.ModuleSharedFlags;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
+import com.android.adservices.shared.spe.SpeMockitoTestCase;
+import com.android.adservices.shared.testing.AnswerSyncCallback;
 import com.android.adservices.shared.util.Clock;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -56,7 +59,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 
 import java.util.concurrent.CountDownLatch;
@@ -69,7 +71,11 @@ import java.util.concurrent.TimeUnit;
  * This test creates an example {@link JobService} to use logging methods in {@link
  * JobServiceLogger} and runs tests against this class.
  */
-public final class JobServiceTest extends SharedExtendedMockitoTestCase {
+@DisabledOnRavenwood(
+        blockedBy =
+                Context.class) // TODO(b/362475922): remove when Context.deleteSharedPreferences()
+// is supported
+public final class JobServiceTest extends SpeMockitoTestCase {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     // Use an arbitrary job ID for testing. It won't have side effect to use production id as
     // the test doesn't actually schedule a job. This avoids complicated mocking logic.
@@ -97,7 +103,6 @@ public final class JobServiceTest extends SharedExtendedMockitoTestCase {
             new ImmutableMap.Builder<Integer, String>().put(JOB_ID, "job").build();
     private static final StatsdJobServiceLogger sMockStatsdLogger =
             mock(StatsdJobServiceLogger.class);
-    private static final ModuleSharedFlags sMockFlags = mock(ModuleSharedFlags.class);
     private JobServiceLogger mLogger;
 
     @Mock private JobParameters mMockJobParameters;
@@ -107,51 +112,57 @@ public final class JobServiceTest extends SharedExtendedMockitoTestCase {
     @Before
     public void setup() {
         mLogger =
-                Mockito.spy(
+                spy(
                         new JobServiceLogger(
-                                sContext,
+                                mContext,
                                 mMockClock,
                                 sMockStatsdLogger,
                                 mMockErrorLogger,
                                 Executors.newCachedThreadPool(),
                                 sJobIdToNameMap,
-                                sMockFlags));
+                                mMockFlags));
 
         // Clear shared preference
-        sContext.deleteSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS);
+        mContext.deleteSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS);
 
-        when(sMockFlags.getBackgroundJobsLoggingEnabled()).thenReturn(true);
+        mockGetBackgroundJobsLoggingEnabled(true);
     }
 
     @After
     public void teardown() {
         // Clear shared preference
-        sContext.deleteSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS);
+        mContext.deleteSharedPreferences(SHARED_PREFS_BACKGROUND_JOBS);
     }
 
     /** To test 1) success as first execution 2) success result code */
     @Test
-    public void testJobExecutionLifeCycle_succeedThenSucceed() throws InterruptedException {
+    public void testJobExecutionLifeCycle_succeedThenSucceed() throws Exception {
         TestJobService jobService = new TestJobService(mLogger);
         // Mock clock to return mocked currentTimeStamp in sequence.
-        when(mMockClock.currentTimeMillis())
-                .thenReturn(
-                        START_TIMESTAMP_EXECUTION_1,
-                        END_TIMESTAMP_EXECUTION_1,
-                        START_TIMESTAMP_EXECUTION_2,
-                        END_TIMESTAMP_EXECUTION_2);
+        mocker.mockCurrentTimeMillis(
+                mMockClock,
+                START_TIMESTAMP_EXECUTION_1,
+                END_TIMESTAMP_EXECUTION_1,
+                START_TIMESTAMP_EXECUTION_2,
+                END_TIMESTAMP_EXECUTION_2);
         // onStopJob() is not called, so stop reason is the unavailable value.
         int stopReason = UNAVAILABLE_STOP_REASON;
         // First Execution -- Succeed to execute
         jobService.setOnSuccessCallback(true);
-        CountDownLatch logOperationCalledLatch1 = createCountDownLatchWithMockedOperation();
+        AnswerSyncCallback<Void> callback1 = AnswerSyncCallback.forSingleVoidAnswer();
+        doAnswer(callback1)
+                .when(mLogger)
+                .logJobStatsHelper(
+                        JOB_ID,
+                        Latency_EXECUTION_1,
+                        PERIOD_EXECUTION_1,
+                        AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SUCCESSFUL,
+                        stopReason);
 
         jobService.onStartJob(mMockJobParameters);
 
-        expect.that(
-                        logOperationCalledLatch1.await(
-                                BACKGROUND_EXECUTION_TIMEOUT, TimeUnit.MILLISECONDS))
-                .isTrue();
+        callback1.assertCalled();
+
         verify(mLogger)
                 .logJobStatsHelper(
                         JOB_ID,
@@ -162,45 +173,51 @@ public final class JobServiceTest extends SharedExtendedMockitoTestCase {
 
         // Second Execution -- Succeed to execute
         jobService.setOnSuccessCallback(true);
-        CountDownLatch logOperationCalledLatch2 = createCountDownLatchWithMockedOperation();
-        jobService.onStartJob(mMockJobParameters);
-
-        expect.that(
-                        logOperationCalledLatch2.await(
-                                BACKGROUND_EXECUTION_TIMEOUT, TimeUnit.MILLISECONDS))
-                .isTrue();
-        verify(mLogger)
+        AnswerSyncCallback<Void> callback2 = AnswerSyncCallback.forSingleVoidAnswer();
+        doAnswer(callback2)
+                .when(mLogger)
                 .logJobStatsHelper(
                         JOB_ID,
                         Latency_EXECUTION_2,
                         PERIOD_EXECUTION_2,
                         AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SUCCESSFUL,
                         stopReason);
+
+        jobService.onStartJob(mMockJobParameters);
+
+        callback2.assertCalled();
     }
 
     /** To test 1) Failure as first execution 2) failure w/o retry. */
     @Test
-    public void testJobExecutionLifeCycle_FailWithRetryThenFailWithoutRetry()
-            throws InterruptedException {
+    public void testJobExecutionLifeCycle_FailWithRetryThenFailWithoutRetry() throws Exception {
         TestJobService jobService = new TestJobService(mLogger);
         // Mock clock to return mocked currentTimeStamp in sequence.
-        when(mMockClock.currentTimeMillis())
-                .thenReturn(
-                        START_TIMESTAMP_EXECUTION_1,
-                        END_TIMESTAMP_EXECUTION_1,
-                        START_TIMESTAMP_EXECUTION_2,
-                        END_TIMESTAMP_EXECUTION_2);
+        mocker.mockCurrentTimeMillis(
+                mMockClock,
+                START_TIMESTAMP_EXECUTION_1,
+                END_TIMESTAMP_EXECUTION_1,
+                START_TIMESTAMP_EXECUTION_2,
+                END_TIMESTAMP_EXECUTION_2);
         // onStopJob() is not called, so stop reason is the unavailable value.
         int stopReason = UNAVAILABLE_STOP_REASON;
         // First Execution -- Fail to execute with retry
         jobService.setOnSuccessCallback(false);
         jobService.setShouldRetryOnJobFinished(true);
-        CountDownLatch logOperationCalledLatch1 = createCountDownLatchWithMockedOperation();
+        AnswerSyncCallback<Void> callback1 = AnswerSyncCallback.forSingleVoidAnswer();
+        doAnswer(callback1)
+                .when(mLogger)
+                .logJobStatsHelper(
+                        JOB_ID,
+                        Latency_EXECUTION_1,
+                        PERIOD_EXECUTION_1,
+                        AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__FAILED_WITH_RETRY,
+                        stopReason);
+
         jobService.onStartJob(mMockJobParameters);
-        expect.that(
-                        logOperationCalledLatch1.await(
-                                BACKGROUND_EXECUTION_TIMEOUT, TimeUnit.MILLISECONDS))
-                .isTrue();
+
+        callback1.assertCalled();
+
         verify(mLogger)
                 .logJobStatsHelper(
                         JOB_ID,
@@ -208,55 +225,62 @@ public final class JobServiceTest extends SharedExtendedMockitoTestCase {
                         PERIOD_EXECUTION_1,
                         AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__FAILED_WITH_RETRY,
                         stopReason);
+
         // Second Execution -- Fail to execute without retry
         jobService.setOnSuccessCallback(false);
         jobService.setShouldRetryOnJobFinished(false);
-        CountDownLatch logOperationCalledLatch2 = createCountDownLatchWithMockedOperation();
-        jobService.onStartJob(mMockJobParameters);
-        expect.that(
-                        logOperationCalledLatch2.await(
-                                BACKGROUND_EXECUTION_TIMEOUT, TimeUnit.MILLISECONDS))
-                .isTrue();
-        verify(mLogger)
+        AnswerSyncCallback<Void> callback2 = AnswerSyncCallback.forSingleVoidAnswer();
+        doAnswer(callback2)
+                .when(mLogger)
                 .logJobStatsHelper(
                         JOB_ID,
                         Latency_EXECUTION_2,
                         PERIOD_EXECUTION_2,
                         AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__FAILED_WITHOUT_RETRY,
                         stopReason);
+
+        jobService.onStartJob(mMockJobParameters);
+
+        callback2.assertCalled();
     }
 
     /** To test 1) onStopJob() is called as first execution 2) onStopJob w/o retry. */
     @Test
     @FlakyTest(bugId = 344643516)
-    public void testJobExecutionLifeCycle_onStopWithRetryThenOnStopWithoutRetry()
-            throws InterruptedException {
+    public void testJobExecutionLifeCycle_onStopWithRetryThenOnStopWithoutRetry() throws Exception {
         TestJobService jobService = new TestJobService(mLogger);
         // Mock the stop reason on test purpose. It's assigned by JobScheduler in production.
         when(mMockJobParameters.getStopReason()).thenReturn(STOP_REASON);
         // Mock clock to return mocked currentTimeStamp in sequence.
-        when(mMockClock.currentTimeMillis())
-                .thenReturn(
-                        START_TIMESTAMP_EXECUTION_1,
-                        END_TIMESTAMP_EXECUTION_1,
-                        START_TIMESTAMP_EXECUTION_2,
-                        END_TIMESTAMP_EXECUTION_2);
+        mocker.mockCurrentTimeMillis(
+                mMockClock,
+                START_TIMESTAMP_EXECUTION_1,
+                END_TIMESTAMP_EXECUTION_1,
+                START_TIMESTAMP_EXECUTION_2,
+                END_TIMESTAMP_EXECUTION_2);
         // First Execution -- onStopJob() is called with retry
         jobService.setShouldOnStopJobHappen(true);
         jobService.setShouldRetryOnStopJob(true);
-        CountDownLatch logOperationCalledLatch1 = createCountDownLatchWithMockedOperation();
-        jobService.onStartJob(mMockJobParameters);
-        jobService.onStopJob(mMockJobParameters);
-        expect.that(
-                        logOperationCalledLatch1.await(
-                                BACKGROUND_EXECUTION_TIMEOUT, TimeUnit.MILLISECONDS))
-                .isTrue();
-
+        AnswerSyncCallback<Void> callback1 = AnswerSyncCallback.forSingleVoidAnswer();
         // StopReason was only introduced in Android S; prior to that it'll only log as Unknown.
         int expectedStopReason =
                 SdkLevel.isAtLeastS()
                         ? STOP_REASON
                         : AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__PUBLIC_STOP_REASON__STOP_REASON_UNDEFINED;
+        doAnswer(callback1)
+                .when(mLogger)
+                .logJobStatsHelper(
+                        JOB_ID,
+                        Latency_EXECUTION_1,
+                        PERIOD_EXECUTION_1,
+                        AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__ONSTOP_CALLED_WITH_RETRY,
+                        expectedStopReason);
+
+        jobService.onStartJob(mMockJobParameters);
+        jobService.onStopJob(mMockJobParameters);
+
+        callback1.assertCalled();
+
         verify(mLogger)
                 .logJobStatsHelper(
                         JOB_ID,
@@ -264,48 +288,57 @@ public final class JobServiceTest extends SharedExtendedMockitoTestCase {
                         PERIOD_EXECUTION_1,
                         AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__ONSTOP_CALLED_WITH_RETRY,
                         expectedStopReason);
+
         // Second Execution -- onStopJob() is called without retry
         jobService.setShouldOnStopJobHappen(true);
         jobService.setShouldRetryOnStopJob(false);
-        CountDownLatch logOperationCalledLatch2 = createCountDownLatchWithMockedOperation();
-        jobService.onStartJob(mMockJobParameters);
-        jobService.onStopJob(mMockJobParameters);
-        expect.that(
-                        logOperationCalledLatch2.await(
-                                BACKGROUND_EXECUTION_TIMEOUT, TimeUnit.MILLISECONDS))
-                .isTrue();
-        verify(mLogger)
+        AnswerSyncCallback<Void> callback2 = AnswerSyncCallback.forSingleVoidAnswer();
+        doAnswer(callback2)
+                .when(mLogger)
                 .logJobStatsHelper(
                         JOB_ID,
                         Latency_EXECUTION_2,
                         PERIOD_EXECUTION_2,
                         AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__ONSTOP_CALLED_WITHOUT_RETRY,
                         expectedStopReason);
+
+        jobService.onStartJob(mMockJobParameters);
+        jobService.onStopJob(mMockJobParameters);
+
+        callback2.assertCalled();
     }
 
     /** To test the flow that execution is halted without calling onStopJob(). */
     @Test
-    public void testJobExecutionLifeCycle_successThenHaltedByDevice() throws InterruptedException {
+    public void testJobExecutionLifeCycle_successThenHaltedByDevice() throws Exception {
         TestJobService jobService = new TestJobService(mLogger);
         // Mock the stop reason on test purpose. It's assigned by JobScheduler in production.
         when(mMockJobParameters.getStopReason()).thenReturn(STOP_REASON);
         // Mock clock to return mocked currentTimeStamp in sequence.
-        when(mMockClock.currentTimeMillis())
-                .thenReturn(
-                        START_TIMESTAMP_EXECUTION_1,
-                        END_TIMESTAMP_EXECUTION_1,
-                        START_TIMESTAMP_EXECUTION_2,
-                        END_TIMESTAMP_EXECUTION_2);
+        mocker.mockCurrentTimeMillis(
+                mMockClock,
+                START_TIMESTAMP_EXECUTION_1,
+                END_TIMESTAMP_EXECUTION_1,
+                START_TIMESTAMP_EXECUTION_2,
+                END_TIMESTAMP_EXECUTION_2);
         // onStopJob() is not called, so stop reason is the unavailable value.
         int stopReason = UNAVAILABLE_STOP_REASON;
         // First Execution -- successful
         jobService.setOnSuccessCallback(true);
-        CountDownLatch logOperationCalledLatch1 = createCountDownLatchWithMockedOperation();
+        AnswerSyncCallback<Void> callback1 = AnswerSyncCallback.forSingleVoidAnswer();
+        doAnswer(callback1)
+                .when(mLogger)
+                .logJobStatsHelper(
+                        JOB_ID,
+                        Latency_EXECUTION_1,
+                        PERIOD_EXECUTION_1,
+                        AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SUCCESSFUL,
+                        stopReason);
+
         jobService.onStartJob(mMockJobParameters);
-        expect.that(
-                        logOperationCalledLatch1.await(
-                                BACKGROUND_EXECUTION_TIMEOUT, TimeUnit.MILLISECONDS))
-                .isTrue();
+
+        callback1.assertCalled();
+
         verify(mLogger)
                 .logJobStatsHelper(
                         JOB_ID,
@@ -313,35 +346,38 @@ public final class JobServiceTest extends SharedExtendedMockitoTestCase {
                         PERIOD_EXECUTION_1,
                         AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SUCCESSFUL,
                         stopReason);
+
         // Second Execution -- halted due to system/device issue.
         // Set the flag shouldOnStopJobHappen to true to stop executing onStartJob(), but do not
         // actually invoke onStopJob() to mimic the scenario.
         jobService.setShouldOnStopJobHappen(true);
         CountDownLatch logOperationCalledLatch2 = createCountDownLatchWithMockedOperation();
+
         jobService.onStartJob(mMockJobParameters);
         // Logging doesn't happen because the execution is open-ended.
         expect.that(
                         logOperationCalledLatch2.await(
                                 BACKGROUND_EXECUTION_TIMEOUT, TimeUnit.MILLISECONDS))
                 .isFalse();
+
         // The logging happens on the next execution for execution halted due to device issues.
         //
         // Third Execution -- halted due to system/device issue.
         // This execution doesn't log itself but will log previous execution halted by device issue.
         jobService.setShouldOnStopJobHappen(true);
-        CountDownLatch logOperationCalledLatch3 = createCountDownLatchWithMockedOperation();
-        jobService.onStartJob(mMockJobParameters);
-        expect.that(
-                        logOperationCalledLatch3.await(
-                                BACKGROUND_EXECUTION_TIMEOUT, TimeUnit.MILLISECONDS))
-                .isTrue();
-        verify(mLogger)
+        AnswerSyncCallback<Void> callback3 = AnswerSyncCallback.forSingleVoidAnswer();
+        doAnswer(callback3)
+                .when(mLogger)
                 .logJobStatsHelper(
                         JOB_ID,
                         UNAVAILABLE_JOB_LATENCY,
                         PERIOD_EXECUTION_2,
                         AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__HALTED_FOR_UNKNOWN_REASON,
                         stopReason);
+
+        jobService.onStartJob(mMockJobParameters);
+
+        callback3.assertCalled();
     }
 
     /**
@@ -349,17 +385,17 @@ public final class JobServiceTest extends SharedExtendedMockitoTestCase {
      * log successfully
      */
     @Test
-    public void testJobExecutionLifeCycle_haltedThenSuccess() throws InterruptedException {
+    public void testJobExecutionLifeCycle_haltedThenSuccess() throws Exception {
         TestJobService jobService = new TestJobService(mLogger);
         // Mock the stop reason on test purpose. It's assigned by JobScheduler in production.
         when(mMockJobParameters.getStopReason()).thenReturn(STOP_REASON);
         // Mock clock to return mocked currentTimeStamp in sequence.
         // Note the first execution is open-ended, so it doesn't have an ending timestamp
-        when(mMockClock.currentTimeMillis())
-                .thenReturn(
-                        START_TIMESTAMP_EXECUTION_1,
-                        START_TIMESTAMP_EXECUTION_2,
-                        END_TIMESTAMP_EXECUTION_2);
+        mocker.mockCurrentTimeMillis(
+                mMockClock,
+                START_TIMESTAMP_EXECUTION_1,
+                START_TIMESTAMP_EXECUTION_2,
+                END_TIMESTAMP_EXECUTION_2);
         // onStopJob() is not called, so stop reason is the unavailable value.
         int stopReason = UNAVAILABLE_STOP_REASON;
         // First Execution -- halted due to system/device issue.
@@ -367,72 +403,75 @@ public final class JobServiceTest extends SharedExtendedMockitoTestCase {
         // actually invoke onStopJob() to mimic the scenario.
         jobService.setShouldOnStopJobHappen(true);
         CountDownLatch logOperationCalledLatch1 = createCountDownLatchWithMockedOperation();
+
         jobService.onStartJob(mMockJobParameters);
         // Logging doesn't happen because the execution is open-ended.
         expect.that(
                         logOperationCalledLatch1.await(
                                 BACKGROUND_EXECUTION_TIMEOUT, TimeUnit.MILLISECONDS))
                 .isFalse();
+
         // The logging happens on the next execution.
         //
         // Second Execution -- Successful
         // This execution logs itself and also logs previous execution halted by device issue.
         jobService.setOnSuccessCallback(true);
         jobService.setShouldOnStopJobHappen(false);
-        // It will log twice so create a CountDownLatch with event count = 2.
-        CountDownLatch logOperationCalledLatch2 = new CountDownLatch(2);
-        doAnswer(
-                        (Answer<Object>)
-                                invocation -> {
-                                    // The method logAdServicesBackgroundJobsStats is called.
-                                    invocation.callRealMethod();
-                                    logOperationCalledLatch2.countDown();
-                                    return null;
-                                })
+        // It will log twice.
+        AnswerSyncCallback<Void> callback2 = AnswerSyncCallback.forSingleVoidAnswer();
+        doAnswer(callback2)
                 .when(mLogger)
-                .logJobStatsHelper(anyInt(), anyLong(), anyLong(), anyInt(), anyInt());
-        jobService.onStartJob(mMockJobParameters);
-        expect.that(
-                        logOperationCalledLatch2.await(
-                                BACKGROUND_EXECUTION_TIMEOUT * 2, TimeUnit.MILLISECONDS))
-                .isTrue();
-        verify(mLogger)
                 .logJobStatsHelper(
                         JOB_ID,
                         UNAVAILABLE_JOB_LATENCY,
                         PERIOD_EXECUTION_1,
                         AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__HALTED_FOR_UNKNOWN_REASON,
                         stopReason);
-        verify(mLogger)
+        AnswerSyncCallback<Void> callback3 = AnswerSyncCallback.forSingleVoidAnswer();
+        doAnswer(callback3)
+                .when(mLogger)
                 .logJobStatsHelper(
                         JOB_ID,
                         Latency_EXECUTION_2,
                         PERIOD_EXECUTION_2,
                         AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SUCCESSFUL,
                         stopReason);
+
+        jobService.onStartJob(mMockJobParameters);
+
+        callback2.assertCalled();
+        callback3.assertCalled();
     }
 
     /** To test 1) skipping as first execution 2) skipping result code */
     @Test
-    public void testJobExecutionLifeCycle_skipThenSkip() throws InterruptedException {
+    public void testJobExecutionLifeCycle_skipThenSkip() throws Exception {
         TestJobService jobService = new TestJobService(mLogger);
         // Mock clock to return mocked currentTimeStamp in sequence.
-        when(mMockClock.currentTimeMillis())
-                .thenReturn(
-                        START_TIMESTAMP_EXECUTION_1,
-                        END_TIMESTAMP_EXECUTION_1,
-                        START_TIMESTAMP_EXECUTION_2,
-                        END_TIMESTAMP_EXECUTION_2);
+        mocker.mockCurrentTimeMillis(
+                mMockClock,
+                START_TIMESTAMP_EXECUTION_1,
+                END_TIMESTAMP_EXECUTION_1,
+                START_TIMESTAMP_EXECUTION_2,
+                END_TIMESTAMP_EXECUTION_2);
         // onStopJob() is not called, so stop reason is the unavailable value.
         int stopReason = UNAVAILABLE_STOP_REASON;
         // First Execution -- skip to execute
         jobService.setShouldSkip(true);
-        CountDownLatch logOperationCalledLatch1 = createCountDownLatchWithMockedOperation();
+        AnswerSyncCallback<Void> callback1 = AnswerSyncCallback.forSingleVoidAnswer();
+        doAnswer(callback1)
+                .when(mLogger)
+                .logJobStatsHelper(
+                        JOB_ID,
+                        Latency_EXECUTION_1,
+                        PERIOD_EXECUTION_1,
+                        AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON,
+                        stopReason);
+
         jobService.onStartJob(mMockJobParameters);
-        expect.that(
-                        logOperationCalledLatch1.await(
-                                BACKGROUND_EXECUTION_TIMEOUT, TimeUnit.MILLISECONDS))
-                .isTrue();
+
+        callback1.assertCalled();
+
         verify(mLogger)
                 .logJobStatsHelper(
                         JOB_ID,
@@ -440,32 +479,35 @@ public final class JobServiceTest extends SharedExtendedMockitoTestCase {
                         PERIOD_EXECUTION_1,
                         AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON,
                         stopReason);
+
         // Second Execution -- Succeed to execute
         jobService.setShouldSkip(true);
-        CountDownLatch logOperationCalledLatch2 = createCountDownLatchWithMockedOperation();
-        jobService.onStartJob(mMockJobParameters);
-        expect.that(
-                        logOperationCalledLatch2.await(
-                                BACKGROUND_EXECUTION_TIMEOUT, TimeUnit.MILLISECONDS))
-                .isTrue();
-        verify(mLogger)
+        AnswerSyncCallback<Void> callback2 = AnswerSyncCallback.forSingleVoidAnswer();
+        doAnswer(callback2)
+                .when(mLogger)
                 .logJobStatsHelper(
                         JOB_ID,
                         Latency_EXECUTION_2,
                         PERIOD_EXECUTION_2,
                         AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON,
                         stopReason);
+
+        jobService.onStartJob(mMockJobParameters);
+
+        callback2.assertCalled();
     }
 
     @Test
-    public void testLoggingNotEnabled_successfulExecution() throws InterruptedException {
+    public void testLoggingNotEnabled_successfulExecution() throws Exception {
         TestJobService jobService = new TestJobService(mLogger);
         // Disable logging feature
-        when(sMockFlags.getBackgroundJobsLoggingEnabled()).thenReturn(false);
+        mockGetBackgroundJobsLoggingEnabled(false);
         // First Execution -- Succeed to execute
         jobService.setOnSuccessCallback(true);
         CountDownLatch logOperationCalledLatch1 = createCountDownLatchWithMockedOperation();
+
         jobService.onStartJob(mMockJobParameters);
+
         expect.that(
                         logOperationCalledLatch1.await(
                                 BACKGROUND_EXECUTION_TIMEOUT, TimeUnit.MILLISECONDS))
@@ -473,15 +515,17 @@ public final class JobServiceTest extends SharedExtendedMockitoTestCase {
     }
 
     @Test
-    public void testLoggingNotEnabled_failedExecution() throws InterruptedException {
+    public void testLoggingNotEnabled_failedExecution() throws Exception {
         TestJobService jobService = new TestJobService(mLogger);
         // Disable logging feature
-        when(sMockFlags.getBackgroundJobsLoggingEnabled()).thenReturn(false);
+        mockGetBackgroundJobsLoggingEnabled(false);
         // First Execution -- Fail to execute with retry
         jobService.setOnSuccessCallback(false);
         jobService.setShouldRetryOnJobFinished(true);
         CountDownLatch logOperationCalledLatch1 = createCountDownLatchWithMockedOperation();
+
         jobService.onStartJob(mMockJobParameters);
+
         expect.that(
                         logOperationCalledLatch1.await(
                                 BACKGROUND_EXECUTION_TIMEOUT, TimeUnit.MILLISECONDS))
@@ -489,16 +533,18 @@ public final class JobServiceTest extends SharedExtendedMockitoTestCase {
     }
 
     @Test
-    public void testLoggingNotEnabled_executionCallingOnStop() throws InterruptedException {
+    public void testLoggingNotEnabled_executionCallingOnStop() throws Exception {
         TestJobService jobService = new TestJobService(mLogger);
         // Disable logging feature
-        when(sMockFlags.getBackgroundJobsLoggingEnabled()).thenReturn(false);
+        mockGetBackgroundJobsLoggingEnabled(false);
         // First Execution -- onStopJob() is called with retry
         jobService.setShouldOnStopJobHappen(true);
         jobService.setShouldRetryOnStopJob(true);
         CountDownLatch logOperationCalledLatch1 = createCountDownLatchWithMockedOperation();
+
         jobService.onStartJob(mMockJobParameters);
         jobService.onStopJob(mMockJobParameters);
+
         expect.that(
                         logOperationCalledLatch1.await(
                                 BACKGROUND_EXECUTION_TIMEOUT, TimeUnit.MILLISECONDS))
@@ -506,14 +552,16 @@ public final class JobServiceTest extends SharedExtendedMockitoTestCase {
     }
 
     @Test
-    public void testLoggingNotEnabled_skipExecution() throws InterruptedException {
+    public void testLoggingNotEnabled_skipExecution() throws Exception {
         TestJobService jobService = new TestJobService(mLogger);
         // Disable logging feature
-        when(sMockFlags.getBackgroundJobsLoggingEnabled()).thenReturn(false);
+        mockGetBackgroundJobsLoggingEnabled(false);
         // First Execution -- onStopJob() is called with retry
         jobService.setShouldSkip(true);
         CountDownLatch logOperationCalledLatch1 = createCountDownLatchWithMockedOperation();
+
         jobService.onStartJob(mMockJobParameters);
+
         expect.that(
                         logOperationCalledLatch1.await(
                                 BACKGROUND_EXECUTION_TIMEOUT, TimeUnit.MILLISECONDS))

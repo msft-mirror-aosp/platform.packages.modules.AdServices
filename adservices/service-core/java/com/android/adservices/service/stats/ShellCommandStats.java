@@ -52,6 +52,8 @@ public final class ShellCommandStats {
     public static final int COMMAND_RESET_CONSENT_DATA =
             AdServicesStatsLog
                     .AD_SERVICES_SHELL_COMMAND_CALLED__COMMAND__COMMAND_RESET_CONSENT_DATA;
+    public static final int COMMAND_DEV_SESSION =
+            AdServicesStatsLog.AD_SERVICES_SHELL_COMMAND_CALLED__COMMAND__COMMAND_DEV_SESSION;
 
     public static final int COMMAND_CUSTOM_AUDIENCE_VIEW =
             AdServicesStatsLog
@@ -79,6 +81,9 @@ public final class ShellCommandStats {
     public static final int COMMAND_AD_SELECTION_GET_AD_SELECTION_DATA =
             AdServicesStatsLog
                     .AD_SERVICES_SHELL_COMMAND_CALLED__COMMAND__COMMAND_AD_SELECTION_GET_AD_SELECTION_DATA;
+    public static final int COMMAND_AD_SELECTION_VIEW_AUCTION_RESULT =
+            AdServicesStatsLog
+                    .AD_SERVICES_SHELL_COMMAND_CALLED__COMMAND__COMMAND_AD_SELECTION_VIEW_AUCTION_RESULT;
 
     public static final int COMMAND_APP_SIGNALS_GENERATE_INPUT_FOR_ENCODING =
             AdServicesStatsLog
@@ -99,6 +104,7 @@ public final class ShellCommandStats {
         COMMAND_IS_ALLOWED_TOPICS_ACCESS,
         COMMAND_ENABLE_ADSERVICES,
         COMMAND_RESET_CONSENT_DATA,
+        COMMAND_DEV_SESSION,
 
         // Custom audience commands
         COMMAND_CUSTOM_AUDIENCE_VIEW,
@@ -111,6 +117,7 @@ public final class ShellCommandStats {
         COMMAND_AD_SELECTION_CONSENTED_DEBUG_VIEW,
         COMMAND_AD_SELECTION_CONSENTED_DEBUG_HELP,
         COMMAND_AD_SELECTION_GET_AD_SELECTION_DATA,
+        COMMAND_AD_SELECTION_VIEW_AUCTION_RESULT,
 
         // Protected App Signals commands
         COMMAND_APP_SIGNALS_GENERATE_INPUT_FOR_ENCODING,

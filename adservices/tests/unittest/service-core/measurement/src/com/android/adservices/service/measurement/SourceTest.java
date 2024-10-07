@@ -19,6 +19,7 @@ package com.android.adservices.service.measurement;
 import static com.android.adservices.service.measurement.Source.DEFAULT_MAX_EVENT_STATES;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -43,6 +44,9 @@ import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
+import com.android.adservices.service.measurement.aggregation.AggregateDebugReportData;
+import com.android.adservices.service.measurement.aggregation.AggregateDebugReporting;
+import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -103,6 +107,9 @@ public final class SourceTest extends AdServicesMockitoTestCase {
         assertEquals(Source.TriggerDataMatching.MODULUS, source.getTriggerDataMatching());
         assertNull(source.getTriggerData());
         assertNull(source.getAttributedTriggers());
+        assertNull(source.getAggregateDebugReportingString());
+        assertEquals(0, source.getAggregateDebugReportContributions());
+        assertNull(source.getAggregateContributionBuckets());
     }
 
     @Test
@@ -127,6 +134,10 @@ public final class SourceTest extends AdServicesMockitoTestCase {
         String debugWebAdId = "SAMPLE_DEBUG_WEB_ADID";
         TriggerSpecs triggerSpecs = SourceFixture.getValidTriggerSpecsValueSum();
         Double event_level_epsilon = 10d;
+        String aggregateDebugReportingString =
+                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT;
+        int aggregateDebugReportContributions = 1024;
+        AggregateContributionBuckets aggregateContribution = new AggregateContributionBuckets();
         assertEquals(
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
@@ -185,6 +196,9 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                         .setDestinationLimitPriority(100L)
                         .setDestinationLimitAlgorithm(Source.DestinationLimitAlgorithm.FIFO)
                         .setEventLevelEpsilon(event_level_epsilon)
+                        .setAggregateDebugReportingString(aggregateDebugReportingString)
+                        .setAggregateDebugReportContributions(aggregateDebugReportContributions)
+                        .setAggregateContributionBuckets(aggregateContribution)
                         .build(),
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
@@ -243,6 +257,9 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                         .setDestinationLimitPriority(100L)
                         .setDestinationLimitAlgorithm(Source.DestinationLimitAlgorithm.FIFO)
                         .setEventLevelEpsilon(event_level_epsilon)
+                        .setAggregateDebugReportingString(aggregateDebugReportingString)
+                        .setAggregateDebugReportContributions(aggregateDebugReportContributions)
+                        .setAggregateContributionBuckets(aggregateContribution)
                         .build());
     }
 
@@ -560,6 +577,23 @@ public final class SourceTest extends AdServicesMockitoTestCase {
         assertNotEquals(
                 SourceFixture.getMinimalValidSourceBuilder().setEventLevelEpsilon(10D).build(),
                 SourceFixture.getMinimalValidSourceBuilder().setEventLevelEpsilon(11D).build());
+        assertThat(
+                        SourceFixture.getMinimalValidSourceBuilder()
+                                .setAggregateDebugReportingString(
+                                        "{\"budget\":1024,\"key_piece\":\"0x1\"}")
+                                .build())
+                .isNotEqualTo(
+                        SourceFixture.getMinimalValidSourceBuilder()
+                                .setAggregateDebugReportingString(
+                                        "{\"budget\":1024,\"key_piece\":\"0x2\"}")
+                                .build());
+        assertNotEquals(
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAggregateDebugReportContributions(1024)
+                        .build(),
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAggregateDebugReportContributions(1025)
+                        .build());
     }
 
     @Test
@@ -586,7 +620,9 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                 SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
                 SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
-                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON);
+                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON,
+                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT,
+                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT_CONTRIBUTIONS);
 
         assertInvalidSourceArguments(
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
@@ -610,7 +646,9 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                 SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
                 SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
-                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON);
+                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON,
+                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT,
+                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT_CONTRIBUTIONS);
     }
 
     @Test
@@ -638,7 +676,9 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                 SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
                 SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
-                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON);
+                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON,
+                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT,
+                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT_CONTRIBUTIONS);
 
         // Invalid web Uri
         assertInvalidSourceArguments(
@@ -663,7 +703,9 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                 SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
                 SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
-                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON);
+                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON,
+                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT,
+                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT_CONTRIBUTIONS);
 
         // Empty app destinations list
         assertInvalidSourceArguments(
@@ -688,7 +730,9 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                 SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
                 SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
-                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON);
+                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON,
+                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT,
+                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT_CONTRIBUTIONS);
 
         // Empty web destinations list
         assertInvalidSourceArguments(
@@ -713,7 +757,9 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                 SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
                 SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
-                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON);
+                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON,
+                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT,
+                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT_CONTRIBUTIONS);
 
         // Too many app destinations
         assertInvalidSourceArguments(
@@ -740,7 +786,9 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                 SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
                 SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
-                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON);
+                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON,
+                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT,
+                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT_CONTRIBUTIONS);
     }
 
     @Test
@@ -767,7 +815,9 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                 SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
                 SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
-                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON);
+                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON,
+                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT,
+                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT_CONTRIBUTIONS);
     }
 
     @Test
@@ -794,7 +844,9 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                 SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
                 SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
-                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON);
+                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON,
+                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT,
+                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT_CONTRIBUTIONS);
 
         assertInvalidSourceArguments(
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
@@ -818,7 +870,9 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                 SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
                 SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
-                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON);
+                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON,
+                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT,
+                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT_CONTRIBUTIONS);
     }
 
     @Test
@@ -845,7 +899,9 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                 SourceFixture.ValidSourceParams.SHARED_FILTER_DATA_KEYS,
                 SourceFixture.ValidSourceParams.INSTALL_TIME,
                 SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
-                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON);
+                SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON,
+                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT,
+                SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT_CONTRIBUTIONS);
     }
 
     @Test
@@ -886,6 +942,55 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                         .get()
                         .getFilterMap()
                         .getAttributionFilterMap());
+    }
+
+    @Test
+    public void aggregateDebugReport_parsing_asExpected() throws JSONException {
+        // Setup
+        String aggregateDebugReport =
+                "{\"budget\":1024,"
+                        + "\"key_piece\":\"0x100\","
+                        + "\"debug_data\":["
+                        + "{"
+                        + "\"types\": [\"source-destination-limit\"],"
+                        + "\"key_piece\": \"0x111\","
+                        + "\"value\": 111"
+                        + "},"
+                        + "{"
+                        + "\"types\": [\"unspecified\"],"
+                        + "\"key_piece\": \"0x222\","
+                        + "\"value\": 222"
+                        + "}"
+                        + "]}";
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setAggregateDebugReportingString(aggregateDebugReport)
+                        .build();
+
+        // Execution
+        AggregateDebugReportData debugData1 =
+                new AggregateDebugReportData.Builder(
+                                Collections.singleton(
+                                        DebugReportApi.Type.SOURCE_DESTINATION_LIMIT.getValue()),
+                                new BigInteger("111", 16),
+                                111)
+                        .build();
+        AggregateDebugReportData debugData2 =
+                new AggregateDebugReportData.Builder(
+                                Collections.singleton(DebugReportApi.Type.UNSPECIFIED.getValue()),
+                                new BigInteger("222", 16),
+                                222)
+                        .build();
+
+        // Assertion
+        assertThat(source.getAggregateDebugReportingObject())
+                .isEqualTo(
+                        new AggregateDebugReporting.Builder(
+                                        1024,
+                                        new BigInteger("100", 16),
+                                        Arrays.asList(debugData1, debugData2),
+                                        null)
+                                .build());
     }
 
     @Test
@@ -1357,7 +1462,9 @@ public final class SourceTest extends AdServicesMockitoTestCase {
             @Nullable String sharedFilterDataKeys,
             @Nullable Long installTime,
             Uri registrationOrigin,
-            @Nullable Double eventLevelEpsilon) {
+            @Nullable Double eventLevelEpsilon,
+            @Nullable String aggregateDebugReportingString,
+            @Nullable Integer aggregateDebugReportContributions) {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -1384,6 +1491,9 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                                 .setRegistrationOrigin(registrationOrigin)
                                 .setSharedFilterDataKeys(sharedFilterDataKeys)
                                 .setEventLevelEpsilon(eventLevelEpsilon)
+                                .setAggregateDebugReportingString(aggregateDebugReportingString)
+                                .setAggregateDebugReportContributions(
+                                        aggregateDebugReportContributions)
                                 .build());
     }
 
@@ -2284,5 +2394,187 @@ public final class SourceTest extends AdServicesMockitoTestCase {
         Double epsilonRetrievedConfigured =
                 withEpsilonConfigured.getConditionalEventLevelEpsilon(mMockFlags);
         assertEquals(10D, epsilonRetrievedConfigured, 0.0);
+    }
+
+    @Test
+    public void testGetInformationGainThreshold_dualDestination_event() {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
+                        .setWebDestinations(
+                                List.of(WebUtil.validUri("https://web-destination1.test")))
+                        .setSourceType(Source.SourceType.EVENT)
+                        .build();
+        when(mMockFlags.getMeasurementEnableCoarseEventReportDestinations()).thenReturn(false);
+        when(mMockFlags.getMeasurementFlexApiMaxInformationGainDualDestinationEvent())
+                .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT);
+
+        float thresholdRetrieved = source.getInformationGainThreshold(mMockFlags);
+        verify(mMockFlags).getMeasurementFlexApiMaxInformationGainDualDestinationEvent();
+        assertWithMessage("getInformationGainThreshold() dual destination event")
+                .that(thresholdRetrieved)
+                .isEqualTo(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT);
+    }
+
+    @Test
+    public void testGetInformationGainThreshold_dualDestination_navigation() {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
+                        .setWebDestinations(
+                                List.of(WebUtil.validUri("https://web-destination1.test")))
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .build();
+        when(mMockFlags.getMeasurementEnableCoarseEventReportDestinations()).thenReturn(false);
+        float infoGn = Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION;
+        when(mMockFlags.getMeasurementFlexApiMaxInformationGainDualDestinationNavigation())
+                .thenReturn(infoGn);
+
+        float thresholdRetrieved = source.getInformationGainThreshold(mMockFlags);
+        verify(mMockFlags).getMeasurementFlexApiMaxInformationGainDualDestinationNavigation();
+        assertWithMessage("getInformationGainThreshold() dual destination nav")
+                .that(thresholdRetrieved)
+                .isEqualTo(infoGn);
+    }
+
+    @Test
+    public void testGetInformationGainThreshold_singleDestination_event() {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSourceType(Source.SourceType.EVENT)
+                        .build();
+        when(mMockFlags.getMeasurementEnableCoarseEventReportDestinations()).thenReturn(true);
+        when(mMockFlags.getMeasurementFlexApiMaxInformationGainEvent())
+                .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT);
+
+        float thresholdRetrieved = source.getInformationGainThreshold(mMockFlags);
+        verify(mMockFlags).getMeasurementFlexApiMaxInformationGainEvent();
+        assertWithMessage("getInformationGainThreshold() single destination event")
+                .that(thresholdRetrieved)
+                .isEqualTo(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT);
+    }
+
+    @Test
+    public void testGetInformationGainThreshold_singleDestination_navigation() {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .build();
+        when(mMockFlags.getMeasurementEnableCoarseEventReportDestinations()).thenReturn(true);
+        when(mMockFlags.getMeasurementFlexApiMaxInformationGainNavigation())
+                .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION);
+
+        float thresholdRetrieved = source.getInformationGainThreshold(mMockFlags);
+        verify(mMockFlags).getMeasurementFlexApiMaxInformationGainNavigation();
+        assertWithMessage("getInformationGainThreshold() single destination nav")
+                .that(thresholdRetrieved)
+                .isEqualTo(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION);
+    }
+
+    @Test
+    public void testGetAggregateContribution() {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAggregateContributionBuckets(new AggregateContributionBuckets())
+                        .build();
+        AggregateContributionBuckets aggregateContribution = new AggregateContributionBuckets();
+        aggregateContribution.createCapacityBucket("bucket1", 50);
+        aggregateContribution.createCapacityBucket("bucket2", 40);
+        aggregateContribution.addToBucket("bucket1", 5);
+
+        source.getAggregateContributionBuckets().createCapacityBucket("bucket1", 50);
+        source.getAggregateContributionBuckets().createCapacityBucket("bucket2", 40);
+        source.getAggregateContributionBuckets().addToBucket("bucket1", 5);
+
+        assertWithMessage("source.getAggregateContributionBuckets()")
+                .that(source.getAggregateContributionBuckets())
+                .isEqualTo(aggregateContribution);
+    }
+
+    @Test
+    public void testCreateAndMaybeGetBucketCapacity() {
+        AggregateContributionBuckets aggregateContributionBuckets =
+                new AggregateContributionBuckets();
+        aggregateContributionBuckets.createCapacityBucket("bucket1", 10);
+        aggregateContributionBuckets.createCapacityBucket("bucket2", 20);
+        aggregateContributionBuckets.createCapacityBucket("bucket3", 5);
+
+        assertWithMessage("maybeGetBucketCapacity(\"bucket1\")")
+                .that(aggregateContributionBuckets.maybeGetBucketCapacity("bucket1").get())
+                .isEqualTo(10);
+        assertWithMessage("maybeGetBucketCapacity(\"bucket2\")")
+                .that(aggregateContributionBuckets.maybeGetBucketCapacity("bucket2").get())
+                .isEqualTo(20);
+        assertWithMessage("maybeGetBucketCapacity(\"bucket3\")")
+                .that(aggregateContributionBuckets.maybeGetBucketCapacity("bucket3").get())
+                .isEqualTo(5);
+    }
+
+    @Test
+    public void testMaybeGetBucketCapacity_bucketDoesNotExist() {
+        AggregateContributionBuckets aggregateContributionBuckets =
+                new AggregateContributionBuckets();
+
+        assertWithMessage("maybeGetBucketCapacity(\"bucket1\")")
+                .that(aggregateContributionBuckets.maybeGetBucketCapacity("bucket1"))
+                .isEqualTo(Optional.empty());
+    }
+
+    @Test
+    public void testAddToBucket_success() {
+        AggregateContributionBuckets aggregateContributionBuckets =
+                new AggregateContributionBuckets();
+        aggregateContributionBuckets.createCapacityBucket("bucket1", 100);
+
+        assertWithMessage("addToBucket(\"bucket1\", 90)")
+                .that(aggregateContributionBuckets.addToBucket("bucket1", 90))
+                .isTrue();
+    }
+
+    @Test
+    public void testAddToBucket_contributionOverCapacity_fail() {
+        AggregateContributionBuckets aggregateContributionBuckets =
+                new AggregateContributionBuckets();
+        aggregateContributionBuckets.createCapacityBucket("bucket1", 100);
+        aggregateContributionBuckets.addToBucket("bucket1", 65);
+
+        assertWithMessage("addToBucket(\"bucket1\", 40)")
+                .that(aggregateContributionBuckets.addToBucket("bucket1", 40))
+                .isFalse();
+    }
+
+    @Test
+    public void testMaybeGetBucketContributions() {
+        AggregateContributionBuckets aggregateContributionBuckets =
+                new AggregateContributionBuckets();
+        aggregateContributionBuckets.createCapacityBucket("bucket1", 100);
+
+        aggregateContributionBuckets.addToBucket("bucket1", 20);
+        aggregateContributionBuckets.addToBucket("bucket1", 30);
+        aggregateContributionBuckets.addToBucket("bucket1", 10);
+        assertWithMessage("maybeGetBucketContributions(\"bucket1\")")
+                .that(aggregateContributionBuckets.maybeGetBucketContribution("bucket1").get())
+                .isEqualTo(60);
+    }
+
+    @Test
+    public void testMaybeGetBucketContributions_bucketDoesNotExist() {
+        AggregateContributionBuckets aggregateContributionBuckets =
+                new AggregateContributionBuckets();
+
+        assertWithMessage("maybeGetBucketContributions(\"bucket1\")")
+                .that(aggregateContributionBuckets.maybeGetBucketContribution("bucket1"))
+                .isEqualTo(Optional.empty());
+    }
+
+    @Test
+    public void testMaybeGetBucketContributions_bucketHasNoContributions() {
+        AggregateContributionBuckets aggregateContributionBuckets =
+                new AggregateContributionBuckets();
+        aggregateContributionBuckets.createCapacityBucket("bucket1", 100);
+
+        assertWithMessage("maybeGetBucketContributions(\"bucket1\")")
+                .that(aggregateContributionBuckets.maybeGetBucketContribution("bucket1").get())
+                .isEqualTo(0);
     }
 }

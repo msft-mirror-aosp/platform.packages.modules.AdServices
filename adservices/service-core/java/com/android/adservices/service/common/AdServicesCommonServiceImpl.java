@@ -63,11 +63,11 @@ import android.adservices.common.IAdServicesCommonCallback;
 import android.adservices.common.IAdServicesCommonService;
 import android.adservices.common.IAdServicesCommonStatesCallback;
 import android.adservices.common.IEnableAdServicesCallback;
-import android.adservices.common.ISetAdServicesModuleOverridesCallback;
-import android.adservices.common.ISetAdServicesModuleUserChoicesCallback;
+import android.adservices.common.IRequestAdServicesModuleOverridesCallback;
+import android.adservices.common.IRequestAdServicesModuleUserChoicesCallback;
 import android.adservices.common.IUpdateAdIdCallback;
 import android.adservices.common.IsAdServicesEnabledResult;
-import android.adservices.common.NotificationTypeParams;
+import android.adservices.common.NotificationType;
 import android.adservices.common.UpdateAdIdRequest;
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
@@ -217,9 +217,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                             return;
                         }
 
-                        SharedPreferences preferences =
-                                mContext.getSharedPreferences(
-                                        ADSERVICES_STATUS_SHARED_PREFERENCE, Context.MODE_PRIVATE);
+                        SharedPreferences preferences = getPrefs();
 
                         int adServiceEntryPointStatusInt =
                                 adServicesEntryPointEnabled
@@ -283,9 +281,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
             ConsentManager consentManager = ConsentManager.getInstance();
             if (!consentManager.wasGaUxNotificationDisplayed()) {
                 // Check Beta notification displayed and user opt-in, we will re-consent
-                SharedPreferences preferences =
-                        mContext.getSharedPreferences(
-                                ADSERVICES_STATUS_SHARED_PREFERENCE, Context.MODE_PRIVATE);
+                SharedPreferences preferences = getPrefs();
                 // Check the setAdServicesEnabled was called before
                 if (preferences.contains(KEY_ADSERVICES_ENTRY_POINT_STATUS)
                         && consentManager.getConsent().isGiven()) {
@@ -509,21 +505,68 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
 
     /** Sets AdServices feature states. */
     @Override
-    @RequiresPermission(anyOf = {ACCESS_ADSERVICES_STATE, ACCESS_ADSERVICES_STATE_COMPAT})
-    public void setAdServicesModuleOverrides(
+    @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
+    public void requestAdServicesModuleOverrides(
             List<AdServicesModuleState> adServicesModuleStateList,
-            NotificationTypeParams notificationType,
-            ISetAdServicesModuleOverridesCallback callback) {
-        // TODO: Add implementation
+            @NotificationType.NotificationTypeCode int notificationType,
+            IRequestAdServicesModuleOverridesCallback callback) {
+
+        boolean authorizedCaller = PermissionHelper.hasModifyAdServicesStatePermission(mContext);
+        sBackgroundExecutor.execute(
+                () -> {
+                    try {
+                        if (!authorizedCaller) {
+                            callback.onFailure(STATUS_UNAUTHORIZED);
+                            LogUtil.d(UNAUTHORIZED_CALLER_MESSAGE);
+                            return;
+                        }
+                        ConsentManager consentManager = ConsentManager.getInstance();
+                        consentManager.setModuleStates(adServicesModuleStateList);
+                        callback.onSuccess();
+
+                        // TODO(361411984): Add the notification trigger logic
+
+                    } catch (Exception e) {
+                        LogUtil.e(
+                                "requestAdServicesModuleOverrides() failed to complete: "
+                                        + e.getMessage());
+                        try {
+                            callback.onFailure(STATUS_INTERNAL_ERROR);
+                        } catch (RemoteException ex) {
+                            LogUtil.e("Unable to send result to the callback " + ex.getMessage());
+                        }
+                    }
+                });
     }
 
     /** Sets AdServices feature user choices. */
     @Override
-    @RequiresPermission(anyOf = {ACCESS_ADSERVICES_STATE, ACCESS_ADSERVICES_STATE_COMPAT})
-    public void setAdServicesModuleUserChoices(
+    @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
+    public void requestAdServicesModuleUserChoices(
             List<AdServicesModuleUserChoice> adServicesFeatureUserChoiceList,
-            ISetAdServicesModuleUserChoicesCallback callback) {
-        // TODO: Add implementation
+            IRequestAdServicesModuleUserChoicesCallback callback) {
+
+        boolean authorizedCaller = PermissionHelper.hasModifyAdServicesStatePermission(mContext);
+
+        sBackgroundExecutor.execute(
+                () -> {
+                    try {
+                        if (!authorizedCaller) {
+                            callback.onFailure(STATUS_UNAUTHORIZED);
+                            LogUtil.d(UNAUTHORIZED_CALLER_MESSAGE);
+                            return;
+                        }
+                        ConsentManager consentManager = ConsentManager.getInstance();
+                        consentManager.setUserChoices(adServicesFeatureUserChoiceList);
+                        LogUtil.i("requestAdServicesModuleUserChoices");
+                        callback.onSuccess();
+
+                    } catch (Exception e) {
+                        LogUtil.e(
+                                "requestAdServicesModuleUserChoices() failed to complete: "
+                                        + e.getMessage());
+                    }
+                });
     }
 
     private int getLatency(CallerMetadata metadata, long serviceStartTime) {
@@ -531,7 +574,13 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
         long serviceLatency = mClock.elapsedRealtime() - serviceStartTime;
         // Double it to simulate the return binder time is same to call binder time
         long binderLatency = (serviceStartTime - binderCallStartTimeMillis) * 2;
-
+        LogUtil.v(
+                "binder call start time "
+                        + binderCallStartTimeMillis
+                        + ", servicve Start time "
+                        + serviceStartTime
+                        + ", service latency "
+                        + serviceLatency);
         return (int) (serviceLatency + binderLatency);
     }
 
@@ -567,5 +616,11 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                         .setApiEnabled(apiEnabled)
                         .setSuccess(success)
                         .build());
+    }
+
+    @SuppressWarnings("AvoidSharedPreferences") // Legacy usage
+    private SharedPreferences getPrefs() {
+        return mContext.getSharedPreferences(
+                ADSERVICES_STATUS_SHARED_PREFERENCE, Context.MODE_PRIVATE);
     }
 }

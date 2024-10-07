@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.measurement.aggregation;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
@@ -27,12 +29,15 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.FilterMap;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -48,8 +53,7 @@ import java.util.Set;
 public final class AggregatableAttributionTriggerTest {
     @Mock Flags mFlags;
 
-    private AggregatableAttributionTrigger createExample(
-            List<AggregateDeduplicationKey> aggregateDeduplicationKeys) {
+    private List<AggregateTriggerData> createAggregateTriggerData() {
         AggregateTriggerData attributionTriggerData1 =
                 new AggregateTriggerData.Builder()
                         .setKey(BigInteger.valueOf(159L))
@@ -61,34 +65,114 @@ public final class AggregatableAttributionTriggerTest {
                         .setSourceKeys(new HashSet<>(
                                 Arrays.asList("campCounts", "campGeoCounts", "campGeoValue")))
                         .build();
+        return List.of(attributionTriggerData1, attributionTriggerData2);
+    }
 
-        Map<String, Integer> values = new HashMap<>();
-        values.put("campCounts", 1);
-        values.put("campGeoCounts", 100);
+    private AggregatableAttributionTrigger createExampleWithValues(
+            List<AggregateDeduplicationKey> aggregateDeduplicationKeys) {
+        List<AggregateTriggerData> aggregateTriggerDataList = createAggregateTriggerData();
+        AggregateTriggerData attributionTriggerData1 = aggregateTriggerDataList.get(0);
+        AggregateTriggerData attributionTriggerData2 = aggregateTriggerDataList.get(1);
+        Map<String, AggregatableKeyValue> values = new HashMap<>();
+        values.put("campCounts", new AggregatableKeyValue.Builder(1).build());
+        values.put("campGeoCounts", new AggregatableKeyValue.Builder(100).build());
+        List<AggregatableValuesConfig> configList = new ArrayList<>();
+        configList.add(new AggregatableValuesConfig.Builder(values).build());
         if (aggregateDeduplicationKeys != null) {
             return new AggregatableAttributionTrigger.Builder()
                     .setTriggerData(Arrays.asList(attributionTriggerData1, attributionTriggerData2))
-                    .setValues(values)
+                    .setValueConfigs(configList)
                     .setAggregateDeduplicationKeys(aggregateDeduplicationKeys)
                     .build();
         }
         return new AggregatableAttributionTrigger.Builder()
                 .setTriggerData(Arrays.asList(attributionTriggerData1, attributionTriggerData2))
-                .setValues(values)
+                .setValueConfigs(configList)
+                .build();
+    }
+
+    private AggregatableAttributionTrigger createExampleWithValueConfigs() throws Exception {
+        when(mFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true);
+        List<AggregateTriggerData> aggregateTriggerDataList = createAggregateTriggerData();
+        AggregateTriggerData attributionTriggerData1 = aggregateTriggerDataList.get(0);
+        AggregateTriggerData attributionTriggerData2 = aggregateTriggerDataList.get(1);
+        // Build AggregatableValuesConfig
+        JSONObject jsonObj1Values = new JSONObject();
+        jsonObj1Values.put("campCounts", 1);
+        jsonObj1Values.put("campGeoCounts", 100);
+        // Build filter_set and not_filter_set
+        JSONObject filterMap = new JSONObject();
+        filterMap.put(
+                "conversion_subdomain", new JSONArray(Arrays.asList("electronics.megastore")));
+        filterMap.put("product", new JSONArray(Arrays.asList("1234", "2345")));
+        JSONArray filterSet = new JSONArray();
+        filterSet.put(filterMap);
+        // Put into json object
+        JSONObject jsonObj = new JSONObject();
+        jsonObj.put("values", jsonObj1Values);
+        jsonObj.put("filter_set", filterMap);
+        jsonObj.put("not_filter_set", filterMap);
+        AggregatableValuesConfig aggregatableValuesConfig =
+                new AggregatableValuesConfig.Builder(jsonObj, mFlags).build();
+        List<AggregatableValuesConfig> aggregatableValuesConfigList = new ArrayList<>();
+        aggregatableValuesConfigList.add(aggregatableValuesConfig);
+        return new AggregatableAttributionTrigger.Builder()
+                .setTriggerData(Arrays.asList(attributionTriggerData1, attributionTriggerData2))
+                .setValueConfigs(aggregatableValuesConfigList)
                 .build();
     }
 
     @Test
-    public void testCreation() throws Exception {
-        AggregatableAttributionTrigger attributionTrigger = createExample(null);
+    public void testCreationWithValues() throws Exception {
+        AggregatableAttributionTrigger attributionTrigger = createExampleWithValues(null);
 
-        assertEquals(attributionTrigger.getTriggerData().size(), 2);
-        assertEquals(attributionTrigger.getTriggerData().get(0).getKey().longValue(), 159L);
-        assertEquals(attributionTrigger.getTriggerData().get(0).getSourceKeys().size(), 2);
-        assertEquals(attributionTrigger.getTriggerData().get(1).getKey().longValue(), 5L);
-        assertEquals(attributionTrigger.getTriggerData().get(1).getSourceKeys().size(), 3);
-        assertEquals(attributionTrigger.getValues().get("campCounts").intValue(), 1);
-        assertEquals(attributionTrigger.getValues().get("campGeoCounts").intValue(), 100);
+        assertThat(attributionTrigger.getTriggerData().size()).isEqualTo(2);
+        assertThat(attributionTrigger.getTriggerData().get(0).getKey().longValue()).isEqualTo(159L);
+        assertThat(attributionTrigger.getTriggerData().get(0).getSourceKeys().size()).isEqualTo(2);
+        assertThat(attributionTrigger.getTriggerData().get(1).getKey().longValue()).isEqualTo(5L);
+        assertThat(attributionTrigger.getTriggerData().get(1).getSourceKeys().size()).isEqualTo(3);
+        assertThat(
+                        attributionTrigger
+                                .getValueConfigs()
+                                .get(0)
+                                .getValues()
+                                .get("campCounts")
+                                .getValue())
+                .isEqualTo(1);
+        assertThat(
+                        attributionTrigger
+                                .getValueConfigs()
+                                .get(0)
+                                .getValues()
+                                .get("campGeoCounts")
+                                .getValue())
+                .isEqualTo(100);
+    }
+
+    @Test
+    public void testCreationWithValueConfigs() throws Exception {
+        AggregatableAttributionTrigger attributionTrigger = createExampleWithValueConfigs();
+        assertThat(attributionTrigger.getTriggerData().size()).isEqualTo(2);
+        assertThat(attributionTrigger.getTriggerData().get(0).getKey().longValue()).isEqualTo(159L);
+        assertThat(attributionTrigger.getTriggerData().get(0).getSourceKeys().size()).isEqualTo(2);
+        assertThat(attributionTrigger.getTriggerData().get(1).getKey().longValue()).isEqualTo(5L);
+        assertThat(attributionTrigger.getTriggerData().get(1).getSourceKeys().size()).isEqualTo(3);
+        assertThat(
+                        attributionTrigger
+                                .getValueConfigs()
+                                .get(0)
+                                .getValues()
+                                .get("campCounts")
+                                .getValue())
+                .isEqualTo(1);
+        assertThat(
+                        attributionTrigger
+                                .getValueConfigs()
+                                .get(0)
+                                .getValues()
+                                .get("campGeoCounts")
+                                .getValue())
+                .isEqualTo(100);
     }
 
     @Test
@@ -96,13 +180,12 @@ public final class AggregatableAttributionTriggerTest {
         AggregatableAttributionTrigger attributionTrigger =
                 new AggregatableAttributionTrigger.Builder().build();
         assertEquals(attributionTrigger.getTriggerData().size(), 0);
-        assertEquals(attributionTrigger.getValues().size(), 0);
     }
 
     @Test
     public void testHashCode_equals() throws Exception {
-        final AggregatableAttributionTrigger attributionTrigger1 = createExample(null);
-        final AggregatableAttributionTrigger attributionTrigger2 = createExample(null);
+        final AggregatableAttributionTrigger attributionTrigger1 = createExampleWithValues(null);
+        final AggregatableAttributionTrigger attributionTrigger2 = createExampleWithValues(null);
         final Set<AggregatableAttributionTrigger> attributionTriggerSet1 =
                 Set.of(attributionTrigger1);
         final Set<AggregatableAttributionTrigger> attributionTriggerSet2 =
@@ -114,21 +197,22 @@ public final class AggregatableAttributionTriggerTest {
 
     @Test
     public void testHashCode_notEquals() throws Exception {
-        final AggregatableAttributionTrigger attributionTrigger1 = createExample(null);
+        final AggregatableAttributionTrigger attributionTrigger1 = createExampleWithValues(null);
 
         AggregateTriggerData attributionTriggerData1 =
                 new AggregateTriggerData.Builder()
                         .setKey(BigInteger.valueOf(159L))
                         .setSourceKeys(new HashSet<>(Arrays.asList("campCounts", "campGeoCounts")))
                         .build();
-        Map<String, Integer> values = new HashMap<>();
-        values.put("campCounts", 1);
-        values.put("campGeoCounts", 100);
+        Map<String, AggregatableKeyValue> values = new HashMap<>();
+        values.put("campCounts", new AggregatableKeyValue.Builder(1).build());
+        values.put("campGeoCounts", new AggregatableKeyValue.Builder(100).build());
 
         final AggregatableAttributionTrigger attributionTrigger2 =
                 new AggregatableAttributionTrigger.Builder()
                         .setTriggerData(Arrays.asList(attributionTriggerData1))
-                        .setValues(values)
+                        .setValueConfigs(
+                                List.of(new AggregatableValuesConfig.Builder(values).build()))
                         .build();
         final Set<AggregatableAttributionTrigger> attributionTriggerSet1 =
                 Set.of(attributionTrigger1);
@@ -176,7 +260,9 @@ public final class AggregatableAttributionTriggerTest {
                 new FilterMap.Builder().setAttributionFilterMap(sourceFilterMap).build();
 
         Optional<AggregateDeduplicationKey> aggregateDeduplicationKey =
-                createExample(Arrays.asList(aggregateDeduplicationKey1, aggregateDeduplicationKey2))
+                createExampleWithValues(
+                                Arrays.asList(
+                                        aggregateDeduplicationKey1, aggregateDeduplicationKey2))
                         .maybeExtractDedupKey(sourceFilter, mFlags);
         assertTrue(aggregateDeduplicationKey.isPresent());
         assertEquals(aggregateDeduplicationKey1, aggregateDeduplicationKey.get());
@@ -239,7 +325,9 @@ public final class AggregatableAttributionTriggerTest {
                 new FilterMap.Builder().setAttributionFilterMap(sourceFilterMap).build();
 
         Optional<AggregateDeduplicationKey> aggregateDeduplicationKey =
-                createExample(Arrays.asList(aggregateDeduplicationKey1, aggregateDeduplicationKey2))
+                createExampleWithValues(
+                                Arrays.asList(
+                                        aggregateDeduplicationKey1, aggregateDeduplicationKey2))
                         .maybeExtractDedupKey(sourceFilter, mFlags);
         assertTrue(aggregateDeduplicationKey.isPresent());
         assertEquals(aggregateDeduplicationKey2, aggregateDeduplicationKey.get());
@@ -298,7 +386,9 @@ public final class AggregatableAttributionTriggerTest {
                 new FilterMap.Builder().setAttributionFilterMap(sourceFilterMap).build();
 
         Optional<AggregateDeduplicationKey> aggregateDeduplicationKey =
-                createExample(Arrays.asList(aggregateDeduplicationKey1, aggregateDeduplicationKey2))
+                createExampleWithValues(
+                                Arrays.asList(
+                                        aggregateDeduplicationKey1, aggregateDeduplicationKey2))
                         .maybeExtractDedupKey(sourceFilter, mFlags);
         assertTrue(aggregateDeduplicationKey.isPresent());
         assertEquals(aggregateDeduplicationKey2, aggregateDeduplicationKey.get());
@@ -332,7 +422,9 @@ public final class AggregatableAttributionTriggerTest {
                 new FilterMap.Builder().setAttributionFilterMap(sourceFilterMap).build();
 
         Optional<AggregateDeduplicationKey> aggregateDeduplicationKey =
-                createExample(Arrays.asList(aggregateDeduplicationKey1, aggregateDeduplicationKey2))
+                createExampleWithValues(
+                                Arrays.asList(
+                                        aggregateDeduplicationKey1, aggregateDeduplicationKey2))
                         .maybeExtractDedupKey(sourceFilter, mFlags);
         assertTrue(aggregateDeduplicationKey.isPresent());
         assertEquals(aggregateDeduplicationKey1, aggregateDeduplicationKey.get());
@@ -375,7 +467,9 @@ public final class AggregatableAttributionTriggerTest {
                 new FilterMap.Builder().setAttributionFilterMap(sourceFilterMap).build();
 
         Optional<AggregateDeduplicationKey> aggregateDeduplicationKey =
-                createExample(Arrays.asList(aggregateDeduplicationKey1, aggregateDeduplicationKey2))
+                createExampleWithValues(
+                                Arrays.asList(
+                                        aggregateDeduplicationKey1, aggregateDeduplicationKey2))
                         .maybeExtractDedupKey(sourceFilter, mFlags);
         assertTrue(aggregateDeduplicationKey.isEmpty());
     }
@@ -432,7 +526,9 @@ public final class AggregatableAttributionTriggerTest {
                 new FilterMap.Builder().setAttributionFilterMap(sourceFilterMap).build();
 
         Optional<AggregateDeduplicationKey> aggregateDeduplicationKey =
-                createExample(Arrays.asList(aggregateDeduplicationKey1, aggregateDeduplicationKey2))
+                createExampleWithValues(
+                                Arrays.asList(
+                                        aggregateDeduplicationKey1, aggregateDeduplicationKey2))
                         .maybeExtractDedupKey(sourceFilter, mFlags);
         assertTrue(aggregateDeduplicationKey.isEmpty());
     }
@@ -473,7 +569,9 @@ public final class AggregatableAttributionTriggerTest {
                         .build();
 
         Optional<AggregateDeduplicationKey> aggregateDeduplicationKey =
-                createExample(Arrays.asList(aggregateDeduplicationKey1, aggregateDeduplicationKey2))
+                createExampleWithValues(
+                                Arrays.asList(
+                                        aggregateDeduplicationKey1, aggregateDeduplicationKey2))
                         .maybeExtractDedupKey(sourceFilter, mFlags);
         assertTrue(aggregateDeduplicationKey.isEmpty());
     }

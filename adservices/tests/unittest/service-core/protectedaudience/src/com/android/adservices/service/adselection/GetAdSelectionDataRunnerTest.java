@@ -25,6 +25,12 @@ import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
 import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_CREATE_ASSET_FILE_DESCRIPTOR_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_EXCEEDED_ALLOWED_TIME_LIMIT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_FILTER_AND_REVOKED_CONSENT_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_NOTIFY_FAILURE_INTERNAL_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_NOTIFY_FAILURE_TIMEOUT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA;
 import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplFixture.BINDER_ELAPSED_TIMESTAMP;
 import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplFixture.GET_AD_SELECTION_DATA_END_TIMESTAMP;
 import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplFixture.GET_AD_SELECTION_DATA_OVERALL_LATENCY_MS;
@@ -66,6 +72,9 @@ import android.os.RemoteException;
 import androidx.room.Room;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
@@ -135,6 +144,9 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 @MockStatic(PackageManagerCompatUtils.class)
 @SpyStatic(AssetFileDescriptorUtil.class)
 @RequiresSdkLevelAtLeastS
+@SetErrorLogUtilDefaultParams(
+        throwable = ExpectErrorLogUtilWithExceptionCall.Any.class,
+        ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA)
 public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockitoTestCase {
     private static final int CALLER_UID = Process.myUid();
     private static final int E2E_TRACE_COOKIE = 0;
@@ -230,6 +242,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                         CALLER_PACKAGE_NAME,
                         true,
                         true,
+                        true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
                         Throttler.ApiKey.FLEDGE_API_SELECT_ADS,
@@ -299,6 +312,74 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
         verify(mConsentedDebugConfigurationGenerator).getConsentedDebugConfiguration();
         verify(mEgressConfigurationGenerator)
                 .isUnlimitedEgressEnabledForAuction(CALLER_PACKAGE_NAME, CALLER_UID);
+    }
+
+    @Test
+    public void testRunner_getAdSelectionData_returnsSuccessWithUXNotificationEnforcementDisabled()
+            throws Exception {
+        Flags flagsWithoutUxNotificationEnforcement =
+                new GetAdSelectionDataRunnerTestFlags() {
+                    @Override
+                    public boolean getConsentNotificationDebugMode() {
+                        return true;
+                    }
+                };
+
+        mocker.mockGetFlags(flagsWithoutUxNotificationEnforcement);
+        doReturn(FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))
+                .when(mObliviousHttpEncryptorMock)
+                .encryptBytes(any(), anyLong(), anyLong(), any(), any());
+        mockGetAdSelectionDataRunnerWithFledgeAuctionServerExecutionLogger(
+                MultiCloudTestStrategyFactory.getDisabledTestStrategy(mObliviousHttpEncryptorMock));
+
+        createAndPersistDBCustomAudiencesWithAdRenderId();
+        GetAdSelectionDataInput inputParams =
+                new GetAdSelectionDataInput.Builder()
+                        .setSeller(SELLER)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+
+        GetAdSelectionDataRunner getAdSelectionDataRunner =
+                initRunner(flagsWithoutUxNotificationEnforcement, mAdsRelevanceExecutionLogger);
+
+        GetAdSelectionDataTestCallback callback =
+                invokeGetAdSelectionData(getAdSelectionDataRunner, inputParams);
+
+        Assert.assertTrue(
+                "Call failed with response " + callback.mFledgeErrorResponse, callback.mIsSuccess);
+        Assert.assertNotNull(callback.mGetAdSelectionDataResponse);
+        Assert.assertNotNull(callback.mGetAdSelectionDataResponse.getAdSelectionData());
+        Assert.assertArrayEquals(
+                CIPHER_TEXT_BYTES, callback.mGetAdSelectionDataResponse.getAdSelectionData());
+        Assert.assertTrue(callback.mGetAdSelectionDataResponse.getAdSelectionData().length > 0);
+        verify(mObliviousHttpEncryptorMock, times(1))
+                .encryptBytes(any(), anyLong(), anyLong(), any(), any());
+        verify(mAdSelectionEntryDaoSpy, times(1))
+                .persistAdSelectionInitialization(
+                        callback.mGetAdSelectionDataResponse.getAdSelectionId(),
+                        AdSelectionInitialization.builder()
+                                .setSeller(SELLER)
+                                .setCallerPackageName(CALLER_PACKAGE_NAME)
+                                .setCreationInstant(AD_SELECTION_INITIALIZATION_INSTANT)
+                                .build());
+        verify(mFrequencyCapAdFiltererSpy).filterCustomAudiences(any());
+
+        verifyGetAdSelectionDataApiUsageLog(STATUS_SUCCESS);
+        verify(mAuctionServerDebugReporting).isEnabled();
+        verify(mConsentedDebugConfigurationGenerator).getConsentedDebugConfiguration();
+        verify(mEgressConfigurationGenerator)
+                .isUnlimitedEgressEnabledForAuction(CALLER_PACKAGE_NAME, CALLER_UID);
+        verify(mAdSelectionServiceFilterMock)
+                .filterRequest(
+                        SELLER,
+                        CALLER_PACKAGE_NAME,
+                        false,
+                        true,
+                        false,
+                        CALLER_UID,
+                        AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA,
+                        Throttler.ApiKey.FLEDGE_API_GET_AD_SELECTION_DATA,
+                        DevContext.createForDevOptionsDisabled());
     }
 
     @Test
@@ -1035,6 +1116,10 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_CREATE_ASSET_FILE_DESCRIPTOR_ERROR)
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_NOTIFY_FAILURE_INTERNAL_ERROR)
     public void testRunner_getAdSelectionData_returnsInternalErrorWhenEncounteringIOException()
             throws Exception {
         mFakeFlags = new GetAdSelectionDataRunnerTestFlagsWithExcessiveSizeFormatter();
@@ -1068,6 +1153,8 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_FILTER_AND_REVOKED_CONSENT_EXCEPTION)
     public void testRunner_revokedUserConsent_returnsRandomResult() throws Exception {
         mocker.mockGetFlags(mFakeFlags);
         doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
@@ -1076,6 +1163,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                         eq(SELLER),
                         eq(CALLER_PACKAGE_NAME),
                         eq(false),
+                        eq(true),
                         eq(true),
                         eq(CALLER_UID),
                         eq(AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA),
@@ -1102,6 +1190,8 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_FILTER_AND_REVOKED_CONSENT_EXCEPTION)
     public void testRunner_revokedUserConsent_returnsRandomResultWithExcessiveSizeFormatterVersion()
             throws Exception {
         mFakeFlags = new GetAdSelectionDataRunnerTestFlagsWithExcessiveSizeFormatter();
@@ -1114,6 +1204,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                         eq(SELLER),
                         eq(CALLER_PACKAGE_NAME),
                         eq(false),
+                        eq(true),
                         eq(true),
                         eq(CALLER_UID),
                         eq(AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA),
@@ -1290,6 +1381,10 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_EXCEEDED_ALLOWED_TIME_LIMIT)
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_NOTIFY_FAILURE_TIMEOUT)
     public void testRunner_getAdSelectionData_timeoutFailure() throws Exception {
         mocker.mockGetFlags(mFakeFlags);
 
@@ -1486,6 +1581,11 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
         @Override
         public boolean getFledgeAuctionServerKeyFetchMetricsEnabled() {
             return FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED_IN_TEST;
+        }
+
+        @Override
+        public boolean getConsentNotificationDebugMode() {
+            return false;
         }
     }
 

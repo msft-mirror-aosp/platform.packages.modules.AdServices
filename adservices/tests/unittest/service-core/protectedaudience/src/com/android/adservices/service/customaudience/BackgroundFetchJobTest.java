@@ -87,20 +87,20 @@ public final class BackgroundFetchJobTest extends AdServicesJobTestCase {
         when(mMockConsentManager.getConsent(FLEDGE)).thenReturn(GIVEN);
 
         // Mock BackgroundFetchWorker.
-        doReturn(mMockBackgroundFetchWorker).when(() -> BackgroundFetchWorker.getInstance(any()));
+        doReturn(mMockBackgroundFetchWorker).when(BackgroundFetchWorker::getInstance);
         when(mMockBackgroundFetchWorker.runBackgroundFetch())
                 .thenReturn(FluentFuture.from(Futures.immediateVoidFuture()));
     }
 
     @Test
-    @SuppressWarnings("unused")
     public void testGetExecutionFuture() throws Exception {
         ListenableFuture<ExecutionResult> executionFuture =
-                mBackgroundFetchJob.getExecutionFuture(sContext, mMockParams);
+                mBackgroundFetchJob.getExecutionFuture(mContext, mMockParams);
 
         assertWithMessage("testGetExecutionFuture().get()")
                 .that(executionFuture.get())
                 .isEqualTo(SUCCESS);
+        @SuppressWarnings("unused")
         FluentFuture<Void> unusedFuture = verify(mMockBackgroundFetchWorker).runBackgroundFetch();
     }
 
@@ -158,7 +158,7 @@ public final class BackgroundFetchJobTest extends AdServicesJobTestCase {
         int resultCode = SCHEDULING_RESULT_CODE_SUCCESSFUL;
         when(mMockFlags.getSpeOnBackgroundFetchJobEnabled()).thenReturn(false);
         JobSchedulingLogger mockedLogger =
-                mockJobSchedulingLogger(mMockAdServicesJobServiceFactory);
+                mocker.mockJobSchedulingLogger(mMockAdServicesJobServiceFactory);
         doReturn(resultCode)
                 .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), anyBoolean()));
 

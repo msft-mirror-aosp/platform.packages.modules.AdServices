@@ -21,6 +21,8 @@ import static com.android.adservices.shared.testing.mockito.MockitoHelper.isSpy;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
+import com.android.adservices.mockito.AndroidMocker;
+
 import org.junit.Test;
 
 public final class AdServicesMockitoTestCaseTest extends AdServicesMockitoTestCase {
@@ -40,5 +42,17 @@ public final class AdServicesMockitoTestCaseTest extends AdServicesMockitoTestCa
         expect.withMessage("spied context")
                 .that(getSpiedInstance(mSpyContext))
                 .isSameInstanceAs(mContext);
+    }
+
+    @Test
+    public void testMockFlags() {
+        expect.withMessage("mMockFlags").that(mMockFlags).isNotNull();
+        expect.withMessage("mMockDebugFlags").that(mMockDebugFlags).isNotNull();
+    }
+
+    @Test
+    public void testMocker() {
+        assertWithMessage("mocker").that(mocker).isNotNull();
+        expect.withMessage("mocker").that(mocker).isInstanceOf(AndroidMocker.class);
     }
 }

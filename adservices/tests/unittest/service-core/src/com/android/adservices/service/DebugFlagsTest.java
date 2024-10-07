@@ -16,6 +16,8 @@
 
 package com.android.adservices.service;
 
+import static com.android.adservices.service.CommonDebugFlags.DUMP_EQUALS;
+import static com.android.adservices.service.CommonDebugFlags.DUMP_PREFIX;
 import static com.android.adservices.service.DebugFlags.CONSENT_MANAGER_DEBUG_MODE;
 import static com.android.adservices.service.DebugFlags.CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
 import static com.android.adservices.service.DebugFlags.CONSENT_NOTIFICATION_DEBUG_MODE;
@@ -27,6 +29,7 @@ import static com.android.adservices.service.DebugFlags.DEFAULT_FLEDGE_CONSENTED
 import static com.android.adservices.service.DebugFlags.DEFAULT_FLEDGE_CUSTOM_AUDIENCE_CLI_ENABLED;
 import static com.android.adservices.service.DebugFlags.DEFAULT_JS_ISOLATE_CONSOLE_MESSAGES_IN_LOGS_ENABLED;
 import static com.android.adservices.service.DebugFlags.DEFAULT_PROTECTED_APP_SIGNALS_CLI_ENABLED;
+import static com.android.adservices.service.DebugFlags.DEFAULT_PROTECTED_APP_SIGNALS_ENCODER_LOGIC_REGISTERED_BROADCAST_ENABLED;
 import static com.android.adservices.service.DebugFlags.DEFAULT_RECORD_TOPICS_COMPLETE_BROADCAST_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_AD_SELECTION_CLI_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_AD_SERVICES_JS_ISOLATE_CONSOLE_MESSAGES_IN_LOGS_ENABLED;
@@ -39,9 +42,11 @@ import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_AUCT
 import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_PROTECTED_APP_SIGNALS_CLI_ENABLED;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_PROTECTED_APP_SIGNALS_ENCODER_LOGIC_REGISTERED_BROADCAST_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_RECORD_TOPICS_COMPLETE_BROADCAST_ENABLED;
+import static com.android.adservices.shared.meta_testing.FlagsTestLittleHelper.expectDumpHasAllFlags;
 
-import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import android.util.Log;
 
@@ -162,14 +167,41 @@ public final class DebugFlagsTest extends AdServicesExtendedMockitoTestCase {
                 DebugFlags::getRecordTopicsCompleteBroadcastEnabled);
     }
 
+    @Test
+    public void testGetProtectedAppSignalsEncoderLogicRegisteredBroadcastEnabled() {
+        testDebugFlag(
+                KEY_PROTECTED_APP_SIGNALS_ENCODER_LOGIC_REGISTERED_BROADCAST_ENABLED,
+                DEFAULT_PROTECTED_APP_SIGNALS_ENCODER_LOGIC_REGISTERED_BROADCAST_ENABLED,
+                DebugFlags::getProtectedAppSignalsEncoderLogicRegisteredBroadcastEnabled);
+    }
+
+    @Test
+    public void testDump() throws Exception {
+        expectDumpHasAllFlags(
+                expect,
+                DebugFlagsConstants.class,
+                pw -> mDebugFlags.dump(pw),
+                flag -> (DUMP_PREFIX + flag.second + DUMP_EQUALS));
+        // Must also check the flags from its superclass
+        expectDumpHasAllFlags(
+                expect,
+                CommonDebugFlagsConstants.class,
+                pw -> mDebugFlags.dump(pw),
+                flag -> (DUMP_PREFIX + flag.second + DUMP_EQUALS));
+    }
+
     private void testDebugFlag(
             String flagName, Boolean defaultValue, Flaginator<DebugFlags, Boolean> flaginator) {
         // Without any overriding, the value is the hard coded constant.
-        assertThat(flaginator.getFlagValue(mDebugFlags)).isEqualTo(defaultValue);
+        assertWithMessage("before overriding")
+                .that(flaginator.getFlagValue(mDebugFlags))
+                .isEqualTo(defaultValue);
 
         boolean phOverridingValue = !defaultValue;
         setSystemProperty(flagName, String.valueOf(phOverridingValue));
-        assertThat(flaginator.getFlagValue(mDebugFlags)).isEqualTo(phOverridingValue);
+        assertWithMessage("after overriding")
+                .that(flaginator.getFlagValue(mDebugFlags))
+                .isEqualTo(phOverridingValue);
     }
 
     private void setSystemProperty(String name, String value) {

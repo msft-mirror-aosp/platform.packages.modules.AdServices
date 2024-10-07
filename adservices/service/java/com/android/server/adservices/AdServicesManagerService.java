@@ -18,6 +18,8 @@ package com.android.server.adservices;
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_MANAGER;
 import static android.app.adservices.AdServicesManager.AD_SERVICES_SYSTEM_SERVICE;
 
+import static com.android.adservices.service.CommonDebugFlagsConstants.KEY_ADSERVICES_SHELL_COMMAND_ENABLED;
+
 import android.adservices.common.AdServicesPermissions;
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
@@ -45,7 +47,7 @@ import android.provider.DeviceConfig;
 import android.util.ArrayMap;
 import android.util.Dumpable;
 
-import com.android.adservices.service.CommonFlagsConstants;
+import com.android.adservices.shared.system.SystemContextSingleton;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.BackgroundThread;
@@ -63,6 +65,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /** @hide */
 // TODO(b/267667963): Offload methods from binder thread to background thread.
@@ -123,10 +126,21 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     @GuardedBy("mRollbackCheckLock")
     private final Map<Integer, VersionedPackage> mAdServicesPackagesRolledBackTo = new ArrayMap<>();
 
+    // Used by mOnFlagsChangedListener to avoid failures on unit tests
+    private final AtomicBoolean mShutdown = new AtomicBoolean();
+
     // This will be triggered when there is a flag change.
     private final DeviceConfig.OnPropertiesChangedListener mOnFlagsChangedListener =
             properties -> {
                 if (!properties.getNamespace().equals(DeviceConfig.NAMESPACE_ADSERVICES)) {
+                    return;
+                }
+                if (mShutdown.get()) {
+                    // Shouldn't happen in "real life"
+                    LogUtil.w(
+                            "onPropertiesChanged(%s): ignoring because service already shut down"
+                                    + " (should only happen on unit tests)",
+                            properties.getKeyset());
                     return;
                 }
                 registerReceivers();
@@ -150,6 +164,28 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         registerReceivers();
         setAdServicesApexVersion();
         setRollbackStatus();
+
+        LogUtil.d("AdServicesManagerService constructed (context=%s)!", mContext);
+    }
+
+    // Used only by AdServicesManagerServiceTest - even though TestableDeviceConfig automatically
+    // removes the listeners on tearDown() (when integrated with the ExtendedMockitoRule), there
+    // seems to be a race condition somewhere that causes some tests to fail when a property is
+    // changed in the background, after the test finished.
+    @VisibleForTesting
+    void tearDownForTesting() {
+        mShutdown.set(true);
+        LogUtil.i(
+                "shutdown(): calling DeviceConfig.removeOnPropertiesChangedListener(%s)",
+                mOnFlagsChangedListener);
+        try {
+            DeviceConfig.removeOnPropertiesChangedListener(mOnFlagsChangedListener);
+        } catch (Exception e) {
+            LogUtil.e(
+                    e,
+                    "Call to DeviceConfig.removeOnPropertiesChangedListener(%s) failed",
+                    mOnFlagsChangedListener);
+        }
     }
 
     /** @hide */
@@ -159,11 +195,10 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         /** @hide */
         public Lifecycle(Context context) {
             this(
-                    context,
+                    SystemContextSingleton.set(context),
                     new AdServicesManagerService(
                             context,
-                            new UserInstanceManager(
-                                    TopicsDao.getInstance(context), ADSERVICES_BASE_DIR)));
+                            new UserInstanceManager(TopicsDao.getInstance(), ADSERVICES_BASE_DIR)));
         }
 
         /** @hide */
@@ -171,7 +206,6 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         public Lifecycle(Context context, AdServicesManagerService service) {
             super(context);
             mService = service;
-            LogUtil.d("AdServicesManagerService constructed!");
         }
 
         /** @hide */
@@ -185,7 +219,8 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
                 publishBinderService();
                 published = true;
             } catch (RuntimeException e) {
-                LogUtil.w(
+                // TODO(b/363070750): call AdServicesErrorLogger as well
+                LogUtil.e(
                         e,
                         "Failed to publish %s service; will piggyback it into SdkSandbox anyways",
                         AD_SERVICES_SYSTEM_SERVICE);
@@ -798,6 +833,15 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
             pw.printf("mAdServicesPackagesRolledBackTo: %s\n", mAdServicesPackagesRolledBackTo);
         }
         pw.printf("ShellCmd enabled: %b\n", isShellCmdEnabled());
+
+        pw.print("SystemContextSingleton: ");
+        try {
+            Context systemContext = SystemContextSingleton.get();
+            pw.println(systemContext);
+        } catch (RuntimeException e) {
+            pw.println(e.getMessage());
+        }
+
         mUserInstanceManager.dump(pw, args);
     }
 
@@ -815,8 +859,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         if (!isShellCmdEnabled()) {
             LogUtil.d(
                     "handleShellCommand(%s): disabled by flag %s",
-                    Arrays.toString(args),
-                    CommonFlagsConstants.KEY_ADSERVICES_SHELL_COMMAND_ENABLED);
+                    Arrays.toString(args), KEY_ADSERVICES_SHELL_COMMAND_ENABLED);
             return super.handleShellCommand(in, out, err, args);
         }
 

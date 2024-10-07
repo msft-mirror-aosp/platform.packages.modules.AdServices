@@ -16,15 +16,24 @@
 
 package com.android.adservices.shared;
 
+import static org.mockito.Mockito.mock;
+
+import android.content.Context;
 import android.platform.test.annotations.DisabledOnRavenwood;
 
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.mockito.AndroidExtendedMockitoMocker;
 import com.android.adservices.mockito.AndroidStaticMocker;
 import com.android.adservices.mockito.LogInterceptor;
+import com.android.adservices.mockito.StaticClassChecker;
+import com.android.adservices.shared.common.flags.ModuleSharedFlags;
+import com.android.adservices.shared.testing.CallSuper;
 
 import org.junit.Rule;
 
+// NOTE: currently no subclass needs a custom mocker; once they do, this class should be split
+// into a SharedMockerLessExtendededMockitoTestCase (similar to AdServiceExtendedMockitoTestCase /
+// AdServicesMockerLessExtendedMockitoTestCase)
 // TODO(b/335935200): fix this
 @DisabledOnRavenwood(reason = "Uses ExtendedMockito")
 public abstract class SharedExtendedMockitoTestCase extends SharedUnitTestCase {
@@ -36,12 +45,25 @@ public abstract class SharedExtendedMockitoTestCase extends SharedUnitTestCase {
     /** Provides common expectations. */
     public final Mocker mocker = new Mocker(extendedMockito);
 
+    protected final Context mMockContext = mock(Context.class);
+    protected final ModuleSharedFlags mMockFlags = mock(ModuleSharedFlags.class);
+
+    // TODO(b/361555631): rename to testSharedExtendedMockitoTestCaseFixtures() and annotate it with
+    // @MetaTest
+    @CallSuper
+    @Override
+    protected void assertValidTestCaseFixtures() throws Exception {
+        super.assertValidTestCaseFixtures();
+
+        checkProhibitedMockitoFields(SharedExtendedMockitoTestCase.class, this);
+    }
+
     public static final class Mocker implements AndroidStaticMocker {
 
         private final AndroidStaticMocker mAndroidMocker;
 
-        private Mocker(AdServicesExtendedMockitoRule rule) {
-            mAndroidMocker = new AndroidExtendedMockitoMocker(rule);
+        Mocker(StaticClassChecker checker) {
+            mAndroidMocker = new AndroidExtendedMockitoMocker(checker);
         }
 
         // AndroidStaticMocker methods

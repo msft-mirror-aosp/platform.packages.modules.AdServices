@@ -16,16 +16,25 @@
 
 package com.android.adservices.shared.storage;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ATOMIC_FILE_DATASTORE_READ_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ATOMIC_FILE_DATASTORE_WRITE_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 import static com.android.adservices.shared.testing.common.DumpHelper.assertDumpHasPrefix;
 import static com.android.adservices.shared.testing.common.DumpHelper.dump;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import android.os.PersistableBundle;
+import android.util.AtomicFile;
 import android.util.Pair;
 
 import com.android.adservices.shared.SharedExtendedMockitoTestCase;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
@@ -35,10 +44,14 @@ import com.google.common.truth.StringSubject;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -46,17 +59,31 @@ import java.util.stream.IntStream;
 public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase {
     private static final String VALID_DIR = sContext.getFilesDir().getAbsolutePath();
     private static final String FILENAME = "AtomicFileDatastoreTest.xml";
+
     private static final int DATASTORE_VERSION = 1;
     private static final String TEST_KEY = "key";
     private static final String TEST_KEY_1 = "key1";
     private static final String TEST_KEY_2 = "key2";
+    private static final String TEST_KEY_3 = "key3";
+    private static final String TEST_KEY_4 = "key4";
+    private static final String TEST_KEY_5 = "key5";
+    private static final String TEST_KEY_6 = "key6";
+    private static final String TEST_KEY_7 = "key7";
     private static final String TEST_VERSION_KEY = "version_key";
 
-    private final AtomicFileDatastore mDatastore =
-            new AtomicFileDatastore(VALID_DIR, FILENAME, DATASTORE_VERSION, TEST_VERSION_KEY);
+    @Mock private AdServicesErrorLogger mMockAdServicesErrorLogger;
+
+    private AtomicFileDatastore mDatastore;
 
     @Before
     public void initializeDatastore() throws IOException {
+        mDatastore =
+                new AtomicFileDatastore(
+                        VALID_DIR,
+                        FILENAME,
+                        DATASTORE_VERSION,
+                        TEST_VERSION_KEY,
+                        mMockAdServicesErrorLogger);
         mDatastore.initialize();
     }
 
@@ -75,7 +102,8 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
                                 /* parentPath= */ null,
                                 FILENAME,
                                 DATASTORE_VERSION,
-                                TEST_VERSION_KEY));
+                                TEST_VERSION_KEY,
+                                mMockAdServicesErrorLogger));
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -83,7 +111,8 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
                                 /* parentPath= */ "",
                                 FILENAME,
                                 DATASTORE_VERSION,
-                                TEST_VERSION_KEY));
+                                TEST_VERSION_KEY,
+                                mMockAdServicesErrorLogger));
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -91,7 +120,8 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
                                 VALID_DIR,
                                 /* filename= */ null,
                                 DATASTORE_VERSION,
-                                TEST_VERSION_KEY));
+                                TEST_VERSION_KEY,
+                                mMockAdServicesErrorLogger));
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -99,14 +129,28 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
                                 VALID_DIR,
                                 /* filename= */ "",
                                 DATASTORE_VERSION,
-                                TEST_VERSION_KEY));
+                                TEST_VERSION_KEY,
+                                mMockAdServicesErrorLogger));
+
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        new AtomicFileDatastore(
+                                VALID_DIR,
+                                FILENAME,
+                                DATASTORE_VERSION,
+                                TEST_VERSION_KEY,
+                                /* adServicesErrorLogger= */ null));
 
         // File constructor
         assertThrows(
                 NullPointerException.class,
                 () ->
                         new AtomicFileDatastore(
-                                /* file= */ null, DATASTORE_VERSION, TEST_VERSION_KEY));
+                                /* file= */ (File) null,
+                                DATASTORE_VERSION,
+                                TEST_VERSION_KEY,
+                                mMockAdServicesErrorLogger));
     }
 
     @Test
@@ -118,7 +162,8 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
                                 "I can't believe this is a valid dir",
                                 FILENAME,
                                 DATASTORE_VERSION,
-                                TEST_VERSION_KEY));
+                                TEST_VERSION_KEY,
+                                mMockAdServicesErrorLogger));
     }
 
     @Test
@@ -133,7 +178,11 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
                     IllegalArgumentException.class,
                     () ->
                             new AtomicFileDatastore(
-                                    path, FILENAME, DATASTORE_VERSION, TEST_VERSION_KEY));
+                                    path,
+                                    FILENAME,
+                                    DATASTORE_VERSION,
+                                    TEST_VERSION_KEY,
+                                    mMockAdServicesErrorLogger));
         } finally {
             if (!file.delete()) {
                 mLog.e("Could not delete file %s at the end", path);
@@ -168,6 +217,29 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
         assertThrows(exceptionClass, () -> mDatastore.remove(key));
 
         assertThrows(exceptionClass, () -> mDatastore.removeByPrefix(key));
+
+        assertThrows(
+                exceptionClass,
+                () -> mDatastore.update(updateOperation -> updateOperation.putBoolean(key, true)));
+        assertThrows(
+                exceptionClass,
+                () -> mDatastore.update(updateOperation -> updateOperation.putInt(key, 7)));
+        assertThrows(
+                exceptionClass,
+                () -> mDatastore.update(updateOperation -> updateOperation.putString(key, "foo")));
+        assertThrows(
+                exceptionClass,
+                () ->
+                        mDatastore.update(
+                                updateOperation -> updateOperation.putBooleanIfNew(key, true)));
+        assertThrows(
+                exceptionClass,
+                () -> mDatastore.update(updateOperation -> updateOperation.putIntIfNew(key, 7)));
+        assertThrows(
+                exceptionClass,
+                () ->
+                        mDatastore.update(
+                                updateOperation -> updateOperation.putStringIfNew(key, "foo")));
     }
 
     @Test
@@ -213,6 +285,101 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
         assertWithMessage("getPreviousStoredVersion()")
                 .that(mDatastore.getPreviousStoredVersion())
                 .isEqualTo(DATASTORE_VERSION);
+    }
+
+    @Test
+    public void testPutBoolean_ioExceptionOccurs_noWriteToFile() throws Exception {
+        datastoreIoExceptionTestHelper(datastore -> datastore.putBoolean(TEST_KEY, true));
+    }
+
+    @Test
+    public void testPutInt_ioExceptionOccurs_noWriteToFile() throws Exception {
+        datastoreIoExceptionTestHelper(datastore -> datastore.putInt(TEST_KEY_1, 6));
+    }
+
+    @Test
+    public void testPutString_ioExceptionOccurs_noWriteToFile() throws Exception {
+        datastoreIoExceptionTestHelper(datastore -> datastore.putString(TEST_KEY_2, "abc"));
+    }
+
+    @Test
+    public void testPutBooleanIfNew_ioExceptionOccurs_noWriteToFile() throws Exception {
+        datastoreIoExceptionTestHelper(datastore -> datastore.putBooleanIfNew(TEST_KEY_5, true));
+    }
+
+    @Test
+    public void testPutIntIfNew_ioExceptionOccurs_noWriteToFile() throws Exception {
+        datastoreIoExceptionTestHelper(datastore -> datastore.putIntIfNew(TEST_KEY_6, 8));
+    }
+
+    @Test
+    public void testPutStringIfNew_ioExceptionOccurs_noWriteToFile() throws Exception {
+        datastoreIoExceptionTestHelper(datastore -> datastore.putStringIfNew(TEST_KEY_7, "hello"));
+    }
+
+    @Test
+    public void testClearAllTrue_ioExceptionOccurs_noWriteToFile() throws Exception {
+        datastoreIoExceptionTestHelper(AtomicFileDatastore::clearAllTrue);
+    }
+
+    @Test
+    public void testClearAllFalse_ioExceptionOccurs_noWriteToFile() throws Exception {
+        datastoreIoExceptionTestHelper(AtomicFileDatastore::clearAllFalse);
+    }
+
+    @Test
+    public void testRemove_ioExceptionOccurs_noWriteToFile() throws Exception {
+        datastoreIoExceptionTestHelper(datastore -> datastore.remove(TEST_KEY_1));
+    }
+
+    @Test
+    public void testRemoveByPrefix_ioExceptionOccurs_noWriteToFile() throws Exception {
+        datastoreIoExceptionTestHelper(datastore -> datastore.removeByPrefix(TEST_KEY));
+    }
+
+    @Test
+    public void testUpdate_ioExceptionOccurs_noWriteToFile() throws Exception {
+        datastoreIoExceptionTestHelper(
+                datastore ->
+                        datastore.update(
+                                updateOperation -> updateOperation.putBoolean(TEST_KEY, true)));
+    }
+
+    @Test
+    public void testWriteToFile_ThrowsIoException() throws Exception {
+        AtomicFile atomicFileMock = Mockito.mock(AtomicFile.class);
+        when(atomicFileMock.startWrite()).thenThrow(new IOException("Write failure"));
+        AtomicFileDatastore datastore =
+                new AtomicFileDatastore(
+                        atomicFileMock,
+                        DATASTORE_VERSION,
+                        TEST_VERSION_KEY,
+                        mMockAdServicesErrorLogger);
+
+        assertThrows(IOException.class, () -> datastore.putBoolean(TEST_KEY, false));
+
+        verify(mMockAdServicesErrorLogger)
+                .logError(
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ATOMIC_FILE_DATASTORE_WRITE_FAILURE,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
+    }
+
+    @Test
+    public void testReadFromFile_ThrowsIoException() throws Exception {
+        AtomicFile atomicFileMock = Mockito.mock(AtomicFile.class);
+        when(atomicFileMock.readFully()).thenThrow(new IOException("Read failure"));
+        AtomicFileDatastore datastore =
+                new AtomicFileDatastore(
+                        atomicFileMock,
+                        DATASTORE_VERSION,
+                        TEST_VERSION_KEY,
+                        mMockAdServicesErrorLogger);
+
+        assertThrows(IOException.class, () -> datastore.initialize());
+        verify(mMockAdServicesErrorLogger)
+                .logError(
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ATOMIC_FILE_DATASTORE_READ_FAILURE,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
     }
 
     @Test
@@ -677,6 +844,160 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
         }
     }
 
+    @Test
+    public void testUpdate() throws Exception {
+        AtomicFile atomicFile = spy(new AtomicFile(new File(VALID_DIR, FILENAME)));
+        AtomicFileDatastore datastore =
+                new AtomicFileDatastore(
+                        atomicFile,
+                        DATASTORE_VERSION,
+                        TEST_VERSION_KEY,
+                        mMockAdServicesErrorLogger);
+        try {
+            datastore.update(
+                    updateOperation -> {
+                        updateOperation.putBoolean(TEST_KEY, false);
+                        updateOperation.putInt(TEST_KEY_1, 3);
+                        updateOperation.putString(TEST_KEY_2, "bar");
+                        updateOperation.putBooleanIfNew(TEST_KEY, true);
+                        updateOperation.putIntIfNew(TEST_KEY_1, 2);
+                        updateOperation.putStringIfNew(TEST_KEY_2, "newBar");
+                        updateOperation.putBooleanIfNew(TEST_KEY_3, true);
+                        updateOperation.putIntIfNew(TEST_KEY_4, 7);
+                        updateOperation.putStringIfNew(TEST_KEY_5, "foo");
+                    });
+
+            Map<String, Object> expectedMap =
+                    Map.of(
+                            TEST_KEY,
+                            false,
+                            TEST_KEY_1,
+                            3,
+                            TEST_KEY_2,
+                            "bar",
+                            TEST_KEY_3,
+                            true,
+                            TEST_KEY_4,
+                            7,
+                            TEST_KEY_5,
+                            "foo",
+                            TEST_VERSION_KEY,
+                            1);
+
+            assertWithMessage("getBoolean(%s)", TEST_KEY)
+                    .that(datastore.getBoolean(TEST_KEY))
+                    .isEqualTo(false);
+            assertWithMessage("getInt(%s)", TEST_KEY_1)
+                    .that(datastore.getInt(TEST_KEY_1))
+                    .isEqualTo(3);
+            assertWithMessage("getString(%s)", TEST_KEY_2)
+                    .that(datastore.getString(TEST_KEY_2))
+                    .isEqualTo("bar");
+            assertWithMessage("getBoolean(%s)", TEST_KEY_3)
+                    .that(datastore.getBoolean(TEST_KEY_3))
+                    .isEqualTo(true);
+            assertWithMessage("getInt(%s)", TEST_KEY_4)
+                    .that(datastore.getInt(TEST_KEY_4))
+                    .isEqualTo(7);
+
+            assertWithMessage("getString(%s)", TEST_KEY_5)
+                    .that(datastore.getString(TEST_KEY_5))
+                    .isEqualTo("foo");
+
+            assertWithMessage("datastore content check")
+                    .that(readFromAtomicFile(atomicFile))
+                    .containsExactlyEntriesIn(expectedMap);
+
+            verify(atomicFile).startWrite();
+        } finally {
+            datastore.tearDownForTesting();
+        }
+    }
+
+    @Test
+    public void testUpdate_noUpdateOnSameData() throws Exception {
+        AtomicFile atomicFile = spy(new AtomicFile(new File(VALID_DIR, FILENAME)));
+        AtomicFileDatastore datastore =
+                new AtomicFileDatastore(
+                        atomicFile,
+                        DATASTORE_VERSION,
+                        TEST_VERSION_KEY,
+                        mMockAdServicesErrorLogger);
+
+        try {
+            datastore.update(
+                    updateOperation -> {
+                        updateOperation.putBoolean(TEST_KEY, false);
+                        updateOperation.putInt(TEST_KEY_1, 3);
+                        updateOperation.putString(TEST_KEY_2, "bar");
+                        updateOperation.putBooleanIfNew(TEST_KEY_3, true);
+                        updateOperation.putIntIfNew(TEST_KEY_4, 7);
+                        updateOperation.putStringIfNew(TEST_KEY_5, "foo");
+                    });
+
+            verify(atomicFile).startWrite();
+
+            // verify no update to file if writing the same data
+            datastore.update(
+                    updateOperation -> {
+                        updateOperation.putBoolean(TEST_KEY, false);
+                        updateOperation.putInt(TEST_KEY_1, 3);
+                        updateOperation.putString(TEST_KEY_2, "bar");
+                        updateOperation.putBooleanIfNew(TEST_KEY_3, true);
+                        updateOperation.putIntIfNew(TEST_KEY_4, 7);
+                        updateOperation.putStringIfNew(TEST_KEY_5, "foo");
+                    });
+            verify(atomicFile).startWrite();
+        } finally {
+            datastore.tearDownForTesting();
+        }
+    }
+
+    @Test
+    public void testUpdate_putIfType_overwriteIncorrectWrite() throws Exception {
+        mDatastore.update(
+                updateOperation -> {
+                    updateOperation.putBoolean(TEST_KEY, false);
+                    updateOperation.putInt(TEST_KEY_1, 3);
+                    updateOperation.putString(TEST_KEY_2, "foo");
+                });
+
+        assertThrows(
+                IllegalStateException.class,
+                () ->
+                        mDatastore.update(
+                                updateOperation -> updateOperation.putIntIfNew(TEST_KEY, 5)));
+        assertThrows(
+                IllegalStateException.class,
+                () ->
+                        mDatastore.update(
+                                updateOperation ->
+                                        updateOperation.putStringIfNew(TEST_KEY, "test")));
+        assertThrows(
+                IllegalStateException.class,
+                () ->
+                        mDatastore.update(
+                                updateOperation ->
+                                        updateOperation.putBooleanIfNew(TEST_KEY_1, true)));
+        assertThrows(
+                IllegalStateException.class,
+                () ->
+                        mDatastore.update(
+                                updateOperation ->
+                                        updateOperation.putStringIfNew(TEST_KEY_1, "test")));
+        assertThrows(
+                IllegalStateException.class,
+                () ->
+                        mDatastore.update(
+                                updateOperation ->
+                                        updateOperation.putBooleanIfNew(TEST_KEY_2, true)));
+        assertThrows(
+                IllegalStateException.class,
+                () ->
+                        mDatastore.update(
+                                updateOperation -> updateOperation.putIntIfNew(TEST_KEY_2, 6)));
+    }
+
     private void assertCommonDumpContents(String dump, String prefix) {
         assertDumpHasPrefix(dump, prefix);
         expect.withMessage("contents of dump() (DATASTORE_VERSION)")
@@ -686,5 +1007,90 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
         expect.withMessage("contents of dump() (TEST_VERSION_KEY)")
                 .that(dump)
                 .contains(TEST_VERSION_KEY);
+    }
+
+    private static Map<String, Object> readFromAtomicFile(AtomicFile atomicFile) throws Exception {
+        try (ByteArrayInputStream inputStream = new ByteArrayInputStream(atomicFile.readFully())) {
+            PersistableBundle bundleRead = PersistableBundle.readFromStream(inputStream);
+            return bundleRead.keySet().stream()
+                    .collect(Collectors.toMap(key -> key, key -> bundleRead.get(key)));
+        }
+    }
+
+    private void datastoreIoExceptionTestHelper(ThrowingRunnable runnable) throws Exception {
+        AtomicFile atomicFile = spy(new AtomicFile(new File(VALID_DIR, FILENAME)));
+        AtomicFileDatastore datastore =
+                new AtomicFileDatastore(
+                        atomicFile,
+                        DATASTORE_VERSION,
+                        TEST_VERSION_KEY,
+                        mMockAdServicesErrorLogger);
+
+        try {
+            datastore.putBoolean(TEST_KEY, false);
+            datastore.putInt(TEST_KEY_1, 3);
+            datastore.putString(TEST_KEY_2, "bar");
+            datastore.putBoolean(TEST_KEY_3, true);
+            datastore.putBoolean(TEST_KEY_4, true);
+
+            Map<String, Object> expectedMap =
+                    Map.of(
+                            TEST_KEY,
+                            false,
+                            TEST_KEY_1,
+                            3,
+                            TEST_KEY_2,
+                            "bar",
+                            TEST_KEY_3,
+                            true,
+                            TEST_KEY_4,
+                            true,
+                            TEST_VERSION_KEY,
+                            1);
+
+            assertWithMessage("datastore content check")
+                    .that(readFromAtomicFile(atomicFile))
+                    .containsExactlyEntriesIn(expectedMap);
+
+            // No file and local map update when exception occurs
+            when(atomicFile.startWrite()).thenThrow(new IOException("write failure"));
+
+            assertThrows(IOException.class, () -> runnable.run(datastore));
+
+            assertWithMessage("getBoolean(%s)", TEST_KEY)
+                    .that(datastore.getBoolean(TEST_KEY))
+                    .isEqualTo(false);
+            assertWithMessage("getInt(%s)", TEST_KEY_1)
+                    .that(datastore.getInt(TEST_KEY_1))
+                    .isEqualTo(3);
+            assertWithMessage("getString(%s)", TEST_KEY_2)
+                    .that(datastore.getString(TEST_KEY_2))
+                    .isEqualTo("bar");
+            assertWithMessage("getBoolean(%s)", TEST_KEY_3)
+                    .that(datastore.getBoolean(TEST_KEY_3))
+                    .isEqualTo(true);
+            assertWithMessage("getBoolean(%s)", TEST_KEY_4)
+                    .that(datastore.getBoolean(TEST_KEY_4))
+                    .isEqualTo(true);
+
+            assertWithMessage("getBoolean(%s)", TEST_KEY_5)
+                    .that(datastore.getBoolean(TEST_KEY_5))
+                    .isNull();
+            assertWithMessage("getInt(%s)", TEST_KEY_6).that(datastore.getInt(TEST_KEY_6)).isNull();
+            assertWithMessage("getString(%s)", TEST_KEY_7)
+                    .that(datastore.getString(TEST_KEY_7))
+                    .isNull();
+
+            assertWithMessage("datastore content check after write failure")
+                    .that(readFromAtomicFile(atomicFile))
+                    .containsExactlyEntriesIn(expectedMap);
+        } finally {
+            datastore.tearDownForTesting();
+        }
+    }
+
+    @FunctionalInterface
+    private interface ThrowingRunnable {
+        void run(AtomicFileDatastore datastore) throws Exception;
     }
 }

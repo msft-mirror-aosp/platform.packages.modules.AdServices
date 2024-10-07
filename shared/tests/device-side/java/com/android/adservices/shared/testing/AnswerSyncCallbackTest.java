@@ -18,6 +18,7 @@ package com.android.adservices.shared.testing;
 
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
@@ -45,7 +46,6 @@ public final class AnswerSyncCallbackTest extends SyncCallbackTestCase<AnswerSyn
             SyncCallbackFactory.newSettingsBuilder().setExpectedNumberCalls(2).build();
 
     @Mock private Voider mDarthVoider;
-    @Mock private InvocationOnMock mMockInvocation;
 
     @Override
     protected AnswerSyncCallback<Void> newCallback(SyncCallbackSettings settings) {
@@ -54,14 +54,15 @@ public final class AnswerSyncCallbackTest extends SyncCallbackTestCase<AnswerSyn
 
     @Override
     protected String callCallback(AnswerSyncCallback<Void> callback) {
-        // Since mMockInvocation is not a "real" InvocationOnMock (provided by Mockito), we need
+        InvocationOnMock mockInvocation = mock(InvocationOnMock.class);
+        // Since mockInvocation is not a "real" InvocationOnMock (provided by Mockito), we need
         // to mock its toString(), otherwise it would be logged as "mMockInvocation" and we'd have
         // to return "mMockInvocation" here too (which would make the FakeLogger output confusing).
         String methodName = "mockedVoidMethod()";
-        when(mMockInvocation.toString()).thenReturn(methodName);
+        when(mockInvocation.toString()).thenReturn(methodName);
         try {
-            callback.answer(mMockInvocation);
-            return methodName;
+            callback.answer(mockInvocation);
+            return "answer(" + methodName + ")";
         } catch (Throwable t) {
             // Shouldn't happen
             throw new IllegalStateException("callback.answer(mMockInvocation) failed", t);
@@ -88,7 +89,9 @@ public final class AnswerSyncCallbackTest extends SyncCallbackTestCase<AnswerSyn
         mDarthVoider.voidVoid();
 
         callback.assertCalled();
-        expect.withMessage("%%s.isCalled() aftercall", callback).that(callback.isCalled()).isTrue();
+        expect.withMessage("%%s.isCalled() after call", callback)
+                .that(callback.isCalled())
+                .isTrue();
     }
 
     @Test
@@ -106,7 +109,9 @@ public final class AnswerSyncCallbackTest extends SyncCallbackTestCase<AnswerSyn
 
         expect.withMessage("toString()").that(toString).isEqualTo(ANSWER);
         callback.assertCalled();
-        expect.withMessage("%%s.isCalled() aftercall", callback).that(callback.isCalled()).isTrue();
+        expect.withMessage("%%s.isCalled() after call", callback)
+                .that(callback.isCalled())
+                .isTrue();
     }
 
     @Test
@@ -183,7 +188,9 @@ public final class AnswerSyncCallbackTest extends SyncCallbackTestCase<AnswerSyn
 
         expect.withMessage("thrown exception").that(thrown).isSameInstanceAs(mFailure);
         callback.assertCalled();
-        expect.withMessage("%%s.isCalled() aftercall", callback).that(callback.isCalled()).isTrue();
+        expect.withMessage("%%s.isCalled() after call", callback)
+                .that(callback.isCalled())
+                .isTrue();
     }
 
     @Test
@@ -200,7 +207,9 @@ public final class AnswerSyncCallbackTest extends SyncCallbackTestCase<AnswerSyn
 
         expect.withMessage("thrown exception").that(thrown).isSameInstanceAs(mFailure);
         callback.assertCalled();
-        expect.withMessage("%%s.isCalled() aftercall", callback).that(callback.isCalled()).isTrue();
+        expect.withMessage("%%s.isCalled() after call", callback)
+                .that(callback.isCalled())
+                .isTrue();
     }
 
     public interface Voider {

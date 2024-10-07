@@ -21,6 +21,7 @@ import static android.adservices.common.CommonFixture.VALID_BUYER_1;
 import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
 
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH;
@@ -85,6 +86,7 @@ import java.util.concurrent.TimeoutException;
 @RequiresSdkLevelAtLeastS
 @SetAllLogcatTags
 @SetFlagDisabled(KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH)
+@EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
 @SetFlagEnabled(KEY_ENABLE_ENROLLMENT_TEST_SEED)
 @SetPpapiAppAllowList
 public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
@@ -119,7 +121,7 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
                         .setExecutor(MoreExecutors.directExecutor())
                         .build();
         DevContext devContext = DevContextFilter.create(sContext).createDevContext(Process.myUid());
-        mIsDebugMode = devContext.getDevOptionsEnabled();
+        mIsDebugMode = devContext.getDeviceDevOptionsEnabled();
 
         // Needed to test different custom audience limits
         InstrumentationRegistry.getInstrumentation()

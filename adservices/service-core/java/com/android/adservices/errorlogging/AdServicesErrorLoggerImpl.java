@@ -56,7 +56,11 @@ public final class AdServicesErrorLoggerImpl extends AbstractAdServicesErrorLogg
         this(
                 flags,
                 statsdAdServicesErrorLogger,
-                flags.getCustomErrorCodeSamplingEnabled() ? new ErrorCodeSampler(flags) : null);
+                flags.getCustomErrorCodeSamplingEnabled()
+                        ? new ErrorCodeSampler(
+                                flags,
+                                new NoSamplingAdServicesErrorLogger(statsdAdServicesErrorLogger))
+                        : null);
     }
 
     @VisibleForTesting
@@ -86,5 +90,25 @@ public final class AdServicesErrorLoggerImpl extends AbstractAdServicesErrorLogg
         // TODO(b/332599638): Deprecate error code deny list once custom sampling is launched.
         return !mFlags.getErrorCodeLoggingDenyList().contains(errorCode)
                 && logBasedOnCustomSampleInterval;
+    }
+
+    /**
+     * ErrorLogger class where we are not doing any custom sampling of error codes. We perform
+     * logging every time when error occurs.
+     *
+     * <p>Note: This is intended only to log errors for {@code ErrorCodeSampler} which is
+     * instantiated inside {@code AdServicesErrorLoggerImpl}.
+     */
+    private static final class NoSamplingAdServicesErrorLogger
+            extends AbstractAdServicesErrorLogger {
+        private NoSamplingAdServicesErrorLogger(
+                StatsdAdServicesErrorLogger statsdAdServicesErrorLogger) {
+            super(statsdAdServicesErrorLogger);
+        }
+
+        @Override
+        protected boolean isEnabled(int errorCode) {
+            return true;
+        }
     }
 }

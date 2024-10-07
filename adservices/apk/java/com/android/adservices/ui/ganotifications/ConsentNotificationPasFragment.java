@@ -40,6 +40,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.api.R;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
@@ -76,17 +77,20 @@ public class ConsentNotificationPasFragment extends Fragment {
         mIsRenotify = requireActivity().getIntent().getBooleanExtra(IS_RENOTIFY_KEY, false);
         mIsFirstTimeRow = false;
         if (mIsRenotify) {
+            LoggerFactory.getUILogger().d("PAS renotify");
             // renotify version
             inflatedView =
                     inflater.inflate(R.layout.consent_notification_screen_1_pas, container, false);
             TextView title = inflatedView.findViewById(R.id.notification_title);
             title.setText(R.string.notificationUI_pas_renotify_header_title);
         } else if (mIsStrictConsentBehavior) {
+            LoggerFactory.getUILogger().d("PAS strict consent behavior");
             // first-time version
             inflatedView =
                     inflater.inflate(R.layout.consent_notification_screen_1_pas, container, false);
         } else {
             // combined version
+            LoggerFactory.getUILogger().d("PAS combined version");
             mIsFirstTimeRow = true;
             inflatedView =
                     inflater.inflate(
@@ -154,6 +158,14 @@ public class ConsentNotificationPasFragment extends Fragment {
                         setInfoViewState2(!mIsInfoViewExpanded2);
                     });
             ((TextView) requireActivity().findViewById(R.id.learn_more_from_privacy_policy2))
+                    .setMovementMethod(LinkMovementMethod.getInstance());
+            // initialize hyperlink in 1st section
+            ((TextView) requireActivity().findViewById(R.id.notificationUI_pas_app_body2_part2))
+                    .setMovementMethod(LinkMovementMethod.getInstance());
+        } else {
+            ((TextView)
+                            requireActivity()
+                                    .findViewById(R.id.notificationUI_pas_combined_dropdown_body6))
                     .setMovementMethod(LinkMovementMethod.getInstance());
         }
 

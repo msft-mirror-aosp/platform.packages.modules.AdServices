@@ -16,11 +16,14 @@
 
 package com.android.adservices.data.adselection;
 
+import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
+
+import static com.android.adservices.data.adselection.DBRegisteredAdInteractionFixture.AD_SELECTION_ID;
+import static com.android.adservices.data.adselection.DBRegisteredAdInteractionFixture.EVENT_REPORTING_URI;
+import static com.android.adservices.data.adselection.DBRegisteredAdInteractionFixture.INTERACTION_KEY_CLICK;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
-
-import android.adservices.adselection.ReportEventRequest;
-import android.net.Uri;
 
 import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
@@ -28,15 +31,6 @@ import org.junit.Rule;
 import org.junit.Test;
 
 public class DBRegisteredAdInteractionTest {
-    public static final int AD_SELECTION_ID = 1;
-    public static final String INTERACTION_KEY_CLICK = "CLICK";
-
-    @ReportEventRequest.ReportingDestination
-    public static final int DESTINATION_SELLER =
-            ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
-
-    private static final String BASE_URI = "https://www.seller.com/";
-    public static final Uri EVENT_REPORTING_URI = Uri.parse(BASE_URI + INTERACTION_KEY_CLICK);
 
     @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
@@ -44,16 +38,11 @@ public class DBRegisteredAdInteractionTest {
     @Test
     public void testBuildDBRegisteredAdInteraction() {
         DBRegisteredAdInteraction dbRegisteredAdInteraction =
-                DBRegisteredAdInteraction.builder()
-                        .setAdSelectionId(AD_SELECTION_ID)
-                        .setInteractionKey(INTERACTION_KEY_CLICK)
-                        .setDestination(DESTINATION_SELLER)
-                        .setInteractionReportingUri(EVENT_REPORTING_URI)
-                        .build();
+                DBRegisteredAdInteractionFixture.getValidDbRegisteredAdInteractionBuilder().build();
 
         assertEquals(AD_SELECTION_ID, dbRegisteredAdInteraction.getAdSelectionId());
         assertEquals(INTERACTION_KEY_CLICK, dbRegisteredAdInteraction.getInteractionKey());
-        assertEquals(DESTINATION_SELLER, dbRegisteredAdInteraction.getDestination());
+        assertEquals(FLAG_REPORTING_DESTINATION_SELLER, dbRegisteredAdInteraction.getDestination());
         assertEquals(EVENT_REPORTING_URI, dbRegisteredAdInteraction.getInteractionReportingUri());
     }
 
@@ -64,7 +53,7 @@ public class DBRegisteredAdInteractionTest {
                 () -> {
                     DBRegisteredAdInteraction.builder()
                             .setInteractionKey(INTERACTION_KEY_CLICK)
-                            .setDestination(DESTINATION_SELLER)
+                            .setDestination(FLAG_REPORTING_DESTINATION_SELLER)
                             .setInteractionReportingUri(EVENT_REPORTING_URI)
                             .build();
                 });
@@ -77,7 +66,7 @@ public class DBRegisteredAdInteractionTest {
                 () -> {
                     DBRegisteredAdInteraction.builder()
                             .setAdSelectionId(AD_SELECTION_ID)
-                            .setDestination(DESTINATION_SELLER)
+                            .setDestination(FLAG_REPORTING_DESTINATION_SELLER)
                             .setInteractionReportingUri(EVENT_REPORTING_URI)
                             .build();
                 });
@@ -104,7 +93,7 @@ public class DBRegisteredAdInteractionTest {
                     DBRegisteredAdInteraction.builder()
                             .setAdSelectionId(AD_SELECTION_ID)
                             .setInteractionKey(INTERACTION_KEY_CLICK)
-                            .setDestination(DESTINATION_SELLER)
+                            .setDestination(FLAG_REPORTING_DESTINATION_SELLER)
                             .build();
                 });
     }

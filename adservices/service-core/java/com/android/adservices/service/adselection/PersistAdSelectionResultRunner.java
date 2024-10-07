@@ -17,10 +17,52 @@
 package com.android.adservices.service.adselection;
 
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_JS_SANDBOX_UNAVAILABLE;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_TIMEOUT;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNSET;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_ADSERVICES_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_AUCTION_RESULT_HAS_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_AUCTION_RESULT_INVALID_OBJECT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_AUCTION_RESULT_UNKNOWN;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_FAST_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_INTERACTION_KEY_EXCEEDS_MAXIMUM_LIMIT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_INVALID_AD_TECH_URI;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_INVALID_INTERACTION_URI;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_MISMATCH_INITIALIZATION_INFO;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_EMPTY_SUCCESS_CALLBACK_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_FAILURE_CALLBACK_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_FAILURE_FILTER_EXCEPTION_BACKGROUND_CALLER;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_FAILURE_FILTER_EXCEPTION_CALLER_NOT_ALLOWED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_FAILURE_FILTER_EXCEPTION_RATE_LIMIT_REACHED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_FAILURE_FILTER_EXCEPTION_UNAUTHORIZED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_FAILURE_FILTER_EXCEPTION_USER_CONSENT_REVOKED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_FAILURE_INTERNAL_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_FAILURE_INVALID_ARGUMENT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_FAILURE_JS_SANDBOX_UNAVAILABLE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_FAILURE_TIMEOUT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_SUCCESS_CALLBACK_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOT_FOUND_CA;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOT_FOUND_WINNING_AD;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NULL_INITIALIZATION_INFO;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NULL_OR_EMPTY_ADS_FOR_CA;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_PARSING_AUCTION_RESULT_INVALID_PROTO_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_PROCESSING_KANON_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_RESULT_IS_CHAFF;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_REVOKED_CONSENT_FILTER_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_TIMEOUT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_UNDEFINED_AD_TYPE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_UPDATING_AD_COUNTER_WIN_HISTOGRAM_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.WINNER_TYPE_CA_WINNER;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.WINNER_TYPE_NO_WINNER;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.WINNER_TYPE_PAS_WINNER;
@@ -49,6 +91,7 @@ import com.android.adservices.data.adselection.datahandlers.WinningCustomAudienc
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
@@ -224,6 +267,7 @@ public class PersistAdSelectionResultRunner {
                                             inputParams.getCallerPackageName(),
                                             false,
                                             true,
+                                            !mFlags.getConsentNotificationDebugMode(),
                                             mCallerUid,
                                             apiName,
                                             Throttler.ApiKey.FLEDGE_API_PERSIST_AD_SELECTION_RESULT,
@@ -263,10 +307,16 @@ public class PersistAdSelectionResultRunner {
                                 // AdSelectionServiceFilter ensures the failing assertion is logged
                                 // internally.
 
+                                ErrorLogUtil.e(
+                                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_REVOKED_CONSENT_FILTER_EXCEPTION,
+                                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
                                 // Fail Silently by notifying success to caller
                                 notifyEmptySuccessToCaller(callback, adSelectionId);
                             } else {
                                 if (t.getCause() instanceof AdServicesException) {
+                                    ErrorLogUtil.e(
+                                            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_ADSERVICES_EXCEPTION,
+                                            AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
                                     notifyFailureToCaller(t.getCause(), callback);
                                 } else {
                                     notifyFailureToCaller(t, callback);
@@ -278,6 +328,9 @@ public class PersistAdSelectionResultRunner {
 
         } catch (Throwable t) {
             sLogger.v("PersistAdSelectionResult fails fast with exception %s.", t.toString());
+            ErrorLogUtil.e(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_FAST_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
             notifyFailureToCaller(t, callback);
         }
     }
@@ -297,6 +350,9 @@ public class PersistAdSelectionResultRunner {
                                     kAnonSignJoinManager.processNewMessages(messageEntities);
                                 } catch (Throwable t) {
                                     sLogger.e("Error while processing new messages for KAnon");
+                                    ErrorLogUtil.e(
+                                            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_PROCESSING_KANON_ERROR,
+                                            AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
                                 }
                                 return Futures.immediateVoidFuture();
                             },
@@ -324,14 +380,23 @@ public class PersistAdSelectionResultRunner {
                                                 "AuctionResult has an error: %s",
                                                 auctionResult.getError().getMessage());
                                 sLogger.e(err);
+                                ErrorLogUtil.e(
+                                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_AUCTION_RESULT_HAS_ERROR,
+                                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
                                 logPersistAdSelectionResultWinnerType(WINNER_TYPE_NO_WINNER);
                                 throw new IllegalArgumentException(err);
                             } else if (auctionResult.getIsChaff()) {
                                 sLogger.v("Result is chaff, truncating persistAdSelectionResult");
+                                ErrorLogUtil.e(
+                                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_RESULT_IS_CHAFF,
+                                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
                                 logPersistAdSelectionResultWinnerType(WINNER_TYPE_NO_WINNER);
                             } else if (auctionResult.getAdType() == AuctionResult.AdType.UNKNOWN) {
                                 String err = "AuctionResult type is unknown";
                                 sLogger.e(err);
+                                ErrorLogUtil.e(
+                                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_AUCTION_RESULT_UNKNOWN,
+                                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
                                 logPersistAdSelectionResultWinnerType(WINNER_TYPE_NO_WINNER);
                                 throw new IllegalArgumentException(err);
                             } else {
@@ -342,6 +407,9 @@ public class PersistAdSelectionResultRunner {
                                     logPersistAdSelectionResultWinnerType(WINNER_TYPE_NO_WINNER);
                                     String err = "Invalid object of Auction Result";
                                     sLogger.e(err);
+                                    ErrorLogUtil.e(
+                                            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_AUCTION_RESULT_INVALID_OBJECT,
+                                            AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
                                     throw new IllegalArgumentException(err);
                                 }
 
@@ -389,6 +457,9 @@ public class PersistAdSelectionResultRunner {
                             "The value: '%s' is not defined in AdType proto!",
                             auctionResult.getAdType().getNumber());
             sLogger.e(err);
+            ErrorLogUtil.e(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_UNDEFINED_AD_TYPE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
             logPersistAdSelectionResultWinnerType(WINNER_TYPE_NO_WINNER);
             throw new IllegalArgumentException(err);
         }
@@ -421,6 +492,9 @@ public class PersistAdSelectionResultRunner {
                                 buyer,
                                 name);
                 sLogger.e(err);
+                ErrorLogUtil.e(
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOT_FOUND_CA,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
                 throw new IllegalArgumentException(err);
             }
 
@@ -428,6 +502,9 @@ public class PersistAdSelectionResultRunner {
                     || winningCustomAudience.getAds().isEmpty()) {
                 String err = "Custom Audience has a null or empty list of ads";
                 sLogger.v(err);
+                ErrorLogUtil.e(
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NULL_OR_EMPTY_ADS_FOR_CA,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
                 throw new IllegalArgumentException(err);
             }
 
@@ -463,6 +540,9 @@ public class PersistAdSelectionResultRunner {
         if (Objects.isNull(winningAd)) {
             String err = "Winning ad is not found in custom audience's list of ads";
             sLogger.v(err);
+            ErrorLogUtil.e(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOT_FOUND_WINNING_AD,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
             throw new IllegalArgumentException(err);
         }
 
@@ -486,6 +566,10 @@ public class PersistAdSelectionResultRunner {
     @Nullable
     private AuctionResult handleTimeoutError(TimeoutException e) {
         sLogger.e(e, PERSIST_AD_SELECTION_RESULT_TIMED_OUT);
+        ErrorLogUtil.e(
+                e,
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_TIMEOUT,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
         throw new UncheckedTimeoutException(PERSIST_AD_SELECTION_RESULT_TIMED_OUT);
     }
 
@@ -552,6 +636,10 @@ public class PersistAdSelectionResultRunner {
             return result;
         } catch (InvalidProtocolBufferException ex) {
             sLogger.e("Error during parsing AuctionResult proto from byte[]");
+            ErrorLogUtil.e(
+                    ex,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_PARSING_AUCTION_RESULT_INVALID_PROTO_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
             throw new RuntimeException(ex);
         }
     }
@@ -614,6 +702,10 @@ public class PersistAdSelectionResultRunner {
                     exception,
                     "Error encountered updating ad counter histogram with win event; "
                             + "continuing ad selection persistence");
+            ErrorLogUtil.e(
+                    exception,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_UPDATING_AD_COUNTER_WIN_HISTOGRAM_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
         }
     }
 
@@ -753,6 +845,10 @@ public class PersistAdSelectionResultRunner {
             return adTechUri;
         } catch (IllegalArgumentException illegalArgumentException) {
             sLogger.w(illegalArgumentException.getMessage());
+            ErrorLogUtil.e(
+                    illegalArgumentException,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_INVALID_AD_TECH_URI,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
             return Uri.EMPTY;
         }
     }
@@ -777,6 +873,10 @@ public class PersistAdSelectionResultRunner {
                                 adTechUriValidator.validate(uriToValidate);
                             } catch (IllegalArgumentException e) {
                                 sLogger.v("Interaction data %s is invalid: %s", entry, e);
+                                ErrorLogUtil.e(
+                                        e,
+                                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_INVALID_INTERACTION_URI,
+                                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
                                 return null;
                             }
                             if (keyToValidate.getBytes(StandardCharsets.UTF_8).length
@@ -785,6 +885,9 @@ public class PersistAdSelectionResultRunner {
                                         "InteractionKey %s size exceeds the maximum allowed! "
                                                 + "Skipping this entry",
                                         keyToValidate);
+                                ErrorLogUtil.e(
+                                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_INTERACTION_KEY_EXCEEDS_MAXIMUM_LIMIT,
+                                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
                                 return null;
                             }
                             if (uriToValidate.toString().getBytes(StandardCharsets.UTF_8).length
@@ -793,6 +896,7 @@ public class PersistAdSelectionResultRunner {
                                         "Interaction reporting uri %s size exceeds the "
                                                 + "maximum allowed! Skipping this entry",
                                         uriToValidate);
+                                // TODO(b/329285478): Add a reporting uri size exceeds maximum CEL.
                                 return null;
                             }
                             return new AbstractMap.SimpleEntry<>(entry.getKey(), uriToValidate);
@@ -812,6 +916,9 @@ public class PersistAdSelectionResultRunner {
                             "Initialization info cannot be found for the given ad selection id: %s",
                             adSelectionId);
             sLogger.e(err);
+            ErrorLogUtil.e(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NULL_INITIALIZATION_INFO,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
             throw new IllegalArgumentException(err);
         }
 
@@ -831,6 +938,9 @@ public class PersistAdSelectionResultRunner {
                             sellerInRequest,
                             callerInRequest);
             sLogger.e(err);
+            ErrorLogUtil.e(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_MISMATCH_INITIALIZATION_INFO,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
             throw new IllegalArgumentException(err);
         }
     }
@@ -847,6 +957,10 @@ public class PersistAdSelectionResultRunner {
         } catch (RemoteException e) {
             sLogger.e(e, "Encountered exception during notifying PersistAdSelectionResultCallback");
             resultCode = STATUS_INTERNAL_ERROR;
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_SUCCESS_CALLBACK_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
         } finally {
             sLogger.v("Attempted notifying success");
             mAdsRelevanceExecutionLogger.endAdsRelevanceApi(resultCode);
@@ -865,9 +979,14 @@ public class PersistAdSelectionResultRunner {
                             .setAdSelectionId(adSelectionId)
                             .setAdRenderUri(Uri.EMPTY)
                             .build());
+            // TODO(b/329285478): Add a silent consent failure CEL.
         } catch (RemoteException e) {
             sLogger.e(e, "Encountered exception during notifying PersistAdSelectionResultCallback");
             resultCode = STATUS_INTERNAL_ERROR;
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_EMPTY_SUCCESS_CALLBACK_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
         } finally {
             sLogger.v(
                     "Persist Ad Selection Result completed, attempted notifying success for a"
@@ -891,8 +1010,13 @@ public class PersistAdSelectionResultRunner {
         } catch (RemoteException e) {
             sLogger.e(e, "Encountered exception during notifying PersistAdSelectionResultCallback");
             resultCode = STATUS_INTERNAL_ERROR;
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_FAILURE_CALLBACK_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
         } finally {
             sLogger.v("Persist Ad Selection Result failed");
+            logPersistAdSelectionResultRunnerExceptionCel(resultCode);
             mAdsRelevanceExecutionLogger.endAdsRelevanceApi(resultCode);
         }
     }
@@ -971,5 +1095,43 @@ public class PersistAdSelectionResultRunner {
                             .setWinnerType(winnerType)
                             .build());
         }
+    }
+
+    private void logPersistAdSelectionResultRunnerExceptionCel(int resultCode) {
+        int celEnum = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED;
+        switch (resultCode) {
+            case STATUS_TIMEOUT:
+                celEnum = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_FAILURE_TIMEOUT;
+                break;
+            case STATUS_JS_SANDBOX_UNAVAILABLE:
+                celEnum = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_FAILURE_JS_SANDBOX_UNAVAILABLE;
+                break;
+            case STATUS_INVALID_ARGUMENT:
+                celEnum = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_FAILURE_INVALID_ARGUMENT;
+                break;
+            case STATUS_INTERNAL_ERROR:
+                celEnum = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_FAILURE_INTERNAL_ERROR;
+                break;
+            case STATUS_USER_CONSENT_REVOKED:
+                celEnum = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_FAILURE_FILTER_EXCEPTION_USER_CONSENT_REVOKED;
+                break;
+            case STATUS_BACKGROUND_CALLER:
+                celEnum = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_FAILURE_FILTER_EXCEPTION_BACKGROUND_CALLER;
+                break;
+            case STATUS_CALLER_NOT_ALLOWED:
+                celEnum = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_FAILURE_FILTER_EXCEPTION_CALLER_NOT_ALLOWED;
+                break;
+            case STATUS_UNAUTHORIZED:
+                celEnum = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_FAILURE_FILTER_EXCEPTION_UNAUTHORIZED;
+                break;
+            case STATUS_RATE_LIMIT_REACHED:
+                celEnum = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_FAILURE_FILTER_EXCEPTION_RATE_LIMIT_REACHED;
+                break;
+            default:
+                // Skip the error logging if celEnum is
+                // AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED.
+                return;
+        }
+        ErrorLogUtil.e(celEnum, AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
     }
 }

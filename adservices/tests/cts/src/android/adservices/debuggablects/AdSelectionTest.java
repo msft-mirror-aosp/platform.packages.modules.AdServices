@@ -16,6 +16,7 @@
 
 package android.adservices.debuggablects;
 
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_HTTP_CACHE_ENABLE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES;
@@ -27,7 +28,7 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assume.assumeTrue;
 
 import android.adservices.adid.AdId;
-import android.adservices.adid.AdIdCompatibleManager;
+import android.adservices.adid.AdIdManager;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.adservices.adselection.AdSelectionOutcome;
@@ -42,6 +43,7 @@ import android.net.Uri;
 import android.util.Log;
 
 import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
+import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 
@@ -59,6 +61,7 @@ import java.util.concurrent.TimeoutException;
 
 @SetFlagDisabled(KEY_FLEDGE_HTTP_CACHE_ENABLE)
 @SetFlagDisabled(KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED)
+@EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
 public final class AdSelectionTest extends FledgeDebuggableScenarioTest {
 
     /**
@@ -446,12 +449,12 @@ public final class AdSelectionTest extends FledgeDebuggableScenarioTest {
     }
 
     private boolean isAdIdSupported() {
-        AdIdCompatibleManager adIdCompatibleManager;
+        AdIdManager adIdManager;
         AdServicesOutcomeReceiverForTests<AdId> callback =
                 new AdServicesOutcomeReceiverForTests<>();
         try {
-            adIdCompatibleManager = new AdIdCompatibleManager(sContext);
-            adIdCompatibleManager.getAdId(MoreExecutors.directExecutor(), callback);
+            adIdManager = AdIdManager.get(sContext);
+            adIdManager.getAdId(MoreExecutors.directExecutor(), callback);
         } catch (IllegalStateException e) {
             Log.d(TAG, "isAdIdAvailable(): IllegalStateException detected in AdId manager.");
             return false;

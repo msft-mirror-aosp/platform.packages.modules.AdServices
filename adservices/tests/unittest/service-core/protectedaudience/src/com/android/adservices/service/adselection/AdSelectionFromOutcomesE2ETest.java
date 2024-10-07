@@ -35,7 +35,6 @@ import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RU
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
@@ -58,7 +57,6 @@ import android.adservices.common.CallingAppUidSupplierProcessImpl;
 import android.adservices.common.CommonFixture;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.http.MockWebServerRule;
-import android.content.Context;
 import android.net.Uri;
 import android.os.Process;
 import android.os.RemoteException;
@@ -68,6 +66,7 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -110,24 +109,21 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.SelectAdsFromOutcomesApiCalledStats;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.mockwebserver.Dispatcher;
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
 import com.google.mockwebserver.RecordedRequest;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.MockitoSession;
-import org.mockito.Spy;
-import org.mockito.quality.Strictness;
 
 import java.io.File;
 import java.time.Instant;
@@ -139,7 +135,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
-public class AdSelectionFromOutcomesE2ETest {
+@RequiresSdkLevelAtLeastS()
+@SpyStatic(FlagsFactory.class)
+public final class AdSelectionFromOutcomesE2ETest extends AdServicesExtendedMockitoTestCase {
     private static final int CALLER_UID = Process.myUid();
     private static final String SELECTION_PICK_HIGHEST_LOGIC_JS_PATH = "/selectionPickHighestJS/";
     private static final String SELECTION_PICK_NONE_LOGIC_JS_PATH = "/selectionPickNoneJS/";
@@ -191,12 +189,7 @@ public class AdSelectionFromOutcomesE2ETest {
 
     private final AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
-    private final Flags mFlags = new AdSelectionFromOutcomesE2ETest.TestFlags();
-
-    @Spy private Context mContextSpy = ApplicationProvider.getApplicationContext();
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+    private final Flags mFakeFlags = new AdSelectionFromOutcomesE2ETest.TestFlags();
 
     // Every test in this class requires that the JS Sandbox be available. The JS Sandbox
     // availability depends on an external component (the system webview) being higher than a
@@ -218,11 +211,11 @@ public class AdSelectionFromOutcomesE2ETest {
 
     FledgeAuthorizationFilter mFledgeAuthorizationFilter =
             new FledgeAuthorizationFilter(
-                    mContextSpy.getPackageManager(),
-                    new EnrollmentDao(mContextSpy, DbTestUtil.getSharedDbHelperForTest(), mFlags),
+                    mSpyContext.getPackageManager(),
+                    new EnrollmentDao(
+                            mSpyContext, DbTestUtil.getSharedDbHelperForTest(), mFakeFlags),
                     mAdServicesLoggerMock);
 
-    private MockitoSession mStaticMockSession = null;
     private ExecutorService mLightweightExecutorService;
     private ExecutorService mBackgroundExecutorService;
     private ScheduledThreadPoolExecutor mScheduledExecutor;
@@ -250,19 +243,11 @@ public class AdSelectionFromOutcomesE2ETest {
 
     @Before
     public void setUp() throws Exception {
-        // Test applications don't have the required permissions to read config P/H flags, and
-        // injecting mocked flags everywhere is annoying and non-trivial for static methods
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .initMocks(this)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
-        doReturn(mFlags).when(FlagsFactory::getFlags);
+        doReturn(mFakeFlags).when(FlagsFactory::getFlags);
 
         mAdSelectionEntryDaoSpy =
                 spy(
-                        Room.inMemoryDatabaseBuilder(mContextSpy, AdSelectionDatabase.class)
+                        Room.inMemoryDatabaseBuilder(mSpyContext, AdSelectionDatabase.class)
                                 .build()
                                 .adSelectionEntryDao());
 
@@ -271,33 +256,33 @@ public class AdSelectionFromOutcomesE2ETest {
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mScheduledExecutor = AdServicesExecutors.getScheduler();
         mCustomAudienceDao =
-                Room.inMemoryDatabaseBuilder(mContextSpy, CustomAudienceDatabase.class)
+                Room.inMemoryDatabaseBuilder(mSpyContext, CustomAudienceDatabase.class)
                         .addTypeConverter(new DBCustomAudience.Converters(true, true, true))
                         .build()
                         .customAudienceDao();
         mEncodedPayloadDao =
-                Room.inMemoryDatabaseBuilder(mContextSpy, ProtectedSignalsDatabase.class)
+                Room.inMemoryDatabaseBuilder(mSpyContext, ProtectedSignalsDatabase.class)
                         .build()
                         .getEncodedPayloadDao();
         SharedStorageDatabase sharedDb =
-                Room.inMemoryDatabaseBuilder(mContextSpy, SharedStorageDatabase.class).build();
+                Room.inMemoryDatabaseBuilder(mSpyContext, SharedStorageDatabase.class).build();
         mAppInstallDao = sharedDb.appInstallDao();
         mFrequencyCapDao = sharedDb.frequencyCapDao();
         AdSelectionServerDatabase serverDb =
-                Room.inMemoryDatabaseBuilder(mContextSpy, AdSelectionServerDatabase.class).build();
+                Room.inMemoryDatabaseBuilder(mSpyContext, AdSelectionServerDatabase.class).build();
         mEnrollmentDao = EnrollmentDao.getInstance();
         mEncryptionKeyDao = EncryptionKeyDao.getInstance();
         mMultiCloudSupportStrategy =
                 MultiCloudTestStrategyFactory.getDisabledTestStrategy(mObliviousHttpEncryptor);
         mAdFilteringFeatureFactory =
-                new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, mFlags);
+                new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, mFakeFlags);
         mAdServicesHttpsClient =
                 new AdServicesHttpsClient(
                         AdServicesExecutors.getBlockingExecutor(),
                         CacheProviderFactory.createNoOpCache());
         mRetryStrategyFactory = RetryStrategyFactory.createInstanceForTesting();
         mConsentedDebugConfigurationDao =
-                Room.inMemoryDatabaseBuilder(mContextSpy, AdSelectionDatabase.class)
+                Room.inMemoryDatabaseBuilder(mSpyContext, AdSelectionDatabase.class)
                         .build()
                         .consentedDebugConfigurationDao();
         mConsentedDebugConfigurationGeneratorFactory =
@@ -329,9 +314,9 @@ public class AdSelectionFromOutcomesE2ETest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        mContextSpy,
+                        mSpyContext,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFakeFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
@@ -367,7 +352,7 @@ public class AdSelectionFromOutcomesE2ETest {
                     }
                 };
 
-        when(mContextSpy.getDatabasePath(DATABASE_NAME)).thenReturn(mMockDBAdSelectionFile);
+        when(mSpyContext.getDatabasePath(DATABASE_NAME)).thenReturn(mMockDBAdSelectionFile);
         when(mMockDBAdSelectionFile.length()).thenReturn(DB_AD_SELECTION_FILE_SIZE);
         doNothing()
                 .when(mAdSelectionServiceFilter)
@@ -376,17 +361,11 @@ public class AdSelectionFromOutcomesE2ETest {
                         CALLER_PACKAGE_NAME,
                         false,
                         true,
+                        true,
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                         Throttler.ApiKey.FLEDGE_API_SELECT_ADS,
                         DevContext.createForDevOptionsDisabled());
-    }
-
-    @After
-    public void tearDown() {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
     }
 
     @Test
@@ -494,7 +473,7 @@ public class AdSelectionFromOutcomesE2ETest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        mContextSpy,
+                        mSpyContext,
                         mAdServicesLoggerMock,
                         auctionServerEnabledFlags,
                         CallingAppUidSupplierProcessImpl.create(),
@@ -577,9 +556,9 @@ public class AdSelectionFromOutcomesE2ETest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
-                        mContextSpy,
+                        mSpyContext,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        mFakeFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
@@ -601,8 +580,8 @@ public class AdSelectionFromOutcomesE2ETest {
         assertThat(resultsCallback.mIsSuccess).isTrue();
         assertThat(resultsCallback.mAdSelectionResponse).isNotNull();
         assertEquals(AD_SELECTION_ID_3, resultsCallback.mAdSelectionResponse.getAdSelectionId());
-        verify(mAdSelectionEntryDaoSpy, times(1)).getWinningBidAndUriForIdsUnifiedTables(any());
-        verify(mAdSelectionEntryDaoSpy, times(1))
+        verify(mAdSelectionEntryDaoSpy).getWinningBidAndUriForIdsUnifiedTables(any());
+        verify(mAdSelectionEntryDaoSpy)
                 .getAdSelectionIdsWithCallerPackageNameFromUnifiedTable(any(), any());
         mMockWebServerRule.verifyMockServerRequests(
                 server, 1, Collections.singletonList(selectionLogicPath), String::equals);
@@ -1120,6 +1099,11 @@ public class AdSelectionFromOutcomesE2ETest {
         @Override
         public boolean getFledgeSelectAdsFromOutcomesApiMetricsEnabled() {
             return true;
+        }
+
+        @Override
+        public boolean getConsentNotificationDebugMode() {
+            return false;
         }
     }
 }

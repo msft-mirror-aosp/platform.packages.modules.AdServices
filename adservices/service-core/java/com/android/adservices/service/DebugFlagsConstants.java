@@ -47,6 +47,11 @@ public final class DebugFlagsConstants {
     public static final String KEY_PROTECTED_APP_SIGNALS_CLI_ENABLED =
             "fledge_is_app_signals_cli_enabled";
 
+    /** Key for feature flagging the broadcast after encoder logic registration (for testing). */
+    public static final String
+            KEY_PROTECTED_APP_SIGNALS_ENCODER_LOGIC_REGISTERED_BROADCAST_ENABLED =
+                    "protected_app_signals_encoder_logic_registered_broadcast_enabled";
+
     /** Key for feature flagging adselection CLI. */
     public static final String KEY_AD_SELECTION_CLI_ENABLED = "fledge_is_ad_selection_cli_enabled";
 
@@ -67,4 +72,13 @@ public final class DebugFlagsConstants {
 
     public static final String KEY_RECORD_TOPICS_COMPLETE_BROADCAST_ENABLED =
             "record_topics_complete_broadcast_enabled";
+
+    public static final String KEY_FLEDGE_SCHEDULE_CA_COMPLETE_BROADCAST_ENABLED =
+            "fledge_schedule_ca_complete_broadcast_enabled";
+
+    public static final String KEY_FLEDGE_BACKGROUND_FETCH_COMPLETE_BROADCAST_ENABLED =
+            "fledge_background_fetch_complete_broadcast_enabled";
+
+    public static final String KEY_FLEDGE_BACKGROUND_KEY_FETCH_COMPLETE_BROADCAST_ENABLED =
+            "fledge_background_key_fetch_complete_broadcast_enabled";
 }

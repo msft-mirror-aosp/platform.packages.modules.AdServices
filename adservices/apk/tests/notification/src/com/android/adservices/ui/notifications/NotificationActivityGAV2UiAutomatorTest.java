@@ -18,6 +18,7 @@ package com.android.adservices.ui.notifications;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_DEBUG_UX;
 import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_UX_ENABLED;
 import static com.android.adservices.ui.util.ApkTestUtil.getString;
 import static com.android.adservices.ui.util.NotificationActivityTestUtil.WINDOW_LAUNCH_TIMEOUT;
 
@@ -50,8 +51,10 @@ public final class NotificationActivityGAV2UiAutomatorTest extends AdServicesUiT
     public final AdServicesFlagsSetterRule flags =
             AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
                     .setCompatModeFlags()
+                    .setAllLogcatTags()
                     .setDebugFlag(KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE, true)
                     .setFlag(KEY_GA_UX_FEATURE_ENABLED, true)
+                    .setFlag(KEY_PAS_UX_ENABLED, false)
                     .setFlag(KEY_DEBUG_UX, "GA_UX");
 
     @BeforeClass
@@ -62,12 +65,15 @@ public final class NotificationActivityGAV2UiAutomatorTest extends AdServicesUiT
     @Before
     public void setup() {
         Assume.assumeTrue(SdkLevel.isAtLeastS());
+        Assume.assumeTrue(
+                NotificationActivityTestUtil.isNotificationIntentInstalled(appContext.get(), true));
     }
 
     @Test
     @FlakyTest(bugId = 302607350)
     public void moreButtonTest() throws Exception {
-        NotificationActivityTestUtil.startActivity(/* isEuActivity= */ true, mDevice);
+        NotificationActivityTestUtil.startActivity(
+                appContext.get(), /* isEuActivity= */ true, mDevice);
         NotificationActivityTestUtil.clickMoreToBottom(mDevice);
 
         UiObject2 leftControlButton =
@@ -84,7 +90,8 @@ public final class NotificationActivityGAV2UiAutomatorTest extends AdServicesUiT
 
     @Test
     public void euAcceptFlowTest() throws Exception {
-        NotificationActivityTestUtil.startActivity(/* isEuActivity= */ true, mDevice);
+        NotificationActivityTestUtil.startActivity(
+                appContext.get(), /* isEuActivity= */ true, mDevice);
         NotificationActivityTestUtil.clickMoreToBottom(mDevice);
 
         UiObject2 leftControlButton =
@@ -132,7 +139,8 @@ public final class NotificationActivityGAV2UiAutomatorTest extends AdServicesUiT
     @Test
     @FlakyTest(bugId = 302607350)
     public void rowClickGotItTest() throws Exception {
-        NotificationActivityTestUtil.startActivity(/* isEuActivity= */ false, mDevice);
+        NotificationActivityTestUtil.startActivity(
+                appContext.get(), /* isEuActivity= */ false, mDevice);
         NotificationActivityTestUtil.clickMoreToBottom(mDevice);
 
         UiObject2 leftControlButton =
@@ -164,7 +172,8 @@ public final class NotificationActivityGAV2UiAutomatorTest extends AdServicesUiT
     @Test
     @FlakyTest(bugId = 302607350)
     public void rowClickSettingsTest() throws Exception {
-        NotificationActivityTestUtil.startActivity(/* isEuActivity= */ false, mDevice);
+        NotificationActivityTestUtil.startActivity(
+                appContext.get(), /* isEuActivity= */ false, mDevice);
         NotificationActivityTestUtil.clickMoreToBottom(mDevice);
 
         UiObject2 leftControlButton =

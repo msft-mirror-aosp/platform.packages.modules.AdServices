@@ -33,8 +33,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -52,7 +50,6 @@ import com.android.adservices.common.AdServicesJobServiceTestCase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
-import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.adservices.shared.spe.JobServiceConstants.JobSchedulingResultCode;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
@@ -105,39 +102,35 @@ public final class MddJobServiceTest extends AdServicesJobServiceTestCase {
                 MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB_ID,
                 MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID
             };
-
+    private final ExecutorService mExecutorService = Executors.newSingleThreadExecutor();
     @Spy private MddJobService mSpyMddJobService;
-
     @Mock private JobParameters mMockJobParameters;
     @Mock private MobileDataDownload mMockMdd;
     @Mock private MddFlags mMockMddFlags;
-    @Mock private StatsdAdServicesLogger mMockStatsdLogger;
     @Mock private MobileDataDownload mSpyMobileDataDownload;
     @Mock private EnrollmentDataDownloadManager mSpyEnrollmentDataDownloadManager;
     @Mock private EncryptionDataDownloadManager mSpyEncryptionDataDownloadManager;
-
-    private final ExecutorService mExecutorService = Executors.newSingleThreadExecutor();
     private AdServicesJobServiceLogger mLogger;
 
     @Before
     public void setup() {
         // Mock JobScheduler invocation in EpochJobService
         assertThat(JOB_SCHEDULER).isNotNull();
-        assertNull(
-                "Job already scheduled before setup!",
-                JOB_SCHEDULER.getPendingJob(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID));
+        assertWithMessage("Job already scheduled before setup!")
+                .that(JOB_SCHEDULER.getPendingJob(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID))
+                .isNull();
 
         mocker.mockGetFlags(mMockFlags);
 
         doReturn(mSpyMobileDataDownload).when(() -> MobileDataDownloadFactory.getMdd(any()));
         doReturn(mSpyEnrollmentDataDownloadManager)
-                .when(() -> EnrollmentDataDownloadManager.getInstance());
+                .when(EnrollmentDataDownloadManager::getInstance);
         doReturn(mSpyEncryptionDataDownloadManager)
-                .when(() -> EncryptionDataDownloadManager.getInstance());
+                .when(EncryptionDataDownloadManager::getInstance);
 
         doReturn(JOB_SCHEDULER).when(mSpyMddJobService).getSystemService(JobScheduler.class);
 
-        mLogger = mockAdServicesJobServiceLogger(sContext, mMockFlags);
+        mLogger = mocker.mockNoOpAdServicesJobServiceLogger(mContext, mMockFlags);
 
         // MDD Task Tag.
         PersistableBundle bundle = new PersistableBundle();
@@ -150,61 +143,14 @@ public final class MddJobServiceTest extends AdServicesJobServiceTestCase {
 
     @After
     public void teardown() {
-        JOB_SCHEDULER.cancelAll();
+        if (JOB_SCHEDULER != null) {
+            JOB_SCHEDULER.cancelAll();
+        }
     }
 
     @Test
-    public void testOnStartJob_killswitchIsOff_withoutLogging() throws Exception {
-        // Logging killswitch is on.
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, true);
-
-        testOnStartJob_killswitchIsOff();
-
-        // Verify logging methods are not invoked.
-        verifyLoggingNotHappened(mLogger);
-    }
-
-    @Test
-    public void testOnStartJob_killswitchIsOff_withLogging() throws Exception {
-        // Logging killswitch is off.
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, false);
-        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(mLogger);
-        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mLogger);
-
-        testOnStartJob_killswitchIsOff();
-
-        // Verify logging methods are invoked.
-        verifyJobFinishedLogged(mLogger, onStartJobCallback, onJobDoneCallback);
-    }
-
-    @Test
-    public void testOnStartJob_killswitchIsOn_withoutLogging() throws Exception {
-        // Logging killswitch is on.
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, true);
-
-        testOnStartJob_killswitchIsOn();
-
-        // Verify logging methods are not invoked.
-        verifyLoggingNotHappened(mLogger);
-    }
-
-    @Test
-    public void testOnStartJob_killSwitchOn_withLogging() throws Exception {
-        // Logging killswitch is off.
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, false);
-        JobServiceLoggingCallback callback = syncLogExecutionStats(mLogger);
-
-        testOnStartJob_killswitchIsOn();
-
-        // Verify logging methods are invoked.
-        verifyBackgroundJobsSkipLogged(mLogger, callback);
-    }
-
-    @Test
-    public void testSchedule_killswitchOff() throws Exception {
+    public void testSchedule_killSwitchOff() throws Exception {
         mockGetMddFlags();
-        // Killswitch is off.
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, false);
 
         ResultSyncCallback<Integer> callBack = scheduleJobInBackground(/* forceSchedule */ false);
         assertJobScheduled(
@@ -221,29 +167,6 @@ public final class MddJobServiceTest extends AdServicesJobServiceTestCase {
         verifyZeroInteractions(staticMockMarker(MobileDataDownloadFactory.class));
         assertJobScheduled(
                 callBack, MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID, SCHEDULING_RESULT_CODE_SKIPPED);
-    }
-
-    @Test
-    public void testOnStopJob_withoutLogging() throws Exception {
-        // Logging killswitch is on.
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, true);
-
-        testOnStopJob();
-
-        // Verify logging methods are not invoked.
-        verifyLoggingNotHappened(mLogger);
-    }
-
-    @Test
-    public void testOnStopJob_withLogging() throws Exception {
-        // Logging killswitch is off.
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, false);
-        JobServiceLoggingCallback callback = syncLogExecutionStats(mLogger);
-
-        testOnStopJob();
-
-        // Verify logging methods are invoked.
-        verifyOnStopJobLogged(mLogger, callback);
     }
 
     @Test
@@ -353,27 +276,6 @@ public final class MddJobServiceTest extends AdServicesJobServiceTestCase {
     }
 
     @Test
-    public void testOnStartJob_shouldDisableJobTrue_withoutLogging() {
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, true);
-
-        testOnStartJob_shouldDisableJobTrue();
-
-        // Verify logging method is not invoked.
-        verifyLoggingNotHappened(mLogger);
-    }
-
-    @Test
-    public void testOnStartJob_shouldDisableJobTrue_withLoggingEnabled() {
-        mockBackgroundJobsLoggingKillSwitch(mMockFlags, false);
-
-        testOnStartJob_shouldDisableJobTrue();
-
-        // Verify no logging has happened even though logging is enabled because this field is not
-        // logged
-        verifyLoggingNotHappened(mLogger);
-    }
-
-    @Test
     public void testOnStartJob_speEnabled() {
         doNothing().when(MddJob::scheduleAllMddJobs);
         when(mMockFlags.getSpeOnPilotJobsEnabled()).thenReturn(true);
@@ -382,7 +284,10 @@ public final class MddJobServiceTest extends AdServicesJobServiceTestCase {
         verify(MddJob::scheduleAllMddJobs);
     }
 
-    private void testOnStartJob_killswitchIsOn() throws InterruptedException {
+    @Test
+    public void testOnStartJob_killswitchIsOn() throws Exception {
+        JobServiceLoggingCallback loggingCallback = syncLogExecutionStats(mLogger);
+
         // Killswitch is on.
         mockMddBackgroundTaskKillSwitch(/* toBeReturned */ true);
         doNothing().when(mSpyMddJobService).jobFinished(mMockJobParameters, false);
@@ -391,7 +296,7 @@ public final class MddJobServiceTest extends AdServicesJobServiceTestCase {
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID,
-                                new ComponentName(sContext, MddJobService.class))
+                                new ComponentName(mContext, MddJobService.class))
                         .setRequiresCharging(true)
                         .setPeriodic(TASK_PERIOD_MS, FLEX_MS)
                         .build();
@@ -408,9 +313,16 @@ public final class MddJobServiceTest extends AdServicesJobServiceTestCase {
 
         verify(mSpyMddJobService).jobFinished(mMockJobParameters, false);
         verifyNoMoreInteractions(staticMockMarker(MobileDataDownloadFactory.class));
+
+        // Verify logging methods are invoked.
+        verifyBackgroundJobsSkipLogged(mLogger, loggingCallback);
     }
 
-    private void testOnStartJob_killswitchIsOff() throws InterruptedException {
+    @Test
+    public void testOnStartJob_killswitchIsOff() throws Exception {
+        JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(mLogger);
+        JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(mLogger);
+
         // Killswitch is off.
         mockMddBackgroundTaskKillSwitch(/* toBeReturned */ false);
 
@@ -425,18 +337,27 @@ public final class MddJobServiceTest extends AdServicesJobServiceTestCase {
         // Check that Mdd.handleTask is executed.
         verify(() -> MobileDataDownloadFactory.getMdd(any(Flags.class)));
         verify(mMockMdd).handleTask(WIFI_CHARGING_PERIODIC_TASK);
+
+        // Verify logging methods are invoked.
+        verifyJobFinishedLogged(mLogger, onStartJobCallback, onJobDoneCallback);
     }
 
-    private void testOnStopJob() throws InterruptedException {
+    @Test
+    public void testOnStopJob() throws Exception {
+        JobServiceLoggingCallback loggingCallback = syncLogExecutionStats(mLogger);
         JobServiceCallback callback = new JobServiceCallback().expectJobStopped(mSpyMddJobService);
 
         // Verify nothing throws
         mSpyMddJobService.onStopJob(mMockJobParameters);
 
         callback.assertJobStopped();
+
+        // Verify logging methods are invoked.
+        verifyOnStopJobLogged(mLogger, loggingCallback);
     }
 
-    private void testOnStartJob_shouldDisableJobTrue() {
+    @Test
+    public void testOnStartJob_shouldDisableJobTrue() {
         doReturn(true)
                 .when(
                         () ->
@@ -449,20 +370,24 @@ public final class MddJobServiceTest extends AdServicesJobServiceTestCase {
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID,
-                                new ComponentName(sContext, MddJobService.class))
+                                new ComponentName(mContext, MddJobService.class))
                         .setRequiresCharging(true)
                         .setPeriodic(TASK_PERIOD_MS, FLEX_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
-        assertNotNull(JOB_SCHEDULER.getPendingJob(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID));
+        assertThat(JOB_SCHEDULER.getPendingJob(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID)).isNotNull();
 
         // Now verify that when the Job starts, it will unschedule itself.
         assertFalse(mSpyMddJobService.onStartJob(mMockJobParameters));
 
-        assertNull(JOB_SCHEDULER.getPendingJob(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID));
+        assertThat(JOB_SCHEDULER.getPendingJob(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID)).isNull();
 
         verify(mSpyMddJobService).jobFinished(mMockJobParameters, false);
         verifyNoMoreInteractions(staticMockMarker(MobileDataDownloadFactory.class));
+
+        // Verify no logging has happened even though logging is enabled because this field is not
+        // logged
+        verifyLoggingNotHappened(mLogger);
     }
 
     private void mockGetMddFlags() {
@@ -497,7 +422,7 @@ public final class MddJobServiceTest extends AdServicesJobServiceTestCase {
     }
 
     private void assertJobScheduledSingleTask(ResultSyncCallback<Integer> callback, int jobId)
-            throws InterruptedException {
+            throws Exception {
         assertWithMessage("Check callback received result. jobId: %s", jobId)
                 .that(callback.assertResultReceived())
                 .isEqualTo(SCHEDULING_RESULT_CODE_SUCCESSFUL);
@@ -507,7 +432,7 @@ public final class MddJobServiceTest extends AdServicesJobServiceTestCase {
             ResultSyncCallback<Integer> callback,
             int jobId,
             @JobSchedulingResultCode int resultCode)
-            throws InterruptedException {
+            throws Exception {
         assertWithMessage(
                         "Check callback received result. jobId: %s, resultCode: %s",
                         jobId, resultCode)
@@ -518,7 +443,7 @@ public final class MddJobServiceTest extends AdServicesJobServiceTestCase {
     private void scheduleJobsDirectly() {
         for (Integer jobId : ALL_JOB_IDS) {
             JobInfo jobInfo =
-                    new JobInfo.Builder(jobId, new ComponentName(sContext, MddJobService.class))
+                    new JobInfo.Builder(jobId, new ComponentName(mContext, MddJobService.class))
                             .setRequiresCharging(true)
                             .setPeriodic(TASK_PERIOD_MS, FLEX_MS)
                             .build();

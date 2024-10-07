@@ -119,7 +119,8 @@ public class DevContextFilter {
     @VisibleForTesting
     public DevContext createDevContext(int callingAppUid) {
         String callingAppPackage = null;
-        DevContext.Builder builder = DevContext.builder();
+        // TODO(b/363472834): Propagate developer mode state from the DB.
+        DevContext.Builder builder = DevContext.builder().setDevSession(DevSession.UNKNOWN);
 
         if (!isDeveloperMode()) {
             // Since developer mode is off, we don't want to look up the app name; OTOH, we need to
@@ -134,7 +135,7 @@ public class DevContextFilter {
                             + " disabled and using package name %s",
                     callingAppUid, callingAppPackage);
             return builder.setCallingAppPackageName(callingAppPackage)
-                    .setDevOptionsEnabled(false)
+                    .setDeviceDevOptionsEnabled(false)
                     .build();
         }
 
@@ -154,7 +155,7 @@ public class DevContextFilter {
                     callingAppUid,
                     callingAppPackage);
             return builder.setCallingAppPackageName(callingAppPackage)
-                    .setDevOptionsEnabled(false)
+                    .setDeviceDevOptionsEnabled(false)
                     .build();
         }
         builder.setCallingAppPackageName(callingAppPackage);
@@ -162,12 +163,12 @@ public class DevContextFilter {
             LogUtil.v(
                     "createDevContext(%d): app %s not debuggable, creating DevContext as disabled",
                     callingAppUid, callingAppPackage);
-            builder.setDevOptionsEnabled(false);
+            builder.setDeviceDevOptionsEnabled(false);
         } else {
             LogUtil.v(
                     "createDevContext(%d): creating DevContext for calling app with package %s",
                     callingAppUid, callingAppPackage);
-            builder.setDevOptionsEnabled(true);
+            builder.setDeviceDevOptionsEnabled(true);
         }
         return builder.build();
     }

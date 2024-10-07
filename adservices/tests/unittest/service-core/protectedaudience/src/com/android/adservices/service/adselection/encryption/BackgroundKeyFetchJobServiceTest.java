@@ -50,7 +50,6 @@ import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
-import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -76,7 +75,6 @@ import java.util.concurrent.TimeoutException;
 @MockStatic(ConsentManager.class)
 @SpyStatic(BackgroundKeyFetchJobService.class)
 @SpyStatic(BackgroundKeyFetchWorker.class)
-@SpyStatic(AdServicesJobServiceLogger.class)
 @MockStatic(ServiceCompatUtils.class)
 public final class BackgroundKeyFetchJobServiceTest extends AdServicesJobServiceTestCase {
 
@@ -118,7 +116,7 @@ public final class BackgroundKeyFetchJobServiceTest extends AdServicesJobService
     @Test
     public void testOnStartJobConsentRevokedGaUxDisabled() throws Exception {
         mocker.mockGetFlags(mFlagsWithEnabledBgFGaUxDisabled);
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
+        doReturn(mConsentManagerMock).when(ConsentManager::getInstance);
         doReturn(AdServicesApiConsent.REVOKED)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
@@ -170,11 +168,11 @@ public final class BackgroundKeyFetchJobServiceTest extends AdServicesJobService
     @Test
     public void testOnStartJobAdSelectionDataKillSwitchOff() throws Exception {
         mocker.mockGetFlags(mFlagsWithAdSelectionDataKillSwitchOff);
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
+        doReturn(mConsentManagerMock).when(ConsentManager::getInstance);
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
-        doReturn(mBgFWorkerMock).when(() -> BackgroundKeyFetchWorker.getInstance(any()));
+        doReturn(mBgFWorkerMock).when(BackgroundKeyFetchWorker::getInstance);
         doReturn(FluentFuture.from(immediateFuture(null)))
                 .when(mBgFWorkerMock)
                 .runBackgroundKeyFetch();
@@ -191,7 +189,7 @@ public final class BackgroundKeyFetchJobServiceTest extends AdServicesJobService
         assertTrue(mBgFJobServiceSpy.onStartJob(mJobParametersMock));
         jobFinishedCountDown.await();
 
-        ExtendedMockito.verify(() -> BackgroundKeyFetchWorker.getInstance(mBgFJobServiceSpy));
+        ExtendedMockito.verify(BackgroundKeyFetchWorker::getInstance);
         verify(mBgFWorkerMock).runBackgroundKeyFetch();
         verify(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
         verifyNoMoreInteractions(staticMockMarker(BackgroundKeyFetchWorker.class));
@@ -199,18 +197,15 @@ public final class BackgroundKeyFetchJobServiceTest extends AdServicesJobService
 
     @Test
     public void testOnStartJobUpdateSuccessdd() throws Exception {
-        Flags flagsWithEnabledBgFGaUxDisabledWithoutLogging =
-                new BackgroundKeyFetchJobServiceTest.FlagsWithEnabledBgFGaUxEnabledWithoutLogging();
-        mocker.mockGetFlags(flagsWithEnabledBgFGaUxDisabledWithoutLogging);
-        AdServicesJobServiceLogger spyLogger =
-                mockAdServicesJobServiceLogger(
-                        sContext, flagsWithEnabledBgFGaUxDisabledWithoutLogging);
+        Flags flagsWithEnabledBgFGaUxDisabled =
+                new BackgroundKeyFetchJobServiceTest.FlagsWithEnabledBgFGaUxEnabled();
+        mocker.mockGetFlags(flagsWithEnabledBgFGaUxDisabled);
 
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
+        doReturn(mConsentManagerMock).when(ConsentManager::getInstance);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
-        doReturn(mBgFWorkerMock).when(() -> BackgroundKeyFetchWorker.getInstance(any()));
+        doReturn(mBgFWorkerMock).when(BackgroundKeyFetchWorker::getInstance);
         doReturn(FluentFuture.from(immediateFuture(null)))
                 .when(mBgFWorkerMock)
                 .runBackgroundKeyFetch();
@@ -225,12 +220,10 @@ public final class BackgroundKeyFetchJobServiceTest extends AdServicesJobService
         assertTrue(mBgFJobServiceSpy.onStartJob(mJobParametersMock));
         jobFinishedCountDown.await();
 
-        ExtendedMockito.verify(() -> BackgroundKeyFetchWorker.getInstance(mBgFJobServiceSpy));
+        ExtendedMockito.verify(BackgroundKeyFetchWorker::getInstance);
         verify(mBgFWorkerMock).runBackgroundKeyFetch();
         verify(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
         verifyNoMoreInteractions(staticMockMarker(BackgroundKeyFetchWorker.class));
-
-        verifyLoggingNotHappened(spyLogger);
     }
 
     @Test
@@ -241,11 +234,11 @@ public final class BackgroundKeyFetchJobServiceTest extends AdServicesJobService
 
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
+        doReturn(mConsentManagerMock).when(ConsentManager::getInstance);
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
-        doReturn(mBgFWorkerMock).when(() -> BackgroundKeyFetchWorker.getInstance(any()));
+        doReturn(mBgFWorkerMock).when(BackgroundKeyFetchWorker::getInstance);
         doReturn(FluentFuture.from(immediateFailedFuture(new TimeoutException("testing timeout"))))
                 .when(mBgFWorkerMock)
                 .runBackgroundKeyFetch();
@@ -260,7 +253,7 @@ public final class BackgroundKeyFetchJobServiceTest extends AdServicesJobService
         assertTrue(mBgFJobServiceSpy.onStartJob(mJobParametersMock));
         jobFinishedCountDown.await();
 
-        ExtendedMockito.verify(() -> BackgroundKeyFetchWorker.getInstance(mBgFJobServiceSpy));
+        ExtendedMockito.verify(BackgroundKeyFetchWorker::getInstance);
         verify(mBgFWorkerMock).runBackgroundKeyFetch();
         verify(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
         verifyNoMoreInteractions(staticMockMarker(BackgroundKeyFetchWorker.class));
@@ -270,11 +263,11 @@ public final class BackgroundKeyFetchJobServiceTest extends AdServicesJobService
     public void testOnStartJobUpdateExecutionExceptionHandled() throws Exception {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
         mocker.mockGetFlags(mFlagsWithEnabledBgFGaUxDisabled);
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
+        doReturn(mConsentManagerMock).when(ConsentManager::getInstance);
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
                 .getConsent(AdServicesApiType.FLEDGE);
-        doReturn(mBgFWorkerMock).when(() -> BackgroundKeyFetchWorker.getInstance(any()));
+        doReturn(mBgFWorkerMock).when(BackgroundKeyFetchWorker::getInstance);
         doReturn(
                         FluentFuture.from(
                                 immediateFailedFuture(
@@ -292,7 +285,7 @@ public final class BackgroundKeyFetchJobServiceTest extends AdServicesJobService
         assertTrue(mBgFJobServiceSpy.onStartJob(mJobParametersMock));
         jobFinishedCountDown.await();
 
-        ExtendedMockito.verify(() -> BackgroundKeyFetchWorker.getInstance(mBgFJobServiceSpy));
+        ExtendedMockito.verify(BackgroundKeyFetchWorker::getInstance);
         verify(mBgFWorkerMock).runBackgroundKeyFetch();
         verify(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
         verifyNoMoreInteractions(staticMockMarker(BackgroundKeyFetchWorker.class));
@@ -302,7 +295,7 @@ public final class BackgroundKeyFetchJobServiceTest extends AdServicesJobService
     public void testOnStopJobCallsStopWork() {
         mocker.mockGetFlags(mMockFlags);
 
-        doReturn(mBgFWorkerMock).when(() -> BackgroundKeyFetchWorker.getInstance(any()));
+        doReturn(mBgFWorkerMock).when(BackgroundKeyFetchWorker::getInstance);
         doNothing().when(mBgFWorkerMock).stopWork();
 
         assertTrue(mBgFJobServiceSpy.onStopJob(mJobParametersMock));
@@ -456,14 +449,6 @@ public final class BackgroundKeyFetchJobServiceTest extends AdServicesJobService
         @Override
         public boolean getFledgeAuctionServerKillSwitch() {
             return false;
-        }
-    }
-
-    private static class FlagsWithEnabledBgFGaUxEnabledWithoutLogging
-            extends FlagsWithEnabledBgFGaUxEnabled {
-        @Override
-        public boolean getBackgroundJobsLoggingKillSwitch() {
-            return true;
         }
     }
 

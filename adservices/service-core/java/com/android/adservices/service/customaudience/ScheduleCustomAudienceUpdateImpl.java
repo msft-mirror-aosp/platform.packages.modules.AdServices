@@ -185,6 +185,7 @@ public class ScheduleCustomAudienceUpdateImpl {
                                         mDisableFledgeEnrollmentCheck,
                                         mEnforceForegroundStatus,
                                         ENFORCE_CONSENT,
+                                        !mFlags.getConsentNotificationDebugMode(),
                                         mCallingAppUid,
                                         API_NAME,
                                         FLEDGE_API_SCHEDULE_CUSTOM_AUDIENCE_UPDATE,
@@ -222,7 +223,7 @@ public class ScheduleCustomAudienceUpdateImpl {
                         .setBuyer(buyer)
                         .setCreationTime(Instant.now())
                         .setScheduledTime(scheduledTime)
-                        .setIsDebuggable(devContext.getDevOptionsEnabled())
+                        .setIsDebuggable(devContext.getDeviceDevOptionsEnabled())
                         .build();
 
         sLogger.d(

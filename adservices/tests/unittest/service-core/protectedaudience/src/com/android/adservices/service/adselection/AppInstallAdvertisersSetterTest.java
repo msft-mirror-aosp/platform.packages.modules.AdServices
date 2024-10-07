@@ -128,6 +128,49 @@ public class AppInstallAdvertisersSetterTest {
                         CommonFixture.TEST_PACKAGE_NAME_1,
                         true,
                         false,
+                        true,
+                        UID,
+                        AD_SERVICES_API_CALLED__API_NAME__SET_APP_INSTALL_ADVERTISERS,
+                        Throttler.ApiKey.FLEDGE_API_SET_APP_INSTALL_ADVERTISERS,
+                        DevContext.createForDevOptionsDisabled());
+        assertTrue(callback.mIsSuccess);
+        verifyLog(AdServicesStatusUtils.STATUS_SUCCESS);
+        verify(mAppInstallDaoMock)
+                .setAdTechsForPackage(
+                        eq(CommonFixture.TEST_PACKAGE_NAME_1), eq(DB_WRITE_FOR_SAMPLE_INPUT));
+    }
+
+    @Test
+    public void testSetAppInstallAdvertisersSuccessWithUxNotificationEnforcementDisabled()
+            throws Exception {
+        Flags flagsWithoutUxNotificationEnforcement =
+                new AppInstallAdvertisersSetterTestFlags(true) {
+                    @Override
+                    public boolean getConsentNotificationDebugMode() {
+                        return true;
+                    }
+                };
+        AppInstallAdvertisersSetter appInstallAdvertisersSetter =
+                new AppInstallAdvertisersSetter(
+                        mAppInstallDaoMock,
+                        mExecutorService,
+                        mAdServicesLogger,
+                        flagsWithoutUxNotificationEnforcement,
+                        mAdSelectionServiceFilter,
+                        mConsentManager,
+                        UID,
+                        DevContext.createForDevOptionsDisabled());
+
+        SetAppInstallAdvertisersTestCallback callback =
+                callSetAppInstallAdvertisers(SAMPLE_INPUT, appInstallAdvertisersSetter);
+
+        verify(mAdSelectionServiceFilter)
+                .filterRequest(
+                        null,
+                        CommonFixture.TEST_PACKAGE_NAME_1,
+                        true,
+                        false,
+                        false,
                         UID,
                         AD_SERVICES_API_CALLED__API_NAME__SET_APP_INSTALL_ADVERTISERS,
                         Throttler.ApiKey.FLEDGE_API_SET_APP_INSTALL_ADVERTISERS,
@@ -206,7 +249,15 @@ public class AppInstallAdvertisersSetterTest {
         doThrow(new AppImportanceFilter.WrongCallingApplicationStateException())
                 .when(mAdSelectionServiceFilter)
                 .filterRequest(
-                        any(), any(), anyBoolean(), anyBoolean(), anyInt(), anyInt(), any(), any());
+                        any(),
+                        any(),
+                        anyBoolean(),
+                        anyBoolean(),
+                        anyBoolean(),
+                        anyInt(),
+                        anyInt(),
+                        any(),
+                        any());
         SetAppInstallAdvertisersTestCallback callback = callSetAppInstallAdvertisers(SAMPLE_INPUT);
 
         // Confirm a duplicate log entry does not exist.
@@ -224,7 +275,15 @@ public class AppInstallAdvertisersSetterTest {
         doThrow(new FledgeAllowListsFilter.AppNotAllowedException())
                 .when(mAdSelectionServiceFilter)
                 .filterRequest(
-                        any(), any(), anyBoolean(), anyBoolean(), anyInt(), anyInt(), any(), any());
+                        any(),
+                        any(),
+                        anyBoolean(),
+                        anyBoolean(),
+                        anyBoolean(),
+                        anyInt(),
+                        anyInt(),
+                        any(),
+                        any());
         SetAppInstallAdvertisersTestCallback callback = callSetAppInstallAdvertisers(SAMPLE_INPUT);
 
         // Confirm a duplicate log entry does not exist.
@@ -242,7 +301,15 @@ public class AppInstallAdvertisersSetterTest {
         doThrow(new FledgeAuthorizationFilter.CallerMismatchException())
                 .when(mAdSelectionServiceFilter)
                 .filterRequest(
-                        any(), any(), anyBoolean(), anyBoolean(), anyInt(), anyInt(), any(), any());
+                        any(),
+                        any(),
+                        anyBoolean(),
+                        anyBoolean(),
+                        anyBoolean(),
+                        anyInt(),
+                        anyInt(),
+                        any(),
+                        any());
         SetAppInstallAdvertisersTestCallback callback = callSetAppInstallAdvertisers(SAMPLE_INPUT);
 
         // Confirm a duplicate log entry does not exist.
@@ -260,7 +327,15 @@ public class AppInstallAdvertisersSetterTest {
         doThrow(new LimitExceededException())
                 .when(mAdSelectionServiceFilter)
                 .filterRequest(
-                        any(), any(), anyBoolean(), anyBoolean(), anyInt(), anyInt(), any(), any());
+                        any(),
+                        any(),
+                        anyBoolean(),
+                        anyBoolean(),
+                        anyBoolean(),
+                        anyInt(),
+                        anyInt(),
+                        any(),
+                        any());
         SetAppInstallAdvertisersTestCallback callback = callSetAppInstallAdvertisers(SAMPLE_INPUT);
 
         // Confirm a duplicate log entry does not exist.
@@ -355,6 +430,11 @@ public class AppInstallAdvertisersSetterTest {
         @Override
         public boolean getFledgeAppInstallFilteringEnabled() {
             return mAppInstallFilteringEnabled;
+        }
+
+        @Override
+        public boolean getConsentNotificationDebugMode() {
+            return false;
         }
     }
 }
