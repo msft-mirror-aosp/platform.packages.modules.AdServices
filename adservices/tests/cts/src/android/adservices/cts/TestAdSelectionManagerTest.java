@@ -127,7 +127,9 @@ public final class TestAdSelectionManagerTest extends ForegroundCtsTestCase {
                         .setContext(sContext)
                         .setExecutor(CALLBACK_EXECUTOR)
                         .build();
-        DevContext devContext = DevContextFilter.create(sContext).createDevContext(Process.myUid());
+        DevContext devContext =
+                DevContextFilter.create(mContext, /* developerModeFeatureEnabled= */ true)
+                        .createDevContext(Process.myUid());
         mIsDebugMode = devContext.getDeviceDevOptionsEnabled();
 
         InstrumentationRegistry.getInstrumentation()

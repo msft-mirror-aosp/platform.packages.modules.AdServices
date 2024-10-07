@@ -13,25 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.adservices.shared.testing.flags;
 
-package com.android.adservices.service.devapi;
+/** Represents an action such as setting the value of a flag. */
+public interface Action {
 
-import com.google.common.util.concurrent.ListenableFuture;
+    /** Executes the action, returning whether it changed the state of the flags system. */
+    boolean execute() throws Exception;
 
-/** Provides the ability to set and get {@link DevSession} status. */
-public interface DevSessionDataStore {
-    /**
-     * Set the dev session status.
-     *
-     * @param devSession The dev session to persist.
-     * @return The persisted dev session. Should be identical to above.
-     */
-    ListenableFuture<DevSession> set(DevSession devSession);
-
-    /**
-     * Get the dev session.
-     *
-     * @return An instance of {@link DevSession}.
-     */
-    ListenableFuture<DevSession> get();
+    /** Reverts the previously executed action. */
+    void revert() throws Exception;
 }
