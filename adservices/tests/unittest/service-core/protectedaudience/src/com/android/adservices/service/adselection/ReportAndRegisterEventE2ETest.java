@@ -1038,6 +1038,7 @@ public final class ReportAndRegisterEventE2ETest extends AdServicesExtendedMocki
                 mContext,
                 mAdServicesLoggerMock,
                 flags,
+                mMockDebugFlags,
                 CallingAppUidSupplierProcessImpl.create(),
                 mFledgeAuthorizationFilterMock,
                 mAdSelectionServiceFilterMock,

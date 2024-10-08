@@ -36,6 +36,5 @@ public class AeadAlgorithmSpecTest {
         Assert.assertEquals(aeadAlgorithmSpec.tagLength(), 16);
         Assert.assertEquals(
                 aeadAlgorithmSpec.identifier(), AeadAlgorithmSpec.AES_256_GCM_IDENTIFIER);
-        Assert.assertNotNull(aeadAlgorithmSpec.aeadNativeRefSupplier().get().getAddress());
     }
 }

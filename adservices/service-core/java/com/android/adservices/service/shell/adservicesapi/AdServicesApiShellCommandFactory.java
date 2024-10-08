@@ -33,7 +33,7 @@ import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
 import com.android.adservices.service.common.DatabaseClearer;
 import com.android.adservices.service.devapi.DevSessionController;
 import com.android.adservices.service.devapi.DevSessionControllerImpl;
-import com.android.adservices.service.devapi.DevSessionDataStore;
+import com.android.adservices.service.devapi.DevSessionDataStoreFactory;
 import com.android.adservices.service.shell.AdServicesShellCommandHandler;
 import com.android.adservices.service.shell.NoOpShellCommand;
 import com.android.adservices.service.shell.ShellCommand;
@@ -86,7 +86,7 @@ public final class AdServicesApiShellCommandFactory implements ShellCommandFacto
                                         .getFrequencyCapDataClearer(),
                                 ProtectedSignalsDatabase.getInstance().protectedSignalsDao(),
                                 AdServicesExecutors.getBackgroundExecutor()),
-                        DevSessionDataStore.getInstance(),
+                        DevSessionDataStoreFactory.get(),
                         AdServicesExecutors.getLightWeightExecutor()),
                 FlagsFactory.getFlags().getDeveloperModeFeatureEnabled());
     }
