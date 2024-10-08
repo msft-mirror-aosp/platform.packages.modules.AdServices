@@ -20,6 +20,7 @@ import android.content.Context;
 
 import androidx.datastore.guava.GuavaDataStore;
 
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.proto.DevSessionStorage;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
@@ -37,6 +38,7 @@ public final class DevSessionProtoDataStore implements DevSessionDataStore {
 
     @VisibleForTesting static final String FILE_NAME = "dev_session.binarypb";
 
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getLogger();
     private static final DevSessionDataStore sInstance =
             new DevSessionProtoDataStore(
                     ApplicationContextSingleton.get(),
@@ -82,7 +84,10 @@ public final class DevSessionProtoDataStore implements DevSessionDataStore {
     public ListenableFuture<DevSession> set(DevSession devSession) {
         return Futures.transform(
                 mDevSessionDataStore.updateDataAsync(
-                        currentDevSession -> DevSession.toProto(devSession)),
+                        currentDevSession -> {
+                            sLogger.v("DevSessionProtoDataStore: Completed updateDataAsync op");
+                            return DevSession.toProto(devSession);
+                        }),
                 proto -> DevSession.fromProto(proto),
                 mLightWeightExecutor);
     }
