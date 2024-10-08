@@ -15,11 +15,14 @@
  */
 package com.android.adservices.mockito;
 
+import android.platform.test.annotations.DisabledOnRavenwood;
+
 import com.android.adservices.shared.SharedUnitTestCase;
 import com.android.adservices.shared.meta_testing.TestNamerRuleTester;
 
 import org.junit.Test;
 
+@DisabledOnRavenwood(reason = "Uses ExtendedMockito")  // TODO(b/335935200): fix this
 public final class AdServicesExtendedMockitoRuleTest extends SharedUnitTestCase {
 
     @Test
