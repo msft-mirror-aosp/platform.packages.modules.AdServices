@@ -77,8 +77,10 @@ import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.DBRegisteredAdInteraction;
 import com.android.adservices.data.adselection.datahandlers.RegisteredAdInteraction;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
@@ -92,6 +94,7 @@ import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ReportInteractionApiCalledStats;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
@@ -117,6 +120,8 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(DebugFlags.class)
 @RequiresSdkLevelAtLeastS()
 public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase {
     private static final Instant ACTIVATION_TIME = Instant.now();
@@ -162,11 +167,6 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
                 public boolean getDisableFledgeEnrollmentCheck() {
                     return false;
                 }
-
-                @Override
-                public boolean getConsentNotificationDebugMode() {
-                    return false;
-                }
             };
 
     private long mMaxRegisteredAdBeaconsTotalCount;
@@ -187,6 +187,8 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
     @Before
     public void setup() throws Exception {
         mFakeFlags = FakeFlagsFactory.getFlagsForTest();
+        mocker.mockGetDebugFlags(mMockDebugFlags);
+        mocker.mockGetConsentNotificationDebugMode(false);
         mMaxRegisteredAdBeaconsPerDestination =
                 mFakeFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount();
         mMaxRegisteredAdBeaconsTotalCount =
@@ -206,6 +208,7 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
                         mBackgroundExecutorService,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         mAdSelectionServiceFilterMock,
                         MY_UID,
                         mFledgeAuthorizationFilterMock,
@@ -324,14 +327,7 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
     public void
             testImplSuccessfullyReportsRegisteredInteractionsWithUXNotificationEnforcementDisabled()
                     throws Exception {
-        Flags flagsWithoutUxNotificationEnforcement =
-                new Flags() {
-                    @Override
-                    public boolean getConsentNotificationDebugMode() {
-                        return true;
-                    }
-                };
-
+        mocker.mockGetConsentNotificationDebugMode(true);
         mEventReporter =
                 new ReportEventImpl(
                         mAdSelectionEntryDao,
@@ -339,7 +335,8 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mAdServicesLoggerMock,
-                        flagsWithoutUxNotificationEnforcement,
+                        mFakeFlags,
+                        mMockDebugFlags,
                         mAdSelectionServiceFilterMock,
                         MY_UID,
                         mFledgeAuthorizationFilterMock,
@@ -747,6 +744,7 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
                         mBackgroundExecutorService,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         mAdSelectionServiceFilterMock,
                         MY_UID,
                         mFledgeAuthorizationFilterMock,
@@ -834,6 +832,7 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
                         mBackgroundExecutorService,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         mAdSelectionServiceFilterMock,
                         MY_UID,
                         mFledgeAuthorizationFilterMock,
@@ -1352,6 +1351,7 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
                         mBackgroundExecutorService,
                         mAdServicesLoggerMock,
                         flags,
+                        mMockDebugFlags,
                         mAdSelectionServiceFilterMock,
                         MY_UID,
                         mFledgeAuthorizationFilterMock,
@@ -1487,6 +1487,7 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
                         mBackgroundExecutorService,
                         mAdServicesLoggerMock,
                         flags,
+                        mMockDebugFlags,
                         mAdSelectionServiceFilterMock,
                         MY_UID,
                         mFledgeAuthorizationFilterMock,
@@ -1574,6 +1575,7 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
                         mBackgroundExecutorService,
                         mAdServicesLoggerMock,
                         flags,
+                        mMockDebugFlags,
                         mAdSelectionServiceFilterMock,
                         MY_UID,
                         mFledgeAuthorizationFilterMock,
