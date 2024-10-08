@@ -575,6 +575,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetCobaltEnableApiCallResponseLogging() {
+        testFeatureFlag(
+                "COBALT__ENABLE_API_CALL_RESPONSE_LOGGING",
+                Flags::getCobaltEnableApiCallResponseLogging);
+    }
+
+    @Test
     public void testGetRNotificationDefaultConsentFixEnabled() {
         testFeatureFlag(
                 "DEFAULT_R_NOTIFICATION_DEFAULT_CONSENT_FIX_ENABLED",
