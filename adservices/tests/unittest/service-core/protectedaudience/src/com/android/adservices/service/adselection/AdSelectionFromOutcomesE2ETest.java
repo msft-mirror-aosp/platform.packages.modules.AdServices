@@ -90,6 +90,7 @@ import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGeneratorFactory;
@@ -137,6 +138,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 @RequiresSdkLevelAtLeastS()
 @SpyStatic(FlagsFactory.class)
+@SpyStatic(DebugFlags.class)
 public final class AdSelectionFromOutcomesE2ETest extends AdServicesExtendedMockitoTestCase {
     private static final int CALLER_UID = Process.myUid();
     private static final String SELECTION_PICK_HIGHEST_LOGIC_JS_PATH = "/selectionPickHighestJS/";
@@ -244,6 +246,8 @@ public final class AdSelectionFromOutcomesE2ETest extends AdServicesExtendedMock
     @Before
     public void setUp() throws Exception {
         doReturn(mFakeFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
+        mocker.mockGetDebugFlags(mMockDebugFlags);
 
         mAdSelectionEntryDaoSpy =
                 spy(
@@ -317,6 +321,7 @@ public final class AdSelectionFromOutcomesE2ETest extends AdServicesExtendedMock
                         mSpyContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
@@ -476,6 +481,7 @@ public final class AdSelectionFromOutcomesE2ETest extends AdServicesExtendedMock
                         mSpyContext,
                         mAdServicesLoggerMock,
                         auctionServerEnabledFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
@@ -559,6 +565,7 @@ public final class AdSelectionFromOutcomesE2ETest extends AdServicesExtendedMock
                         mSpyContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
@@ -1099,11 +1106,6 @@ public final class AdSelectionFromOutcomesE2ETest extends AdServicesExtendedMock
         @Override
         public boolean getFledgeSelectAdsFromOutcomesApiMetricsEnabled() {
             return true;
-        }
-
-        @Override
-        public boolean getConsentNotificationDebugMode() {
-            return false;
         }
     }
 }

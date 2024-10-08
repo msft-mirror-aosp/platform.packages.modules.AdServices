@@ -162,6 +162,7 @@ public class FetchCustomAudienceImpl {
             @NonNull AdDataConversionStrategy adDataConversionStrategy) {
         Objects.requireNonNull(debugFlags);
         Objects.requireNonNull(flags);
+        Objects.requireNonNull(debugFlags);
         Objects.requireNonNull(clock);
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(executor);

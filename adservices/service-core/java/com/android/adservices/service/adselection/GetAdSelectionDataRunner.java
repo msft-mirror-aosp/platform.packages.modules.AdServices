@@ -77,6 +77,7 @@ import com.android.adservices.data.adselection.datahandlers.AdSelectionInitializ
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGenerator;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
@@ -143,6 +144,7 @@ public class GetAdSelectionDataRunner {
     @NonNull private final ListeningExecutorService mBlockingExecutorService;
     @NonNull private final ScheduledThreadPoolExecutor mScheduledExecutor;
     @NonNull private final Flags mFlags;
+    @NonNull private final DebugFlags mDebugFlags;
     private final int mCallerUid;
 
     @NonNull protected final AdSelectionIdGenerator mAdSelectionIdGenerator;
@@ -179,6 +181,7 @@ public class GetAdSelectionDataRunner {
             @NonNull final ExecutorService blockingExecutorService,
             @NonNull final ScheduledThreadPoolExecutor scheduledExecutor,
             @NonNull final Flags flags,
+            @NonNull final DebugFlags debugFlags,
             final int callerUid,
             @NonNull final DevContext devContext,
             @NonNull final AuctionServerDebugReporting auctionServerDebugReporting,
@@ -199,6 +202,7 @@ public class GetAdSelectionDataRunner {
         Objects.requireNonNull(lightweightExecutorService);
         Objects.requireNonNull(scheduledExecutor);
         Objects.requireNonNull(flags);
+        Objects.requireNonNull(debugFlags);
         Objects.requireNonNull(devContext);
         Objects.requireNonNull(auctionServerDebugReporting);
         Objects.requireNonNull(adsRelevanceExecutionLogger);
@@ -221,6 +225,7 @@ public class GetAdSelectionDataRunner {
         mBlockingExecutorService = MoreExecutors.listeningDecorator(blockingExecutorService);
         mScheduledExecutor = scheduledExecutor;
         mFlags = flags;
+        mDebugFlags = debugFlags;
         mCallerUid = callerUid;
         mDevContext = devContext;
         mClock = Clock.systemUTC();
@@ -284,6 +289,7 @@ public class GetAdSelectionDataRunner {
             @NonNull final ExecutorService blockingExecutorService,
             @NonNull final ScheduledThreadPoolExecutor scheduledExecutor,
             @NonNull final Flags flags,
+            @NonNull final DebugFlags debugFlags,
             final int callerUid,
             @NonNull final DevContext devContext,
             @NonNull Clock clock,
@@ -304,6 +310,7 @@ public class GetAdSelectionDataRunner {
         Objects.requireNonNull(lightweightExecutorService);
         Objects.requireNonNull(scheduledExecutor);
         Objects.requireNonNull(flags);
+        Objects.requireNonNull(debugFlags);
         Objects.requireNonNull(devContext);
         Objects.requireNonNull(clock);
         Objects.requireNonNull(auctionServerDebugReporting);
@@ -327,6 +334,7 @@ public class GetAdSelectionDataRunner {
         mBlockingExecutorService = MoreExecutors.listeningDecorator(blockingExecutorService);
         mScheduledExecutor = scheduledExecutor;
         mFlags = flags;
+        mDebugFlags = debugFlags;
         mCallerUid = callerUid;
         mDevContext = devContext;
         mClock = clock;
@@ -414,7 +422,7 @@ public class GetAdSelectionDataRunner {
                                             inputParams.getCallerPackageName(),
                                             /*enforceForeground:*/ false,
                                             /*enforceConsent:*/ true,
-                                            !mFlags.getConsentNotificationDebugMode(),
+                                            !mDebugFlags.getConsentNotificationDebugMode(),
                                             mCallerUid,
                                             apiName,
                                             Throttler.ApiKey.FLEDGE_API_GET_AD_SELECTION_DATA,
@@ -458,7 +466,7 @@ public class GetAdSelectionDataRunner {
                         public void onFailure(Throwable t) {
                             if (t instanceof FilterException
                                     && t.getCause()
-                                            instanceof ConsentManager.RevokedConsentException) {
+                                    instanceof ConsentManager.RevokedConsentException) {
                                 // Skip logging if a FilterException occurs.
                                 // AdSelectionServiceFilter ensures the failing assertion is logged
                                 // internally.
@@ -640,12 +648,12 @@ public class GetAdSelectionDataRunner {
     private int getCurrentPayloadSize(AuctionServerPayloadInfo auctionServerPayloadInfo) {
         sLogger.v("Calling get current payload size");
         return composeProtectedAuctionInputBytes(
-                        auctionServerPayloadInfo.getCompressedBuyerInput(),
-                        auctionServerPayloadInfo.getPackageName(),
-                        auctionServerPayloadInfo.getAdSelectionDataId(),
-                        auctionServerPayloadInfo.getDebugReportingEnabled(),
-                        auctionServerPayloadInfo.getUnlimitedEgressEnabled(),
-                        auctionServerPayloadInfo.getConsentedDebugConfigurationOptional())
+                auctionServerPayloadInfo.getCompressedBuyerInput(),
+                auctionServerPayloadInfo.getPackageName(),
+                auctionServerPayloadInfo.getAdSelectionDataId(),
+                auctionServerPayloadInfo.getDebugReportingEnabled(),
+                auctionServerPayloadInfo.getUnlimitedEgressEnabled(),
+                auctionServerPayloadInfo.getConsentedDebugConfigurationOptional())
                 .toByteArray()
                 .length;
     }
