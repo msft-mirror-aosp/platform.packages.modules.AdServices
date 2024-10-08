@@ -50,11 +50,14 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
+import java.util.concurrent.TimeUnit;
+
 @MockStatic(Settings.Global.class)
 @MockStatic(BuildCompatUtils.class)
 public final class DevContextFilterTest extends AdServicesExtendedMockitoTestCase {
     private static final int APP_UID = 100;
     private static final String APP_PACKAGE = "com.test.myapp";
+    private static final long DEV_SESSION_SET_TIMEOUT_SEC = 2;
 
     @Mock private PackageManager mMockPackageManager;
     @Mock private AppPackageNameRetriever mMockAppPackageNameRetriever;
@@ -131,15 +134,8 @@ public final class DevContextFilterTest extends AdServicesExtendedMockitoTestCas
         mockInstalledApplications(aDebuggableAppInfo());
         when(mMockDevSessionDataStore.get()).thenReturn(immediateFuture(DevSession.UNKNOWN));
 
-        DevContext devContext = mDevContextFilter.createDevContext(APP_UID);
-
-        assertWithMessage("createDevContext(%s)", APP_UID).that(devContext).isNotNull();
-        expect.withMessage("devContext.getDevOptionsEnabled()")
-                .that(devContext.getDeviceDevOptionsEnabled())
-                .isTrue();
-        expect.withMessage("devContext.getCallingAppPackageName()")
-                .that(devContext.getCallingAppPackageName())
-                .isEqualTo(APP_PACKAGE);
+        assertThrows(
+                IllegalStateException.class, () -> mDevContextFilter.createDevContext(APP_UID));
     }
 
     @Test
@@ -256,11 +252,14 @@ public final class DevContextFilterTest extends AdServicesExtendedMockitoTestCas
     }
 
     @Test
-    public void testGetSettingsForCurrentAppWithDeveloperModeFeatureEnabled() {
+    public void testGetSettingsForCurrentAppWithDeveloperModeFeatureEnabled() throws Exception {
         int myUid = Process.myUid();
         Context context = appContext.get();
         // Enable development options for the test app
         setDeveloperOptionsEnabled(context.getContentResolver(), true);
+        DevSessionDataStoreFactory.get(/* developerModeFeatureEnabled= */ true)
+                .set(IN_PROD)
+                .get(DEV_SESSION_SET_TIMEOUT_SEC, TimeUnit.SECONDS);
 
         DevContextFilter nonMockedFilter =
                 DevContextFilter.create(context, /* developerModeFeatureEnabled= */ true);
