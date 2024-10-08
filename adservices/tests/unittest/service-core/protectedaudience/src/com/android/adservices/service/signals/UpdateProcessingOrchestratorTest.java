@@ -52,13 +52,12 @@ import com.android.adservices.service.signals.updateprocessors.UpdateProcessor;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorSelector;
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -79,6 +78,7 @@ import java.util.stream.Collectors;
 @SetErrorLogUtilDefaultParams(
         throwable = ExpectErrorLogUtilWithExceptionCall.Any.class,
         ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS)
+@RequiresSdkLevelAtLeastT(reason = "PAS is only supported on T+")
 public class UpdateProcessingOrchestratorTest extends AdServicesExtendedMockitoTestCase {
 
     public static final byte[] KEY_1 = {(byte) 1, (byte) 2, (byte) 3, (byte) 4};
@@ -99,9 +99,6 @@ public class UpdateProcessingOrchestratorTest extends AdServicesExtendedMockitoT
     @Captor ArgumentCaptor<UpdateOutput> mUpdateOutputArgumentCaptor;
 
     private UpdateProcessingOrchestrator mUpdateProcessingOrchestrator;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Before
     public void setup() {
