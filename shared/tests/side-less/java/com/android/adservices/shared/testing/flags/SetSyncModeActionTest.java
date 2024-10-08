@@ -101,6 +101,30 @@ public final class SetSyncModeActionTest extends SharedSidelessTestCase {
     }
 
     @Test
+    public void testExecuteAndRevert_previousReturnNull() throws Exception {
+        mFakeDeviceConfig.setSyncDisabledMode(null);
+        SetSyncModeAction action =
+                new SetSyncModeAction(mFakeLogger, mFakeDeviceConfig, PERSISTENT);
+
+        boolean result = action.execute();
+
+        expect.withMessage("execute()").that(result).isTrue();
+        expect.withMessage("device config mode after execute")
+                .that(mFakeDeviceConfig.getSyncDisabledMode())
+                .isEqualTo(PERSISTENT);
+
+        // Should not call it as it was null before
+        mFakeDeviceConfig.onSetSyncDisabledModeCallback(
+                () -> {
+                    throw new RuntimeException("Y U CALLED ME?");
+                });
+        action.revert();
+        expect.withMessage("device config mode after revert")
+                .that(mFakeDeviceConfig.getSyncDisabledMode())
+                .isEqualTo(PERSISTENT);
+    }
+
+    @Test
     public void testExecuteAndRevert_changed() throws Exception {
         mFakeDeviceConfig.setSyncDisabledMode(PERSISTENT);
         SetSyncModeAction action =
