@@ -326,6 +326,7 @@ public abstract class FledgeScenarioTest extends AdServicesCtsTestCase {
         return scenarioDispatcher;
     }
 
+
     private JoinCustomAudienceRequest makeJoinCustomAudienceRequest(String customAudienceName) {
         return new JoinCustomAudienceRequest.Builder()
                 .setCustomAudience(makeCustomAudience(customAudienceName).build())
