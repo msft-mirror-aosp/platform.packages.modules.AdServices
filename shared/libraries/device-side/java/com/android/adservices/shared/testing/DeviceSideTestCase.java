@@ -59,7 +59,6 @@ public abstract class DeviceSideTestCase extends SidelessTestCase {
      */
     @Deprecated protected static Context sContext;
 
-
     /**
      * Package name of the app being instrumented.
      *

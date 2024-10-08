@@ -55,5 +55,4 @@ public final class HandlerIdleSyncCallback extends ResultSyncCallback<Object> {
     public void assertIdle() throws InterruptedException {
         assertCalled();
     }
-
 }

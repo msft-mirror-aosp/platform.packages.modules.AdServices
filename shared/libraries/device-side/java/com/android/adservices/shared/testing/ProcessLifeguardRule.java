@@ -19,7 +19,6 @@ import static com.android.adservices.shared.testing.common.FileHelper.writeFile;
 
 import android.os.Looper;
 
-
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.List;

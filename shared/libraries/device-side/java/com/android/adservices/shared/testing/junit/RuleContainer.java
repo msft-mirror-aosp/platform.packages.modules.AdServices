@@ -36,20 +36,22 @@ import java.util.List;
 public final class RuleContainer {
     private final IdentityHashMap<Object, Integer> mOrderValues =
             new IdentityHashMap<Object, Integer>();
-    private final List<TestRule> testRules = new ArrayList<TestRule>();
-    private final List<MethodRule> methodRules = new ArrayList<MethodRule>();
+    private final List<TestRule> mTestRules = new ArrayList<TestRule>();
+    private final List<MethodRule> mMethodRules = new ArrayList<MethodRule>();
 
     /** Sets order value for the specified rule. */
     public void setOrder(Object rule, int order) {
         mOrderValues.put(rule, order);
     }
 
+    /** Adds a method rule. */
     public void add(MethodRule methodRule) {
-        methodRules.add(methodRule);
+        mMethodRules.add(methodRule);
     }
 
+    /** Adds a test rule. */
     public void add(TestRule testRule) {
-        testRules.add(testRule);
+        mTestRules.add(testRule);
     }
 
     static final Comparator<RuleEntry> ENTRY_COMPARATOR =
@@ -67,12 +69,12 @@ public final class RuleContainer {
     /** Returns entries in the order how they should be applied, i.e. inner-to-outer. */
     private List<RuleEntry> getSortedEntries() {
         List<RuleEntry> ruleEntries =
-                new ArrayList<RuleEntry>(methodRules.size() + testRules.size());
-        for (MethodRule rule : methodRules) {
+                new ArrayList<RuleEntry>(mMethodRules.size() + mTestRules.size());
+        for (MethodRule rule : mMethodRules) {
             ruleEntries.add(
                     new RuleEntry(rule, RuleEntry.TYPE_METHOD_RULE, mOrderValues.get(rule)));
         }
-        for (TestRule rule : testRules) {
+        for (TestRule rule : mTestRules) {
             ruleEntries.add(new RuleEntry(rule, RuleEntry.TYPE_TEST_RULE, mOrderValues.get(rule)));
         }
         Collections.sort(ruleEntries, ENTRY_COMPARATOR);
@@ -82,7 +84,7 @@ public final class RuleContainer {
     /** Applies all the rules ordered accordingly to the specified {@code statement}. */
     public Statement apply(
             FrameworkMethod method, Description description, Object target, Statement statement) {
-        if (methodRules.isEmpty() && testRules.isEmpty()) {
+        if (mMethodRules.isEmpty() && mTestRules.isEmpty()) {
             return statement;
         }
         Statement result = statement;
@@ -108,13 +110,13 @@ public final class RuleContainer {
         return result;
     }
 
-    static class RuleEntry {
+    static final class RuleEntry {
         static final int TYPE_TEST_RULE = 1;
         static final int TYPE_METHOD_RULE = 0;
 
-        final Object rule;
-        final int type;
-        final int order;
+        public final Object rule;
+        public final int type;
+        public final int order;
 
         RuleEntry(Object rule, int type, Integer order) {
             this.rule = rule;

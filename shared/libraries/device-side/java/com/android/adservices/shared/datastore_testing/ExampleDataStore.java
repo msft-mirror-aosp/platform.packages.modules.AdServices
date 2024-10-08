@@ -33,7 +33,7 @@ import java.util.function.Function;
 final class ExampleDataStore {
     private final GuavaDataStore<ExampleDatastoreProto> mDataStore;
 
-    public ExampleDataStore(String fileName) {
+    ExampleDataStore(String fileName) {
         mDataStore =
                 new GuavaDataStore.Builder<ExampleDatastoreProto>(
                                 ApplicationContextSingleton.get(),

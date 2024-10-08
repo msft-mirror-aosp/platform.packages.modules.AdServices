@@ -156,11 +156,11 @@ public abstract class SidelessTestCase implements TestNamer {
         }
 
         StringBuilder violationsBuilder = new StringBuilder();
-            for (String name : names) {
+        for (String name : names) {
             if (iHaveThisField(name)) {
-                    violationsBuilder.append(' ').append(name);
-                }
+                violationsBuilder.append(' ').append(name);
             }
+        }
         String violations = violationsBuilder.toString();
         if (violations.isEmpty()) {
             return;

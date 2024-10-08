@@ -69,6 +69,8 @@ import java.util.Set;
  * Rule used to properly set "Android flags"- it will take care of permissions, restoring values at
  * the end, setting {@link android.provider.DeviceConfig} or {@link android.os.SystemProperties},
  * etc...
+ *
+ * @param <T> type of the concrete rule
  */
 public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<T>>
         extends AbstractRethrowerRule {
