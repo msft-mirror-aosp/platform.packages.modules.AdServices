@@ -53,8 +53,6 @@ public final class AndroidSdk {
      */
     public static final int PRE_T = SC_V2;
 
-
-
     // TODO(b/324919960): make it package-protected again or make sure it's unit tested.
     /** Represents a specific SDK level. */
     public enum Level {

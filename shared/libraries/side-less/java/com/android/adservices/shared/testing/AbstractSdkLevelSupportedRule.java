@@ -342,5 +342,4 @@ public abstract class AbstractSdkLevelSupportedRule implements TestRule {
     public String toString() {
         return getClass().getSimpleName() + "[mDefaultRequiredRange=" + mDefaultRequiredRange + "]";
     }
-
 }

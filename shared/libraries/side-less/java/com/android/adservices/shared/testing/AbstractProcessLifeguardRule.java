@@ -201,11 +201,7 @@ public abstract class AbstractProcessLifeguardRule extends AbstractRule {
                 switch (mMode) {
                     case FAIL:
                         throw newUncaughtBackgroundException(
-                                testName,
-                                thread,
-                                sAllTestsSoFar,
-                                lastTests,
-                                uncaughtThrowable);
+                                testName, thread, sAllTestsSoFar, lastTests, uncaughtThrowable);
                     case IGNORE:
                         ignoreUncaughtBackgroundException(
                                 testName, thread, sAllTestsSoFar, lastTests, uncaughtThrowable);

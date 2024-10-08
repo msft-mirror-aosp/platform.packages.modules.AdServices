@@ -128,6 +128,7 @@ public final class DeviceConfigHelper {
                 + mLog
                 + "]";
     }
+
     // TODO(b/294423183): temporarily exposed as it's used by legacy helper methods on
     // AdServicesFlagsSetterRule
     String get(String name) {

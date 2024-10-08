@@ -72,11 +72,11 @@ public class SafeAndroidJUnitRunner extends EasilyExtensibleBlockJUnit4ClassRunn
 
     private static final class SafeTestClass extends TestClass {
 
-        public SafeTestClass(Class<?> clazz) {
+        SafeTestClass(Class<?> clazz) {
             super(clazz);
         }
 
-        public SafeTestClass(TestClass testClass) {
+        SafeTestClass(TestClass testClass) {
             this(testClass.getJavaClass());
         }
 

@@ -237,7 +237,11 @@ public final class TestDeviceHelper {
         }
     }
 
-    /** Abstraction for a command that returns a result. */
+    /**
+     * Abstraction for a command that returns a result.
+     *
+     * @param <T> type of command
+     */
     public interface Command<T> {
         /** Run Forrest, run! */
         T run(ITestDevice device) throws DeviceNotAvailableException;

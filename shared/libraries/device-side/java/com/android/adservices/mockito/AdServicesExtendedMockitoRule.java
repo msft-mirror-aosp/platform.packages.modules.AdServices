@@ -80,13 +80,13 @@ public final class AdServicesExtendedMockitoRule
     }
 
     @Override
-    public final String getTestName() {
+    public String getTestName() {
         return mTestName;
     }
 
     // Overridden to get test name
     @Override
-    public final Statement apply(Statement base, Description description) {
+    public Statement apply(Statement base, Description description) {
         Statement realStatement = super.apply(base, description);
         return new Statement() {
 
@@ -103,21 +103,21 @@ public final class AdServicesExtendedMockitoRule
     }
 
     @Override
-    protected final Set<Class<?>> getSpiedStaticClasses(Description description) {
+    protected Set<Class<?>> getSpiedStaticClasses(Description description) {
         Set<Class<?>> spiedStaticClasses = super.getSpiedStaticClasses(description);
         mSpiedOrMockedStaticClasses.addAll(spiedStaticClasses);
         return spiedStaticClasses;
     }
 
     @Override
-    protected final Set<Class<?>> getMockedStaticClasses(Description description) {
+    protected Set<Class<?>> getMockedStaticClasses(Description description) {
         Set<Class<?>> mockedStaticClasses = super.getMockedStaticClasses(description);
         mSpiedOrMockedStaticClasses.addAll(mockedStaticClasses);
         return mockedStaticClasses;
     }
 
     @Override
-    protected final boolean getClearInlineMethodsAtTheEnd(Description description) {
+    protected boolean getClearInlineMethodsAtTheEnd(Description description) {
         ClearInlineMocksMode annotation = getAnnotation(description, ClearInlineMocksMode.class);
         if (annotation != null) {
             boolean shouldClear = shouldClearInlineMocksAfterTest(description, annotation.value());

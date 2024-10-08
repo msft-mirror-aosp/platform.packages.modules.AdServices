@@ -40,7 +40,6 @@ public class FutureSyncCallback<T> extends FailableResultSyncCallback<T, Throwab
     @Override
     public void onSuccess(T result) {
         injectResult(result);
-
     }
 
     @Override
