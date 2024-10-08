@@ -31,6 +31,8 @@ import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.utils.CustomAudienceTestFixture;
 
+import androidx.test.filters.FlakyTest;
+
 import com.android.adservices.common.AdServicesShellCommandHelper;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.annotations.SetPpapiAppAllowList;
@@ -99,6 +101,7 @@ public final class CustomAudienceShellCommandsE2ETest extends ForegroundDebuggab
     }
 
     @Test
+    @FlakyTest(bugId = 371644277)
     public void testRun_listCustomAudience_happyPath() throws Exception {
         mCustomAudienceTestFixture.joinCustomAudience(mShirtsCustomAudience);
         mCustomAudienceTestFixture.joinCustomAudience(mShoesCustomAudience);
@@ -135,6 +138,7 @@ public final class CustomAudienceShellCommandsE2ETest extends ForegroundDebuggab
     }
 
     @Test
+    @FlakyTest(bugId = 371644277)
     public void testRun_viewCustomAudience_happyPath() throws Exception {
         mCustomAudienceTestFixture.joinCustomAudience(mShirtsCustomAudience);
 
@@ -153,6 +157,7 @@ public final class CustomAudienceShellCommandsE2ETest extends ForegroundDebuggab
     }
 
     @Test
+    @FlakyTest(bugId = 371644277)
     public void testRun_refreshCustomAudiences_verifyNoCustomAudienceChanged() {
         CommandResult commandResult =
                 mShellCommandHelper.runCommandRwe(

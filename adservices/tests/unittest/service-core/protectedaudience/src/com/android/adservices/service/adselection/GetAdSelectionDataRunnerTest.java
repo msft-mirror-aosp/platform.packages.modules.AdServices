@@ -85,6 +85,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGenerator;
@@ -141,6 +142,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 @SpyStatic(FlagsFactory.class)
+@SpyStatic(DebugFlags.class)
 @MockStatic(PackageManagerCompatUtils.class)
 @SpyStatic(AssetFileDescriptorUtil.class)
 @RequiresSdkLevelAtLeastS
@@ -197,8 +199,9 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
     @Mock private AuctionServerDebugReporting mAuctionServerDebugReporting;
     private GetAdSelectionDataRunner mGetAdSelectionDataRunner;
 
-    @Mock private com.android.adservices.shared.util.Clock
-            mFledgeAuctionServerExecutionLoggerClockMock;
+    @Mock
+    private com.android.adservices.shared.util.Clock mFledgeAuctionServerExecutionLoggerClockMock;
+
     private AdsRelevanceExecutionLoggerFactory mAdsRelevanceExecutionLoggerFactory;
     private AdsRelevanceExecutionLogger mAdsRelevanceExecutionLogger;
 
@@ -211,6 +214,8 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
     @Before
     public void setup() throws Exception {
         mFakeFlags = new GetAdSelectionDataRunnerTestFlags();
+        mocker.mockGetDebugFlags(mMockDebugFlags);
+        mocker.mockGetConsentNotificationDebugMode(false);
         mMultiCloudSupportStrategyFlagOff =
                 MultiCloudTestStrategyFactory.getDisabledTestStrategy(mObliviousHttpEncryptorMock);
         mMultiCloudSupportStrategyFlagOn =
@@ -317,15 +322,9 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
     @Test
     public void testRunner_getAdSelectionData_returnsSuccessWithUXNotificationEnforcementDisabled()
             throws Exception {
-        Flags flagsWithoutUxNotificationEnforcement =
-                new GetAdSelectionDataRunnerTestFlags() {
-                    @Override
-                    public boolean getConsentNotificationDebugMode() {
-                        return true;
-                    }
-                };
+        mocker.mockGetConsentNotificationDebugMode(true);
 
-        mocker.mockGetFlags(flagsWithoutUxNotificationEnforcement);
+        mocker.mockGetFlags(mFakeFlags);
         doReturn(FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))
                 .when(mObliviousHttpEncryptorMock)
                 .encryptBytes(any(), anyLong(), anyLong(), any(), any());
@@ -340,7 +339,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                         .build();
 
         GetAdSelectionDataRunner getAdSelectionDataRunner =
-                initRunner(flagsWithoutUxNotificationEnforcement, mAdsRelevanceExecutionLogger);
+                initRunner(mFakeFlags, mAdsRelevanceExecutionLogger);
 
         GetAdSelectionDataTestCallback callback =
                 invokeGetAdSelectionData(getAdSelectionDataRunner, inputParams);
@@ -1421,6 +1420,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                         BLOCKING_EXECUTOR,
                         mScheduledExecutor,
                         shortTimeoutFlags,
+                        mMockDebugFlags,
                         CALLER_UID,
                         DevContext.createForDevOptionsDisabled(),
                         mAuctionServerDebugReporting,
@@ -1487,6 +1487,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                 BLOCKING_EXECUTOR,
                 mScheduledExecutor,
                 flags,
+                mMockDebugFlags,
                 CALLER_UID,
                 DevContext.createForDevOptionsDisabled(),
                 mClockMock,
@@ -1581,11 +1582,6 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
         @Override
         public boolean getFledgeAuctionServerKeyFetchMetricsEnabled() {
             return FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED_IN_TEST;
-        }
-
-        @Override
-        public boolean getConsentNotificationDebugMode() {
-            return false;
         }
     }
 
