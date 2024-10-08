@@ -23,6 +23,7 @@ import android.os.Process;
 
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
@@ -56,6 +57,7 @@ public class EventReporterFactoryTest {
     @Mock private MeasurementImpl mMeasurementServiceMock;
     @Mock private ConsentManager mConsentManagerMock;
     @Mock private Context mContextMock;
+    @Mock private DebugFlags mDebugFlags;
 
     @Rule(order = 0)
     public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
@@ -134,6 +136,7 @@ public class EventReporterFactoryTest {
                         mBackgroundExecutorService,
                         mAdServicesLoggerMock,
                         flags,
+                        mDebugFlags,
                         mAdSelectionServiceFilterMock,
                         MY_UID,
                         mFledgeAuthorizationFilterMock,

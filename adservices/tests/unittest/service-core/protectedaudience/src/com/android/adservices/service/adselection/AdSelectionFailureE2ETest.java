@@ -87,6 +87,7 @@ import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.shared.SharedDbHelper;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adid.AdIdCacheManager;
@@ -108,7 +109,7 @@ import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.NoOpLoggerImpl;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.concurrency.FailableOnResultSyncCallback;
-import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -136,7 +137,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 @RequiresSdkLevelAtLeastS(reason = "Ad Selection is only enabled for S+ devices")
-@MockStatic(FlagsFactory.class)
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(DebugFlags.class)
 public final class AdSelectionFailureE2ETest extends AdServicesExtendedMockitoTestCase {
 
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -254,6 +256,8 @@ public final class AdSelectionFailureE2ETest extends AdServicesExtendedMockitoTe
                 WebViewSupportUtil.isJSSandboxAvailable(mContext));
         mFakeFlags = new AdSelectionFailureE2ETestFlags();
         mocker.mockGetFlags(mFakeFlags);
+        mocker.mockGetDebugFlags(mMockDebugFlags);
+        mocker.mockGetConsentNotificationDebugMode(false);
         mAdSelectionEntryDao =
                 Room.inMemoryDatabaseBuilder(mSpyContext, AdSelectionDatabase.class)
                         .build()
@@ -436,6 +440,7 @@ public final class AdSelectionFailureE2ETest extends AdServicesExtendedMockitoTe
                         mSpyContext,
                         mAdServicesLogger,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mMockAdSelectionServiceFilter,
@@ -527,6 +532,7 @@ public final class AdSelectionFailureE2ETest extends AdServicesExtendedMockitoTe
                         mContext,
                         mAdServicesLogger,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mMockAdSelectionServiceFilter,
@@ -728,11 +734,6 @@ public final class AdSelectionFailureE2ETest extends AdServicesExtendedMockitoTe
         @Override
         public long getFledgeAdSelectionBiddingLogicJsVersion() {
             return mBiddingLogicVersion;
-        }
-
-        @Override
-        public boolean getConsentNotificationDebugMode() {
-            return false;
         }
     }
 }

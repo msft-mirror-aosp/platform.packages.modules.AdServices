@@ -15,8 +15,6 @@
  */
 package com.android.adservices.shared.testing.flags;
 
-import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest.UNSUPPORTED;
-
 import com.android.adservices.shared.testing.AbstractRule;
 import com.android.adservices.shared.testing.Logger.RealLogger;
 import com.android.adservices.shared.testing.TestHelper;
@@ -28,8 +26,6 @@ import com.google.common.annotations.VisibleForTesting;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
-import java.util.Objects;
-
 /**
  * A rule used to prepare the Flags before a test class is executed.
  *
@@ -38,19 +34,14 @@ import java.util.Objects;
  */
 public abstract class AbstractFlagsPreparerClassRule extends AbstractRule {
 
-    private final DeviceConfig mDeviceConfig;
-    // TODO(b/362977985): it should be more generic and use reversible commands instead.
-    private final SyncDisabledModeForTest mMode;
+    // TODO(b/362977985): it should be more generic and have a list of actions instead, so it could
+    // create other actions based on annotations
+    private final Action mSetSyncModeAction;
 
     protected AbstractFlagsPreparerClassRule(
             RealLogger logger, DeviceConfig deviceConfig, SyncDisabledModeForTest mode) {
         super(logger);
-
-        mDeviceConfig = Objects.requireNonNull(deviceConfig, "deviceConfig cannot be null");
-        mMode = Objects.requireNonNull(mode, "mode cannot be null");
-        if (mode.equals(UNSUPPORTED)) {
-            throw new IllegalArgumentException("invalid mode: " + mode);
-        }
+        mSetSyncModeAction = new SafeAction(mLog, new SetSyncModeAction(mLog, deviceConfig, mode));
     }
 
     // TODO(b/370596037): should be protected, but it's used by
@@ -60,37 +51,11 @@ public abstract class AbstractFlagsPreparerClassRule extends AbstractRule {
     public final void evaluate(Statement base, Description description) throws Throwable {
         TestHelper.throwIfTest(description);
 
-        SyncDisabledModeForTest modeBefore = null;
-        try {
-            modeBefore = mDeviceConfig.getSyncDisabledMode();
-            mLog.d("Sync mode before %s: %s", getTestName(), modeBefore);
-        } catch (Exception e) {
-            mLog.e(e, "Failed to get Sync mode before %s", getTestName());
-        }
-
-        boolean set = false;
-        if (mMode.equals(modeBefore)) {
-            mLog.d("Not setting sync mode as it's already %s", mMode);
-        } else {
-            set = safeSetSyncMode(mMode);
-        }
-
+        mSetSyncModeAction.execute();
         try {
             base.evaluate();
         } finally {
-            if (set) {
-                safeSetSyncMode(modeBefore);
-            }
-        }
-    }
-
-    private boolean safeSetSyncMode(SyncDisabledModeForTest mode) {
-        try {
-            mDeviceConfig.setSyncDisabledMode(mode);
-            return true;
-        } catch (Exception e) {
-            mLog.e(e, "Failed to set sync mode to %s", mode);
-            return false;
+            mSetSyncModeAction.revert();
         }
     }
 }
