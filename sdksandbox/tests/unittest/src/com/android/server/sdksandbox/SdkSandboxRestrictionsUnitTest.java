@@ -1007,8 +1007,9 @@ public class SdkSandboxRestrictionsUnitTest extends DeviceSupportedBaseTest {
                                 /* onlyProtectedBroadcasts= */ false))
                 .isFalse();
 
-        Mockito.when(mSdkSandboxRestrictionManager.getEffectiveTargetSdkVersion(Mockito.anyInt()))
-                .thenReturn(35);
+        Mockito.doReturn(35)
+                .when(mSdkSandboxRestrictionManager)
+                .getEffectiveTargetSdkVersion(Mockito.anyInt());
         expect.that(
                         mSdkSandboxManagerLocal.canRegisterBroadcastReceiver(
                                 new IntentFilter(Intent.ACTION_SCREEN_OFF),
