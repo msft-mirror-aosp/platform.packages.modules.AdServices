@@ -516,6 +516,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getCobaltEnableApiCallResponseLogging() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_COBALT__ENABLE_API_CALL_RESPONSE_LOGGING,
+                COBALT__FALL_BACK_TO_DEFAULT_BASE_REGISTRY);
+    }
+
+    @Override
     @SuppressWarnings("AvoidSystemPropertiesUsage")
     // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public long getMaintenanceJobPeriodMs() {

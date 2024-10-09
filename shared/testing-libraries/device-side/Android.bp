@@ -1,0 +1,225 @@
+// Copyright (C) 2024 The Android Open Source Project
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+java_library {
+    name: "adservices-shared-testing",
+    min_sdk_version: "30",
+    sdk_version: "module_current",
+    srcs: [
+        "java/com/android/adservices/shared/testing/**/*.java",
+        ":adservices-shared-sideless-testing-sources",
+    ],
+    static_libs: [
+        // TODO(b/345219434): use defaults instead?
+        "mockito-target-extended-minus-junit4",
+        "adservices-shared-common",
+        "adservices-shared-util",
+        "androidx.test.core",
+        "framework-annotations-lib", // @VisibleForTesting
+        "junit",
+        "ravenwood-junit",
+        "truth",
+    ],
+    libs: [
+        "framework-connectivity.stubs.module_lib",
+    ],
+    visibility: [
+        "//packages/modules/AdServices:__subpackages__",
+        "//packages/modules/ExtServices:__subpackages__",
+        "//packages/modules/OnDevicePersonalization:__subpackages__",
+    ],
+    apex_available: [
+        "com.android.adservices",
+        "com.android.extservices",
+        "com.android.ondevicepersonalization",
+    ],
+    lint: {
+        extra_check_modules: ["AdServicesProdLintChecker"],
+    },
+}
+
+java_library {
+    name: "adservices-shared-static-class-checker",
+    min_sdk_version: "30",
+    sdk_version: "module_current",
+    srcs: [
+        "java/com/android/adservices/mockito/StaticClassChecker.java",
+        ":adservices-shared-sideless-testing-TestNamer-sources",
+    ],
+    static_libs: [
+        "guava", // for ImmutableSet
+    ],
+    visibility: [
+        "//packages/modules/AdServices:__subpackages__",
+        "//packages/modules/ExtServices:__subpackages__",
+        "//packages/modules/OnDevicePersonalization:__subpackages__",
+    ],
+    lint: {
+        extra_check_modules: ["AdServicesProdLintChecker"],
+    },
+}
+
+java_library {
+    name: "adservices-shared-mockito-expectations",
+    min_sdk_version: "30",
+    sdk_version: "module_current",
+    srcs: [
+        // TODO(b/338132355): might be better to split into separate mockers:
+
+        // Base classes
+        "java/com/android/adservices/mockito/AbstractMocker.java",
+        "java/com/android/adservices/mockito/AbstractStaticMocker.java",
+        "java/com/android/adservices/mockito/StaticClassChecker.java",
+
+        // AndroidMocker
+        "java/com/android/adservices/mockito/AndroidMocker.java",
+        "java/com/android/adservices/mockito/AndroidMockitoMocker.java",
+
+        // AndroidStaticMocker
+        "java/com/android/adservices/mockito/AndroidStaticMocker.java",
+        "java/com/android/adservices/mockito/AndroidExtendedMockitoMocker.java",
+        "java/com/android/adservices/mockito/LogInterceptor.java",
+
+        // SharedMocker
+        "java/com/android/adservices/mockito/SharedMocker.java",
+        "java/com/android/adservices/mockito/SharedMockitoMocker.java",
+    ],
+    libs: [
+        "framework-annotations-lib", // for @Nullable
+    ],
+    static_libs: [
+        "adservices-shared-static-class-checker",
+        "error_prone_annotations", // for @FormatMethod
+        "modules-utils-build", // for SdkLevel
+        "mockito-target-extended-minus-junit4",
+        "modules-utils-preconditions",
+
+        // TODO(b/338132355): might be better to split into separate mockers
+
+        // Need by SharedMocker.java
+        "adservices-shared-common",
+        "adservices-shared-spe",
+        "adservices-shared-testing",
+
+        // Need by AndroidStaticMocker.java
+        // "adservices-shared-testing",
+    ],
+    visibility: [
+        "//packages/modules/AdServices:__subpackages__",
+        "//packages/modules/ExtServices:__subpackages__",
+        "//packages/modules/OnDevicePersonalization:__subpackages__",
+    ],
+    apex_available: [
+        "com.android.adservices",
+        "com.android.extservices",
+        "com.android.ondevicepersonalization",
+    ],
+    lint: {
+        extra_check_modules: ["AdServicesProdLintChecker"],
+    },
+}
+
+filegroup {
+    name: "adservices-shared-extended-mockito-rule-sources",
+    srcs: [
+        "java/com/android/adservices/mockito/AdServicesExtendedMockitoRule.java",
+        "java/com/android/adservices/mockito/ExtendedMockitoInlineCleanerRule.java",
+    ],
+    path: "java",
+    visibility: [
+        "//packages/modules/AdServices:__subpackages__",
+        "//packages/modules/ExtServices:__subpackages__",
+        "//packages/modules/OnDevicePersonalization:__subpackages__",
+    ],
+}
+
+// NOTE: it does not include TestableDeviceConfig
+java_defaults {
+    name: "adservices-shared-extended-mockito-defaults",
+    srcs: [
+        ":adservices-shared-extended-mockito-rule-sources",
+    ],
+    static_libs: [
+        "adservices-shared-static-class-checker",
+    ],
+    // TODO(b/345219434): change it back to
+    // modules-utils-extended-mockito-rule-defaults once it have
+    // compile_multilib: "both",
+    defaults: ["modules-utils-testable-device-config-defaults"],
+    visibility: [
+        "//packages/modules/AdServices:__subpackages__",
+        "//packages/modules/ExtServices:__subpackages__",
+        "//packages/modules/OnDevicePersonalization:__subpackages__",
+    ],
+}
+
+// Note: This lib contains an example for datastore usage which is used for testing the proto data
+// store. This should be not added as a production code dependency.
+java_library {
+    name: "adservices-datastore_testing",
+    sdk_version: "module_current",
+    proto: {
+        type: "lite",
+        include_dirs: [
+            "external/protobuf/java",
+            "external/protobuf/src",
+        ],
+        canonical_path_from_root: false, // Use relative path instead of Android root
+    },
+    srcs: [
+        "java/com/android/adservices/shared/datastore_testing/*.java",
+        "java/com/android/adservices/shared/datastore_testing/*.proto",
+        ":libprotobuf-internal-protos",
+    ],
+    static_libs: [
+        "adservices-shared-common",
+        "adservices-shared-datastore",
+    ],
+    visibility: [
+        "//packages/modules/AdServices/shared/tests:__subpackages__",
+    ],
+    lint: {
+        extra_check_modules: ["AdServicesProdLintChecker"],
+    },
+}
+
+// Shared test classes used to test shared test classes - Malkovich!
+filegroup {
+    name: "adservices-shared-device-side-meta-testing-sources",
+    srcs: [
+        "java/com/android/adservices/shared/meta_testing/**/*.java",
+    ],
+    visibility: [
+        "//packages/modules/AdServices/shared/tests:__subpackages__",
+        // Explicitly add each package below - don't use __subpackages__
+        "//packages/modules/AdServices/adservices/tests/unittest/adservices-test-utility",
+    ],
+}
+
+// Shared test classes used to test shared test classes - Malkovich!
+filegroup {
+    name: "adservices-shared-device-side-flags-meta-testing-sources",
+    srcs: [
+        "java/com/android/adservices/shared/meta_testing/FlagsTestLittleHelper.java",
+    ],
+    visibility: [
+        "//packages/modules/AdServices/shared/tests:__subpackages__",
+        // Explicitly add each package below - don't use __subpackages__
+        "//packages/modules/AdServices/adservices/tests/unittest/service-core",
+    ],
+}

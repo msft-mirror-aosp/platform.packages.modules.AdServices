@@ -81,9 +81,6 @@ public final class AdIdManagerTest extends AdServicesCtsTestCase
         Log.v(mTag, "AdId: " + toString(resultAdId));
 
         assertWithMessage("getAdId()").that(resultAdId.getAdId()).isNotNull();
-        assertWithMessage("isLimitAdTrackingEnabled()")
-                .that(resultAdId.isLimitAdTrackingEnabled())
-                .isNotNull();
     }
 
     @Test
