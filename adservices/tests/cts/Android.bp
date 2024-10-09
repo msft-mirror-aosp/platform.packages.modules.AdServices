@@ -276,7 +276,7 @@ android_test {
         "auto_value_annotations",
     ],
     sdk_version: "module_current",
-    min_sdk_version: "30",
+    min_sdk_version: "31",
     max_sdk_version: "32",
     test_config: "AndroidTestDebuggable.ExtServices.xml",
     manifest: "AndroidManifestDebuggableExtServices.xml",
@@ -327,5 +327,5 @@ android_library {
     // If we use the normal "AndroidManifest.xml", we will redeclare permissions in the tests.
     // See b/228270294 for detail on duplicate permissions error.
     manifest: "EmptyManifest.xml",
-    min_sdk_version: "30",
+    min_sdk_version: "31",
 }
