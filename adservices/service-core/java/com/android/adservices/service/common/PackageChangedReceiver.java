@@ -86,6 +86,7 @@ public class PackageChangedReceiver extends BroadcastReceiver {
     private static boolean sFrequencyCapFilteringEnabled;
     private static boolean sAppInstallFilteringEnabled;
     private static boolean sProtectedSignalsCleanupEnabled;
+    private static boolean sScheduleCustomAudienceEnabled;
 
     private static final Object LOCK = new Object();
 
@@ -108,6 +109,8 @@ public class PackageChangedReceiver extends BroadcastReceiver {
                     BinderFlagReader.readFlag(flags::getFledgeAppInstallFilteringEnabled);
             sProtectedSignalsCleanupEnabled =
                     BinderFlagReader.readFlag(flags::getProtectedSignalsCleanupEnabled);
+            sScheduleCustomAudienceEnabled =
+                    BinderFlagReader.readFlag(flags::getFledgeScheduleCustomAudienceUpdateEnabled);
             try {
                 context.getPackageManager()
                         .setComponentEnabledSetting(
@@ -286,9 +289,7 @@ public class PackageChangedReceiver extends BroadcastReceiver {
                         getCustomAudienceDatabase(context)
                                 .customAudienceDao()
                                 .deleteCustomAudienceDataByOwner(
-                                        packageUri.toString(),
-                                        FlagsFactory.getFlags()
-                                                .getFledgeFetchCustomAudienceEnabled()));
+                                        packageUri.toString(), sScheduleCustomAudienceEnabled));
         if (sFrequencyCapFilteringEnabled) {
             LogUtil.d("Deleting frequency cap histogram data for package: " + packageUri);
             sBackgroundExecutor.execute(
