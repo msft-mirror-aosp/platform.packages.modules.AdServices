@@ -42,6 +42,7 @@ import static com.android.adservices.service.Flags.COBALT_LOGGING_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.COBALT_OPERATIONAL_LOGGING_ENABLED;
 import static com.android.adservices.service.Flags.COBALT_REGISTRY_OUT_OF_BAND_UPDATE_ENABLED;
 import static com.android.adservices.service.Flags.COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS;
+import static com.android.adservices.service.Flags.COBALT__ENABLE_API_CALL_RESPONSE_LOGGING;
 import static com.android.adservices.service.Flags.COBALT__FALL_BACK_TO_DEFAULT_BASE_REGISTRY;
 import static com.android.adservices.service.Flags.COBALT__IGNORED_REPORT_ID_LIST;
 import static com.android.adservices.service.Flags.COMPAT_LOGGING_KILL_SWITCH;
@@ -582,6 +583,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_COBALT_LOGGING_J
 import static com.android.adservices.service.FlagsConstants.KEY_COBALT_OPERATIONAL_LOGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_COBALT_REGISTRY_OUT_OF_BAND_UPDATE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_COBALT__ENABLE_API_CALL_RESPONSE_LOGGING;
 import static com.android.adservices.service.FlagsConstants.KEY_COBALT__FALL_BACK_TO_DEFAULT_BASE_REGISTRY;
 import static com.android.adservices.service.FlagsConstants.KEY_COBALT__IGNORED_REPORT_ID_LIST;
 import static com.android.adservices.service.FlagsConstants.KEY_COMPAT_LOGGING_KILL_SWITCH;
@@ -1404,6 +1406,14 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_COBALT__IGNORED_REPORT_ID_LIST,
                 COBALT__IGNORED_REPORT_ID_LIST,
                 Flags::getCobaltIgnoredReportIdList);
+    }
+
+    @Test
+    public void testGetCobaltEnableApiCallResponseLogging() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_COBALT__ENABLE_API_CALL_RESPONSE_LOGGING,
+                COBALT__ENABLE_API_CALL_RESPONSE_LOGGING,
+                Flags::getCobaltEnableApiCallResponseLogging);
     }
 
     @Test
