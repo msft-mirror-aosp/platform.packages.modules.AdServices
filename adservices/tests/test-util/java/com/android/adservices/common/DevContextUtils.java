@@ -32,7 +32,7 @@ import java.util.Objects;
 
 public class DevContextUtils {
 
-    private static final boolean IS_DEBUGGABLE_BUILD = computeIsDebuggableBuild();
+    private static final boolean IS_DEBUGGABLE_BUILD = Build.isDebuggable();
 
     /** Method to check if Dev Options are enabled based on DevContext. */
     public static boolean isDevOptionsEnabled(Context context, String logTag) {
@@ -144,9 +144,5 @@ public class DevContextUtils {
                             possibleAppPackages.length, possibleAppPackages[0]));
         }
         return possibleAppPackages[0];
-    }
-
-    private static boolean computeIsDebuggableBuild() {
-        return Build.isDebuggable();
     }
 }
