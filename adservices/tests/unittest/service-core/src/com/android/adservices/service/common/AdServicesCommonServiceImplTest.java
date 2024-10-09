@@ -34,6 +34,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -60,6 +61,7 @@ import android.adservices.common.IRequestAdServicesModuleOverridesCallback;
 import android.adservices.common.IRequestAdServicesModuleUserChoicesCallback;
 import android.adservices.common.IUpdateAdIdCallback;
 import android.adservices.common.IsAdServicesEnabledResult;
+import android.adservices.common.Module;
 import android.adservices.common.NotificationType;
 import android.adservices.common.UpdateAdIdRequest;
 import android.content.ComponentName;
@@ -987,8 +989,12 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
                 new RequestAdServicesModuleOverridesCallback(BINDER_CONNECTION_TIMEOUT_MS);
         List<AdServicesModuleState> adServicesModuleStates =
                 List.of(
-                        new AdServicesModuleState.Builder().setModule(1).setModuleState(2).build(),
-                        new AdServicesModuleState.Builder().setModule(2).setModuleState(3).build());
+                        new AdServicesModuleState(
+                                Module.PROTECTED_AUDIENCE,
+                                AdServicesModuleState.MODULE_STATE_ENABLED),
+                        new AdServicesModuleState(
+                                Module.PROTECTED_APP_SIGNALS,
+                                AdServicesModuleState.MODULE_STATE_DISABLED));
         mCommonService.requestAdServicesModuleOverrides(
                 adServicesModuleStates, NotificationType.NOTIFICATION_ONGOING, callback);
 
@@ -1009,17 +1015,23 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
                 new RequestAdServicesModuleUserChoicesCallback(BINDER_CONNECTION_TIMEOUT_MS);
         List<AdServicesModuleUserChoice> adServicesModuleUserChoices =
                 List.of(
-                        new AdServicesModuleUserChoice.Builder()
-                                .setModule(1)
-                                .setUserChoice(2)
-                                .build(),
-                        new AdServicesModuleUserChoice.Builder()
-                                .setModule(2)
-                                .setUserChoice(3)
-                                .build());
+                        new AdServicesModuleUserChoice(
+                                Module.PROTECTED_AUDIENCE,
+                                AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN),
+                        new AdServicesModuleUserChoice(
+                                Module.PROTECTED_APP_SIGNALS,
+                                AdServicesModuleUserChoice.USER_CHOICE_OPTED_OUT));
         mCommonService.requestAdServicesModuleUserChoices(adServicesModuleUserChoices, callback);
         callback.assertSuccess();
         verify(mConsentManager, atLeastOnce()).setUserChoices(eq(adServicesModuleUserChoices));
+    }
+
+    @Test
+    public void testInvalidAdServicesEnrollmentInfo() {
+        assertThrows(IllegalArgumentException.class, () -> new AdServicesModuleState(6, 1));
+        assertThrows(IllegalArgumentException.class, () -> new AdServicesModuleState(1, 3));
+        assertThrows(IllegalArgumentException.class, () -> new AdServicesModuleUserChoice(6, 2));
+        assertThrows(IllegalArgumentException.class, () -> new AdServicesModuleUserChoice(5, 4));
     }
 
     private IsAdServicesEnabledResult getStatusResult() throws Exception {
