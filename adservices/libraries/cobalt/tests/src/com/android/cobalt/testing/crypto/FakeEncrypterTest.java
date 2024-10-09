@@ -19,9 +19,10 @@ package com.android.cobalt.testing.crypto;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
-import androidx.test.runner.AndroidJUnit4;
+import com.android.cobalt.crypto.EncryptionFailedException;
 
 import com.google.cobalt.EncryptedMessage;
 import com.google.cobalt.Envelope;
@@ -29,24 +30,28 @@ import com.google.cobalt.Observation;
 import com.google.cobalt.ObservationToEncrypt;
 import com.google.protobuf.ByteString;
 
+import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.util.Optional;
 
-@RunWith(AndroidJUnit4.class)
-public class NoOpEncrypterTest {
+public final class FakeEncrypterTest {
     private static final ByteString CONTRIBUTION_ID =
             ByteString.copyFromUtf8("test_contribution_id");
-    private final NoOpEncrypter mNoOpEncrypter = new NoOpEncrypter();
+    private FakeEncrypter mFakeEncrypter;
+
+    @Before
+    public void setUp() {
+        mFakeEncrypter = new FakeEncrypter();
+    }
 
     @Test
-    public void encryptEnvelope() throws Exception {
+    public void test_encryptEnvelope() throws Exception {
         Envelope envelope =
                 Envelope.newBuilder().setApiKey(ByteString.copyFromUtf8("test_api_key")).build();
 
         // NoOp Encrypt envelope.
-        Optional<EncryptedMessage> encryptionResult = mNoOpEncrypter.encryptEnvelope(envelope);
+        Optional<EncryptedMessage> encryptionResult = mFakeEncrypter.encryptEnvelope(envelope);
         assertTrue(encryptionResult.isPresent());
 
         Envelope noOpEncryptedEnvelope = Envelope.parseFrom(encryptionResult.get().getCiphertext());
@@ -54,7 +59,7 @@ public class NoOpEncrypterTest {
     }
 
     @Test
-    public void encryptObservation() throws Exception {
+    public void test_encryptObservation() throws Exception {
         Observation observation =
                 Observation.newBuilder()
                         .setRandomId(ByteString.copyFromUtf8("test_random_id"))
@@ -62,7 +67,7 @@ public class NoOpEncrypterTest {
 
         // NoOp Encrypt observation.
         Optional<EncryptedMessage> encryptionResult =
-                mNoOpEncrypter.encryptObservation(
+                mFakeEncrypter.encryptObservation(
                         ObservationToEncrypt.newBuilder()
                                 .setObservation(observation)
                                 .setContributionId(CONTRIBUTION_ID)
@@ -76,21 +81,21 @@ public class NoOpEncrypterTest {
     }
 
     @Test
-    public void encryptEmptyEnvelope() {
+    public void test_encryptEmptyEnvelope() {
         Envelope emptyEnvelope = Envelope.newBuilder().build();
 
         // NoOp Encrypt empty envelope.
-        Optional<EncryptedMessage> encryptionResult = mNoOpEncrypter.encryptEnvelope(emptyEnvelope);
+        Optional<EncryptedMessage> encryptionResult = mFakeEncrypter.encryptEnvelope(emptyEnvelope);
         assertFalse(encryptionResult.isPresent());
     }
 
     @Test
-    public void encryptEmptyObservation() {
+    public void test_encryptEmptyObservation() {
         Observation emptyObservation = Observation.newBuilder().build();
 
         // NoOp Encrypt empty observation.
         Optional<EncryptedMessage> encryptionResult =
-                mNoOpEncrypter.encryptObservation(
+                mFakeEncrypter.encryptObservation(
                         ObservationToEncrypt.newBuilder()
                                 .setObservation(emptyObservation)
                                 .setContributionId(CONTRIBUTION_ID)
@@ -99,10 +104,26 @@ public class NoOpEncrypterTest {
 
         // NoOp Encrypt unset observation.
         encryptionResult =
-                mNoOpEncrypter.encryptObservation(
+                mFakeEncrypter.encryptObservation(
                         ObservationToEncrypt.newBuilder()
                                 .setContributionId(CONTRIBUTION_ID)
                                 .build());
         assertFalse(encryptionResult.isPresent());
+    }
+
+    @Test
+    public void test_throwOnEncryptEnvelope() {
+        mFakeEncrypter.setThrowOnEncryptEnvelope();
+        assertThrows(
+                EncryptionFailedException.class,
+                () -> mFakeEncrypter.encryptEnvelope(Envelope.newBuilder().build()));
+    }
+
+    @Test
+    public void test_throwOnEncryptObservation() {
+        mFakeEncrypter.setThrowOnEncryptObservation();
+        assertThrows(
+                EncryptionFailedException.class,
+                () -> mFakeEncrypter.encryptObservation(ObservationToEncrypt.newBuilder().build()));
     }
 }
