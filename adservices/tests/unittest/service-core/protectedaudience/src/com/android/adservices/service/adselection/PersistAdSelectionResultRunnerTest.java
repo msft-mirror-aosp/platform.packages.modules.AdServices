@@ -1860,13 +1860,9 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
         verifyPersistAdSelectionResultApiUsageLog(STATUS_SUCCESS);
     }
 
-
     @Test
-    @ExpectErrorLogUtilCall(
-            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_INTERACTION_URI_EXCEEDS_MAXIMUM_LIMIT,
-            times = 2)
-    public void testRunner_persistResultWithLongInteractionUri_silentReport()
-            throws Exception {
+    @SkipLoggingUsageRule(reason = "Using ErrorLogUtilCallback as logging happens in background.")
+    public void testRunner_persistResultWithLongInteractionUri_silentReport() throws Exception {
         mocker.mockGetFlags(mFakeFlags);
         mockPersistAdSelectionResultWithFledgeAuctionServerExecutionLogger();
 
@@ -1927,8 +1923,28 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
 
+        ErrorLogUtilCallback mErrorLogUtilWithoutThrowableCallbackSync1 =
+                mockErrorLogUtilWithoutThrowable();
+        ErrorLogUtilCallback mErrorLogUtilWithoutThrowableCallbackSync2 =
+                mockErrorLogUtilWithoutThrowable();
+        ErrorLogUtilCallback mErrorLogUtilWithoutThrowableCallbackAsync =
+                mockErrorLogUtilWithoutThrowable();
+
         PersistAdSelectionResultTestCallback callback =
                 invokePersistAdSelectionResult(persistAdSelectionResultRunner, inputParams);
+
+        mErrorLogUtilWithoutThrowableCallbackSync1.assertReceived(
+                expect,
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_INTERACTION_URI_EXCEEDS_MAXIMUM_LIMIT,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
+        mErrorLogUtilWithoutThrowableCallbackSync2.assertReceived(
+                expect,
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_INTERACTION_URI_EXCEEDS_MAXIMUM_LIMIT,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
+        mErrorLogUtilWithoutThrowableCallbackAsync.assertReceived(
+                expect,
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_EMPTY_SUCCESS_SILENT_CONSENT_FAILURE,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
 
         Assert.assertTrue(callback.mIsSuccess);
         Assert.assertEquals(
