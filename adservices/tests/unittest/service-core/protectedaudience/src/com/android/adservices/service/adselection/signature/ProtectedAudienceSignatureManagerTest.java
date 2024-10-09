@@ -38,10 +38,8 @@ import com.android.adservices.service.encryptionkey.EncryptionKey;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.stats.SignatureVerificationLogger;
 import com.android.adservices.service.stats.SignatureVerificationStats;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -71,9 +69,6 @@ public class ProtectedAudienceSignatureManagerTest {
     @Mock private EncryptionKeyDao mEncryptionKeyDaoMock;
     @Mock private SignatureVerificationLogger mSignatureVerificationLoggerMock;
     private ProtectedAudienceSignatureManager mSignatureManager;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {

@@ -20,16 +20,11 @@ import static com.android.adservices.service.adselection.AuctionServerPayloadFor
 import static com.android.adservices.service.adselection.AuctionServerPayloadFormattingUtil.PAYLOAD_FORMAT_VERSION_LENGTH_BITS;
 
 import com.android.adservices.service.Flags;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Assert;
-import org.junit.Rule;
 import org.junit.Test;
 
 public class AuctionServerPayloadFormattingUtilTest {
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Test
     public void testMetaInfoByte_allValidValues_extractedSuccessfully() {
         for (int compressionVersion = 0;

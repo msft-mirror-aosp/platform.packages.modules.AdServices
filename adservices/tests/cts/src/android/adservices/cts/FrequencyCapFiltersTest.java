@@ -27,14 +27,12 @@ import android.adservices.common.KeyedFrequencyCapFixture;
 import android.os.Parcel;
 
 import com.android.adservices.shared.testing.EqualsTester;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
 
 /** Unit tests for {@link FrequencyCapFilters}. */
-@RequiresSdkLevelAtLeastS
 public final class FrequencyCapFiltersTest extends CtsAdServicesDeviceTestCase {
     @Test
     public void testBuildValidFrequencyCapFilters_success() {

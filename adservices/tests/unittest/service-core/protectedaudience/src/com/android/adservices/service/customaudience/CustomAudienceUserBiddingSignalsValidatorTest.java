@@ -31,11 +31,9 @@ import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.CommonFixture;
 
 import com.android.adservices.service.common.JsonValidator;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.collect.ImmutableList;
 
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Locale;
@@ -49,9 +47,6 @@ public class CustomAudienceUserBiddingSignalsValidatorTest {
     private final CustomAudienceUserBiddingSignalsValidator mValidator =
             new CustomAudienceUserBiddingSignalsValidator(
                     mJsonValidator, CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B);
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testConstructor_nullJsonValidator_throws() {
