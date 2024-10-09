@@ -64,18 +64,18 @@ public class RestrictionsSandboxedSdkProvider extends SandboxedSdkProvider {
         public void getContentProvider() {
             mContentResolver.query(
                     UserDictionary.Words.CONTENT_URI,
-                    /*projectionName=*/ null,
-                    /*queryArgs=*/ null,
-                    /*cancellationSignal=*/ null);
+                    /* projectionName= */ null,
+                    /* queryArgs= */ null,
+                    /* cancellationSignal= */ null);
         }
 
         @Override
         public void getContentProviderByAuthority(String authority) {
             mContentResolver.query(
                     Uri.parse("content://" + authority),
-                    /*projectionName=*/ null,
-                    /*queryArgs=*/ null,
-                    /*cancellationSignal=*/ null);
+                    /* projectionName= */ null,
+                    /* queryArgs= */ null,
+                    /* cancellationSignal= */ null);
         }
 
         @Override
@@ -83,7 +83,7 @@ public class RestrictionsSandboxedSdkProvider extends SandboxedSdkProvider {
             final ContentObserver observer =
                     new ContentObserver(new Handler(Looper.getMainLooper())) {};
             mContentResolver.registerContentObserver(
-                    UserDictionary.Words.CONTENT_URI, /*notifyForDescendants=*/ true, observer);
+                    UserDictionary.Words.CONTENT_URI, /* notifyForDescendants= */ true, observer);
         }
     }
 

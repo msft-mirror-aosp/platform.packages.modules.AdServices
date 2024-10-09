@@ -189,8 +189,10 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
                         mPreTestSystemProperties.addAll(
                                 mSystemProperties.getAll(mSystemPropertiesMatcher)));
 
-        setAnnotatedFlags(description);
+        // TODO(b/297085722): Call runInitialCommands before setAnnotatedFlags so that
+        // SyncDisabledModeForTest.Persistent is set before the annotated flags are set.
         runInitialCommands(testName);
+        setAnnotatedFlags(description);
     }
 
     @Override

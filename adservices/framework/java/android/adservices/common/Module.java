@@ -18,7 +18,6 @@ package android.adservices.common;
 
 import android.annotation.FlaggedApi;
 import android.annotation.IntDef;
-import android.annotation.SystemApi;
 
 import com.android.adservices.flags.Flags;
 
@@ -33,7 +32,6 @@ import java.lang.annotation.RetentionPolicy;
  *
  * @hide
  */
-@SystemApi
 @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
 public final class Module {
 
@@ -74,4 +72,24 @@ public final class Module {
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface ModuleCode {}
+
+    /**
+     * Validates a module.
+     *
+     * @param module module to validate
+     * @return module
+     */
+    @ModuleCode
+    static int validate(@ModuleCode int module) {
+        return switch (module) {
+            case ADID,
+                            MEASUREMENT,
+                            ON_DEVICE_PERSONALIZATION,
+                            PROTECTED_APP_SIGNALS,
+                            PROTECTED_AUDIENCE,
+                            TOPICS ->
+                    module;
+            default -> throw new IllegalArgumentException("Invalid Module Code:" + module);
+        };
+    }
 }

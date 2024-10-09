@@ -4804,49 +4804,38 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
             ConsentManager spyConsentManager, int consentSourceOfTruth) throws RemoteException {
         EnrollmentData data = EnrollmentData.deserialize("");
         AdServicesModuleState moduleState =
-                new AdServicesModuleState.Builder()
-                        .setModule(Module.TOPICS)
-                        .setModuleState(AdServicesModuleState.MODULE_STATE_DISABLED)
-                        .build();
+                new AdServicesModuleState(
+                        Module.TOPICS, AdServicesModuleState.MODULE_STATE_DISABLED);
         spyConsentManager.setModuleStates(List.of(moduleState));
         data.putModuleState(moduleState);
 
         moduleState =
-                new AdServicesModuleState.Builder()
-                        .setModule(Module.PROTECTED_AUDIENCE)
-                        .setModuleState(AdServicesModuleState.MODULE_STATE_ENABLED)
-                        .build();
+                new AdServicesModuleState(
+                        Module.PROTECTED_AUDIENCE, AdServicesModuleState.MODULE_STATE_ENABLED);
         spyConsentManager.setModuleStates(List.of(moduleState));
         data.putModuleState(moduleState);
 
         moduleState =
-                new AdServicesModuleState.Builder()
-                        .setModule(Module.MEASUREMENT)
-                        .setModuleState(AdServicesModuleState.MODULE_STATE_ENABLED)
-                        .build();
+                new AdServicesModuleState(
+                        Module.MEASUREMENT, AdServicesModuleState.MODULE_STATE_ENABLED);
         spyConsentManager.setModuleStates(List.of(moduleState));
 
         AdServicesModuleUserChoice userChoice =
-                new AdServicesModuleUserChoice.Builder()
-                        .setModule(Module.MEASUREMENT)
-                        .setUserChoice(AdServicesModuleUserChoice.USER_CHOICE_OPTED_OUT)
-                        .build();
+                new AdServicesModuleUserChoice(
+                        Module.MEASUREMENT, AdServicesModuleUserChoice.USER_CHOICE_OPTED_OUT);
         spyConsentManager.setUserChoices(List.of(userChoice));
         data.putModuleState(moduleState);
         data.putUserChoice(Module.MEASUREMENT, AdServicesModuleUserChoice.USER_CHOICE_OPTED_OUT);
 
         moduleState =
-                new AdServicesModuleState.Builder()
-                        .setModule(Module.PROTECTED_APP_SIGNALS)
-                        .setModuleState(AdServicesModuleState.MODULE_STATE_ENABLED)
-                        .build();
+                new AdServicesModuleState(
+                        Module.PROTECTED_APP_SIGNALS, AdServicesModuleState.MODULE_STATE_ENABLED);
         spyConsentManager.setModuleStates(List.of(moduleState));
 
         AdServicesModuleUserChoice userChoicePa =
-                new AdServicesModuleUserChoice.Builder()
-                        .setModule(Module.PROTECTED_APP_SIGNALS)
-                        .setUserChoice(AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN)
-                        .build();
+                new AdServicesModuleUserChoice(
+                        Module.PROTECTED_APP_SIGNALS,
+                        AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN);
         spyConsentManager.setUserChoices(List.of(userChoicePa));
         data.putModuleState(moduleState);
         data.putUserChoice(
