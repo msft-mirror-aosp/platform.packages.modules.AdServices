@@ -40,7 +40,6 @@ import static org.mockito.Mockito.when;
 
 import android.app.Notification;
 import android.app.NotificationManager;
-import android.app.adservices.AdServicesManager;
 import android.content.Intent;
 
 import androidx.annotation.NonNull;
@@ -114,8 +113,6 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
     private static final String TEST_NON_PRIVILEGED_APP_APK_PATH =
             "/data/local/tmp/cts/install/" + TEST_NON_PRIVILEGED_APP_NAME + ".apk";
     private static UiDevice sDevice;
-
-    private AdServicesManager mAdServicesManager;
     private NotificationManager mNotificationManager;
 
     @Mock private AdServicesLogger mAdServicesLogger;
@@ -132,7 +129,6 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         mocker.mockGetFlags(mMockFlags);
         doReturn(mAdServicesLogger).when(UiStatsLogger::getAdServicesLogger);
         doReturn(mMockUxStatesManager).when(() -> UxStatesManager.getInstance());
-        doReturn(mAdServicesManager).when(mSpyContext).getSystemService(AdServicesManager.class);
         doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
         doReturn(true).when(mMockFlags).isEeaDeviceFeatureEnabled();
         doReturn(true).when(mMockFlags).isUiFeatureTypeLoggingEnabled();

@@ -15,18 +15,20 @@
  */
 package com.android.adservices.ui.settingsga;
 
+import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_AD_SERVICES_SYSTEM_API;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_BACK_COMPAT;
 import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
 
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.annotations.DisableGlobalKillSwitch;
 import com.android.adservices.common.annotations.SetAllLogcatTags;
 import com.android.adservices.common.annotations.SetCompatModeFlags;
+import com.android.adservices.service.common.AdServicesBackCompatInit;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.ui.util.AdServicesUiTestCase;
 import com.android.adservices.ui.util.SettingsTestUtil;
 
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -36,13 +38,17 @@ import org.junit.Test;
 @SetCompatModeFlags
 @SetFlagEnabled(KEY_ENABLE_AD_SERVICES_SYSTEM_API)
 @SetFlagEnabled(KEY_GA_UX_FEATURE_ENABLED)
+@SetFlagEnabled(KEY_ADSERVICES_ENABLED)
+@SetFlagEnabled(KEY_ENABLE_BACK_COMPAT)
 public final class SettingsGaUiAutomatorTest extends AdServicesUiTestCase {
     @Rule(order = 11)
     public final AdServicesFlagsSetterRule flags = AdServicesFlagsSetterRule.newInstance();
 
     @Before
     public void setup() throws Exception {
-        Assume.assumeTrue(SettingsTestUtil.isSettingsIntentInstalled());
+        if (!sdkLevel.isAtLeastT() && !SettingsTestUtil.isSettingsIntentInstalled()) {
+            AdServicesBackCompatInit.getInstance().initializeComponents();
+        }
     }
 
     @Test
