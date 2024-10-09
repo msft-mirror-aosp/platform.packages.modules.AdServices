@@ -4813,6 +4813,18 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     /**
+     * The flag to enable Cobalt logging for API call response, including both success and failure
+     * responses. This metric is replacing the app package name API error metric, controlled by the
+     * {@link APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED} flag.
+     */
+    @FeatureFlag Boolean COBALT__ENABLE_API_CALL_RESPONSE_LOGGING = false;
+
+    /** Returns whether Cobalt Api call response logging is enabled. */
+    default boolean getCobaltEnableApiCallResponseLogging() {
+        return COBALT__ENABLE_API_CALL_RESPONSE_LOGGING;
+    }
+
+    /**
      * A feature flag to enable DB schema change to version 8 in Topics API. Version 8 is to add
      * logged_topic column to ReturnedTopic table.
      *
