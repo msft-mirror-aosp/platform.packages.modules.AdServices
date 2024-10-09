@@ -63,10 +63,13 @@ public final class CustomAudienceCtsDebuggableTest extends ForegroundDebuggableC
                         .setContext(sContext)
                         .setExecutor(MoreExecutors.directExecutor())
                         .build();
-        DevContextFilter devContextFilter = DevContextFilter.create(sContext);
-        DevContext devContext = DevContextFilter.create(sContext).createDevContext(Process.myUid());
+        DevContextFilter devContextFilter =
+                DevContextFilter.create(mContext, /* developerModeFeatureEnabled= */ false);
+        DevContext devContext =
+                DevContextFilter.create(mContext, /* developerModeFeatureEnabled= */ false)
+                        .createDevContext(Process.myUid());
         boolean isDebuggable = devContextFilter.isDebuggable(devContext.getCallingAppPackageName());
-        boolean isDeveloperMode = devContextFilter.isDeveloperMode();
+        boolean isDeveloperMode = devContextFilter.isDeviceDevOptionsEnabledOrDebuggable();
         mHasAccessToDevOverrides = devContext.getDeviceDevOptionsEnabled();
         mAccessStatus =
                 String.format("Debuggable: %b\n", isDebuggable)
