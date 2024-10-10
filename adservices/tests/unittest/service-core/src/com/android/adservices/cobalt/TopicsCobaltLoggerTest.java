@@ -26,7 +26,6 @@ import static org.mockito.Mockito.when;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.data.topics.Topic;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.cobalt.CobaltLogger;
 import com.android.cobalt.domain.Project;
 
@@ -40,7 +39,6 @@ import org.mockito.Mock;
 
 import java.util.Map;
 
-@RequiresSdkLevelAtLeastS
 public final class TopicsCobaltLoggerTest extends AdServicesMockitoTestCase {
     private static final int COUNT = 5;
 

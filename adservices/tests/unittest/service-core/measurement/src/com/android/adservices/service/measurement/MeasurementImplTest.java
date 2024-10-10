@@ -22,7 +22,6 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_IO_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.view.MotionEvent.ACTION_BUTTON_PRESS;
 
-import static com.android.compatibility.common.util.VersionCodes.S;
 import static com.android.compatibility.common.util.VersionCodes.S_V2;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -447,7 +446,7 @@ public final class MeasurementImplTest extends AdServicesExtendedMockitoTestCase
     }
 
     @Test
-    @RequiresSdkRange(atLeast = S, atMost = S_V2)
+    @RequiresSdkRange(atMost = S_V2)
     public void testDeleteRegistrations_success_recordsDeletion_S() {
         doReturn(false).when(mMockFlags).getMeasurementRollbackDeletionKillSwitch();
 
@@ -533,7 +532,7 @@ public final class MeasurementImplTest extends AdServicesExtendedMockitoTestCase
     }
 
     @Test
-    @RequiresSdkRange(atLeast = S, atMost = S_V2)
+    @RequiresSdkRange(atMost = S_V2)
     public void testDeletePackageRecords_success_recordsDeletion_S() {
         doReturn(false).when(mMockFlags).getMeasurementRollbackDeletionKillSwitch();
 
@@ -599,7 +598,7 @@ public final class MeasurementImplTest extends AdServicesExtendedMockitoTestCase
     }
 
     @Test
-    @RequiresSdkRange(atLeast = S, atMost = S_V2)
+    @RequiresSdkRange(atMost = S_V2)
     public void testDeleteAllMeasurementData_success_recordsDeletion_S() {
         doReturn(false).when(mMockFlags).getMeasurementRollbackDeletionKillSwitch();
 
@@ -650,7 +649,7 @@ public final class MeasurementImplTest extends AdServicesExtendedMockitoTestCase
     }
 
     @Test
-    @RequiresSdkRange(atLeast = S, atMost = S_V2)
+    @RequiresSdkRange(atMost = S_V2)
     public void testDeleteAllUninstalledMeasurementData_success_recordsDeletion_S() {
         doReturn(false).when(mMockFlags).getMeasurementRollbackDeletionKillSwitch();
 

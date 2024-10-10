@@ -26,7 +26,6 @@ import android.net.Uri;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.shared.testing.EqualsTester;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Test;
 
@@ -34,7 +33,6 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 
-@RequiresSdkLevelAtLeastS
 public final class ScheduleCustomAudienceUpdateRequestTest extends AdServicesUnitTestCase {
     public static final Uri VALID_UPDATE_URI_1 =
             CustomAudienceFixture.getValidFetchUriByBuyer(CommonFixture.VALID_BUYER_1, "1");

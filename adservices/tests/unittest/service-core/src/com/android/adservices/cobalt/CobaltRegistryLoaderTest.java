@@ -26,7 +26,6 @@ import static org.mockito.Mockito.when;
 import android.content.res.AssetManager;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.cobalt.domain.Project;
 import com.android.cobalt.registry.RegistryValidator;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -42,7 +41,6 @@ import org.mockito.Mock;
 import java.io.InputStream;
 import java.util.Optional;
 
-@RequiresSdkLevelAtLeastS
 @SpyStatic(CobaltDownloadRegistryManager.class)
 public final class CobaltRegistryLoaderTest extends AdServicesExtendedMockitoTestCase {
     private static final String REPORT_NAME_DOGFOOD_SUFFIX = "_dogfood";

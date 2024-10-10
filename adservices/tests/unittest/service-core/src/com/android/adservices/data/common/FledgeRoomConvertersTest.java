@@ -24,7 +24,6 @@ import android.adservices.common.AdTechIdentifier;
 import android.net.Uri;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -37,7 +36,6 @@ import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.Set;
 
-@RequiresSdkLevelAtLeastS
 public final class FledgeRoomConvertersTest extends AdServicesUnitTestCase {
     private static final Clock CLOCK = Clock.fixed(Instant.now(), ZoneOffset.UTC);
 

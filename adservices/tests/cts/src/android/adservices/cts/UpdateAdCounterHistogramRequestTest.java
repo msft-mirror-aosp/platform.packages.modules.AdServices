@@ -25,13 +25,11 @@ import android.adservices.common.CommonFixture;
 import android.adservices.common.FrequencyCapFilters;
 
 import com.android.adservices.shared.testing.EqualsTester;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Test;
 
 import java.util.Random;
 
-@RequiresSdkLevelAtLeastS
 public final class UpdateAdCounterHistogramRequestTest extends CtsAdServicesDeviceTestCase {
     private static final Random RANDOM = new Random();
     private static final long VALID_AD_SELECTION_ID = 10;

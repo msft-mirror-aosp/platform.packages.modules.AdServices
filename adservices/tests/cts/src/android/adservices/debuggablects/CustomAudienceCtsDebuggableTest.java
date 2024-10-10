@@ -26,7 +26,6 @@ import android.os.Process;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -37,7 +36,6 @@ import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
 
-@RequiresSdkLevelAtLeastS
 public final class CustomAudienceCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
     private TestAdvertisingCustomAudienceClient mTestClient;

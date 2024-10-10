@@ -21,7 +21,6 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Process;
-import android.os.SystemProperties;
 import android.provider.Settings;
 import android.util.Log;
 
@@ -148,11 +147,6 @@ public class DevContextUtils {
     }
 
     private static boolean computeIsDebuggableBuild() {
-        if (SdkLevel.isAtLeastS()) {
-            return Build.isDebuggable();
-        }
-
-        // Build.isDebuggable was added in S; duplicate that functionality for R.
-        return SystemProperties.getInt("ro.debuggable", 0) == 1;
+        return Build.isDebuggable();
     }
 }
