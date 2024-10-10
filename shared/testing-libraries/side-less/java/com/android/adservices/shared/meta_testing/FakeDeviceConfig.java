@@ -20,8 +20,6 @@ import com.android.adservices.shared.testing.Logger;
 import com.android.adservices.shared.testing.Nullable;
 import com.android.adservices.shared.testing.device.DeviceConfig;
 
-import java.util.Objects;
-
 /** Fake implementation of {@link DeviceConfig} so tests don't need to mock it. */
 public final class FakeDeviceConfig implements DeviceConfig {
 
@@ -33,13 +31,13 @@ public final class FakeDeviceConfig implements DeviceConfig {
     @Nullable private Runnable mOnSetCallback;
 
     @Override
-    public void setSyncDisabledMode(SyncDisabledModeForTest mode) {
+    public void setSyncDisabledMode(@Nullable SyncDisabledModeForTest mode) {
         mLog.i("setSyncDisabledMode(%s): mMode=%s, mOnSetCallback=%s", mode, mMode, mOnSetCallback);
         if (mOnSetCallback != null) {
             mOnSetCallback.run();
         }
         mLog.i("setSyncDisabledMode(): from %s to %s", mMode, mode);
-        mMode = Objects.requireNonNull(mode, "mode cannot be null");
+        mMode = mode;
     }
 
     @Override
