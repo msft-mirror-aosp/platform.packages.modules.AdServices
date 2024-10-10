@@ -33,12 +33,12 @@ import java.util.List;
  * Simple implementation of {@link RealLogger} that stores log calls for further assertions (they
  * can be obtained by {@link #getEntries()}.
  */
-public final class FakeLogger implements RealLogger {
+public final class FakeRealLogger implements RealLogger {
 
     private final List<LogEntry> mEntries = new ArrayList<>();
 
     private static final Logger sRealLogger =
-            new Logger(DynamicLogger.getInstance(), FakeLogger.class);
+            new Logger(DynamicLogger.getInstance(), FakeRealLogger.class);
 
     @Override
     @FormatMethod
@@ -64,7 +64,7 @@ public final class FakeLogger implements RealLogger {
 
     @Override
     public String toString() {
-        return "[" + FakeLogger.class.getSimpleName() + ": " + mEntries.size() + " entries]";
+        return "[" + FakeRealLogger.class.getSimpleName() + ": " + mEntries.size() + " entries]";
     }
 
     @FormatMethod
