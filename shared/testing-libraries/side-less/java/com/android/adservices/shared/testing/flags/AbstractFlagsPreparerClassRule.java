@@ -46,11 +46,9 @@ public abstract class AbstractFlagsPreparerClassRule extends AbstractRule {
         mSetSyncModeAction = new SafeAction(mLog, new SetSyncModeAction(mLog, deviceConfig, mode));
     }
 
-    // TODO(b/370596037): should be protected, but it's used by
-    // AbstractFlagsPreparerClassRuleTestCase, which is located in the meta_testing package
     @VisibleForTesting
     @Override
-    public final void evaluate(Statement base, Description description) throws Throwable {
+    protected final void evaluate(Statement base, Description description) throws Throwable {
         TestHelper.throwIfTest(description);
 
         mSetSyncModeAction.execute();
