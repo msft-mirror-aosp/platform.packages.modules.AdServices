@@ -46,6 +46,9 @@ public interface AdServicesFlagsMocker {
     /** Mocks a call to {@link Flags#getAppNameApiErrorCobaltLoggingEnabled()}. */
     void mockGetAppNameApiErrorCobaltLoggingEnabled(boolean value);
 
+    /** Mocks a call to {@link Flags#getCobaltEnableApiCallResponseLogging()}. */
+    void mockGetEnableApiCallResponseLoggingEnabled(boolean value);
+
     /** Mocks calls to override Cobalt app name api error logging related flags. */
     void mockAllCobaltLoggingFlags(boolean enabled);
 
