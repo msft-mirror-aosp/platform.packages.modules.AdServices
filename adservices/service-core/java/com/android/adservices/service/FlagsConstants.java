@@ -674,6 +674,9 @@ public final class FlagsConstants {
     // FLEDGE Schedule Custom Audience Update keys
     public static final String KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED =
             "fledge_schedule_custom_audience_update_enabled";
+    public static final String
+            KEY_FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS =
+                    "Fledge__enable_schedule_custom_audience_update_additional_schedule_requests";
     public static final String KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_PERIOD_MS =
             "fledge_schedule_custom_audience_update_job_period_ms";
     public static final String KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_FLEX_MS =

@@ -1412,6 +1412,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests() {
+        return getDeviceConfigFlag(
+                FlagsConstants
+                        .KEY_FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS,
+                FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS);
+    }
+
+    @Override
     public long getFledgeScheduleCustomAudienceUpdateJobPeriodMs() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_PERIOD_MS,
@@ -5144,6 +5152,12 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED
                         + " = "
                         + getFledgeScheduleCustomAudienceUpdateEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants
+                                .KEY_FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS
+                        + " = "
+                        + getFledgeEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_PERIOD_MS
