@@ -290,6 +290,11 @@ public abstract class AdServicesMockerLessExtendedMockitoTestCase<M extends Inte
         }
 
         @Override
+        public void mockGetEnableApiCallResponseLoggingEnabled(boolean value) {
+            mAdServicesFlagsMocker.mockGetEnableApiCallResponseLoggingEnabled(value);
+        }
+
+        @Override
         public void mockGetAdservicesReleaseStageForCobalt(String stage) {
             mAdServicesFlagsMocker.mockGetAdservicesReleaseStageForCobalt(stage);
         }
