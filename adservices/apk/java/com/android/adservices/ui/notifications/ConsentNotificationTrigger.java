@@ -16,6 +16,7 @@
 
 package com.android.adservices.ui.notifications;
 
+import static android.adservices.common.AdServicesCommonManager.ACTION_VIEW_ADSERVICES_CONSENT_PAGE;
 import static android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE;
 import static android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE_COMPAT;
 
@@ -56,17 +57,12 @@ import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.ui.OTAResourcesManager;
 import com.android.adservices.ui.UxUtil;
 
-import com.google.common.annotations.VisibleForTesting;
-
 import java.util.List;
 
 /** Provides methods which can be used to display Privacy Sandbox consent notification. */
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class ConsentNotificationTrigger {
-    @VisibleForTesting
-    public static final String ACTION_VIEW_ADSERVICES_CONSENT_PAGE =
-            "android.adservices.common.action.VIEW_ADSERVICES_CONSENT_PAGE";
 
     /* Random integer for NotificationCompat purposes. */
     public static final int NOTIFICATION_ID = 67920;
