@@ -133,38 +133,52 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     private static final String LONG_AGGREGATE_KEY_ID = "12345678901234567890123456";
     private static final String LONG_AGGREGATE_KEY_PIECE = "0x123456789012345678901234567890123";
     private static final long DEDUP_KEY = 100;
+    private static final String BUCKET_NAME = "biddable";
     private static final UnsignedLong DEBUG_KEY = new UnsignedLong(34787843L);
     private static final String DEBUG_JOIN_KEY = "SAMPLE_DEBUG_JOIN_KEY";
     private static final String DEFAULT_REDIRECT = WebUtil.validUrl("https://subdomain.bar.test");
     private static final String EVENT_TRIGGERS_1 =
-            "[\n"
-                    + "{\n"
+            "["
+                    + "{"
                     + "  \"trigger_data\": \""
                     + TRIGGER_DATA
-                    + "\",\n"
+                    + "\","
                     + "  \"priority\": \""
                     + PRIORITY
-                    + "\",\n"
+                    + "\","
                     + "  \"deduplication_key\": \""
                     + DEDUP_KEY
-                    + "\",\n"
-                    + "  \"filters\": [{\n"
-                    + "    \"source_type\": [\"navigation\"],\n"
-                    + "    \"key_1\": [\"value_1\"] \n"
-                    + "   }]\n"
+                    + "\","
+                    + "  \"filters\": [{"
+                    + "    \"source_type\": [\"navigation\"],"
+                    + "    \"key_1\": [\"value_1\"] "
+                    + "   }]"
                     + "}"
-                    + "]\n";
-    private static final String AGGREGATE_DEDUPLICATION_KEYS_1 =
+                    + "]";
+    private static final String AGGREGATE_DEDUPLICATION_KEYS =
             "[{\"deduplication_key\": \""
                     + DEDUP_KEY
-                    + "\",\n"
-                    + "\"filters\": {\n"
-                    + "  \"category_1\": [\"filter\"],\n"
-                    + "  \"category_2\": [\"filter\"] \n"
+                    + "\","
+                    + "\"filters\": {"
+                    + "  \"category_1\": [\"filter\"],"
+                    + "  \"category_2\": [\"filter\"] "
                     + " },"
-                    + "\"not_filters\": {\n"
-                    + "  \"category_1\": [\"filter\"],\n"
-                    + "  \"category_2\": [\"filter\"] \n"
+                    + "\"not_filters\": {"
+                    + "  \"category_1\": [\"filter\"],"
+                    + "  \"category_2\": [\"filter\"] "
+                    + "}}"
+                    + "]";
+    private static final String AGGREGATABLE_BUCKETS =
+            "[{\"bucket\": \""
+                    + BUCKET_NAME
+                    + "\","
+                    + "\"filters\": {"
+                    + "  \"category_1\": [\"filter\"],"
+                    + "  \"category_2\": [\"filter\"] "
+                    + " },"
+                    + "\"not_filters\": {"
+                    + "  \"category_1\": [\"filter\"],"
+                    + "  \"category_2\": [\"filter\"] "
                     + "}}"
                     + "]";
     private static final String LIST_TYPE_REDIRECT_URI =
@@ -285,6 +299,8 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 .thenReturn(Flags.MEASUREMENT_ENABLE_DEBUG_REPORT);
         when(mMockFlags.getMeasurementEnableHeaderErrorDebugReport())
                 .thenReturn(Flags.MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT);
+        when(mMockFlags.getMeasurementEnableAggregateContributionBudgetCapacity())
+                .thenReturn(Flags.MEASUREMENT_ENABLE_AGGREGATE_CONTRIBUTION_BUDGET_CAPACITY);
     }
 
     @Test
@@ -294,7 +310,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 new MeasurementRegistrationResponseStats.Builder(
                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS,
                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__TRIGGER,
-                                223,
+                                213,
                                 UNKNOWN_SOURCE_TYPE,
                                 APP_REGISTRATION_SURFACE_TYPE,
                                 SUCCESS_STATUS,
@@ -352,7 +368,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 new MeasurementRegistrationResponseStats.Builder(
                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS,
                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__TRIGGER,
-                                436,
+                                419,
                                 UNKNOWN_SOURCE_TYPE,
                                 APP_REGISTRATION_SURFACE_TYPE,
                                 SUCCESS_STATUS,
@@ -400,7 +416,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                                                 + EVENT_TRIGGERS_1
                                                 + ","
                                                 + "\"aggregatable_deduplication_keys\":"
-                                                + AGGREGATE_DEDUPLICATION_KEYS_1
+                                                + AGGREGATE_DEDUPLICATION_KEYS
                                                 + "}")));
 
         AsyncRedirects asyncRedirects = new AsyncRedirects();
@@ -670,6 +686,307 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
         assertEquals(aggregateDedupKeys, result.getAggregateDeduplicationKeys());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testBasicTriggerRequest_withAggregatableBucket_success() throws Exception {
+        when(mMockFlags.getMeasurementEnableAggregateContributionBudgetCapacity()).thenReturn(true);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        MeasurementRegistrationResponseStats expectedStats =
+                new MeasurementRegistrationResponseStats.Builder(
+                                AD_SERVICES_MEASUREMENT_REGISTRATIONS,
+                                AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__TRIGGER,
+                                436,
+                                UNKNOWN_SOURCE_TYPE,
+                                APP_REGISTRATION_SURFACE_TYPE,
+                                SUCCESS_STATUS,
+                                UNKNOWN_REGISTRATION_FAILURE_TYPE,
+                                0,
+                                "",
+                                0,
+                                false,
+                                false,
+                                0,
+                                false,
+                                false)
+                        .setAdTechDomain(null)
+                        .build();
+        String wrappedFilters =
+                "[{"
+                        + "  \"category_1\": [\"filter\"],"
+                        + "  \"category_2\": [\"filter\"] "
+                        + " }]";
+        String wrappedNotFilters =
+                "[{" + "  \"category_1\": [\"filter\"]," + "  \"category_2\": [\"filter\"] " + "}]";
+        String expectedAggregatableBuckets =
+                "[{\"bucket\": \""
+                        + BUCKET_NAME
+                        + "\","
+                        + "\"filters\": "
+                        + wrappedFilters
+                        + ","
+                        + "\"not_filters\":"
+                        + wrappedNotFilters
+                        + "}"
+                        + "]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "\"event_trigger_data\":"
+                                                + EVENT_TRIGGERS_1
+                                                + ","
+                                                + "\"aggregatable_buckets\":"
+                                                + AGGREGATABLE_BUCKETS
+                                                + "}")));
+
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        asyncFetchStatus.setRegistrationDelay(0L);
+        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isPresent()).isTrue();
+        Trigger result = fetch.get();
+        assertThat(result.getAttributionDestination().toString())
+                .isEqualTo(asyncRegistration.getTopOrigin().toString());
+        assertThat(result.getEnrollmentId()).isEqualTo(ENROLLMENT_ID);
+        assertThat(result.getEventTriggers()).isEqualTo(new JSONArray(EVENT_TRIGGERS_1).toString());
+        assertThat(result.getAggregatableBucketsString())
+                .isEqualTo(new JSONArray(expectedAggregatableBuckets).toString());
+        assertThat(result.getRegistrationOrigin().toString()).isEqualTo(TRIGGER_URI);
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testBasicTriggerRequest_aggregatableBucketWithEnableFlagOff_success()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        MeasurementRegistrationResponseStats expectedStats =
+                new MeasurementRegistrationResponseStats.Builder(
+                                AD_SERVICES_MEASUREMENT_REGISTRATIONS,
+                                AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__TRIGGER,
+                                436,
+                                UNKNOWN_SOURCE_TYPE,
+                                APP_REGISTRATION_SURFACE_TYPE,
+                                SUCCESS_STATUS,
+                                UNKNOWN_REGISTRATION_FAILURE_TYPE,
+                                0,
+                                "",
+                                0,
+                                false,
+                                false,
+                                0,
+                                false,
+                                false)
+                        .setAdTechDomain(null)
+                        .build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "\"event_trigger_data\":"
+                                                + EVENT_TRIGGERS_1
+                                                + ","
+                                                + "\"aggregatable_buckets\":"
+                                                + AGGREGATABLE_BUCKETS
+                                                + "}")));
+
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        asyncFetchStatus.setRegistrationDelay(0L);
+        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isPresent()).isTrue();
+        Trigger result = fetch.get();
+        assertThat(result.getAttributionDestination().toString())
+                .isEqualTo(asyncRegistration.getTopOrigin().toString());
+        assertThat(result.getEnrollmentId()).isEqualTo(ENROLLMENT_ID);
+        assertThat(result.getEventTriggers()).isEqualTo(new JSONArray(EVENT_TRIGGERS_1).toString());
+        assertThat(result.getAggregatableBucketsString()).isNull();
+        assertThat(result.getRegistrationOrigin().toString()).isEqualTo(TRIGGER_URI);
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void triggerRequest_aggregatableBucketsBucketNotJsonObj_fails() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String buckets = "[5678, 1910]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mMockFlags.getMeasurementEnableAggregateContributionBudgetCapacity()).thenReturn(true);
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "\"event_trigger_data\":"
+                                                + EVENT_TRIGGERS_1
+                                                + ","
+                                                + "\"aggregatable_buckets\":"
+                                                + buckets
+                                                + "}")));
+
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(asyncFetchStatus.getEntityStatus())
+                .isEqualTo(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isPresent()).isFalse();
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void triggerRequest_aggregatableBucketsBucketNotString_fails() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String wrappedFilters =
+                "[{" + "\"category_1\":[\"filter\"]," + "\"category_2\":[\"filter\"]" + "}]";
+        String wrappedNotFilters =
+                "[{" + "\"category_1\":[\"filter\"]," + "\"category_2\":[\"filter\"]" + "}]";
+        String buckets =
+                "[{\"bucket\": 123,"
+                        + "\"filters\": "
+                        + wrappedFilters
+                        + ","
+                        + "\"not_filters\":"
+                        + wrappedNotFilters
+                        + "}"
+                        + "]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mMockFlags.getMeasurementEnableAggregateContributionBudgetCapacity()).thenReturn(true);
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "\"event_trigger_data\":"
+                                                + EVENT_TRIGGERS_1
+                                                + ","
+                                                + "\"aggregatable_buckets\":"
+                                                + buckets
+                                                + "}")));
+
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(asyncFetchStatus.getEntityStatus())
+                .isEqualTo(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isPresent()).isFalse();
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void triggerRequest_aggregatableBucketsNoBucketField_succeeds() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String wrappedFilters =
+                "[{" + "\"category_1\":[\"filter\"]," + "\"category_2\":[\"filter\"]" + "}]";
+        String wrappedNotFilters =
+                "[{" + "\"category_1\":[\"filter\"]," + "\"category_2\":[\"filter\"]" + "}]";
+        String buckets =
+                "[{\"filters\":"
+                        + wrappedFilters
+                        + ","
+                        + "\"not_filters\":"
+                        + wrappedNotFilters
+                        + "}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mMockFlags.getMeasurementEnableAggregateContributionBudgetCapacity()).thenReturn(true);
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "\"event_trigger_data\":"
+                                                + EVENT_TRIGGERS_1
+                                                + ","
+                                                + "\"aggregatable_buckets\":"
+                                                + buckets
+                                                + "}")));
+
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isPresent()).isTrue();
+        Trigger result = fetch.get();
+        assertThat(result.getAggregatableBucketsString()).isEqualTo(buckets);
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void triggerRequest_aggregatableBucketsBucketOnly_succeeds() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String buckets = "[{\"bucket\":\"" + BUCKET_NAME + "\"}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mMockFlags.getMeasurementEnableAggregateContributionBudgetCapacity()).thenReturn(true);
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "\"event_trigger_data\":"
+                                                + EVENT_TRIGGERS_1
+                                                + ","
+                                                + "\"aggregatable_buckets\":"
+                                                + buckets
+                                                + "}")));
+
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isPresent()).isTrue();
+        Trigger result = fetch.get();
+        assertThat(result.getAggregatableBucketsString()).isEqualTo(buckets);
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -6039,7 +6356,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 new MeasurementRegistrationResponseStats.Builder(
                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS,
                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__TRIGGER,
-                                223,
+                                213,
                                 UNKNOWN_SOURCE_TYPE,
                                 APP_REGISTRATION_SURFACE_TYPE,
                                 SUCCESS_STATUS,

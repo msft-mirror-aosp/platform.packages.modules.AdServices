@@ -27,9 +27,11 @@ import androidx.test.filters.SmallTest;
 
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.FilterMap;
+import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -89,6 +91,31 @@ public final class AggregatableAttributionTriggerTest {
                 .setTriggerData(Arrays.asList(attributionTriggerData1, attributionTriggerData2))
                 .setValueConfigs(configList)
                 .build();
+    }
+
+    private AggregatableAttributionTrigger createExampleWithValues(
+            List<AggregateDeduplicationKey> aggregateDeduplicationKeys,
+            List<AggregatableBucket> aggregatableBuckets) {
+        List<AggregateTriggerData> aggregateTriggerDataList = createAggregateTriggerData();
+        AggregateTriggerData attributionTriggerData1 = aggregateTriggerDataList.get(0);
+        AggregateTriggerData attributionTriggerData2 = aggregateTriggerDataList.get(1);
+        Map<String, AggregatableKeyValue> values = new HashMap<>();
+        values.put("campCounts", new AggregatableKeyValue.Builder(1).build());
+        values.put("campGeoCounts", new AggregatableKeyValue.Builder(100).build());
+        List<AggregatableValuesConfig> configList = new ArrayList<>();
+        configList.add(new AggregatableValuesConfig.Builder(values).build());
+        AggregatableAttributionTrigger.Builder builder =
+                new AggregatableAttributionTrigger.Builder()
+                        .setTriggerData(
+                                Arrays.asList(attributionTriggerData1, attributionTriggerData2))
+                        .setValueConfigs(configList);
+        if (aggregateDeduplicationKeys != null) {
+            builder.setAggregateDeduplicationKeys(aggregateDeduplicationKeys);
+        }
+        if (aggregatableBuckets != null) {
+            builder.setAggregatableBuckets(aggregatableBuckets);
+        }
+        return builder.build();
     }
 
     private AggregatableAttributionTrigger createExampleWithValueConfigs() throws Exception {
@@ -180,6 +207,42 @@ public final class AggregatableAttributionTriggerTest {
         AggregatableAttributionTrigger attributionTrigger =
                 new AggregatableAttributionTrigger.Builder().build();
         assertEquals(attributionTrigger.getTriggerData().size(), 0);
+    }
+
+    @Test
+    public void testGetAggregatableBuckets() throws JSONException {
+        JSONObject filterMap1 = new JSONObject();
+        filterMap1.put("2", new JSONArray(Arrays.asList("1234", "234")));
+        JSONArray filterSet1 = new JSONArray();
+        filterSet1.put(filterMap1);
+        JSONObject bucketObj1 = new JSONObject();
+        bucketObj1.put(AggregatableBucket.AggregatableBucketContract.BUCKET, "biddable");
+        bucketObj1.put(Filter.FilterContract.FILTERS, filterSet1);
+        AggregatableBucket aggregatableBucket1 = new AggregatableBucket(bucketObj1, mFlags);
+
+        JSONObject filterMap2 = new JSONObject();
+        filterMap2.put("2", new JSONArray(Arrays.asList("5678", "678")));
+        JSONArray filterSet2 = new JSONArray();
+        filterSet2.put(filterMap2);
+        JSONObject bucketObj2 = new JSONObject();
+        bucketObj2.put(AggregatableBucket.AggregatableBucketContract.BUCKET, "nonbiddable");
+        bucketObj2.put(Filter.FilterContract.FILTERS, filterSet2);
+        AggregatableBucket aggregatableBucket2 = new AggregatableBucket(bucketObj2, mFlags);
+
+        List<AggregatableBucket> aggregatableBuckets =
+                createExampleWithValues(
+                                null, Arrays.asList(aggregatableBucket1, aggregatableBucket2))
+                        .getAggregatableBuckets();
+        assertThat(aggregatableBuckets).isNotNull();
+        assertThat(aggregatableBuckets)
+                .isEqualTo(List.of(aggregatableBucket1, aggregatableBucket2));
+    }
+
+    @Test
+    public void testGetAggregatableBuckets_nullBucket() {
+        AggregatableAttributionTrigger attributionTrigger = createExampleWithValues(null, null);
+
+        assertThat(attributionTrigger.getAggregatableBuckets()).isNull();
     }
 
     @Test
