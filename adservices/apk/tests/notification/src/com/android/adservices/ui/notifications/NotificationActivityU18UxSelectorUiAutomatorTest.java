@@ -23,7 +23,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_U18_UX_ENABLED;
 import static com.android.adservices.ui.util.ApkTestUtil.getString;
 import static com.android.adservices.ui.util.NotificationActivityTestUtil.WINDOW_LAUNCH_TIMEOUT;
 
-import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.FlakyTest;
@@ -73,14 +73,16 @@ public final class NotificationActivityU18UxSelectorUiAutomatorTest extends AdSe
 
         UiObject2 u18NotificationTitle =
                 ApkTestUtil.getElement(mDevice, R.string.notificationUI_u18_notification_title);
-        assertThat(u18NotificationTitle).isNotNull();
+        assertWithMessage("notification title should show").that(u18NotificationTitle).isNotNull();
 
         NotificationActivityTestUtil.clickMoreToBottom(mDevice);
 
         UiObject2 leftControlButton =
                 ApkTestUtil.getElement(
                         mDevice, R.string.notificationUI_u18_left_control_button_text);
-        assertThat(leftControlButton).isNotNull();
+        assertWithMessage("notification left button should show")
+                .that(leftControlButton)
+                .isNotNull();
         UiObject2 rightControlButton =
                 ApkTestUtil.getElement(
                         mDevice,
@@ -94,7 +96,7 @@ public final class NotificationActivityU18UxSelectorUiAutomatorTest extends AdSe
         // Retrieve a new instance to avoid android.support.test.uiautomator.StaleObjectException.
         u18NotificationTitle =
                 ApkTestUtil.getElement(mDevice, R.string.notificationUI_u18_notification_title);
-        assertThat(u18NotificationTitle).isNull();
+        assertWithMessage("second page should not show").that(u18NotificationTitle).isNull();
     }
 
     @Test
@@ -110,7 +112,9 @@ public final class NotificationActivityU18UxSelectorUiAutomatorTest extends AdSe
                 ApkTestUtil.getElement(
                         mDevice,
                         R.string.notificationUI_u18_right_control_button_text);
-        assertThat(rightControlButton).isNotNull();
+        assertWithMessage("notification right button should show")
+                .that(rightControlButton)
+                .isNotNull();
 
         leftControlButton.click();
         mDevice.wait(
@@ -120,10 +124,17 @@ public final class NotificationActivityU18UxSelectorUiAutomatorTest extends AdSe
 
         // make sure it goes to u18 page rather than GA page
         UiObject2 topicTitle = ApkTestUtil.getElement(mDevice, R.string.settingsUI_topics_ga_title);
-        assertThat(topicTitle).isNull();
+        assertWithMessage(
+                        "notification enter settings should see topics title %s ",
+                        getString(R.string.settingsUI_topics_ga_title))
+                .that(topicTitle)
+                .isNull();
         UiObject2 measurementTitle =
                 ApkTestUtil.getElement(mDevice, R.string.settingsUI_u18_measurement_view_title);
-        assertThat(measurementTitle).isNotNull();
+        assertWithMessage(
+                        "notification enter settings should see measurement title %s ",
+                        getString(R.string.settingsUI_u18_measurement_view_title))
+                .that(measurementTitle)
+                .isNotNull();
     }
-
 }
