@@ -84,4 +84,21 @@ public final class ApplicationContextProviderTest extends SharedMockitoTestCase 
                 .that(ApplicationContextSingleton.get())
                 .isSameInstanceAs(mMockAppContext);
     }
+
+    @Test
+    public void testOnCreate_setsSingleton_overriddenBySubclass() {
+        ApplicationContextProvider provider =
+                new ApplicationContextProvider() {
+                    @Override
+                    protected void setApplicationContext(Context context) {
+                        ApplicationContextSingleton.setAs(mContext);
+                    }
+                };
+
+        assertWithMessage("result of onCreate()").that(provider.onCreate()).isTrue();
+
+        assertWithMessage("ApplicationContextSingleton.get()")
+                .that(ApplicationContextSingleton.get())
+                .isSameInstanceAs(mContext);
+    }
 }

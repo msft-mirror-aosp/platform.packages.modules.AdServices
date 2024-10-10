@@ -19,7 +19,7 @@ package android.adservices.debuggablects;
 import static android.adservices.debuggablects.CustomAudienceShellCommandHelper.fromJson;
 import static android.adservices.debuggablects.CustomAudienceSubject.assertThat;
 
-import static com.android.adservices.service.CommonFlagsConstants.KEY_ADSERVICES_SHELL_COMMAND_ENABLED;
+import static com.android.adservices.service.CommonDebugFlagsConstants.KEY_ADSERVICES_SHELL_COMMAND_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
@@ -30,6 +30,8 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.utils.CustomAudienceTestFixture;
+
+import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.AdServicesShellCommandHelper;
 import com.android.adservices.common.AdservicesTestHelper;
@@ -99,6 +101,7 @@ public final class CustomAudienceShellCommandsE2ETest extends ForegroundDebuggab
     }
 
     @Test
+    @FlakyTest(bugId = 371644277)
     public void testRun_listCustomAudience_happyPath() throws Exception {
         mCustomAudienceTestFixture.joinCustomAudience(mShirtsCustomAudience);
         mCustomAudienceTestFixture.joinCustomAudience(mShoesCustomAudience);
@@ -135,6 +138,7 @@ public final class CustomAudienceShellCommandsE2ETest extends ForegroundDebuggab
     }
 
     @Test
+    @FlakyTest(bugId = 371644277)
     public void testRun_viewCustomAudience_happyPath() throws Exception {
         mCustomAudienceTestFixture.joinCustomAudience(mShirtsCustomAudience);
 
@@ -153,6 +157,7 @@ public final class CustomAudienceShellCommandsE2ETest extends ForegroundDebuggab
     }
 
     @Test
+    @FlakyTest(bugId = 371644277)
     public void testRun_refreshCustomAudiences_verifyNoCustomAudienceChanged() {
         CommandResult commandResult =
                 mShellCommandHelper.runCommandRwe(

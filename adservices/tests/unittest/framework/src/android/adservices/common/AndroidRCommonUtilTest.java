@@ -16,30 +16,16 @@
 
 package android.adservices.common;
 
-import static com.android.adservices.shared.testing.AndroidSdk.RVC;
-
-import android.adservices.exceptions.AdServicesException;
-
 import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
-import com.android.adservices.shared.testing.annotations.RequiresSdkRange;
 
 import org.junit.Test;
 
+@RequiresSdkLevelAtLeastS()
 public final class AndroidRCommonUtilTest extends AdServicesUnitTestCase {
 
     @Test
-    @RequiresSdkRange(atMost = RVC)
-    public void testInvokeCallbackOnErrorOnRvc_onR() throws Exception {
-        AdServicesOutcomeReceiverForTests callback = new AdServicesOutcomeReceiverForTests();
-
-        expect.that(AndroidRCommonUtil.invokeCallbackOnErrorOnRvc(callback)).isTrue();
-        callback.assertFailure(AdServicesException.class);
-    }
-
-    @Test
-    @RequiresSdkLevelAtLeastS()
     public void testInvokeCallbackOnErrorOnRvc_onSPlus() throws Exception {
         AdServicesOutcomeReceiverForTests callback = new AdServicesOutcomeReceiverForTests();
 

@@ -42,6 +42,7 @@ import static com.android.adservices.service.Flags.COBALT_LOGGING_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.COBALT_OPERATIONAL_LOGGING_ENABLED;
 import static com.android.adservices.service.Flags.COBALT_REGISTRY_OUT_OF_BAND_UPDATE_ENABLED;
 import static com.android.adservices.service.Flags.COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS;
+import static com.android.adservices.service.Flags.COBALT__ENABLE_API_CALL_RESPONSE_LOGGING;
 import static com.android.adservices.service.Flags.COBALT__FALL_BACK_TO_DEFAULT_BASE_REGISTRY;
 import static com.android.adservices.service.Flags.COBALT__IGNORED_REPORT_ID_LIST;
 import static com.android.adservices.service.Flags.COMPAT_LOGGING_KILL_SWITCH;
@@ -582,6 +583,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_COBALT_LOGGING_J
 import static com.android.adservices.service.FlagsConstants.KEY_COBALT_OPERATIONAL_LOGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_COBALT_REGISTRY_OUT_OF_BAND_UPDATE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_COBALT__ENABLE_API_CALL_RESPONSE_LOGGING;
 import static com.android.adservices.service.FlagsConstants.KEY_COBALT__FALL_BACK_TO_DEFAULT_BASE_REGISTRY;
 import static com.android.adservices.service.FlagsConstants.KEY_COBALT__IGNORED_REPORT_ID_LIST;
 import static com.android.adservices.service.FlagsConstants.KEY_COMPAT_LOGGING_KILL_SWITCH;
@@ -1082,8 +1084,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_UI_FEATURE_TYPE_
 import static com.android.adservices.service.FlagsConstants.KEY_UI_OTA_RESOURCES_MANIFEST_FILE_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_TOGGLE_SPEED_BUMP_ENABLED;
-import static com.android.adservices.service.FlagsConstantsTest.getAllFlagNameConstants;
 import static com.android.adservices.shared.common.flags.ModuleSharedFlags.ENCODED_ERROR_CODE_LIST_PER_SAMPLE_INTERVAL;
+import static com.android.adservices.shared.meta_testing.FlagsTestLittleHelper.expectDumpHasAllFlags;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -1091,7 +1093,6 @@ import static org.junit.Assert.assertThrows;
 
 import android.provider.DeviceConfig;
 import android.util.Log;
-import android.util.Pair;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
@@ -1405,6 +1406,14 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_COBALT__IGNORED_REPORT_ID_LIST,
                 COBALT__IGNORED_REPORT_ID_LIST,
                 Flags::getCobaltIgnoredReportIdList);
+    }
+
+    @Test
+    public void testGetCobaltEnableApiCallResponseLogging() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_COBALT__ENABLE_API_CALL_RESPONSE_LOGGING,
+                COBALT__ENABLE_API_CALL_RESPONSE_LOGGING,
+                Flags::getCobaltEnableApiCallResponseLogging);
     }
 
     @Test
@@ -3554,25 +3563,11 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     @Test
     @Ignore("TODO(b/369385082): remove @Ignore when all missing values are added")
     public void testDump() throws Exception {
-        String dump = DumpHelper.dump((pw) -> mPhFlags.dump(pw, /* args= */ null));
-
-        StringBuilder missingFlags = new StringBuilder();
-        int numberMissingFlags = 0;
-        for (Pair<String, String> flag : getAllFlagNameConstants(FlagsConstants.class)) {
-            String name = flag.first;
-            String value = flag.second;
-            if (!dump.contains("\t" + value + " = ")) {
-                // NOTE: not using expect because the value of dump print on each failure would be
-                // hundreds of lines long
-                numberMissingFlags++;
-                missingFlags.append('\n').append(name);
-            }
-        }
-
-        if (numberMissingFlags > 0) {
-            expect.withMessage("dump() is missing %s flags: %s", numberMissingFlags, missingFlags)
-                    .fail();
-        }
+        expectDumpHasAllFlags(
+                expect,
+                FlagsConstants.class,
+                pw -> mPhFlags.dump(pw, /* args= */ null),
+                flag -> ("\t" + flag.second + " = "));
     }
 
     @Test
@@ -5851,6 +5846,16 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 Flags::getMddPackageDenyRegistryManifestFileUrl);
     }
 
+    @Test
+    public void testGetAdIdCacheTtl() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_AD_ID_CACHE_TTL_MS, DEFAULT_ADID_CACHE_TTL_MS, Flags::getAdIdCacheTtlMs);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // NOTE: do NOT add new tests below, only helper methods                                      //
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
     private void setMeasurementKillSwitch(boolean value) {
         setAdservicesFlag(KEY_MEASUREMENT_KILL_SWITCH, value);
     }
@@ -5903,9 +5908,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
         mockGetAdServicesFlag(KEY_GLOBAL_BLOCKED_TOPIC_IDS, blockedTopicIds);
     }
 
-    @Test
-    public void testGetAdIdCacheTtl() {
-        mFlagsTestHelper.testConfigFlag(
-                KEY_AD_ID_CACHE_TTL_MS, DEFAULT_ADID_CACHE_TTL_MS, Flags::getAdIdCacheTtlMs);
-    }
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // NOTE: do NOT add new tests below, only helper methods                                      //
+    ////////////////////////////////////////////////////////////////////////////////////////////////
 }

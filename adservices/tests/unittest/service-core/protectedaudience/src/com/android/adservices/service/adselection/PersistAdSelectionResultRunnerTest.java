@@ -26,12 +26,15 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_TIMEOUT;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
 import static com.android.adservices.common.logging.ErrorLogUtilCallback.mockErrorLogUtilWithThrowable;
+import static com.android.adservices.common.logging.ErrorLogUtilCallback.mockErrorLogUtilWithoutThrowable;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_AUCTION_RESULT_HAS_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_INTERACTION_URI_EXCEEDS_MAXIMUM_LIMIT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_INVALID_AD_TECH_URI;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_INVALID_INTERACTION_URI;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_MISMATCH_INITIALIZATION_INFO;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_EMPTY_SUCCESS_SILENT_CONSENT_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_FAILURE_INVALID_ARGUMENT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_FAILURE_TIMEOUT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NULL_INITIALIZATION_INFO;
@@ -193,6 +196,8 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
             CommonFixture.getUri(DIFFERENT_SELLER, "/interaction").toString();
     private static final String BUYER_INTERACTION_URI_EXCEEDS_MAX =
             CommonFixture.getUri(WINNER_BUYER, "/interaction_uri_exceeds_max").toString();
+    private static final String SELLER_INTERACTION_URI_EXCEEDS_MAX =
+            CommonFixture.getUri(SELLER, "/interaction_uri_exceeds_max").toString();
     private static final String SELLER_INTERACTION_KEY_EXCEEDS_MAX =
             "seller-interaction-key-exceeds-max";
     private static final WinReportingUrls WIN_REPORTING_URLS =
@@ -259,6 +264,24 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                                             SELLER_INTERACTION_URI_DIFFERENT_SELLER)
                                     .build())
                     .build();
+
+    private static final WinReportingUrls WIN_REPORTING_URLS_INTERACTION_URIS_EXCEED_MAX =
+            WinReportingUrls.newBuilder()
+                    .setBuyerReportingUrls(
+                            ReportingUrls.newBuilder()
+                                    .setReportingUrl(BUYER_REPORTING_URI)
+                                    .putInteractionReportingUrls(
+                                            BUYER_INTERACTION_KEY,
+                                            BUYER_INTERACTION_URI_EXCEEDS_MAX)
+                                    .build())
+                    .setTopLevelSellerReportingUrls(
+                            ReportingUrls.newBuilder()
+                                    .setReportingUrl(SELLER_REPORTING_URI)
+                                    .putInteractionReportingUrls(
+                                            SELLER_INTERACTION_KEY,
+                                            SELLER_INTERACTION_URI_EXCEEDS_MAX)
+                                    .build())
+                    .build();
     private static final String WINNER_CUSTOM_AUDIENCE_NAME = "test-name-1";
     private static final String WINNER_CUSTOM_AUDIENCE_OWNER = "winner-owner";
     private static final String CUSTOM_AUDIENCE_OWNER_1 = "owner-1";
@@ -311,6 +334,18 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                             .setIsChaff(false)
                             .setWinReportingUrls(
                                     WIN_REPORTING_URLS_WITH_INTERACTION_DATA_EXCEEDS_MAX);
+    private static final AuctionResult.Builder
+            AUCTION_RESULT_WITH_INTERACTION_URI_LENGTH_EXCEEDS_MAX =
+            AuctionResult.newBuilder()
+                    .setAdRenderUrl(WINNER_AD_RENDER_URI.toString())
+                    .setCustomAudienceName(WINNER_CUSTOM_AUDIENCE_NAME)
+                    .setCustomAudienceOwner(WINNER_CUSTOM_AUDIENCE_OWNER)
+                    .setBuyer(WINNER_BUYER.toString())
+                    .setBid((float) BID)
+                    .setScore((float) SCORE)
+                    .setIsChaff(false)
+                    .setWinReportingUrls(
+                            WIN_REPORTING_URLS_INTERACTION_URIS_EXCEED_MAX);
     private static final AuctionResult.Builder AUCTION_RESULT_WITHOUT_OWNER =
             AuctionResult.newBuilder()
                     .setAdRenderUrl(WINNER_AD_RENDER_URI.toString())
@@ -1457,6 +1492,46 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
     }
 
     @Test
+    @SkipLoggingUsageRule(reason = "Using ErrorLogUtilCallback as logging happens in background.")
+    public void testRunner_revokedUserConsent_silentReport() throws InterruptedException {
+        mocker.mockGetFlags(mFakeFlags);
+        doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
+                .when(mAdSelectionServiceFilterMock)
+                .filterRequest(
+                        eq(SELLER),
+                        eq(CALLER_PACKAGE_NAME),
+                        eq(false),
+                        eq(true),
+                        eq(true),
+                        eq(CALLER_UID),
+                        eq(AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT),
+                        eq(Throttler.ApiKey.FLEDGE_API_PERSIST_AD_SELECTION_RESULT),
+                        eq(DevContext.createForDevOptionsDisabled()));
+        PersistAdSelectionResultInput inputParams =
+                new PersistAdSelectionResultInput.Builder()
+                        .setSeller(SELLER)
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionResult(CIPHER_TEXT_BYTES)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+        ErrorLogUtilCallback mErrorLogUtilWithoutThrowableCallback =
+                mockErrorLogUtilWithoutThrowable();
+
+        PersistAdSelectionResultTestCallback callback =
+                invokePersistAdSelectionResult(mPersistAdSelectionResultRunner, inputParams);
+
+        mErrorLogUtilWithoutThrowableCallback.assertReceived(
+                expect,
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_EMPTY_SUCCESS_SILENT_CONSENT_FAILURE,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
+        Assert.assertTrue(callback.mIsSuccess);
+        Assert.assertNotNull(callback.mPersistAdSelectionResultResponse);
+        Assert.assertEquals(
+                AD_SELECTION_ID, callback.mPersistAdSelectionResultResponse.getAdSelectionId());
+        Assert.assertEquals(Uri.EMPTY, callback.mPersistAdSelectionResultResponse.getAdRenderUri());
+    }
+
+    @Test
     @ExpectErrorLogUtilCall(
             errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_REVOKED_CONSENT_FILTER_EXCEPTION)
     public void testRunner_revokedUserConsent_returnsEmptyResult_UXNotificationEnforcementDisabled()
@@ -1657,6 +1732,8 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
     @Test
     @ExpectErrorLogUtilWithExceptionCall(
             errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_INVALID_INTERACTION_URI)
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_INTERACTION_URI_EXCEEDS_MAXIMUM_LIMIT)
     public void testRunner_persistResultWithLongInteractionKeyAndUri_throwsException()
             throws Exception {
         mocker.mockGetFlags(mFakeFlags);
@@ -1781,6 +1858,99 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                 .isEqualTo(ADSERVICES_STATUS_UNSET);
 
         verifyPersistAdSelectionResultApiUsageLog(STATUS_SUCCESS);
+    }
+
+    @Test
+    @SkipLoggingUsageRule(reason = "Using ErrorLogUtilCallback as logging happens in background.")
+    public void testRunner_persistResultWithLongInteractionUri_silentReport() throws Exception {
+        mocker.mockGetFlags(mFakeFlags);
+        mockPersistAdSelectionResultWithFledgeAuctionServerExecutionLogger();
+
+        doReturn(prepareDecryptedAuctionResultForRemarketingAd(
+                AUCTION_RESULT_WITH_INTERACTION_URI_LENGTH_EXCEEDS_MAX))
+                .when(mObliviousHttpEncryptorMock)
+                .decryptBytes(CIPHER_TEXT_BYTES, AD_SELECTION_ID);
+        doReturn(WINNER_CUSTOM_AUDIENCE_WITH_WIN_AD)
+                .when(mCustomAudienceDaoMock)
+                .getCustomAudienceByPrimaryKey(
+                        WINNER_CUSTOM_AUDIENCE_OWNER, WINNER_BUYER, WINNER_CUSTOM_AUDIENCE_NAME);
+
+        mAdSelectionEntryDaoSpy.persistAdSelectionInitialization(
+                AD_SELECTION_ID, INITIALIZATION_DATA);
+
+        PersistAdSelectionResultInput inputParams =
+                new PersistAdSelectionResultInput.Builder()
+                        .setSeller(SELLER)
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionResult(CIPHER_TEXT_BYTES)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+        PersistAdSelectionResultRunner.ReportingRegistrationLimits reportingLimits =
+                PersistAdSelectionResultRunner.ReportingRegistrationLimits.builder()
+                        .setMaxRegisteredAdBeaconsTotalCount(
+                                mFakeFlags
+                                        .getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount())
+                        .setMaxInteractionKeySize(
+                                Math.max(SELLER_INTERACTION_KEY.getBytes(StandardCharsets.UTF_8)
+                                        .length, BUYER_INTERACTION_KEY.getBytes(StandardCharsets.UTF_8).length))
+                        .setMaxInteractionReportingUriSize(
+                                Math.min(
+                                        BUYER_INTERACTION_URI_EXCEEDS_MAX.getBytes(StandardCharsets.UTF_8).length,
+                                        SELLER_INTERACTION_URI_EXCEEDS_MAX.getBytes(StandardCharsets.UTF_8).length)
+                                        - 1)
+                        .setMaxRegisteredAdBeaconsPerAdTechCount(
+                                mFakeFlags
+                                        .getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount())
+                        .build();
+        PersistAdSelectionResultRunner persistAdSelectionResultRunner =
+                new PersistAdSelectionResultRunner(
+                        mObliviousHttpEncryptorMock,
+                        mAdSelectionEntryDaoSpy,
+                        mCustomAudienceDaoMock,
+                        mAdSelectionServiceFilterMock,
+                        mBackgroundExecutorService,
+                        mLightweightExecutorService,
+                        mScheduledExecutor,
+                        CALLER_UID,
+                        DevContext.createForDevOptionsDisabled(),
+                        mOverallTimeout,
+                        mForceContinueOnAbsentOwner,
+                        reportingLimits,
+                        mAdCounterHistogramUpdaterSpy,
+                        mAuctionResultValidator,
+                        mFakeFlags,
+                        mAdServicesLoggerSpy,
+                        mAdsRelevanceExecutionLogger,
+                        mKAnonSignJoinFactoryMock);
+
+        ErrorLogUtilCallback mErrorLogUtilWithoutThrowableCallbackSync1 =
+                mockErrorLogUtilWithoutThrowable();
+        ErrorLogUtilCallback mErrorLogUtilWithoutThrowableCallbackSync2 =
+                mockErrorLogUtilWithoutThrowable();
+        ErrorLogUtilCallback mErrorLogUtilWithoutThrowableCallbackAsync =
+                mockErrorLogUtilWithoutThrowable();
+
+        PersistAdSelectionResultTestCallback callback =
+                invokePersistAdSelectionResult(persistAdSelectionResultRunner, inputParams);
+
+        mErrorLogUtilWithoutThrowableCallbackSync1.assertReceived(
+                expect,
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_INTERACTION_URI_EXCEEDS_MAXIMUM_LIMIT,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
+        mErrorLogUtilWithoutThrowableCallbackSync2.assertReceived(
+                expect,
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_INTERACTION_URI_EXCEEDS_MAXIMUM_LIMIT,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
+        mErrorLogUtilWithoutThrowableCallbackAsync.assertReceived(
+                expect,
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_EMPTY_SUCCESS_SILENT_CONSENT_FAILURE,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
+
+        Assert.assertTrue(callback.mIsSuccess);
+        Assert.assertEquals(
+                WINNER_AD_RENDER_URI, callback.mPersistAdSelectionResultResponse.getAdRenderUri());
+        Assert.assertEquals(
+                AD_SELECTION_ID, callback.mPersistAdSelectionResultResponse.getAdSelectionId());
     }
 
     @Test

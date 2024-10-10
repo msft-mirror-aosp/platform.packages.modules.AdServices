@@ -123,6 +123,12 @@
                         android:layout_marginStart="@dimen/adservices_content_horizontal_two_thirds_padding"
                         style="@style/MainStyle.Body1" />
                     <TextView
+                        android:id="@+id/notificationUI_pas_app_body2_part2"
+                        android:text="@string/notificationUI_pas_app_body2_part2"
+                        android:layout_marginTop="0dp"
+                        android:layout_marginStart="@dimen/adservices_content_horizontal_two_thirds_padding"
+                        style="@style/MainStyle.Body1" />
+                    <TextView
                         android:drawableStart="@drawable/ic_bullet_point"
                         android:drawablePadding="@dimen/adservices_ic_bullet_point_padding"
                         android:text="@string/notificationUI_pas_app_dropdown_subtitle3"
@@ -186,7 +192,7 @@
                         style="@style/MainStyle.Body1" />
                     <TextView
                         android:id="@+id/learn_more_from_privacy_policy2"
-                        android:text="@string/notificationUI_pas_leanr_more_link"
+                        android:text="@string/notificationUI_pas_learn_more_msmt_link"
                         style="@style/MainStyle.Body1" />
                 </LinearLayout>
             </LinearLayout>

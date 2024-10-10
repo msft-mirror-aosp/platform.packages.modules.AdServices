@@ -407,7 +407,7 @@
     <!-- Text for information explaining ads in the expander of the ROW notification landing page. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_how_it_works_row_body6_v2" translatable="false">@string/notificationUI_how_it_works_row_body6</string>
     <!-- Text for information explaining ads in the expander of the ROW notification landing page. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_how_it_works_row_body7_v2" translatable="false">@string/notificationUI_how_it_works_row_body7</string>
+    <string name="notificationUI_how_it_works_row_body7_v2"><a href="https://support.google.com/android/answer/13720755?sjid=5065763854652067029">Learn more about ad privacy on Android</a></string>
     <!-- Text for button that scrolls the page down to view more text. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_next_button_text">Next</string>
 
@@ -800,6 +800,8 @@
     <string name="notificationUI_pas_msmt_dropdown_subtitle2">How is my identity protected?</string>
     <!-- Text for the body of the current explainer section. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_pas_msmt_body2">Android uses multiple privacy measures such as aggregation and noising data to limit the information apps can share with one another and help protect your identity.\n\nAd measurement data is also deleted regularly from your device.</string>
+    <!-- Link that takes user to additional info on ad privacy for Android. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_pas_learn_more_msmt_link"><a href="https://support.google.com/android?p=ad_measurement">Learn more about how Android helps protect your privacy</a></string>
     <!-- Text for the subtitle of the explainer for a subsection of the PAS notification landing page. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_pas_app_dropdown_subtitle1" translatable="false">@string/notificationUI_pas_msmt_dropdown_subtitle1</string>
     <!-- Text for the body of the current explainer section. [CHAR LIMIT=NONE] -->
@@ -809,7 +811,7 @@
     <!-- Text for the body of the current explainer section. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_pas_app_body2">Apps can securely store this information so that it can only be used by their advertising partners to personalize ads on other apps. For example, if you regularly use cooking apps, you may see ads for grocery delivery services or related content in other apps.</string>
     <!-- Text for the body of the current explainer section. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_pas_app_body2_part2">Google requires companies to state publicly that they won’t use this data to re-identify you across apps. Some apps may use your activity to personalize your experience for more than just ads. They may also combine it with other information they already know about you. Companies are responsible for letting you know how they use your data. <a href="https://policies.google.com/privacy">Learn more about how Google protects your data in our Privacy Policy</a></string>
+    <string name="notificationUI_pas_app_body2_part2" translatable="false">@string/notificationUI_pas_combined_dropdown_body6</string>
     <!-- Text for the subtitle of the explainer for a subsection of the PAS notification landing page. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_pas_app_dropdown_subtitle3">How can I manage this data?</string>
     <!-- Text for the body of the current explainer section. [CHAR LIMIT=NONE] -->

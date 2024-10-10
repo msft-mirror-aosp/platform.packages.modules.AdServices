@@ -89,6 +89,7 @@ filegroup {
     srcs: [
         "java/com/android/adservices/cobalt/CobaltConstants.java",
         "java/com/android/adservices/service/CommonFlagsConstants.java",
+        "java/com/android/adservices/service/CommonDebugFlagsConstants.java",
         "java/com/android/adservices/service/DebugFlagsConstants.java",
         "java/com/android/adservices/service/FlagsConstants.java",
     ],
@@ -105,6 +106,7 @@ filegroup {
     name: "adservices-service-common-flags-sources",
     srcs: [
         "java/com/android/adservices/service/CommonDebugFlags.java",
+        "java/com/android/adservices/service/CommonDebugFlagsConstants.java",
         "java/com/android/adservices/service/CommonFlagsConstants.java",
         "java/com/android/adservices/service/DeviceConfigFlagsHelper.java",
     ],

@@ -57,22 +57,20 @@ public final class NotificationActivityTestUtil {
         }
     }
 
+    /** Start the Notification activity. */
     public static void startActivity(boolean isEUActivity, UiDevice device)
             throws InterruptedException {
-        if (sContext.checkCallingOrSelfPermission(READ_DEVICE_CONFIG)
-                != PackageManager.PERMISSION_GRANTED) {
-            Log.d("adservices", "this does not have read_device_config permission");
-        } else {
-            Log.d("adservices", "this has read_device_config permission");
-        }
-
-        String notificationPackage = NOTIFICATION_PACKAGE;
-        Intent intent = new Intent(notificationPackage);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        intent.putExtra("isEUDevice", isEUActivity);
-
+        Intent intent = getNotificationIntent(isEUActivity);
         sContext.startActivity(intent);
-        device.wait(Until.hasObject(By.pkg(notificationPackage).depth(0)), LAUNCH_TIMEOUT);
+        device.wait(Until.hasObject(By.pkg(NOTIFICATION_PACKAGE).depth(0)), LAUNCH_TIMEOUT);
+    }
+
+    /** Start the activity with context provided. */
+    public static void startActivity(Context context, boolean isEUActivity, UiDevice device)
+            throws InterruptedException {
+        Intent intent = getNotificationIntent(isEUActivity);
+        context.startActivity(intent);
+        device.wait(Until.hasObject(By.pkg(NOTIFICATION_PACKAGE).depth(0)), LAUNCH_TIMEOUT);
     }
 
     /**
@@ -84,21 +82,11 @@ public final class NotificationActivityTestUtil {
      */
     public static void startRenotifyPasActivity(boolean isEUActivity, UiDevice device)
             throws InterruptedException {
-        if (sContext.checkCallingOrSelfPermission(READ_DEVICE_CONFIG)
-                != PackageManager.PERMISSION_GRANTED) {
-            Log.d("adservices", "this does not have read_device_config permission");
-        } else {
-            Log.d("adservices", "this has read_device_config permission");
-        }
-
-        String notificationPackage = NOTIFICATION_PACKAGE;
-        Intent intent = new Intent(notificationPackage);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        intent.putExtra("isEUDevice", isEUActivity);
+        Intent intent = getNotificationIntent(isEUActivity);
         intent.putExtra("IS_RENOTIFY_KEY", true);
 
         sContext.startActivity(intent);
-        device.wait(Until.hasObject(By.pkg(notificationPackage).depth(0)), LAUNCH_TIMEOUT);
+        device.wait(Until.hasObject(By.pkg(NOTIFICATION_PACKAGE).depth(0)), LAUNCH_TIMEOUT);
     }
 
     /***
@@ -122,5 +110,31 @@ public final class NotificationActivityTestUtil {
             moreButton = ApkTestUtil.getElement(device, R.string.notificationUI_more_button_text);
         }
         assertWithMessage("More button").that(moreButton).isNull();
+    }
+
+    /** get a notification specific intent. */
+    public static Intent getNotificationIntent(boolean isEUActivity) {
+        if (sContext.checkCallingOrSelfPermission(READ_DEVICE_CONFIG)
+                != PackageManager.PERMISSION_GRANTED) {
+            Log.d("adservices", "this does not have read_device_config permission");
+        } else {
+            Log.d("adservices", "this has read_device_config permission");
+        }
+
+        Intent intent = ApkTestUtil.getIntent(NOTIFICATION_PACKAGE);
+        intent.putExtra("isEUDevice", isEUActivity);
+        return intent;
+    }
+
+    /** Check if intent has package and activity installed. */
+    public static boolean isNotificationIntentInstalled(boolean isEUActivity) {
+        Intent intent = getNotificationIntent(isEUActivity);
+        return ApkTestUtil.isIntentInstalled(intent);
+    }
+
+    /** Check if intent has package and activity installed with context. */
+    public static boolean isNotificationIntentInstalled(Context context, boolean isEUActivity) {
+        Intent intent = getNotificationIntent(isEUActivity);
+        return ApkTestUtil.isIntentInstalled(context, intent);
     }
 }

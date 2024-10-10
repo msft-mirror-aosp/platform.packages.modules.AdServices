@@ -23,12 +23,14 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_TIMEOUT;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
+import static com.android.adservices.common.logging.ErrorLogUtilCallback.mockErrorLogUtilWithThrowable;
 import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_CREATE_ASSET_FILE_DESCRIPTOR_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_EXCEEDED_ALLOWED_TIME_LIMIT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_FILTER_AND_REVOKED_CONSENT_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_NOTIFY_FAILURE_INTERNAL_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_NOTIFY_FAILURE_INVALID_ARGUMENT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_NOTIFY_FAILURE_TIMEOUT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA;
 import static com.android.adservices.service.stats.AdsRelevanceExecutionLoggerImplFixture.BINDER_ELAPSED_TIMESTAMP;
@@ -72,6 +74,7 @@ import android.os.RemoteException;
 import androidx.room.Room;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.logging.ErrorLogUtilCallback;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
@@ -85,6 +88,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGenerator;
@@ -106,6 +110,7 @@ import com.android.adservices.service.stats.AdsRelevanceExecutionLoggerFactory;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
 import com.android.adservices.service.stats.GetAdSelectionDataBuyerInputGeneratedStats;
+import com.android.adservices.shared.testing.SkipLoggingUsageRule;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
@@ -141,6 +146,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 @SpyStatic(FlagsFactory.class)
+@SpyStatic(DebugFlags.class)
 @MockStatic(PackageManagerCompatUtils.class)
 @SpyStatic(AssetFileDescriptorUtil.class)
 @RequiresSdkLevelAtLeastS
@@ -197,8 +203,9 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
     @Mock private AuctionServerDebugReporting mAuctionServerDebugReporting;
     private GetAdSelectionDataRunner mGetAdSelectionDataRunner;
 
-    @Mock private com.android.adservices.shared.util.Clock
-            mFledgeAuctionServerExecutionLoggerClockMock;
+    @Mock
+    private com.android.adservices.shared.util.Clock mFledgeAuctionServerExecutionLoggerClockMock;
+
     private AdsRelevanceExecutionLoggerFactory mAdsRelevanceExecutionLoggerFactory;
     private AdsRelevanceExecutionLogger mAdsRelevanceExecutionLogger;
 
@@ -211,6 +218,8 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
     @Before
     public void setup() throws Exception {
         mFakeFlags = new GetAdSelectionDataRunnerTestFlags();
+        mocker.mockGetDebugFlags(mMockDebugFlags);
+        mocker.mockGetConsentNotificationDebugMode(false);
         mMultiCloudSupportStrategyFlagOff =
                 MultiCloudTestStrategyFactory.getDisabledTestStrategy(mObliviousHttpEncryptorMock);
         mMultiCloudSupportStrategyFlagOn =
@@ -317,15 +326,9 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
     @Test
     public void testRunner_getAdSelectionData_returnsSuccessWithUXNotificationEnforcementDisabled()
             throws Exception {
-        Flags flagsWithoutUxNotificationEnforcement =
-                new GetAdSelectionDataRunnerTestFlags() {
-                    @Override
-                    public boolean getConsentNotificationDebugMode() {
-                        return true;
-                    }
-                };
+        mocker.mockGetConsentNotificationDebugMode(true);
 
-        mocker.mockGetFlags(flagsWithoutUxNotificationEnforcement);
+        mocker.mockGetFlags(mFakeFlags);
         doReturn(FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))
                 .when(mObliviousHttpEncryptorMock)
                 .encryptBytes(any(), anyLong(), anyLong(), any(), any());
@@ -340,7 +343,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                         .build();
 
         GetAdSelectionDataRunner getAdSelectionDataRunner =
-                initRunner(flagsWithoutUxNotificationEnforcement, mAdsRelevanceExecutionLogger);
+                initRunner(mFakeFlags, mAdsRelevanceExecutionLogger);
 
         GetAdSelectionDataTestCallback callback =
                 invokeGetAdSelectionData(getAdSelectionDataRunner, inputParams);
@@ -944,6 +947,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
     }
 
     @Test
+    @SkipLoggingUsageRule(reason = "Using ErrorLogUtilCallback as logging happens in background.")
     public void testRunner_getAdSelectionData_multiCloudFlagOn_invalidCoordinator_throwsError()
             throws Exception {
 
@@ -964,8 +968,15 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                         .setCoordinatorOriginUri(Uri.parse("random-url"))
                         .build();
 
+        ErrorLogUtilCallback mErrorLogUtilWithThrowableCallback = mockErrorLogUtilWithThrowable();
+
         GetAdSelectionDataTestCallback callback =
                 invokeGetAdSelectionData(mGetAdSelectionDataRunner, inputParams);
+
+        mErrorLogUtilWithThrowableCallback.assertReceived(
+                expect,
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_NOTIFY_FAILURE_INVALID_ARGUMENT,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA);
 
         Assert.assertFalse("Call should not have succeeded", callback.mIsSuccess);
         Assert.assertEquals(STATUS_INVALID_ARGUMENT, callback.mFledgeErrorResponse.getStatusCode());
@@ -1421,6 +1432,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                         BLOCKING_EXECUTOR,
                         mScheduledExecutor,
                         shortTimeoutFlags,
+                        mMockDebugFlags,
                         CALLER_UID,
                         DevContext.createForDevOptionsDisabled(),
                         mAuctionServerDebugReporting,
@@ -1487,6 +1499,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                 BLOCKING_EXECUTOR,
                 mScheduledExecutor,
                 flags,
+                mMockDebugFlags,
                 CALLER_UID,
                 DevContext.createForDevOptionsDisabled(),
                 mClockMock,
@@ -1581,11 +1594,6 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
         @Override
         public boolean getFledgeAuctionServerKeyFetchMetricsEnabled() {
             return FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED_IN_TEST;
-        }
-
-        @Override
-        public boolean getConsentNotificationDebugMode() {
-            return false;
         }
     }
 

@@ -1039,4 +1039,5 @@
     <public type="string" name="notificationUI_pas_combined_dropdown_subtitle3" id="0x7f017ce5" />
     <public type="string" name="notificationUI_pas_combined_dropdown_body6" id="0x7f017ce4" />
     <public type="string" name="notificationUI_pas_app_body2_part2" id="0x7f017ce3" />
+    <public type="string" name="notificationUI_pas_learn_more_msmt_link" id="0x7f017ce2" />
 </resources>

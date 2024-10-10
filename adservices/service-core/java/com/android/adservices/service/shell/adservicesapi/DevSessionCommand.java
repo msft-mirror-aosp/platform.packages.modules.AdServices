@@ -42,10 +42,10 @@ public final class DevSessionCommand extends AbstractShellCommand {
             "WARNING: Enabling a development session will cause the AdServices database to be "
                     + "reset to a factory new state.";
 
-    @VisibleForTesting public static final String CMD = "dev-session";
-    @VisibleForTesting public static final String SUB_CMD_START = "start";
-    @VisibleForTesting public static final String SUB_CMD_END = "end";
-    @VisibleForTesting public static final String ARG_ERASE_DB = "--erase-db";
+    public static final String CMD = "dev-session";
+    public static final String SUB_CMD_START = "start";
+    public static final String SUB_CMD_END = "end";
+    public static final String ARG_ERASE_DB = "--erase-db";
 
     @VisibleForTesting
     public static final String HELP =
@@ -111,21 +111,13 @@ public final class DevSessionCommand extends AbstractShellCommand {
             return invalidArgsError(getCommandHelp(), err, getMetricsLoggerCommand(), args);
         }
 
-        boolean success;
+        DevSessionControllerResult result;
         try {
             Future<DevSessionControllerResult> future =
                     shouldSetDevSessionEnabled
                             ? mDevSessionController.startDevSession()
                             : mDevSessionController.endDevSession();
-            success =
-                    future.get(TIMEOUT_SEC, TimeUnit.SECONDS)
-                            .equals(DevSessionControllerResult.SUCCESS);
-        } catch (IllegalStateException e) {
-            // TODO(b/370948289): Handle NO_OP instead ISE.
-            sLogger.e(e, ERROR_ALREADY_IN_DEV_MODE);
-            err.write(ERROR_ALREADY_IN_DEV_MODE);
-            return toShellCommandResult(
-                    ShellCommandStats.RESULT_GENERIC_ERROR, COMMAND_DEV_SESSION);
+            result = future.get(TIMEOUT_SEC, TimeUnit.SECONDS);
         } catch (ExecutionException | InterruptedException | TimeoutException e) {
             sLogger.e(e, ERROR_FAILED_TO_RESET);
             err.write(ERROR_FAILED_TO_RESET);
@@ -133,7 +125,12 @@ public final class DevSessionCommand extends AbstractShellCommand {
                     ShellCommandStats.RESULT_GENERIC_ERROR, COMMAND_DEV_SESSION);
         }
 
-        if (success) {
+        if (result.equals(DevSessionControllerResult.NO_OP)) {
+            sLogger.e(ERROR_ALREADY_IN_DEV_MODE);
+            err.write(ERROR_ALREADY_IN_DEV_MODE);
+            return toShellCommandResult(
+                    ShellCommandStats.RESULT_GENERIC_ERROR, COMMAND_DEV_SESSION);
+        } else if (result.equals(DevSessionControllerResult.SUCCESS)) {
             String successMessage =
                     String.format(OUTPUT_SUCCESS_FORMAT, shouldSetDevSessionEnabled);
             sLogger.v(successMessage);

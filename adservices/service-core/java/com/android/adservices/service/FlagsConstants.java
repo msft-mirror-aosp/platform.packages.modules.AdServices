@@ -150,6 +150,8 @@ public final class FlagsConstants {
             "Cobalt__fall_back_to_default_base_registry";
     public static final String KEY_COBALT__IGNORED_REPORT_ID_LIST =
             "Cobalt__ignored_report_id_list";
+    public static final String KEY_COBALT__ENABLE_API_CALL_RESPONSE_LOGGING =
+            "Cobalt__enable_api_call_response_logging";
 
     // Measurement keys
     public static final String KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS =
@@ -421,8 +423,9 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED =
             "measurement_verbose_debug_reporting_fallback_job_persisted";
 
-    static final String KEY_MEASUREMENT_REPORT_RETRY_LIMIT = "measurement_report_retry_limit";
-    static final String KEY_MEASUREMENT_REPORT_RETRY_LIMIT_ENABLED =
+    public static final String KEY_MEASUREMENT_REPORT_RETRY_LIMIT =
+            "measurement_report_retry_limit";
+    public static final String KEY_MEASUREMENT_REPORT_RETRY_LIMIT_ENABLED =
             "measurement_report_retry_limit_enabled";
     public static final String KEY_MEASUREMENT_APP_PACKAGE_NAME_LOGGING_ALLOWLIST =
             "measurement_app_package_name_logging_allowlist";

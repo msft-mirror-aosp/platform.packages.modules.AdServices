@@ -312,7 +312,7 @@ public class AdServicesCommonManager {
      * those PPAPIs will not operate for that user.
      *
      * <p>A notification type is also required to determine what type of notification should be
-     * shown to the user to notify them of these changes. The NotificationTypeParams can be Ongoing,
+     * shown to the user to notify them of these changes. The NotificationType can be Ongoing,
      * Regular, or None.
      *
      * @param adServicesModuleStateList parcel containing state information for modules.
@@ -321,16 +321,14 @@ public class AdServicesCommonManager {
      * @param callback callback function to confirm modules overrides is set up correctly.
      * @hide
      */
-    @SystemApi
     @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
     @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
     public void requestAdServicesModuleOverrides(
             @NonNull List<AdServicesModuleState> adServicesModuleStateList,
-            @NonNull NotificationTypeParams notificationType,
+            @NotificationType.NotificationTypeCode int notificationType,
             @NonNull @CallbackExecutor Executor executor,
             @NonNull AdServicesOutcomeReceiver<Void, Exception> callback) {
         Objects.requireNonNull(adServicesModuleStateList);
-        Objects.requireNonNull(notificationType);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(callback);
 
@@ -375,7 +373,6 @@ public class AdServicesCommonManager {
      * @param callback callback function to confirm module user choice is set up correctly.
      * @hide
      */
-    @SystemApi
     @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
     @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
     public void requestAdServicesModuleUserChoices(
