@@ -15,6 +15,7 @@
  */
 package com.android.adservices.shared.testing.flags;
 
+import com.android.adservices.shared.testing.Action;
 import com.android.adservices.shared.testing.Logger;
 import com.android.adservices.shared.testing.device.DeviceConfig;
 

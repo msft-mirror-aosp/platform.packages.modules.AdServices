@@ -25,7 +25,6 @@ import android.adservices.common.FrequencyCapFilters;
 import android.adservices.common.KeyedFrequencyCapFixture;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import com.google.common.collect.ImmutableList;
 
@@ -34,7 +33,6 @@ import org.junit.Test;
 import java.time.Instant;
 
 // TODO(b/265204820): Move to CTS tests once public APIs are unhidden
-@RequiresSdkLevelAtLeastS
 public final class SetAdCounterHistogramOverrideRequestTest extends AdServicesUnitTestCase {
     private static final ImmutableList<Instant> HISTOGRAM_TIMESTAMPS =
             ImmutableList.of(

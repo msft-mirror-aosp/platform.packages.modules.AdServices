@@ -33,7 +33,6 @@ import com.android.adservices.service.profiling.JSScriptEngineLogConstants;
 import com.android.adservices.service.profiling.Profiler;
 import com.android.adservices.service.profiling.StopWatch;
 import com.android.adservices.shared.testing.FutureSyncCallback;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
 import com.google.common.util.concurrent.FluentFuture;
@@ -47,7 +46,6 @@ import org.mockito.Mockito;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-@RequiresSdkLevelAtLeastS()
 @MockStatic(JavaScriptSandbox.class)
 public final class JavaScriptSandboxProviderTest extends AdServicesExtendedMockitoTestCase {
     private final LoggerFactory.Logger mLogger = LoggerFactory.getFledgeLogger();

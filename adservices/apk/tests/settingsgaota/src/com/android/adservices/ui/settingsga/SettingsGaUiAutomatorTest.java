@@ -22,7 +22,6 @@ import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.annotations.DisableGlobalKillSwitch;
 import com.android.adservices.common.annotations.SetAllLogcatTags;
 import com.android.adservices.common.annotations.SetCompatModeFlags;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.ui.util.AdServicesUiTestCase;
 import com.android.adservices.ui.util.SettingsTestUtil;
@@ -33,7 +32,6 @@ import org.junit.Rule;
 import org.junit.Test;
 
 @DisableGlobalKillSwitch
-@RequiresSdkLevelAtLeastS
 @SetAllLogcatTags
 @SetCompatModeFlags
 @SetFlagEnabled(KEY_ENABLE_AD_SERVICES_SYSTEM_API)

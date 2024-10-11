@@ -29,7 +29,6 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.EpochComputationClassifierStats;
 import com.android.adservices.service.topics.CacheManager;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.android.libraries.mobiledatadownload.file.SynchronousFileStorage;
@@ -52,7 +51,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /** Precomputed Topics Classifier Test {@link PrecomputedClassifier}. */
-@RequiresSdkLevelAtLeastS
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(ModelManager.class)
 public final class PrecomputedClassifierTest extends AdServicesExtendedMockitoTestCase {
