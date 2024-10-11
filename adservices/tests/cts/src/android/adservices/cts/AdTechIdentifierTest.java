@@ -22,12 +22,10 @@ import android.adservices.common.AdTechIdentifier;
 import android.os.Parcel;
 
 import com.android.adservices.shared.testing.EqualsTester;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-@RequiresSdkLevelAtLeastS
 public final class AdTechIdentifierTest extends CtsAdServicesDeviceTestCase {
 
     private static final String AD_TECH_ID_STRING = "example.com";

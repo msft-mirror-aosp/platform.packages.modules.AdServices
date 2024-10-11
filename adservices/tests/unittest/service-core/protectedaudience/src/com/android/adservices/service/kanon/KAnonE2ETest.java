@@ -149,7 +149,6 @@ import com.android.adservices.service.stats.kanon.KAnonJoinStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonSignJoinStatsConstants;
 import com.android.adservices.service.stats.kanon.KAnonSignStatusStats;
 import com.android.adservices.shared.testing.SkipLoggingUsageRule;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -208,7 +207,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("UnusedVariable")
-@RequiresSdkLevelAtLeastS()
 @SpyStatic(JSScriptEngine.class)
 @MockStatic(ConsentManager.class)
 @MockStatic(AppImportanceFilter.class)

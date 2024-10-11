@@ -13,17 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.shared.testing.flags;
+package com.android.adservices.shared.testing;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.shared.meta_testing.FakeAction;
-import com.android.adservices.shared.meta_testing.FakeLogger;
 import com.android.adservices.shared.meta_testing.SharedSidelessTestCase;
-import com.android.adservices.shared.testing.LogEntry;
-import com.android.adservices.shared.testing.Logger;
 import com.android.adservices.shared.testing.Logger.LogLevel;
 
 import com.google.common.collect.ImmutableList;
@@ -32,12 +29,11 @@ import org.junit.Test;
 
 public final class SafeActionTest extends SharedSidelessTestCase {
 
-    private final FakeLogger mFakeLogger = new FakeLogger();
     private final FakeAction mFakeAction = new FakeAction();
     private final Exception mException = new Exception("D'OH!");
 
     private final SafeAction mSafeAction =
-            new SafeAction(new Logger(mFakeLogger, SafeActionTest.class), mFakeAction);
+            new SafeAction(new Logger(mFakeRealLogger, SafeActionTest.class), mFakeAction);
 
     @Test
     public void testConstructor_null() {
@@ -107,7 +103,7 @@ public final class SafeActionTest extends SharedSidelessTestCase {
     }
 
     private void expectErrorLogged(String method) {
-        ImmutableList<LogEntry> logEntries = mFakeLogger.getEntries();
+        ImmutableList<LogEntry> logEntries = mFakeRealLogger.getEntries();
         assertWithMessage("log entries").that(logEntries).hasSize(1);
         LogEntry logEntry = logEntries.get(0);
         expect.withMessage("log entry").that(logEntry.level).isEqualTo(LogLevel.ERROR);

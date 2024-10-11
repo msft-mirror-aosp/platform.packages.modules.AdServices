@@ -95,7 +95,6 @@ import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ReportInteractionApiCalledStats;
 import com.android.adservices.shared.testing.AnswerSyncCallback;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
@@ -123,7 +122,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-@RequiresSdkLevelAtLeastS()
 @MockStatic(ConsentManager.class)
 @MockStatic(PermissionHelper.class)
 @SpyStatic(FlagsFactory.class)

@@ -24,13 +24,11 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import com.google.protobuf.ByteString;
 
 import org.junit.Test;
 
-@RequiresSdkLevelAtLeastS()
 public final class CobaltApiKeysTest extends AdServicesUnitTestCase {
 
     @Test
