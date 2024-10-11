@@ -37,7 +37,6 @@ import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.ui.util.AdServicesUiTestCase;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.adservices.ui.util.NotificationActivityTestUtil;
-import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.Assume;
 import org.junit.Before;
@@ -68,7 +67,6 @@ public final class NotificationActivityGAV2UxSelectorUiAutomatorTest extends AdS
 
     @Before
     public void setup() {
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
         Assume.assumeTrue(NotificationActivityTestUtil.isNotificationIntentInstalled(true));
     }
 

@@ -47,7 +47,6 @@ import com.android.adservices.shared.spe.framework.ExecutionRuntimeParameters;
 import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
 import com.android.adservices.shared.spe.scheduling.BackoffPolicy;
 import com.android.adservices.shared.spe.scheduling.JobSpec;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.spe.AdServicesJobScheduler;
 import com.android.adservices.spe.AdServicesJobServiceFactory;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
@@ -61,7 +60,6 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 /** Unit tests for {@link BackgroundFetchJob}. */
-@RequiresSdkLevelAtLeastS()
 @MockStatic(AdServicesJobScheduler.class)
 @MockStatic(AdServicesJobServiceFactory.class)
 @MockStatic(BackgroundFetchJobService.class)

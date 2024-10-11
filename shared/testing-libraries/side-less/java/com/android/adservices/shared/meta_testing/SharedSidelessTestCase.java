@@ -17,10 +17,12 @@ package com.android.adservices.shared.meta_testing;
 
 import com.android.adservices.shared.testing.AbstractProcessLifeguardRule;
 import com.android.adservices.shared.testing.DynamicLogger;
+import com.android.adservices.shared.testing.Logger;
 import com.android.adservices.shared.testing.Logger.RealLogger;
 import com.android.adservices.shared.testing.SidelessTestCase;
 
 import org.junit.Rule;
+import org.junit.Test;
 
 /** Base class for all tests on shared testing infra. */
 public abstract class SharedSidelessTestCase extends SidelessTestCase {
@@ -39,11 +41,28 @@ public abstract class SharedSidelessTestCase extends SidelessTestCase {
                 }
             };
 
+    protected final FakeRealLogger mFakeRealLogger = new FakeRealLogger();
+    protected final Logger mFakeLogger = new Logger(mFakeRealLogger, getClass());
+
     protected SharedSidelessTestCase() {
         this(DynamicLogger.getInstance());
     }
 
     protected SharedSidelessTestCase(RealLogger realLogger) {
         super(realLogger);
+    }
+
+    @Test
+    @Override
+    public final void testValidTestCaseFixtures() throws Exception {
+        assertValidTestCaseFixtures();
+    }
+
+    @Override
+    protected void assertValidTestCaseFixtures() throws Exception {
+        super.assertValidTestCaseFixtures();
+
+        assertTestClassHasNoFieldsFromSuperclass(
+                SharedSidelessTestCase.class, "processLifeguard", "mFakeRealLogger", "mFakeLogger");
     }
 }

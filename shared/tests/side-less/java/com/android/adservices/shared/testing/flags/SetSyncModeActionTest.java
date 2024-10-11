@@ -22,15 +22,12 @@ import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisa
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.shared.meta_testing.FakeDeviceConfig;
-import com.android.adservices.shared.meta_testing.FakeLogger;
 import com.android.adservices.shared.meta_testing.SharedSidelessTestCase;
-import com.android.adservices.shared.testing.Logger;
 
 import org.junit.Test;
 
 public final class SetSyncModeActionTest extends SharedSidelessTestCase {
 
-    private final Logger mFakeLogger = new Logger(new FakeLogger(), SetSyncModeActionTest.class);
     private final FakeDeviceConfig mFakeDeviceConfig = new FakeDeviceConfig();
 
     @Test

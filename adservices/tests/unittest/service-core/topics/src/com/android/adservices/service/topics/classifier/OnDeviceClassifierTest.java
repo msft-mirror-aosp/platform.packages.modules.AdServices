@@ -35,7 +35,6 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.EpochComputationClassifierStats;
 import com.android.adservices.service.topics.CacheManager;
 import com.android.adservices.shared.testing.SkipLoggingUsageRule;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.android.libraries.mobiledatadownload.file.SynchronousFileStorage;
@@ -58,7 +57,6 @@ import java.util.stream.Collectors;
 
 /** Topic Classifier Test {@link OnDeviceClassifier}. */
 @SpyStatic(FlagsFactory.class)
-@RequiresSdkLevelAtLeastS
 // TODO (b/359964245): Remove after bug is resolved.
 @SkipLoggingUsageRule(reason = "b/359964245")
 public final class OnDeviceClassifierTest extends AdServicesExtendedMockitoTestCase {

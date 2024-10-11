@@ -67,7 +67,6 @@ import com.android.adservices.service.stats.BackgroundFetchExecutionLogger;
 import com.android.adservices.service.stats.CustomAudienceLoggerFactory;
 import com.android.adservices.service.stats.UpdateCustomAudienceExecutionLogger;
 import com.android.adservices.shared.testing.AnswerSyncCallback;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.adservices.shared.testing.concurrency.SimpleSyncCallback;
 
 import com.google.common.util.concurrent.FluentFuture;
@@ -100,9 +99,6 @@ public class BackgroundFetchWorkerTest {
 
     private final Flags mFlags = new BackgroundFetchWorkerTestFlags(true);
     private final ExecutorService mExecutorService = Executors.newFixedThreadPool(8);
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Rule(order = 1)
     public final AdServicesDeviceSupportedRule deviceSupportRule =

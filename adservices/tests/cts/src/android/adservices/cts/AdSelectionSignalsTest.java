@@ -20,14 +20,12 @@ import android.adservices.common.AdSelectionSignals;
 import android.os.Parcel;
 
 import com.android.adservices.shared.testing.EqualsTester;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
 
-@RequiresSdkLevelAtLeastS
 public final class AdSelectionSignalsTest extends CtsAdServicesDeviceTestCase {
 
     private static final String SIGNALS_STRING = "{\"a\":\"b\"}";

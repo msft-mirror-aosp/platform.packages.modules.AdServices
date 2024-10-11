@@ -34,11 +34,9 @@ import android.adservices.customaudience.TrustedBiddingData;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.ValidatorUtil;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.collect.ImmutableList;
 
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.List;
@@ -49,9 +47,6 @@ public class TrustedBiddingDataValidatorTest {
             CommonFixture.FLAGS_FOR_TEST.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB();
     private TrustedBiddingDataValidator mValidator =
             new TrustedBiddingDataValidator(CUSTOM_AUDIENCE_MAX_TRUSTED_BIDDING_DATA_SIZE_B);
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testGetValidationViolation_nullTrustedBiddingData_throws() {

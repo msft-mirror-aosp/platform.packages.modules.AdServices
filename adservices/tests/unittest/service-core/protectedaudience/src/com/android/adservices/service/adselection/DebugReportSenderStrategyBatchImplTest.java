@@ -26,7 +26,6 @@ import android.net.Uri;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
 import com.android.adservices.service.devapi.DevContext;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -38,7 +37,6 @@ import org.mockito.Mock;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-@RequiresSdkLevelAtLeastS()
 @SpyStatic(DebugReportSenderJobService.class)
 public final class DebugReportSenderStrategyBatchImplTest
         extends AdServicesExtendedMockitoTestCase {

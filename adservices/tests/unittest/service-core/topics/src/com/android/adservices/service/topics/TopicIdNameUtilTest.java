@@ -19,7 +19,6 @@ package com.android.adservices.service.topics;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -29,7 +28,6 @@ import org.junit.Test;
 import java.io.IOException;
 
 /** TopicId to TopicName utility test {@link TopicIdNameUtil} */
-@RequiresSdkLevelAtLeastS
 public final class TopicIdNameUtilTest extends AdServicesUnitTestCase {
     private static TopicIdNameUtil sTopicIdNameUtil;
 
