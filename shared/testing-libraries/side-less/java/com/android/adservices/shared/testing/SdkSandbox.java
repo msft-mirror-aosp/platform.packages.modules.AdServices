@@ -13,34 +13,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.shared.testing.device;
+package com.android.adservices.shared.testing;
 
-/** Side-agnostic abstraction to interact with the {@code DeviceConfig}. */
-public interface DeviceConfig {
+/** Side-agnostic abstraction to interact with some {@code SdkSandbox} features. */
+public interface SdkSandbox {
 
-    /** Sets the synchronization mode. */
-    void setSyncDisabledMode(SyncDisabledModeForTest mode);
+    /** Gets the current state. */
+    State getState();
 
-    /** Gets the synchronization mode. */
-    SyncDisabledModeForTest getSyncDisabledMode();
+    /**
+     * Sets the state, or no-op if not supported..
+     *
+     * @throws IllegalArgumentException if state is not {@code ENABLED} or {@code DISABLED}.
+     */
+    void setState(State state);
 
-    /* Synchronization mode */
-    enum SyncDisabledModeForTest {
-        // TODO(b/297085722): remove UNSUPPORTED once tests don't run on R anymore
+    /* State of the {@code SdkSandbox}. */
+    enum State {
+        UNKNOWN(false),
         UNSUPPORTED(false),
-        NONE(true),
-        PERSISTENT(true),
-        UNTIL_REBOOT(true);
+        ENABLED(true),
+        DISABLED(true);
+
+        private final boolean mValid;
+
+        State(boolean valid) {
+            mValid = valid;
+        }
 
         /** Whether the state is a valid one. */
         public boolean isValid() {
             return mValid;
-        }
-
-        private final boolean mValid;
-
-        SyncDisabledModeForTest(boolean valid) {
-            mValid = valid;
         }
     }
 }
