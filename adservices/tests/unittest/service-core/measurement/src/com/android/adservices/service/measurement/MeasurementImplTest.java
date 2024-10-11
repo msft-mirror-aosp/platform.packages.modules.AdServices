@@ -473,8 +473,7 @@ public final class MeasurementImplTest extends AdServicesExtendedMockitoTestCase
     @Test
     @MockStatic(SdkLevel.class)
     public void testDeleteRegistrations_success_recordsDeletionInAppSearch_flagOff_S() {
-        mocker.mockIsAtLeastT(false);
-        mocker.mockIsAtLeastS(true);
+        mocker.mockSdkLevelS();
 
         doReturn(true).when(mMockFlags).getMeasurementRollbackDeletionAppSearchKillSwitch();
         MeasurementRollbackCompatManager mockRollbackManager = doDeleteRegistrationsCompat();
@@ -701,8 +700,7 @@ public final class MeasurementImplTest extends AdServicesExtendedMockitoTestCase
     @Test
     @MockStatic(SdkLevel.class)
     public void testCheckIfNeedsToHandleReconciliation_S() {
-        mocker.mockIsAtLeastT(false);
-        mocker.mockIsAtLeastS(true);
+        mocker.mockSdkLevelS();
 
         doReturn(false).when(mMockFlags).getMeasurementRollbackDeletionKillSwitch();
         doReturn(false).when(mMockFlags).getMeasurementRollbackDeletionAppSearchKillSwitch();
@@ -721,8 +719,7 @@ public final class MeasurementImplTest extends AdServicesExtendedMockitoTestCase
     @Test
     @MockStatic(SdkLevel.class)
     public void testCheckIfNeedsToHandleReconciliation_clearsData_S() {
-        mocker.mockIsAtLeastT(false);
-        mocker.mockIsAtLeastS(true);
+        mocker.mockSdkLevelS();
 
         doReturn(false).when(mMockFlags).getMeasurementRollbackDeletionKillSwitch();
         checkIfNeedsToHandleReconciliationCompat(true, true);
@@ -749,8 +746,7 @@ public final class MeasurementImplTest extends AdServicesExtendedMockitoTestCase
     @Test
     @MockStatic(SdkLevel.class)
     public void testCheckIfNeedsToHandleReconciliation_flagOff_S() {
-        mocker.mockIsAtLeastT(false);
-        mocker.mockIsAtLeastS(true);
+        mocker.mockSdkLevelS();
 
         doReturn(true).when(mMockFlags).getMeasurementRollbackDeletionAppSearchKillSwitch();
         mocker.mockGetFlags(mMockFlags);
@@ -804,8 +800,7 @@ public final class MeasurementImplTest extends AdServicesExtendedMockitoTestCase
 
         mocker.mockGetFlags(mMockFlags);
         mocker.mockAdServicesLoggerImpl(mockLogger);
-        mocker.mockIsAtLeastT(false);
-        mocker.mockIsAtLeastS(true);
+        mocker.mockSdkLevelS();
         ExtendedMockito.doReturn(mockManager)
                 .when(() -> MeasurementRollbackCompatManager.getInstance(any(), anyInt()));
 
