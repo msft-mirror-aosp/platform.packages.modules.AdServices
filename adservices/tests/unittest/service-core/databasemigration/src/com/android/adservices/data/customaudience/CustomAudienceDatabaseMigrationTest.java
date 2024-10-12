@@ -39,8 +39,6 @@ import androidx.room.util.TableInfo;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -56,9 +54,6 @@ public class CustomAudienceDatabaseMigrationTest {
 
     private static final String QUERY_TABLES_FROM_SQL_MASTER =
             "SELECT * FROM sqlite_master WHERE type='table' AND name='%s';";
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Rule(order = 1)
     public MigrationTestHelper helper =

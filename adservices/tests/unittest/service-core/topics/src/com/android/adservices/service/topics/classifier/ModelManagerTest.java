@@ -42,7 +42,6 @@ import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithE
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -71,7 +70,6 @@ import java.util.Map;
 /** Model Manager Test {@link ModelManager}. */
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(ModelManager.class)
-@RequiresSdkLevelAtLeastS
 @SetErrorLogUtilDefaultParams(
         throwable = Any.class,
         ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS)

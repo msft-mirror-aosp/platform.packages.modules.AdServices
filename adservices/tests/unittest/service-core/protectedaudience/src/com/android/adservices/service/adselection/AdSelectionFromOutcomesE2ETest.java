@@ -111,7 +111,6 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.SelectAdsFromOutcomesApiCalledStats;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -136,7 +135,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
-@RequiresSdkLevelAtLeastS()
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(DebugFlags.class)
 public final class AdSelectionFromOutcomesE2ETest extends AdServicesExtendedMockitoTestCase {

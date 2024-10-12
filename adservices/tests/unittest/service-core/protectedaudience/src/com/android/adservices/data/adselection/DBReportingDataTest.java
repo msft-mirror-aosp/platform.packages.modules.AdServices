@@ -23,9 +23,6 @@ import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-
-import org.junit.Rule;
 import org.junit.Test;
 
 public class DBReportingDataTest {
@@ -35,9 +32,6 @@ public class DBReportingDataTest {
             CommonFixture.getUri(AdSelectionConfigFixture.BUYER, REPORTING_FRAGMENT);
     private static final Uri SELLER_REPORTING_URI_1 =
             CommonFixture.getUri(AdSelectionConfigFixture.SELLER, REPORTING_FRAGMENT);
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuild_unsetAdSelectionId_throwsISE() {

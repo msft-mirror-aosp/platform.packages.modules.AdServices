@@ -15,33 +15,81 @@
  */
 package com.android.adservices.shared.meta_testing;
 
+import com.android.adservices.shared.testing.Action;
 import com.android.adservices.shared.testing.Nullable;
-import com.android.adservices.shared.testing.flags.Action;
 
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /** Fake action! */
 public final class FakeAction implements Action {
 
-    private boolean mExecuted;
-    private boolean mOnExecute;
-    private boolean mReverted;
-
+    @Nullable private final String mName;
+    @Nullable private final AtomicInteger mExecutionOrderCounter;
+    @Nullable private final AtomicInteger mReversionOrderCounter;
     @Nullable private Exception mOnExecuteException;
     @Nullable private Exception mOnRevertException;
+    @Nullable private Boolean mOnExecute;
+
+    private boolean mExecuted;
+    private boolean mReverted;
+    private int mExecutionOrder;
+    private int mReversionOrder;
+
+    /** Default constructor, don't set anything. */
+    public FakeAction() {
+        this(
+                /* checkNull= */ false,
+                /* name= */ null,
+                /* executionOrderCounter= */ null,
+                /* reversionOrderCounter= */ null);
+    }
+
+    /**
+     * Constructor used when tests need to check the order of multiple actions.
+     *
+     * @param name name of the object (used on {@link #toString()}
+     * @param executionOrderCounter counter that is incremented when {@link #execute()} is called.
+     * @param reversionOrderCounter counter that is incremented when {@link #revert()} is called.
+     */
+    public FakeAction(
+            String name, AtomicInteger executionOrderCounter, AtomicInteger reversionOrderCounter) {
+        this(/* checkNull= */ true, name, executionOrderCounter, reversionOrderCounter);
+    }
+
+    private FakeAction(
+            boolean checkNull,
+            String name,
+            AtomicInteger executionOrderCounter,
+            AtomicInteger reversionOrderCounter) {
+        if (checkNull) {
+            Objects.requireNonNull(name, "mName cannot be null");
+            Objects.requireNonNull(executionOrderCounter, "executionOrderCounter cannot be null");
+            Objects.requireNonNull(reversionOrderCounter, "reversionOrderCounter cannot be null");
+        }
+        mName = name;
+        mExecutionOrderCounter = executionOrderCounter;
+        mReversionOrderCounter = reversionOrderCounter;
+    }
 
     @Override
     public boolean execute() throws Exception {
         mExecuted = true;
+        if (mExecutionOrderCounter != null) {
+            mExecutionOrder = mExecutionOrderCounter.incrementAndGet();
+        }
         if (mOnExecuteException != null) {
             throw mOnExecuteException;
         }
-        return mOnExecute;
+        return mOnExecute == null || mOnExecute;
     }
 
     @Override
     public void revert() throws Exception {
         mReverted = true;
+        if (mReversionOrderCounter != null) {
+            mReversionOrder = mReversionOrderCounter.incrementAndGet();
+        }
         if (mOnRevertException != null) {
             throw mOnRevertException;
         }
@@ -62,6 +110,19 @@ public final class FakeAction implements Action {
         return mExecuted;
     }
 
+    /**
+     * Gets the execution order of this action.
+     *
+     * @throws IllegalStateException if it was not constructed using {@link #FakeAction(String,
+     *     AtomicInteger, AtomicInteger)}.
+     */
+    public int getExecutionOrder() {
+        if (mExecutionOrderCounter == null) {
+            throw new IllegalStateException("Not created with executionOrder consttructor");
+        }
+        return mExecutionOrder;
+    }
+
     /** Sets an exception to be thrown by {@link #revert()}. */
     public void onRevertThrows(Exception exception) {
         mOnRevertException = Objects.requireNonNull(exception, "exception cannot be null");
@@ -72,18 +133,40 @@ public final class FakeAction implements Action {
         return mReverted;
     }
 
+    /**
+     * Gets the reversion order of this action.
+     *
+     * @throws IllegalStateException if it was not constructed using {@link #FakeAction(String,
+     *     AtomicInteger, AtomicInteger)}.
+     */
+    public int getReversionOrder() {
+        if (mReversionOrderCounter == null) {
+            throw new IllegalStateException("Not created with reversionOrder consttructor");
+        }
+        return mReversionOrder;
+    }
+
     @Override
     public String toString() {
-        return "FakeAction[mExecuted="
-                + mExecuted
-                + ", mReverted="
-                + mReverted
-                + ", mOnExecute="
-                + mOnExecute
-                + ", mOnExecuteException="
-                + mOnExecuteException
-                + ", mOnRevertException="
-                + mOnRevertException
-                + "]";
+        StringBuilder string = new StringBuilder("FakeAction[");
+        if (mName != null) {
+            string.append("name=").append(mName).append(", ");
+        }
+        string.append("mExecuted=")
+                .append(mExecuted)
+                .append(", mReverted=")
+                .append(mReverted)
+                .append(", mOnExecute=")
+                .append(mOnExecute);
+        if (mExecutionOrderCounter != null) {
+            string.append(", mExecutionOrder=")
+                    .append(mExecutionOrder)
+                    .append(", mReversionOrder=")
+                    .append(mReversionOrder);
+        }
+        if (mOnExecuteException != null) {
+            string.append(", mOnExecuteException=").append(mOnExecuteException);
+        }
+        return string.append(']').toString();
     }
 }

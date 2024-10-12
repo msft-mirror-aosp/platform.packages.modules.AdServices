@@ -49,6 +49,9 @@ public interface AndroidStaticMocker {
     /** Mocks a call to SDK level to return R */
     void mockSdkLevelR();
 
+    /** Mocks a call to SDK level to return S */
+    void mockSdkLevelS();
+
     /**
      * Mocks a call to {@link ActivityManager#getCurrentUser()}, returning {@code user}.
      *

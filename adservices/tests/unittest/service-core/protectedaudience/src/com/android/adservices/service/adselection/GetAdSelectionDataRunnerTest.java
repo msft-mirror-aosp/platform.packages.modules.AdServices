@@ -111,7 +111,6 @@ import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
 import com.android.adservices.service.stats.GetAdSelectionDataBuyerInputGeneratedStats;
 import com.android.adservices.shared.testing.SkipLoggingUsageRule;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -149,7 +148,6 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 @SpyStatic(DebugFlags.class)
 @MockStatic(PackageManagerCompatUtils.class)
 @SpyStatic(AssetFileDescriptorUtil.class)
-@RequiresSdkLevelAtLeastS
 @SetErrorLogUtilDefaultParams(
         throwable = ExpectErrorLogUtilWithExceptionCall.Any.class,
         ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA)

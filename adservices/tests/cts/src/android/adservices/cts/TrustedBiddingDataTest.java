@@ -25,15 +25,12 @@ import android.adservices.customaudience.TrustedBiddingDataFixture;
 import android.net.Uri;
 import android.os.Parcel;
 
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
-
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Collections;
 
 /** Unit tests for {@link android.adservices.customaudience.TrustedBiddingData} */
-@RequiresSdkLevelAtLeastS
 public final class TrustedBiddingDataTest extends CtsAdServicesDeviceTestCase {
     private static final Uri VALID_TRUSTED_BIDDING_URL =
             TrustedBiddingDataFixture.getValidTrustedBiddingUriByBuyer(CommonFixture.VALID_BUYER_1);

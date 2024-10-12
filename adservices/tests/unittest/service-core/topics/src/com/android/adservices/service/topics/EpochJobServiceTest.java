@@ -60,7 +60,6 @@ import com.android.adservices.service.stats.TopicsScheduleEpochJobSettingReporte
 import com.android.adservices.shared.testing.AnswerSyncCallback;
 import com.android.adservices.shared.testing.HandlerIdleSyncCallback;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.concurrency.JobServiceCallback;
 import com.android.adservices.spe.AdServicesJobScheduler;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
@@ -85,7 +84,6 @@ import java.util.List;
 @MockStatic(ServiceCompatUtils.class)
 @SpyStatic(TopicsWorker.class)
 @SpyStatic(TopicsScheduleEpochJobSettingReportedStatsLogger.class)
-@RequiresSdkLevelAtLeastS
 @SetErrorLogUtilDefaultParams(ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS)
 public final class EpochJobServiceTest extends AdServicesJobServiceTestCase {
     private static final int TOPICS_EPOCH_JOB_ID = TOPICS_EPOCH_JOB.getJobId();

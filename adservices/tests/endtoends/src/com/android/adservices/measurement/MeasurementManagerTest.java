@@ -44,7 +44,6 @@ import androidx.annotation.NonNull;
 
 import com.android.adservices.AdServicesEndToEndTestCase;
 import com.android.adservices.common.annotations.SetMsmtApiAppAllowList;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.junit.SafeAndroidJUnitRunner;
 
 import org.junit.Assert;
@@ -59,7 +58,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 @SetMsmtApiAppAllowList
-@RequiresSdkLevelAtLeastS()
 @RunWith(SafeAndroidJUnitRunner.class)
 @SuppressWarnings("NewApi")
 public final class MeasurementManagerTest extends AdServicesEndToEndTestCase {
