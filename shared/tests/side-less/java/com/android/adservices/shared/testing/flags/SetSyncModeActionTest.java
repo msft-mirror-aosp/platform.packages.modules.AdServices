@@ -63,7 +63,7 @@ public final class SetSyncModeActionTest extends SharedSidelessTestCase {
         boolean result = action.execute();
         mFakeDeviceConfig.onGetSyncDisabledModeCallback(null); // reset as we'll check state later
 
-        expect.withMessage("execute()").that(result).isTrue();
+        expect.withMessage("execute()").that(result).isFalse();
         expect.withMessage("device config mode after execute")
                 .that(mFakeDeviceConfig.getSyncDisabledMode())
                 .isEqualTo(UNTIL_REBOOT);
@@ -105,12 +105,36 @@ public final class SetSyncModeActionTest extends SharedSidelessTestCase {
 
         boolean result = action.execute();
 
-        expect.withMessage("execute()").that(result).isTrue();
+        expect.withMessage("execute()").that(result).isFalse();
         expect.withMessage("device config mode after execute")
                 .that(mFakeDeviceConfig.getSyncDisabledMode())
                 .isEqualTo(PERSISTENT);
 
         // Should not call it as it was null before
+        mFakeDeviceConfig.onSetSyncDisabledModeCallback(
+                () -> {
+                    throw new RuntimeException("Y U CALLED ME?");
+                });
+        action.revert();
+        expect.withMessage("device config mode after revert")
+                .that(mFakeDeviceConfig.getSyncDisabledMode())
+                .isEqualTo(PERSISTENT);
+    }
+
+    @Test
+    public void testExecuteAndRevert_previousReturnInvalid() throws Exception {
+        mFakeDeviceConfig.setSyncDisabledMode(UNSUPPORTED);
+        SetSyncModeAction action =
+                new SetSyncModeAction(mFakeLogger, mFakeDeviceConfig, PERSISTENT);
+
+        boolean result = action.execute();
+
+        expect.withMessage("execute()").that(result).isFalse();
+        expect.withMessage("device config mode after execute")
+                .that(mFakeDeviceConfig.getSyncDisabledMode())
+                .isEqualTo(PERSISTENT);
+
+        // Should not call it as it was UNSUPPORTED before
         mFakeDeviceConfig.onSetSyncDisabledModeCallback(
                 () -> {
                     throw new RuntimeException("Y U CALLED ME?");
@@ -156,6 +180,19 @@ public final class SetSyncModeActionTest extends SharedSidelessTestCase {
         SetSyncModeAction action =
                 new SetSyncModeAction(mFakeLogger, mFakeDeviceConfig, UNTIL_REBOOT);
         assertThrows(IllegalStateException.class, () -> action.revert());
+    }
+
+    @Test
+    public void testOnRevertWhenNotExecuted() throws Exception {
+        // This is kind of an "overkill" test, as onRevert() should not be called directly, but it
+        // doesn't hurt to be sure...
+        mFakeDeviceConfig.setSyncDisabledMode(PERSISTENT);
+        SetSyncModeAction action =
+                new SetSyncModeAction(mFakeLogger, mFakeDeviceConfig, PERSISTENT);
+
+        action.execute();
+
+        assertThrows(IllegalStateException.class, () -> action.onRevert());
     }
 
     @Test
