@@ -28,7 +28,6 @@ import android.os.Process;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import com.google.common.util.concurrent.Futures;
 
@@ -40,7 +39,6 @@ import org.mockito.Mock;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 
-@RequiresSdkLevelAtLeastS
 public final class AuctionServerDebugReportingTest extends AdServicesMockitoTestCase {
 
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;

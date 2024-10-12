@@ -91,7 +91,6 @@ import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ReportInteractionApiCalledStats;
 import com.android.adservices.shared.testing.AnswerSyncCallback;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
@@ -113,7 +112,6 @@ import org.mockito.Spy;
 import java.time.Instant;
 import java.util.List;
 
-@RequiresSdkLevelAtLeastS()
 @MockStatic(ConsentManager.class)
 @MockStatic(PermissionHelper.class)
 public final class ReportAndRegisterEventImplTest extends AdServicesExtendedMockitoTestCase {

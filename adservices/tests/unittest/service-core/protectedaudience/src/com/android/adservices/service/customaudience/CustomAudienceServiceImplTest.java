@@ -93,7 +93,6 @@ import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.shared.testing.SkipLoggingUsageRule;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -110,7 +109,6 @@ import org.mockito.quality.Strictness;
 
 import java.util.concurrent.ExecutorService;
 
-@RequiresSdkLevelAtLeastS()
 // TODO (b/315812832) - Refactor test so strictness can be lenient and enable logging usage rule.
 @SkipLoggingUsageRule(reason = "Overrides mocking strictness to STRICT_STUBS.")
 @MockStatic(BackgroundFetchJob.class)

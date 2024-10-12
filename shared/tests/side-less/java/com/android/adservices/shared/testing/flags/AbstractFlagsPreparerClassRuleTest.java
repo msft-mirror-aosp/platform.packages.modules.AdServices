@@ -49,7 +49,8 @@ public final class AbstractFlagsPreparerClassRuleTest
         return new FakeFlagsPreparerClassRule(deviceConfig, syncMode);
     }
 
-    public static final class FakeFlagsPreparerClassRule extends AbstractFlagsPreparerClassRule {
+    public static final class FakeFlagsPreparerClassRule
+            extends AbstractFlagsPreparerClassRule<FakeFlagsPreparerClassRule> {
 
         FakeFlagsPreparerClassRule(
                 RealLogger realLogger, DeviceConfig deviceConfig, SyncDisabledModeForTest mode) {

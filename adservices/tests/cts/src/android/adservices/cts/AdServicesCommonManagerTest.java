@@ -35,7 +35,6 @@ import android.adservices.common.UpdateAdIdRequest;
 import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
 import com.android.adservices.common.annotations.SetPpapiAppAllowList;
 import com.android.adservices.shared.testing.OutcomeReceiverForTests;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.SetFlagFalse;
 
 import org.junit.Before;
@@ -47,7 +46,6 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 @SetPpapiAppAllowList
-@RequiresSdkLevelAtLeastS
 public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCase {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
@@ -158,10 +156,7 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
                 new AdServicesOutcomeReceiverForTests<>();
 
         AdServicesModuleState moduleState =
-                new AdServicesModuleState.Builder()
-                        .setModule(MEASUREMENT)
-                        .setModuleState(MODULE_STATE_ENABLED)
-                        .build();
+                new AdServicesModuleState(MEASUREMENT, MODULE_STATE_ENABLED);
         List<AdServicesModuleState> adServicesModuleStateList = Arrays.asList(moduleState);
 
         expect.that(moduleState.getModule()).isEqualTo(MEASUREMENT);
@@ -180,10 +175,7 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
                 new AdServicesOutcomeReceiverForTests<>();
 
         AdServicesModuleUserChoice adServicesModuleUserChoice =
-                new AdServicesModuleUserChoice.Builder()
-                        .setModule(TOPICS)
-                        .setUserChoice(USER_CHOICE_OPTED_OUT)
-                        .build();
+                new AdServicesModuleUserChoice(TOPICS, USER_CHOICE_OPTED_OUT);
         List<AdServicesModuleUserChoice> adServicesModuleUserChoiceList =
                 Arrays.asList(adServicesModuleUserChoice);
 

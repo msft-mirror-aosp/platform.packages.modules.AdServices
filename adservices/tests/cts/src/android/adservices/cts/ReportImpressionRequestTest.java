@@ -23,11 +23,8 @@ import static org.junit.Assert.assertThrows;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.ReportImpressionRequest;
 
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
-
 import org.junit.Test;
 
-@RequiresSdkLevelAtLeastS
 public final class ReportImpressionRequestTest extends CtsAdServicesDeviceTestCase {
     private static final long AUCTION_ID = 123;
 
