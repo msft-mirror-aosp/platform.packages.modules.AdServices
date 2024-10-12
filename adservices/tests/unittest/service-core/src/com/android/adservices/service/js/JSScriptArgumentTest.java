@@ -30,21 +30,15 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import org.json.JSONException;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Map;
 
 public class JSScriptArgumentTest {
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     private static final String VALID_TEST_OBJECT_JSON_ARRAY =
             "["
                     + "{"

@@ -47,7 +47,7 @@ import javax.annotation.concurrent.ThreadSafe;
 public final class AdServicesLoggerImpl implements AdServicesLogger {
 
     private static volatile AdServicesLoggerImpl sAdServicesLogger;
-    private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
+    private static final Executor sBlockingExecutor = AdServicesExecutors.getBlockingExecutor();
     private final StatsdAdServicesLogger mStatsdAdServicesLogger;
 
     private AdServicesLoggerImpl() {
@@ -446,7 +446,7 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
         Objects.requireNonNull(
                 appPackageName, "INTERNAL ERROR: caller didn't check for null appPackageName");
 
-        sBackgroundExecutor.execute(
+        sBlockingExecutor.execute(
                 () -> {
                     AppNameApiErrorLogger appNameApiErrorLogger =
                             AppNameApiErrorLogger.getInstance();
@@ -458,7 +458,7 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     /** Logs measurement registration status using {@code CobaltLogger}. */
     private void cobaltLogMsmtRegistration(
             MeasurementRegistrationResponseStats stats, @Nullable String enrollmentId) {
-        sBackgroundExecutor.execute(
+        sBlockingExecutor.execute(
                 () -> {
                     MeasurementCobaltLogger measurementCobaltLogger =
                             MeasurementCobaltLogger.getInstance();
@@ -477,7 +477,7 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     /** Logs measurement attribution status using {@code CobaltLogger}. */
     private void cobaltLogMsmtAttribution(
             MeasurementAttributionStats stats, @Nullable String enrollmentId) {
-        sBackgroundExecutor.execute(
+        sBlockingExecutor.execute(
                 () -> {
                     MeasurementCobaltLogger measurementCobaltLogger =
                             MeasurementCobaltLogger.getInstance();
@@ -494,7 +494,7 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     /** Logs measurement reporting status using {@code CobaltLogger}. */
     private void cobaltLogMsmtReportingStats(
             MeasurementReportsStats stats, @Nullable String enrollmentId) {
-        sBackgroundExecutor.execute(
+        sBlockingExecutor.execute(
                 () -> {
                     MeasurementCobaltLogger measurementCobaltLogger =
                             MeasurementCobaltLogger.getInstance();

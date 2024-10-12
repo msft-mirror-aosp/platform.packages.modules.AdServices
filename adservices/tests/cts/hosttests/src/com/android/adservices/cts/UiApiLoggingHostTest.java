@@ -34,7 +34,6 @@ import android.cts.statsdatom.lib.ReportUtils;
 import com.android.adservices.common.AdServicesHostSideTestCase;
 import com.android.adservices.shared.testing.BackgroundLogReceiver;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.internal.os.StatsdConfigProto.StatsdConfig;
@@ -71,7 +70,6 @@ import java.util.function.Predicate;
 @SetFlagEnabled(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK)
 @SetFlagEnabled(KEY_GA_UX_FEATURE_ENABLED)
 @EnableDebugFlag(KEY_CONSENT_MANAGER_DEBUG_MODE)
-@RequiresSdkLevelAtLeastS(reason = "Cannot run on R with Consent Source of truth removed")
 public final class UiApiLoggingHostTest extends AdServicesHostSideTestCase {
     private static final String CLASS =
             "com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity";

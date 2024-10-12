@@ -35,7 +35,6 @@ import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.data.topics.Topic;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.json.JSONObject;
 import org.junit.Test;
@@ -43,7 +42,6 @@ import org.junit.Test;
 import java.nio.charset.StandardCharsets;
 
 /** Unit tests for {@link HpkeEncrypter}. */
-@RequiresSdkLevelAtLeastS
 @SetErrorLogUtilDefaultParams(
         throwable = Any.class,
         ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS)

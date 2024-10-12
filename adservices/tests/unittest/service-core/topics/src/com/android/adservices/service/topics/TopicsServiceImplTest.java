@@ -106,7 +106,6 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.shared.testing.IntFailureSyncCallback;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 import com.android.adservices.shared.util.Clock;
@@ -128,11 +127,6 @@ import java.util.Random;
 import java.util.stream.Collectors;
 
 /** Unit test for {@link com.android.adservices.service.topics.TopicsServiceImpl}. */
-@RequiresSdkLevelAtLeastS(
-        reason =
-                "We are not expecting to launch Topics API on Android R. Hence, skipping this test"
-                        + " on Android R since some tests require handling of unsupported"
-                        + " PackageManager APIs.")
 @SpyStatic(Binder.class)
 @SpyStatic(AllowLists.class)
 @SpyStatic(FlagsFactory.class)

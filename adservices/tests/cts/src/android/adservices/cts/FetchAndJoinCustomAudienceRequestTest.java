@@ -24,11 +24,9 @@ import android.adservices.customaudience.FetchAndJoinCustomAudienceRequest;
 import android.net.Uri;
 
 import com.android.adservices.shared.testing.EqualsTester;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Test;
 
-@RequiresSdkLevelAtLeastS
 public final class FetchAndJoinCustomAudienceRequestTest extends CtsAdServicesDeviceTestCase {
     public static final Uri VALID_FETCH_URI_1 =
             CustomAudienceFixture.getValidFetchUriByBuyer(CommonFixture.VALID_BUYER_1, "1");

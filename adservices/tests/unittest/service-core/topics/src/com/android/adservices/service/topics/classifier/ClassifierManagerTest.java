@@ -32,7 +32,6 @@ import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.Flags.ClassifierType;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.base.Suppliers;
@@ -51,7 +50,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /** Manager Classifier Test {@link ClassifierManager}. */
-@RequiresSdkLevelAtLeastS
 @SpyStatic(FlagsFactory.class)
 public final class ClassifierManagerTest extends AdServicesExtendedMockitoTestCase {
 

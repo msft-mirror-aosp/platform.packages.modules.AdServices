@@ -55,7 +55,6 @@ import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithE
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.exception.XmlParseException;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -112,7 +111,6 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS(reason = "Uses PackageManager API not available on R")
     public void testIsAllowedAttributionAccess_sPlus() throws Exception {
         mockGetPropertySucceeds(PACKAGE_NAME, AD_SERVICES_CONFIG_PROPERTY, RESOURCE_ID);
         mockAppManifestConfigParserGetConfigSucceeds();
@@ -144,7 +142,6 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS(reason = "Uses PackageManager API not available on R")
     public void testIsAllowedCustomAudiencesAccess_sPlus() throws Exception {
         mockGetPropertySucceeds(PACKAGE_NAME, AD_SERVICES_CONFIG_PROPERTY, RESOURCE_ID);
         mockAppManifestConfigParserGetConfigSucceeds();
@@ -161,7 +158,6 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS(reason = "Uses PackageManager API not available on R")
     public void testIsAllowedProtectedSignalsAccess_sPlus() throws Exception {
         mockGetPropertySucceeds(PACKAGE_NAME, AD_SERVICES_CONFIG_PROPERTY, RESOURCE_ID);
         mockAppManifestConfigParserGetConfigSucceeds();
@@ -178,7 +174,6 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS(reason = "Uses PackageManager API not available on R")
     public void testIsAllowedAdSelectionAccess_sPlus() throws Exception {
         mockGetPropertySucceeds(PACKAGE_NAME, AD_SERVICES_CONFIG_PROPERTY, RESOURCE_ID);
         mockAppManifestConfigParserGetConfigSucceeds();
@@ -194,7 +189,6 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS(reason = "Uses PackageManager API not available on R")
     public void testIsAllowedAdSelectionAccessCustomAudienceTag() throws Exception {
         mockGetPropertySucceeds(PACKAGE_NAME, AD_SERVICES_CONFIG_PROPERTY, RESOURCE_ID);
         mockAppManifestConfigParserGetConfigSucceeds();
@@ -211,7 +205,6 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS(reason = "Uses PackageManager API not available on R")
     public void testIsAllowedAdSelectionAccessProtectedSignalsTag() throws Exception {
         mockGetPropertySucceeds(PACKAGE_NAME, AD_SERVICES_CONFIG_PROPERTY, RESOURCE_ID);
         mockAppManifestConfigParserGetConfigSucceeds();
@@ -245,14 +238,12 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS(reason = "Uses PackageManager API not available on R")
     public void testIsAllowedTopicsAccessFromSandbox_allowed_sPlus() throws Exception {
         executeIsAllowedTopicAccessTest(
                 S_PLUS, USE_SANDBOX_CHECK, DOESNT_CONTAIN_SDK, EXPECTED_ALLOWED);
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS(reason = "Uses PackageManager API not available on R")
     public void testIsAllowedTopicsAccessFromSandbox_notAllowed_sPlus() throws Exception {
         executeIsAllowedTopicAccessTest(
                 S_PLUS,
@@ -262,14 +253,12 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS(reason = "Uses PackageManager API not available on R")
     public void testIsAllowedTopicsAccessFromApp_allowed_sPlus() throws Exception {
         executeIsAllowedTopicAccessTest(
                 S_PLUS, DOESNT_USE_SANDBOX_CHECK, CONTAINS_SDK, EXPECTED_ALLOWED);
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS(reason = "Uses PackageManager API not available on R")
     public void testIsAllowedTopicsAccessFromApp_notAllowedBecauseOfSdk_sPlus() throws Exception {
         executeIsAllowedTopicAccessTest(
                 S_PLUS,
@@ -279,7 +268,6 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS(reason = "Uses PackageManager API not available on R")
     public void testIsAllowedTopicsAccessFromApp_notAllowedBecauseOfTopics_sPlus()
             throws Exception {
         executeIsAllowedTopicAccessTest(
@@ -357,7 +345,6 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS(reason = "Uses PackageManager API not available on R")
     @ExpectErrorLogUtilWithExceptionCall(times = NUM_COMPONENTS)
     public void testIsAllowedApiAccess_parsingExceptionSwallowed_enabledByDefault_sPlus()
             throws Exception {
@@ -392,7 +379,6 @@ public final class AppManifestConfigHelperTest extends AdServicesExtendedMockito
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS(reason = "Uses PackageManager API not available on R")
     public void testIsAllowedApiAccess_noConfigXmlForPackage_enabledByDefault_sPlus()
             throws Exception {
         mockAppFound(PACKAGE_NAME);

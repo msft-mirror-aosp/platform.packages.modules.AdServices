@@ -36,14 +36,13 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -56,6 +55,7 @@ import java.util.concurrent.ExecutionException;
 @SetErrorLogUtilDefaultParams(
         throwable = ExpectErrorLogUtilWithExceptionCall.Any.class,
         ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS)
+@RequiresSdkLevelAtLeastT(reason = "PAS is only supported on T+")
 public class UpdatesDownloaderTest extends AdServicesExtendedMockitoTestCase {
 
     private static final Uri URI = Uri.parse("https://example.com");
@@ -64,9 +64,6 @@ public class UpdatesDownloaderTest extends AdServicesExtendedMockitoTestCase {
     @Mock private AdServicesHttpsClient mMockAdServicesHttpsClient;
 
     private UpdatesDownloader mUpdatesDownloader;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Before
     public void setup() {

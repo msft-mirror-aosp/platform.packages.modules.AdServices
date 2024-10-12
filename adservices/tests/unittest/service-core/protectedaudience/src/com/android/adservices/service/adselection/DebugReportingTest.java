@@ -31,7 +31,6 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.DevContext;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import com.google.common.util.concurrent.Futures;
 
@@ -43,7 +42,6 @@ import org.mockito.Mock;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 
-@RequiresSdkLevelAtLeastS
 public final class DebugReportingTest extends AdServicesMockitoTestCase {
 
     private static final DevContext DEV_CONTEXT_DISABLED = DevContext.createForDevOptionsDisabled();

@@ -18,10 +18,7 @@ package com.android.adservices.data.adselection;
 
 import android.net.Uri;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-
 import org.junit.Assert;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.time.Instant;
@@ -30,9 +27,6 @@ public class DBAdSelectionDebugReportTest {
 
     private static final long CREATION_TIMESTAMP = Instant.now().toEpochMilli();
     private static final Uri DEBUG_URI = Uri.parse("https://example.com/debug_report");
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testAdSelectionDebugReport_create_success() {

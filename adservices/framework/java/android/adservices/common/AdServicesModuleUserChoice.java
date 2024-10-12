@@ -19,7 +19,6 @@ package android.adservices.common;
 import android.annotation.FlaggedApi;
 import android.annotation.IntDef;
 import android.annotation.NonNull;
-import android.annotation.SystemApi;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -35,7 +34,6 @@ import java.util.Objects;
  *
  * @hide
  */
-@SystemApi
 @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
 public final class AdServicesModuleUserChoice implements Parcelable {
 
@@ -69,10 +67,31 @@ public final class AdServicesModuleUserChoice implements Parcelable {
         mUserChoice = in.readInt();
     }
 
-    private AdServicesModuleUserChoice(
+    /**
+     * Constructor for a user choice.
+     *
+     * @param module desired module
+     * @param userChoice desired user choice
+     */
+    public AdServicesModuleUserChoice(
             @Module.ModuleCode int module, @ModuleUserChoiceCode int userChoice) {
-        this.mModule = module;
-        this.mUserChoice = userChoice;
+        this.mModule = Module.validate(module);
+        this.mUserChoice = validate(userChoice);
+    }
+
+    /**
+     * Validates a user choice. For this function doesn't alter the input and just returns it back,
+     * if not valid fails with {@link IllegalArgumentException}.
+     *
+     * @param userChoice user choice to validate
+     * @return user choice
+     */
+    @ModuleUserChoiceCode
+    private static int validate(@ModuleUserChoiceCode int userChoice) {
+        return switch (userChoice) {
+            case USER_CHOICE_UNKNOWN, USER_CHOICE_OPTED_IN, USER_CHOICE_OPTED_OUT -> userChoice;
+            default -> throw new IllegalArgumentException("Invalid User Choice:" + userChoice);
+        };
     }
 
     @NonNull
@@ -109,34 +128,5 @@ public final class AdServicesModuleUserChoice implements Parcelable {
     /** Gets the user opted in/out choice of current module */
     public @ModuleUserChoiceCode int getUserChoice() {
         return mUserChoice;
-    }
-
-    public static final class Builder {
-        @Module.ModuleCode private int mModule;
-
-        @ModuleUserChoiceCode private int mUserChoice;
-
-        public Builder() {}
-
-        /** Sets the AdServices module. */
-        @NonNull
-        public AdServicesModuleUserChoice.Builder setModule(@Module.ModuleCode int module) {
-            this.mModule = module;
-            return this;
-        }
-
-        /** Sets the AdServices moduleState. */
-        @NonNull
-        public AdServicesModuleUserChoice.Builder setUserChoice(
-                @ModuleUserChoiceCode int userChoice) {
-            this.mUserChoice = userChoice;
-            return this;
-        }
-
-        /** Builds a {@link AdServicesModuleUserChoice} instance. */
-        @NonNull
-        public AdServicesModuleUserChoice build() {
-            return new AdServicesModuleUserChoice(this.mModule, this.mUserChoice);
-        }
     }
 }

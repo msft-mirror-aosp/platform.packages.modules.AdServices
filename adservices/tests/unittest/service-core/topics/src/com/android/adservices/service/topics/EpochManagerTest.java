@@ -47,7 +47,6 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.TopicsEncryptionEpochComputationReportedStats;
 import com.android.adservices.service.topics.classifier.Classifier;
 import com.android.adservices.service.topics.classifier.ClassifierManager;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.util.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -73,7 +72,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /** Unit tests for {@link com.android.adservices.service.topics.EpochManager} */
-@RequiresSdkLevelAtLeastS
 public final class EpochManagerTest extends AdServicesExtendedMockitoTestCase {
     @SuppressWarnings({"unused"})
     private static final String TAG = "EpochManagerTest";

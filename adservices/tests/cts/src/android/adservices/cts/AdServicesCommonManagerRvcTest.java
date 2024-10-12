@@ -72,10 +72,7 @@ public final class AdServicesCommonManagerRvcTest extends CtsAdServicesDeviceTes
         AdServicesOutcomeReceiverForTests<Void> receiver =
                 new AdServicesOutcomeReceiverForTests<>();
         AdServicesModuleState moduleState =
-                new AdServicesModuleState.Builder()
-                        .setModule(MEASUREMENT)
-                        .setModuleState(MODULE_STATE_ENABLED)
-                        .build();
+                new AdServicesModuleState(MEASUREMENT, MODULE_STATE_ENABLED);
         List<AdServicesModuleState> adServicesModuleStateList = Arrays.asList(moduleState);
 
         mCommonManager.requestAdServicesModuleOverrides(
@@ -89,10 +86,7 @@ public final class AdServicesCommonManagerRvcTest extends CtsAdServicesDeviceTes
         AdServicesOutcomeReceiverForTests<Void> receiver =
                 new AdServicesOutcomeReceiverForTests<>();
         AdServicesModuleUserChoice adServicesModuleUserChoice =
-                new AdServicesModuleUserChoice.Builder()
-                        .setModule(TOPICS)
-                        .setUserChoice(USER_CHOICE_OPTED_OUT)
-                        .build();
+                new AdServicesModuleUserChoice(TOPICS, USER_CHOICE_OPTED_OUT);
         List<AdServicesModuleUserChoice> adServicesModuleUserChoiceList =
                 Arrays.asList(adServicesModuleUserChoice);
 

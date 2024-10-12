@@ -32,14 +32,12 @@ import static org.mockito.Mockito.verify;
 import android.adservices.adid.AdId;
 import android.adservices.adid.AdIdManager;
 import android.adservices.common.AdServicesOutcomeReceiver;
-import android.annotation.RequiresApi;
 import android.net.Uri;
 import android.os.Build;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.shared.testing.OutcomeReceiverForTests;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.testing.annotations.RequiresSdkRange;
 
@@ -59,8 +57,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 
 /** Unit tests for {@link AdSelectionManager} */
-@RequiresSdkLevelAtLeastS
-@RequiresApi(Build.VERSION_CODES.S)
 public final class AdSelectionManagerTest extends AdServicesMockitoTestCase {
     // AdId constants
     private static final String AD_ID = "35a4ac90-e4dc-4fe7-bbc6-95e804aa7dbc";

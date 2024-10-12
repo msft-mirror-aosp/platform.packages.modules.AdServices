@@ -16,6 +16,8 @@
 
 package com.android.adservices.data.signals;
 
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 
@@ -37,5 +39,23 @@ public class DBEncodedPayloadFixture {
                 .setVersion(1)
                 .setCreationTime(CommonFixture.FIXED_NOW)
                 .setEncodedPayload(SAMPLE_PAYLOAD);
+    }
+
+    /**
+     * Asserts that the two non-null {@link DBEncodedPayload} objects are equal, as persisted in the
+     * database.
+     */
+    public static void assertDBEncodedPayloadsAreEqual(
+            DBEncodedPayload expected, DBEncodedPayload actual) {
+        assertWithMessage("Expected DBEncodedPayload").that(expected).isNotNull();
+        assertWithMessage("Actual DBEncodedPayload").that(actual).isNotNull();
+        assertWithMessage("Buyer").that(actual.getBuyer()).isEqualTo(expected.getBuyer());
+        assertWithMessage("Version").that(actual.getVersion()).isEqualTo(expected.getVersion());
+        assertWithMessage("Creation time (in milliseconds from epoch)")
+                .that(actual.getCreationTime().toEpochMilli())
+                .isEqualTo(expected.getCreationTime().toEpochMilli());
+        assertWithMessage("Encoded payload")
+                .that(actual.getEncodedPayload())
+                .isEqualTo(expected.getEncodedPayload());
     }
 }

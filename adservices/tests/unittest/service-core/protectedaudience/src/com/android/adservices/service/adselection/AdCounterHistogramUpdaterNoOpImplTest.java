@@ -21,19 +21,13 @@ import static org.junit.Assert.assertThrows;
 import android.adservices.common.CommonFixture;
 import android.adservices.common.FrequencyCapFilters;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
 public class AdCounterHistogramUpdaterNoOpImplTest {
     private static final long AD_SELECTION_ID = 10;
 
     private AdCounterHistogramUpdater mAdCounterHistogramUpdater;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {

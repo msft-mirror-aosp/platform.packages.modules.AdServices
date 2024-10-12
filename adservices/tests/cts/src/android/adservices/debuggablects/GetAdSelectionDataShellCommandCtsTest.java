@@ -34,7 +34,6 @@ import com.android.adservices.common.AdServicesShellCommandHelper;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 
 import com.google.protobuf.DescriptorProtos;
@@ -56,7 +55,6 @@ import java.util.concurrent.TimeoutException;
 @SetFlagEnabled(KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED)
 @SetFlagEnabled(KEY_PROTECTED_SIGNALS_ENABLED)
 @EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
-@RequiresSdkLevelAtLeastS(reason = "Ad Selection is enabled for S+")
 public class GetAdSelectionDataShellCommandCtsTest extends ForegroundDebuggableCtsTest {
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("localhost");
 

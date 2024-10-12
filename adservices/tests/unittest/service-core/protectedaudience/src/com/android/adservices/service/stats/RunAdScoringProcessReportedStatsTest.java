@@ -20,9 +20,6 @@ import static org.junit.Assert.assertEquals;
 
 import android.adservices.common.AdServicesStatusUtils;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-
-import org.junit.Rule;
 import org.junit.Test;
 
 /** Unit tests for {@link RunAdScoringProcessReportedStats}. */
@@ -44,9 +41,6 @@ public class RunAdScoringProcessReportedStatsTest {
     static final int GET_AD_SELECTION_LOGIC_SCRIPT_TYPE = AdServicesStatusUtils.STATUS_SUCCESS;
     static final boolean SCORE_AD_SELLER_ADDITIONAL_SIGNALS_CONTAINED_DATA_VERSION = true;
     static final int SCORE_AD_JS_SCRIPT_RESULT_CODE = 0;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuilderCreateSuccess() {

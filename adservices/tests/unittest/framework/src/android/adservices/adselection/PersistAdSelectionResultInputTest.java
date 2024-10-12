@@ -26,11 +26,9 @@ import android.os.Parcel;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.shared.testing.EqualsTester;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Test;
 
-@RequiresSdkLevelAtLeastS
 public final class PersistAdSelectionResultInputTest extends AdServicesUnitTestCase {
     private static final AdTechIdentifier SELLER = AdSelectionConfigFixture.SELLER;
     private static final AdTechIdentifier ANOTHER_SELLER = AdSelectionConfigFixture.SELLER_1;

@@ -25,11 +25,9 @@ import static org.junit.Assert.assertThrows;
 import android.os.Parcel;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Test;
 
-@RequiresSdkLevelAtLeastS
 public final class EncryptedCobaltEnvelopeParamsTest extends AdServicesUnitTestCase {
     private static final byte[] BYTES = {0x0a, 0x0b, 0x0c};
     private static final int KEY_INDEX = 5;

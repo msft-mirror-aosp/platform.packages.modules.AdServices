@@ -240,6 +240,11 @@ public abstract class AdServicesMockerLessExtendedMockitoTestCase<M extends Inte
         }
 
         @Override
+        public void mockSdkLevelS() {
+            mAndroidStaticMocker.mockSdkLevelS();
+        }
+
+        @Override
         public void mockGetCurrentUser(int user) {
             mAndroidStaticMocker.mockGetCurrentUser(user);
         }
@@ -287,6 +292,11 @@ public abstract class AdServicesMockerLessExtendedMockitoTestCase<M extends Inte
         @Override
         public void mockGetAppNameApiErrorCobaltLoggingEnabled(boolean value) {
             mAdServicesFlagsMocker.mockGetAppNameApiErrorCobaltLoggingEnabled(value);
+        }
+
+        @Override
+        public void mockGetEnableApiCallResponseLoggingEnabled(boolean value) {
+            mAdServicesFlagsMocker.mockGetEnableApiCallResponseLoggingEnabled(value);
         }
 
         @Override

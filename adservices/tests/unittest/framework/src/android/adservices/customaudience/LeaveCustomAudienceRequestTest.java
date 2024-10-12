@@ -21,11 +21,9 @@ import static com.google.common.truth.Truth.assertThat;
 import android.adservices.common.CommonFixture;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Test;
 
-@RequiresSdkLevelAtLeastS
 public final class LeaveCustomAudienceRequestTest extends AdServicesUnitTestCase {
     @Test
     public void testLeaveCustomAudienceRequestWithSameValuesAreEqual() {

@@ -21,12 +21,10 @@ import static org.junit.Assert.assertThrows;
 import android.os.Parcel;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Test;
 
 /** Unit tests for {@link FledgeErrorResponse} */
-@RequiresSdkLevelAtLeastS
 public final class FledgeErrorResponseTest extends AdServicesUnitTestCase {
     @Test
     public void testBuildFledgeErrorResponse() {

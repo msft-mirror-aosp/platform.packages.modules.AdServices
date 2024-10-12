@@ -19,11 +19,9 @@ package android.adservices.adselection;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Test;
 
-@RequiresSdkLevelAtLeastS
 public final class RemoveAdSelectionOverrideRequestTest extends AdServicesUnitTestCase {
     private static final AdSelectionConfig AD_SELECTION_CONFIG =
             AdSelectionConfigFixture.anAdSelectionConfig();

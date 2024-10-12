@@ -24,6 +24,7 @@ import android.net.Uri;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
+import com.android.adservices.service.measurement.aggregation.AggregatableBucket;
 import com.android.adservices.service.measurement.aggregation.AggregatableValuesConfig;
 import com.android.adservices.service.measurement.aggregation.AggregateDebugReporting;
 import com.android.adservices.service.measurement.aggregation.AggregateDeduplicationKey;
@@ -86,6 +87,7 @@ public class Trigger {
     @Nullable private Integer mAggregatableFilteringIdMaxBytes;
     @Nullable private String mAggregateDebugReportingString;
     @Nullable private AggregateDebugReporting mAggregateDebugReporting;
+    @Nullable private String mAggregatableBucketsString;
 
     @IntDef(value = {Status.PENDING, Status.IGNORED, Status.ATTRIBUTED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -146,7 +148,8 @@ public class Trigger {
                 && Objects.equals(
                         mAggregatableFilteringIdMaxBytes, trigger.mAggregatableFilteringIdMaxBytes)
                 && Objects.equals(
-                        mAggregateDebugReportingString, trigger.mAggregateDebugReportingString);
+                        mAggregateDebugReportingString, trigger.mAggregateDebugReportingString)
+                && Objects.equals(mAggregatableBucketsString, trigger.mAggregatableBucketsString);
     }
 
     @Override
@@ -178,7 +181,8 @@ public class Trigger {
                 mTriggerContextId,
                 mAttributionScopesString,
                 mAggregatableFilteringIdMaxBytes,
-                mAggregateDebugReportingString);
+                mAggregateDebugReportingString,
+                mAggregatableBucketsString);
     }
 
     /** Unique identifier for the {@link Trigger}. */
@@ -276,6 +280,16 @@ public class Trigger {
      */
     public String getAggregateDeduplicationKeys() {
         return mAggregateDeduplicationKeys;
+    }
+
+    /**
+     * Returns the JSON representation of the list of aggregatable buckets. aggregatable bucket is a
+     * JSONObject. example: {"bucket": "biddable", "filters": { "2": ["11102626635",
+     * "11081876753"]}, "not_filters": { "2": ["11102626635", "11081876753"]}}
+     */
+    @Nullable
+    public String getAggregatableBucketsString() {
+        return mAggregatableBucketsString;
     }
 
     /**
@@ -514,6 +528,18 @@ public class Trigger {
             aggregatableAttributionTriggerBuilder.setValueConfigs(
                     List.of(aggregatableValuesConfig));
         }
+
+        if (flags.getMeasurementEnableAggregateContributionBudgetCapacity()
+                && getAggregatableBucketsString() != null) {
+            JSONArray bucketObjects = new JSONArray(getAggregatableBucketsString());
+            List<AggregatableBucket> aggregatableBuckets = new ArrayList<>();
+            for (int i = 0; i < bucketObjects.length(); i++) {
+                aggregatableBuckets.add(
+                        new AggregatableBucket(bucketObjects.getJSONObject(i), flags));
+            }
+            aggregatableAttributionTriggerBuilder.setAggregatableBuckets(aggregatableBuckets);
+        }
+
         return Optional.of(aggregatableAttributionTriggerBuilder.build());
     }
 
@@ -746,6 +772,12 @@ public class Trigger {
             return this;
         }
 
+        /** See {@link Trigger#getAggregatableBucketsString()} */
+        public Builder setAggregatableBucketsString(String aggregatableBucketsString) {
+            mBuilding.mAggregatableBucketsString = aggregatableBucketsString;
+            return this;
+        }
+
         /** See {@link Trigger#getFilters()} */
         @NonNull
         public Builder setFilters(@Nullable String filters) {
@@ -796,7 +828,7 @@ public class Trigger {
             return this;
         }
 
-        /** See {@link Trigger#getAggregatableAttributionTrigger()} */
+        /** See {@link Trigger#getAggregatableAttributionTrigger(Flags)} */
         @NonNull
         public Builder setAggregatableAttributionTrigger(
                 @Nullable AggregatableAttributionTrigger aggregatableAttributionTrigger) {

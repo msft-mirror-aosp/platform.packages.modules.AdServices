@@ -19,9 +19,6 @@ package com.android.adservices.data.adselection;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-
-import org.junit.Rule;
 import org.junit.Test;
 
 public class DBAdSelectionFromOutcomesOverrideTest {
@@ -29,9 +26,6 @@ public class DBAdSelectionFromOutcomesOverrideTest {
     private static final String APP_PACKAGE_NAME = "com.test.package";
     private static final String SELECTION_LOGIC_JS = "function outcomeSelection{ return null; }";
     private static final String SELECTION_SIGNALS = "testSignals";
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildDBAdSelectionOverride() {

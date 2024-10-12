@@ -48,7 +48,6 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.topics.classifier.CommonClassifierHelper;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.network.NetworkConnectionHelper;
 import com.android.adservices.shared.util.Clock;
 import com.android.compatibility.common.util.ShellUtils;
@@ -86,7 +85,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 /** Unit tests for {@link MobileDataDownloadFactory} */
-@RequiresSdkLevelAtLeastS
 @SpyStatic(MddLogger.class)
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(MobileDataDownloadFactory.class)

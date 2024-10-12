@@ -36,7 +36,7 @@ import java.util.concurrent.Executors;
  * in the app as text as well as toast message. In case anything goes wrong in this process, error
  * message will also be shown in toast to suggest the Exception encountered.
  */
-public class MainActivity extends AppCompatActivity {
+public final class MainActivity extends AppCompatActivity {
 
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 

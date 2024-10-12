@@ -24,7 +24,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.data.topics.Topic;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -33,7 +32,6 @@ import org.junit.Test;
 import java.util.Locale;
 
 /** Unit tests for {@link TopicsJsonMapper}. */
-@RequiresSdkLevelAtLeastS
 public final class TopicsJsonMapperTest extends AdServicesUnitTestCase {
     private static final int TOPIC_ID = 7;
     private static final long MODEL_VERSION = 5L;

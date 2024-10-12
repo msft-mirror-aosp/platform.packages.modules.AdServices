@@ -23,12 +23,10 @@ import static org.junit.Assert.assertThrows;
 import android.os.Parcel;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Test;
 
 /** Unit tests for {@link ReportImpressionInput} */
-@RequiresSdkLevelAtLeastS
 public final class ReportImpressionInputTest extends AdServicesUnitTestCase {
     private static final long AUCTION_ID = 123;
     private static final String CALLER_PACKAGE_NAME = "callerPackageName";

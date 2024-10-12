@@ -65,6 +65,14 @@
         <option name="force-skip-system-props" value="true"/>
     </target_preparer>
 
+    <!-- Push compiled APK file of test apps to a local place for installation -->
+    <target_preparer class="com.android.compatibility.common.tradefed.targetprep.FilePusher">
+        <option name="push"
+                value="com.example.adservices.samples.ui.consenttestapp.apk->/data/local/tmp/cts/install/com.example.adservices.samples.ui.consenttestapp.apk" />
+        <option name="push"
+                value="com.example.adservices.samples.ui.sampletestapp.apk->/data/local/tmp/cts/install/com.example.adservices.samples.ui.sampletestapp.apk" />
+    </target_preparer>
+
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">
         <option name="hidden-api-checks" value="false"/> <!-- Allow hidden API uses -->
         <option name="package" value="com.android.adextservices.tests.ui"/>

@@ -18,12 +18,10 @@ package com.android.adservices.service.topics;
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Test;
 
 /** Unit tests for {@link AppInfo} */
-@RequiresSdkLevelAtLeastS
 public final class AppInfoTest extends AdServicesUnitTestCase {
     private static final String APP_NAME = "appName";
     private static final String APP_DESCRIPTION = "appDescription";

@@ -56,7 +56,6 @@ import androidx.annotation.NonNull;
 import com.android.adservices.AdServicesEndToEndTestCase;
 import com.android.adservices.LogUtil;
 import com.android.adservices.common.annotations.SetMsmtApiAppAllowList;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -72,7 +71,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 @SetMsmtApiAppAllowList
-@RequiresSdkLevelAtLeastS()
 @SuppressWarnings("NewApi")
 public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTestCase {
 

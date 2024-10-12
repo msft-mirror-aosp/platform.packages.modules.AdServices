@@ -18,11 +18,9 @@ package android.adservices.common;
 
 import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Test;
 
-@RequiresSdkLevelAtLeastS()
 public final class AndroidRCommonUtilTest extends AdServicesUnitTestCase {
 
     @Test

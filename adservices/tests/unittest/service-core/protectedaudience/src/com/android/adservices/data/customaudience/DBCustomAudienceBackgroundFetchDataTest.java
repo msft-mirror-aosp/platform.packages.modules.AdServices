@@ -34,14 +34,12 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
 import com.android.adservices.service.customaudience.CustomAudienceUpdatableData;
 import com.android.adservices.service.customaudience.CustomAudienceUpdatableDataFixture;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Test;
 
 import java.time.Instant;
 
-@RequiresSdkLevelAtLeastS()
 public final class DBCustomAudienceBackgroundFetchDataTest
         extends AdServicesExtendedMockitoTestCase {
 

@@ -26,7 +26,6 @@ import android.content.res.Resources;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.data.topics.Topic;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import com.google.common.collect.ImmutableList;
 
@@ -34,7 +33,6 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 /** Tests for {@link TopicsMapper}. */
-@RequiresSdkLevelAtLeastS
 public final class TopicMapperTest extends AdServicesMockitoTestCase {
     @Mock private Context mContext;
     @Mock private Resources mResources;

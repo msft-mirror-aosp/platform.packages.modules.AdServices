@@ -22,11 +22,8 @@ import android.adservices.adselection.AddAdSelectionOverrideRequest;
 import android.adservices.adselection.RemoveAdSelectionOverrideRequest;
 import android.adservices.common.AdSelectionSignals;
 
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
-
 import org.junit.Test;
 
-@RequiresSdkLevelAtLeastS
 public final class AdSelectionOverrideRequestTest extends CtsAdServicesDeviceTestCase {
 
     private static final AdSelectionConfig AD_SELECTION_CONFIG =

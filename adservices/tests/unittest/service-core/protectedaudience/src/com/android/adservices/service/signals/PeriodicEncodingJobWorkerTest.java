@@ -50,7 +50,7 @@ import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.pas.EncodingJobRunStats;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.util.Clock;
 
 import com.google.common.collect.ImmutableList;
@@ -60,7 +60,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -78,6 +77,7 @@ import java.util.concurrent.TimeoutException;
 @SetErrorLogUtilDefaultParams(
         throwable = ExpectErrorLogUtilWithExceptionCall.Any.class,
         ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS)
+@RequiresSdkLevelAtLeastT(reason = "PAS is only supported on T+")
 public class PeriodicEncodingJobWorkerTest extends AdServicesExtendedMockitoTestCase {
 
     private static final AdTechIdentifier BUYER = CommonFixture.VALID_BUYER_1;
@@ -128,9 +128,6 @@ public class PeriodicEncodingJobWorkerTest extends AdServicesExtendedMockitoTest
 
     private PeriodicEncodingJobWorker mJobWorker;
     private ArgumentCaptor<EncodingJobRunStats> mEncodingJobRunStatsArgumentCaptor;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Before
     public void setup() {

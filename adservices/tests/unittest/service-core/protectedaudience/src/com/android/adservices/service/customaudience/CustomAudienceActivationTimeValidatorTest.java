@@ -32,11 +32,8 @@ import static org.junit.Assert.assertThrows;
 
 import android.adservices.common.CommonFixture;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-
 import com.google.common.collect.ImmutableList;
 
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.time.Duration;
@@ -51,9 +48,6 @@ public class CustomAudienceActivationTimeValidatorTest {
     private final CustomAudienceActivationTimeValidator mValidator =
             new CustomAudienceActivationTimeValidator(
                     FIXED_CLOCK_TRUNCATED_TO_MILLI, CUSTOM_AUDIENCE_MAX_ACTIVATION_DELAY);
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testConstructor_nullClock_throws() {

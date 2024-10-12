@@ -20,11 +20,9 @@ import android.os.OutcomeReceiver;
 
 import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Test;
 
-@RequiresSdkLevelAtLeastS
 @SuppressWarnings("NewApi")
 public class OutcomeReceiverConverterTest extends AdServicesUnitTestCase {
     @Test

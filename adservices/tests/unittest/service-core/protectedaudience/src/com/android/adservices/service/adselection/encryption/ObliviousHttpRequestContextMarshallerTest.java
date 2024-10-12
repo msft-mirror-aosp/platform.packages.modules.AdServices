@@ -32,12 +32,10 @@ import com.android.adservices.data.adselection.EncryptionKeyConstants;
 import com.android.adservices.ohttp.EncapsulatedSharedSecret;
 import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
 import com.android.adservices.ohttp.ObliviousHttpRequestContext;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.io.BaseEncoding;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -72,9 +70,6 @@ public class ObliviousHttpRequestContextMarshallerTest {
     private EncryptionContextDao mEncryptionContextDao;
     private ObliviousHttpRequestContextMarshaller mObliviousHttpRequestContextMarshaller;
     private Clock mClock;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setUp() {

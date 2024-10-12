@@ -96,7 +96,6 @@ import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.signals.EgressConfigurationGenerator;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.FetchProcessLogger;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.util.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -120,7 +119,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-@RequiresSdkLevelAtLeastS()
 @SpyStatic(FlagsFactory.class)
 public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockitoTestCase {
     private static final int CALLBACK_WAIT_MS = 500;
@@ -302,6 +300,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         mSpyContext,
                         mAdServicesLoggerMock,
                         flagsEnablingAdFiltering,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mServiceFilterMock,
@@ -470,6 +469,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         mSpyContext,
                         mAdServicesLoggerMock,
                         flagsWithDisabledAdFiltering,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mServiceFilterMock,
@@ -535,6 +535,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         mSpyContext,
                         mAdServicesLoggerMock,
                         flagsWithLowRateLimit,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         new AdSelectionServiceFilter(
@@ -787,6 +788,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         mSpyContext,
                         mAdServicesLoggerMock,
                         new FlagsWithLowEventCounts(),
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mServiceFilterMock,
@@ -902,6 +904,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         mSpyContext,
                         mAdServicesLoggerMock,
                         new FlagsWithLowPerBuyerEventCounts(),
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mServiceFilterMock,

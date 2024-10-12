@@ -45,7 +45,6 @@ import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -65,7 +64,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-@RequiresSdkLevelAtLeastS()
 public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestCase {
 
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();

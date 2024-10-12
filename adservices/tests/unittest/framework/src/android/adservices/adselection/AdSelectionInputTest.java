@@ -23,12 +23,10 @@ import static org.junit.Assert.assertThrows;
 import android.os.Parcel;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Test;
 
 /** Unit tests for {@link AdSelectionInput} */
-@RequiresSdkLevelAtLeastS
 public final class AdSelectionInputTest extends AdServicesUnitTestCase {
     private static final String CALLER_PACKAGE_NAME = "callerPackageName";
 

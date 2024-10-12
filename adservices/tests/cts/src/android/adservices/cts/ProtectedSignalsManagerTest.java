@@ -20,13 +20,11 @@ import android.adservices.signals.ProtectedSignalsManager;
 import android.os.Build;
 
 import com.android.adservices.service.FlagsConstants;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 
 import org.junit.Assume;
 import org.junit.Test;
 
-@RequiresSdkLevelAtLeastS
 @SetFlagEnabled(FlagsConstants.KEY_PROTECTED_SIGNALS_ENABLED)
 public final class ProtectedSignalsManagerTest extends CtsAdServicesDeviceTestCase {
     @Test

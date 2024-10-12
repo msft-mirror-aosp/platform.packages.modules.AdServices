@@ -137,6 +137,7 @@
     <string name="notificationUI_notification_ga_content_v2" msgid="9010872481787347894">"现在，您可以在有效保护个人身份信息的同时，更好地掌控自己看到的广告"</string>
     <string name="notificationUI_header_ga_title_v2" msgid="7278405488204886217">"全新广告隐私功能现已上线"</string>
     <string name="notificationUI_container1_ga_introduction_v2" msgid="8607352345994852038">"Android 现已推出新的隐私功能，可以让您更好地掌控自己看到的广告。"</string>
+    <string name="notificationUI_how_it_works_row_body7_v2" msgid="1478686356348245037"><a href="https://support.google.com/android/answer/13720755?sjid=5065763854652067029">"详细了解 Android 上的广告隐私权"</a></string>
     <string name="notificationUI_next_button_text" msgid="6150546034144405663">"继续"</string>
     <string name="settingsUI_main_view_title" msgid="8506265544709344889">"Privacy Sandbox"</string>
     <string name="settingsUI_main_view_subtitle" msgid="4192045492059726083">"参与 Android 广告隐私权 Beta 版测试计划"</string>
@@ -238,7 +239,7 @@
     <string name="notificationUI_pas_notification_content" msgid="4707569137808653882">"让您更好地掌控自己看到的广告，同时帮助保护您的身份信息"</string>
     <string name="notificationUI_pas_re_notification_title" msgid="3602324501055294805">"广告隐私权功能的更新内容"</string>
     <string name="notificationUI_pas_re_notification_content" msgid="4205599804842406411">"让您更好地掌控自己看到的广告，同时帮助保护您的身份信息"</string>
-    <string name="notificationUI_pas_body_main" msgid="4373572260264270651">"Android 正在扩展广告隐私权功能，以限制应用在向您展示个性化广告时可以了解哪些与您相关的信息。"</string>
+    <string name="notificationUI_pas_body_main" msgid="5423612791646610134">"广告隐私权功能有助于限制应用在向您展示个性化广告时可以了解哪些与您相关的信息。"</string>
     <string name="notificationUI_pas_body1" msgid="850989038991219454">"应用及其广告合作伙伴可根据您在此设备上其他应用中的活动记录来展示个性化广告，同时仍然确保您身份信息的私密性和安全性。"</string>
     <string name="notificationUI_pas_expand_button_text1" msgid="8981025972348568991">"详细了解应用建议的广告"</string>
     <string name="notificationUI_pas_body2" msgid="8458057494531462690">"应用之间只会相互分享有限类型的数据（例如一天当中向您展示广告的时间），以便了解广告效果。"</string>
@@ -247,18 +248,21 @@
     <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"• 您使用的应用还可根据您的应用活动记录判断您会喜欢哪些内容。例如，如果您经常使用烹饪应用，可能就会在其他应用中看到日杂配送服务或相关内容的广告。\n\n应用会安全存储这些信息，只有广告合作伙伴才能使用这些信息在其他应用中展示个性化广告。"</string>
     <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"之后，您使用的应用可请求获取这些信息，包括广告主题或您使用的应用建议的广告。"</string>
     <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"您使用的应用可请求 Android 提供相关信息，以便衡量其广告效果。Android 会限制各种应用相互之间可以分享的信息，从而协助保护您的隐私。"</string>
+    <string name="notificationUI_pas_combined_dropdown_subtitle3" msgid="6590622927507281434">"应用如何使用您的数据"</string>
+    <string name="notificationUI_pas_combined_dropdown_body6" msgid="184557016624222120">"Google 要求公司公开声明，他们不会跨应用使用此类数据重新识别您的身份。某些应用可能会使用您的活动记录为您提供个性化体验，而不仅仅是展示个性化广告。这些应用还可能会将活动记录与应用中关于您的其他信息整合到一起。公司有责任告知您他们会如何使用您的数据。"<a href="https://policies.google.com/privacy">"如需详细了解 Google 如何保护您的数据，请参阅我们的《隐私权政策》"</a></string>
     <string name="notificationUI_pas_msmt_dropdown_subtitle1" msgid="2518548652511929388">"会使用哪些数据？"</string>
     <string name="notificationUI_pas_msmt_body1" msgid="6437950797184418065">"您使用的应用可请求 Android 提供相关信息，以便衡量其广告效果。Android 会限制各种应用相互之间可以分享的信息，从而帮助保护您的隐私。"</string>
     <string name="notificationUI_pas_msmt_dropdown_subtitle2" msgid="1369612937107473791">"我的身份信息如何受到保护？"</string>
     <string name="notificationUI_pas_msmt_body2" msgid="6096311192720552724">"Android 使用多种隐私保护措施（例如汇总数据和噪声数据）来限制各种应用相互之间可以分享的信息，并帮助保护您的身份信息。\n\n系统也会定期从您的设备中删除广告效果衡量数据。"</string>
+    <string name="notificationUI_pas_learn_more_msmt_link" msgid="6508855535651241811"><a href="https://support.google.com/android?p=ad_measurement">"详细了解 Android 如何帮助保护您的隐私"</a></string>
     <string name="notificationUI_pas_app_body1" msgid="5276341884020030212">"您的应用活动记录可以用来建议广告。"</string>
     <string name="notificationUI_pas_app_dropdown_subtitle2" msgid="6921646926839023847">"应用会如何使用这些数据？"</string>
     <string name="notificationUI_pas_app_body2" msgid="7216401746885174244">"应用会安全地存储这些信息，只有应用的广告合作伙伴才能使用这些信息在其他应用中展示个性化广告。例如，如果您经常使用烹饪应用，可能就会在其他应用中看到日杂配送服务或相关内容的广告。"</string>
     <string name="notificationUI_pas_app_dropdown_subtitle3" msgid="140629612535108432">"我可以如何管理这些数据？"</string>
     <string name="notificationUI_pas_app_body3" msgid="6455200181055776674">"您可以禁止特定应用与广告合作伙伴分享您的活动记录，还可以随时在隐私设置中重置或关闭应用建议的广告。Android 也会定期自动删除这些数据。"</string>
-    <string name="notificationUI_pas_leanr_more_link" msgid="8029331460965381868"><a href="https://support.google.com/android?p=ad_privacy">"详细了解 Android 如何帮助保护您的隐私"</a></string>
-    <string name="settingsUI_pas_apps_view_body_text" msgid="2824173687944664612">"应用及其广告合作伙伴可根据您在此设备上其他应用中的活动记录来展示个性化广告，同时仍然确保与您相关的信息的私密性和安全性。\n\n例如，如果您经常使用烹饪应用，可能就会在其他应用中看到日杂配送服务或相关内容的广告。\n\nAndroid 会定期自动删除您的活动记录，但您也可以禁止应用与其广告合作伙伴分享这些信息。\n\n虽然您可以开启此功能，但可能看不到应用列表。只有在此功能完全推出，且应用开始使用之后，系统才会显示应用列表。"</string>
-    <string name="settingsUI_pas_apps_view_footer" msgid="7911915685966727993">"应用及其广告合作伙伴通常会记住您感兴趣的内容，以便为您提供个性化体验。应用会安全地存储这些信息，只有其广告合作伙伴才能使用这些信息在其他应用中展示广告。\n\n您可以禁止应用与广告合作伙伴分享您的活动记录数据。Android 也会定期自动删除分享的活动记录数据，因此您再次使用的应用可能会重新出现在此列表中。\n\n您看到的广告是否经过个性化定制可能取决于很多因素，例如此设置、广告主题设置、您的广告 ID 设置，以及您使用的应用是否展示个性化广告。\n\n"<a href="https://support.google.com/android?p=ad_privacy">"详细了解应用建议的广告"</a></string>
+    <string name="notificationUI_pas_leanr_more_link" msgid="8029331460965381868"><a href="https://support.google.com/android?p=manage_appsuggested_ads">"详细了解 Android 如何帮助保护您的隐私"</a></string>
+    <string name="settingsUI_pas_apps_view_body_text" msgid="954711203060462705">"应用及其广告合作伙伴可根据您在此设备上其他应用中的活动记录来展示个性化广告，同时仍然确保与您相关的信息的私密性和安全性。\n\n例如，如果您经常使用烹饪应用，就可能会在其他应用中看到日杂配送服务或相关内容的广告。\n\n您可以禁止应用与广告合作伙伴分享您的活动记录数据。Android 也会定期自动删除分享的活动记录数据，因此您再次使用的应用可能会重新出现在此列表中。\n\n虽然您可以开启此功能，但可能看不到应用列表。只有在此功能完全推出，且应用开始使用之后，系统才会显示应用列表。"</string>
+    <string name="settingsUI_pas_apps_view_footer" msgid="7708188361421000402">"应用及其广告合作伙伴通常会记住您感兴趣的内容，以便为您提供个性化体验。应用会安全地存储这些信息，只有其广告合作伙伴才能使用这些信息在其他应用中展示广告。\n\n您看到的广告是否经过个性化定制可能取决于很多因素，例如此设置、广告主题设置、您的广告 ID 设置，以及您使用的应用是否展示个性化广告。\n\nGoogle 要求公司公开声明，他们不会跨应用使用此类数据重新识别您的身份。某些应用可能会使用您的活动记录为您提供个性化体验，而不仅仅是展示个性化广告。这些应用还可能会将活动记录与应用中关于您的其他信息整合到一起。公司有责任告知您他们如何使用您的数据。"<a href="https://policies.google.com/privacy">"如需详细了解 Google 如何保护您的数据，请参阅我们的《隐私权政策》"</a>\n\n<a href="https://support.google.com/android?p=manage_appsuggested_ads">"详细了解应用建议的广告"</a></string>
     <string name="settingsUI_pas_msmt_view_footer" msgid="1547779101661050529">"Android 使用多种隐私保护措施（例如汇总数据和噪声数据）来限制各种应用相互之间可以分享的信息，并帮助保护您的身份信息。\n\n您的浏览器可能有相似的设置。如果 Android 和您的浏览器都开启了广告效果衡量功能，相关公司或许就能够衡量广告在您使用的应用和访问的网站中的效果。您的浏览记录会保留在设备上，确保其私密性。\n\n"<a href="https://support.google.com/android?p=ad_privacy">"详细了解广告效果衡量"</a></string>
     <string name="settingsUI_pas_topics_view_footer" msgid="4957955199367073977">"Android 会根据您在最近几个星期使用过的应用，记住您感兴趣的主题。\n\n之后，您使用的应用可请求 Android 提供这些主题信息，以便向您展示个性化广告。Android 最多会分享 3 个主题，并且会保护您的身份以及应用使用情况相关信息。\n\nAndroid 会定期自动删除主题。如果您继续使用应用，相应主题可能会重新出现在列表中。或者，您可以屏蔽您不想让 Android 与应用分享的主题。\n\n您看到的广告是否经过个性化定制可能取决于很多因素，例如此设置、应用建议的广告设置、您的广告 ID 设置，以及您使用的应用是否展示个性化广告。\n\n"<a href="https://support.google.com/android?p=ad_privacy">"详细了解广告主题"</a></string>
     <string name="ic_consent_notification_ga_image_description" msgid="3533533250410782396">"代表感兴趣主题（如音乐、新闻和体育）的符号的彩色图示"</string>

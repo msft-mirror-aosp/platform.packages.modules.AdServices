@@ -21,14 +21,12 @@ import static com.google.common.truth.Truth.assertThat;
 import android.os.Build;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.testing.annotations.RequiresSdkRange;
 
 import org.junit.Test;
 
 /** Unit tests for {@link Topic} */
-@RequiresSdkLevelAtLeastS
 public final class TopicsManagerTest extends AdServicesUnitTestCase {
     @Test
     @RequiresSdkLevelAtLeastT

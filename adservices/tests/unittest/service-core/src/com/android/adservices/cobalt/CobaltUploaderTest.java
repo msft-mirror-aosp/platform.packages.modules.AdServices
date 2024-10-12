@@ -34,7 +34,6 @@ import android.os.RemoteException;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.cobalt.CobaltPipelineType;
 
 import com.google.cobalt.EncryptedMessage;
@@ -45,7 +44,6 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
 
-@RequiresSdkLevelAtLeastS
 public final class CobaltUploaderTest extends AdServicesExtendedMockitoTestCase {
     private static final int KEY_INDEX = 5;
     private static final byte[] BYTES = {0x0a, 0x0b, 0x0c};

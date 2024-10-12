@@ -19,13 +19,11 @@ package com.android.adservices.data.topics.migration;
 import android.database.sqlite.SQLiteDatabase;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Test;
 import org.mockito.Mock;
 
 /** Unit tests for {@link com.android.adservices.data.topics.migration.AbstractTopicsDbMigrator} */
-@RequiresSdkLevelAtLeastS
 public final class AbstractTopicsDbMigratorTest extends AdServicesMockitoTestCase {
     @Mock private SQLiteDatabase mDb;
 

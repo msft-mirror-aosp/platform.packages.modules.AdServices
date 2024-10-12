@@ -21,7 +21,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.when;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import com.google.common.collect.ImmutableList;
 
@@ -31,7 +30,6 @@ import java.util.HashSet;
 import java.util.stream.Stream;
 
 /** Unit tests for {@link com.android.adservices.service.topics.GlobalBlockedTopicsManager} */
-@RequiresSdkLevelAtLeastS
 public final class GlobalBlockedTopicsManagerTest extends AdServicesMockitoTestCase {
     @Test
     public void testGetGlobalBlockedTopicIds() {

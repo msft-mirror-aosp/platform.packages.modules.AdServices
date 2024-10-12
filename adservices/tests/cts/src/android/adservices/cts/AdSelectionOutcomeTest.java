@@ -20,11 +20,9 @@ import android.adservices.adselection.AdSelectionOutcome;
 import android.net.Uri;
 
 import com.android.adservices.shared.testing.EqualsTester;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Test;
 
-@RequiresSdkLevelAtLeastS
 public final class AdSelectionOutcomeTest extends CtsAdServicesDeviceTestCase {
     private static final Uri VALID_RENDER_URI =
             new Uri.Builder().path("valid.example.com/testing/hello").build();

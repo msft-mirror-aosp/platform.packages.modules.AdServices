@@ -45,6 +45,7 @@ filegroup {
 android_library {
     name: "adservices-test-utility",
     sdk_version: "module_current",
+    // this test util needs to be used for the RVC-specific tests
     min_sdk_version: "30",
     srcs: [
         ":adservices-test-utility-sideless-sources",

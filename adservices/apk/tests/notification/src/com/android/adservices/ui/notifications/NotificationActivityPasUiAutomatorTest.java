@@ -35,17 +35,13 @@ import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiObject2;
 import androidx.test.uiautomator.Until;
 
-
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.ui.util.AdServicesUiTestCase;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.adservices.ui.util.NotificationActivityTestUtil;
-import com.android.modules.utils.build.SdkLevel;
 
-import org.junit.Assume;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -82,11 +78,6 @@ public final class NotificationActivityPasUiAutomatorTest extends AdServicesUiTe
     public static void classSetup() throws Exception {
 
         NotificationActivityTestUtil.setupBeforeTests();
-    }
-
-    @Before
-    public void setup() {
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
     }
 
     @Test

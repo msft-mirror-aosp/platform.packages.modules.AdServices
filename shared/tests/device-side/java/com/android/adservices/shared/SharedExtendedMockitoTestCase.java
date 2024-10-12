@@ -99,6 +99,11 @@ public abstract class SharedExtendedMockitoTestCase extends SharedUnitTestCase {
         }
 
         @Override
+        public void mockSdkLevelS() {
+            mAndroidMocker.mockSdkLevelS();
+        }
+
+        @Override
         public void mockGetCurrentUser(int user) {
             mAndroidMocker.mockGetCurrentUser(user);
         }

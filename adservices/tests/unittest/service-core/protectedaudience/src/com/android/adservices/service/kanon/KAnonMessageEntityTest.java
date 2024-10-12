@@ -21,9 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.service.kanon.KAnonMessageEntity.KanonMessageEntityStatus;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.time.Instant;
@@ -33,9 +31,6 @@ public class KAnonMessageEntityTest {
     private static final long AD_SELECTION_ID_1 = 1;
     private static final long MESSAGE_ID_1 = 12;
     private static final Instant CORRESPONDING_CLIENT_PARAMS_EXPIRY_INSTANT = Instant.now();
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuilderKAnonMessageEntity_buildsSuccessfully() {

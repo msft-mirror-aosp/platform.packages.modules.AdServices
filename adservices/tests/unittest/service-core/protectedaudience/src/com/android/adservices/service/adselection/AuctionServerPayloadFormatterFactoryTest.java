@@ -27,9 +27,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 
@@ -40,9 +38,6 @@ public class AuctionServerPayloadFormatterFactoryTest {
     private static final int INVALID_VERSION = Integer.MAX_VALUE;
 
     @Mock private AdServicesLogger mAdServicesLoggerMock;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testCreateFormatter_validVersion_returnImplementationSuccess() {

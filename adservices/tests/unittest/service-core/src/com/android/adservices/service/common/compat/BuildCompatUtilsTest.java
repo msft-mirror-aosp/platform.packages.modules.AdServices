@@ -29,7 +29,6 @@ import android.os.Build;
 import android.os.SystemProperties;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -39,7 +38,6 @@ import org.junit.Test;
 public final class BuildCompatUtilsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     @MockStatic(Build.class)
     @SpyStatic(BuildCompatUtils.class)
     public void testIsDebuggable_SPlus_debuggable() {
@@ -52,7 +50,6 @@ public final class BuildCompatUtilsTest extends AdServicesExtendedMockitoTestCas
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS()
     @MockStatic(Build.class)
     @SpyStatic(BuildCompatUtils.class)
     public void testIsDebuggable_SPlus_notDebuggable() {

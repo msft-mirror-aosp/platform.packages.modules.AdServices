@@ -29,17 +29,12 @@ import android.adservices.common.KeyedFrequencyCapFixture;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.service.adselection.HistogramEventFixture;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
-import org.junit.Rule;
 import org.junit.Test;
 
 @SmallTest
 public class DBHistogramEventDataTest {
     private static final Long NON_NULL_ROW_ID = 50L;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildValidEventData_success() {

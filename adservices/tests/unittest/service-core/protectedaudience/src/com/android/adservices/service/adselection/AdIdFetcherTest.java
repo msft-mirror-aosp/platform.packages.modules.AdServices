@@ -30,7 +30,6 @@ import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.adid.AdIdCacheManager;
 import com.android.adservices.service.common.PermissionHelper;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
 import org.junit.Before;
@@ -42,7 +41,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 @MockStatic(PermissionHelper.class)
-@RequiresSdkLevelAtLeastS
 public final class AdIdFetcherTest extends AdServicesExtendedMockitoTestCase {
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     private static final int CALLER_UID = Process.myUid();

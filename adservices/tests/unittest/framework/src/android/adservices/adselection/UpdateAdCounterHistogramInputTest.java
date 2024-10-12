@@ -26,13 +26,11 @@ import android.os.Parcel;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.shared.testing.EqualsTester;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Test;
 
 import java.util.Random;
 
-@RequiresSdkLevelAtLeastS
 public final class UpdateAdCounterHistogramInputTest extends AdServicesUnitTestCase {
     private static final Random RANDOM = new Random();
     private static final long VALID_AD_SELECTION_ID = 10;

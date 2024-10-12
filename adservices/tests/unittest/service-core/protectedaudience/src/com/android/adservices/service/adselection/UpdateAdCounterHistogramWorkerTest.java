@@ -54,7 +54,6 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesStatsLog;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.util.concurrent.MoreExecutors;
 
@@ -86,9 +85,6 @@ public class UpdateAdCounterHistogramWorkerTest {
 
     private UpdateAdCounterHistogramWorker mUpdateWorker;
     private UpdateAdCounterHistogramInput mInputParams;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {

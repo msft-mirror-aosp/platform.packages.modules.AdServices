@@ -203,6 +203,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+@SpyStatic(DebugFlags.class)
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(DebugFlags.class)
 @MockStatic(BackgroundJobsManager.class)
@@ -360,12 +361,12 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
     @Mock private AppImportanceFilter mAppImportanceFilterMock;
     @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptor;
+    @Mock private KAnonSignJoinFactory mUnusedKAnonSignJoinFactory;
     private MultiCloudSupportStrategy mMultiCloudSupportStrategy =
             MultiCloudTestStrategyFactory.getDisabledTestStrategy(mObliviousHttpEncryptor);
     private AdSelectionDebugReportDao mAdSelectionDebugReportDao;
     private MockAdIdWorker mMockAdIdWorker;
     private AdIdFetcher mAdIdFetcher;
-    @Mock private KAnonSignJoinFactory mUnusedKAnonSignJoinFactory;
     private RetryStrategyFactory mRetryStrategyFactory;
     private ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
     private ConsentedDebugConfigurationGeneratorFactory
@@ -1222,6 +1223,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         mSpyContext,
                         mAdServicesLoggerMock,
                         DEFAULT_FLAGS,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -1385,6 +1387,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         mSpyContext,
                         mAdServicesLoggerMock,
                         DEFAULT_FLAGS,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -3508,6 +3511,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         mSpyContext,
                         mAdServicesLoggerMock,
                         DEFAULT_FLAGS,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -4952,6 +4956,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         mSpyContext,
                         mAdServicesLoggerMock,
                         flags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,

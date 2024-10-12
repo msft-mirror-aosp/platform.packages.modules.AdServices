@@ -23,9 +23,6 @@ import static org.junit.Assert.assertEquals;
 
 import android.adservices.common.AdServicesStatusUtils;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-
-import org.junit.Rule;
 import org.junit.Test;
 
 /** Unit tests for {@link RunAdBiddingPerCAProcessReportedStats}. */
@@ -48,9 +45,6 @@ public class RunAdBiddingPerCAProcessReportedStatsTest {
     static final boolean RUN_AD_BIDDING_PER_CA_RETURNED_AD_COST = false;
     static final boolean GENERATE_BID_BUYER_ADDITIONAL_SIGNALS_CONTAINED_DATA_VERSION = true;
     static final int GENERATE_BID_JS_SCRIPT_RESULT_CODE = JS_RUN_STATUS_SUCCESS;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuilderCreateSuccess() {

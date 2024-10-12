@@ -29,11 +29,15 @@ public final class FakeCobaltOperationLogger implements CobaltOperationLogger {
     private final Map<Pair<Integer, Integer>, Integer> mStringBufferMaxExceededOccurrences;
     private final Map<Pair<Integer, Integer>, Integer> mEventVectorBufferMaxExceededOccurrences;
     private final Map<Pair<Integer, Integer>, Integer> mMaxValueExceededOccurrences;
+    private int mUploadFailureOccurrences;
+    private int mUploadSuccessOccurrences;
 
     public FakeCobaltOperationLogger() {
         mStringBufferMaxExceededOccurrences = new HashMap<Pair<Integer, Integer>, Integer>();
         mEventVectorBufferMaxExceededOccurrences = new HashMap<Pair<Integer, Integer>, Integer>();
         mMaxValueExceededOccurrences = new HashMap<Pair<Integer, Integer>, Integer>();
+        mUploadFailureOccurrences = 0;
+        mUploadSuccessOccurrences = 0;
     }
 
     /**
@@ -82,5 +86,31 @@ public final class FakeCobaltOperationLogger implements CobaltOperationLogger {
     public int getNumMaxValueExceededOccurrences(int metricId, int reportId) {
         return mMaxValueExceededOccurrences.getOrDefault(
                 new Pair<Integer, Integer>(metricId, reportId), 0);
+    }
+
+    /**
+     * NoOp logs that Cobalt periodical job failed to upload observations. Increments the
+     * occurrences of upload failure.
+     */
+    public void logUploadFailure() {
+        mUploadFailureOccurrences++;
+    }
+
+    /** Returns the total occurrences of upload failure. */
+    public int getNumUploadFailureOccurrences() {
+        return mUploadFailureOccurrences;
+    }
+
+    /**
+     * NoOp logs that Cobalt periodical job upload observations successfully. Increments the
+     * occurrences of upload success.
+     */
+    public void logUploadSuccess() {
+        mUploadSuccessOccurrences++;
+    }
+
+    /** Returns the total occurrences of upload success. */
+    public int getNumUploadSuccessOccurrences() {
+        return mUploadSuccessOccurrences;
     }
 }

@@ -24,9 +24,7 @@ import android.adservices.customaudience.CustomAudienceFixture;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.ValidatorTestUtil;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.time.Duration;
@@ -36,9 +34,6 @@ public class CustomAudienceTimestampValidatorTest {
     private final CustomAudienceTimestampValidator mValidator =
             new CustomAudienceTimestampValidator(
                     CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI, FLAGS);
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testAllValidTimes() {

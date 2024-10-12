@@ -39,7 +39,6 @@ import com.android.adservices.shared.common.exception.ServiceUnavailableExceptio
 import com.android.adservices.shared.testing.OutcomeReceiverForTests;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.topics.TopicsTestHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
@@ -540,7 +539,6 @@ public final class TopicsManagerTest extends CtsTopicsEndToEndTestCase {
 
     @Test
     @RequiresLowRamDevice
-    @RequiresSdkLevelAtLeastS(reason = "OutcomeReceiver is not available on R")
     public void testGetTopics_lowRamDevice() throws Exception {
         TopicsManager manager = TopicsManager.get(sContext);
         assertWithMessage("manager").that(manager).isNotNull();

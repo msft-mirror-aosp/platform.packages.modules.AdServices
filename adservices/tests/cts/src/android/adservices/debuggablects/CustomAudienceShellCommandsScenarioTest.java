@@ -36,7 +36,6 @@ import android.net.Uri;
 
 import com.android.adservices.common.AdServicesShellCommandHelper;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 
@@ -51,7 +50,6 @@ import java.util.List;
 @EnableDebugFlag(KEY_ADSERVICES_SHELL_COMMAND_ENABLED)
 @EnableDebugFlag(KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED)
 @EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
-@RequiresSdkLevelAtLeastS(reason = "Custom Audience is enabled for S+")
 public final class CustomAudienceShellCommandsScenarioTest extends FledgeDebuggableScenarioTest {
     private final AdServicesShellCommandHelper mShellCommandHelper =
             new AdServicesShellCommandHelper();

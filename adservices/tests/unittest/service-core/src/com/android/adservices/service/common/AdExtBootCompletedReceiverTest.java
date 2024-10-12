@@ -30,14 +30,12 @@ import android.content.Intent;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
-@RequiresSdkLevelAtLeastS()
 @SpyStatic(AdServicesBackCompatInit.class)
 @SetErrorLogUtilDefaultParams(
         throwable = Any.class,

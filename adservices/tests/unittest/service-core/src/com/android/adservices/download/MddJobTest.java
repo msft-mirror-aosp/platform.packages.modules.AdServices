@@ -57,7 +57,6 @@ import com.android.adservices.shared.spe.framework.ExecutionResult;
 import com.android.adservices.shared.spe.framework.ExecutionRuntimeParameters;
 import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
 import com.android.adservices.shared.testing.FutureSyncCallback;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.spe.AdServicesJobScheduler;
 import com.android.adservices.spe.AdServicesJobServiceFactory;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -71,7 +70,6 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 /** Unit test for {@link com.android.adservices.download.MddJob} */
-@RequiresSdkLevelAtLeastS
 @SpyStatic(AdServicesJobScheduler.class)
 @SpyStatic(AdServicesJobServiceFactory.class)
 @SpyStatic(EncryptionDataDownloadManager.class)

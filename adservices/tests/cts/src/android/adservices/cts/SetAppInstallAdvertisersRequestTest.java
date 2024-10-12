@@ -21,15 +21,12 @@ import static com.google.common.truth.Truth.assertThat;
 import android.adservices.adselection.SetAppInstallAdvertisersRequest;
 import android.adservices.common.AdTechIdentifier;
 
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
-
 import org.junit.Ignore;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-@RequiresSdkLevelAtLeastS
 public final class SetAppInstallAdvertisersRequestTest extends CtsAdServicesDeviceTestCase {
     private static final Set<AdTechIdentifier> ADVERTISERS =
             new HashSet<>(

@@ -68,7 +68,6 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.shared.testing.IntFailureSyncCallback;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.util.Clock;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -90,7 +89,6 @@ import java.util.concurrent.TimeUnit;
 @SetErrorLogUtilDefaultParams(
         throwable = Any.class,
         ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID)
-@RequiresSdkLevelAtLeastS()
 public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase {
     private static final String TEST_APP_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     private static final String INVALID_PACKAGE_NAME = "com.do_not_exists";

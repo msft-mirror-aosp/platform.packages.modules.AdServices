@@ -73,12 +73,11 @@ public final class ResetConsentCommandTest extends ShellCommandTestCase<ResetCon
         verify(mMockAdServicesCommonManager)
                 .recordUserManualInteractionWithConsent(NO_MANUAL_INTERACTIONS_RECORDED);
         verify(mMockAdServicesCommonManager).disable(any(), eq(MEASUREMENTS));
-        if (sdkLevel.isAtLeastS()) {
-            verify(mMockAdServicesCommonManager).recordNotificationDisplayed(false);
-            verify(mMockAdServicesCommonManager).recordGaUxNotificationDisplayed(false);
-            verify(mMockAdServicesCommonManager).disable(any(), eq(TOPICS));
-            verify(mMockAdServicesCommonManager).disable(any(), eq(FLEDGE));
-        }
+        verify(mMockAdServicesCommonManager).recordNotificationDisplayed(false);
+        verify(mMockAdServicesCommonManager).recordGaUxNotificationDisplayed(false);
+        verify(mMockAdServicesCommonManager).disable(any(), eq(TOPICS));
+        verify(mMockAdServicesCommonManager).disable(any(), eq(FLEDGE));
+
         if (sdkLevel.isAtLeastT()) {
             verify(mMockAdServicesCommonManager).recordPasNotificationDisplayed(false);
             verify(mMockAdServicesCommonManager).recordPasNotificationOpened(false);

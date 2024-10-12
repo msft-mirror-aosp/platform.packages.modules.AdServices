@@ -43,13 +43,11 @@ import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.collect.ImmutableList;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.List;
@@ -76,9 +74,6 @@ public class CustomAudienceUpdatableDataReaderTest {
                     return true;
                 }
             };
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testGetUserBiddingSignalsFromFullJsonObjectSuccess() throws JSONException {

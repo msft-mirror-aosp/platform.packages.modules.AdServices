@@ -26,12 +26,10 @@ import android.adservices.common.CommonFixture;
 import android.os.Parcel;
 
 import com.android.adservices.shared.testing.EqualsTester;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Test;
 
 /** Unit tests for {@link AppInstallFilters}. */
-@RequiresSdkLevelAtLeastS
 public final class AppInstallFiltersTest extends CtsAdServicesDeviceTestCase {
     @Test
     public void testBuildValidAppInstallFilters_success() {

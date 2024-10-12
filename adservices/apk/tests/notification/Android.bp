@@ -58,7 +58,10 @@ android_test {
         "general-tests",
         "mts-adservices",
     ],
-    data: [":com.example.adservices.samples.ui.consenttestapp"],
+    data: [
+        ":com.example.adservices.samples.ui.consenttestapp",
+        ":com.example.adservices.samples.ui.sampletestapp",
+    ],
     instrumentation_for: "AdServicesApk",
 }
 
@@ -109,6 +112,9 @@ android_test {
     ],
     test_config: "AndroidTest.ExtServices.xml",
     manifest: "AndroidManifestExtServices.xml",
-    data: [":com.example.adservices.samples.ui.consenttestapp"],
+    data: [
+        ":com.example.adservices.samples.ui.consenttestapp",
+        ":com.example.adservices.samples.ui.sampletestapp",
+    ],
     instrumentation_for: "ExtServices-sminus",
 }

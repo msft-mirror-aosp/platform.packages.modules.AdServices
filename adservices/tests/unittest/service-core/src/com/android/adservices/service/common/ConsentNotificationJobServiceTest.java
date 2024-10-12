@@ -45,6 +45,7 @@ import android.content.pm.PackageManager;
 import android.os.PersistableBundle;
 
 import com.android.adservices.common.AdServicesJobServiceTestCase;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.consent.ConsentManager;
@@ -69,6 +70,7 @@ import java.util.concurrent.CountDownLatch;
 
 /** Unit test for {@link com.android.adservices.service.common.ConsentNotificationJobService}. */
 @SpyStatic(FlagsFactory.class)
+@SpyStatic(DebugFlags.class)
 @SpyStatic(ConsentManager.class)
 @SpyStatic(AdServicesSyncUtil.class)
 @SpyStatic(ConsentNotificationJobService.class)
@@ -100,6 +102,7 @@ public final class ConsentNotificationJobServiceTest extends AdServicesJobServic
     public void setup() {
         doReturn(mPackageManager).when(mConsentNotificationJobService).getPackageManager();
         mocker.mockGetFlags(mMockFlags);
+        mocker.mockGetDebugFlags(mMockDebugFlags);
         when(mMockFlags.getConsentNotificationIntervalEndMs()).thenReturn(mIntervalEndMs);
         when(mMockFlags.getConsentNotificationIntervalBeginMs()).thenReturn(mIntervalBeginMs);
         when(mMockFlags.getConsentNotificationMinimalDelayBeforeIntervalEnds())
@@ -126,8 +129,7 @@ public final class ConsentNotificationJobServiceTest extends AdServicesJobServic
     @Test
     public void testOnStartJobAsyncUtilExecute_Reconsent_GaUxDisabled() throws Exception {
         mockServiceCompatUtilDisableJob(false);
-        doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        when(mMockFlags.getConsentNotificationDebugMode()).thenReturn(false);
+        mocker.mockGetConsentNotificationDebugMode(false);
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(false);
         ConsentManager consentManager = mock(ConsentManager.class);
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
@@ -148,7 +150,7 @@ public final class ConsentNotificationJobServiceTest extends AdServicesJobServic
                 .jobFinished(mMockJobParameters, false);
 
         doNothing().when(mAdservicesSyncUtil).execute(any(Context.class), any(Boolean.class));
-        when(mMockFlags.getConsentNotificationDebugMode()).thenReturn(false);
+        mocker.mockGetConsentNotificationDebugMode(false);
 
         mConsentNotificationJobService.onStartJob(mMockJobParameters);
         jobFinishedCountDown.await();
@@ -161,8 +163,7 @@ public final class ConsentNotificationJobServiceTest extends AdServicesJobServic
     @Test
     public void testOnStartJobAsyncUtilExecute_ReconsentFalse() throws Exception {
         mockServiceCompatUtilDisableJob(false);
-        doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        when(mMockFlags.getConsentNotificationDebugMode()).thenReturn(false);
+        mocker.mockGetConsentNotificationDebugMode(false);
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
         ConsentManager consentManager = mock(ConsentManager.class);
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
@@ -184,7 +185,7 @@ public final class ConsentNotificationJobServiceTest extends AdServicesJobServic
                 .jobFinished(mMockJobParameters, false);
 
         doNothing().when(mAdservicesSyncUtil).execute(any(Context.class), any(Boolean.class));
-        when(mMockFlags.getConsentNotificationDebugMode()).thenReturn(false);
+        mocker.mockGetConsentNotificationDebugMode(false);
 
         mConsentNotificationJobService.onStartJob(mMockJobParameters);
         jobFinishedCountDown.await();
@@ -274,8 +275,7 @@ public final class ConsentNotificationJobServiceTest extends AdServicesJobServic
 
     @Test
     public void testDelaysWhenDebugModeOn() {
-        doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        when(mMockFlags.getConsentNotificationDebugMode()).thenReturn(true);
+        mocker.mockGetConsentNotificationDebugMode(true);
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(0);
         long initialDelay = ConsentNotificationJobService.calculateInitialDelay(calendar);
@@ -377,8 +377,7 @@ public final class ConsentNotificationJobServiceTest extends AdServicesJobServic
 
     private void testOnStartJobAsyncUtilExecute() throws Exception {
         mockServiceCompatUtilDisableJob(false);
-        doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        when(mMockFlags.getConsentNotificationDebugMode()).thenReturn(false);
+        mocker.mockGetConsentNotificationDebugMode(false);
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
         ConsentManager consentManager = mock(ConsentManager.class);
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
@@ -402,7 +401,7 @@ public final class ConsentNotificationJobServiceTest extends AdServicesJobServic
                 .when(mConsentNotificationJobService)
                 .jobFinished(mMockJobParameters, false);
         doNothing().when(mAdservicesSyncUtil).execute(any(Context.class), any(Boolean.class));
-        when(mMockFlags.getConsentNotificationDebugMode()).thenReturn(false);
+        mocker.mockGetConsentNotificationDebugMode(false);
 
         mConsentNotificationJobService.onStartJob(mMockJobParameters);
         jobFinishedCountDown.await();
@@ -417,18 +416,15 @@ public final class ConsentNotificationJobServiceTest extends AdServicesJobServic
     }
 
     private void mockOtaStringsFeature(boolean enabled) {
-        doReturn(mMockFlags).when(FlagsFactory::getFlags);
         when(mMockFlags.getUiOtaStringsFeatureEnabled()).thenReturn(enabled);
     }
 
     private void mockOtaResourcesFeature(boolean enabled) {
-        doReturn(mMockFlags).when(FlagsFactory::getFlags);
         when(mMockFlags.getUiOtaResourcesFeatureEnabled()).thenReturn(enabled);
     }
 
     private void mockConsentDebugMode(boolean enabled) {
-        doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        when(mMockFlags.getConsentNotificationDebugMode()).thenReturn(enabled);
+        mocker.mockGetConsentNotificationDebugMode(enabled);
     }
 
     private void mockJobFinished() throws Exception {

@@ -28,17 +28,12 @@ import android.adservices.customaudience.CustomAudienceFixture;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.service.adselection.HistogramEventFixture;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
-import org.junit.Rule;
 import org.junit.Test;
 
 @SmallTest
 public class DBHistogramIdentifierTest {
     private static final String DEPRECATED_KEY = "deprecated";
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildValidIdentifier_success() {

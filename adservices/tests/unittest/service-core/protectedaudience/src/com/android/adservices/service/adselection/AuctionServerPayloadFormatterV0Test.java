@@ -32,10 +32,8 @@ import android.adservices.exceptions.UnsupportedPayloadSizeException;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -60,9 +58,6 @@ public class AuctionServerPayloadFormatterV0Test {
         secureRandom.nextBytes(result);
         return result;
     }
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {

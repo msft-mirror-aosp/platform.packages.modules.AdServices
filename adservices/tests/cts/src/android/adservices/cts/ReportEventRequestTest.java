@@ -26,13 +26,10 @@ import android.adservices.adselection.ReportEventRequest;
 import android.view.InputEvent;
 import android.view.KeyEvent;
 
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
-
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 
-@RequiresSdkLevelAtLeastS
 public final class ReportEventRequestTest extends CtsAdServicesDeviceTestCase {
     private static final long AD_SELECTION_ID = 1234L;
     private static final String INTERACTION_KEY = "click";

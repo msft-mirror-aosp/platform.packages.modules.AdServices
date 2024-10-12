@@ -33,6 +33,7 @@ import java.util.Optional;
 public class AggregatableAttributionTrigger {
 
     private List<AggregateTriggerData> mTriggerData;
+    @Nullable private List<AggregatableBucket> mAggregatableBuckets;
     @Nullable private List<AggregatableValuesConfig> mValueConfigs;
     private Optional<List<AggregateDeduplicationKey>> mAggregateDeduplicationKeys;
 
@@ -47,12 +48,13 @@ public class AggregatableAttributionTrigger {
         }
         AggregatableAttributionTrigger attributionTrigger = (AggregatableAttributionTrigger) obj;
         return Objects.equals(mTriggerData, attributionTrigger.mTriggerData)
-                && Objects.equals(mValueConfigs, attributionTrigger.mValueConfigs);
+                && Objects.equals(mValueConfigs, attributionTrigger.mValueConfigs)
+                && Objects.equals(mAggregatableBuckets, attributionTrigger.mAggregatableBuckets);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mTriggerData, mValueConfigs);
+        return Objects.hash(mTriggerData, mAggregatableBuckets, mValueConfigs);
     }
 
     /**
@@ -75,6 +77,15 @@ public class AggregatableAttributionTrigger {
     /** Returns De-deuplication keys for Aggregate Report Creation. */
     public Optional<List<AggregateDeduplicationKey>> getAggregateDeduplicationKeys() {
         return mAggregateDeduplicationKeys;
+    }
+
+    /**
+     * Returns a list of AggregatableBucket that contains bucket name, filters, and not_filters for
+     * each bucket.
+     */
+    @Nullable
+    public List<AggregatableBucket> getAggregatableBuckets() {
+        return mAggregatableBuckets;
     }
 
     /**
@@ -135,6 +146,12 @@ public class AggregatableAttributionTrigger {
         /** See {@link AggregatableAttributionTrigger#getAggregateDeduplicationKeys()}. */
         public Builder setAggregateDeduplicationKeys(List<AggregateDeduplicationKey> keys) {
             mBuilding.mAggregateDeduplicationKeys = Optional.of(keys);
+            return this;
+        }
+
+        /** See {@link AggregatableAttributionTrigger#getAggregatableBuckets()} ()}. */
+        public Builder setAggregatableBuckets(List<AggregatableBucket> aggregatableBuckets) {
+            mBuilding.mAggregatableBuckets = aggregatableBuckets;
             return this;
         }
 

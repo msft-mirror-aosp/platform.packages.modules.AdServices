@@ -50,6 +50,12 @@ public final class AdServicesMockitoFlagsMocker extends AbstractMocker
     }
 
     @Override
+    public void mockGetEnableApiCallResponseLoggingEnabled(boolean value) {
+        logV("mockGetEnableApiCallResponseLoggingEnabled(%b)", value);
+        when(mFlags.getCobaltEnableApiCallResponseLogging()).thenReturn(value);
+    }
+
+    @Override
     public void mockGetAdservicesReleaseStageForCobalt(String stage) {
         logV("mockGetAdservicesReleaseStageForCobalt(%s)", stage);
         Objects.requireNonNull(stage, "Stage cannot be null");
@@ -61,6 +67,7 @@ public final class AdServicesMockitoFlagsMocker extends AbstractMocker
         logV("mockAllCobaltLoggingFlags(%b)", enabled);
         mockGetCobaltLoggingEnabled(enabled);
         mockGetAppNameApiErrorCobaltLoggingEnabled(enabled);
+        mockGetEnableApiCallResponseLoggingEnabled(enabled);
         mockGetAdservicesReleaseStageForCobalt("DEBUG");
     }
 

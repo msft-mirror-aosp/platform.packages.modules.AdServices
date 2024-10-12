@@ -26,11 +26,8 @@ import static org.junit.Assert.assertThrows;
 
 import android.net.Uri;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.junit.Rule;
 import org.junit.Test;
 
 public class InteractionUriRegistrationInfoTest {
@@ -41,9 +38,6 @@ public class InteractionUriRegistrationInfoTest {
             Uri.parse(INTERACTION_REPORTING_URI_STRING);
     private static final Uri DIFFERENT_INTERACTION_REPORTING_URI =
             Uri.parse("https://different.com/click");
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testFromJsonSucceeds() throws Exception {

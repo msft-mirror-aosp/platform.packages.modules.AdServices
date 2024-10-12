@@ -63,7 +63,6 @@ import static com.android.adservices.service.Flags.MEASUREMENT_TRIGGER_DEBUG_SIG
 import static com.android.adservices.service.Flags.PPAPI_AND_SYSTEM_SERVER;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.shared.common.flags.ModuleSharedFlags.DEFAULT_JOB_SCHEDULING_LOGGING_ENABLED;
-import static com.android.adservices.shared.testing.AndroidSdk.RVC;
 import static com.android.adservices.shared.testing.AndroidSdk.SC;
 import static com.android.adservices.shared.testing.AndroidSdk.SC_V2;
 
@@ -152,12 +151,6 @@ public final class FlagsTest extends AdServicesUnitTestCase {
         expect.withMessage("getBlockedTopicsSourceOfTruth()")
                 .that(mFlags.getBlockedTopicsSourceOfTruth())
                 .isEqualTo(expected);
-    }
-
-    @Test
-    @RequiresSdkRange(atMost = RVC, reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
-    public void testEnableAppsearchConsentData_isR() {
-        assertEnableAppsearchConsentData(false);
     }
 
     @Test
@@ -572,6 +565,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
         testFeatureFlag(
                 "COBALT__FALL_BACK_TO_DEFAULT_BASE_REGISTRY",
                 Flags::getCobaltFallBackToDefaultBaseRegistry);
+    }
+
+    @Test
+    public void testGetCobaltEnableApiCallResponseLogging() {
+        testFeatureFlag(
+                "COBALT__ENABLE_API_CALL_RESPONSE_LOGGING",
+                Flags::getCobaltEnableApiCallResponseLogging);
     }
 
     @Test

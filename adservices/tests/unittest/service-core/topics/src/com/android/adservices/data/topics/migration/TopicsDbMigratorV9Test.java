@@ -27,7 +27,6 @@ import com.android.adservices.data.topics.EncryptedTopic;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Before;
@@ -37,7 +36,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 /** Unit tests for {@link TopicsDbMigratorV9} */
-@RequiresSdkLevelAtLeastS
 @SpyStatic(FlagsFactory.class)
 public final class TopicsDbMigratorV9Test extends AdServicesExtendedMockitoTestCase {
     // The database is created with V8 and will migrate to V9.

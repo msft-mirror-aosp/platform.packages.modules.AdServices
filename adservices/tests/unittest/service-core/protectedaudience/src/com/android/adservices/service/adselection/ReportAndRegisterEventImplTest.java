@@ -71,6 +71,7 @@ import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.DBRegisteredAdInteraction;
 import com.android.adservices.data.adselection.datahandlers.RegisteredAdInteraction;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AllowLists;
@@ -90,7 +91,6 @@ import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ReportInteractionApiCalledStats;
 import com.android.adservices.shared.testing.AnswerSyncCallback;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
@@ -112,7 +112,6 @@ import org.mockito.Spy;
 import java.time.Instant;
 import java.util.List;
 
-@RequiresSdkLevelAtLeastS()
 @MockStatic(ConsentManager.class)
 @MockStatic(PermissionHelper.class)
 public final class ReportAndRegisterEventImplTest extends AdServicesExtendedMockitoTestCase {
@@ -169,6 +168,7 @@ public final class ReportAndRegisterEventImplTest extends AdServicesExtendedMock
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
     @Mock private MeasurementImpl mMeasurementServiceMock;
     @Mock private ConsentManager mConsentManagerMock;
+    @Mock private DebugFlags mDebugFlags;
     private ReportAndRegisterEventImpl mEventReporter;
     private DBAdSelection mDBAdSelection;
     private DBRegisteredAdInteraction mDBRegisteredAdInteractionSellerClick;
@@ -1178,6 +1178,7 @@ public final class ReportAndRegisterEventImplTest extends AdServicesExtendedMock
                 mBackgroundExecutorService,
                 mAdServicesLoggerMock,
                 flags,
+                mDebugFlags,
                 mAdSelectionServiceFilterMock,
                 MY_UID,
                 mFledgeAuthorizationFilterMock,

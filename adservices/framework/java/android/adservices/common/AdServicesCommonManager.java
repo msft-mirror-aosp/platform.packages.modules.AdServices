@@ -321,7 +321,6 @@ public class AdServicesCommonManager {
      * @param callback callback function to confirm modules overrides is set up correctly.
      * @hide
      */
-    @SystemApi
     @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
     @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
     public void requestAdServicesModuleOverrides(
@@ -374,7 +373,6 @@ public class AdServicesCommonManager {
      * @param callback callback function to confirm module user choice is set up correctly.
      * @hide
      */
-    @SystemApi
     @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
     @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
     public void requestAdServicesModuleUserChoices(

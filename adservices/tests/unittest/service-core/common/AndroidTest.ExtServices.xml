@@ -16,16 +16,17 @@
   -->
 <configuration
     description="Config for AdServices Service-core common test cases in ExtServices">
+
+    <!-- Prevent test from running on Android T+ -->
     <object class="com.android.tradefed.testtype.suite.module.MaxSdkModuleController"
             type="module_controller">
         <option name="max-sdk-level" value="32"/>
     </object>
 
-    <!-- Prevent test from running on Android T+ -->
-    <object class="com.android.tradefed.testtype.suite.module.Sdk30ModuleController"
+    <!-- Prevent tests from running on Android R- -->
+    <object class="com.android.tradefed.testtype.suite.module.Sdk31ModuleController"
             type="module_controller"/>
 
-    <!-- Prevent tests from running on Android Q- -->
     <object class="com.android.tradefed.testtype.suite.module.MainlineTestModuleController"
             type="module_controller">
         <option name="mainline-module-package-name" value="com.google.android.extservices"/>

@@ -25,14 +25,11 @@ import android.adservices.adselection.PerBuyerDecisionLogic;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.CommonFixture;
 
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
-
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
 
 /** Adds tests for {@link AddAdSelectionOverrideRequest}. */
-@RequiresSdkLevelAtLeastS
 public final class AddAdSelectionOverrideRequestTest extends CtsAdServicesDeviceTestCase {
     private static final AdSelectionConfig AD_SELECTION_CONFIG =
             AdSelectionConfigFixture.anAdSelectionConfig();

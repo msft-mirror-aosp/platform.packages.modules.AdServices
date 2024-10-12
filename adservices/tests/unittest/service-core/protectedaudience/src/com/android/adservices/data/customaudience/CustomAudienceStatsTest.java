@@ -21,9 +21,6 @@ import static com.google.common.truth.Truth.assertThat;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-
-import org.junit.Rule;
 import org.junit.Test;
 
 public class CustomAudienceStatsTest {
@@ -32,9 +29,6 @@ public class CustomAudienceStatsTest {
     private static final long TOTAL_OWNER_COUNT = 3L;
     private static final long PER_BUYER_CUSTOM_AUDIENCE_COUNT = 4L;
     private static final long TOTAL_BUYER_COUNT = 5L;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildDefault() {

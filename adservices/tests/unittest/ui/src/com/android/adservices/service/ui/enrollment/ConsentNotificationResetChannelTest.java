@@ -154,10 +154,9 @@ public class ConsentNotificationResetChannelTest {
     public void enrollTest() {
         mConsentNotificationResetChannel.enroll(null, mConsentManager);
 
-        if (SdkLevel.isAtLeastS()) {
-            verify(mConsentManager).recordNotificationDisplayed(false);
-            verify(mConsentManager).recordGaUxNotificationDisplayed(false);
-        }
+        verify(mConsentManager).recordNotificationDisplayed(false);
+        verify(mConsentManager).recordGaUxNotificationDisplayed(false);
+
         if (SdkLevel.isAtLeastT()) {
             verify(mConsentManager).recordPasNotificationDisplayed(false);
         }

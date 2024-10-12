@@ -22,7 +22,6 @@ import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.shared.testing.EqualsTester;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -30,7 +29,6 @@ import org.junit.Test;
 import java.nio.charset.StandardCharsets;
 
 /** Unit tests for {@link android.adservices.topics.EncryptedTopic} */
-@RequiresSdkLevelAtLeastS
 public final class EncryptedTopicTest extends AdServicesUnitTestCase {
 
     private static final byte[] CIPHER_TEXT =

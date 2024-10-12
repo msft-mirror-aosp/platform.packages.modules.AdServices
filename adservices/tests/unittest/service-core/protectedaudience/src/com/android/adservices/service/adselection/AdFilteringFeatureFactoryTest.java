@@ -33,9 +33,7 @@ import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.FrequencyCapAdDataValidatorImpl;
 import com.android.adservices.service.common.FrequencyCapAdDataValidatorNoOpImpl;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -58,9 +56,6 @@ public class AdFilteringFeatureFactoryTest {
     private boolean mAuctionServerEnabledForUpdateHistogram =
             new FlagsWithFrequencyCapFilteringDisabled()
                     .getFledgeAuctionServerEnabledForUpdateHistogram();
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testGetFrequencyCapAdFiltererFilteringEnabled() {

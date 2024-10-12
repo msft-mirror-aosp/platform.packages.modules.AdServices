@@ -54,13 +54,11 @@ import com.android.adservices.data.adselection.datahandlers.RegisteredAdInteract
 import com.android.adservices.data.adselection.datahandlers.ReportingComputationData;
 import com.android.adservices.data.adselection.datahandlers.ReportingData;
 import com.android.adservices.data.adselection.datahandlers.WinningCustomAudience;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Before;
 import org.junit.Ignore;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.time.Clock;
@@ -379,9 +377,6 @@ public class AdSelectionEntryDaoTest {
                     .build();
 
     private AdSelectionEntryDao mAdSelectionEntryDao;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {

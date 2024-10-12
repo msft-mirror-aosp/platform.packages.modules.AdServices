@@ -83,6 +83,15 @@ public abstract class AdServicesFlagsMockerTestCase<T extends AdServicesFlagsMoc
     }
 
     @Test
+    public final void testMockGetEnableApiCallResponseLoggingEnabled() {
+        getMocker().mockGetEnableApiCallResponseLoggingEnabled(true);
+
+        boolean result = mMockFlags.getCobaltEnableApiCallResponseLogging();
+
+        expect.withMessage("flags.getCobaltEnableApiCallResponseLogging()").that(result).isTrue();
+    }
+
+    @Test
     public final void testMockGetAdservicesReleaseStageForCobalt() {
         getMocker().mockGetAdservicesReleaseStageForCobalt("Central Stage");
 

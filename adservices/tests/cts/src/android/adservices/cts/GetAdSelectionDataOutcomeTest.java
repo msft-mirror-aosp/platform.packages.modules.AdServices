@@ -20,11 +20,8 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.adselection.GetAdSelectionDataOutcome;
 
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
-
 import org.junit.Test;
 
-@RequiresSdkLevelAtLeastS
 public final class GetAdSelectionDataOutcomeTest extends CtsAdServicesDeviceTestCase {
     private static final long AD_SELECTION_ID = 123456789L;
     private static final byte[] AD_SELECTION_RESULT = new byte[] {1, 2, 3, 4};

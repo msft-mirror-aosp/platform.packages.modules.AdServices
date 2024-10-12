@@ -27,13 +27,11 @@ import android.os.Parcel;
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.shared.testing.EqualsTester;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Test;
 
 import java.util.concurrent.ExecutorService;
 
-@RequiresSdkLevelAtLeastS
 public final class GetAdSelectionDataResponseTest extends AdServicesUnitTestCase {
     private static final byte[] AD_SELECTION_RESULT = new byte[] {1, 2, 3, 4};
     private static final byte[] ANOTHER_AD_SELECTION_RESULT = new byte[] {5, 6, 7, 8};

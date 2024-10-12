@@ -24,11 +24,8 @@ import android.adservices.common.AdDataFixture;
 import android.adservices.common.CommonFixture;
 import android.os.Parcel;
 
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
-
 import org.junit.Test;
 
-@RequiresSdkLevelAtLeastS
 public final class AdWithBidTest extends CtsAdServicesDeviceTestCase {
     private static final AdData VALID_AD_DATA =
             AdDataFixture.getValidAdDataByBuyer(CommonFixture.VALID_BUYER_1, 0);

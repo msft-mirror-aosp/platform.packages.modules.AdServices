@@ -137,6 +137,7 @@
     <string name="notificationUI_notification_ga_content_v2" msgid="9010872481787347894">"現在，你可以進一步掌控自己看到的廣告，並保護你的身分資料"</string>
     <string name="notificationUI_header_ga_title_v2" msgid="7278405488204886217">"全新廣告隱私權功能正式上線"</string>
     <string name="notificationUI_container1_ga_introduction_v2" msgid="8607352345994852038">"Android 現在推出新的隱私權功能，讓你進一步掌控自己看到的廣告。"</string>
+    <string name="notificationUI_how_it_works_row_body7_v2" msgid="1478686356348245037"><a href="https://support.google.com/android/answer/13720755?sjid=5065763854652067029">"進一步瞭解 Android 上的廣告隱私權"</a></string>
     <string name="notificationUI_next_button_text" msgid="6150546034144405663">"繼續"</string>
     <string name="settingsUI_main_view_title" msgid="8506265544709344889">"Privacy Sandbox"</string>
     <string name="settingsUI_main_view_subtitle" msgid="4192045492059726083">"參與 Android 廣告隱私權 Beta 版測試計畫"</string>
@@ -238,7 +239,7 @@
     <string name="notificationUI_pas_notification_content" msgid="4707569137808653882">"取得更多廣告控管選項，同時保護身分隱私"</string>
     <string name="notificationUI_pas_re_notification_title" msgid="3602324501055294805">"廣告隱私權功能更新"</string>
     <string name="notificationUI_pas_re_notification_content" msgid="4205599804842406411">"取得更多廣告控管選項，同時保護身分隱私"</string>
-    <string name="notificationUI_pas_body_main" msgid="4373572260264270651">"Android 正在拓展廣告隱私權功能，限制應用程式可在放送個人化廣告時瞭解哪些使用者資訊。"</string>
+    <string name="notificationUI_pas_body_main" msgid="5423612791646610134">"廣告隱私權功能可限制應用程式能取得哪些個人資訊，用於顯示個人化廣告。"</string>
     <string name="notificationUI_pas_body1" msgid="850989038991219454">"應用程式和其廣告合作夥伴可根據你在這部裝置上其他應用程式中的活動，放送個人化廣告，同時保障身分隱私和安全。"</string>
     <string name="notificationUI_pas_expand_button_text1" msgid="8981025972348568991">"進一步瞭解應用程式建議廣告"</string>
     <string name="notificationUI_pas_body2" msgid="8458057494531462690">"為瞭解廣告成效，應用程式之間會分享特定類型的資料，例如一天中向使用者放送廣告的時間。"</string>
@@ -247,18 +248,21 @@
     <string name="notificationUI_pas_combined_dropdown_body2" msgid="5592056391863655805">"•  你使用的應用程式也能根據你的應用程式活動記錄，判斷你的興趣。舉例來說，假如你定期使用烹飪應用程式，可能就會在其他應用程式中看到雜貨外送廣告或相關內容。\n\n應用程式會安全儲存這類資訊，只有廣告合作夥伴才能使用這類資訊在應用程式中放送個人化廣告。"</string>
     <string name="notificationUI_pas_combined_dropdown_body3" msgid="7622881614002410415">"此後，你使用的應用程式可要求取得這項資訊，包括廣告主題或由你使用過的應用程式建議的廣告。"</string>
     <string name="notificationUI_pas_combined_dropdown_body5" msgid="3066941294231483873">"你使用的應用程式可要求 Android 提供資訊，以便評估廣告成效。為保護你的隱私，Android 會限制應用程式間可共享的資訊。"</string>
+    <string name="notificationUI_pas_combined_dropdown_subtitle3" msgid="6590622927507281434">"應用程式如何使用您的資料"</string>
+    <string name="notificationUI_pas_combined_dropdown_body6" msgid="184557016624222120">"Google 會要求公司公開聲明，不跨應用程式使用這類資料重新識別您的身分。某些應用程式可能會根據您的活動記錄提供個人化體驗 (不限於廣告)，也可能會將活動記錄與應用程式中有關您的其他個人資訊整合在一起。公司必須負責向使用者告知資料用途。"<a href="https://policies.google.com/privacy">"想進一步瞭解 Google 如何保護您的資料，請參閱《隱私權政策》"</a></string>
     <string name="notificationUI_pas_msmt_dropdown_subtitle1" msgid="2518548652511929388">"使用的資料類型為何？"</string>
     <string name="notificationUI_pas_msmt_body1" msgid="6437950797184418065">"你使用的應用程式可要求 Android 提供資訊，方便評估廣告成效。為協助保障隱私權，Android 會限制可在應用程式之間分享的資訊。"</string>
     <string name="notificationUI_pas_msmt_dropdown_subtitle2" msgid="1369612937107473791">"我的身分如何受到保護？"</string>
     <string name="notificationUI_pas_msmt_body2" msgid="6096311192720552724">"為了限制可在應用程式之間分享哪些資訊，並協助保護你的身分資料，Android 會採用多項隱私保護措施，例如匯總資料和加入雜訊。\n\n系統也會定期刪除裝置上的廣告評估資料。"</string>
+    <string name="notificationUI_pas_learn_more_msmt_link" msgid="6508855535651241811"><a href="https://support.google.com/android?p=ad_measurement">"進一步瞭解 Android 如何保護隱私權"</a></string>
     <string name="notificationUI_pas_app_body1" msgid="5276341884020030212">"你的應用程式活動可能會用來建議廣告。"</string>
     <string name="notificationUI_pas_app_dropdown_subtitle2" msgid="6921646926839023847">"應用程式如何使用這類資料？"</string>
     <string name="notificationUI_pas_app_body2" msgid="7216401746885174244">"應用程式可安全儲存這類資訊，只供廣告合作夥伴用來在其他應用程式中放送個人化廣告。舉例來說，如果你定期使用烹飪應用程式，可能會在其他應用程式中看到生鮮雜貨外送服務或相關內容的廣告。"</string>
     <string name="notificationUI_pas_app_dropdown_subtitle3" msgid="140629612535108432">"我可以如何管理這類資料？"</string>
     <string name="notificationUI_pas_app_body3" msgid="6455200181055776674">"你可以禁止特定應用程式向廣告合作夥伴提供活動資料，並隨時前往隱私權設定，重設或關閉應用程式建議廣告功能。Android 也會定期自動刪除這類資料。"</string>
-    <string name="notificationUI_pas_leanr_more_link" msgid="8029331460965381868"><a href="https://support.google.com/android?p=ad_privacy">"進一步瞭解 Android 如何保護隱私權"</a></string>
-    <string name="settingsUI_pas_apps_view_body_text" msgid="2824173687944664612">"應用程式和其廣告合作夥伴可根據你在這部裝置上其他應用程式中的活動，放送個人化廣告，同時保障身分隱私和安全。\n\n舉例來說，假設你經常使用烹飪應用程式，可能會在其他應用程式中看到生鮮雜貨外送服務或相關內容的廣告。\n\nAndroid 會定期自動刪除活動資料，但你也可以禁止應用程式將這類資訊提供給廣告合作夥伴。\n\n這項功能雖然已可開啟，但可能要等到功能完全開放，且應用程式開始使用後，你才會看到應用程式清單。"</string>
-    <string name="settingsUI_pas_apps_view_footer" msgid="7911915685966727993">"一般來說，應用程式及其廣告合作夥伴會記住你感興趣的內容，用於提供個人化體驗。應用程式可安全儲存這類資訊，只供廣告合作夥伴用來在其他應用程式中放送廣告。\n\n你可以禁止應用程式將活動資料提供給廣告合作夥伴。Android 也會定期自動刪除收到的活動資料，但如果你再次使用應用程式，該應用程式可能會重新出現在這份清單中。\n\n你看見的廣告是否為個人化廣告，取決於多項因素，例如這項設定、廣告主題設定、廣告 ID 設定，以及你使用的應用程式是否會放送個人化廣告。\n\n"<a href="https://support.google.com/android?p=ad_privacy">"進一步瞭解應用程式建議廣告"</a></string>
+    <string name="notificationUI_pas_leanr_more_link" msgid="8029331460965381868"><a href="https://support.google.com/android?p=manage_appsuggested_ads">"進一步瞭解 Android 如何保護隱私權"</a></string>
+    <string name="settingsUI_pas_apps_view_body_text" msgid="954711203060462705">"應用程式及其廣告合作夥伴可根據這部裝置上其他應用程式中的活動記錄，放送個人化廣告，同時保護身分資訊的隱私和安全。\n\n舉例來說，假如您經常使用烹飪應用程式，可能會在其他應用程式中看到食品雜貨外送服務或相關內容的廣告。\n\n您可以禁止應用程式將活動記錄提供給廣告合作夥伴。Android 也會定期自動刪除收到的活動記錄，所以您再次使用應用程式時，該應用程式可能會重新出現在這份清單中。\n\n這項功能雖然已可開啟，但可能要等到功能完全開放，且應用程式開始使用後，您才會看到應用程式清單。"</string>
+    <string name="settingsUI_pas_apps_view_footer" msgid="7708188361421000402">"一般來說，應用程式及其廣告合作夥伴會記住您感興趣的內容，用於提供個人化體驗。應用程式可安全儲存這類資訊，只供廣告合作夥伴用來在其他應用程式中放送廣告。\n\n您看到的廣告是否個人化取決於多項因素，例如這項設定、廣告主題設定、廣告 ID 設定，以及您使用的應用程式是否會放送個人化廣告。\n\nGoogle 會要求公司公開聲明，不跨應用程式使用這類資料重新識別您的身分。某些應用程式可能會根據您的活動記錄提供個人化體驗 (不限於廣告)，也可能會將活動記錄與應用程式中有關您的其他個人資訊整合在一起。公司必須負責向使用者告知資料用途。"<a href="https://policies.google.com/privacy">"想進一步瞭解 Google 如何保護您的資料，請參閱《隱私權政策》"</a>\n\n<a href="https://support.google.com/android?p=manage_appsuggested_ads">"進一步瞭解應用程式建議廣告"</a></string>
     <string name="settingsUI_pas_msmt_view_footer" msgid="1547779101661050529">"為了限制可在應用程式之間分享哪些資訊，並協助保護你的身分資料，Android 會採用多項隱私保護措施，例如匯總資料和加入雜訊。\n\n瀏覽器可能具有類似設定。如果 Android 和瀏覽器都開啟了廣告評估功能，相關公司或許能在你使用的應用程式和造訪的網站上評估廣告成效差異。瀏覽記錄只會儲存在你的裝置上。\n\n"<a href="https://support.google.com/android?p=ad_privacy">"進一步瞭解廣告評估"</a></string>
     <string name="settingsUI_pas_topics_view_footer" msgid="4957955199367073977">"Android 會根據你最近幾週的應用程式使用情形，記錄你感興趣的主題。\n\n之後，你使用的應用程式可以要求 Android 提供這類資訊，用於放送個人化廣告。Android 最多會分享 3 個主題，同時保護你的身分和應用程式使用情形資訊。\n\nAndroid 會定期自動刪除主題，但如果你繼續使用應用程式，就可能會在清單中再次看到已刪除的主題。你也可以禁止 Android 將你感興趣的特定主題告知應用程式。\n\n你可能會在應用程式中看到個人化廣告，實際情況取決於多項因素，例如這項設定、應用程式建議廣告設定、廣告 ID 設定，以及你使用的應用程式是否會顯示個人化廣告。\n\n"<a href="https://support.google.com/android?p=ad_privacy">"進一步瞭解廣告主題"</a></string>
     <string name="ic_consent_notification_ga_image_description" msgid="3533533250410782396">"這張彩色插圖中的符號代表音樂、新聞和體育賽事等興趣喜好主題"</string>

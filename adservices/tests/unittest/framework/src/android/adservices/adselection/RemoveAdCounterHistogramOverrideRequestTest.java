@@ -23,12 +23,10 @@ import android.adservices.common.FrequencyCapFilters;
 import android.adservices.common.KeyedFrequencyCapFixture;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Test;
 
 // TODO(b/265204820): Move to CTS tests once public APIs are unhidden
-@RequiresSdkLevelAtLeastS
 public final class RemoveAdCounterHistogramOverrideRequestTest extends AdServicesUnitTestCase {
     @Test
     public void testBuildValidRequest_success() {

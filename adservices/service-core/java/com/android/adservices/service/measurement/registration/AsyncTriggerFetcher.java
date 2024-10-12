@@ -40,6 +40,7 @@ import com.android.adservices.service.measurement.MeasurementHttpClient;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.TriggerSpecs;
 import com.android.adservices.service.measurement.XNetworkData;
+import com.android.adservices.service.measurement.aggregation.AggregatableBucket.AggregatableBucketContract;
 import com.android.adservices.service.measurement.aggregation.AggregatableKeyValue.AggregatableKeyValueContract;
 import com.android.adservices.service.measurement.aggregation.AggregatableValuesConfig.AggregatableValuesConfigContract;
 import com.android.adservices.service.measurement.ondevicepersonalization.IOdpDelegationWrapper;
@@ -692,6 +693,36 @@ public class AsyncTriggerFetcher {
             }
         }
 
+        if (mFlags.getMeasurementEnableAggregateContributionBudgetCapacity()
+                && !json.isNull(AggregatableBucketContract.AGGREGATABLE_BUCKETS)) {
+            Object aggregatableBucketsObject =
+                    json.get(AggregatableBucketContract.AGGREGATABLE_BUCKETS);
+            if (!(aggregatableBucketsObject instanceof JSONArray)) {
+                LoggerFactory.getMeasurementLogger()
+                        .e(
+                                String.format(
+                                        "parseValidateTrigger: Aggregatable buckets are not an"
+                                                + " array in %s header",
+                                        TriggerHeaderContract
+                                                .HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER));
+                return false;
+            }
+            JSONArray aggregatableBucketsArray = (JSONArray) aggregatableBucketsObject;
+            Optional<String> maybeAggregatableBuckets =
+                    parseAggregatableBuckets(aggregatableBucketsArray);
+            if (maybeAggregatableBuckets.isEmpty()) {
+                LoggerFactory.getMeasurementLogger()
+                        .e(
+                                String.format(
+                                        "parseValidateTrigger: Invalid aggregatable buckets in"
+                                                + " %s header",
+                                        TriggerHeaderContract
+                                                .HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER));
+                return false;
+            }
+            builder.setAggregatableBucketsString(maybeAggregatableBuckets.get());
+        }
+
         return true;
     }
 
@@ -720,6 +751,73 @@ public class AsyncTriggerFetcher {
                         mEnrollmentDao,
                         mContext,
                         mFlags);
+    }
+
+    private Optional<String> parseAggregatableBuckets(JSONArray aggregatableBuckets)
+            throws JSONException {
+        boolean shouldCheckFilterSize = !mFlags.getMeasurementEnableUpdateTriggerHeaderLimit();
+        JSONArray validAggregatableBuckets = new JSONArray();
+
+        for (int i = 0; i < aggregatableBuckets.length(); i++) {
+            JSONObject aggregateBucket = new JSONObject();
+            Object maybeBucketObj = aggregatableBuckets.get(i);
+
+            if (!(maybeBucketObj instanceof JSONObject)) {
+                LoggerFactory.getMeasurementLogger()
+                        .d("parseAggregatableBuckets: Bucket " + i + " is not a JSON object.");
+                return Optional.empty();
+            }
+            JSONObject bucketObj = (JSONObject) maybeBucketObj;
+
+            if (!bucketObj.isNull(AggregatableBucketContract.BUCKET)) {
+                if (!(bucketObj.get(AggregatableBucketContract.BUCKET) instanceof String)) {
+                    LoggerFactory.getMeasurementLogger()
+                            .d(
+                                    "parseAggregatableBuckets: Value for bucket "
+                                            + i
+                                            + " \"bucket\" is not a string.");
+                    return Optional.empty();
+                }
+                aggregateBucket.put(
+                        AggregatableBucketContract.BUCKET,
+                        bucketObj.getString(AggregatableBucketContract.BUCKET));
+            }
+            if (!bucketObj.isNull(FilterContract.FILTERS)) {
+                JSONArray filters = Filter.maybeWrapFilters(bucketObj, FilterContract.FILTERS);
+                if (!FetcherUtil.areValidAttributionFilters(
+                        filters,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ true,
+                        shouldCheckFilterSize)) {
+                    LoggerFactory.getMeasurementLogger()
+                            .d(
+                                    "parseAggregatableBuckets: Aggregatable bucket "
+                                            + i
+                                            + " contains invalid filters.");
+                    return Optional.empty();
+                }
+                aggregateBucket.put(FilterContract.FILTERS, filters);
+            }
+            if (!bucketObj.isNull(FilterContract.NOT_FILTERS)) {
+                JSONArray notFilters =
+                        Filter.maybeWrapFilters(bucketObj, FilterContract.NOT_FILTERS);
+                if (!FetcherUtil.areValidAttributionFilters(
+                        notFilters,
+                        mFlags,
+                        /* canIncludeLookbackWindow= */ true,
+                        shouldCheckFilterSize)) {
+                    LoggerFactory.getMeasurementLogger()
+                            .d(
+                                    "parseAggregatableBuckets: Aggregatable bucket "
+                                            + i
+                                            + " contains invalid not_filters.");
+                    return Optional.empty();
+                }
+                aggregateBucket.put(FilterContract.NOT_FILTERS, notFilters);
+            }
+            validAggregatableBuckets.put(aggregateBucket);
+        }
+        return Optional.of(validAggregatableBuckets.toString());
     }
 
     private Optional<String> getValidEventTriggerData(JSONArray eventTriggerDataArr) {

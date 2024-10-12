@@ -27,7 +27,6 @@ import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.shared.testing.FutureSyncCallback;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import com.google.common.util.concurrent.FluentFuture;
 
@@ -41,7 +40,6 @@ import org.mockito.Mock;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-@RequiresSdkLevelAtLeastS
 public class JSScriptEngineE2ETest extends AdServicesMockitoTestCase {
     @Rule(order = 15)
     public final SupportedByConditionRule mJSSandboxSupportedRule =

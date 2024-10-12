@@ -29,6 +29,7 @@ import android.net.Uri;
 import android.os.Build;
 
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
@@ -69,6 +70,7 @@ class ReportAndRegisterEventImpl extends EventReporter {
             @NonNull ExecutorService backgroundExecutorService,
             @NonNull AdServicesLogger adServicesLogger,
             @NonNull Flags flags,
+            @NonNull DebugFlags debugFlags,
             @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
             int callerUid,
             @NonNull FledgeAuthorizationFilter fledgeAuthorizationFilter,
@@ -84,6 +86,7 @@ class ReportAndRegisterEventImpl extends EventReporter {
                 backgroundExecutorService,
                 adServicesLogger,
                 flags,
+                debugFlags,
                 adSelectionServiceFilter,
                 callerUid,
                 fledgeAuthorizationFilter,

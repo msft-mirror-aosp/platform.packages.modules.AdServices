@@ -26,7 +26,6 @@ import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.doNothing;
 
 import com.android.adservices.common.AdServicesDeviceSupportedRule;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -62,9 +61,6 @@ public final class KeyAttestationTest {
     @Mock private Certificate mMockCertificate;
 
     @Mock private KeyPairGenerator mMockKeyPairGenerator;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Rule(order = 1)
     public final AdServicesDeviceSupportedRule deviceSupportRule =

@@ -22,9 +22,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.time.temporal.ChronoUnit;
@@ -34,9 +31,6 @@ public class DBEncryptionKeyTest {
     private static final String KEY_ID_1 = "key_id_1";
     private static final String PUBLIC_KEY_1 = "public_key_1";
     private static final Long EXPIRY_TTL_SECONDS_1 = 1209600L;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildValidEncryptionKey_success() {

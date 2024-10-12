@@ -211,6 +211,27 @@
     </issue>
 
     <issue
+        errorLine1=" this(FlagsFactory.getFlags(), MobileDataDownloadFactory.getFileStorage());" errorLine2=" ~~~~~~~~~~~~~~"
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `getFileStorage`">
+        <location
+            column="65"
+            file="packages/modules/AdServices/adservices/service-core/java/com/android/adservices/cobalt/CobaltDownloadRegistryManager.java"
+            line="61" />
+    </issue>
+
+    <issue
+        errorLine1=" MobileDataDownload mdd = MobileDataDownloadFactory.getMdd(mFlags);" errorLine2=" ~~~~~~"
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `getMdd`">
+        <location
+            column="60"
+            file="packages/modules/AdServices/adservices/service-core/java/com/android/adservices/cobalt/CobaltDownloadRegistryManager.java"
+            line="70" />
+    </issue>
+
+
+    <issue
         id="NewApi"
         message="Call requires API level 31 (current min is 30): `EnableAdServicesCommand`"
         errorLine1="                return new EnableAdServicesCommand();"

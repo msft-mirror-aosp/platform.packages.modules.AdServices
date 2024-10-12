@@ -39,10 +39,8 @@ import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.ValidatorTestUtil;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.AuctionResult;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 
@@ -74,9 +72,6 @@ public class AuctionResultValidatorTest extends AdServicesExtendedMockitoTestCas
                 .setScore(VALID_SCORE)
                 .setBid(VALID_BID);
     }
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setUp() {
