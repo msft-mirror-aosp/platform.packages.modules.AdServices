@@ -5912,6 +5912,25 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_FLEDGE_JS_SCRIPT_RESULT_CODE_METRICS_ENABLED
                         + " = "
                         + getFledgeJsScriptResultCodeMetricsEnabled());
+        writer.println("\t" + FlagsConstants.KEY_EEA_PAS_UX_ENABLED + " = " + getEeaPasUxEnabled());
+        writer.println("\t" + FlagsConstants.KEY_AD_ID_CACHE_TTL_MS + " = " + getAdIdCacheTtlMs());
+        writer.println(
+                "\t" + FlagsConstants.KEY_GA_UX_FEATURE_ENABLED + " = " + getGaUxFeatureEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_RECORD_MANUAL_INTERACTION_ENABLED
+                        + " = "
+                        + getRecordManualInteractionEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_UI_TOGGLE_SPEED_BUMP_ENABLED
+                        + " = "
+                        + getToggleSpeedBumpEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_UI_DIALOG_FRAGMENT_ENABLED
+                        + " = "
+                        + getUiDialogFragmentEnabled());
     }
 
     @VisibleForTesting

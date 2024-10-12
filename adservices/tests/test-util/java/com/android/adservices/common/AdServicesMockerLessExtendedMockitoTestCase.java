@@ -240,6 +240,11 @@ public abstract class AdServicesMockerLessExtendedMockitoTestCase<M extends Inte
         }
 
         @Override
+        public void mockSdkLevelS() {
+            mAndroidStaticMocker.mockSdkLevelS();
+        }
+
+        @Override
         public void mockGetCurrentUser(int user) {
             mAndroidStaticMocker.mockGetCurrentUser(user);
         }

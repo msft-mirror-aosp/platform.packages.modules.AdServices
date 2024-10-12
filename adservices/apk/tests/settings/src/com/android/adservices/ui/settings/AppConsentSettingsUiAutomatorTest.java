@@ -30,6 +30,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.os.Process;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -39,6 +40,7 @@ import androidx.test.uiautomator.UiObject2;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.Until;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdServicesUnitTestCase;
@@ -75,6 +77,8 @@ public final class AppConsentSettingsUiAutomatorTest extends AdServicesUnitTestC
     private static final int LAUNCH_TIMEOUT = 5000;
     private static UiDevice sDevice;
 
+    private int mUserId;
+
     private String mTestName;
 
     @Rule(order = 5)
@@ -83,8 +87,12 @@ public final class AppConsentSettingsUiAutomatorTest extends AdServicesUnitTestC
     @Before
     public void setup() throws UiObjectNotFoundException {
         mTestName = getTestName();
+        mUserId = Process.myUserHandle().getIdentifier();
+        LogUtil.d("work on user id %d", mUserId);
 
-        String installMessage = ShellUtils.runShellCommand("pm install -r " + TEST_APP_APK_PATH);
+        String installMessage =
+                ShellUtils.runShellCommand(
+                        "pm install -r --user %d %s", mUserId, TEST_APP_APK_PATH);
         assertThat(installMessage).contains("Success");
 
         // Initialize UiDevice instance
@@ -101,7 +109,7 @@ public final class AppConsentSettingsUiAutomatorTest extends AdServicesUnitTestC
         AdservicesTestHelper.killAdservicesProcess(mContext);
 
         // Note aosp_x86 requires --user 0 to uninstall though arm doesn't.
-        ShellUtils.runShellCommand("pm uninstall --user 0 " + TEST_APP_NAME);
+        ShellUtils.runShellCommand("pm uninstall --user %d %s", mUserId, TEST_APP_NAME);
     }
 
     // TODO: Remove this blank test along with the other @Ignore. b/268351419

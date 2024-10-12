@@ -26,8 +26,12 @@ import com.android.adservices.shared.testing.device.DeviceGatewayImpl;
  *
  * <p>Note: it's {@code abstract} by design, so it's extended by project-specific classes (like
  * {@code AdServicesFlagsPreparerClassRule}.
+ *
+ * @param <R> concrete rule class
  */
-public abstract class DeviceSideFlagsPreparerClassRule extends AbstractFlagsPreparerClassRule {
+public abstract class DeviceSideFlagsPreparerClassRule<
+                R extends DeviceSideFlagsPreparerClassRule<R>>
+        extends AbstractFlagsPreparerClassRule<R> {
 
     public DeviceSideFlagsPreparerClassRule() {
         this(

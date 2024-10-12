@@ -27,14 +27,12 @@ public final class FakeAction implements Action {
     @Nullable private final String mName;
     @Nullable private final AtomicInteger mExecutionOrderCounter;
     @Nullable private final AtomicInteger mReversionOrderCounter;
-
     @Nullable private Exception mOnExecuteException;
     @Nullable private Exception mOnRevertException;
+    @Nullable private Boolean mOnExecute;
 
     private boolean mExecuted;
-    private boolean mOnExecute = true;
     private boolean mReverted;
-
     private int mExecutionOrder;
     private int mReversionOrder;
 
@@ -83,7 +81,7 @@ public final class FakeAction implements Action {
         if (mOnExecuteException != null) {
             throw mOnExecuteException;
         }
-        return mOnExecute;
+        return mOnExecute == null || mOnExecute;
     }
 
     @Override
