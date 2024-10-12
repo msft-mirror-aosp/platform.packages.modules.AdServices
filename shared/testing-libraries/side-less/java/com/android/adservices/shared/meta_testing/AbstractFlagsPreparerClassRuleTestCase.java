@@ -41,7 +41,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * @param <R> type of the rule
  */
 public abstract class AbstractFlagsPreparerClassRuleTestCase<
-                R extends AbstractFlagsPreparerClassRule>
+                R extends AbstractFlagsPreparerClassRule<R>>
         extends SharedSidelessTestCase {
 
     // Not using NONE because that's the default value of FakeDeviceCOnfig

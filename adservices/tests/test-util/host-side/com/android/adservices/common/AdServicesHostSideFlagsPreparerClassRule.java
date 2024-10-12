@@ -27,7 +27,8 @@ import com.android.adservices.shared.testing.flags.HostSideFlagsPreparerClassRul
  * <p>See {@link com.android.adservices.shared.testing.flags.AbstractFlagsPreparerClassRule} for
  * actual documentation.
  */
-public final class AdServicesHostSideFlagsPreparerClassRule extends HostSideFlagsPreparerClassRule {
+public final class AdServicesHostSideFlagsPreparerClassRule
+        extends HostSideFlagsPreparerClassRule<AdServicesHostSideFlagsPreparerClassRule> {
 
     public AdServicesHostSideFlagsPreparerClassRule() {
         super();
