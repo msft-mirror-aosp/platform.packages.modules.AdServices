@@ -16,8 +16,10 @@
 package com.android.adservices.ui.notifications;
 
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_DEBUG_UX;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_AD_SERVICES_SYSTEM_API;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_BACK_COMPAT;
 import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_U18_UX_ENABLED;
@@ -34,13 +36,12 @@ import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.service.common.AdServicesBackCompatInit;
 import com.android.adservices.ui.util.AdServicesUiTestCase;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.adservices.ui.util.NotificationActivityTestUtil;
 
-import org.junit.Assume;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -58,16 +59,16 @@ public final class NotificationActivityGAV2UxSelectorUiAutomatorTest extends AdS
                     .setFlag(KEY_GA_UX_FEATURE_ENABLED, true)
                     .setFlag(KEY_U18_UX_ENABLED, true)
                     .setFlag(KEY_PAS_UX_ENABLED, false)
+                    .setFlag(KEY_ADSERVICES_ENABLED, true)
+                    .setFlag(KEY_ENABLE_BACK_COMPAT, true)
                     .setFlag(KEY_DEBUG_UX, "GA_UX");
 
-    @BeforeClass
-    public static void classSetup() throws Exception {
-        NotificationActivityTestUtil.setupBeforeTests();
-    }
-
     @Before
-    public void setup() {
-        Assume.assumeTrue(NotificationActivityTestUtil.isNotificationIntentInstalled(true));
+    public void setup() throws Exception {
+        if (!sdkLevel.isAtLeastT()
+                && !NotificationActivityTestUtil.isNotificationIntentInstalled(true)) {
+            AdServicesBackCompatInit.getInstance().initializeComponents();
+        }
     }
 
     @Test
