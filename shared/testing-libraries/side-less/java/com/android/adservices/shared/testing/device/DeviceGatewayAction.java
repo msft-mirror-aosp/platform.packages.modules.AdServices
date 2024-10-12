@@ -13,21 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.shared.testing.flags;
+package com.android.adservices.shared.testing.device;
 
 import com.android.adservices.shared.testing.AbstractAction;
 import com.android.adservices.shared.testing.Logger;
-import com.android.adservices.shared.testing.device.DeviceConfig;
 
 import java.util.Objects;
 
-/** Base class for {@code DeviceConfig} actions. */
-public abstract class DeviceConfigAction extends AbstractAction {
+/**
+ * Base class for actions that need a {@code DeviceGateway}.
+ *
+ * <p>Typically extended by actions that will run a shell command.
+ */
+public abstract class DeviceGatewayAction extends AbstractAction {
 
-    protected final DeviceConfig mDeviceConfig;
+    protected final DeviceGateway mDeviceGateway;
 
-    protected DeviceConfigAction(Logger logger, DeviceConfig deviceConfig) {
+    protected DeviceGatewayAction(Logger logger, DeviceGateway deviceGateway) {
         super(logger);
-        mDeviceConfig = Objects.requireNonNull(deviceConfig, "deviceConfig cannot be null");
+        mDeviceGateway = Objects.requireNonNull(deviceGateway, "deviceGateway cannot be null");
     }
 }

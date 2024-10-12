@@ -41,7 +41,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * @param <R> type of the rule
  */
 public abstract class AbstractFlagsPreparerClassRuleTestCase<
-                R extends AbstractFlagsPreparerClassRule>
+                R extends AbstractFlagsPreparerClassRule<R>>
         extends SharedSidelessTestCase {
 
     // Not using NONE because that's the default value of FakeDeviceCOnfig
@@ -85,7 +85,7 @@ public abstract class AbstractFlagsPreparerClassRuleTestCase<
     public final void testThrowsIfUsedAsRule() {
         var rule = newRule(mDeviceConfig, PERSISTENT);
 
-        assertThrows(IllegalStateException.class, () -> rule.evaluate(mTestBody, mTest));
+        assertThrows(IllegalStateException.class, () -> runRule(rule, mTest));
     }
 
     @Test
@@ -96,7 +96,7 @@ public abstract class AbstractFlagsPreparerClassRuleTestCase<
         AtomicReference<SyncDisabledModeForTest> modeSetDuringTest = new AtomicReference<>();
         mTestBody.onEvaluate(() -> modeSetDuringTest.set(mDeviceConfig.getSyncDisabledMode()));
         var rule = newRule(mDeviceConfig, mModeDuringTest);
-        rule.evaluate(mTestBody, mSuite);
+        runRule(rule);
 
         expect.withMessage("mode during test").that(modeSetDuringTest.get()).isEqualTo(UNSUPPORTED);
         expect.withMessage("mode after test")
@@ -109,7 +109,7 @@ public abstract class AbstractFlagsPreparerClassRuleTestCase<
         AtomicReference<SyncDisabledModeForTest> modeSetDuringTest = new AtomicReference<>();
         mTestBody.onEvaluate(() -> modeSetDuringTest.set(mDeviceConfig.getSyncDisabledMode()));
         var rule = newRule(mDeviceConfig, mModeDuringTest);
-        rule.evaluate(mTestBody, mSuite);
+        runRule(rule);
 
         expect.withMessage("mode during test")
                 .that(modeSetDuringTest.get())
@@ -129,7 +129,7 @@ public abstract class AbstractFlagsPreparerClassRuleTestCase<
                     throw testFailure;
                 });
         var rule = newRule(mDeviceConfig, mModeDuringTest);
-        Throwable thrown = assertThrows(Throwable.class, () -> rule.evaluate(mTestBody, mSuite));
+        Throwable thrown = assertThrows(Throwable.class, () -> runRule(rule));
 
         expect.withMessage("thrown exception ").that(thrown).isSameInstanceAs(testFailure);
         expect.withMessage("mode during test")
@@ -154,7 +154,7 @@ public abstract class AbstractFlagsPreparerClassRuleTestCase<
                 });
 
         var rule = newRule(mDeviceConfig, mModeDuringTest);
-        rule.evaluate(mTestBody, mSuite);
+        runRule(rule);
 
         expect.withMessage("mode during test")
                 .that(modeSetDuringTest.get())
@@ -172,7 +172,7 @@ public abstract class AbstractFlagsPreparerClassRuleTestCase<
         mTestBody.onEvaluate(() -> modeSetDuringTest.set(mDeviceConfig.getSyncDisabledMode()));
 
         var rule = newRule(mDeviceConfig, mModeDuringTest);
-        rule.evaluate(mTestBody, mSuite);
+        runRule(rule);
 
         // Was not changed at all
         expect.withMessage("mode during test")
@@ -192,7 +192,7 @@ public abstract class AbstractFlagsPreparerClassRuleTestCase<
                     mDeviceConfig.onSetSyncDisabledModeCallback(failWith("Failed at end"));
                 });
         var rule = newRule(mDeviceConfig, mModeDuringTest);
-        rule.evaluate(mTestBody, mSuite);
+        runRule(rule);
 
         expect.withMessage("mode during test")
                 .that(modeSetDuringTest.get())
@@ -208,12 +208,20 @@ public abstract class AbstractFlagsPreparerClassRuleTestCase<
         mDeviceConfig.onSetSyncDisabledModeCallback(() -> setCalled.set(true));
 
         var rule = newRule(mDeviceConfig, mModeBeforeTest);
-        rule.evaluate(mTestBody, mSuite);
+        runRule(rule);
 
         if (setCalled.get()) {
             expect.withMessage("Rule shouldn't have called deviceConfig.setSyncDisabledMode()")
                     .fail();
         }
+    }
+
+    private void runRule(R rule) throws Throwable {
+        runRule(rule, mSuite);
+    }
+
+    private void runRule(R rule, Description description) throws Throwable {
+        rule.apply(mTestBody, description).evaluate();
     }
 
     private Runnable failWith(String message) {
