@@ -15,13 +15,12 @@
  */
 package com.android.adservices.shared.testing.flags;
 
-import com.android.adservices.shared.testing.AbstractRule;
+import com.android.adservices.shared.testing.ActionBasedRule;
 import com.android.adservices.shared.testing.Logger.RealLogger;
+import com.android.adservices.shared.testing.SafeAction;
 import com.android.adservices.shared.testing.TestHelper;
 import com.android.adservices.shared.testing.device.DeviceConfig;
 import com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest;
-
-import com.google.common.annotations.VisibleForTesting;
 
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -31,31 +30,21 @@ import org.junit.runners.model.Statement;
  *
  * <p>For now it's just setting the {@link SyncDisabledModeForTest}, but in the future it will be
  * extended to perform more actions like clearing all the flags.
+ *
+ * @param <R> concrete rule class
  */
-public abstract class AbstractFlagsPreparerClassRule extends AbstractRule {
-
-    // TODO(b/362977985): it should be more generic and have a list of actions instead, so it could
-    // create other actions based on annotations
-    private final Action mSetSyncModeAction;
+public abstract class AbstractFlagsPreparerClassRule<R extends AbstractFlagsPreparerClassRule<R>>
+        extends ActionBasedRule<R> {
 
     protected AbstractFlagsPreparerClassRule(
             RealLogger logger, DeviceConfig deviceConfig, SyncDisabledModeForTest mode) {
         super(logger);
-        mSetSyncModeAction = new SafeAction(mLog, new SetSyncModeAction(mLog, deviceConfig, mode));
+        // TODO(b/297085722): remove SafeAction wrapper once tests don't run on R anymore
+        addAction(new SafeAction(mLog, new SetSyncModeAction(mLog, deviceConfig, mode)));
     }
 
-    // TODO(b/370596037): should be protected, but it's used by
-    // AbstractFlagsPreparerClassRuleTestCase, which is located in the meta_testing package
-    @VisibleForTesting
     @Override
-    public final void evaluate(Statement base, Description description) throws Throwable {
+    protected final void preExecuteActions(Statement base, Description description) {
         TestHelper.throwIfTest(description);
-
-        mSetSyncModeAction.execute();
-        try {
-            base.evaluate();
-        } finally {
-            mSetSyncModeAction.revert();
-        }
     }
 }

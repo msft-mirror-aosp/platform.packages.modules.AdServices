@@ -40,7 +40,6 @@ import com.android.adservices.data.encryptionkey.EncryptionKeyTables;
 import com.android.adservices.data.shared.SharedDbHelper;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.encryptionkey.EncryptionKey;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.util.Clock;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -62,7 +61,6 @@ import java.util.List;
 /** Tests for {@link EncryptionDataDownloadManager}. */
 @SpyStatic(FlagsFactory.class)
 @MockStatic(MobileDataDownloadFactory.class)
-@RequiresSdkLevelAtLeastS
 @SetErrorLogUtilDefaultParams(
         throwable = Any.class,
         ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON)

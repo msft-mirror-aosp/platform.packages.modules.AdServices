@@ -51,7 +51,6 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.SelectAdsFromOutcomesApiCalledStats;
 import com.android.adservices.service.stats.SelectAdsFromOutcomesExecutionLogger;
 import com.android.adservices.service.stats.SelectAdsFromOutcomesExecutionLoggerFactory;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.adservices.shared.util.Clock;
 
 import com.google.common.util.concurrent.Futures;
@@ -106,9 +105,6 @@ public class AdOutcomeSelectorImplTest {
     private MockWebServerRule.RequestMatcher<String> mRequestMatcherExactMatch;
 
     private DevContext mDevContext = DevContext.createForDevOptionsDisabled();
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {

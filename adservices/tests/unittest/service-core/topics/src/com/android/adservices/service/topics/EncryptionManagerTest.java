@@ -46,7 +46,6 @@ import com.android.adservices.data.topics.EncryptedTopic;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.encryptionkey.EncryptionKey;
 import com.android.adservices.service.enrollment.EnrollmentData;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import com.google.common.primitives.Bytes;
 
@@ -61,7 +60,6 @@ import java.util.List;
 import java.util.Optional;
 
 /** Unit tests for {@link EncryptionManager}. */
-@RequiresSdkLevelAtLeastS
 @SetErrorLogUtilDefaultParams(
         throwable = Any.class,
         ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS)

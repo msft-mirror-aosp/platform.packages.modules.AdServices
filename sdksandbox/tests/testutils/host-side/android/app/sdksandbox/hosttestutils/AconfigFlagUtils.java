@@ -13,14 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.shared.testing.flags;
 
-/** Represents an action such as setting the value of a flag. */
-public interface Action {
+package android.app.sdksandbox.hosttestutils;
 
-    /** Executes the action, returning whether it changed the state of the flags system. */
-    boolean execute() throws Exception;
+import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
 
-    /** Reverts the previously executed action. */
-    void revert() throws Exception;
+public class AconfigFlagUtils {
+    private final BaseHostJUnit4Test mTest;
+
+    public AconfigFlagUtils(BaseHostJUnit4Test test) {
+        mTest = test;
+    }
+
+    /** Checks if an aconfig flag is enabled using adb command */
+    public boolean isFlagEnabled(String flag) throws Exception {
+        String flagValue = mTest.getDevice().executeShellCommand("aflags list | grep " + flag);
+        return flagValue.contains("enabled");
+    }
 }

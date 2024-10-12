@@ -64,8 +64,7 @@ public final class AdServicesEnrollmentTest extends AdServicesCtsTestCase
         AdServicesCommonManager commonManager = AdServicesCommonManager.get(mContext);
 
         List<AdServicesModuleState> adServicesModuleStateList = new ArrayList<>();
-        adServicesModuleStateList.add(
-                new AdServicesModuleState.Builder().setModule(1).setModuleState(0).build());
+        adServicesModuleStateList.add(new AdServicesModuleState(1, 0));
         int notificationType = 1;
         ListenableFuture<Integer> responseFuture =
                 CallbackToFutureAdapter.getFuture(

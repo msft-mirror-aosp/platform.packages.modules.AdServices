@@ -162,7 +162,6 @@ import com.android.adservices.service.stats.RunAdBiddingProcessReportedStats;
 import com.android.adservices.service.stats.RunAdScoringProcessReportedStats;
 import com.android.adservices.service.stats.RunAdSelectionProcessReportedStats;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -202,7 +201,6 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
  */
 // Test applications don't have the required permissions to read config P/H flags, and
 // injecting mocked flags everywhere is annoying and non-trivial for static methods
-@RequiresSdkLevelAtLeastS()
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(DebugFlags.class)
 @SetFlagDisabled(KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED)

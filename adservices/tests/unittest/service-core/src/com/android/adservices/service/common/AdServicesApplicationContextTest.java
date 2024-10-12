@@ -46,9 +46,7 @@ public final class AdServicesApplicationContextTest extends AdServicesUnitTestCa
 
         var dump = dump(pw -> context.dump(pw, /* args= */ null));
 
-        if (sdkLevel.isAtLeastS()) { // TODO(b/371467118): remove once project set for S+
-            expect.withMessage("dump()").that(dump).contains("user: " + context.getUser());
-        }
+        expect.withMessage("dump()").that(dump).contains("user: " + context.getUser());
         expect.withMessage("dump()").that(dump).contains("baseContext: " + mContext);
         expect.withMessage("dump()")
                 .that(dump)

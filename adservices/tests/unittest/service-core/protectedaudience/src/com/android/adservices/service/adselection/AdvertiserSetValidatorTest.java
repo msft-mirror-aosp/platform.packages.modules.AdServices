@@ -27,10 +27,8 @@ import android.adservices.common.CommonFixture;
 
 import com.android.adservices.service.common.AdTechIdentifierValidator;
 import com.android.adservices.service.common.ValidatorTestUtil;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -46,9 +44,6 @@ public class AdvertiserSetValidatorTest {
     @Mock private AdTechIdentifierValidator mAdTechIdentifierValidator;
 
     private AdvertiserSetValidator mValidator;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {

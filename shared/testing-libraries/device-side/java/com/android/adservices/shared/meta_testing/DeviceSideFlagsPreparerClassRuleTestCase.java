@@ -33,7 +33,7 @@ import org.junit.Test;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class DeviceSideFlagsPreparerClassRuleTestCase<
-                R extends DeviceSideFlagsPreparerClassRule>
+                R extends DeviceSideFlagsPreparerClassRule<R>>
         extends AbstractFlagsPreparerClassRuleTestCase<R> {
 
     // TODO(b/342639109): move to SidelessTestCase instead (would require an abstract

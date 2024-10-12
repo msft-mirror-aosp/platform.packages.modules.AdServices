@@ -84,6 +84,19 @@ public final class AndroidExtendedMockitoMocker extends AbstractStaticMocker
         doReturn(false).when(SdkLevel::isAtLeastSv2);
         doReturn(false).when(SdkLevel::isAtLeastT);
         doReturn(false).when(SdkLevel::isAtLeastU);
+        doReturn(false).when(SdkLevel::isAtLeastV);
+    }
+
+    @Override
+    public void mockSdkLevelS() {
+        logV("mockSdkLevelS()");
+        assertSpiedOrMocked(SdkLevel.class);
+        doReturn(true).when(SdkLevel::isAtLeastR);
+        doReturn(true).when(SdkLevel::isAtLeastS);
+        doReturn(false).when(SdkLevel::isAtLeastSv2);
+        doReturn(false).when(SdkLevel::isAtLeastT);
+        doReturn(false).when(SdkLevel::isAtLeastU);
+        doReturn(false).when(SdkLevel::isAtLeastV);
     }
 
     @Override

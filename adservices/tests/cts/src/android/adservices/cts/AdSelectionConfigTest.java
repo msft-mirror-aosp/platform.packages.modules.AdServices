@@ -28,13 +28,11 @@ import android.net.Uri;
 import android.os.Parcel;
 
 import com.android.adservices.shared.testing.EqualsTester;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Test;
 
 import java.util.Map;
 
-@RequiresSdkLevelAtLeastS
 public final class AdSelectionConfigTest extends CtsAdServicesDeviceTestCase {
     @Test
     public void testBuildValidAdSelectionConfigSuccess() {

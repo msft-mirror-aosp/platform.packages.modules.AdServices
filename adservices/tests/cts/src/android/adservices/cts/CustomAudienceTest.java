@@ -33,7 +33,6 @@ import android.net.Uri;
 import android.os.Parcel;
 
 import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import com.google.common.collect.ImmutableList;
 
@@ -49,7 +48,6 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 /** Unit tests for {@link android.adservices.customaudience.CustomAudience} */
-@RequiresSdkLevelAtLeastS
 public final class CustomAudienceTest extends CtsAdServicesDeviceTestCase {
     // TODO(b/342332791): add to these tests with CA priority
 

@@ -52,7 +52,6 @@ import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.appsearch.AppSearchConsentManager;
 import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.util.Clock;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -77,7 +76,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /** Unit test for {@link com.android.adservices.service.topics.TopicsWorker}. */
-@RequiresSdkLevelAtLeastS
 public final class TopicsWorkerTest extends AdServicesMockitoTestCase {
     private final DbHelper mDbHelper = spy(DbTestUtil.getDbHelperForTest());
 

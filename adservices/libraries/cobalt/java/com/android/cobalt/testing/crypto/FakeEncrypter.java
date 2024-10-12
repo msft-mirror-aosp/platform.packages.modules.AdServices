@@ -16,7 +16,6 @@
 
 package com.android.cobalt.testing.crypto;
 
-
 import androidx.annotation.VisibleForTesting;
 
 import com.android.cobalt.crypto.Encrypter;
@@ -31,12 +30,36 @@ import java.util.Optional;
 
 /** An encrypter that doesn't encrypt, just serializes the proto into the EncryptedMessage. */
 @VisibleForTesting
-public final class NoOpEncrypter implements Encrypter {
-    /** Encrypt an envelope by serializing its bytes. */
+public final class FakeEncrypter implements Encrypter {
+    private boolean mThrowOnEncryptEnvelope;
+    private boolean mThrowOnEncryptObservation;
+
+    public FakeEncrypter() {
+        mThrowOnEncryptEnvelope = false;
+        mThrowOnEncryptObservation = false;
+    }
+
+    /** Enables throw on encrypt envelope */
+    public void setThrowOnEncryptEnvelope() {
+        mThrowOnEncryptEnvelope = true;
+    }
+
+    /** Enables throw on encrypt observation */
+    public void setThrowOnEncryptObservation() {
+        mThrowOnEncryptObservation = true;
+    }
+
+    /**
+     * Encrypts an envelope by serializing its bytes. Throws EncryptionFailedException when throw on
+     * encrypt envelope is set
+     */
     public Optional<EncryptedMessage> encryptEnvelope(Envelope envelope)
             throws EncryptionFailedException {
-        Objects.requireNonNull(envelope);
+        if (mThrowOnEncryptEnvelope) {
+            throw new EncryptionFailedException("Envelope couldn't be encrypted.");
+        }
 
+        Objects.requireNonNull(envelope);
         if (envelope.toByteArray().length == 0) {
             return Optional.empty();
         }
@@ -44,11 +67,14 @@ public final class NoOpEncrypter implements Encrypter {
                 EncryptedMessage.newBuilder().setCiphertext(envelope.toByteString()).build());
     }
 
-    /** Encrypt an observation by serializing its bytes. */
+    /** Encrypts an observation by serializing its bytes. */
     public Optional<EncryptedMessage> encryptObservation(ObservationToEncrypt observation)
             throws EncryptionFailedException {
-        Objects.requireNonNull(observation);
+        if (mThrowOnEncryptObservation) {
+            throw new EncryptionFailedException("Observation couldn't be encrypted.");
+        }
 
+        Objects.requireNonNull(observation);
         if (observation.getObservation().toByteArray().length == 0) {
             return Optional.empty();
         }
