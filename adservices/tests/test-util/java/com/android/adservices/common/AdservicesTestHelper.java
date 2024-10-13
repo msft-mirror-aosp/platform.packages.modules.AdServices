@@ -16,6 +16,8 @@
 
 package com.android.adservices.common;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import android.annotation.NonNull;
 import android.content.Context;
 import android.content.Intent;
@@ -201,5 +203,11 @@ public final class AdservicesTestHelper {
                 break;
         }
         return serviceInfo;
+    }
+
+    /** Install test app and verify the installation. */
+    public static void installTestApp(String apkPath) {
+        String installMessage = ShellUtils.runShellCommand("pm install --user 0 -r %s", apkPath);
+        assertThat(installMessage).contains("Success");
     }
 }

@@ -174,6 +174,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     @NonNull private final DevContextFilter mDevContextFilter;
     @NonNull private final AdServicesLogger mAdServicesLogger;
     @NonNull private final Flags mFlags;
+    @NonNull private final DebugFlags mDebugFlags;
     @NonNull private final CallingAppUidSupplier mCallingAppUidSupplier;
     @NonNull private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
     @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
@@ -214,6 +215,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull Context context,
             @NonNull AdServicesLogger adServicesLogger,
             @NonNull Flags flags,
+            @NonNull DebugFlags debugFlags,
             @NonNull CallingAppUidSupplier callingAppUidSupplier,
             @NonNull FledgeAuthorizationFilter fledgeAuthorizationFilter,
             @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
@@ -245,6 +247,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         Objects.requireNonNull(scheduledExecutor);
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(flags);
+        Objects.requireNonNull(debugFlags);
         Objects.requireNonNull(adFilteringFeatureFactory);
         Objects.requireNonNull(consentManager);
         Objects.requireNonNull(multiCloudSupportStrategy);
@@ -270,6 +273,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         mContext = context;
         mAdServicesLogger = adServicesLogger;
         mFlags = flags;
+        mDebugFlags = debugFlags;
         mCallingAppUidSupplier = callingAppUidSupplier;
         mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
         mAdSelectionServiceFilter = adSelectionServiceFilter;
@@ -313,6 +317,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 context,
                 AdServicesLoggerImpl.getInstance(),
                 FlagsFactory.getFlags(),
+                DebugFlags.getInstance(),
                 CallingAppUidSupplierBinderImpl.create(),
                 FledgeAuthorizationFilter.create(context, AdServicesLoggerImpl.getInstance()),
                 new AdSelectionServiceFilter(
@@ -682,6 +687,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                                 AdServicesExecutors.getBlockingExecutor(),
                                                 mScheduledExecutor,
                                                 mFlags,
+                                                mDebugFlags,
                                                 callingUid,
                                                 devContext,
                                                 auctionServerDebugReporting,
@@ -721,6 +727,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                                 AdServicesExecutors.getBlockingExecutor(),
                                                 mScheduledExecutor,
                                                 mFlags,
+                                                mDebugFlags,
                                                 callingUid,
                                                 devContext,
                                                 AuctionServerDebugReporting
@@ -845,6 +852,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mAdServicesLogger,
                         devContext,
                         mFlags,
+                        mDebugFlags,
                         adSelectionExecutionLogger,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory.getFrequencyCapAdFilterer(),
@@ -974,6 +982,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                             devContext,
                             mAdServicesLogger,
                             mFlags,
+                            mDebugFlags,
                             mAdSelectionServiceFilter,
                             mFledgeAuthorizationFilter,
                             mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
@@ -1052,6 +1061,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                 mBackgroundExecutor,
                                 mAdServicesLogger,
                                 mFlags,
+                                mDebugFlags,
                                 mAdSelectionServiceFilter,
                                 callerUid,
                                 mFledgeAuthorizationFilter,

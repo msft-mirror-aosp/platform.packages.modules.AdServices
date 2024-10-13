@@ -26,7 +26,6 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -34,7 +33,6 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.List;
 
-@RequiresSdkLevelAtLeastS
 public final class AdSelectionDatabaseMigrationTest extends AdServicesUnitTestCase {
     private static final String QUERY_TABLES_FROM_SQL_MASTER =
             "SELECT * FROM sqlite_master WHERE type='table' AND name='%s';";

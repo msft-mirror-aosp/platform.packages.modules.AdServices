@@ -63,6 +63,7 @@ public final class AdServicesExtendedMockitoMocker extends AbstractStaticMocker
     }
 
     @Override
+    @SuppressWarnings("NewApi")
     public void mockSpeJobScheduler(AdServicesJobScheduler mockedAdServicesJobScheduler) {
         Objects.requireNonNull(
                 mockedAdServicesJobScheduler, "AdServicesJobScheduler cannot be null");
@@ -72,6 +73,7 @@ public final class AdServicesExtendedMockitoMocker extends AbstractStaticMocker
     }
 
     @Override
+    @SuppressWarnings("NewApi")
     public void mockAdServicesJobServiceFactory(
             AdServicesJobServiceFactory mockedAdServicesJobServiceFactory) {
         Objects.requireNonNull(

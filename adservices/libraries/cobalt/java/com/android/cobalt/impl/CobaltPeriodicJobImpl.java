@@ -91,6 +91,7 @@ public final class CobaltPeriodicJobImpl implements CobaltPeriodicJob {
     private final Uploader mUploader;
     private final Encrypter mEncrypter;
     private final ByteString mApiKey;
+    private final CobaltOperationLogger mOperationLogger;
     private final ObservationGeneratorFactory mObservationGeneratorFactory;
     private final ImmutableSet<ReportIdentifier> mReportsToIgnore;
 
@@ -123,6 +124,7 @@ public final class CobaltPeriodicJobImpl implements CobaltPeriodicJob {
         mUploader = Objects.requireNonNull(uploader);
         mEncrypter = Objects.requireNonNull(encrypter);
         mApiKey = Objects.requireNonNull(apiKey);
+        mOperationLogger = Objects.requireNonNull(operationLogger);
         mObservationGeneratorFactory =
                 new ObservationGeneratorFactory(
                         mProject,
@@ -130,7 +132,7 @@ public final class CobaltPeriodicJobImpl implements CobaltPeriodicJob {
                         mDataService.getDaoBuildingBlocks(),
                         Objects.requireNonNull(privacyGenerator),
                         Objects.requireNonNull(secureRandom),
-                        Objects.requireNonNull(operationLogger));
+                        mOperationLogger);
         mReportsToIgnore = ImmutableSet.copyOf(reportsToIgnore);
     }
 
@@ -269,6 +271,8 @@ public final class CobaltPeriodicJobImpl implements CobaltPeriodicJob {
         // Send the final set of observations not sent in the loop.
         uploadAndRemoveObservationBatches(currentBatches.build(), currentObservationIds.build());
 
+        // Log upload success on return.
+        mOperationLogger.logUploadSuccess();
         return null;
     }
 
@@ -332,6 +336,7 @@ public final class CobaltPeriodicJobImpl implements CobaltPeriodicJob {
 
     private Void logUploadFailure(Throwable t) {
         logThrownAtError("One or more observations failed to be uploaded", t);
+        mOperationLogger.logUploadFailure();
         return null;
     }
 

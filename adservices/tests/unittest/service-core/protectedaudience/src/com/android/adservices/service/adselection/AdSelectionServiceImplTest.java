@@ -135,6 +135,7 @@ import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AppInstallAdvertisersSetterTest.SetAppInstallAdvertisersTestCallback;
@@ -204,9 +205,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+@SpyStatic(DebugFlags.class)
+@SpyStatic(FlagsFactory.class)
 @SpyStatic(JSScriptEngine.class)
 @MockStatic(ConsentManager.class)
-@MockStatic(FlagsFactory.class)
 @MockStatic(MeasurementImpl.class)
 @MockStatic(AppImportanceFilter.class)
 @SkipLoggingUsageRule(reason = "b/355696393")
@@ -344,6 +346,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     public void setUp() {
         mFakeFlags = new AdSelectionServicesTestsFlags(false);
         mocker.mockGetFlags(mFakeFlags);
+        mocker.mockGetDebugFlags(mMockDebugFlags);
+        mocker.mockGetConsentNotificationDebugMode(false);
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(mContext, CustomAudienceDatabase.class)
                         .addTypeConverter(new DBCustomAudience.Converters(true, true, true))
@@ -512,6 +516,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -555,14 +560,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testReportImpressionSuccessWithUXNotificationNotEnforced() throws Exception {
-        boolean enrollmentCheckDisabled = false;
-        Flags flagsWithoutUxNotificationEnforcement =
-                new AdSelectionServicesTestsFlags(enrollmentCheckDisabled) {
-                    @Override
-                    public boolean getConsentNotificationDebugMode() {
-                        return true;
-                    }
-                };
+        mocker.mockGetConsentNotificationDebugMode(true);
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -634,7 +632,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mScheduledExecutor,
                         mContext,
                         mAdServicesLoggerMock,
-                        flagsWithoutUxNotificationEnforcement,
+                        mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -771,6 +770,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -895,6 +895,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -1012,6 +1013,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -1136,6 +1138,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -1251,6 +1254,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -1382,6 +1386,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -1514,6 +1519,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -1634,6 +1640,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -1772,6 +1779,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         auctionServerReportingDisabledFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -1910,6 +1918,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         auctionServerReportingEnabledFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -2049,6 +2058,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         auctionServerReportingEnabledFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -2182,6 +2192,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         auctionServerReportingDisabledFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -2306,6 +2317,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         auctionServerReportingDisabledFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -2424,6 +2436,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         auctionServerReportingEnabledFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -2541,6 +2554,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         auctionServerReportingDisabledFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -2662,6 +2676,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         auctionServerReportingEnabledFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -2772,6 +2787,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -2897,6 +2913,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -3019,6 +3036,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -3147,6 +3165,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -3324,6 +3343,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -3470,6 +3490,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -3634,6 +3655,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -3803,6 +3825,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -3963,6 +3986,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -4112,6 +4136,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -4265,6 +4290,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         flagsWithSmallerMaxEventUris,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -4434,6 +4460,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         flagsWithSmallerMaxInteractionKeySize,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -4611,6 +4638,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         flagsWithSmallerMaxInteractionReportingUriSize,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -4757,6 +4785,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -4865,6 +4894,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -4972,6 +5002,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -5083,6 +5114,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -5191,6 +5223,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -5294,6 +5327,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -5396,6 +5430,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -5499,6 +5534,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -5617,6 +5653,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -5761,6 +5798,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -5857,6 +5895,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -5919,6 +5958,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -5979,6 +6019,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -6042,6 +6083,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -6114,6 +6156,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -6184,6 +6227,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -6256,6 +6300,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -6328,6 +6373,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -6442,6 +6488,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -6558,6 +6605,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -6672,6 +6720,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -6784,6 +6833,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -6825,6 +6875,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -6880,6 +6931,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -6947,6 +6999,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -7015,6 +7068,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         FlagsWithOverriddenFledgeChecks.createFlagsWithFledgeChecksDisabled(),
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -7074,6 +7128,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -7135,6 +7190,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         FlagsWithOverriddenFledgeChecks.createFlagsWithFledgeChecksDisabled(),
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -7190,6 +7246,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -7249,6 +7306,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         FlagsWithOverriddenFledgeChecks.createFlagsWithFledgeChecksDisabled(),
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -7352,6 +7410,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -7472,6 +7531,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -7593,6 +7653,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -7719,6 +7780,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -7826,6 +7888,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -7936,6 +7999,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -8072,6 +8136,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -8187,6 +8252,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -8304,6 +8370,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -8443,6 +8510,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -8578,6 +8646,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         flagsWithEnrollment,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -8695,6 +8764,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -8760,6 +8830,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -8824,6 +8895,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -8886,6 +8958,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -8950,6 +9023,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -9026,6 +9100,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -9100,6 +9175,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -9173,6 +9249,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -9246,6 +9323,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -9368,6 +9446,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -9488,6 +9567,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -9608,6 +9688,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -9746,6 +9827,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -10354,6 +10436,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         unifiedFlowReportingDisabled,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -10418,6 +10501,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         unifiedFlowReportingEnabled,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -10454,15 +10538,11 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
             testReportImpressionSuccess_callsServerAuctionForImpressionReporterIsOnWithUXNotificationEnforcementDisabled()
                     throws Exception {
         boolean enrollmentCheck = false;
+        mocker.mockGetConsentNotificationDebugMode(true);
         Flags flagsWithUXConsentEnforcementDisabled =
                 new AdSelectionServicesTestsFlags(enrollmentCheck) {
                     @Override
                     public boolean getFledgeAuctionServerEnabledForReportImpression() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getConsentNotificationDebugMode() {
                         return true;
                     }
                 };
@@ -10488,6 +10568,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         flagsWithUXConsentEnforcementDisabled,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -10548,6 +10629,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                 mContext,
                 mAdServicesLoggerMock,
                 mFakeFlags,
+                mMockDebugFlags,
                 CallingAppUidSupplierProcessImpl.create(),
                 mFledgeAuthorizationFilterMock,
                 mAdSelectionServiceFilterMock,
@@ -11275,11 +11357,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
         @Override
         public boolean getFledgeOnDeviceAuctionShouldUseUnifiedTables() {
-            return false;
-        }
-
-        @Override
-        public boolean getConsentNotificationDebugMode() {
             return false;
         }
     }

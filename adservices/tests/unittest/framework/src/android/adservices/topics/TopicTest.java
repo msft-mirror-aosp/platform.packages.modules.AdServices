@@ -20,13 +20,11 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.shared.testing.EqualsTester;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Before;
 import org.junit.Test;
 
 /** Unit tests for {@link android.adservices.topics.Topic} */
-@RequiresSdkLevelAtLeastS
 public final class TopicTest extends AdServicesUnitTestCase {
 
     private static final long TAXONOMY_VERSION_2 = 2L;

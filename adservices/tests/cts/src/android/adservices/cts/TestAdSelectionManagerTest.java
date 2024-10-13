@@ -54,7 +54,6 @@ import com.android.adservices.common.annotations.SetPpapiAppAllowList;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.shared.testing.annotations.SetLongDebugFlag;
@@ -73,7 +72,6 @@ import java.util.concurrent.TimeUnit;
 
 @EnableAllApis
 @SetCompatModeFlags
-@RequiresSdkLevelAtLeastS
 @SetFlagEnabled(KEY_ENABLE_ENROLLMENT_TEST_SEED)
 @SetFlagDisabled(KEY_ISOLATE_MAX_HEAP_SIZE_BYTES)
 @SetPpapiAppAllowList
@@ -127,7 +125,9 @@ public final class TestAdSelectionManagerTest extends ForegroundCtsTestCase {
                         .setContext(sContext)
                         .setExecutor(CALLBACK_EXECUTOR)
                         .build();
-        DevContext devContext = DevContextFilter.create(sContext).createDevContext(Process.myUid());
+        DevContext devContext =
+                DevContextFilter.create(mContext, /* developerModeFeatureEnabled= */ false)
+                        .createDevContext(Process.myUid());
         mIsDebugMode = devContext.getDeviceDevOptionsEnabled();
 
         InstrumentationRegistry.getInstrumentation()
