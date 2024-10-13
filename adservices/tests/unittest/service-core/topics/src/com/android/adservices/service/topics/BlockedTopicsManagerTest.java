@@ -58,7 +58,6 @@ import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.appsearch.AppSearchConsentManager;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -72,7 +71,6 @@ import org.mockito.quality.Strictness;
 import java.util.List;
 
 /** Unit test to test class {@link com.android.adservices.service.topics.BlockedTopicsManager} */
-@RequiresSdkLevelAtLeastS()
 @SetErrorLogUtilDefaultParams(
         throwable = IllegalStateException.class,
         ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS)

@@ -36,18 +36,13 @@ import static org.junit.Assert.assertThrows;
 import android.net.Uri;
 
 import com.android.adservices.service.Flags;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
 public class PrebuiltLogicGeneratorTest {
     private PrebuiltLogicGenerator mPrebuiltLogicGenerator;
     private Flags mFlags;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {

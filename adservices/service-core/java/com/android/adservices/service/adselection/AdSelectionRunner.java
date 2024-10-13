@@ -52,6 +52,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.signature.ProtectedAudienceSignatureManager;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
@@ -146,6 +147,7 @@ public abstract class AdSelectionRunner {
     @NonNull protected final Clock mClock;
     @NonNull protected final AdServicesLogger mAdServicesLogger;
     @NonNull protected final Flags mFlags;
+    @NonNull protected final DebugFlags mDebugFlags;
     @NonNull protected final AdSelectionExecutionLogger mAdSelectionExecutionLogger;
     @NonNull protected final DebugReporting mDebugReporting;
     @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
@@ -171,6 +173,7 @@ public abstract class AdSelectionRunner {
      * @param scheduledExecutor executor for tasks to be run with a delay or timed executions
      * @param adServicesLogger logger for logging calls to PPAPI
      * @param flags for accessing feature flags
+     * @param debugFlags for accessing debug flags
      * @param adSelectionServiceFilter for validating the request
      */
     public AdSelectionRunner(
@@ -183,6 +186,7 @@ public abstract class AdSelectionRunner {
             @NonNull final ScheduledThreadPoolExecutor scheduledExecutor,
             @NonNull final AdServicesLogger adServicesLogger,
             @NonNull final Flags flags,
+            @NonNull final DebugFlags debugFlags,
             @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger,
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final FrequencyCapAdFilterer frequencyCapAdFilterer,
@@ -201,6 +205,7 @@ public abstract class AdSelectionRunner {
         Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(flags);
+        Objects.requireNonNull(debugFlags);
         Objects.requireNonNull(adSelectionServiceFilter);
         Objects.requireNonNull(frequencyCapAdFilterer);
         Objects.requireNonNull(frequencyCapAdDataValidator);
@@ -221,6 +226,7 @@ public abstract class AdSelectionRunner {
         mAdSelectionIdGenerator = new AdSelectionIdGenerator();
         mClock = Clock.systemUTC();
         mFlags = flags;
+        mDebugFlags = debugFlags;
         mAdSelectionExecutionLogger = adSelectionExecutionLogger;
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mFrequencyCapAdFilterer = frequencyCapAdFilterer;
@@ -254,6 +260,7 @@ public abstract class AdSelectionRunner {
             @NonNull Clock clock,
             @NonNull final AdServicesLogger adServicesLogger,
             @NonNull final Flags flags,
+            @NonNull final DebugFlags debugFlags,
             int callerUid,
             @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull FrequencyCapAdFilterer frequencyCapAdFilterer,
@@ -275,6 +282,7 @@ public abstract class AdSelectionRunner {
         Objects.requireNonNull(clock);
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(flags);
+        Objects.requireNonNull(debugFlags);
         Objects.requireNonNull(adSelectionExecutionLogger);
         Objects.requireNonNull(frequencyCapAdFilterer);
         Objects.requireNonNull(frequencyCapAdDataValidator);
@@ -294,6 +302,7 @@ public abstract class AdSelectionRunner {
         mClock = clock;
         mAdServicesLogger = adServicesLogger;
         mFlags = flags;
+        mDebugFlags = debugFlags;
         mAdSelectionExecutionLogger = adSelectionExecutionLogger;
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mFrequencyCapAdFilterer = frequencyCapAdFilterer;
@@ -495,7 +504,7 @@ public abstract class AdSelectionRunner {
                 inputParams.getCallerPackageName(),
                 mFlags.getEnforceForegroundStatusForFledgeRunAdSelection(),
                 true,
-                !mFlags.getConsentNotificationDebugMode(),
+                !mDebugFlags.getConsentNotificationDebugMode(),
                 mCallerUid,
                 AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                 Throttler.ApiKey.FLEDGE_API_SELECT_ADS,

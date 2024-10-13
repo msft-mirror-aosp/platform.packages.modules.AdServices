@@ -516,6 +516,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getCobaltEnableApiCallResponseLogging() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_COBALT__ENABLE_API_CALL_RESPONSE_LOGGING,
+                COBALT__FALL_BACK_TO_DEFAULT_BASE_REGISTRY);
+    }
+
+    @Override
     @SuppressWarnings("AvoidSystemPropertiesUsage")
     // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public long getMaintenanceJobPeriodMs() {
@@ -5905,6 +5912,25 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_FLEDGE_JS_SCRIPT_RESULT_CODE_METRICS_ENABLED
                         + " = "
                         + getFledgeJsScriptResultCodeMetricsEnabled());
+        writer.println("\t" + FlagsConstants.KEY_EEA_PAS_UX_ENABLED + " = " + getEeaPasUxEnabled());
+        writer.println("\t" + FlagsConstants.KEY_AD_ID_CACHE_TTL_MS + " = " + getAdIdCacheTtlMs());
+        writer.println(
+                "\t" + FlagsConstants.KEY_GA_UX_FEATURE_ENABLED + " = " + getGaUxFeatureEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_RECORD_MANUAL_INTERACTION_ENABLED
+                        + " = "
+                        + getRecordManualInteractionEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_UI_TOGGLE_SPEED_BUMP_ENABLED
+                        + " = "
+                        + getToggleSpeedBumpEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_UI_DIALOG_FRAGMENT_ENABLED
+                        + " = "
+                        + getUiDialogFragmentEnabled());
     }
 
     @VisibleForTesting

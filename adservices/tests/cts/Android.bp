@@ -113,8 +113,8 @@ android_test {
     },
 }
 
-android_test {
-    name: "CtsAdExtServicesDeviceTestCases",
+java_defaults {
+    name: "AdExtServices-DeviceTestCases-Defaults",
     defaults: ["cts_defaults"],
     libs: [
         "android.ext.adservices",
@@ -122,12 +122,6 @@ android_test {
         "android.test.base.stubs.system",
         "framework-adservices-lib",
         "auto_value_annotations",
-    ],
-    srcs: ["src/**/*.java"],
-    // Tag this module as a cts test artifact
-    exclude_srcs: [
-        "src/android/adservices/debuggablects/*.java",
-        "src/android/adservices/rootcts/*.java",
     ],
     test_suites: [
         "cts",
@@ -152,14 +146,41 @@ android_test {
         "testng",
     ],
     sdk_version: "module_current",
-    min_sdk_version: "30",
+    compile_multilib: "both",
+}
+
+android_test {
+    name: "CtsAdExtServicesDeviceTestCases",
+    defaults: ["AdExtServices-DeviceTestCases-Defaults"],
+    srcs: ["src/**/*.java"],
+    exclude_srcs: [
+        "src/android/adservices/debuggablects/*.java",
+        "src/android/adservices/rootcts/*.java",
+    ],
+    min_sdk_version: "31",
     max_sdk_version: "32",
     test_config: "AndroidTest.ExtServices.xml",
     manifest: "AndroidManifestExtServices.xml",
-    compile_multilib: "both",
     lint: {
         extra_check_modules: ["AdServicesTestLintChecker"],
         baseline_filename: "lint-baseline-adextservices-devicetestcases.xml",
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
+}
+
+android_test {
+    name: "CtsAdExtServicesRvcDeviceTestCases",
+    defaults: ["AdExtServices-DeviceTestCases-Defaults"],
+    srcs: [
+        "src/android/adservices/cts/AdServicesCommonManagerRvcTest.java",
+        "src/android/adservices/cts/CtsAdServicesDeviceTestCase.java",
+    ],
+    min_sdk_version: "30",
+    max_sdk_version: "30",
+    test_config: "AndroidTest.ExtServicesRvc.xml",
+    manifest: "AndroidManifestExtServicesRvc.xml",
+    lint: {
+        extra_check_modules: ["AdServicesTestLintChecker"],
         test: false, // TODO(b/343741206): remove when checks will run on android_test
     },
 }
@@ -255,7 +276,7 @@ android_test {
         "auto_value_annotations",
     ],
     sdk_version: "module_current",
-    min_sdk_version: "30",
+    min_sdk_version: "31",
     max_sdk_version: "32",
     test_config: "AndroidTestDebuggable.ExtServices.xml",
     manifest: "AndroidManifestDebuggableExtServices.xml",
@@ -306,5 +327,5 @@ android_library {
     // If we use the normal "AndroidManifest.xml", we will redeclare permissions in the tests.
     // See b/228270294 for detail on duplicate permissions error.
     manifest: "EmptyManifest.xml",
-    min_sdk_version: "30",
+    min_sdk_version: "31",
 }

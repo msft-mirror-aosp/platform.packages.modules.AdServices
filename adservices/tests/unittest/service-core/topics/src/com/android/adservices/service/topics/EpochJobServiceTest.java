@@ -60,7 +60,6 @@ import com.android.adservices.service.stats.TopicsScheduleEpochJobSettingReporte
 import com.android.adservices.shared.testing.AnswerSyncCallback;
 import com.android.adservices.shared.testing.HandlerIdleSyncCallback;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.concurrency.JobServiceCallback;
 import com.android.adservices.spe.AdServicesJobScheduler;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
@@ -85,7 +84,6 @@ import java.util.List;
 @MockStatic(ServiceCompatUtils.class)
 @SpyStatic(TopicsWorker.class)
 @SpyStatic(TopicsScheduleEpochJobSettingReportedStatsLogger.class)
-@RequiresSdkLevelAtLeastS
 @SetErrorLogUtilDefaultParams(ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS)
 public final class EpochJobServiceTest extends AdServicesJobServiceTestCase {
     private static final int TOPICS_EPOCH_JOB_ID = TOPICS_EPOCH_JOB.getJobId();
@@ -231,25 +229,33 @@ public final class EpochJobServiceTest extends AdServicesJobServiceTestCase {
         List<TopicsScheduleEpochJobSettingReportedStats> stats = argumentCaptor.getAllValues();
         assertThat(stats).hasSize(2);
 
-        TopicsScheduleEpochJobSettingReportedStats firstScheduledEpochJobStats = stats.get(0);
-        expect.that(firstScheduledEpochJobStats.getRescheduleEpochJobStatus())
-                .isEqualTo(TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_UNSET);
-        expect.that(firstScheduledEpochJobStats.getPreviousEpochJobSetting())
-                .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING);
-        expect.that(firstScheduledEpochJobStats.getCurrentEpochJobSetting())
-                .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING);
-        expect.that(firstScheduledEpochJobStats.getScheduleIfNeededEpochJobStatus())
-                .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_REQUIRES_CHARGING);
+        List<TopicsScheduleEpochJobSettingReportedStats> actualStats =
+                argumentCaptor.getAllValues();
 
-        TopicsScheduleEpochJobSettingReportedStats secondScheduledEpochJobStats = stats.get(1);
-        expect.that(secondScheduledEpochJobStats.getRescheduleEpochJobStatus())
-                .isEqualTo(TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_UNSET);
-        expect.that(secondScheduledEpochJobStats.getPreviousEpochJobSetting())
-                .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING);
-        expect.that(secondScheduledEpochJobStats.getCurrentEpochJobSetting())
-                .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING);
-        expect.that(secondScheduledEpochJobStats.getScheduleIfNeededEpochJobStatus())
-                .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_REQUIRES_BATTERY_NOT_LOW);
+        TopicsScheduleEpochJobSettingReportedStats expectedStat1 =
+                TopicsScheduleEpochJobSettingReportedStats.builder()
+                        .setCurrentEpochJobSetting(
+                                TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING)
+                        .setRescheduleEpochJobStatus(TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_UNSET)
+                        .setPreviousEpochJobSetting(
+                                TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING)
+                        .setScheduleIfNeededEpochJobStatus(
+                                TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_REQUIRES_CHARGING)
+                        .build();
+        TopicsScheduleEpochJobSettingReportedStats expectedStat2 =
+                TopicsScheduleEpochJobSettingReportedStats.builder()
+                        .setCurrentEpochJobSetting(
+                                TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING)
+                        .setRescheduleEpochJobStatus(TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_UNSET)
+                        .setPreviousEpochJobSetting(
+                                TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING)
+                        .setScheduleIfNeededEpochJobStatus(
+                                TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_REQUIRES_BATTERY_NOT_LOW)
+                        .build();
+
+        assertWithMessage("Calls to log scheduled battery constraint")
+                .that(actualStats)
+                .containsExactly(expectedStat1, expectedStat2);
     }
 
     @Test
