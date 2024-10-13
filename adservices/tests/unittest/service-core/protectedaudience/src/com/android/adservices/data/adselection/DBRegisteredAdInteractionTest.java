@@ -25,15 +25,9 @@ import static com.android.adservices.data.adselection.DBRegisteredAdInteractionF
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-
-import org.junit.Rule;
 import org.junit.Test;
 
 public class DBRegisteredAdInteractionTest {
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildDBRegisteredAdInteraction() {

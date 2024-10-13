@@ -37,7 +37,6 @@ import com.android.adservices.common.AdServicesShellCommandHelper;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.annotations.SetPpapiAppAllowList;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.shared.testing.shell.CommandResult;
 
@@ -56,7 +55,6 @@ import java.util.List;
 @EnableDebugFlag(KEY_ADSERVICES_SHELL_COMMAND_ENABLED)
 @EnableDebugFlag(KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED)
 @EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
-@RequiresSdkLevelAtLeastS(reason = "Custom Audience is enabled for S+")
 @SetFlagEnabled(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
 @SetPpapiAppAllowList
 public final class CustomAudienceShellCommandsE2ETest extends ForegroundDebuggableCtsTest {

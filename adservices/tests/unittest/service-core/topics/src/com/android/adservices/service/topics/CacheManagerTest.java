@@ -45,7 +45,6 @@ import com.android.adservices.service.appsearch.AppSearchConsentManager;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.GetTopicsReportedStats;
 import com.android.adservices.service.stats.TopicsEncryptionGetTopicsReportedStats;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.util.Clock;
 
 import com.google.common.collect.ImmutableList;
@@ -67,7 +66,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /** Unit tests for {@link com.android.adservices.service.topics.CacheManager} */
-@RequiresSdkLevelAtLeastS
 public final class CacheManagerTest extends AdServicesMockitoTestCase {
     @SuppressWarnings({"unused"})
     private static final String TAG = "CacheManagerTest";

@@ -27,11 +27,9 @@ import android.adservices.common.KeyedFrequencyCapFixture;
 import android.os.Parcel;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Test;
 
-@RequiresSdkLevelAtLeastS
 public final class RemoveAdCounterHistogramOverrideInputTest extends AdServicesUnitTestCase {
     @Test
     public void testBuildValidInput_success() {

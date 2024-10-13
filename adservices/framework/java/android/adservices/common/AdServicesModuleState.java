@@ -19,7 +19,6 @@ package android.adservices.common;
 import android.annotation.FlaggedApi;
 import android.annotation.IntDef;
 import android.annotation.NonNull;
-import android.annotation.SystemApi;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -34,7 +33,6 @@ import java.util.Objects;
  *
  * @hide
  */
-@SystemApi
 @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
 public final class AdServicesModuleState implements Parcelable {
 
@@ -68,9 +66,30 @@ public final class AdServicesModuleState implements Parcelable {
         mModuleState = in.readInt();
     }
 
-    private AdServicesModuleState(@Module.ModuleCode int module, @ModuleStateCode int moduleState) {
-        this.mModule = module;
-        this.mModuleState = moduleState;
+    /**
+     * Constructor for a module state.
+     *
+     * @param module desired module
+     * @param moduleState desired module state
+     */
+    public AdServicesModuleState(@Module.ModuleCode int module, @ModuleStateCode int moduleState) {
+        this.mModule = Module.validate(module);
+        this.mModuleState = validate(moduleState);
+    }
+
+    /**
+     * Validates a module state. For this function doesn't alter the input and just returns it back
+     * or fails with {@link IllegalArgumentException}.
+     *
+     * @param moduleState module state to validate
+     * @return module state
+     */
+    @ModuleStateCode
+    private static int validate(@ModuleStateCode int moduleState) {
+        return switch (moduleState) {
+            case MODULE_STATE_UNKNOWN, MODULE_STATE_ENABLED, MODULE_STATE_DISABLED -> moduleState;
+            default -> throw new IllegalArgumentException("Invalid Module State:" + moduleState);
+        };
     }
 
     /** Gets the state of current module */
@@ -109,33 +128,5 @@ public final class AdServicesModuleState implements Parcelable {
         Objects.requireNonNull(dest, "Parcel is null");
         dest.writeInt(mModule);
         dest.writeInt(mModuleState);
-    }
-
-    public static final class Builder {
-        @Module.ModuleCode private int mModule;
-
-        @ModuleStateCode private int mModuleState;
-
-        public Builder() {}
-
-        /** Sets the AdServices module. */
-        @NonNull
-        public AdServicesModuleState.Builder setModule(@Module.ModuleCode int module) {
-            this.mModule = module;
-            return this;
-        }
-
-        /** Sets the AdServices moduleState. */
-        @NonNull
-        public AdServicesModuleState.Builder setModuleState(@ModuleStateCode int moduleState) {
-            this.mModuleState = moduleState;
-            return this;
-        }
-
-        /** Builds a {@link AdServicesModuleState} instance. */
-        @NonNull
-        public AdServicesModuleState build() {
-            return new AdServicesModuleState(this.mModule, this.mModuleState);
-        }
     }
 }

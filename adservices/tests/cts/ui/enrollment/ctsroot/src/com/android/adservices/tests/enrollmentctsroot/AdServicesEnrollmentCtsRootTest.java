@@ -60,10 +60,8 @@ public final class AdServicesEnrollmentCtsRootTest extends AdServicesCtsTestCase
 
         List<AdServicesModuleState> adServicesModuleStateList = new ArrayList<>();
         adServicesModuleStateList.add(
-                new AdServicesModuleState.Builder()
-                        .setModule(Module.MEASUREMENT)
-                        .setModuleState(AdServicesModuleState.MODULE_STATE_ENABLED)
-                        .build());
+                new AdServicesModuleState(
+                        Module.MEASUREMENT, AdServicesModuleState.MODULE_STATE_ENABLED));
         int notificationType = NotificationType.NOTIFICATION_ONGOING;
         ListenableFuture<Integer> responseFuture =
                 CallbackToFutureAdapter.getFuture(
@@ -94,10 +92,9 @@ public final class AdServicesEnrollmentCtsRootTest extends AdServicesCtsTestCase
 
         List<AdServicesModuleUserChoice> adServicesModuleUserChoices =
                 List.of(
-                        new AdServicesModuleUserChoice.Builder()
-                                .setModule(Module.MEASUREMENT)
-                                .setUserChoice(AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN)
-                                .build());
+                        new AdServicesModuleUserChoice(
+                                Module.MEASUREMENT,
+                                AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN));
 
         ListenableFuture<Integer> responseFuture =
                 CallbackToFutureAdapter.getFuture(

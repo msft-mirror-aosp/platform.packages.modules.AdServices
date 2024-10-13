@@ -184,7 +184,6 @@ import com.android.adservices.service.stats.RunAdBiddingProcessReportedStats;
 import com.android.adservices.service.stats.RunAdSelectionProcessReportedStats;
 import com.android.adservices.service.stats.SignatureVerificationStats;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -231,7 +230,6 @@ import java.util.stream.Collectors;
  * mocked and provide expected mock responses when invoked with desired input
  */
 @SuppressWarnings("FutureReturnValueIgnored")
-@RequiresSdkLevelAtLeastS()
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(DebugFlags.class)
 @MockStatic(com.android.adservices.shared.util.Clock.class)

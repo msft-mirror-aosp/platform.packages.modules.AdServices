@@ -62,7 +62,6 @@ import com.android.adservices.common.annotations.SetPpapiAppAllowList;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
@@ -83,7 +82,6 @@ import java.util.concurrent.TimeoutException;
 
 @DisableGlobalKillSwitch
 @EnableDebugFlag(KEY_CONSENT_MANAGER_DEBUG_MODE)
-@RequiresSdkLevelAtLeastS
 @SetAllLogcatTags
 @SetFlagDisabled(KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH)
 @EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)

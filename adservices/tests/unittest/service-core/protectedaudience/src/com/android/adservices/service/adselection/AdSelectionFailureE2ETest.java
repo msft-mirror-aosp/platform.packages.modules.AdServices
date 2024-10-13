@@ -107,7 +107,6 @@ import com.android.adservices.service.signals.EgressConfigurationGenerator;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.NoOpLoggerImpl;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.concurrency.FailableOnResultSyncCallback;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -136,7 +135,6 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
-@RequiresSdkLevelAtLeastS(reason = "Ad Selection is only enabled for S+ devices")
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(DebugFlags.class)
 public final class AdSelectionFailureE2ETest extends AdServicesExtendedMockitoTestCase {
