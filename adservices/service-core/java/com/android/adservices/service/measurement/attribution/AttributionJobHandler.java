@@ -766,7 +766,8 @@ class AttributionJobHandler {
                                 sourceTime,
                                 getAggregateReportDelay(),
                                 getApiVersion(),
-                                API);
+                                API,
+                                mFlags);
 
         if (mFlags.getMeasurementEnableAggregatableReportPayloadPadding()) {
             AggregateHistogramContribution paddingContribution =
@@ -1875,7 +1876,7 @@ class AttributionJobHandler {
                 : WebAddresses.topPrivateDomainAndScheme(uri);
     }
 
-    private static Pair<UnsignedLong, List<UnsignedLong>> getDebugKeysForFlex(
+    private Pair<UnsignedLong, List<UnsignedLong>> getDebugKeysForFlex(
             List<AttributedTrigger> contributingTriggers, Source source) {
         List<UnsignedLong> triggerDebugKeys = new ArrayList<>();
         // To provide a source debug key in the event report, the source debug key must have been
@@ -1899,9 +1900,9 @@ class AttributionJobHandler {
                 : null;
         // All triggers must have debug keys for the report to include any.
         if (contributingTriggers.size() == triggerDebugKeys.size()) {
-            return Pair.create(sourceDebugKey, triggerDebugKeys);
+            return getDebugKeysForFlexHelper(sourceDebugKey, triggerDebugKeys);
         } else {
-            return Pair.create(sourceDebugKey, Collections.emptyList());
+            return getDebugKeysForFlexHelper(sourceDebugKey, Collections.emptyList());
         }
     }
 
@@ -2078,5 +2079,16 @@ class AttributionJobHandler {
             return false;
         }
         return true;
+    }
+
+    private Pair<UnsignedLong, List<UnsignedLong>> getDebugKeysForFlexHelper(
+            UnsignedLong sourceDebugKey, List<UnsignedLong> triggerDebugKeys) {
+        if (!mFlags.getMeasurementEnableBothSideDebugKeysInReports()) {
+            return Pair.create(sourceDebugKey, triggerDebugKeys);
+        }
+        if (sourceDebugKey != null && triggerDebugKeys.size() > 0) {
+            return Pair.create(sourceDebugKey, triggerDebugKeys);
+        }
+        return Pair.create(null, Collections.emptyList());
     }
 }

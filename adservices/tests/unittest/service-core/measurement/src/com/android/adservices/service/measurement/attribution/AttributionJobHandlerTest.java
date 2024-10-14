@@ -244,6 +244,7 @@ public class AttributionJobHandlerTest {
                 .thenReturn(Flags.MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA);
         when(mFlags.getMeasurementMaxAggregateReportsPerSource())
                 .thenReturn(Flags.MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE);
+        when(mFlags.getMeasurementEnableBothSideDebugKeysInReports()).thenReturn(false);
     }
 
     @Test
@@ -6888,6 +6889,504 @@ public class AttributionJobHandlerTest {
 
         verify(mMeasurementDao, times(1)).updateSourceAttributedTriggers(
                 eq(source.getId()), eq(source.attributedTriggersToJsonFlexApi()));
+        verify(mMeasurementDao, never()).updateSourceStatus(any(), anyInt());
+    }
+
+    @Test
+    public void performAttribution_flexEventReport_enabledTwoSideDebugKeysPrivacy_debugKeysPresent()
+            throws DatastoreException, JSONException {
+        // Setup
+        long baseTime = System.currentTimeMillis();
+        UnsignedLong triggerData1 = new UnsignedLong(1L);
+        UnsignedLong triggerData2 = new UnsignedLong(2L);
+        UnsignedLong sourceDebugKey = new UnsignedLong(777L);
+        UnsignedLong debugKey1 = new UnsignedLong(4L);
+        UnsignedLong debugKey2 = new UnsignedLong(55L);
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("triggerId1")
+                        .setDestinationType(EventSurfaceType.APP)
+                        .setStatus(Trigger.Status.PENDING)
+                        .setEventTriggers(
+                                "["
+                                        + "{"
+                                        + "  \"trigger_data\": \""
+                                        + triggerData2
+                                        + "\","
+                                        + "  \"priority\": \"123\","
+                                        + "  \"value\": \"105\","
+                                        + "  \"deduplication_key\": \"123\""
+                                        + "}"
+                                        + "]")
+                        .setFilters(
+                                "[{"
+                                        + "  \"key_1\": [\"value_1\", \"value_2\"],"
+                                        + "  \"key_2\": [\"value_1\", \"value_2\"]"
+                                        + "}]")
+                        .setTriggerTime(baseTime + TimeUnit.DAYS.toMillis(1))
+                        .setAggregateTriggerData(buildAggregateTriggerData().toString())
+                        .setAggregateValuesString("{\"campaignCounts\":32768,\"geoValue\":1644}")
+                        .setAdIdPermission(true)
+                        .setDebugKey(debugKey2)
+                        .build();
+
+        Pair<Long, Long> firstBucket = Pair.create(10L, 99L);
+        Pair<Long, Long> secondBucket = Pair.create(100L, TriggerSpecs.MAX_BUCKET_THRESHOLD);
+
+        final EventReport currentEventReport1 =
+                new EventReport.Builder()
+                        .setId("100")
+                        .setSourceEventId(new UnsignedLong(22L))
+                        .setEnrollmentId("another-enrollment-id")
+                        .setAttributionDestinations(List.of(Uri.parse("android-app://com.ignored")))
+                        .setReportTime(baseTime + TimeUnit.DAYS.toMillis(3))
+                        .setStatus(EventReport.Status.PENDING)
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setRegistrationOrigin(WebUtil.validUri("https://adtech2.test"))
+                        .setTriggerTime(baseTime + 3000L)
+                        .setTriggerData(triggerData1)
+                        .setTriggerPriority(123L)
+                        .setTriggerValue(30)
+                        .setTriggerSummaryBucket(firstBucket)
+                        .setTriggerDedupKey(new UnsignedLong(3L))
+                        .setTriggerDebugKey(debugKey1)
+                        .build();
+
+        TriggerSpecs templateTriggerSpecs = SourceFixture.getValidTriggerSpecsValueSum();
+        JSONArray existingAttributes = new JSONArray();
+        JSONObject triggerRecord1 = generateTriggerJsonFromEventReport(currentEventReport1);
+
+        existingAttributes.put(triggerRecord1);
+
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setEventTime(baseTime)
+                        .setAggregateSource(
+                                "{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}")
+                        .setFilterDataString(
+                                "{"
+                                        + "  \"key_1\": [\"value_1\", \"value_2\"],"
+                                        + "  \"key_2\": [\"value_1\", \"value_2\"]"
+                                        + "}")
+                        .setEventReportWindow(baseTime + TimeUnit.DAYS.toMillis(2))
+                        .setAggregatableReportWindow(baseTime + TimeUnit.DAYS.toMillis(2))
+                        .setTriggerSpecsString(templateTriggerSpecs.encodeToJson())
+                        .setMaxEventLevelReports(templateTriggerSpecs.getMaxReports())
+                        .setEventAttributionStatus(existingAttributes.toString())
+                        .setPrivacyParameters(
+                                templateTriggerSpecs.encodePrivacyParametersToJsonString())
+                        .setAdIdPermission(true)
+                        .setDebugKey(sourceDebugKey)
+                        .build();
+
+        when(mFlags.getMeasurementEnableBothSideDebugKeysInReports()).thenReturn(true);
+        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        List<Source> matchingSourceList = new ArrayList<>();
+        matchingSourceList.add(source);
+        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(anyInt(), any(), any()))
+                .thenReturn(5L);
+        when(mMeasurementDao.getSourceEventReports(any()))
+                .thenReturn(new ArrayList<>(Collections.singletonList(currentEventReport1)));
+        int numAggregateReportPerDestination = 10;
+        int numEventReportPerDestination = 10;
+        when(mMeasurementDao.getNumAggregateReportsPerDestination(
+                        trigger.getAttributionDestination(), trigger.getDestinationType()))
+                .thenReturn(numAggregateReportPerDestination);
+        when(mMeasurementDao.getNumEventReportsPerDestination(
+                        trigger.getAttributionDestination(), trigger.getDestinationType()))
+                .thenReturn(numEventReportPerDestination);
+        when(mMeasurementDao.getSourceDestinations(source.getId()))
+                .thenReturn(Pair.create(source.getAppDestinations(), source.getWebDestinations()));
+
+        // Execution
+        mHandler.performPendingAttributions();
+
+        // Assertion
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(Collections.singletonList(trigger.getId())),
+                        eq(Trigger.Status.ATTRIBUTED));
+
+        verify(mMeasurementDao, times(1)).getSourceEventReports(any());
+        ArgumentCaptor<EventReport> insertedReportsCaptor =
+                ArgumentCaptor.forClass(EventReport.class);
+        ArgumentCaptor<List<EventReport>> deletedReportsCaptor =
+                ArgumentCaptor.forClass((Class) List.class);
+        verify(mMeasurementDao, times(3)).insertEventReport(insertedReportsCaptor.capture());
+        verify(mMeasurementDao, times(1))
+                .deleteFlexEventReportsAndAttributions(deletedReportsCaptor.capture());
+        verify(mTransaction, times(2)).begin();
+        verify(mTransaction, times(2)).end();
+        assertEquals(1, deletedReportsCaptor.getValue().size());
+        List<EventReport> insertedEventReports = insertedReportsCaptor.getAllValues();
+        assertEquals(firstBucket, insertedEventReports.get(0).getTriggerSummaryBucket());
+        assertEquals(firstBucket, insertedEventReports.get(1).getTriggerSummaryBucket());
+        assertEquals(secondBucket, insertedEventReports.get(2).getTriggerSummaryBucket());
+        assertEquals(triggerData1, insertedEventReports.get(0).getTriggerData());
+        assertEquals(triggerData2, insertedEventReports.get(1).getTriggerData());
+        assertEquals(triggerData2, insertedEventReports.get(2).getTriggerData());
+        assertEquals(Collections.emptyList(), insertedEventReports.get(0).getTriggerDebugKeys());
+        assertEquals(List.of(debugKey2), insertedEventReports.get(1).getTriggerDebugKeys());
+        assertEquals(List.of(debugKey2), insertedEventReports.get(2).getTriggerDebugKeys());
+        assertNull(insertedEventReports.get(0).getSourceDebugKey());
+        assertEquals(sourceDebugKey, insertedEventReports.get(1).getSourceDebugKey());
+        assertEquals(sourceDebugKey, insertedEventReports.get(2).getSourceDebugKey());
+        assertEquals(
+                EventReport.DebugReportStatus.NONE,
+                insertedEventReports.get(0).getDebugReportStatus());
+        assertEquals(
+                EventReport.DebugReportStatus.PENDING,
+                insertedEventReports.get(1).getDebugReportStatus());
+        assertEquals(
+                EventReport.DebugReportStatus.PENDING,
+                insertedEventReports.get(2).getDebugReportStatus());
+        long reportTime = TimeUnit.DAYS.toMillis(2);
+        assertEquals(reportTime, insertedEventReports.get(0).getReportTime() - baseTime);
+        assertEquals(reportTime, insertedEventReports.get(1).getReportTime() - baseTime);
+        assertEquals(reportTime, insertedEventReports.get(2).getReportTime() - baseTime);
+        verify(mMeasurementDao).insertAggregateReport(any());
+        verify(mMeasurementDao, never()).fetchMatchingEventReports(any(), any());
+        verify(mMeasurementDao, times(1))
+                .updateSourceAttributedTriggers(
+                        eq(source.getId()), eq(source.attributedTriggersToJsonFlexApi()));
+        assertEquals(2, source.getTriggerSpecs().getAttributedTriggers().size());
+        verify(mMeasurementDao, never()).updateSourceStatus(any(), anyInt());
+    }
+
+    @Test
+    public void
+            performAttribution_flexEventReport_enabledTwoSideDebugKeysPrivacy_NoSourceDebugKeys()
+                    throws DatastoreException, JSONException {
+        // Setup
+        long baseTime = System.currentTimeMillis();
+        UnsignedLong triggerData1 = new UnsignedLong(1L);
+        UnsignedLong triggerData2 = new UnsignedLong(2L);
+        UnsignedLong debugKey1 = new UnsignedLong(4L);
+        UnsignedLong debugKey2 = new UnsignedLong(55L);
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("triggerId1")
+                        .setDestinationType(EventSurfaceType.APP)
+                        .setStatus(Trigger.Status.PENDING)
+                        .setEventTriggers(
+                                "["
+                                        + "{"
+                                        + "  \"trigger_data\": \""
+                                        + triggerData2
+                                        + "\","
+                                        + "  \"priority\": \"123\","
+                                        + "  \"value\": \"105\","
+                                        + "  \"deduplication_key\": \"123\""
+                                        + "}"
+                                        + "]")
+                        .setFilters(
+                                "[{"
+                                        + "  \"key_1\": [\"value_1\", \"value_2\"],"
+                                        + "  \"key_2\": [\"value_1\", \"value_2\"]"
+                                        + "}]")
+                        .setTriggerTime(baseTime + TimeUnit.DAYS.toMillis(1))
+                        .setAggregateTriggerData(buildAggregateTriggerData().toString())
+                        .setAggregateValuesString("{\"campaignCounts\":32768,\"geoValue\":1644}")
+                        .setAdIdPermission(true)
+                        .setDebugKey(debugKey2)
+                        .build();
+
+        Pair<Long, Long> firstBucket = Pair.create(10L, 99L);
+        Pair<Long, Long> secondBucket = Pair.create(100L, TriggerSpecs.MAX_BUCKET_THRESHOLD);
+
+        final EventReport currentEventReport1 =
+                new EventReport.Builder()
+                        .setId("100")
+                        .setSourceEventId(new UnsignedLong(22L))
+                        .setEnrollmentId("another-enrollment-id")
+                        .setAttributionDestinations(List.of(Uri.parse("android-app://com.ignored")))
+                        .setReportTime(baseTime + TimeUnit.DAYS.toMillis(3))
+                        .setStatus(EventReport.Status.PENDING)
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setRegistrationOrigin(WebUtil.validUri("https://adtech2.test"))
+                        .setTriggerTime(baseTime + 3000L)
+                        .setTriggerData(triggerData1)
+                        .setTriggerPriority(123L)
+                        .setTriggerValue(30)
+                        .setTriggerSummaryBucket(firstBucket)
+                        .setTriggerDedupKey(new UnsignedLong(3L))
+                        .setTriggerDebugKey(debugKey1)
+                        .build();
+
+        TriggerSpecs templateTriggerSpecs = SourceFixture.getValidTriggerSpecsValueSum();
+        JSONArray existingAttributes = new JSONArray();
+        JSONObject triggerRecord1 = generateTriggerJsonFromEventReport(currentEventReport1);
+
+        existingAttributes.put(triggerRecord1);
+
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setEventTime(baseTime)
+                        .setAggregateSource(
+                                "{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}")
+                        .setFilterDataString(
+                                "{"
+                                        + "  \"key_1\": [\"value_1\", \"value_2\"],"
+                                        + "  \"key_2\": [\"value_1\", \"value_2\"]"
+                                        + "}")
+                        .setEventReportWindow(baseTime + TimeUnit.DAYS.toMillis(2))
+                        .setAggregatableReportWindow(baseTime + TimeUnit.DAYS.toMillis(2))
+                        .setTriggerSpecsString(templateTriggerSpecs.encodeToJson())
+                        .setMaxEventLevelReports(templateTriggerSpecs.getMaxReports())
+                        .setEventAttributionStatus(existingAttributes.toString())
+                        .setPrivacyParameters(
+                                templateTriggerSpecs.encodePrivacyParametersToJsonString())
+                        .setAdIdPermission(true)
+                        .setDebugKey(null)
+                        .build();
+
+        when(mFlags.getMeasurementEnableBothSideDebugKeysInReports()).thenReturn(true);
+        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        List<Source> matchingSourceList = new ArrayList<>();
+        matchingSourceList.add(source);
+        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(anyInt(), any(), any()))
+                .thenReturn(5L);
+        when(mMeasurementDao.getSourceEventReports(any()))
+                .thenReturn(new ArrayList<>(Collections.singletonList(currentEventReport1)));
+        int numAggregateReportPerDestination = 10;
+        int numEventReportPerDestination = 10;
+        when(mMeasurementDao.getNumAggregateReportsPerDestination(
+                        trigger.getAttributionDestination(), trigger.getDestinationType()))
+                .thenReturn(numAggregateReportPerDestination);
+        when(mMeasurementDao.getNumEventReportsPerDestination(
+                        trigger.getAttributionDestination(), trigger.getDestinationType()))
+                .thenReturn(numEventReportPerDestination);
+        when(mMeasurementDao.getSourceDestinations(source.getId()))
+                .thenReturn(Pair.create(source.getAppDestinations(), source.getWebDestinations()));
+
+        // Execution
+        mHandler.performPendingAttributions();
+
+        // Assertion
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(Collections.singletonList(trigger.getId())),
+                        eq(Trigger.Status.ATTRIBUTED));
+
+        verify(mMeasurementDao, times(1)).getSourceEventReports(any());
+        ArgumentCaptor<EventReport> insertedReportsCaptor =
+                ArgumentCaptor.forClass(EventReport.class);
+        ArgumentCaptor<List<EventReport>> deletedReportsCaptor =
+                ArgumentCaptor.forClass((Class) List.class);
+        verify(mMeasurementDao, times(3)).insertEventReport(insertedReportsCaptor.capture());
+        verify(mMeasurementDao, times(1))
+                .deleteFlexEventReportsAndAttributions(deletedReportsCaptor.capture());
+        verify(mTransaction, times(2)).begin();
+        verify(mTransaction, times(2)).end();
+        assertEquals(1, deletedReportsCaptor.getValue().size());
+        List<EventReport> insertedEventReports = insertedReportsCaptor.getAllValues();
+        assertEquals(firstBucket, insertedEventReports.get(0).getTriggerSummaryBucket());
+        assertEquals(firstBucket, insertedEventReports.get(1).getTriggerSummaryBucket());
+        assertEquals(secondBucket, insertedEventReports.get(2).getTriggerSummaryBucket());
+        assertEquals(triggerData1, insertedEventReports.get(0).getTriggerData());
+        assertEquals(triggerData2, insertedEventReports.get(1).getTriggerData());
+        assertEquals(triggerData2, insertedEventReports.get(2).getTriggerData());
+        assertEquals(Collections.emptyList(), insertedEventReports.get(0).getTriggerDebugKeys());
+        assertEquals(Collections.emptyList(), insertedEventReports.get(1).getTriggerDebugKeys());
+        assertEquals(Collections.emptyList(), insertedEventReports.get(2).getTriggerDebugKeys());
+        assertNull(insertedEventReports.get(0).getSourceDebugKey());
+        assertNull(insertedEventReports.get(1).getSourceDebugKey());
+        assertNull(insertedEventReports.get(2).getSourceDebugKey());
+        assertEquals(
+                EventReport.DebugReportStatus.NONE,
+                insertedEventReports.get(0).getDebugReportStatus());
+        assertEquals(
+                EventReport.DebugReportStatus.NONE,
+                insertedEventReports.get(1).getDebugReportStatus());
+        assertEquals(
+                EventReport.DebugReportStatus.NONE,
+                insertedEventReports.get(2).getDebugReportStatus());
+        long reportTime = TimeUnit.DAYS.toMillis(2);
+        assertEquals(reportTime, insertedEventReports.get(0).getReportTime() - baseTime);
+        assertEquals(reportTime, insertedEventReports.get(1).getReportTime() - baseTime);
+        assertEquals(reportTime, insertedEventReports.get(2).getReportTime() - baseTime);
+        verify(mMeasurementDao).insertAggregateReport(any());
+        verify(mMeasurementDao, never()).fetchMatchingEventReports(any(), any());
+        verify(mMeasurementDao, times(1))
+                .updateSourceAttributedTriggers(
+                        eq(source.getId()), eq(source.attributedTriggersToJsonFlexApi()));
+        assertEquals(2, source.getTriggerSpecs().getAttributedTriggers().size());
+        verify(mMeasurementDao, never()).updateSourceStatus(any(), anyInt());
+    }
+
+    @Test
+    public void
+            performAttribution_flexEventReport_enabledTwoSideDebugKeysPrivacy_NoTriggerDebugKeys()
+                    throws DatastoreException, JSONException {
+        // Setup
+        long baseTime = System.currentTimeMillis();
+        UnsignedLong triggerData1 = new UnsignedLong(1L);
+        UnsignedLong triggerData2 = new UnsignedLong(2L);
+        UnsignedLong sourceDebugKey = new UnsignedLong(777L);
+        UnsignedLong debugKey1 = new UnsignedLong(4L);
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("triggerId1")
+                        .setDestinationType(EventSurfaceType.APP)
+                        .setStatus(Trigger.Status.PENDING)
+                        .setEventTriggers(
+                                "["
+                                        + "{"
+                                        + "  \"trigger_data\": \""
+                                        + triggerData2
+                                        + "\","
+                                        + "  \"priority\": \"123\","
+                                        + "  \"value\": \"105\","
+                                        + "  \"deduplication_key\": \"123\""
+                                        + "}"
+                                        + "]")
+                        .setFilters(
+                                "[{"
+                                        + "  \"key_1\": [\"value_1\", \"value_2\"],"
+                                        + "  \"key_2\": [\"value_1\", \"value_2\"]"
+                                        + "}]")
+                        .setTriggerTime(baseTime + TimeUnit.DAYS.toMillis(1))
+                        .setAggregateTriggerData(buildAggregateTriggerData().toString())
+                        .setAggregateValuesString("{\"campaignCounts\":32768,\"geoValue\":1644}")
+                        .setAdIdPermission(true)
+                        .setDebugKey(null)
+                        .build();
+
+        Pair<Long, Long> firstBucket = Pair.create(10L, 99L);
+        Pair<Long, Long> secondBucket = Pair.create(100L, TriggerSpecs.MAX_BUCKET_THRESHOLD);
+
+        final EventReport currentEventReport1 =
+                new EventReport.Builder()
+                        .setId("100")
+                        .setSourceEventId(new UnsignedLong(22L))
+                        .setEnrollmentId("another-enrollment-id")
+                        .setAttributionDestinations(List.of(Uri.parse("android-app://com.ignored")))
+                        .setReportTime(baseTime + TimeUnit.DAYS.toMillis(3))
+                        .setStatus(EventReport.Status.PENDING)
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .setRegistrationOrigin(WebUtil.validUri("https://adtech2.test"))
+                        .setTriggerTime(baseTime + 3000L)
+                        .setTriggerData(triggerData1)
+                        .setTriggerPriority(123L)
+                        .setTriggerValue(30)
+                        .setTriggerSummaryBucket(firstBucket)
+                        .setTriggerDedupKey(new UnsignedLong(3L))
+                        .setTriggerDebugKey(debugKey1)
+                        .build();
+
+        TriggerSpecs templateTriggerSpecs = SourceFixture.getValidTriggerSpecsValueSum();
+        JSONArray existingAttributes = new JSONArray();
+        JSONObject triggerRecord1 = generateTriggerJsonFromEventReport(currentEventReport1);
+
+        existingAttributes.put(triggerRecord1);
+
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setEventTime(baseTime)
+                        .setAggregateSource(
+                                "{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}")
+                        .setFilterDataString(
+                                "{"
+                                        + "  \"key_1\": [\"value_1\", \"value_2\"],"
+                                        + "  \"key_2\": [\"value_1\", \"value_2\"]"
+                                        + "}")
+                        .setEventReportWindow(baseTime + TimeUnit.DAYS.toMillis(2))
+                        .setAggregatableReportWindow(baseTime + TimeUnit.DAYS.toMillis(2))
+                        .setTriggerSpecsString(templateTriggerSpecs.encodeToJson())
+                        .setMaxEventLevelReports(templateTriggerSpecs.getMaxReports())
+                        .setEventAttributionStatus(existingAttributes.toString())
+                        .setPrivacyParameters(
+                                templateTriggerSpecs.encodePrivacyParametersToJsonString())
+                        .setAdIdPermission(true)
+                        .setDebugKey(sourceDebugKey)
+                        .build();
+
+        when(mFlags.getMeasurementEnableBothSideDebugKeysInReports()).thenReturn(true);
+        when(mFlags.getMeasurementFlexibleEventReportingApiEnabled()).thenReturn(true);
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        List<Source> matchingSourceList = new ArrayList<>();
+        matchingSourceList.add(source);
+        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(anyInt(), any(), any()))
+                .thenReturn(5L);
+        when(mMeasurementDao.getSourceEventReports(any()))
+                .thenReturn(new ArrayList<>(Collections.singletonList(currentEventReport1)));
+        int numAggregateReportPerDestination = 10;
+        int numEventReportPerDestination = 10;
+        when(mMeasurementDao.getNumAggregateReportsPerDestination(
+                        trigger.getAttributionDestination(), trigger.getDestinationType()))
+                .thenReturn(numAggregateReportPerDestination);
+        when(mMeasurementDao.getNumEventReportsPerDestination(
+                        trigger.getAttributionDestination(), trigger.getDestinationType()))
+                .thenReturn(numEventReportPerDestination);
+        when(mMeasurementDao.getSourceDestinations(source.getId()))
+                .thenReturn(Pair.create(source.getAppDestinations(), source.getWebDestinations()));
+
+        // Execution
+        mHandler.performPendingAttributions();
+
+        // Assertion
+        verify(mMeasurementDao)
+                .updateTriggerStatus(
+                        eq(Collections.singletonList(trigger.getId())),
+                        eq(Trigger.Status.ATTRIBUTED));
+
+        verify(mMeasurementDao, times(1)).getSourceEventReports(any());
+        ArgumentCaptor<EventReport> insertedReportsCaptor =
+                ArgumentCaptor.forClass(EventReport.class);
+        ArgumentCaptor<List<EventReport>> deletedReportsCaptor =
+                ArgumentCaptor.forClass((Class) List.class);
+        verify(mMeasurementDao, times(3)).insertEventReport(insertedReportsCaptor.capture());
+        verify(mMeasurementDao, times(1))
+                .deleteFlexEventReportsAndAttributions(deletedReportsCaptor.capture());
+        verify(mTransaction, times(2)).begin();
+        verify(mTransaction, times(2)).end();
+        assertEquals(1, deletedReportsCaptor.getValue().size());
+        List<EventReport> insertedEventReports = insertedReportsCaptor.getAllValues();
+        assertEquals(firstBucket, insertedEventReports.get(0).getTriggerSummaryBucket());
+        assertEquals(firstBucket, insertedEventReports.get(1).getTriggerSummaryBucket());
+        assertEquals(secondBucket, insertedEventReports.get(2).getTriggerSummaryBucket());
+        assertEquals(triggerData1, insertedEventReports.get(0).getTriggerData());
+        assertEquals(triggerData2, insertedEventReports.get(1).getTriggerData());
+        assertEquals(triggerData2, insertedEventReports.get(2).getTriggerData());
+        assertEquals(Collections.emptyList(), insertedEventReports.get(0).getTriggerDebugKeys());
+        assertEquals(Collections.emptyList(), insertedEventReports.get(1).getTriggerDebugKeys());
+        assertEquals(Collections.emptyList(), insertedEventReports.get(2).getTriggerDebugKeys());
+        assertNull(insertedEventReports.get(0).getSourceDebugKey());
+        assertNull(insertedEventReports.get(1).getSourceDebugKey());
+        assertNull(insertedEventReports.get(2).getSourceDebugKey());
+        assertEquals(
+                EventReport.DebugReportStatus.NONE,
+                insertedEventReports.get(0).getDebugReportStatus());
+        assertEquals(
+                EventReport.DebugReportStatus.NONE,
+                insertedEventReports.get(1).getDebugReportStatus());
+        assertEquals(
+                EventReport.DebugReportStatus.NONE,
+                insertedEventReports.get(2).getDebugReportStatus());
+        long reportTime = TimeUnit.DAYS.toMillis(2);
+        assertEquals(reportTime, insertedEventReports.get(0).getReportTime() - baseTime);
+        assertEquals(reportTime, insertedEventReports.get(1).getReportTime() - baseTime);
+        assertEquals(reportTime, insertedEventReports.get(2).getReportTime() - baseTime);
+        verify(mMeasurementDao).insertAggregateReport(any());
+        verify(mMeasurementDao, never()).fetchMatchingEventReports(any(), any());
+        verify(mMeasurementDao, times(1))
+                .updateSourceAttributedTriggers(
+                        eq(source.getId()), eq(source.attributedTriggersToJsonFlexApi()));
+        assertEquals(2, source.getTriggerSpecs().getAttributedTriggers().size());
         verify(mMeasurementDao, never()).updateSourceStatus(any(), anyInt());
     }
 
