@@ -42,6 +42,7 @@ import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.WebAddresses;
+import com.android.adservices.service.measurement.AggregatableNamedBudgets.BudgetAndContribution;
 import com.android.adservices.service.measurement.AttributedTrigger;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.AttributionConfig;
@@ -689,7 +690,11 @@ class AttributionJobHandler {
             }
 
             finalizeAggregateReportCreation(
-                    source, aggregateDeduplicationKeyOptional, aggregateReport, measurementDao);
+                    source,
+                    aggregateDeduplicationKeyOptional,
+                    maybeNamedBudget,
+                    aggregateReport,
+                    measurementDao);
             incrementAggregateReportCountBy(attributionStatus, 1);
             if (aggregateReport.getDebugReportStatus()
                     == AggregateReport.DebugReportStatus.PENDING) {
@@ -1528,6 +1533,7 @@ class AttributionJobHandler {
     private static void finalizeAggregateReportCreation(
             Source source,
             Optional<AggregateDeduplicationKey> aggregateDeduplicationKeyOptional,
+            Optional<String> maybeNamedBudget,
             AggregateReport aggregateReport,
             IMeasurementDao measurementDao)
             throws DatastoreException {
@@ -1541,6 +1547,9 @@ class AttributionJobHandler {
             // source
             measurementDao.updateSourceAggregateContributions(source);
             measurementDao.updateSourceAggregateReportDedupKeys(source);
+            if (maybeNamedBudget.isPresent()) {
+                measurementDao.updateSourceAggregatableNamedBudgets(source, maybeNamedBudget.get());
+            }
         }
         measurementDao.insertAggregateReport(aggregateReport);
     }
@@ -1754,20 +1763,27 @@ class AttributionJobHandler {
             @Nullable String matchedNamedBudget,
             int desiredContributions)
             throws DatastoreException {
-        if (matchedNamedBudget == null
-                || source.getAggregatableNamedBudgets()
-                        .maybeGetContribution(matchedNamedBudget)
-                        .isEmpty()) {
+        if (matchedNamedBudget == null) {
+            return true;
+        }
+        BudgetAndContribution budgetAndContribution =
+                measurementDao.getSourceAggregatableNamedBudgetAndContribution(
+                        source.getId(), matchedNamedBudget);
+        if (budgetAndContribution == null) {
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "AttributionJobHandler::"
+                                    + "validateAndUpdateNamedBudgetContributions "
+                                    + " budget not found in database. Source ID: %s ;"
+                                    + " Trigger ID: %s ; Budget: %s ",
+                            source.getId(), trigger.getId(), matchedNamedBudget);
             return true;
         }
 
         int totalContributions =
                 Math.addExact(
-                        desiredContributions,
-                        source.getAggregatableNamedBudgets()
-                                .maybeGetContribution(matchedNamedBudget)
-                                .get());
-        int budget = source.getAggregatableNamedBudgets().maybeGetBudget(matchedNamedBudget).get();
+                        desiredContributions, budgetAndContribution.getAggregateContribution());
+        int budget = budgetAndContribution.getBudget();
         if (totalContributions > budget) {
             // When histogram value is greater than matchedNamedBudget's budget,
             // generate verbose debug report, record the actual histogram value.
@@ -1784,7 +1800,7 @@ class AttributionJobHandler {
                             "AttributionJobHandler::"
                                     + "validateAndUpdateNamedBudgetContributions "
                                     + " contribution exceeded bound. Source ID: %s ;"
-                                    + " Trigger ID: %s ; Bucket: %s ",
+                                    + " Trigger ID: %s ; Budget: %s ",
                             source.getId(), trigger.getId(), matchedNamedBudget);
             return false;
         }
