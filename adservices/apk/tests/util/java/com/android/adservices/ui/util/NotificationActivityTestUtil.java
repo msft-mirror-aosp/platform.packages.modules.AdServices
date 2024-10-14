@@ -65,14 +65,6 @@ public final class NotificationActivityTestUtil {
         device.wait(Until.hasObject(By.pkg(NOTIFICATION_PACKAGE).depth(0)), LAUNCH_TIMEOUT);
     }
 
-    /** Start the activity with context provided. */
-    public static void startActivity(Context context, boolean isEUActivity, UiDevice device)
-            throws InterruptedException {
-        Intent intent = getNotificationIntent(isEUActivity);
-        context.startActivity(intent);
-        device.wait(Until.hasObject(By.pkg(NOTIFICATION_PACKAGE).depth(0)), LAUNCH_TIMEOUT);
-    }
-
     /**
      * Start PAS Renotify Notification.
      *
@@ -130,11 +122,5 @@ public final class NotificationActivityTestUtil {
     public static boolean isNotificationIntentInstalled(boolean isEUActivity) {
         Intent intent = getNotificationIntent(isEUActivity);
         return ApkTestUtil.isIntentInstalled(intent);
-    }
-
-    /** Check if intent has package and activity installed with context. */
-    public static boolean isNotificationIntentInstalled(Context context, boolean isEUActivity) {
-        Intent intent = getNotificationIntent(isEUActivity);
-        return ApkTestUtil.isIntentInstalled(context, intent);
     }
 }
