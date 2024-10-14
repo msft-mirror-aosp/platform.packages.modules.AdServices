@@ -38,18 +38,17 @@ import androidx.test.uiautomator.Until;
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
-import com.android.adservices.ui.util.AdServicesUiTestCase;
+import com.android.adservices.ui.util.AdservicesNotificationUiTestCase;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.adservices.ui.util.NotificationActivityTestUtil;
 
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RequiresSdkLevelAtLeastT(reason = "PAS UX is currently only available on T+ devices")
 @RunWith(AndroidJUnit4.class)
-public final class NotificationActivityPasUiAutomatorTest extends AdServicesUiTestCase {
+public final class NotificationActivityPasUiAutomatorTest extends AdservicesNotificationUiTestCase {
 
     private static final String ANDROID_WIDGET_SWITCH = "android.widget.Switch";
     private static final int PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS = 2_000;
@@ -68,17 +67,6 @@ public final class NotificationActivityPasUiAutomatorTest extends AdServicesUiTe
                     .setFlag(KEY_IS_EEA_DEVICE_FEATURE_ENABLED, true)
                     .setFlag(KEY_IS_EEA_DEVICE, false)
                     .setFlag(KEY_UI_TOGGLE_SPEED_BUMP_ENABLED, false);
-
-    /**
-     * Setup before notification tests.
-     *
-     * @throws Exception general exception
-     */
-    @BeforeClass
-    public static void classSetup() throws Exception {
-
-        NotificationActivityTestUtil.setupBeforeTests();
-    }
 
     @Test
     public void renotifyClickSettingsTest() throws Exception {

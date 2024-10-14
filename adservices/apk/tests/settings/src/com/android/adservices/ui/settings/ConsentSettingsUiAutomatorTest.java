@@ -39,7 +39,7 @@ import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 import com.android.adservices.shared.testing.annotations.SetStringFlag;
-import com.android.adservices.ui.util.AdServicesUiTestCase;
+import com.android.adservices.ui.util.AdservicesSettingsUiTestCase;
 import com.android.adservices.ui.util.ApkTestUtil;
 
 import org.junit.Ignore;
@@ -51,7 +51,7 @@ import org.junit.Test;
 @SetCompatModeFlags
 @SetFlagDisabled(KEY_GA_UX_FEATURE_ENABLED)
 @SetStringFlag(name = "debug_ux", value = "BETA_UX")
-public final class ConsentSettingsUiAutomatorTest extends AdServicesUiTestCase {
+public final class ConsentSettingsUiAutomatorTest extends AdservicesSettingsUiTestCase {
     @Test
     @SetIntegerFlag(name = KEY_CONSENT_SOURCE_OF_TRUTH, value = 0)
     @SetFlagDisabled(KEY_UI_DIALOGS_FEATURE_ENABLED)

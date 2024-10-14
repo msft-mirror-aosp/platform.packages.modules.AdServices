@@ -41,6 +41,8 @@ import androidx.test.uiautomator.Until;
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 
+import java.util.concurrent.TimeUnit;
+
 /** Util class for Settings tests. */
 public final class SettingsTestUtil {
 
@@ -555,5 +557,14 @@ public final class SettingsTestUtil {
     public static boolean isSettingsIntentInstalled() {
         Intent intent = ApkTestUtil.getIntent(PRIVACY_SANDBOX_UI);
         return ApkTestUtil.isIntentInstalled(intent);
+    }
+
+    /** check component enabled and wait for it before tests start */
+    public static void setupBeforeTests() throws InterruptedException {
+        // Check intent component enabled, if not, sleep for 1 min for bootCompleteReceiver to get
+        // invoked on S-
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU && !isSettingsIntentInstalled()) {
+            TimeUnit.SECONDS.sleep(60);
+        }
     }
 }

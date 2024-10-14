@@ -33,19 +33,17 @@ import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
-import com.android.adservices.ui.util.AdServicesUiTestCase;
+import com.android.adservices.ui.util.AdservicesNotificationUiTestCase;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.adservices.ui.util.NotificationActivityTestUtil;
 
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(AndroidJUnit4.class)
-public final class NotificationActivityU18UxSelectorUiAutomatorTest extends AdServicesUiTestCase {
+public final class NotificationActivityU18UxSelectorUiAutomatorTest
+        extends AdservicesNotificationUiTestCase {
 
     @Rule(order = 11)
     public final AdServicesFlagsSetterRule flags =
@@ -56,16 +54,6 @@ public final class NotificationActivityU18UxSelectorUiAutomatorTest extends AdSe
                     .setFlag(KEY_GA_UX_FEATURE_ENABLED, true)
                     .setFlag(KEY_U18_UX_ENABLED, true)
                     .setFlag(KEY_DEBUG_UX, "U18_UX");
-
-    @BeforeClass
-    public static void classSetup() throws Exception {
-        NotificationActivityTestUtil.setupBeforeTests();
-    }
-
-    @Before
-    public void setup() throws Exception {
-        Assume.assumeTrue(NotificationActivityTestUtil.isNotificationIntentInstalled(true));
-    }
 
     @Test
     public void acceptFlowTest() throws Exception {
