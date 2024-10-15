@@ -72,26 +72,6 @@ public final class SettingsTestUtil {
         assertNotNull(appButton, R.string.settingsUI_apps_ga_title);
     }
 
-    public static void settingsRemoveMainToggleAndMeasurementEntryTestRvcUxUtil(UiDevice device) {
-        ApkTestUtil.launchSettingView(device, LAUNCH_TIMEOUT);
-
-        UiObject2 appButton =
-                ApkTestUtil.scrollTo(device, R.string.settingsUI_measurement_view_title);
-        assertNotNull(appButton, R.string.settingsUI_measurement_view_title);
-
-        // make sure we are on the main settings page
-        ApkTestUtil.scrollToAndClick(device, R.string.settingsUI_measurement_view_title);
-
-        // verify have entered to measurement page
-        UiObject2 measurementSwitch =
-                ApkTestUtil.getElement(device, R.string.settingsUI_measurement_switch_title);
-        assertNotNull(measurementSwitch, R.string.settingsUI_measurement_switch_title);
-
-        pressBack(device);
-        // verify back to the main page
-        assertNotNull(appButton, R.string.settingsUI_measurement_view_title);
-    }
-
     public static void measurementDialogTestUtil(UiDevice device, AdServicesFlagsSetterRule flags)
             throws RemoteException {
         flags.setFlag(KEY_UI_DIALOGS_FEATURE_ENABLED, true);

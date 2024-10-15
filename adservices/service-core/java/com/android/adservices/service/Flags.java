@@ -2123,13 +2123,6 @@ public interface Flags extends ModuleSharedFlags {
         return CONSENT_NOTIFICATION_DEBUG_MODE;
     }
 
-    boolean DEFAULT_RVC_POST_OTA_NOTIF_AGE_CHECK = false;
-
-    /** When enabled, perform age check in rvc post ota notification channel. */
-    default boolean getRvcPostOtaNotifAgeCheck() {
-        return DEFAULT_RVC_POST_OTA_NOTIF_AGE_CHECK;
-    }
-
     /** Available sources of truth to get consent for PPAPI. */
     @IntDef(
             flag = true,
