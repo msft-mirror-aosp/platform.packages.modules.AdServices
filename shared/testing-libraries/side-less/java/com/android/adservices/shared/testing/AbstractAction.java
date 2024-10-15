@@ -60,7 +60,7 @@ public abstract class AbstractAction implements Action {
             throw new IllegalStateException("Not executed yet");
         }
         if (!mExecuteResult.get()) {
-            mLog.v("Not calling revert() when execute() returned true");
+            mLog.v("Not calling revert() when execute() returned false");
             return;
         }
         onRevert();
