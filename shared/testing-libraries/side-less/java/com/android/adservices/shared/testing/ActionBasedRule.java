@@ -154,7 +154,8 @@ public abstract class ActionBasedRule<R extends ActionBasedRule<R>> extends Abst
     }
 
     private void revertActions() throws Exception {
-        for (Action action : mActionsToBeReverted) {
+        for (int i = mActionsToBeReverted.size() - 1; i >= 0; i--) {
+            Action action = mActionsToBeReverted.get(i);
             try {
                 action.revert();
             } catch (Throwable t) {
@@ -165,8 +166,9 @@ public abstract class ActionBasedRule<R extends ActionBasedRule<R>> extends Abst
         }
     }
 
+    /** Returns a cast reference to this rule */
     @SuppressWarnings("unchecked")
-    private R getSelf() {
+    protected R getSelf() {
         return (R) this;
     }
 }

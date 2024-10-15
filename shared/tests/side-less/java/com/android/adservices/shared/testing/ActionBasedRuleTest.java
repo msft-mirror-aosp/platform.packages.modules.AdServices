@@ -53,6 +53,13 @@ public final class ActionBasedRuleTest extends SharedSidelessTestCase {
     private final ConcreteActionBasedRule mRule = new ConcreteActionBasedRule();
 
     @Test
+    public void testActionlessRule() throws Throwable {
+        runRule();
+
+        mTest.assertEvaluated();
+    }
+
+    @Test
     public void testAddAction_null() {
         assertThrows(NullPointerException.class, () -> mRule.addAction(null));
     }
@@ -180,10 +187,10 @@ public final class ActionBasedRuleTest extends SharedSidelessTestCase {
                 .isEqualTo(2);
         expect.withMessage("reversion order of action1")
                 .that(mFakeAction1.getReversionOrder())
-                .isEqualTo(1);
+                .isEqualTo(2);
         expect.withMessage("reversion order of action2")
                 .that(mFakeAction2.getReversionOrder())
-                .isEqualTo(2);
+                .isEqualTo(1);
     }
 
     @Test
@@ -247,13 +254,13 @@ public final class ActionBasedRuleTest extends SharedSidelessTestCase {
                 .isEqualTo(3);
         expect.withMessage("reversion order of action1")
                 .that(mFakeAction1.getReversionOrder())
-                .isEqualTo(1);
+                .isEqualTo(3);
         expect.withMessage("reversion order of action2")
                 .that(mFakeAction2.getReversionOrder())
                 .isEqualTo(2);
         expect.withMessage("reversion order of action3")
                 .that(mFakeAction3.getReversionOrder())
-                .isEqualTo(3);
+                .isEqualTo(1);
     }
 
     @Test
@@ -276,10 +283,10 @@ public final class ActionBasedRuleTest extends SharedSidelessTestCase {
                 .isEqualTo(3);
         expect.withMessage("reversion order of action1")
                 .that(mFakeAction1.getReversionOrder())
-                .isEqualTo(1);
+                .isEqualTo(2);
         expect.withMessage("reversion order of action2")
                 .that(mFakeAction2.getReversionOrder())
-                .isEqualTo(2);
+                .isEqualTo(1);
         expect.withMessage("action 3 reverted").that(mFakeAction3.isReverted()).isFalse();
     }
 
@@ -299,10 +306,10 @@ public final class ActionBasedRuleTest extends SharedSidelessTestCase {
                 .isEqualTo(2);
         expect.withMessage("reversion order of action1")
                 .that(mFakeAction1.getReversionOrder())
-                .isEqualTo(1);
+                .isEqualTo(2);
         expect.withMessage("reversion order of action2")
                 .that(mFakeAction2.getReversionOrder())
-                .isEqualTo(2);
+                .isEqualTo(1);
     }
 
     @Test
@@ -346,13 +353,13 @@ public final class ActionBasedRuleTest extends SharedSidelessTestCase {
                 .isEqualTo(3);
         expect.withMessage("reversion order of action1")
                 .that(mFakeAction1.getReversionOrder())
-                .isEqualTo(1);
+                .isEqualTo(3);
         expect.withMessage("reversion order of action2")
                 .that(mFakeAction2.getReversionOrder())
                 .isEqualTo(2);
         expect.withMessage("reversion order of action3")
                 .that(mFakeAction3.getReversionOrder())
-                .isEqualTo(3);
+                .isEqualTo(1);
     }
 
     @Test
