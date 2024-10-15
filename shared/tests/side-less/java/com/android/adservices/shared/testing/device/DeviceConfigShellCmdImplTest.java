@@ -24,7 +24,6 @@ import static com.android.adservices.shared.testing.device.ShellCommandOutput.EM
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.shared.meta_testing.FakeDeviceGateway;
-import com.android.adservices.shared.meta_testing.FakeLogger;
 import com.android.adservices.shared.meta_testing.SharedSidelessTestCase;
 import com.android.adservices.shared.testing.AndroidSdk.Level;
 import com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest;
@@ -35,10 +34,9 @@ public final class DeviceConfigShellCmdImplTest extends SharedSidelessTestCase {
 
     private static final SyncDisabledModeForTest[] REAL_MODES = {NONE, PERSISTENT, UNTIL_REBOOT};
 
-    private final FakeLogger mFakeLogger = new FakeLogger();
     private final FakeDeviceGateway mGateway = new FakeDeviceGateway();
     private final DeviceConfigShellCmdImpl mImpl =
-            new DeviceConfigShellCmdImpl(mFakeLogger, mGateway);
+            new DeviceConfigShellCmdImpl(mFakeRealLogger, mGateway);
 
     @Test
     public void testSyncDisabledModeForTest_getShellCommandString() {
@@ -57,7 +55,7 @@ public final class DeviceConfigShellCmdImplTest extends SharedSidelessTestCase {
     public void testNullConstructor() {
         assertThrows(
                 NullPointerException.class,
-                () -> new DeviceConfigShellCmdImpl(mFakeLogger, /* gateway= */ null));
+                () -> new DeviceConfigShellCmdImpl(mFakeRealLogger, /* gateway= */ null));
         assertThrows(
                 NullPointerException.class,
                 () -> new DeviceConfigShellCmdImpl(/* realLogger= */ null, mGateway));

@@ -26,8 +26,11 @@ import com.android.adservices.shared.testing.device.HostSideDeviceGateway;
  *
  * <p>Note: it's {@code abstract} by design, so it's extended by project-specific classes (like
  * {@code AdServicesHostSideFlagsPreparerClassRule}.
+ *
+ * @param <R> concrete rule class
  */
-public abstract class HostSideFlagsPreparerClassRule extends AbstractFlagsPreparerClassRule {
+public abstract class HostSideFlagsPreparerClassRule<R extends HostSideFlagsPreparerClassRule<R>>
+        extends AbstractFlagsPreparerClassRule<R> {
 
     public HostSideFlagsPreparerClassRule() {
         this(

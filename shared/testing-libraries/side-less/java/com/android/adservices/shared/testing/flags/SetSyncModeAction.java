@@ -15,7 +15,6 @@
  */
 package com.android.adservices.shared.testing.flags;
 
-import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest.UNSUPPORTED;
 
 import com.android.adservices.shared.testing.Logger;
 import com.android.adservices.shared.testing.device.DeviceConfig;
@@ -34,13 +33,13 @@ public final class SetSyncModeAction extends DeviceConfigAction {
             Logger logger, DeviceConfig deviceConfig, SyncDisabledModeForTest mode) {
         super(logger, deviceConfig);
         mMode = Objects.requireNonNull(mode, "mode cannot be null");
-        if (mode.equals(UNSUPPORTED)) {
+        if (!isValidMode(mode)) {
             throw new IllegalArgumentException("invalid mode: " + mode);
         }
     }
 
     @Override
-    public boolean onExecute() throws Exception {
+    protected boolean onExecute() throws Exception {
         try {
             mPreviousMode = mDeviceConfig.getSyncDisabledMode();
         } catch (Exception e) {
@@ -55,14 +54,13 @@ public final class SetSyncModeAction extends DeviceConfigAction {
 
         mDeviceConfig.setSyncDisabledMode(mMode);
 
-        return true;
+        return mPreviousMode != null && isValidMode(mPreviousMode);
     }
 
     @Override
-    public void onRevert() throws Exception {
+    protected void onRevert() throws Exception {
         if (mPreviousMode == null) {
-            mLog.d("%s.revert(): ignoring when it didn't change", this);
-            return;
+            throw new IllegalStateException("should not have been called when it didn't change");
         }
         mDeviceConfig.setSyncDisabledMode(mPreviousMode);
     }
@@ -70,5 +68,16 @@ public final class SetSyncModeAction extends DeviceConfigAction {
     @Override
     public String toString() {
         return "SetSyncModeAction[" + mMode + ']';
+    }
+
+    private static boolean isValidMode(SyncDisabledModeForTest mode) {
+        switch (mode) {
+            case NONE:
+            case PERSISTENT:
+            case UNTIL_REBOOT:
+                return true;
+            default:
+                return false;
+        }
     }
 }

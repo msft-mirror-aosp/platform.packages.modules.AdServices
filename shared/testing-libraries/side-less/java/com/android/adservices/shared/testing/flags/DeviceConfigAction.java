@@ -15,45 +15,19 @@
  */
 package com.android.adservices.shared.testing.flags;
 
+import com.android.adservices.shared.testing.AbstractAction;
 import com.android.adservices.shared.testing.Logger;
 import com.android.adservices.shared.testing.device.DeviceConfig;
 
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /** Base class for {@code DeviceConfig} actions. */
-public abstract class DeviceConfigAction implements Action {
+public abstract class DeviceConfigAction extends AbstractAction {
 
-    protected final Logger mLog;
     protected final DeviceConfig mDeviceConfig;
 
-    private final AtomicBoolean mCalled = new AtomicBoolean();
-
     protected DeviceConfigAction(Logger logger, DeviceConfig deviceConfig) {
-        mLog = Objects.requireNonNull(logger, "deviceConfig cannot be null");
+        super(logger);
         mDeviceConfig = Objects.requireNonNull(deviceConfig, "deviceConfig cannot be null");
     }
-
-    @Override
-    public final boolean execute() throws Exception {
-        if (mCalled.getAndSet(true)) {
-            throw new IllegalStateException("Already executed");
-        }
-
-        return onExecute();
-    }
-
-    /** Actual call to {@link #onExecute()} */
-    protected abstract boolean onExecute() throws Exception;
-
-    @Override
-    public final void revert() throws Exception {
-        if (!mCalled.get()) {
-            throw new IllegalStateException("Not executed yet");
-        }
-        onRevert();
-    }
-
-    /** Actual call to {@link #onRevert()}. */
-    protected abstract void onRevert() throws Exception;
 }

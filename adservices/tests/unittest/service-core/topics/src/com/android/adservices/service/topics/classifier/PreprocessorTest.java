@@ -24,13 +24,11 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Before;
 import org.junit.Test;
 
 /** Unit tests for {@link Preprocessor}. */
-@RequiresSdkLevelAtLeastS
 public final class PreprocessorTest extends AdServicesUnitTestCase {
     private Preprocessor mPreprocessor;
 

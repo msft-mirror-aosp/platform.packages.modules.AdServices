@@ -67,7 +67,6 @@ import com.android.adservices.service.topics.BlockedTopicsManager;
 import com.android.adservices.service.topics.CacheManager;
 import com.android.adservices.service.topics.EpochManager;
 import com.android.adservices.service.topics.TopicsWorker;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
@@ -375,7 +374,6 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    @RequiresSdkLevelAtLeastS
     public void testReceivePackageFullyRemoved_consent() throws Exception {
         Intent intent =
                 createIntentSentByAdServiceSystemService(
@@ -390,7 +388,6 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
     @Test
     public void testReceivePackageFullyRemoved_consent_noPackageUid() throws Exception {
         Assume.assumeFalse(SdkLevel.isAtLeastT());
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
         Intent intent =
                 createIntentSentByAdServiceSystemService(
                         PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
@@ -408,7 +405,6 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
     public void testReceivePackageFullyRemoved_consent_packageUidIsExplicitlyDefault()
             throws Exception {
         Assume.assumeFalse(SdkLevel.isAtLeastT());
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
         Intent intent =
                 createIntentSentByAdServiceSystemService(
                         PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
@@ -421,7 +417,6 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
     @Test
     public void testReceivePackageFullyRemoved_consent_noPackageUid_backCompat() throws Exception {
         Assume.assumeFalse(SdkLevel.isAtLeastT());
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
         Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_FULLY_REMOVED);
         intent.removeExtra(Intent.EXTRA_UID);
 
@@ -433,7 +428,6 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
     public void testReceivePackageFullyRemoved_consent_packageUidIsExplicitlyDefault_backCompat()
             throws Exception {
         Assume.assumeFalse(SdkLevel.isAtLeastT());
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
         Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_FULLY_REMOVED);
         intent.putExtra(Intent.EXTRA_UID, DEFAULT_PACKAGE_UID);
 
@@ -1105,7 +1099,6 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testPackageAdded_OnS() {
-        Assume.assumeTrue(SdkLevel.isAtLeastS());
         Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_ADDED);
         doReturn(mConsentManager).when(ConsentManager::getInstance);
 

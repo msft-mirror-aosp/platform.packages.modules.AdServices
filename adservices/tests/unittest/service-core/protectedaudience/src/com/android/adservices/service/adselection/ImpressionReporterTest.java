@@ -61,7 +61,6 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ReportImpressionExecutionLogger;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.concurrency.FailableOnResultSyncCallback;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -71,7 +70,6 @@ import org.mockito.Mock;
 
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(DebugFlags.class)
-@RequiresSdkLevelAtLeastS(reason = "PA APIs only available on S+")
 public final class ImpressionReporterTest extends AdServicesExtendedMockitoTestCase {
     private static final long AD_SELECTION_ID = 100;
     private static final int LOGGING_TIMEOUT_MS = 5_000;

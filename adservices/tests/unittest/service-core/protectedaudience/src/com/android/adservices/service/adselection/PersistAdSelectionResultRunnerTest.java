@@ -127,7 +127,6 @@ import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.DestinationRegisteredBeaconsReportedStats;
 import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledStats;
 import com.android.adservices.shared.testing.SkipLoggingUsageRule;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 import com.android.adservices.shared.util.Clock;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -157,7 +156,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 @SpyStatic(FlagsFactory.class)
-@RequiresSdkLevelAtLeastS
 @SetErrorLogUtilDefaultParams(
         throwable = ExpectErrorLogUtilWithExceptionCall.Any.class,
         ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT)
@@ -1453,8 +1451,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
     }
 
     @Test
-    @ExpectErrorLogUtilCall(
-            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_REVOKED_CONSENT_FILTER_EXCEPTION)
+    @SkipLoggingUsageRule(reason = "Using ErrorLogUtilCallback as logging happens in background.")
     public void testRunner_revokedUserConsent_returnsEmptyResult() throws InterruptedException {
         mocker.mockGetFlags(mFakeFlags);
 
@@ -1478,8 +1475,24 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         .setAdSelectionResult(CIPHER_TEXT_BYTES)
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
                         .build();
+
+        ErrorLogUtilCallback mErrorLogUtilWithoutThrowableCallbackSync =
+                mockErrorLogUtilWithoutThrowable();
+        ErrorLogUtilCallback mErrorLogUtilWithoutThrowableCallbackAsync =
+                mockErrorLogUtilWithoutThrowable();
+
         PersistAdSelectionResultTestCallback callback =
                 invokePersistAdSelectionResult(mPersistAdSelectionResultRunner, inputParams);
+
+        mErrorLogUtilWithoutThrowableCallbackSync.assertReceived(
+                expect,
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_REVOKED_CONSENT_FILTER_EXCEPTION,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
+
+        mErrorLogUtilWithoutThrowableCallbackAsync.assertReceived(
+                expect,
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_EMPTY_SUCCESS_SILENT_CONSENT_FAILURE,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
 
         Assert.assertTrue(callback.mIsSuccess);
         Assert.assertNotNull(callback.mPersistAdSelectionResultResponse);
@@ -1532,8 +1545,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
     }
 
     @Test
-    @ExpectErrorLogUtilCall(
-            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_REVOKED_CONSENT_FILTER_EXCEPTION)
+    @SkipLoggingUsageRule(reason = "Using ErrorLogUtilCallback as logging happens in background.")
     public void testRunner_revokedUserConsent_returnsEmptyResult_UXNotificationEnforcementDisabled()
             throws InterruptedException {
         Flags flagsWithUXConsentEnforcementDisabled =
@@ -1588,8 +1600,23 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
 
+        ErrorLogUtilCallback mErrorLogUtilWithoutThrowableCallbackSync =
+                mockErrorLogUtilWithoutThrowable();
+        ErrorLogUtilCallback mErrorLogUtilWithoutThrowableCallbackAsync =
+                mockErrorLogUtilWithoutThrowable();
+
         PersistAdSelectionResultTestCallback callback =
                 invokePersistAdSelectionResult(persistAdSelectionResultRunner, inputParams);
+
+        mErrorLogUtilWithoutThrowableCallbackSync.assertReceived(
+                expect,
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_REVOKED_CONSENT_FILTER_EXCEPTION,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
+
+        mErrorLogUtilWithoutThrowableCallbackAsync.assertReceived(
+                expect,
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_EMPTY_SUCCESS_SILENT_CONSENT_FAILURE,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
 
         Assert.assertTrue(callback.mIsSuccess);
         Assert.assertNotNull(callback.mPersistAdSelectionResultResponse);

@@ -24,10 +24,8 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.verify;
 
 import com.android.adservices.service.stats.SignatureVerificationLogger;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -46,9 +44,6 @@ public class ECDSASignatureVerifierTest {
     private byte[] mPublicKeyBytes;
     private byte[] mDataBytes;
     private byte[] mSignatureBytes;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() throws Exception {

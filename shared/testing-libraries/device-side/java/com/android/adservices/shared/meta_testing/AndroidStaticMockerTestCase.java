@@ -28,6 +28,7 @@ import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.mockito.AndroidStaticMocker;
 import com.android.adservices.mockito.StaticClassChecker;
 import com.android.adservices.shared.testing.DeviceSideTestCase;
+import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Before;
@@ -92,6 +93,62 @@ public abstract class AndroidStaticMockerTestCase<T extends AndroidStaticMocker>
         getMocker().mockGetCallingUidOrThrow(42);
 
         expect.withMessage("uid").that(Binder.getCallingUidOrThrow()).isEqualTo(42);
+    }
+
+    @Test
+    @SpyStatic(SdkLevel.class)
+    public final void testMockIsAtLeastR() {
+        getMocker().mockIsAtLeastR(true);
+        expect.withMessage("isAtLeastR()").that(SdkLevel.isAtLeastR()).isTrue();
+
+        getMocker().mockIsAtLeastR(false);
+        expect.withMessage("isAtLeastR()").that(SdkLevel.isAtLeastR()).isFalse();
+    }
+
+    @Test
+    @SpyStatic(SdkLevel.class)
+    public final void testMockIsAtLeastS() {
+        getMocker().mockIsAtLeastS(true);
+        expect.withMessage("isAtLeastS()").that(SdkLevel.isAtLeastS()).isTrue();
+
+        getMocker().mockIsAtLeastS(false);
+        expect.withMessage("isAtLeastS()").that(SdkLevel.isAtLeastS()).isFalse();
+    }
+
+    @Test
+    @SpyStatic(SdkLevel.class)
+    public final void testMockIsAtLeastT() {
+        getMocker().mockIsAtLeastT(true);
+        expect.withMessage("isAtLeastT()").that(SdkLevel.isAtLeastT()).isTrue();
+
+        getMocker().mockIsAtLeastT(false);
+        expect.withMessage("isAtLeastT()").that(SdkLevel.isAtLeastT()).isFalse();
+    }
+
+    @Test
+    @SpyStatic(SdkLevel.class)
+    public final void testMockSdkLevelR() {
+        getMocker().mockSdkLevelR();
+
+        expect.withMessage("isAtLeastR").that(SdkLevel.isAtLeastR()).isTrue();
+        expect.withMessage("isAtLeastS").that(SdkLevel.isAtLeastS()).isFalse();
+        expect.withMessage("isAtLeastSv2").that(SdkLevel.isAtLeastSv2()).isFalse();
+        expect.withMessage("isAtLeastT").that(SdkLevel.isAtLeastT()).isFalse();
+        expect.withMessage("isAtLeastU").that(SdkLevel.isAtLeastU()).isFalse();
+        expect.withMessage("isAtLeastV").that(SdkLevel.isAtLeastV()).isFalse();
+    }
+
+    @Test
+    @SpyStatic(SdkLevel.class)
+    public final void testMockSdkLevelS() {
+        getMocker().mockSdkLevelS();
+
+        expect.withMessage("isAtLeastR").that(SdkLevel.isAtLeastR()).isTrue();
+        expect.withMessage("isAtLeastS").that(SdkLevel.isAtLeastS()).isTrue();
+        expect.withMessage("isAtLeastSv2").that(SdkLevel.isAtLeastSv2()).isFalse();
+        expect.withMessage("isAtLeastT").that(SdkLevel.isAtLeastT()).isFalse();
+        expect.withMessage("isAtLeastU").that(SdkLevel.isAtLeastU()).isFalse();
+        expect.withMessage("isAtLeastV").that(SdkLevel.isAtLeastV()).isFalse();
     }
 
     private void assertFailsWhenClassNotSpied(Class<?> clazz, ThrowingRunnable r) {

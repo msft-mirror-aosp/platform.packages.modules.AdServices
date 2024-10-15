@@ -13,12 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.shared.testing.flags;
+package com.android.adservices.shared.testing;
 
-/** Represents an action such as setting the value of a flag. */
+/** Represents an action executed by a rule, like setting the value of a flag. */
 public interface Action {
 
-    /** Executes the action, returning whether it changed the state of the flags system. */
+    /**
+     * Executes the action, returning whether it should be reverted at the end of the test.
+     *
+     * <p>For example, if the action is used to set the value of a flag but it does nothing because
+     * the desired value was already set, then it should return {@code false}.
+     */
     boolean execute() throws Exception;
 
     /** Reverts the previously executed action. */

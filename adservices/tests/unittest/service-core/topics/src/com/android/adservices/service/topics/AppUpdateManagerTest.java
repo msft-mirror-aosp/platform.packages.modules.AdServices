@@ -43,7 +43,6 @@ import com.android.adservices.data.topics.EncryptedTopic;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.Before;
@@ -62,7 +61,6 @@ import java.util.Random;
 import java.util.Set;
 
 /** Unit tests for {@link com.android.adservices.service.topics.AppUpdateManager} */
-@RequiresSdkLevelAtLeastS
 public final class AppUpdateManagerTest extends AdServicesMockitoTestCase {
     @SuppressWarnings({"unused"})
     private static final String TAG = "AppInstallationInfoManagerTest";
