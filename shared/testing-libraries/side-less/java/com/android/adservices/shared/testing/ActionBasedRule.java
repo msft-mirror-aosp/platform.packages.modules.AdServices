@@ -65,7 +65,7 @@ public abstract class ActionBasedRule<R extends ActionBasedRule<R>> extends Abst
             // action itself to throw if executed twice. But it's probably better to fail earlier...
             throw new IllegalArgumentException("action already added: " + action);
         }
-        mLog.d("Caching %s as test (%s) is not running yet", action, getTestName());
+        mLog.d("Caching %s as test is not running yet", action);
         mActions.add(action);
     }
 
