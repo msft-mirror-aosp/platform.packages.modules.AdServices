@@ -560,6 +560,7 @@ public final class SdkSandboxManagerTest extends SandboxKillerBeforeTest {
 
         LoadSdkException thrown = callback.getLoadSdkException();
 
+        assertThat(thrown).isNotNull();
         assertEquals(LOAD_SDK_INTERNAL_ERROR, thrown.getLoadSdkErrorCode());
         assertThat(thrown).hasMessageThat().contains("does not run in the foreground");
     }

@@ -18,6 +18,7 @@ package android.adservices.rootcts;
 
 import android.app.job.JobScheduler;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Build;
 import android.util.Log;
 
@@ -80,14 +81,13 @@ public final class BackgroundJobHelper {
      *
      * @param jobId ID of the job to run.
      * @param intentActionToWait Expected intent action.
-     * @return false if the job didn't schedule or didn't complete on time.
+     * @return the intent received from the broadcast.
      */
-    boolean runJobWithBroadcastIntent(int jobId, String intentActionToWait) throws Exception {
+    Intent runJobWithBroadcastIntent(int jobId, String intentActionToWait) throws Exception {
         runScheduleJobCommand(jobId);
         BroadcastReceiverSyncCallback callback =
                 new BroadcastReceiverSyncCallback(mContext, intentActionToWait, 31_000);
-        callback.assertResultReceived();
-        return true;
+        return callback.assertResultReceived();
     }
 
     /**
