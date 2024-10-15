@@ -16,11 +16,10 @@
 package com.android.adservices.shared.testing.util;
 
 /**
- * {@link java.util.concurrent.Callable} that can thrown {@link Throwable}.
+ * {@link java.util.concurrent.Callable} that can thrown a {@link Throwable}.
  *
  * @param <V> type of the returned value.
  */
-@FunctionalInterface
 public interface ThrowingCallable<V> {
 
     /** See {@link java.util.concurrent.Callable#call()}. */
