@@ -546,8 +546,8 @@ class AttributionJobHandler {
                 return TriggeringStatus.DROPPED;
             }
 
-            Optional<String> maybeAggregatableBucket =
-                    maybeGetAggregatableBucket(
+            Optional<String> maybeNamedBudget =
+                    maybeGetNamedBudget(
                             maybeAggregatableAttributionSource,
                             maybeAggregatableAttributionTrigger);
             if (!validateAndUpdateAggregateContributions(
@@ -556,7 +556,7 @@ class AttributionJobHandler {
                     trigger,
                     measurementDao,
                     adrTypesToGenerate,
-                    maybeAggregatableBucket.orElse(null))) {
+                    maybeNamedBudget.orElse(null))) {
                 return TriggeringStatus.DROPPED;
             }
 
@@ -899,10 +899,10 @@ class AttributionJobHandler {
                         optionalAggregateAttributionSource.get().getFilterMap(), mFlags);
     }
 
-    private Optional<String> maybeGetAggregatableBucket(
+    private Optional<String> maybeGetNamedBudget(
             Optional<AggregatableAttributionSource> optionalAggregateAttributionSource,
             Optional<AggregatableAttributionTrigger> optionalAggregateAttributionTrigger) {
-        if (!mFlags.getMeasurementEnableAggregateContributionBudgetCapacity()) {
+        if (!mFlags.getMeasurementEnableAggregatableNamedBudgets()) {
             return Optional.empty();
         }
         if (!optionalAggregateAttributionSource.isPresent()
@@ -912,7 +912,7 @@ class AttributionJobHandler {
 
         return optionalAggregateAttributionTrigger
                 .get()
-                .maybeExtractBucket(
+                .maybeExtractNamedBudget(
                         optionalAggregateAttributionSource.get().getFilterMap(), mFlags);
     }
 
@@ -1688,54 +1688,50 @@ class AttributionJobHandler {
         return mFilter.deserializeFilterSet(filters);
     }
 
-    private boolean validateAndUpdateAggregateBucketContributions(
+    private boolean validateAndUpdateNamedBudgetContributions(
             Source source,
             Trigger trigger,
             IMeasurementDao measurementDao,
             List<DebugReportApi.Type> adrTypesToGenerate,
-            @Nullable String matchedBucket,
+            @Nullable String matchedNamedBudget,
             int desiredContributions)
             throws DatastoreException {
-        if (matchedBucket == null
-                || source.getAggregateContributionBuckets()
-                        .maybeGetBucketContribution(matchedBucket)
+        if (matchedNamedBudget == null
+                || source.getAggregatableNamedBudgets()
+                        .maybeGetContribution(matchedNamedBudget)
                         .isEmpty()) {
             return true;
         }
 
-        int totalBucketContribution =
+        int totalContributions =
                 Math.addExact(
                         desiredContributions,
-                        source.getAggregateContributionBuckets()
-                                .maybeGetBucketContribution(matchedBucket)
+                        source.getAggregatableNamedBudgets()
+                                .maybeGetContribution(matchedNamedBudget)
                                 .get());
-        int matchedBucketCapacity =
-                source.getAggregateContributionBuckets()
-                        .maybeGetBucketCapacity(matchedBucket)
-                        .get();
-        if (totalBucketContribution > matchedBucketCapacity) {
-            // When histogram value is greater than matchedBucket's budget,
+        int budget = source.getAggregatableNamedBudgets().maybeGetBudget(matchedNamedBudget).get();
+        if (totalContributions > budget) {
+            // When histogram value is greater than matchedNamedBudget's budget,
             // generate verbose debug report, record the actual histogram value.
             mDebugReportApi.scheduleTriggerDebugReport(
                     source,
                     trigger,
-                    String.valueOf(matchedBucketCapacity),
-                    matchedBucket,
+                    String.valueOf(budget),
+                    matchedNamedBudget,
                     measurementDao,
-                    DebugReportApi.Type.TRIGGER_AGGREGATE_INSUFFICIENT_BUCKET_BUDGET);
-            adrTypesToGenerate.add(
-                    DebugReportApi.Type.TRIGGER_AGGREGATE_INSUFFICIENT_BUCKET_BUDGET);
+                    DebugReportApi.Type.TRIGGER_AGGREGATE_INSUFFICIENT_NAMED_BUDGET);
+            adrTypesToGenerate.add(DebugReportApi.Type.TRIGGER_AGGREGATE_INSUFFICIENT_NAMED_BUDGET);
             LoggerFactory.getMeasurementLogger()
                     .d(
                             "AttributionJobHandler::"
-                                    + "validateAndUpdateAggregateBucketContributions bucket"
+                                    + "validateAndUpdateNamedBudgetContributions "
                                     + " contribution exceeded bound. Source ID: %s ;"
                                     + " Trigger ID: %s ; Bucket: %s ",
-                            source.getId(), trigger.getId(), matchedBucket);
+                            source.getId(), trigger.getId(), matchedNamedBudget);
             return false;
         }
-        source.getAggregateContributionBuckets()
-                .setBucketContribution(matchedBucket, totalBucketContribution);
+        source.getAggregatableNamedBudgets()
+                .setContribution(matchedNamedBudget, totalContributions);
         return true;
     }
 
@@ -1745,7 +1741,7 @@ class AttributionJobHandler {
             Trigger trigger,
             IMeasurementDao measurementDao,
             List<DebugReportApi.Type> adrTypesToGenerate,
-            @Nullable String matchedBucket)
+            @Nullable String matchedNamedBudget)
             throws DatastoreException, JSONException {
         Objects.requireNonNull(source, "source cannot be null");
         Objects.requireNonNull(trigger, "trigger cannot be null");
@@ -1788,12 +1784,12 @@ class AttributionJobHandler {
                 return false;
             }
         }
-        if (!validateAndUpdateAggregateBucketContributions(
+        if (!validateAndUpdateNamedBudgetContributions(
                 source,
                 trigger,
                 measurementDao,
                 adrTypesToGenerate,
-                matchedBucket,
+                matchedNamedBudget,
                 aggregateContributions - source.getAggregateContributions())) {
             return false;
         }

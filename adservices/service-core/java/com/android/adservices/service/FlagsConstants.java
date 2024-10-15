@@ -1213,8 +1213,8 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_DEBUG_KEY_AD_ID_MATCHING_ENROLLMENT_BLOCKLIST =
             "measurement_debug_key_ad_id_matching_enrollment_blocklist";
 
-    public static final String KEY_MEASUREMENT_ENABLE_AGGREGATE_CONTRIBUTION_BUDGET_CAPACITY =
-            "Measurement__enable_aggregate_contribution_budget_capacity";
+    public static final String KEY_MEASUREMENT_ENABLE_AGGREGATABLE_NAMED_BUDGETS =
+            "Measurement__enable_aggregatable_named_budgets";
 
     public static final String KEY_MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA =
             "measurement_enable_v1_source_trigger_data";
@@ -1381,11 +1381,11 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH =
             "measurement_max_attribution_scope_length";
 
-    public static final String KEY_MEASUREMENT_MAX_LENGTH_PER_AGGREGATABLE_BUCKET =
-            "Measurement__max_length_per_aggregatable_bucket";
+    public static final String KEY_MEASUREMENT_MAX_LENGTH_PER_BUDGET_NAME =
+            "Measurement__max_length_per_budget_name";
 
-    public static final String KEY_MEASUREMENT_MAX_AGGREGATABLE_BUCKETS_PER_SOURCE_REGISTRATION =
-            "Measurement__max_aggregatable_buckets_per_source_registration";
+    public static final String KEY_MEASUREMENT_MAX_NAMED_BUDGETS_PER_SOURCE_REGISTRATION =
+            "Measurement__max_named_budgets_per_source_registration";
 
     public static final String KEY_MEASUREMENT_EVENT_API_DEFAULT_EPSILON =
             "measurement_event_api_default_epsilon";

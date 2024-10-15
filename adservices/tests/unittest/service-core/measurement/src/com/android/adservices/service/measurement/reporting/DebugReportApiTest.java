@@ -36,7 +36,7 @@ import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.measurement.AggregateContributionBuckets;
+import com.android.adservices.service.measurement.AggregatableNamedBudgets;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
@@ -44,8 +44,8 @@ import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.TriggerFixture;
 import com.android.adservices.service.measurement.TriggerSpecs;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
-import com.android.adservices.service.measurement.aggregation.AggregatableBucket;
 import com.android.adservices.service.measurement.aggregation.AggregatableKeyValue;
+import com.android.adservices.service.measurement.aggregation.AggregatableNamedBudget;
 import com.android.adservices.service.measurement.aggregation.AggregatableValuesConfig;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
 import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
@@ -87,7 +87,7 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
     private static final String TEST_HEADER_CONTENT = "header-content";
 
     private static final String LIMIT = "100";
-    private static final String BUCKET = "bucketName";
+    private static final String NAME = "budgetName";
 
     private DebugReportApi mDebugReportApi;
     @Mock private IMeasurementDao mMeasurementDao;
@@ -3826,7 +3826,7 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testScheduleTriggAggrInsufficientBucketBudgetDebugReport_triggNotOpIn_dontSchedule()
+    public void testScheduleTriggAggrInsufficientNamedBudgetDebugReport_triggNotOpIn_dontSchedule()
             throws Exception {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -3846,16 +3846,15 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 source,
                 trigger,
                 LIMIT,
-                BUCKET,
+                NAME,
                 mMeasurementDao,
-                DebugReportApi.Type.TRIGGER_AGGREGATE_INSUFFICIENT_BUCKET_BUDGET);
+                DebugReportApi.Type.TRIGGER_AGGREGATE_INSUFFICIENT_NAMED_BUDGET);
         verify(mMeasurementDao, never()).insertDebugReport(any());
     }
 
     @Test
-    public void
-            testScheduleTriggAggreInsufficientBucketBudgetDebugReport_sourceNoAdId_dontSchedule()
-                    throws Exception {
+    public void testScheduleTriggAggreInsufficientNamedBudgetDebugReport_sourceNoAdId_dontSchedule()
+            throws Exception {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
@@ -3874,14 +3873,14 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 source,
                 trigger,
                 LIMIT,
-                BUCKET,
+                NAME,
                 mMeasurementDao,
-                DebugReportApi.Type.TRIGGER_AGGREGATE_INSUFFICIENT_BUCKET_BUDGET);
+                DebugReportApi.Type.TRIGGER_AGGREGATE_INSUFFICIENT_NAMED_BUDGET);
         verify(mMeasurementDao, never()).insertDebugReport(any());
     }
 
     @Test
-    public void testScheduleTriggAggreInsuffBucketBudgetDebugReport_sourceNoArDebug_dontSchedule()
+    public void testScheduleTriggAggreInsuffNamedBudgetDebugReport_sourceNoArDebug_dontSchedule()
             throws Exception {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -3908,18 +3907,19 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 source,
                 trigger,
                 LIMIT,
-                BUCKET,
+                NAME,
                 mMeasurementDao,
-                DebugReportApi.Type.TRIGGER_AGGREGATE_INSUFFICIENT_BUCKET_BUDGET);
+                DebugReportApi.Type.TRIGGER_AGGREGATE_INSUFFICIENT_NAMED_BUDGET);
         verify(mMeasurementDao, never()).insertDebugReport(any());
     }
 
     @Test
-    public void testScheduleTriggerAggreInsufficientBucketBudgetDebugReport_success()
+    public void testScheduleTriggerAggreInsufficientNamedBudgetDebugReport_success()
             throws Exception {
-        JSONObject bucketObj = new JSONObject();
-        bucketObj.put(AggregatableBucket.AggregatableBucketContract.BUCKET, BUCKET);
-        AggregatableBucket aggregatableBucket = new AggregatableBucket(bucketObj, mMockFlags);
+        JSONObject budgetObj = new JSONObject();
+        budgetObj.put(AggregatableNamedBudget.NamedBudgetContract.NAME, NAME);
+        AggregatableNamedBudget aggregatableNamedBudget =
+                new AggregatableNamedBudget(budgetObj, mMockFlags);
 
         AggregateTriggerData attributionTriggerData1 =
                 new AggregateTriggerData.Builder()
@@ -3942,7 +3942,7 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                                 Arrays.asList(attributionTriggerData1, attributionTriggerData2))
                         .setValueConfigs(configList)
                         .setAggregateDeduplicationKeys(List.of())
-                        .setAggregatableBuckets(Arrays.asList(aggregatableBucket));
+                        .setNamedBudgets(Arrays.asList(aggregatableNamedBudget));
 
         JSONArray triggerData = new JSONArray();
         JSONObject jsonObject1 = new JSONObject();
@@ -3954,7 +3954,7 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         triggerData.put(jsonObject1);
         triggerData.put(jsonObject2);
 
-        String aggregatableBucketString = "[{\"bucket\": \"" + BUCKET + "\"" + " }" + "]";
+        String namedBucketsString = "[{\"name\": \"" + NAME + "\"" + " }" + "]";
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
                         .setIsDebugReporting(true)
@@ -3963,12 +3963,12 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                         .setStatus(Trigger.Status.PENDING)
                         .setAggregateTriggerData(triggerData.toString())
                         .setAggregateValuesString("{\"campaignCounts\":2004,\"geoValue\":1644}")
-                        .setAggregatableBucketsString(aggregatableBucketString)
+                        .setNamedBudgetsString(namedBucketsString)
                         .setAggregatableAttributionTrigger(builder.build())
                         .build();
 
-        AggregateContributionBuckets sourceBuckets = new AggregateContributionBuckets();
-        sourceBuckets.createCapacityBucket(BUCKET, 3000);
+        AggregatableNamedBudgets sourceAggregatableNamedBudgets = new AggregatableNamedBudgets();
+        sourceAggregatableNamedBudgets.createContributionBudget(NAME, 3000);
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setEventId(SOURCE_EVENT_ID)
@@ -3979,7 +3979,7 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                         .setAggregateSource(
                                 "{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}")
                         .setFilterDataString("{\"product\":[\"1234\",\"2345\"]}")
-                        .setAggregateContributionBuckets(sourceBuckets)
+                        .setAggregatableNamedBudgets(sourceAggregatableNamedBudgets)
                         .build();
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
@@ -3988,15 +3988,15 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 source,
                 trigger,
                 LIMIT,
-                BUCKET,
+                NAME,
                 mMeasurementDao,
-                DebugReportApi.Type.TRIGGER_AGGREGATE_INSUFFICIENT_BUCKET_BUDGET);
+                DebugReportApi.Type.TRIGGER_AGGREGATE_INSUFFICIENT_NAMED_BUDGET);
         verify(mMeasurementDao).insertDebugReport(any());
     }
 
     @Test
     public void
-            testScheduleTrigAggrInsufficientBucketBudgetDebugReport_debugFlagDisabled_dontSchedule()
+            testScheduleTrigAggrInsufficientNamedBudgetDebugReport_debugFlagDisabled_dontSchedule()
                     throws Exception {
         when(mMockFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         Source source =
@@ -4017,15 +4017,15 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 source,
                 trigger,
                 LIMIT,
-                BUCKET,
+                NAME,
                 mMeasurementDao,
-                DebugReportApi.Type.TRIGGER_AGGREGATE_INSUFFICIENT_BUCKET_BUDGET);
+                DebugReportApi.Type.TRIGGER_AGGREGATE_INSUFFICIENT_NAMED_BUDGET);
         verify(mMeasurementDao, never()).insertDebugReport(any());
     }
 
     @Test
     public void
-            testScheduleTrigAggrInsufficientBucketBudgetDebugReport_trigFlagDisabled_dontSchedule()
+            testScheduleTrigAggrInsufficientNamedBudgetDebugReport_trigFlagDisabled_dontSchedule()
                     throws Exception {
         when(mMockFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
         Source source =
@@ -4046,15 +4046,15 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 source,
                 trigger,
                 LIMIT,
-                BUCKET,
+                NAME,
                 mMeasurementDao,
-                DebugReportApi.Type.TRIGGER_AGGREGATE_INSUFFICIENT_BUCKET_BUDGET);
+                DebugReportApi.Type.TRIGGER_AGGREGATE_INSUFFICIENT_NAMED_BUDGET);
         verify(mMeasurementDao, never()).insertDebugReport(any());
     }
 
     @Test
     public void
-            testScheduleTrigAggrInsufficientBucketBudgetDebugReport_noTrigPermission_dontSchedule()
+            testScheduleTrigAggrInsufficientNamedBudgetDebugReport_noTrigPermission_dontSchedule()
                     throws Exception {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -4070,9 +4070,9 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 source,
                 trigger,
                 LIMIT,
-                BUCKET,
+                NAME,
                 mMeasurementDao,
-                DebugReportApi.Type.TRIGGER_AGGREGATE_INSUFFICIENT_BUCKET_BUDGET);
+                DebugReportApi.Type.TRIGGER_AGGREGATE_INSUFFICIENT_NAMED_BUDGET);
         verify(mMeasurementDao, never()).insertDebugReport(any());
     }
 

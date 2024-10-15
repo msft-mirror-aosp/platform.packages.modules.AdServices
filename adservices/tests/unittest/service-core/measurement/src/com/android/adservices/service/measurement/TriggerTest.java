@@ -550,7 +550,7 @@ public class TriggerTest {
     @Test
     public void testParseAggregateTrigger() throws JSONException {
         when(mFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true, false);
-        when(mFlags.getMeasurementEnableAggregateContributionBudgetCapacity()).thenReturn(true);
+        when(mFlags.getMeasurementEnableAggregatableNamedBudgets()).thenReturn(true);
         JSONArray triggerDatas = new JSONArray();
         JSONObject jsonObject1 = new JSONObject();
         jsonObject1.put("key_piece", "0x400");
@@ -585,24 +585,24 @@ public class TriggerTest {
         aggregateDedupKeys.put(dedupKeyJsonObject2);
         aggregateDedupKeys.put(dedupKeyJsonObject3);
 
-        JSONArray aggregateBuckets = new JSONArray();
-        JSONObject bucketJsonObject1 = new JSONObject();
-        bucketJsonObject1.put("bucket", "biddable");
-        bucketJsonObject1.put("filters", createFilterJSONArray());
-        bucketJsonObject1.put("not_filters", createFilterJSONArray());
-        JSONObject bucketJsonObject2 = new JSONObject();
-        bucketJsonObject2.put("bucket", "nonbiddable");
-        bucketJsonObject2.put("filters", createFilterJSONArray());
-        bucketJsonObject2.put("not_filters", createFilterJSONArray());
-        aggregateBuckets.put(bucketJsonObject1);
-        aggregateBuckets.put(bucketJsonObject2);
+        JSONArray namedBudgets = new JSONArray();
+        JSONObject budgetJsonObject1 = new JSONObject();
+        budgetJsonObject1.put("name", "biddable");
+        budgetJsonObject1.put("filters", createFilterJSONArray());
+        budgetJsonObject1.put("not_filters", createFilterJSONArray());
+        JSONObject budgetJsonObject2 = new JSONObject();
+        budgetJsonObject2.put("name", "nonbiddable");
+        budgetJsonObject2.put("filters", createFilterJSONArray());
+        budgetJsonObject2.put("not_filters", createFilterJSONArray());
+        namedBudgets.put(budgetJsonObject1);
+        namedBudgets.put(budgetJsonObject2);
 
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
                         .setAggregateTriggerData(triggerDatas.toString())
                         .setAggregateValuesString(values.toString())
                         .setAggregateDeduplicationKeys(aggregateDedupKeys.toString())
-                        .setAggregatableBucketsString(aggregateBuckets.toString())
+                        .setNamedBudgetsString(namedBudgets.toString())
                         .build();
         Optional<AggregatableAttributionTrigger> aggregatableAttributionTrigger =
                 trigger.getAggregatableAttributionTrigger(mFlags);
@@ -800,58 +800,56 @@ public class TriggerTest {
                         .getDeduplicationKey()
                         .isEmpty());
 
-        assertThat(aggregateTrigger.getAggregatableBuckets()).isNotNull();
-        assertThat(aggregateTrigger.getAggregatableBuckets().size()).isEqualTo(2);
-        assertThat(aggregateTrigger.getAggregatableBuckets().get(0).getBucket())
-                .isEqualTo("biddable");
-        assertThat(aggregateTrigger.getAggregatableBuckets().get(0).getFilterSet()).isNotNull();
+        assertThat(aggregateTrigger.getNamedBudgets()).isNotNull();
+        assertThat(aggregateTrigger.getNamedBudgets().size()).isEqualTo(2);
+        assertThat(aggregateTrigger.getNamedBudgets().get(0).getName()).isEqualTo("biddable");
+        assertThat(aggregateTrigger.getNamedBudgets().get(0).getFilterSet()).isNotNull();
         assertThat(
                         aggregateTrigger
-                                .getAggregatableBuckets()
+                                .getNamedBudgets()
                                 .get(0)
                                 .getFilterSet()
                                 .get(0)
                                 .getAttributionFilterMap()
                                 .size())
                 .isEqualTo(2);
-        assertThat(aggregateTrigger.getAggregatableBuckets().get(0).getNotFilterSet()).isNotNull();
+        assertThat(aggregateTrigger.getNamedBudgets().get(0).getNotFilterSet()).isNotNull();
         assertThat(
                         aggregateTrigger
-                                .getAggregatableBuckets()
+                                .getNamedBudgets()
                                 .get(0)
                                 .getNotFilterSet()
                                 .get(0)
                                 .getAttributionFilterMap()
                                 .size())
                 .isEqualTo(2);
-        assertThat(aggregateTrigger.getAggregatableBuckets().get(1).getFilterSet()).isNotNull();
+        assertThat(aggregateTrigger.getNamedBudgets().get(1).getFilterSet()).isNotNull();
         assertThat(
                         aggregateTrigger
-                                .getAggregatableBuckets()
+                                .getNamedBudgets()
                                 .get(1)
                                 .getFilterSet()
                                 .get(0)
                                 .getAttributionFilterMap()
                                 .size())
                 .isEqualTo(2);
-        assertThat(aggregateTrigger.getAggregatableBuckets().get(1).getNotFilterSet()).isNotNull();
+        assertThat(aggregateTrigger.getNamedBudgets().get(1).getNotFilterSet()).isNotNull();
         assertThat(
                         aggregateTrigger
-                                .getAggregatableBuckets()
+                                .getNamedBudgets()
                                 .get(1)
                                 .getNotFilterSet()
                                 .get(0)
                                 .getAttributionFilterMap()
                                 .size())
                 .isEqualTo(2);
-        assertThat(aggregateTrigger.getAggregatableBuckets().get(1).getBucket())
-                .isEqualTo("nonbiddable");
+        assertThat(aggregateTrigger.getNamedBudgets().get(1).getName()).isEqualTo("nonbiddable");
     }
 
     @Test
-    public void testParseAggregateTrigger_noBuckets() throws JSONException {
+    public void testParseAggregateTrigger_noNamedBudgets() throws JSONException {
         when(mFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true, false);
-        when(mFlags.getMeasurementEnableAggregateContributionBudgetCapacity()).thenReturn(true);
+        when(mFlags.getMeasurementEnableAggregatableNamedBudgets()).thenReturn(true);
         JSONArray triggerDatas = new JSONArray();
         JSONObject jsonObject1 = new JSONObject();
         jsonObject1.put("key_piece", "0x400");
@@ -881,7 +879,7 @@ public class TriggerTest {
         assertThat(aggregatableAttributionTrigger).isPresent();
         AggregatableAttributionTrigger aggregateTrigger = aggregatableAttributionTrigger.get();
 
-        assertThat(aggregateTrigger.getAggregatableBuckets()).isNull();
+        assertThat(aggregateTrigger.getNamedBudgets()).isNull();
     }
 
     @Test
