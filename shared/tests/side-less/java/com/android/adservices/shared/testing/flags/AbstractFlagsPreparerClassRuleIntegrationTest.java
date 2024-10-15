@@ -17,7 +17,6 @@ package com.android.adservices.shared.testing.flags;
 
 import static com.android.adservices.shared.testing.SdkSandbox.State.DISABLED;
 import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest.PERSISTENT;
-import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest.UNTIL_REBOOT;
 
 import com.android.adservices.shared.meta_testing.AbstractFlagsPreparerClassRuleIntegrationTestCase;
 import com.android.adservices.shared.meta_testing.DeviceConfigWrapper;
@@ -60,14 +59,14 @@ public final class AbstractFlagsPreparerClassRuleIntegrationTest
     protected FakeFlagsPreparerClassRule newRule(
             SdkSandboxWrapper sdkSandbox, DeviceConfigWrapper deviceConfig) {
         // TODO(b/362977985): change interface methods to return self so setters below could be
-        // inline (like fake = new Fake().setSomething())
+        // inlined (like fake = new Fake().setSomething())
         FakeSdkSandbox fakeSdkSandbox = new FakeSdkSandbox();
         fakeSdkSandbox.setState(DISABLED);
         sdkSandbox.setWrapped(fakeSdkSandbox);
         FakeDeviceConfig fakeDeviceConfig = new FakeDeviceConfig();
         fakeDeviceConfig.setSyncDisabledMode(PERSISTENT);
         deviceConfig.setWrapped(fakeDeviceConfig);
-        return new FakeFlagsPreparerClassRule(sdkSandbox, deviceConfig, UNTIL_REBOOT);
+        return new FakeFlagsPreparerClassRule(sdkSandbox, deviceConfig);
     }
 
     @Override
@@ -78,9 +77,9 @@ public final class AbstractFlagsPreparerClassRuleIntegrationTest
     public static final class FakeFlagsPreparerClassRule
             extends AbstractFlagsPreparerClassRule<FakeFlagsPreparerClassRule> {
 
-        FakeFlagsPreparerClassRule(
-                SdkSandbox sdkSandbox, DeviceConfig deviceConfig, SyncDisabledModeForTest mode) {
-            super(DynamicLogger.getInstance(), sdkSandbox, deviceConfig, mode);
+        FakeFlagsPreparerClassRule(SdkSandbox sdkSandbox, DeviceConfig deviceConfig) {
+            super(DynamicLogger.getInstance(), sdkSandbox, deviceConfig);
         }
     }
+
 }

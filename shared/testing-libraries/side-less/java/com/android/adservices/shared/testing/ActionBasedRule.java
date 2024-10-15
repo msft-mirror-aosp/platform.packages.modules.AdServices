@@ -79,9 +79,10 @@ public abstract class ActionBasedRule<R extends ActionBasedRule<R>> extends Abst
      * if it's cached it will.
      *
      * @return self
-     * @throws Exception propagated from {@code action}
+     * @throws ActionExecutionException wraps exception thrown by {@code action} when executing
+     *     right away.
      */
-    protected R executeOrCache(Action action) throws Exception {
+    protected R executeOrCache(Action action) {
         Objects.requireNonNull(action, "action cannot be null");
 
         if (!mIsRunning) {
@@ -90,7 +91,11 @@ public abstract class ActionBasedRule<R extends ActionBasedRule<R>> extends Abst
             mLog.v(
                     "executeOrCache(%s): executing right way as test (%s) is running",
                     action, getTestName());
-            action.execute();
+            try {
+                action.execute();
+            } catch (Exception e) {
+                throw new ActionExecutionException(e);
+            }
         }
 
         return getSelf();
