@@ -75,7 +75,8 @@ public final class DynamicLogger implements RealLogger {
 
     @Override
     @FormatMethod
-    public void log(LogLevel level, String tag, @FormatString String msgFmt, Object... msgArgs) {
+    public void log(
+            LogLevel level, String tag, final @FormatString String msgFmt, Object... msgArgs) {
         mRealLogger.log(level, tag, msgFmt, msgArgs);
     }
 
@@ -85,7 +86,7 @@ public final class DynamicLogger implements RealLogger {
             LogLevel level,
             String tag,
             Throwable throwable,
-            @FormatString String msgFmt,
+            final @FormatString String msgFmt,
             Object... msgArgs) {
         mRealLogger.log(level, tag, throwable, msgFmt, msgArgs);
     }
@@ -301,7 +302,7 @@ public final class DynamicLogger implements RealLogger {
 
         @FormatMethod
         public void log(
-                LogLevel level, String tag, @FormatString String msgFmt, Object... msgArgs) {
+                LogLevel level, String tag, final @FormatString String msgFmt, Object... msgArgs) {
             log(level, tag, /* throwable= */ null, msgFmt, msgArgs);
         }
 
