@@ -30,7 +30,7 @@ import com.android.adservices.shared.testing.device.ShellCommandOutput;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
-/** Implementation that uses Shell to call {@cmd sdk_sandbox} commands . */
+/** Implementation that uses Shell to call {@code cmd sdk_sandbox} commands . */
 public final class SdkSandboxShellCmdImpl implements SdkSandbox {
 
     private static final String SDK_SANDBOX = "sdk_sandbox";

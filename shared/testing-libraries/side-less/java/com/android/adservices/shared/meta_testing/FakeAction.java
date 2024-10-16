@@ -16,6 +16,8 @@
 package com.android.adservices.shared.meta_testing;
 
 import com.android.adservices.shared.testing.Action;
+import com.android.adservices.shared.testing.DynamicLogger;
+import com.android.adservices.shared.testing.Logger;
 import com.android.adservices.shared.testing.Nullable;
 
 import java.util.Objects;
@@ -31,7 +33,9 @@ public final class FakeAction implements Action {
     @Nullable private Exception mOnRevertException;
     @Nullable private Boolean mOnExecute;
 
-    private boolean mExecuted;
+    private final AtomicInteger mNumberTimesExecuteCalled = new AtomicInteger();
+    private final Logger mLog = new Logger(DynamicLogger.getInstance(), FakeAction.class);
+
     private boolean mReverted;
     private int mExecutionOrder;
     private int mReversionOrder;
@@ -74,10 +78,13 @@ public final class FakeAction implements Action {
 
     @Override
     public boolean execute() throws Exception {
-        mExecuted = true;
+        int callNumber = mNumberTimesExecuteCalled.incrementAndGet();
         if (mExecutionOrderCounter != null) {
             mExecutionOrder = mExecutionOrderCounter.incrementAndGet();
         }
+        mLog.v(
+                "execute(): call #%d, mExecutionOrder=%d, mOnExecuteException=%s",
+                callNumber, mExecutionOrder, mOnExecuteException);
         if (mOnExecuteException != null) {
             throw mOnExecuteException;
         }
@@ -90,6 +97,9 @@ public final class FakeAction implements Action {
         if (mReversionOrderCounter != null) {
             mReversionOrder = mReversionOrderCounter.incrementAndGet();
         }
+        mLog.v(
+                "revert(): mReversionOrder=%d, mOnRevertException=%s",
+                mReversionOrder, mOnRevertException);
         if (mOnRevertException != null) {
             throw mOnRevertException;
         }
@@ -106,8 +116,13 @@ public final class FakeAction implements Action {
     }
 
     /** Checks whether {@link #execute()} was called. */
-    public boolean executed() {
-        return mExecuted;
+    public boolean isExecuted() {
+        return mNumberTimesExecuteCalled.get() > 0;
+    }
+
+    /** Returns how many times {@link #execute()} was called. */
+    public int getNumberTimesExecuteCalled() {
+        return mNumberTimesExecuteCalled.get();
     }
 
     /**
@@ -129,7 +144,7 @@ public final class FakeAction implements Action {
     }
 
     /** Checks whether {@link #revert()} was called. */
-    public boolean reverted() {
+    public boolean isReverted() {
         return mReverted;
     }
 
@@ -153,7 +168,9 @@ public final class FakeAction implements Action {
             string.append("name=").append(mName).append(", ");
         }
         string.append("mExecuted=")
-                .append(mExecuted)
+                .append(isExecuted())
+                .append(", mNumberTimesExecuteCalled=")
+                .append(mNumberTimesExecuteCalled.get())
                 .append(", mReverted=")
                 .append(mReverted)
                 .append(", mOnExecute=")
