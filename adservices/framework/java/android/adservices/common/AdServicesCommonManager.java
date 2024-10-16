@@ -290,7 +290,8 @@ public class AdServicesCommonManager {
     /**
      * Activity Action: Open the consent landing page activity. In the activity, user consent
      * choices can be set, depending on user action, by calling {@link
-     * #requestAdServicesModuleUserChoices()}.
+     * #requestAdServicesModuleUserChoices()}. The action must be defined as an intent-filter in
+     * AndroidManifest.xml in order to receive Intents from the platform.
      *
      * <p>Input: nothing
      *
@@ -298,6 +299,7 @@ public class AdServicesCommonManager {
      *
      * @hide
      */
+    @SystemApi
     @SdkConstant(SdkConstantType.ACTIVITY_INTENT_ACTION)
     @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
     @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
