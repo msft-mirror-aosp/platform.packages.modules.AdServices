@@ -604,6 +604,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 Flags::getTopicsEpochJobBatteryConstraintLoggingEnabled);
     }
 
+    @Test
+    public void testGetTopicsCleanDBWhenEpochJobSettingsChanged() {
+        testFlag(
+                "TOPICS_CLEAN_DB_WHEN_EPOCH_JOB_SETTINGS_CHANGED",
+                /* defaultValue */ false,
+                Flags::getTopicsCleanDBWhenEpochJobSettingsChanged);
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Tests for (legacy) kill-switch flags that will be refactored as feature flag - they should //
     // move to the block above once refactored.                                                   //

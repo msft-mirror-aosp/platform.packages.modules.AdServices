@@ -419,6 +419,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getTopicsCleanDBWhenEpochJobSettingsChanged() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_TOPICS_CLEAN_DB_WHEN_EPOCH_JOB_SETTINGS_CHANGED,
+                TOPICS_CLEAN_DB_WHEN_EPOCH_JOB_SETTINGS_CHANGED);
+    }
+
+    @Override
     public boolean getMsmtRegistrationCobaltLoggingEnabled() {
         return getCobaltLoggingEnabled()
                 && getDeviceConfigFlag(
