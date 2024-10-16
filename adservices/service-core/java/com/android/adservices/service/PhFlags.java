@@ -3054,13 +3054,6 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getRvcPostOtaNotifAgeCheck() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_RVC_POST_OTA_NOTIF_AGE_CHECK,
-                DEFAULT_RVC_POST_OTA_NOTIF_AGE_CHECK);
-    }
-
-    @Override
     public int getConsentSourceOfTruth() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH, DEFAULT_CONSENT_SOURCE_OF_TRUTH);
@@ -3586,11 +3579,6 @@ public final class PhFlags implements Flags {
                         + " = "
                         + getEnableAdServicesSystemApi());
         writer.println("\t" + FlagsConstants.KEY_U18_UX_ENABLED + " = " + getU18UxEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_RVC_POST_OTA_NOTIF_AGE_CHECK
-                        + " = "
-                        + getRvcPostOtaNotifAgeCheck());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_CONSENT_NOTIFICATION_RESET_TOKEN
