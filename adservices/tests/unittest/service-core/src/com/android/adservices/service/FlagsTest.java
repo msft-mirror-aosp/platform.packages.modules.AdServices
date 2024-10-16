@@ -992,6 +992,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 Flags::getMeasurementMaxAdrCountPerSource);
     }
 
+    @Test
+    public void testGetFledgeEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests() {
+        testFeatureFlag(
+                "FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS",
+                Flags::getFledgeEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests);
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Internal helpers and tests - do not add new tests for flags following this point.          //
     ////////////////////////////////////////////////////////////////////////////////////////////////

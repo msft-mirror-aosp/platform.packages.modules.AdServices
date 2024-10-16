@@ -1522,12 +1522,19 @@ public interface Flags extends ModuleSharedFlags {
     // Enable scheduleCustomAudienceUpdateApi()
     boolean FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED = false;
 
+    @FeatureFlag
+    boolean FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS = false;
+
     long FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_PERIOD_MS = 1L * 60L * 60L * 1000L; // 1 hour
     long FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_FLEX_MS = 5L * 60L * 1000L; // 5 minutes
     int FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE = 30;
 
     default boolean getFledgeScheduleCustomAudienceUpdateEnabled() {
         return !getGlobalKillSwitch() && FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
+    }
+
+    default boolean getFledgeEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests() {
+        return FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS;
     }
 
     default long getFledgeScheduleCustomAudienceUpdateJobPeriodMs() {
