@@ -48,7 +48,7 @@ public final class SafeActionTest extends SharedSidelessTestCase {
 
         expect.withMessage("%s.execute()", mSafeAction).that(mSafeAction.execute()).isTrue();
 
-        expect.withMessage("FakeAcion.execute() called").that(mFakeAction.executed()).isTrue();
+        expect.withMessage("FakeAcion.execute() called").that(mFakeAction.isExecuted()).isTrue();
     }
 
     @Test
@@ -57,7 +57,7 @@ public final class SafeActionTest extends SharedSidelessTestCase {
 
         expect.withMessage("%s.execute()", mSafeAction).that(mSafeAction.execute()).isFalse();
 
-        expect.withMessage("FakeAcion.execute() called").that(mFakeAction.executed()).isTrue();
+        expect.withMessage("FakeAcion.execute() called").that(mFakeAction.isExecuted()).isTrue();
     }
 
     @Test
@@ -66,7 +66,7 @@ public final class SafeActionTest extends SharedSidelessTestCase {
 
         expect.withMessage("%s.execute()", mSafeAction).that(mSafeAction.execute()).isFalse();
 
-        expect.withMessage("FakeAcion.execute() called").that(mFakeAction.executed()).isTrue();
+        expect.withMessage("FakeAcion.execute() called").that(mFakeAction.isExecuted()).isTrue();
         expectErrorLogged("execute");
     }
 
@@ -74,7 +74,7 @@ public final class SafeActionTest extends SharedSidelessTestCase {
     public void testRevert() {
         mSafeAction.revert();
 
-        expect.withMessage("FakeAcion.revert() called").that(mFakeAction.reverted()).isTrue();
+        expect.withMessage("FakeAcion.revert() called").that(mFakeAction.isReverted()).isTrue();
     }
 
     @Test
@@ -83,7 +83,7 @@ public final class SafeActionTest extends SharedSidelessTestCase {
 
         mSafeAction.revert();
 
-        expect.withMessage("FakeAcion.revert() called").that(mFakeAction.reverted()).isTrue();
+        expect.withMessage("FakeAcion.revert() called").that(mFakeAction.isReverted()).isTrue();
         expectErrorLogged("revert");
     }
 
