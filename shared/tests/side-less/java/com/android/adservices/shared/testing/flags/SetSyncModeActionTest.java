@@ -15,6 +15,7 @@
  */
 package com.android.adservices.shared.testing.flags;
 
+import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest.DISABLED_SOMEHOW;
 import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest.PERSISTENT;
 import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest.UNSUPPORTED;
 import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest.UNTIL_REBOOT;
@@ -46,10 +47,14 @@ public final class SetSyncModeActionTest extends SharedSidelessTestCase {
     }
 
     @Test
-    public void testConstructor_unsupported() {
+    public void testConstructor_notSettable() {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new SetSyncModeAction(mFakeLogger, mFakeDeviceConfig, UNSUPPORTED));
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new SetSyncModeAction(mFakeLogger, mFakeDeviceConfig, DISABLED_SOMEHOW));
     }
 
     @Test
@@ -150,6 +155,25 @@ public final class SetSyncModeActionTest extends SharedSidelessTestCase {
     @Test
     public void testExecuteAndRevert_changed() throws Exception {
         mFakeDeviceConfig.setSyncDisabledMode(PERSISTENT);
+        SetSyncModeAction action =
+                new SetSyncModeAction(mFakeLogger, mFakeDeviceConfig, UNTIL_REBOOT);
+
+        boolean result = action.execute();
+
+        expect.withMessage("execute()").that(result).isTrue();
+        expect.withMessage("device config mode after execute")
+                .that(mFakeDeviceConfig.getSyncDisabledMode())
+                .isEqualTo(UNTIL_REBOOT);
+
+        action.revert();
+        expect.withMessage("device config mode after revert")
+                .that(mFakeDeviceConfig.getSyncDisabledMode())
+                .isEqualTo(PERSISTENT);
+    }
+
+    @Test
+    public void testExecuteAndRevert_changedFromDisabledSomehow() throws Exception {
+        mFakeDeviceConfig.setSyncDisabledMode(DISABLED_SOMEHOW);
         SetSyncModeAction action =
                 new SetSyncModeAction(mFakeLogger, mFakeDeviceConfig, UNTIL_REBOOT);
 
