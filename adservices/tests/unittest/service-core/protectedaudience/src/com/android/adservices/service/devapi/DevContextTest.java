@@ -75,6 +75,7 @@ public final class DevContextTest extends AdServicesUnitTestCase {
                 .isEqualTo(PKG_NAME);
     }
 
+    @SuppressWarnings("RedundantSetterCall")
     @Test
     public void testBuilder_multipleCallsToSetters() {
         DevContext.Builder builder = DevContext.builder(PKG_NAME);

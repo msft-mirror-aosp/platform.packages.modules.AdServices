@@ -552,7 +552,7 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
         assertWithMessage(String.format("putIntIfNew(%s, %d)", TEST_KEY, insertedValue))
                 .that(mDatastore.putIntIfNew(TEST_KEY, insertedValue))
                 .isEqualTo(insertedValue);
-        int readValue = mDatastore.getInt(TEST_KEY);
+        Integer readValue = mDatastore.getInt(TEST_KEY);
         assertWithMessage("getInt(%s)", TEST_KEY).that(readValue).isNotNull();
         assertWithMessage("getInt(%s)", TEST_KEY).that(readValue).isEqualTo(insertedValue);
 
