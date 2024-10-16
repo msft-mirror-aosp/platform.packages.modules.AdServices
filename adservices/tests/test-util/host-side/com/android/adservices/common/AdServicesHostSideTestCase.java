@@ -15,10 +15,9 @@
  */
 package com.android.adservices.common;
 
-import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest.PERSISTENT;
-
 import com.android.adservices.shared.testing.HostSideSdkLevelSupportRule;
 import com.android.adservices.shared.testing.HostSideTestCase;
+import com.android.adservices.shared.testing.annotations.SetSyncDisabledModeForTest;
 import com.android.tradefed.testtype.IDeviceTest;
 
 import org.junit.ClassRule;
@@ -28,6 +27,7 @@ import org.junit.Rule;
  * Base class for host-side tests, it contains just the bare minimum setup needed by all tests (like
  * implementing {@link IDeviceTest}).
  */
+@SetSyncDisabledModeForTest
 public abstract class AdServicesHostSideTestCase extends HostSideTestCase {
 
     // Need to define these constants here so they can be used on subclasses annotations
@@ -36,7 +36,7 @@ public abstract class AdServicesHostSideTestCase extends HostSideTestCase {
 
     @ClassRule
     public static final AdServicesHostSideFlagsPreparerClassRule sFlagsPreparer =
-            new AdServicesHostSideFlagsPreparerClassRule().setSyncDisabledModeForTest(PERSISTENT);
+            new AdServicesHostSideFlagsPreparerClassRule();
 
     @Rule(order = 0)
     public final HostSideSdkLevelSupportRule sdkLevel = HostSideSdkLevelSupportRule.forAnyLevel();
