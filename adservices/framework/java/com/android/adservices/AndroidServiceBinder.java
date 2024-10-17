@@ -277,9 +277,6 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
         }
     }
 
-    // TODO(b/293894199, b/284744130): members below were adapted from BuildCompatUtils, it would
-    // be better to move BuildCompatUtils to this package
-
     private static final boolean IS_DEBUGGABLE = computeIsDebuggable();
 
     private static boolean isDebuggable() {
