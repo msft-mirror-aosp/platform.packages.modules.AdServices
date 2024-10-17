@@ -120,6 +120,41 @@ public class AggregatableAttributionTrigger {
     }
 
     /**
+     * Extract the value for key "bucket" from the {@link AggregatableBucket} aggregatableBucket.
+     *
+     * @param sourceFilterMap the source filter map of the AggregatableAttributionSource.
+     */
+    public Optional<String> maybeExtractBucket(FilterMap sourceFilterMap, Flags flags) {
+        if (getAggregatableBuckets() == null || getAggregatableBuckets().isEmpty()) {
+            return Optional.empty();
+        }
+
+        if (sourceFilterMap.isEmpty(flags)) {
+            return Optional.of(getAggregatableBuckets().get(0).getBucket());
+        }
+        Filter filter = new Filter(flags);
+        for (AggregatableBucket aggregatableBucket : getAggregatableBuckets()) {
+            if (aggregatableBucket.getFilterSet() != null
+                    && !filter.isFilterMatch(
+                            sourceFilterMap,
+                            aggregatableBucket.getFilterSet(),
+                            /* isFilter= */ true)) {
+                continue;
+            }
+
+            if (aggregatableBucket.getNotFilterSet() != null
+                    && !filter.isFilterMatch(
+                            sourceFilterMap,
+                            aggregatableBucket.getNotFilterSet(),
+                            /* isFilter= */ false)) {
+                continue;
+            }
+            return Optional.of(aggregatableBucket.getBucket());
+        }
+        return Optional.empty();
+    }
+
+    /**
      * Builder for {@link AggregatableAttributionTrigger}.
      */
     public static final class Builder {

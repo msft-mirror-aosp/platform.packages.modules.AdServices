@@ -78,15 +78,14 @@ public class AggregateContributionBuckets {
     /**
      * @return whether the contribution was successfully added to the bucket or not
      */
-    public boolean addToBucket(String bucketName, int contribution) {
-        if (mBucketNameToAggregateContributionAndCapacity.get(bucketName).mAggregateContribution
-                        + contribution
+    public boolean setBucketContribution(String bucketName, int contribution) {
+        if (contribution
                 > mBucketNameToAggregateContributionAndCapacity.get(bucketName).mBucketCapacity) {
             return false;
         }
 
-        // Add contribution to mAggregateContributionsPerBucket for the bucket.
-        mBucketNameToAggregateContributionAndCapacity.get(bucketName).mAggregateContribution +=
+        // Set mAggregateContributionsPerBucket to contribution for the bucket.
+        mBucketNameToAggregateContributionAndCapacity.get(bucketName).mAggregateContribution =
                 contribution;
         return true;
     }
