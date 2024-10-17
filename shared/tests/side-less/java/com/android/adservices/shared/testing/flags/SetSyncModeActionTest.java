@@ -194,7 +194,23 @@ public final class SetSyncModeActionTest extends SharedSidelessTestCase {
 
         action.execute();
 
-        assertThrows(IllegalStateException.class, () -> action.onRevert());
+        assertThrows(IllegalStateException.class, () -> action.onRevertLocked());
+    }
+
+    @Test
+    public void testOnReset() throws Exception {
+        mFakeDeviceConfig.setSyncDisabledMode(PERSISTENT);
+        SetSyncModeAction action =
+                new SetSyncModeAction(mFakeLogger, mFakeDeviceConfig, UNTIL_REBOOT);
+        expect.withMessage("previous mode initially ").that(action.getPreviousMode()).isNull();
+        action.execute();
+        expect.withMessage("previous mode after execute")
+                .that(action.getPreviousMode())
+                .isEqualTo(PERSISTENT);
+
+        action.onResetLocked();
+
+        expect.withMessage("previous mode before reset").that(action.getPreviousMode()).isNull();
     }
 
     @Test

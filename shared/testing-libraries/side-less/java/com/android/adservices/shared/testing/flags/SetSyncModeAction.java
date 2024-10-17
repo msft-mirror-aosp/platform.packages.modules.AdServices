@@ -20,6 +20,8 @@ import com.android.adservices.shared.testing.Nullable;
 import com.android.adservices.shared.testing.device.DeviceConfig;
 import com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import java.util.Objects;
 
 /** Action used to set {@code DeviceConfig}'s {@link SyncDisabledModeForTest}. */
@@ -40,7 +42,7 @@ public final class SetSyncModeAction extends DeviceConfigAction {
     }
 
     @Override
-    protected boolean onExecute() throws Exception {
+    protected boolean onExecuteLocked() throws Exception {
         try {
             mPreviousMode = mDeviceConfig.getSyncDisabledMode();
         } catch (Exception e) {
@@ -59,11 +61,22 @@ public final class SetSyncModeAction extends DeviceConfigAction {
     }
 
     @Override
-    protected void onRevert() throws Exception {
+    protected void onRevertLocked() throws Exception {
         if (mPreviousMode == null || !mPreviousMode.isValid()) {
             throw new IllegalStateException("should not have been called when it didn't change");
         }
         mDeviceConfig.setSyncDisabledMode(mPreviousMode);
+    }
+
+    @Override
+    protected void onResetLocked() {
+        mPreviousMode = null;
+    }
+
+    @VisibleForTesting
+    @Nullable
+    SyncDisabledModeForTest getPreviousMode() {
+        return mPreviousMode;
     }
 
     @Override

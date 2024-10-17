@@ -30,11 +30,39 @@ public final class AbstractActionTest extends SharedSidelessTestCase {
     }
 
     @Test
-    public void testExecuteTwice() throws Exception {
+    public void testNormalOverflow() throws Exception {
         ConcreteAction action = new ConcreteAction(mLog);
+        expect.withMessage("isExecuted() initially").that(action.isExecuted()).isFalse();
+        expect.withMessage("isReverted() initially").that(action.isReverted()).isFalse();
 
-        boolean result = action.execute();
-        expect.withMessage("first call to execute()").that(result).isTrue();
+        boolean executeResult = action.execute();
+        expect.withMessage("result of execute()").that(executeResult).isTrue();
+        expect.withMessage("isExecuted() after execute()").that(action.isExecuted()).isTrue();
+        expect.withMessage("isReverted() after execute()").that(action.isReverted()).isFalse();
+
+        action.revert();
+        expect.withMessage("isExecuted() after revert()").that(action.isExecuted()).isTrue();
+        expect.withMessage("isReverted() after revert()").that(action.isReverted()).isTrue();
+
+        action.reset();
+        expect.withMessage("isExecuted() after reset()").that(action.isExecuted()).isFalse();
+        expect.withMessage("isReverted() after reset()").that(action.isReverted()).isFalse();
+
+        boolean executeResultAfterReset = action.execute();
+        expect.withMessage("result of execute()").that(executeResultAfterReset).isTrue();
+        expect.withMessage("isExecuted() after reset+execute").that(action.isExecuted()).isTrue();
+        expect.withMessage("isReverted() after reset+execute").that(action.isReverted()).isFalse();
+
+        action.revert();
+        expect.withMessage("isExecuted() after reset+revert").that(action.isExecuted()).isTrue();
+        expect.withMessage("isReverted() after reset+revert").that(action.isReverted()).isTrue();
+    }
+
+    @Test
+    public void testExecuteTwice_fails() throws Exception {
+        ConcreteAction action = new ConcreteAction(mLog);
+        action.execute();
+
         var thrown = assertThrows(IllegalStateException.class, () -> action.execute());
 
         expect.withMessage("exception message")
@@ -47,7 +75,7 @@ public final class AbstractActionTest extends SharedSidelessTestCase {
     }
 
     @Test
-    public void testRevertTwice() throws Exception {
+    public void testRevertTwice_fails() throws Exception {
         ConcreteAction action = new ConcreteAction(mLog);
 
         action.execute();
@@ -65,9 +93,25 @@ public final class AbstractActionTest extends SharedSidelessTestCase {
     }
 
     @Test
-    public void testRevertBeforeExecute() {
+    public void testRevertBeforeExecute_fails() {
         ConcreteAction action = new ConcreteAction(mLog);
         assertThrows(IllegalStateException.class, () -> action.revert());
+    }
+
+    @Test
+    public void testResetBeforeExecute_ok() throws Exception {
+        ConcreteAction action = new ConcreteAction(mLog);
+
+        action.reset();
+    }
+
+    @Test
+    public void testResetBeforeRevert_fails() throws Exception {
+        ConcreteAction action = new ConcreteAction(mLog);
+
+        action.execute();
+
+        assertThrows(IllegalStateException.class, () -> action.reset());
     }
 
     @Test
@@ -93,14 +137,21 @@ public final class AbstractActionTest extends SharedSidelessTestCase {
         }
 
         @Override
-        protected boolean onExecute() {
+        protected boolean onExecuteLocked() {
             numberOnExecuteCalls++;
             return onExecuteResult;
         }
 
         @Override
-        protected void onRevert() {
+        protected void onRevertLocked() {
             numberOnRevertCalls++;
+        }
+
+        @Override
+        protected void onResetLocked() {
+            onExecuteResult = true;
+            numberOnExecuteCalls = 0;
+            numberOnRevertCalls = 0;
         }
     }
 }
