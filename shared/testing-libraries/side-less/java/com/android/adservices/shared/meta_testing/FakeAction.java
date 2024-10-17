@@ -31,6 +31,7 @@ public final class FakeAction implements Action {
     @Nullable private final AtomicInteger mReversionOrderCounter;
     @Nullable private Exception mOnExecuteException;
     @Nullable private Exception mOnRevertException;
+    @Nullable private RuntimeException mOnResetException;
     @Nullable private Boolean mOnExecute;
 
     private final AtomicInteger mNumberTimesExecuteCalled = new AtomicInteger();
@@ -77,6 +78,27 @@ public final class FakeAction implements Action {
     }
 
     @Override
+    public void reset() {
+        if (mOnResetException != null) {
+            throw mOnResetException;
+            // Don't need to set it to null - if it's set, it's because it should throw
+        }
+        if (mExecutionOrderCounter != null) {
+            mExecutionOrderCounter.set(0);
+        }
+        if (mReversionOrderCounter != null) {
+            mReversionOrderCounter.set(0);
+        }
+        mNumberTimesExecuteCalled.set(0);
+        mOnExecuteException = null;
+        mOnRevertException = null;
+        mOnExecute = null;
+        mReverted = false;
+        mExecutionOrder = 0;
+        mReversionOrder = 0;
+    }
+
+    @Override
     public boolean execute() throws Exception {
         int callNumber = mNumberTimesExecuteCalled.incrementAndGet();
         if (mExecutionOrderCounter != null) {
@@ -115,7 +137,7 @@ public final class FakeAction implements Action {
         mOnExecuteException = Objects.requireNonNull(exception, "exception cannot be null");
     }
 
-    /** Checks whether {@link #execute()} was called. */
+    @Override
     public boolean isExecuted() {
         return mNumberTimesExecuteCalled.get() > 0;
     }
@@ -143,7 +165,7 @@ public final class FakeAction implements Action {
         mOnRevertException = Objects.requireNonNull(exception, "exception cannot be null");
     }
 
-    /** Checks whether {@link #revert()} was called. */
+    @Override
     public boolean isReverted() {
         return mReverted;
     }
@@ -159,6 +181,11 @@ public final class FakeAction implements Action {
             throw new IllegalStateException("Not created with reversionOrder consttructor");
         }
         return mReversionOrder;
+    }
+
+    /** Sets an exception to be thrown by {@link #reset()}. */
+    public void onResetThrows(RuntimeException exception) {
+        mOnResetException = Objects.requireNonNull(exception, "exception cannot be null");
     }
 
     @Override
@@ -183,6 +210,12 @@ public final class FakeAction implements Action {
         }
         if (mOnExecuteException != null) {
             string.append(", mOnExecuteException=").append(mOnExecuteException);
+        }
+        if (mOnRevertException != null) {
+            string.append(", mOnRevertException=").append(mOnRevertException);
+        }
+        if (mOnResetException != null) {
+            string.append(", mOnResetException=").append(mOnResetException);
         }
         return string.append(']').toString();
     }

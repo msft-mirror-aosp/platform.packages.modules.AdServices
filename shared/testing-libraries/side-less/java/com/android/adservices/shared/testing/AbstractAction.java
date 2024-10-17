@@ -15,8 +15,9 @@
  */
 package com.android.adservices.shared.testing;
 
+import com.google.errorprone.annotations.concurrent.GuardedBy;
+
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Base class for actions.
@@ -28,9 +29,16 @@ public abstract class AbstractAction implements Action {
 
     protected final Logger mLog;
 
-    private final AtomicBoolean mExecuted = new AtomicBoolean();
-    private final AtomicBoolean mExecuteResult = new AtomicBoolean();
-    private final AtomicBoolean mReverted = new AtomicBoolean();
+    private final Object mLock = new Object();
+
+    @GuardedBy("mLock")
+    private boolean mExecuted;
+
+    @GuardedBy("mLock")
+    private boolean mExecuteResult;
+
+    @GuardedBy("mLock")
+    private boolean mReverted;
 
     protected AbstractAction(Logger logger) {
         mLog = Objects.requireNonNull(logger, "logger cannot be null");
@@ -38,14 +46,21 @@ public abstract class AbstractAction implements Action {
 
     @Override
     public final boolean execute() throws Exception {
-        if (mExecuted.getAndSet(true)) {
-            throw new IllegalStateException(this + " already executed");
+        synchronized (mLock) {
+            if (mExecuted) {
+                throw new IllegalStateException(this + " already executed");
+            }
+            mExecuted = true;
+            mExecuteResult = onExecuteLocked();
+            return mExecuteResult;
         }
+    }
 
-        boolean result = onExecute();
-        mExecuteResult.set(result);
-
-        return result;
+    @Override
+    public final boolean isExecuted() {
+        synchronized (mLock) {
+            return mExecuted;
+        }
     }
 
     /**
@@ -53,28 +68,75 @@ public abstract class AbstractAction implements Action {
      *
      * <p>This is called by {@link #execute()} when previous checks passed.
      */
-    protected abstract boolean onExecute() throws Exception;
+    @GuardedBy("mLock")
+    protected abstract boolean onExecuteLocked() throws Exception;
 
     @Override
     public final void revert() throws Exception {
-        if (!mExecuted.get()) {
-            throw new IllegalStateException("Not executed yet");
+        synchronized (mLock) {
+            // rename / guard
+            assertExecutedLocked();
+            if (!mExecuteResult) {
+                mLog.v("Not calling revert() when execute() returned false");
+                return;
+            }
+            if (mReverted) {
+                throw new IllegalStateException(this + " already reverted");
+            }
+            mReverted = true;
+            onRevertLocked();
         }
-        if (!mExecuteResult.get()) {
-            mLog.v("Not calling revert() when execute() returned false");
-            return;
+    }
+
+    @Override
+    public boolean isReverted() {
+        synchronized (mLock) {
+            return mReverted;
         }
-        if (mReverted.getAndSet(true)) {
-            throw new IllegalStateException(this + " already reverted");
-        }
-        onRevert();
     }
 
     /**
      * Effective {@code revert()} method.
      *
      * <p>This is called by {@link #revert()} when previous checks passed; for example, it's not
-     * called if {@link #onExecute()} returned {@code false}.
+     * called if {@link #onExecuteLocked()} returned {@code false}.
      */
-    protected abstract void onRevert() throws Exception;
+    @GuardedBy("mLock")
+    protected abstract void onRevertLocked() throws Exception;
+
+    @Override
+    public final void reset() {
+        synchronized (mLock) {
+            if (mExecuted) {
+                assertRevertedLocked();
+            }
+            mExecuteResult = false;
+            mExecuted = false;
+            mReverted = false;
+            onResetLocked();
+        }
+    }
+
+    /**
+     * Effective {@code reset()} method.
+     *
+     * <p>This is called by {@link #reset()} when previous checks passed; for example, it's not
+     * called if {@link #onExecuteLocked()} was not called yet.
+     */
+    @GuardedBy("mLock")
+    protected abstract void onResetLocked();
+
+    @GuardedBy("mLock")
+    private void assertExecutedLocked() {
+        if (!mExecuted) {
+            throw new IllegalStateException("Not executed yet");
+        }
+    }
+
+    @GuardedBy("mLock")
+    private void assertRevertedLocked() {
+        if (!mReverted) {
+            throw new IllegalStateException("Not reverted yet");
+        }
+    }
 }

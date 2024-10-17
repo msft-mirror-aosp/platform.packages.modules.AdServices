@@ -164,7 +164,22 @@ public final class SetSdkSandboxStateActionTest extends SharedSidelessTestCase {
 
         action.execute();
 
-        assertThrows(IllegalStateException.class, () -> action.onRevert());
+        assertThrows(IllegalStateException.class, () -> action.onRevertLocked());
+    }
+
+    @Test
+    public void testOnReset() throws Exception {
+        mFakeSdkSandbox.setState(DISABLED);
+        var action = new SetSdkSandboxStateAction(mFakeLogger, mFakeSdkSandbox, ENABLED);
+        expect.withMessage("previous mode initially ").that(action.getPreviousState()).isNull();
+        action.execute();
+        expect.withMessage("previous mode after execute")
+                .that(action.getPreviousState())
+                .isEqualTo(DISABLED);
+
+        action.onResetLocked();
+
+        expect.withMessage("previous mode before reset").that(action.getPreviousState()).isNull();
     }
 
     @Test
