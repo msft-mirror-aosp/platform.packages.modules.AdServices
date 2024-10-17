@@ -168,6 +168,23 @@ public final class SetSdkSandboxStateActionTest extends SharedSidelessTestCase {
     }
 
     @Test
+    public void testEqualsAndHashCode() {
+        var baseline = new SetSdkSandboxStateAction(mFakeLogger, mFakeSdkSandbox, ENABLED);
+        var equal1 = new SetSdkSandboxStateAction(mFakeLogger, mFakeSdkSandbox, ENABLED);
+        var equal2 =
+                new SetSdkSandboxStateAction(
+                        new Logger(mFakeRealLogger, "whatever"), mFakeSdkSandbox, ENABLED);
+        var equal3 = new SetSdkSandboxStateAction(mFakeLogger, new FakeSdkSandbox(), ENABLED);
+        var different = new SetSdkSandboxStateAction(mFakeLogger, mFakeSdkSandbox, DISABLED);
+        var et = new EqualsTester(expect);
+
+        et.expectObjectsAreEqual(baseline, equal1);
+        et.expectObjectsAreEqual(baseline, equal2);
+        et.expectObjectsAreEqual(baseline, equal3);
+        et.expectObjectsAreNotEqual(baseline, different);
+    }
+
+    @Test
     public void testToString() throws Exception {
         var action = new SetSdkSandboxStateAction(mFakeLogger, mFakeSdkSandbox, ENABLED);
 

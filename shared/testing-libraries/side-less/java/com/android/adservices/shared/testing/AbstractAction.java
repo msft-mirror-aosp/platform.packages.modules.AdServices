@@ -28,8 +28,9 @@ public abstract class AbstractAction implements Action {
 
     protected final Logger mLog;
 
-    private final AtomicBoolean mCalled = new AtomicBoolean();
+    private final AtomicBoolean mExecuted = new AtomicBoolean();
     private final AtomicBoolean mExecuteResult = new AtomicBoolean();
+    private final AtomicBoolean mReverted = new AtomicBoolean();
 
     protected AbstractAction(Logger logger) {
         mLog = Objects.requireNonNull(logger, "logger cannot be null");
@@ -37,8 +38,8 @@ public abstract class AbstractAction implements Action {
 
     @Override
     public final boolean execute() throws Exception {
-        if (mCalled.getAndSet(true)) {
-            throw new IllegalStateException("Already executed");
+        if (mExecuted.getAndSet(true)) {
+            throw new IllegalStateException(this + " already executed");
         }
 
         boolean result = onExecute();
@@ -56,12 +57,15 @@ public abstract class AbstractAction implements Action {
 
     @Override
     public final void revert() throws Exception {
-        if (!mCalled.get()) {
+        if (!mExecuted.get()) {
             throw new IllegalStateException("Not executed yet");
         }
         if (!mExecuteResult.get()) {
             mLog.v("Not calling revert() when execute() returned false");
             return;
+        }
+        if (mReverted.getAndSet(true)) {
+            throw new IllegalStateException(this + " already reverted");
         }
         onRevert();
     }
