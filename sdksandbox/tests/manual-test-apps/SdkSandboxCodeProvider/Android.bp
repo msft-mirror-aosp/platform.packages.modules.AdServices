@@ -20,7 +20,7 @@ package {
 java_defaults {
     name: "SdkSandboxCodeDefaults",
     min_sdk_version: "33",
-    target_sdk_version: "33",
+    target_sdk_version: "34",
     static_libs: [
         "SdkInterfaces",
         "SdkSandboxTestUtils",
