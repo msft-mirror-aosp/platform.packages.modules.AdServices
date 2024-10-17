@@ -115,15 +115,24 @@ public final class AbstractActionTest extends SharedSidelessTestCase {
     }
 
     @Test
+    public void testResetWhenExecutedReturnedFalse() throws Exception {
+        ConcreteAction action = new ConcreteAction(mLog);
+
+        action.execute();
+
+        assertThrows(IllegalStateException.class, () -> action.reset());
+    }
+
+    @Test
     public void testOnRevertNotCalledWhenExecutedReturnedFalse() throws Exception {
         ConcreteAction action = new ConcreteAction(mLog);
         action.onExecuteResult = false;
         action.execute();
 
-        action.revert();
+        action.reset();
 
-        expect.withMessage("number of onRevert() calls")
-                .that(action.numberOnRevertCalls)
+        expect.withMessage("number of onExecute() calls")
+                .that(action.numberOnExecuteCalls)
                 .isEqualTo(0);
     }
 
@@ -152,6 +161,17 @@ public final class AbstractActionTest extends SharedSidelessTestCase {
             onExecuteResult = true;
             numberOnExecuteCalls = 0;
             numberOnRevertCalls = 0;
+        }
+
+        @Override
+        public String toString() {
+            return "ConcreteAction [onExecuteResult="
+                    + onExecuteResult
+                    + ", numberOnExecuteCalls="
+                    + numberOnExecuteCalls
+                    + ", numberOnRevertCalls="
+                    + numberOnRevertCalls
+                    + "]";
         }
     }
 }

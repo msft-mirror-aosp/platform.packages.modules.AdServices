@@ -27,6 +27,9 @@ import java.util.Objects;
  */
 public abstract class AbstractAction implements Action {
 
+    // TODO(b/362977985): make it private and provide custom logV() / logD() - which would include
+    // toString() or other info - instead. Similar to what AbstractSyncCallback does (in fact, we
+    // could create a AbstractLoggable superclass for both)
     protected final Logger mLog;
 
     private final Object mLock = new Object();
@@ -47,11 +50,15 @@ public abstract class AbstractAction implements Action {
     @Override
     public final boolean execute() throws Exception {
         synchronized (mLock) {
+            mLog.v(
+                    "%s.execute(): mExecuted=%b, mExecuteResult=%b, mReverted=%b",
+                    this, mExecuted, mExecuteResult, mExecuteResult);
             if (mExecuted) {
                 throw new IllegalStateException(this + " already executed");
             }
             mExecuted = true;
             mExecuteResult = onExecuteLocked();
+            mLog.v("%s.execute(): returning %b", this, mExecuteResult);
             return mExecuteResult;
         }
     }
@@ -74,8 +81,12 @@ public abstract class AbstractAction implements Action {
     @Override
     public final void revert() throws Exception {
         synchronized (mLock) {
-            // rename / guard
-            assertExecutedLocked();
+            mLog.v(
+                    "%s.revert(): mExecuted=%b, mExecuteResult=%b, mReverted=%b",
+                    this, mExecuted, mExecuteResult, mExecuteResult);
+            if (!mExecuted) {
+                throw new IllegalStateException("Not executed yet");
+            }
             if (!mExecuteResult) {
                 mLog.v("Not calling revert() when execute() returned false");
                 return;
@@ -107,8 +118,11 @@ public abstract class AbstractAction implements Action {
     @Override
     public final void reset() {
         synchronized (mLock) {
-            if (mExecuted) {
-                assertRevertedLocked();
+            mLog.v(
+                    "%s.reset(): mExecuted=%b, mExecuteResult=%b, mReverted=%b",
+                    this, mExecuted, mExecuteResult, mExecuteResult);
+            if (mExecuted && mExecuteResult && !mReverted) {
+                throw new IllegalStateException("Executed but not reverted yet");
             }
             mExecuteResult = false;
             mExecuted = false;
@@ -125,18 +139,4 @@ public abstract class AbstractAction implements Action {
      */
     @GuardedBy("mLock")
     protected abstract void onResetLocked();
-
-    @GuardedBy("mLock")
-    private void assertExecutedLocked() {
-        if (!mExecuted) {
-            throw new IllegalStateException("Not executed yet");
-        }
-    }
-
-    @GuardedBy("mLock")
-    private void assertRevertedLocked() {
-        if (!mReverted) {
-            throw new IllegalStateException("Not reverted yet");
-        }
-    }
 }
