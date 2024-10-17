@@ -68,7 +68,7 @@ public final class ActionBasedRuleTest extends SharedSidelessTestCase {
     public void testAddAction_sameAction() {
         mRule.addAction(mFakeAction1);
 
-        assertThrows(IllegalArgumentException.class, () -> mRule.addAction(mFakeAction1));
+        assertThrows(IllegalStateException.class, () -> mRule.addAction(mFakeAction1));
     }
 
     @Test
@@ -110,7 +110,7 @@ public final class ActionBasedRuleTest extends SharedSidelessTestCase {
     public void testExecuteOrCache_beforeTest_sameAction() throws Exception {
         mRule.executeOrCache(mFakeAction1);
 
-        assertThrows(IllegalArgumentException.class, () -> mRule.executeOrCache(mFakeAction1));
+        assertThrows(IllegalStateException.class, () -> mRule.executeOrCache(mFakeAction1));
     }
 
     @Test

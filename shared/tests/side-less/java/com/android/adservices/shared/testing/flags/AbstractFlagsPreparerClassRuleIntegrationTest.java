@@ -17,6 +17,7 @@ package com.android.adservices.shared.testing.flags;
 
 import static com.android.adservices.shared.testing.SdkSandbox.State.DISABLED;
 import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest.PERSISTENT;
+import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest.UNTIL_REBOOT;
 
 import com.android.adservices.shared.meta_testing.AbstractFlagsPreparerClassRuleIntegrationTestCase;
 import com.android.adservices.shared.meta_testing.DeviceConfigWrapper;
@@ -66,7 +67,7 @@ public final class AbstractFlagsPreparerClassRuleIntegrationTest
         FakeDeviceConfig fakeDeviceConfig = new FakeDeviceConfig();
         fakeDeviceConfig.setSyncDisabledMode(PERSISTENT);
         deviceConfig.setWrapped(fakeDeviceConfig);
-        return new FakeFlagsPreparerClassRule(sdkSandbox, deviceConfig, PERSISTENT);
+        return new FakeFlagsPreparerClassRule(sdkSandbox, deviceConfig, UNTIL_REBOOT);
     }
 
     @Override

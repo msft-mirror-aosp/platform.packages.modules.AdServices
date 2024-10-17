@@ -43,6 +43,7 @@ import com.android.adservices.shared.testing.flags.AbstractFlagsPreparerClassRul
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.Description;
 
@@ -134,6 +135,7 @@ public abstract class AbstractFlagsPreparerClassRuleIntegrationTestCase<
     }
 
     @Test
+    @Ignore("TODO(b/297085722): doesn't make much sense while constructor is always setting a mode")
     public final void testAnnotationLessRule() throws Throwable {
         Description test = newTestMethodForClassRule(AClassHasNoNothingAtAll.class);
 

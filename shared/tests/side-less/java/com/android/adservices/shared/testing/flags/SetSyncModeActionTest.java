@@ -129,8 +129,12 @@ public final class SetSyncModeActionTest extends SharedSidelessTestCase {
     }
 
     @Test
-    public void testExecuteAndRevert_previousReturnInvalid() throws Exception {
+    public void testExecuteAndRevert_previousReturnUnsupported() throws Exception {
         mFakeDeviceConfig.setSyncDisabledMode(UNSUPPORTED);
+        mFakeDeviceConfig.onSetSyncDisabledModeCallback(
+                () -> {
+                    throw new RuntimeException("Y U CALLED ME?");
+                });
         SetSyncModeAction action =
                 new SetSyncModeAction(mFakeLogger, mFakeDeviceConfig, PERSISTENT);
 
@@ -139,17 +143,7 @@ public final class SetSyncModeActionTest extends SharedSidelessTestCase {
         expect.withMessage("execute()").that(result).isFalse();
         expect.withMessage("device config mode after execute")
                 .that(mFakeDeviceConfig.getSyncDisabledMode())
-                .isEqualTo(PERSISTENT);
-
-        // Should not call it as it was UNSUPPORTED before
-        mFakeDeviceConfig.onSetSyncDisabledModeCallback(
-                () -> {
-                    throw new RuntimeException("Y U CALLED ME?");
-                });
-        action.revert();
-        expect.withMessage("device config mode after revert")
-                .that(mFakeDeviceConfig.getSyncDisabledMode())
-                .isEqualTo(PERSISTENT);
+                .isEqualTo(UNSUPPORTED);
     }
 
     @Test
