@@ -38,6 +38,7 @@ public final class FakeAction implements Action {
     private final Logger mLog = new Logger(DynamicLogger.getInstance(), FakeAction.class);
 
     private boolean mReverted;
+    private boolean mThrowIfExecuteCalledMultipleTimes;
     private int mExecutionOrder;
     private int mReversionOrder;
 
@@ -81,18 +82,8 @@ public final class FakeAction implements Action {
     public void reset() {
         if (mOnResetException != null) {
             throw mOnResetException;
-            // Don't need to set it to null - if it's set, it's because it should throw
-        }
-        if (mExecutionOrderCounter != null) {
-            mExecutionOrderCounter.set(0);
-        }
-        if (mReversionOrderCounter != null) {
-            mReversionOrderCounter.set(0);
         }
         mNumberTimesExecuteCalled.set(0);
-        mOnExecuteException = null;
-        mOnRevertException = null;
-        mOnExecute = null;
         mReverted = false;
         mExecutionOrder = 0;
         mReversionOrder = 0;
@@ -101,6 +92,10 @@ public final class FakeAction implements Action {
     @Override
     public boolean execute() throws Exception {
         int callNumber = mNumberTimesExecuteCalled.incrementAndGet();
+        if (mThrowIfExecuteCalledMultipleTimes && callNumber > 1) {
+            throw new IllegalArgumentException(
+                    "Should be called just once, but this is call #" + callNumber);
+        }
         if (mExecutionOrderCounter != null) {
             mExecutionOrder = mExecutionOrderCounter.incrementAndGet();
         }
@@ -135,6 +130,14 @@ public final class FakeAction implements Action {
     /** Sets an exception to be thrown by {@link #execute()}. */
     public void onExecuteThrows(Exception exception) {
         mOnExecuteException = Objects.requireNonNull(exception, "exception cannot be null");
+    }
+
+    /**
+     * When called, {@link #execute()} will throw if called again (without calling {@link
+     * #reset()}).
+     */
+    public void throwIfExecuteCalledMultipleTime() {
+        mThrowIfExecuteCalledMultipleTimes = true;
     }
 
     @Override
@@ -201,7 +204,9 @@ public final class FakeAction implements Action {
                 .append(", mReverted=")
                 .append(mReverted)
                 .append(", mOnExecute=")
-                .append(mOnExecute);
+                .append(mOnExecute)
+                .append(",  mThrowIfExecuteCalledMultipleTimes")
+                .append(mThrowIfExecuteCalledMultipleTimes);
         if (mExecutionOrderCounter != null) {
             string.append(", mExecutionOrder=")
                     .append(mExecutionOrder)

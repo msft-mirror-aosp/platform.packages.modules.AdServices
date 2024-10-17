@@ -363,6 +363,22 @@ public final class ActionBasedRuleTest extends SharedSidelessTestCase {
     }
 
     @Test
+    public void testResetActionsForReuse() throws Throwable {
+        mFakeAction1.throwIfExecuteCalledMultipleTime();
+        mRule.addAction(mFakeAction1);
+
+        runRule();
+        expect.withMessage("number of times %s was executed", mFakeAction1)
+                .that(mFakeAction1.getNumberTimesExecuteCalled())
+                .isEqualTo(1);
+
+        runRule();
+        expect.withMessage("number of times %s was executed", mFakeAction1)
+                .that(mFakeAction1.getNumberTimesExecuteCalled())
+                .isEqualTo(1);
+    }
+
+    @Test
     public void testDecorateToString() {
         expect.withMessage("toString()").that(mRule.toString()).contains(", concrete=I am!");
     }
