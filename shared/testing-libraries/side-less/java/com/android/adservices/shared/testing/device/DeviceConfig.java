@@ -15,8 +15,6 @@
  */
 package com.android.adservices.shared.testing.device;
 
-import java.util.Locale;
-
 /** Side-agnostic abstraction to interact with the {@code DeviceConfig}. */
 public interface DeviceConfig {
 
@@ -28,14 +26,21 @@ public interface DeviceConfig {
 
     /* Synchronization mode */
     enum SyncDisabledModeForTest {
-        UNSUPPORTED,
-        NONE,
-        PERSISTENT,
-        UNTIL_REBOOT;
+        // TODO(b/297085722): remove UNSUPPORTED once tests don't run on R anymore
+        UNSUPPORTED(false),
+        NONE(true),
+        PERSISTENT(true),
+        UNTIL_REBOOT(true);
 
-        /** Gets the value of the mode used on {@code cmd device_config} parameters. */
-        String getShellCommandString() {
-            return toString().toLowerCase(Locale.ENGLISH);
+        /** Whether the state is a valid one. */
+        public boolean isValid() {
+            return mValid;
+        }
+
+        private final boolean mValid;
+
+        SyncDisabledModeForTest(boolean valid) {
+            mValid = valid;
         }
     }
 }

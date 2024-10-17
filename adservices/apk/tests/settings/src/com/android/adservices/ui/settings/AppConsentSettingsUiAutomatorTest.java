@@ -43,7 +43,6 @@ import androidx.test.uiautomator.Until;
 import com.android.adservices.LogUtil;
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
-import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.annotations.DisableGlobalKillSwitch;
 import com.android.adservices.common.annotations.SetAllLogcatTags;
@@ -52,6 +51,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
+import com.android.adservices.ui.util.AdservicesSettingsUiTestCase;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.compatibility.common.util.ShellUtils;
 
@@ -64,7 +64,7 @@ import org.junit.Test;
 @DisableGlobalKillSwitch
 @SetAllLogcatTags
 @SetCompatModeFlags
-public final class AppConsentSettingsUiAutomatorTest extends AdServicesUnitTestCase {
+public final class AppConsentSettingsUiAutomatorTest extends AdservicesSettingsUiTestCase {
     private static final String TEST_APP_NAME = "com.example.adservices.samples.ui.consenttestapp";
     private static final String TEST_APP_APK_PATH =
             "/data/local/tmp/cts/install/" + TEST_APP_NAME + ".apk";

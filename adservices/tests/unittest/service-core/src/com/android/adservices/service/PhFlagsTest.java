@@ -111,7 +111,6 @@ import static com.android.adservices.service.Flags.DEFAULT_PAS_SCRIPT_EXECUTION_
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_PAS_UX_ENABLED;
-import static com.android.adservices.service.Flags.DEFAULT_RVC_POST_OTA_NOTIF_AGE_CHECK;
 import static com.android.adservices.service.Flags.DEFAULT_R_NOTIFICATION_DEFAULT_CONSENT_FIX_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_SPE_ON_ASYNC_REGISTRATION_FALLBACK_JOB_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_SPE_ON_BACKGROUND_FETCH_JOB_ENABLED;
@@ -263,6 +262,7 @@ import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_SET_TYPE
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_SIGN_BATCH_SIZE;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_SIGN_JOIN_FEATURE_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_DEFAULT_KANON_SIGN_JOIN_LOGGING_ENABLED;
+import static com.android.adservices.service.Flags.FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS;
 import static com.android.adservices.service.Flags.FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_BATCH_DELAY_SECONDS;
 import static com.android.adservices.service.Flags.FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_MAX_ITEMS_PER_BATCH;
@@ -732,6 +732,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_DEBUG_REP
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_AUCTION_SERVER_FEATURE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_ON_DEVICE_AUCTION_FEATURE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_BATCH_DELAY_SECONDS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_MAX_ITEMS_PER_BATCH;
@@ -1052,7 +1053,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNAL
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_RECORD_MANUAL_INTERACTION_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_RVC_POST_OTA_NOTIF_AGE_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_R_NOTIFICATION_DEFAULT_CONSENT_FIX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_SDK_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.FlagsConstants.KEY_SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED;
@@ -3402,6 +3402,14 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    public void testGetFledgeEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS,
+                FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS,
+                Flags::getFledgeEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests);
+    }
+
+    @Test
     public void testGetFledgeScheduleCustomAudienceUpdateJobPeriodMs() {
         mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_PERIOD_MS,
@@ -3884,14 +3892,6 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 FeatureFlagType.FEATURE_FLAG,
                 value -> mockGetAdServicesFlag(KEY_ENABLE_AD_SERVICES_SYSTEM_API, value),
                 Flags::getU18UxEnabled);
-    }
-
-    @Test
-    public void testRvcPostOtaNotifAgeCheck() {
-        mFlagsTestHelper.testConfigFlag(
-                KEY_RVC_POST_OTA_NOTIF_AGE_CHECK,
-                DEFAULT_RVC_POST_OTA_NOTIF_AGE_CHECK,
-                Flags::getRvcPostOtaNotifAgeCheck);
     }
 
     @Test

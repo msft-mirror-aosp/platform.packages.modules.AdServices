@@ -196,12 +196,18 @@ public final class SetSyncModeActionTest extends SharedSidelessTestCase {
     }
 
     @Test
-    public void testToString() {
+    public void testToString() throws Exception {
         SetSyncModeAction action =
                 new SetSyncModeAction(mFakeLogger, mFakeDeviceConfig, UNTIL_REBOOT);
 
-        expect.withMessage("toString()")
+        expect.withMessage("toString() before execute")
                 .that(action.toString())
-                .isEqualTo("SetSyncModeAction[UNTIL_REBOOT]");
+                .isEqualTo("SetSyncModeAction[mode=UNTIL_REBOOT, previousMode=null]");
+
+        action.execute();
+
+        expect.withMessage("toString() after execute")
+                .that(action.toString())
+                .isEqualTo("SetSyncModeAction[mode=UNTIL_REBOOT, previousMode=NONE]");
     }
 }
