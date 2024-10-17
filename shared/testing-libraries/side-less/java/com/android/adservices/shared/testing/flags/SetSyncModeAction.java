@@ -67,6 +67,20 @@ public final class SetSyncModeAction extends DeviceConfigAction {
     }
 
     @Override
+    public int hashCode() {
+        return Objects.hash(mMode);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null) return false;
+        if (getClass() != obj.getClass()) return false;
+        SetSyncModeAction other = (SetSyncModeAction) obj;
+        return mMode == other.mMode;
+    }
+
+    @Override
     public String toString() {
         return "SetSyncModeAction[mode=" + mMode + ", previousMode=" + mPreviousMode + ']';
     }

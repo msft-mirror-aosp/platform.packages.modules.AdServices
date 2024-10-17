@@ -35,8 +35,33 @@ public final class AbstractActionTest extends SharedSidelessTestCase {
 
         boolean result = action.execute();
         expect.withMessage("first call to execute()").that(result).isTrue();
+        var thrown = assertThrows(IllegalStateException.class, () -> action.execute());
 
-        assertThrows(IllegalStateException.class, () -> action.execute());
+        expect.withMessage("exception message")
+                .that(thrown)
+                .hasMessageThat()
+                .contains(action.toString());
+        expect.withMessage("number of onExecute() calls")
+                .that(action.numberOnExecuteCalls)
+                .isEqualTo(1);
+    }
+
+    @Test
+    public void testRevertTwice() throws Exception {
+        ConcreteAction action = new ConcreteAction(mLog);
+
+        action.execute();
+
+        action.revert();
+        var thrown = assertThrows(IllegalStateException.class, () -> action.revert());
+
+        expect.withMessage("exception message")
+                .that(thrown)
+                .hasMessageThat()
+                .contains(action.toString());
+        expect.withMessage("number of onRevert() calls")
+                .that(action.numberOnRevertCalls)
+                .isEqualTo(1);
     }
 
     @Test
@@ -53,12 +78,15 @@ public final class AbstractActionTest extends SharedSidelessTestCase {
 
         action.revert();
 
-        expect.withMessage("onRevert() called").that(action.onRevertCalled).isFalse();
+        expect.withMessage("number of onRevert() calls")
+                .that(action.numberOnRevertCalls)
+                .isEqualTo(0);
     }
 
     private static final class ConcreteAction extends AbstractAction {
         public boolean onExecuteResult = true;
-        public boolean onRevertCalled;
+        public int numberOnExecuteCalls;
+        public int numberOnRevertCalls;
 
         private ConcreteAction(Logger logger) {
             super(logger);
@@ -66,12 +94,13 @@ public final class AbstractActionTest extends SharedSidelessTestCase {
 
         @Override
         protected boolean onExecute() {
+            numberOnExecuteCalls++;
             return onExecuteResult;
         }
 
         @Override
         protected void onRevert() {
-            onRevertCalled = true;
+            numberOnRevertCalls++;
         }
     }
 }
