@@ -56,7 +56,7 @@ import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
 import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.measurement.AggregateContributionBuckets;
+import com.android.adservices.service.measurement.AggregatableNamedBudgets;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.AttributionConfig;
 import com.android.adservices.service.measurement.EventReport;
@@ -68,8 +68,8 @@ import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.TriggerFixture;
 import com.android.adservices.service.measurement.TriggerSpecs;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
-import com.android.adservices.service.measurement.aggregation.AggregatableBucket;
 import com.android.adservices.service.measurement.aggregation.AggregatableKeyValue;
+import com.android.adservices.service.measurement.aggregation.AggregatableNamedBudget;
 import com.android.adservices.service.measurement.aggregation.AggregatableValuesConfig;
 import com.android.adservices.service.measurement.aggregation.AggregateAttributionData;
 import com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution;
@@ -154,10 +154,9 @@ public class AttributionJobHandlerTest {
     private static final String AGGREGATE_DEDUPLICATION_KEYS_1 =
             "[{\"deduplication_key\": \"" + 10 + "\"" + " }" + "]";
 
-    private static final String BUCKET_NAME = "bucket1";
-    private static final String UNMATCHED_BUCKET_NAME = "bucket2";
-    private static final String AGGREGATABLE_BUCKET =
-            "[{\"bucket\": \"" + BUCKET_NAME + "\"" + " }" + "]";
+    private static final String BUDGET_NAME = "budget1";
+    private static final String UNMATCHED_BUDGET_NAME = "budget2";
+    private static final String NAMED_BUDGET = "[{\"name\": \"" + BUDGET_NAME + "\"" + " }" + "]";
 
     private static Trigger createAPendingTriggerEventScopeOnly() {
         return TriggerFixture.getValidTriggerBuilder()
@@ -3122,11 +3121,12 @@ public class AttributionJobHandlerTest {
     }
 
     @Test
-    public void shouldDoSimpleAttributionGenerateUnencryptedAggregateReportWithAggregatableBucket()
+    public void shouldDoSimpleAttributionGenerateUnencryptedAggregateReportWithNamedBudget()
             throws DatastoreException, JSONException {
-        JSONObject bucketObj = new JSONObject();
-        bucketObj.put(AggregatableBucket.AggregatableBucketContract.BUCKET, BUCKET_NAME);
-        AggregatableBucket aggregatableBucket = new AggregatableBucket(bucketObj, mFlags);
+        JSONObject budgetObj = new JSONObject();
+        budgetObj.put(AggregatableNamedBudget.NamedBudgetContract.NAME, BUDGET_NAME);
+        AggregatableNamedBudget aggregatableNamedBudget =
+                new AggregatableNamedBudget(budgetObj, mFlags);
 
         AggregateTriggerData attributionTriggerData1 =
                 new AggregateTriggerData.Builder()
@@ -3149,7 +3149,7 @@ public class AttributionJobHandlerTest {
                                 Arrays.asList(attributionTriggerData1, attributionTriggerData2))
                         .setValueConfigs(configList)
                         .setAggregateDeduplicationKeys(List.of())
-                        .setAggregatableBuckets(Arrays.asList(aggregatableBucket));
+                        .setNamedBudgets(Arrays.asList(aggregatableNamedBudget));
 
         JSONArray triggerData = getAggregateTriggerData();
         Trigger trigger =
@@ -3160,13 +3160,13 @@ public class AttributionJobHandlerTest {
                         .setEventTriggers(getEventTriggers())
                         .setAggregateTriggerData(triggerData.toString())
                         .setAggregateValuesString("{\"campaignCounts\":2004,\"geoValue\":1644}")
-                        .setAggregatableBucketsString(AGGREGATABLE_BUCKET)
+                        .setNamedBudgetsString(NAMED_BUDGET)
                         .setAggregatableAttributionTrigger(
                                 aggregatableAttributionTriggerBuilder.build())
                         .build();
 
-        AggregateContributionBuckets sourceBuckets = new AggregateContributionBuckets();
-        sourceBuckets.createCapacityBucket(BUCKET_NAME, 30000);
+        AggregatableNamedBudgets sourceAggregatableNamedBudgets = new AggregatableNamedBudgets();
+        sourceAggregatableNamedBudgets.createContributionBudget(BUDGET_NAME, 30000);
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setId("sourceId1")
@@ -3176,7 +3176,7 @@ public class AttributionJobHandlerTest {
                         .setAggregateSource(
                                 "{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}")
                         .setFilterDataString("{\"product\":[\"1234\",\"2345\"]}")
-                        .setAggregateContributionBuckets(sourceBuckets)
+                        .setAggregatableNamedBudgets(sourceAggregatableNamedBudgets)
                         .build();
         AggregateReport expectedAggregateReport =
                 new AggregateReport.Builder()
@@ -3208,7 +3208,7 @@ public class AttributionJobHandlerTest {
                         .setApi(API)
                         .build();
 
-        when(mFlags.getMeasurementEnableAggregateContributionBudgetCapacity()).thenReturn(true);
+        when(mFlags.getMeasurementEnableAggregatableNamedBudgets()).thenReturn(true);
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
         when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
@@ -3228,27 +3228,28 @@ public class AttributionJobHandlerTest {
 
         assertAggregateReportsEqual(expectedAggregateReport, aggregateReportCaptor.getValue());
         assertThat(sourceArg.getValue().getAggregateContributions()).isEqualTo(2004 + 1644);
-        assertThat(sourceArg.getValue().getAggregateContributionBuckets()).isNotNull();
-        AggregateContributionBuckets expectedBuckets = new AggregateContributionBuckets();
-        expectedBuckets.createCapacityBucket(BUCKET_NAME, 30000);
-        expectedBuckets.setBucketContribution(BUCKET_NAME, 2004 + 1644);
+        assertThat(sourceArg.getValue().getAggregatableNamedBudgets()).isNotNull();
+        AggregatableNamedBudgets expectedAggregatableNamedBudgets = new AggregatableNamedBudgets();
+        expectedAggregatableNamedBudgets.createContributionBudget(BUDGET_NAME, 30000);
+        expectedAggregatableNamedBudgets.setContribution(BUDGET_NAME, 2004 + 1644);
         assertThat(
                         sourceArg
                                 .getValue()
-                                .getAggregateContributionBuckets()
-                                .maybeGetBucketContribution(BUCKET_NAME)
+                                .getAggregatableNamedBudgets()
+                                .maybeGetContribution(BUDGET_NAME)
                                 .get())
                 .isEqualTo(2004 + 1644);
-        assertThat(sourceArg.getValue().getAggregateContributionBuckets())
-                .isEqualTo(expectedBuckets);
+        assertThat(sourceArg.getValue().getAggregatableNamedBudgets())
+                .isEqualTo(expectedAggregatableNamedBudgets);
     }
 
     @Test
-    public void shouldDoSimpleAttributionGenUnencryptedAggrReportWithPreexistingBucketContribution()
+    public void shouldDoSimpleAttributionGenUnencryptedAggrReportWithPreexistingContribution()
             throws DatastoreException, JSONException {
-        JSONObject bucketObj = new JSONObject();
-        bucketObj.put(AggregatableBucket.AggregatableBucketContract.BUCKET, BUCKET_NAME);
-        AggregatableBucket aggregatableBucket = new AggregatableBucket(bucketObj, mFlags);
+        JSONObject budgetObj = new JSONObject();
+        budgetObj.put(AggregatableNamedBudget.NamedBudgetContract.NAME, BUDGET_NAME);
+        AggregatableNamedBudget aggregatableNamedBudget =
+                new AggregatableNamedBudget(budgetObj, mFlags);
 
         AggregateTriggerData attributionTriggerData1 =
                 new AggregateTriggerData.Builder()
@@ -3271,7 +3272,7 @@ public class AttributionJobHandlerTest {
                                 Arrays.asList(attributionTriggerData1, attributionTriggerData2))
                         .setValueConfigs(configList)
                         .setAggregateDeduplicationKeys(List.of())
-                        .setAggregatableBuckets(Arrays.asList(aggregatableBucket));
+                        .setNamedBudgets(Arrays.asList(aggregatableNamedBudget));
 
         JSONArray triggerData = getAggregateTriggerData();
         Trigger trigger =
@@ -3282,15 +3283,15 @@ public class AttributionJobHandlerTest {
                         .setEventTriggers(getEventTriggers())
                         .setAggregateTriggerData(triggerData.toString())
                         .setAggregateValuesString("{\"campaignCounts\":2004,\"geoValue\":1644}")
-                        .setAggregatableBucketsString(AGGREGATABLE_BUCKET)
+                        .setNamedBudgetsString(NAMED_BUDGET)
                         .setAggregatableAttributionTrigger(
                                 aggregatableAttributionTriggerBuilder.build())
                         .build();
 
-        AggregateContributionBuckets sourceBuckets = new AggregateContributionBuckets();
-        sourceBuckets.createCapacityBucket(BUCKET_NAME, 30000);
-        sourceBuckets.setBucketContribution(BUCKET_NAME, 100);
-        sourceBuckets.createCapacityBucket(UNMATCHED_BUCKET_NAME, 1000);
+        AggregatableNamedBudgets sourceAggregatableNamedBudgets = new AggregatableNamedBudgets();
+        sourceAggregatableNamedBudgets.createContributionBudget(BUDGET_NAME, 30000);
+        sourceAggregatableNamedBudgets.setContribution(BUDGET_NAME, 100);
+        sourceAggregatableNamedBudgets.createContributionBudget(UNMATCHED_BUDGET_NAME, 1000);
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setId("sourceId1")
@@ -3300,7 +3301,7 @@ public class AttributionJobHandlerTest {
                         .setAggregateSource(
                                 "{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}")
                         .setFilterDataString("{\"product\":[\"1234\",\"2345\"]}")
-                        .setAggregateContributionBuckets(sourceBuckets)
+                        .setAggregatableNamedBudgets(sourceAggregatableNamedBudgets)
                         .setAggregateContributions(100)
                         .build();
         AggregateReport expectedAggregateReport =
@@ -3333,7 +3334,7 @@ public class AttributionJobHandlerTest {
                         .setApi(API)
                         .build();
 
-        when(mFlags.getMeasurementEnableAggregateContributionBudgetCapacity()).thenReturn(true);
+        when(mFlags.getMeasurementEnableAggregatableNamedBudgets()).thenReturn(true);
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
         when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
@@ -3353,35 +3354,36 @@ public class AttributionJobHandlerTest {
 
         assertAggregateReportsEqual(expectedAggregateReport, aggregateReportCaptor.getValue());
         assertThat(sourceArg.getValue().getAggregateContributions()).isEqualTo(100 + 2004 + 1644);
-        assertThat(sourceArg.getValue().getAggregateContributionBuckets()).isNotNull();
+        assertThat(sourceArg.getValue().getAggregatableNamedBudgets()).isNotNull();
         assertThat(
                         sourceArg
                                 .getValue()
-                                .getAggregateContributionBuckets()
-                                .maybeGetBucketContribution(BUCKET_NAME)
+                                .getAggregatableNamedBudgets()
+                                .maybeGetContribution(BUDGET_NAME)
                                 .get())
                 .isEqualTo(100 + 2004 + 1644);
         assertThat(
                         sourceArg
                                 .getValue()
-                                .getAggregateContributionBuckets()
-                                .maybeGetBucketContribution(UNMATCHED_BUCKET_NAME)
+                                .getAggregatableNamedBudgets()
+                                .maybeGetContribution(UNMATCHED_BUDGET_NAME)
                                 .get())
                 .isEqualTo(0);
-        AggregateContributionBuckets expectedBuckets = new AggregateContributionBuckets();
-        expectedBuckets.createCapacityBucket(BUCKET_NAME, 30000);
-        expectedBuckets.setBucketContribution(BUCKET_NAME, 100 + 2004 + 1644);
-        expectedBuckets.createCapacityBucket(UNMATCHED_BUCKET_NAME, 1000);
-        assertThat(sourceArg.getValue().getAggregateContributionBuckets())
-                .isEqualTo(expectedBuckets);
+        AggregatableNamedBudgets expectedAggregatableNamedBudgets = new AggregatableNamedBudgets();
+        expectedAggregatableNamedBudgets.createContributionBudget(BUDGET_NAME, 30000);
+        expectedAggregatableNamedBudgets.setContribution(BUDGET_NAME, 100 + 2004 + 1644);
+        expectedAggregatableNamedBudgets.createContributionBudget(UNMATCHED_BUDGET_NAME, 1000);
+        assertThat(sourceArg.getValue().getAggregatableNamedBudgets())
+                .isEqualTo(expectedAggregatableNamedBudgets);
     }
 
     @Test
-    public void shouldNotGenerateAggregateReportWhenMatchedBucketContributionOverBound()
+    public void shouldNotGenerateAggregateReportWhenMatchedNamedBudgetContributionOverBound()
             throws DatastoreException, JSONException {
-        JSONObject bucketObj = new JSONObject();
-        bucketObj.put(AggregatableBucket.AggregatableBucketContract.BUCKET, BUCKET_NAME);
-        AggregatableBucket aggregatableBucket = new AggregatableBucket(bucketObj, mFlags);
+        JSONObject budgetObj = new JSONObject();
+        budgetObj.put(AggregatableNamedBudget.NamedBudgetContract.NAME, BUDGET_NAME);
+        AggregatableNamedBudget aggregatableNamedBudget =
+                new AggregatableNamedBudget(budgetObj, mFlags);
 
         AggregateTriggerData attributionTriggerData1 =
                 new AggregateTriggerData.Builder()
@@ -3404,7 +3406,7 @@ public class AttributionJobHandlerTest {
                                 Arrays.asList(attributionTriggerData1, attributionTriggerData2))
                         .setValueConfigs(configList)
                         .setAggregateDeduplicationKeys(List.of())
-                        .setAggregatableBuckets(Arrays.asList(aggregatableBucket));
+                        .setNamedBudgets(Arrays.asList(aggregatableNamedBudget));
 
         JSONArray triggerData = getAggregateTriggerData();
         Trigger trigger =
@@ -3415,13 +3417,13 @@ public class AttributionJobHandlerTest {
                         .setEventTriggers(getEventTriggers())
                         .setAggregateTriggerData(triggerData.toString())
                         .setAggregateValuesString("{\"campaignCounts\":2004,\"geoValue\":1644}")
-                        .setAggregatableBucketsString(AGGREGATABLE_BUCKET)
+                        .setNamedBudgetsString(NAMED_BUDGET)
                         .setAggregatableAttributionTrigger(
                                 aggregatableAttributionTriggerBuilder.build())
                         .build();
 
-        AggregateContributionBuckets sourceBuckets = new AggregateContributionBuckets();
-        sourceBuckets.createCapacityBucket(BUCKET_NAME, 3000);
+        AggregatableNamedBudgets sourceAggregatableNamedBudgets = new AggregatableNamedBudgets();
+        sourceAggregatableNamedBudgets.createContributionBudget(BUDGET_NAME, 3000);
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
                         .setId("sourceId1")
@@ -3431,10 +3433,10 @@ public class AttributionJobHandlerTest {
                         .setAggregateSource(
                                 "{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}")
                         .setFilterDataString("{\"product\":[\"1234\",\"2345\"]}")
-                        .setAggregateContributionBuckets(sourceBuckets)
+                        .setAggregatableNamedBudgets(sourceAggregatableNamedBudgets)
                         .build();
 
-        when(mFlags.getMeasurementEnableAggregateContributionBudgetCapacity()).thenReturn(true);
+        when(mFlags.getMeasurementEnableAggregatableNamedBudgets()).thenReturn(true);
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
         when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
@@ -3483,7 +3485,7 @@ public class AttributionJobHandlerTest {
                         .setAggregateContributions(65000)
                         .build();
 
-        when(mFlags.getMeasurementEnableAggregateContributionBudgetCapacity()).thenReturn(true);
+        when(mFlags.getMeasurementEnableAggregatableNamedBudgets()).thenReturn(true);
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
         when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);

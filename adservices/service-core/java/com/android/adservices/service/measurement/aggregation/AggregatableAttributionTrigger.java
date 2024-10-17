@@ -33,7 +33,7 @@ import java.util.Optional;
 public class AggregatableAttributionTrigger {
 
     private List<AggregateTriggerData> mTriggerData;
-    @Nullable private List<AggregatableBucket> mAggregatableBuckets;
+    @Nullable private List<AggregatableNamedBudget> mNamedBudgets;
     @Nullable private List<AggregatableValuesConfig> mValueConfigs;
     private Optional<List<AggregateDeduplicationKey>> mAggregateDeduplicationKeys;
 
@@ -49,12 +49,12 @@ public class AggregatableAttributionTrigger {
         AggregatableAttributionTrigger attributionTrigger = (AggregatableAttributionTrigger) obj;
         return Objects.equals(mTriggerData, attributionTrigger.mTriggerData)
                 && Objects.equals(mValueConfigs, attributionTrigger.mValueConfigs)
-                && Objects.equals(mAggregatableBuckets, attributionTrigger.mAggregatableBuckets);
+                && Objects.equals(mNamedBudgets, attributionTrigger.mNamedBudgets);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mTriggerData, mAggregatableBuckets, mValueConfigs);
+        return Objects.hash(mTriggerData, mNamedBudgets, mValueConfigs);
     }
 
     /**
@@ -80,12 +80,12 @@ public class AggregatableAttributionTrigger {
     }
 
     /**
-     * Returns a list of AggregatableBucket that contains bucket name, filters, and not_filters for
-     * each bucket.
+     * Returns a list of AggregatableNamedBudget that contains name, filters, and not_filters for
+     * each budget.
      */
     @Nullable
-    public List<AggregatableBucket> getAggregatableBuckets() {
-        return mAggregatableBuckets;
+    public List<AggregatableNamedBudget> getNamedBudgets() {
+        return mNamedBudgets;
     }
 
     /**
@@ -120,36 +120,37 @@ public class AggregatableAttributionTrigger {
     }
 
     /**
-     * Extract the value for key "bucket" from the {@link AggregatableBucket} aggregatableBucket.
+     * Extract the value for key "name" from the {@link AggregatableNamedBudget}
+     * aggregatableNamedBudget.
      *
      * @param sourceFilterMap the source filter map of the AggregatableAttributionSource.
      */
-    public Optional<String> maybeExtractBucket(FilterMap sourceFilterMap, Flags flags) {
-        if (getAggregatableBuckets() == null || getAggregatableBuckets().isEmpty()) {
+    public Optional<String> maybeExtractNamedBudget(FilterMap sourceFilterMap, Flags flags) {
+        if (getNamedBudgets() == null || getNamedBudgets().isEmpty()) {
             return Optional.empty();
         }
 
         if (sourceFilterMap.isEmpty(flags)) {
-            return Optional.of(getAggregatableBuckets().get(0).getBucket());
+            return Optional.of(getNamedBudgets().get(0).getName());
         }
         Filter filter = new Filter(flags);
-        for (AggregatableBucket aggregatableBucket : getAggregatableBuckets()) {
-            if (aggregatableBucket.getFilterSet() != null
+        for (AggregatableNamedBudget aggregatableNamedBudget : getNamedBudgets()) {
+            if (aggregatableNamedBudget.getFilterSet() != null
                     && !filter.isFilterMatch(
                             sourceFilterMap,
-                            aggregatableBucket.getFilterSet(),
+                            aggregatableNamedBudget.getFilterSet(),
                             /* isFilter= */ true)) {
                 continue;
             }
 
-            if (aggregatableBucket.getNotFilterSet() != null
+            if (aggregatableNamedBudget.getNotFilterSet() != null
                     && !filter.isFilterMatch(
                             sourceFilterMap,
-                            aggregatableBucket.getNotFilterSet(),
+                            aggregatableNamedBudget.getNotFilterSet(),
                             /* isFilter= */ false)) {
                 continue;
             }
-            return Optional.of(aggregatableBucket.getBucket());
+            return Optional.of(aggregatableNamedBudget.getName());
         }
         return Optional.empty();
     }
@@ -184,9 +185,9 @@ public class AggregatableAttributionTrigger {
             return this;
         }
 
-        /** See {@link AggregatableAttributionTrigger#getAggregatableBuckets()} ()}. */
-        public Builder setAggregatableBuckets(List<AggregatableBucket> aggregatableBuckets) {
-            mBuilding.mAggregatableBuckets = aggregatableBuckets;
+        /** See {@link AggregatableAttributionTrigger#getNamedBudgets()} ()} ()}. */
+        public Builder setNamedBudgets(List<AggregatableNamedBudget> namedBudgets) {
+            mBuilding.mNamedBudgets = namedBudgets;
             return this;
         }
 
