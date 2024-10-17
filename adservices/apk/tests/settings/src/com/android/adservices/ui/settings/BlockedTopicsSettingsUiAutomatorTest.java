@@ -39,7 +39,7 @@ import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 import com.android.adservices.shared.testing.annotations.SetLongFlag;
-import com.android.adservices.ui.util.AdServicesUiTestCase;
+import com.android.adservices.ui.util.AdservicesSettingsUiTestCase;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.adservices.ui.util.BlockedTopicsSettingsTestUtil;
 
@@ -58,7 +58,7 @@ import org.junit.Test;
 @SetIntegerFlag(name = KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH, value = 2)
 @SetIntegerFlag(name = KEY_CONSENT_SOURCE_OF_TRUTH, value = 2)
 @SetLongFlag(name = KEY_TOPICS_EPOCH_JOB_PERIOD_MS, value = TEST_EPOCH_JOB_PERIOD_MS)
-public final class BlockedTopicsSettingsUiAutomatorTest extends AdServicesUiTestCase {
+public final class BlockedTopicsSettingsUiAutomatorTest extends AdservicesSettingsUiTestCase {
     // Time out to start UI launcher.
     private static final int LAUNCHER_LAUNCH_TIMEOUT = 3000;
     // The epoch length to override. It would increase the test running time if it's too long. And

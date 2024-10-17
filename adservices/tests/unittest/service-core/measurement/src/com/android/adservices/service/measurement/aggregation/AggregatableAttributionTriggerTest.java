@@ -55,6 +55,9 @@ import java.util.Set;
 public final class AggregatableAttributionTriggerTest {
     @Mock Flags mFlags;
 
+    private static final String BUCKET_NAME1 = "BUCKET1";
+    private static final String BUCKET_NAME2 = "BUCKET2";
+
     private List<AggregateTriggerData> createAggregateTriggerData() {
         AggregateTriggerData attributionTriggerData1 =
                 new AggregateTriggerData.Builder()
@@ -637,5 +640,244 @@ public final class AggregatableAttributionTriggerTest {
                                         aggregateDeduplicationKey1, aggregateDeduplicationKey2))
                         .maybeExtractDedupKey(sourceFilter, mFlags);
         assertTrue(aggregateDeduplicationKey.isEmpty());
+    }
+
+    @Test
+    public void testExtractBucket_bothBucketsHaveMatchingFilters() throws JSONException {
+        // Set up
+        JSONObject bucketObj1 = new JSONObject();
+        bucketObj1.put(AggregatableBucket.AggregatableBucketContract.BUCKET, BUCKET_NAME1);
+        JSONObject filterMap1 = new JSONObject();
+        filterMap1.put("1", new JSONArray(Arrays.asList("1234", "234")));
+        JSONArray filterSet1 = new JSONArray();
+        filterSet1.put(filterMap1);
+        bucketObj1.put(Filter.FilterContract.FILTERS, filterSet1);
+        AggregatableBucket aggregatableBucket1 = new AggregatableBucket(bucketObj1, mFlags);
+
+        JSONObject bucketObj2 = new JSONObject();
+        bucketObj2.put(AggregatableBucket.AggregatableBucketContract.BUCKET, BUCKET_NAME2);
+        JSONObject filterMap2 = new JSONObject();
+        filterMap2.put("1", new JSONArray(Arrays.asList("1234", "234")));
+        JSONArray filterSet2 = new JSONArray();
+        filterSet2.put(filterMap2);
+        bucketObj2.put(Filter.FilterContract.FILTERS, filterSet2);
+        AggregatableBucket aggregatableBucket2 = new AggregatableBucket(bucketObj2, mFlags);
+
+        Map<String, List<String>> sourceFilterMap = new HashMap<>();
+        sourceFilterMap.put("1", Arrays.asList("1234", "234"));
+        FilterMap sourceFilter =
+                new FilterMap.Builder().setAttributionFilterMap(sourceFilterMap).build();
+
+        // Execution
+        Optional<String> matchedBucket =
+                createExampleWithValues(
+                                /* aggregateDeduplicationKeys= */ null,
+                                Arrays.asList(aggregatableBucket1, aggregatableBucket2))
+                        .maybeExtractBucket(sourceFilter, mFlags);
+
+        // Assertion
+        assertThat(matchedBucket).isPresent();
+        assertThat(matchedBucket.get()).isEqualTo(BUCKET_NAME1);
+    }
+
+    @Test
+    public void testExtractBucket_firstBucketHasUnmatchedFilters() throws JSONException {
+        // Set up
+        JSONObject bucketObj1 = new JSONObject();
+        bucketObj1.put(AggregatableBucket.AggregatableBucketContract.BUCKET, BUCKET_NAME1);
+        JSONObject filterMap1 = new JSONObject();
+        filterMap1.put("1", new JSONArray(Arrays.asList("78")));
+        filterMap1.put("2", new JSONArray(Arrays.asList("1234", "234")));
+        JSONArray filterSet1 = new JSONArray();
+        filterSet1.put(filterMap1);
+        bucketObj1.put(Filter.FilterContract.FILTERS, filterSet1);
+        JSONObject notFilterMap1 = new JSONObject();
+        notFilterMap1.put("1", new JSONArray(Arrays.asList("91")));
+        notFilterMap1.put("2", new JSONArray(Arrays.asList("856", "23")));
+        JSONArray notFilterSet1 = new JSONArray();
+        notFilterSet1.put(notFilterMap1);
+        bucketObj1.put(Filter.FilterContract.NOT_FILTERS, notFilterSet1);
+        AggregatableBucket aggregatableBucket1 = new AggregatableBucket(bucketObj1, mFlags);
+
+        JSONObject bucketObj2 = new JSONObject();
+        bucketObj2.put(AggregatableBucket.AggregatableBucketContract.BUCKET, BUCKET_NAME2);
+        JSONObject filterMap2 = new JSONObject();
+        filterMap2.put("1", new JSONArray(Arrays.asList("91")));
+        filterMap2.put("2", new JSONArray(Arrays.asList("1234", "234")));
+        JSONArray filterSet2 = new JSONArray();
+        filterSet2.put(filterMap2);
+        bucketObj2.put(Filter.FilterContract.FILTERS, filterSet2);
+        JSONObject notFilterMap2 = new JSONObject();
+        notFilterMap2.put("1", new JSONArray(Arrays.asList("78")));
+        notFilterMap2.put("2", new JSONArray(Arrays.asList("856", "23")));
+        JSONArray notFilterSet2 = new JSONArray();
+        notFilterSet2.put(notFilterMap2);
+        bucketObj2.put(Filter.FilterContract.NOT_FILTERS, notFilterSet2);
+        AggregatableBucket aggregatableBucket2 = new AggregatableBucket(bucketObj2, mFlags);
+
+        Map<String, List<String>> sourceFilterMap = new HashMap<>();
+        sourceFilterMap.put("1", Collections.singletonList("91"));
+        sourceFilterMap.put("2", Arrays.asList("1234", "234"));
+        FilterMap sourceFilter =
+                new FilterMap.Builder().setAttributionFilterMap(sourceFilterMap).build();
+
+        // Execution
+        Optional<String> matchedBucket =
+                createExampleWithValues(
+                                /* aggregateDeduplicationKeys= */ null,
+                                Arrays.asList(aggregatableBucket1, aggregatableBucket2))
+                        .maybeExtractBucket(sourceFilter, mFlags);
+
+        // Assertion
+        assertThat(matchedBucket).isPresent();
+        assertThat(matchedBucket.get()).isEqualTo(BUCKET_NAME2);
+    }
+
+    @Test
+    public void testExtractBucket_firstBucketHasUnmatchedNotFilters() throws JSONException {
+        // Set up
+        JSONObject bucketObj1 = new JSONObject();
+        bucketObj1.put(AggregatableBucket.AggregatableBucketContract.BUCKET, BUCKET_NAME1);
+        JSONObject filterMap1 = new JSONObject();
+        filterMap1.put("1", new JSONArray(Arrays.asList("1234", "234")));
+        JSONArray filterSet1 = new JSONArray();
+        filterSet1.put(filterMap1);
+        bucketObj1.put(Filter.FilterContract.FILTERS, filterSet1);
+        JSONObject notFilterMap1 = new JSONObject();
+        notFilterMap1.put("2", new JSONArray(Arrays.asList("56")));
+        JSONArray notFilterSet1 = new JSONArray();
+        notFilterSet1.put(notFilterMap1);
+        bucketObj1.put(Filter.FilterContract.NOT_FILTERS, notFilterSet1);
+        AggregatableBucket aggregatableBucket1 = new AggregatableBucket(bucketObj1, mFlags);
+
+        JSONObject bucketObj2 = new JSONObject();
+        bucketObj2.put(AggregatableBucket.AggregatableBucketContract.BUCKET, BUCKET_NAME2);
+        JSONObject filterMap2 = new JSONObject();
+        filterMap2.put("2", new JSONArray(Arrays.asList("56")));
+        filterMap2.put("1", new JSONArray(Arrays.asList("1234", "234")));
+        JSONArray filterSet2 = new JSONArray();
+        filterSet2.put(filterMap2);
+        bucketObj2.put(Filter.FilterContract.FILTERS, filterSet2);
+        JSONObject notFilterMap2 = new JSONObject();
+        notFilterMap2.put("2", new JSONArray(Arrays.asList("78")));
+        notFilterMap2.put("1", new JSONArray(Arrays.asList("856", "23")));
+        JSONArray notFilterSet2 = new JSONArray();
+        notFilterSet2.put(notFilterMap2);
+        bucketObj2.put(Filter.FilterContract.NOT_FILTERS, notFilterSet2);
+        AggregatableBucket aggregatableBucket2 = new AggregatableBucket(bucketObj2, mFlags);
+
+        Map<String, List<String>> sourceFilterMap = new HashMap<>();
+        sourceFilterMap.put("2", Collections.singletonList("56"));
+        sourceFilterMap.put("1", Arrays.asList("1234", "234"));
+        FilterMap sourceFilter =
+                new FilterMap.Builder().setAttributionFilterMap(sourceFilterMap).build();
+
+        // Execution
+        Optional<String> matchedBucket =
+                createExampleWithValues(
+                                /* aggregateDeduplicationKeys= */ null,
+                                Arrays.asList(aggregatableBucket1, aggregatableBucket2))
+                        .maybeExtractBucket(sourceFilter, mFlags);
+
+        // Assertion
+        assertThat(matchedBucket).isPresent();
+        assertThat(matchedBucket.get()).isEqualTo(BUCKET_NAME2);
+    }
+
+    @Test
+    public void testExtractBucket_noFiltersInFirstBucket() throws JSONException {
+        JSONObject bucketObj1 = new JSONObject();
+        bucketObj1.put(AggregatableBucket.AggregatableBucketContract.BUCKET, BUCKET_NAME1);
+        AggregatableBucket aggregatableBucket1 = new AggregatableBucket(bucketObj1, mFlags);
+
+        JSONObject bucketObj2 = new JSONObject();
+        bucketObj2.put(AggregatableBucket.AggregatableBucketContract.BUCKET, BUCKET_NAME2);
+        JSONObject filterMap2 = new JSONObject();
+        filterMap2.put("1", new JSONArray(Arrays.asList("789")));
+        filterMap2.put("2", new JSONArray(Arrays.asList("1234", "234")));
+        JSONArray filterSet2 = new JSONArray();
+        filterSet2.put(filterMap2);
+        bucketObj2.put(Filter.FilterContract.FILTERS, filterSet2);
+        AggregatableBucket aggregatableBucket2 = new AggregatableBucket(bucketObj2, mFlags);
+
+        Map<String, List<String>> sourceFilterMap = new HashMap<>();
+        sourceFilterMap.put("1", Collections.singletonList("789"));
+        sourceFilterMap.put("2", Arrays.asList("1234", "234"));
+        FilterMap sourceFilter =
+                new FilterMap.Builder().setAttributionFilterMap(sourceFilterMap).build();
+
+        Optional<String> matchedBucket =
+                createExampleWithValues(
+                                /* aggregateDeduplicationKeys= */ null,
+                                Arrays.asList(aggregatableBucket1, aggregatableBucket2))
+                        .maybeExtractBucket(sourceFilter, mFlags);
+        assertThat(matchedBucket).isPresent();
+        assertThat(matchedBucket.get()).isEqualTo(BUCKET_NAME1);
+    }
+
+    @Test
+    public void testExtractBucket_noBucketsMatch() throws JSONException {
+        JSONObject bucketObj1 = new JSONObject();
+        bucketObj1.put(AggregatableBucket.AggregatableBucketContract.BUCKET, BUCKET_NAME1);
+        JSONObject filterMap1 = new JSONObject();
+        filterMap1.put("1", new JSONArray(Arrays.asList("78")));
+        filterMap1.put("2", new JSONArray(Arrays.asList("4321", "432")));
+        JSONArray filterSet1 = new JSONArray();
+        filterSet1.put(filterMap1);
+        bucketObj1.put(Filter.FilterContract.FILTERS, filterSet1);
+        AggregatableBucket aggregatableBucket1 = new AggregatableBucket(bucketObj1, mFlags);
+
+        JSONObject bucketObj2 = new JSONObject();
+        bucketObj2.put(AggregatableBucket.AggregatableBucketContract.BUCKET, BUCKET_NAME2);
+        JSONObject filterMap2 = new JSONObject();
+        filterMap2.put("1", new JSONArray(Arrays.asList("26")));
+        filterMap2.put("2", new JSONArray(Arrays.asList("9876", "654")));
+        JSONArray filterSet2 = new JSONArray();
+        filterSet2.put(filterMap2);
+        bucketObj2.put(Filter.FilterContract.FILTERS, filterSet2);
+        AggregatableBucket aggregatableBucket2 = new AggregatableBucket(bucketObj2, mFlags);
+
+        Map<String, List<String>> sourceFilterMap = new HashMap<>();
+        sourceFilterMap.put("1", Collections.singletonList("509"));
+        sourceFilterMap.put("2", Arrays.asList("1234", "234"));
+        FilterMap sourceFilter =
+                new FilterMap.Builder().setAttributionFilterMap(sourceFilterMap).build();
+
+        Optional<String> matchedBucket =
+                createExampleWithValues(
+                                /* aggregateDeduplicationKeys= */ null,
+                                Arrays.asList(aggregatableBucket1, aggregatableBucket2))
+                        .maybeExtractBucket(sourceFilter, mFlags);
+        assertThat(matchedBucket).isEmpty();
+    }
+
+    @Test
+    public void testExtractBucket_nullAggregatableBuckets() {
+        Map<String, List<String>> sourceFilterMap = new HashMap<>();
+        sourceFilterMap.put("1", Collections.singletonList("509"));
+        sourceFilterMap.put("2", Arrays.asList("1234", "234"));
+        FilterMap sourceFilter =
+                new FilterMap.Builder().setAttributionFilterMap(sourceFilterMap).build();
+
+        Optional<String> matchedBucket =
+                createExampleWithValues(
+                                /* aggregateDeduplicationKeys= */ null,
+                                /* aggregatableBuckets= */ null)
+                        .maybeExtractBucket(sourceFilter, mFlags);
+        assertThat(matchedBucket).isEmpty();
+    }
+
+    @Test
+    public void testExtractBucket_emptyAggregatableBuckets() {
+        Map<String, List<String>> sourceFilterMap = new HashMap<>();
+        sourceFilterMap.put("1", Collections.singletonList("509"));
+        sourceFilterMap.put("2", Arrays.asList("1234", "234"));
+        FilterMap sourceFilter =
+                new FilterMap.Builder().setAttributionFilterMap(sourceFilterMap).build();
+
+        Optional<String> matchedBucket =
+                createExampleWithValues(/* aggregateDeduplicationKeys= */ null, Arrays.asList())
+                        .maybeExtractBucket(sourceFilter, mFlags);
+        assertThat(matchedBucket).isEmpty();
     }
 }

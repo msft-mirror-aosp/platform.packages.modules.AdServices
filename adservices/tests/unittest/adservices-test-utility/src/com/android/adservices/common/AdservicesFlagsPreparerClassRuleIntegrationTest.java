@@ -15,13 +15,18 @@
  */
 package com.android.adservices.common;
 
-import com.android.adservices.shared.meta_testing.DeviceSideFlagsPreparerClassRuleTestCase;
+import com.android.adservices.shared.meta_testing.AbstractFlagsPreparerClassRuleIntegrationTestCase;
 import com.android.adservices.shared.testing.SdkSandbox;
+import com.android.adservices.shared.testing.SdkSandboxShellCmdImpl;
 import com.android.adservices.shared.testing.device.DeviceConfig;
-import com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest;
+import com.android.adservices.shared.testing.device.DeviceConfigShellCmdImpl;
+import com.android.adservices.shared.testing.device.DeviceGatewayImpl;
 
-public final class AdServicesFlagsPreparerClassRuleTest
-        extends DeviceSideFlagsPreparerClassRuleTestCase<AdServicesFlagsPreparerClassRule> {
+public final class AdservicesFlagsPreparerClassRuleIntegrationTest
+        extends AbstractFlagsPreparerClassRuleIntegrationTestCase<
+                AdServicesFlagsPreparerClassRule> {
+
+    private final DeviceGatewayImpl mDeviceGateway = new DeviceGatewayImpl();
 
     @Override
     protected AdServicesFlagsPreparerClassRule newRule() {
@@ -29,8 +34,12 @@ public final class AdServicesFlagsPreparerClassRuleTest
     }
 
     @Override
-    protected AdServicesFlagsPreparerClassRule newRule(
-            SdkSandbox sdkSandbox, DeviceConfig deviceConfig, SyncDisabledModeForTest syncMode) {
-        return new AdServicesFlagsPreparerClassRule(sdkSandbox, deviceConfig, syncMode);
+    protected SdkSandbox newSdkSandbox() {
+        return new SdkSandboxShellCmdImpl(mRealLogger, mDeviceGateway);
+    }
+
+    @Override
+    protected DeviceConfig newDeviceConfig() {
+        return new DeviceConfigShellCmdImpl(mRealLogger, mDeviceGateway);
     }
 }
