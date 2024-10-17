@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,30 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.adservices.shared.testing.annotations;
 
-package com.android.server.adservices.feature;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-/**
- * Privacy sandbox enrollment channels.
- *
- * @hide
- */
-public enum PrivacySandboxEnrollmentChannelCollection {
-    CONSENT_NOTIFICATION_DEBUG_CHANNEL,
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
-    ALREADY_ENROLLED_CHANNEL,
-
-    FIRST_CONSENT_NOTIFICATION_CHANNEL,
-
-    RECONSENT_NOTIFICATION_CHANNEL,
-
-    GA_GRADUATION_CHANNEL,
-
-    U18_DETENTION_CHANNEL,
-
-    CONSENT_NOTIFICATION_RESET_CHANNEL,
-
-    PAS_RECONSENT_NOTIFICATION_CHANNEL,
-
-    PAS_FIRST_CONSENT_NOTIFICATION_CHANNEL,
+/** Annotation used to enable or disable {@code SdkSandBox}. */
+@Retention(RUNTIME)
+@Target({TYPE, METHOD})
+public @interface SetSdkSandboxStateEnabled {
+    boolean value() default true;
 }

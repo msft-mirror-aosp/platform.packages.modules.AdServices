@@ -1522,12 +1522,19 @@ public interface Flags extends ModuleSharedFlags {
     // Enable scheduleCustomAudienceUpdateApi()
     boolean FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED = false;
 
+    @FeatureFlag
+    boolean FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS = false;
+
     long FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_PERIOD_MS = 1L * 60L * 60L * 1000L; // 1 hour
     long FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_FLEX_MS = 5L * 60L * 1000L; // 5 minutes
     int FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE = 30;
 
     default boolean getFledgeScheduleCustomAudienceUpdateEnabled() {
         return !getGlobalKillSwitch() && FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
+    }
+
+    default boolean getFledgeEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests() {
+        return FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS;
     }
 
     default long getFledgeScheduleCustomAudienceUpdateJobPeriodMs() {
@@ -2121,13 +2128,6 @@ public interface Flags extends ModuleSharedFlags {
     @Deprecated
     default boolean getConsentNotificationDebugMode() {
         return CONSENT_NOTIFICATION_DEBUG_MODE;
-    }
-
-    boolean DEFAULT_RVC_POST_OTA_NOTIF_AGE_CHECK = false;
-
-    /** When enabled, perform age check in rvc post ota notification channel. */
-    default boolean getRvcPostOtaNotifAgeCheck() {
-        return DEFAULT_RVC_POST_OTA_NOTIF_AGE_CHECK;
     }
 
     /** Available sources of truth to get consent for PPAPI. */
@@ -4614,14 +4614,14 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH;
     }
 
-    @ConfigFlag int MEASUREMENT_MAX_LENGTH_PER_AGGREGATABLE_BUCKET = 50;
+    @ConfigFlag int MEASUREMENT_MAX_LENGTH_PER_AGGREGATABLE_BUCKET = 25;
 
     /** Returns max length of an attribution source's aggregatable bucket budget's key. */
     default int getMeasurementMaxLengthPerAggregatableBucket() {
         return MEASUREMENT_MAX_LENGTH_PER_AGGREGATABLE_BUCKET;
     }
 
-    @ConfigFlag int MEASUREMENT_MAX_AGGREGATABLE_BUCKETS_PER_SOURCE_REGISTRATION = 20;
+    @ConfigFlag int MEASUREMENT_MAX_AGGREGATABLE_BUCKETS_PER_SOURCE_REGISTRATION = 25;
 
     /** Returns max size of an attribution source's aggregatable attribution bucket budget list. */
     default int getMeasurementMaxAggregatableBucketsPerSourceRegistration() {

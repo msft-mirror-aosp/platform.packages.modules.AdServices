@@ -674,6 +674,9 @@ public final class FlagsConstants {
     // FLEDGE Schedule Custom Audience Update keys
     public static final String KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED =
             "fledge_schedule_custom_audience_update_enabled";
+    public static final String
+            KEY_FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS =
+                    "Fledge__enable_schedule_custom_audience_update_additional_schedule_requests";
     public static final String KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_PERIOD_MS =
             "fledge_schedule_custom_audience_update_job_period_ms";
     public static final String KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_FLEX_MS =
@@ -1052,10 +1055,6 @@ public final class FlagsConstants {
     public static final String KEY_CONSENT_MANAGER_LAZY_ENABLE_MODE =
             "consent_manager_lazy_enable_mode";
 
-    // Rvc post ota notification age check keys.
-    public static final String KEY_RVC_POST_OTA_NOTIF_AGE_CHECK =
-            "rvc_post_ota_notification_age_check";
-
     // Source of truth to get consent for PPAPI
     public static final String KEY_CONSENT_SOURCE_OF_TRUTH = "consent_source_of_truth";
 
@@ -1433,9 +1432,6 @@ public final class FlagsConstants {
             "notification_dmsmissed_on_click";
 
     public static final String KEY_U18_UX_ENABLED = "u18_ux_enabled";
-
-    public static final String KEY_RVC_POST_OTA_NOTIFICATION_ENABLED =
-            "rvc_post_ota_notification_enabled";
 
     public static final String KEY_ENABLE_AD_SERVICES_SYSTEM_API = "enable_ad_services_system_api";
 

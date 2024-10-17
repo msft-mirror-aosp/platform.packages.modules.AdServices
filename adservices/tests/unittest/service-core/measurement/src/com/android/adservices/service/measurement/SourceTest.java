@@ -2480,15 +2480,13 @@ public final class SourceTest extends AdServicesMockitoTestCase {
         AggregateContributionBuckets aggregateContribution = new AggregateContributionBuckets();
         aggregateContribution.createCapacityBucket("bucket1", 50);
         aggregateContribution.createCapacityBucket("bucket2", 40);
-        aggregateContribution.addToBucket("bucket1", 5);
+        aggregateContribution.setBucketContribution("bucket1", 5);
 
         source.getAggregateContributionBuckets().createCapacityBucket("bucket1", 50);
         source.getAggregateContributionBuckets().createCapacityBucket("bucket2", 40);
-        source.getAggregateContributionBuckets().addToBucket("bucket1", 5);
+        source.getAggregateContributionBuckets().setBucketContribution("bucket1", 5);
 
-        assertWithMessage("source.getAggregateContributionBuckets()")
-                .that(source.getAggregateContributionBuckets())
-                .isEqualTo(aggregateContribution);
+        assertThat(source.getAggregateContributionBuckets()).isEqualTo(aggregateContribution);
     }
 
     @Test
@@ -2499,14 +2497,11 @@ public final class SourceTest extends AdServicesMockitoTestCase {
         aggregateContributionBuckets.createCapacityBucket("bucket2", 20);
         aggregateContributionBuckets.createCapacityBucket("bucket3", 5);
 
-        assertWithMessage("maybeGetBucketCapacity(\"bucket1\")")
-                .that(aggregateContributionBuckets.maybeGetBucketCapacity("bucket1").get())
+        assertThat(aggregateContributionBuckets.maybeGetBucketCapacity("bucket1").get())
                 .isEqualTo(10);
-        assertWithMessage("maybeGetBucketCapacity(\"bucket2\")")
-                .that(aggregateContributionBuckets.maybeGetBucketCapacity("bucket2").get())
+        assertThat(aggregateContributionBuckets.maybeGetBucketCapacity("bucket2").get())
                 .isEqualTo(20);
-        assertWithMessage("maybeGetBucketCapacity(\"bucket3\")")
-                .that(aggregateContributionBuckets.maybeGetBucketCapacity("bucket3").get())
+        assertThat(aggregateContributionBuckets.maybeGetBucketCapacity("bucket3").get())
                 .isEqualTo(5);
     }
 
@@ -2515,8 +2510,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
         AggregateContributionBuckets aggregateContributionBuckets =
                 new AggregateContributionBuckets();
 
-        assertWithMessage("maybeGetBucketCapacity(\"bucket1\")")
-                .that(aggregateContributionBuckets.maybeGetBucketCapacity("bucket1"))
+        assertThat(aggregateContributionBuckets.maybeGetBucketCapacity("bucket1"))
                 .isEqualTo(Optional.empty());
     }
 
@@ -2526,9 +2520,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                 new AggregateContributionBuckets();
         aggregateContributionBuckets.createCapacityBucket("bucket1", 100);
 
-        assertWithMessage("addToBucket(\"bucket1\", 90)")
-                .that(aggregateContributionBuckets.addToBucket("bucket1", 90))
-                .isTrue();
+        assertThat(aggregateContributionBuckets.setBucketContribution("bucket1", 90)).isTrue();
     }
 
     @Test
@@ -2536,11 +2528,9 @@ public final class SourceTest extends AdServicesMockitoTestCase {
         AggregateContributionBuckets aggregateContributionBuckets =
                 new AggregateContributionBuckets();
         aggregateContributionBuckets.createCapacityBucket("bucket1", 100);
-        aggregateContributionBuckets.addToBucket("bucket1", 65);
+        aggregateContributionBuckets.setBucketContribution("bucket1", 65);
 
-        assertWithMessage("addToBucket(\"bucket1\", 40)")
-                .that(aggregateContributionBuckets.addToBucket("bucket1", 40))
-                .isFalse();
+        assertThat(aggregateContributionBuckets.setBucketContribution("bucket1", 105)).isFalse();
     }
 
     @Test
@@ -2549,11 +2539,8 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                 new AggregateContributionBuckets();
         aggregateContributionBuckets.createCapacityBucket("bucket1", 100);
 
-        aggregateContributionBuckets.addToBucket("bucket1", 20);
-        aggregateContributionBuckets.addToBucket("bucket1", 30);
-        aggregateContributionBuckets.addToBucket("bucket1", 10);
-        assertWithMessage("maybeGetBucketContributions(\"bucket1\")")
-                .that(aggregateContributionBuckets.maybeGetBucketContribution("bucket1").get())
+        aggregateContributionBuckets.setBucketContribution("bucket1", 60);
+        assertThat(aggregateContributionBuckets.maybeGetBucketContribution("bucket1").get())
                 .isEqualTo(60);
     }
 
@@ -2562,8 +2549,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
         AggregateContributionBuckets aggregateContributionBuckets =
                 new AggregateContributionBuckets();
 
-        assertWithMessage("maybeGetBucketContributions(\"bucket1\")")
-                .that(aggregateContributionBuckets.maybeGetBucketContribution("bucket1"))
+        assertThat(aggregateContributionBuckets.maybeGetBucketContribution("bucket1"))
                 .isEqualTo(Optional.empty());
     }
 
@@ -2573,8 +2559,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                 new AggregateContributionBuckets();
         aggregateContributionBuckets.createCapacityBucket("bucket1", 100);
 
-        assertWithMessage("maybeGetBucketContributions(\"bucket1\")")
-                .that(aggregateContributionBuckets.maybeGetBucketContribution("bucket1").get())
+        assertThat(aggregateContributionBuckets.maybeGetBucketContribution("bucket1").get())
                 .isEqualTo(0);
     }
 }

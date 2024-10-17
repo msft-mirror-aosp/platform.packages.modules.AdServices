@@ -15,15 +15,17 @@
  */
 package com.android.adservices.shared.testing.flags;
 
-import com.android.adservices.shared.meta_testing.AbstractFlagsPreparerClassRuleTestCase;
+import com.android.adservices.shared.meta_testing.AbstractFlagsPreparerClassRuleIntegrationTestCase;
+import com.android.adservices.shared.meta_testing.FakeDeviceConfig;
+import com.android.adservices.shared.meta_testing.FakeSdkSandbox;
 import com.android.adservices.shared.testing.DynamicLogger;
 import com.android.adservices.shared.testing.SdkSandbox;
 import com.android.adservices.shared.testing.device.DeviceConfig;
 import com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest;
-import com.android.adservices.shared.testing.flags.AbstractFlagsPreparerClassRuleTest.FakeFlagsPreparerClassRule;
+import com.android.adservices.shared.testing.flags.AbstractFlagsPreparerClassRuleIntegrationTest.FakeFlagsPreparerClassRule;
 
 /**
- * Default test case for {@link AbstractFlagsPreparerClassRule} implementations.
+ * Default integration test case for {@link AbstractFlagsPreparerClassRule} implementations.
  *
  * <p>It uses a {@link FakeFlagsPreparerClassRule bogus rule} so it can be run by IDEs. but
  * subclasses should implement {@link #newRule(DeviceConfig, SyncDisabledModeForTest)}.
@@ -33,20 +35,25 @@ import com.android.adservices.shared.testing.flags.AbstractFlagsPreparerClassRul
  * ({@code AdServicesSharedLibrariesHostTests}) project:
  *
  * <ul>
- *   <li>{@code atest AdServicesSharedLibrariesUnitTests:AbstractFlagsPreparerClassRuleTest}
- *   <li>{@code atest AdServicesSharedLibrariesHostTests:AbstractFlagsPreparerClassRuleTest}
+ *   <li>{@code atest
+ *       AdServicesSharedLibrariesUnitTests:AbstractFlagsPreparerClassRuleIntegrationTest}
+ *   <li>{@code atest
+ *       AdServicesSharedLibrariesHostTests:AbstractFlagsPreparerClassRuleIntegrationTest}
  * </ul>
  *
  * <p>Notice that when running the host-side tests, you can use the {@code --host} option so it
  * doesn't require a connected device.
  */
-public final class AbstractFlagsPreparerClassRuleTest
-        extends AbstractFlagsPreparerClassRuleTestCase<FakeFlagsPreparerClassRule> {
+public final class AbstractFlagsPreparerClassRuleIntegrationTest
+        extends AbstractFlagsPreparerClassRuleIntegrationTestCase<FakeFlagsPreparerClassRule> {
+
+    private final FakeDeviceConfig mFakeDeviceConfig = new FakeDeviceConfig();
+    private final FakeSdkSandbox mFakeSdkSandbox = new FakeSdkSandbox();
 
     @Override
-    protected FakeFlagsPreparerClassRule newRule(
-            SdkSandbox sdkSandbox, DeviceConfig deviceConfig, SyncDisabledModeForTest syncMode) {
-        return new FakeFlagsPreparerClassRule(sdkSandbox, deviceConfig, syncMode);
+    protected FakeFlagsPreparerClassRule newRule() {
+        return new FakeFlagsPreparerClassRule(
+                mFakeSdkSandbox, mFakeDeviceConfig, SyncDisabledModeForTest.NONE);
     }
 
     public static final class FakeFlagsPreparerClassRule
@@ -56,5 +63,15 @@ public final class AbstractFlagsPreparerClassRuleTest
                 SdkSandbox sdkSandbox, DeviceConfig deviceConfig, SyncDisabledModeForTest mode) {
             super(DynamicLogger.getInstance(), sdkSandbox, deviceConfig, mode);
         }
+    }
+
+    @Override
+    protected SdkSandbox newSdkSandbox() {
+        return mFakeSdkSandbox;
+    }
+
+    @Override
+    protected DeviceConfig newDeviceConfig() {
+        return mFakeDeviceConfig;
     }
 }

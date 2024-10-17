@@ -13,15 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.shared.testing.util;
 
-/**
- * {@link java.util.concurrent.Callable} that can thrown a {@link Throwable}.
- *
- * @param <V> type of the returned value.
- */
-public interface ThrowingCallable<V> {
+package com.android.adservices.ui.util;
 
-    /** See {@link java.util.concurrent.Callable#call()}. */
-    V call() throws Throwable;
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.BeforeClass;
+
+public abstract class AdservicesSettingsUiTestCase extends AdServicesUiTestCase {
+    @BeforeClass
+    public static void classSetup() throws Exception {
+        SettingsTestUtil.setupBeforeTests();
+    }
+
+    @Before
+    public void setup() throws Exception {
+        if (!sdkLevel.isAtLeastT()) {
+            Assume.assumeTrue(
+                    "Settings intent does not have enabled activity.",
+                    SettingsTestUtil.isSettingsIntentInstalled());
+        }
+    }
 }
