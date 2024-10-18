@@ -32,6 +32,7 @@ import com.android.adservices.data.customaudience.DBCustomAudienceToLeave;
 import com.android.adservices.data.customaudience.DBScheduledCustomAudienceUpdate;
 import com.android.adservices.data.customaudience.DBScheduledCustomAudienceUpdateRequest;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.stats.ScheduledCustomAudienceUpdateScheduleAttemptedStats;
 
 import com.google.common.util.concurrent.ExecutionSequencer;
 import com.google.common.util.concurrent.FluentFuture;
@@ -103,7 +104,9 @@ public class AdditionalScheduleRequestsEnabledStrategy
                                                     .extractCustomAudiencesToLeaveFromRequest(
                                                             scheduleRequest),
                                             scheduleRequest.getBoolean(
-                                                    SHOULD_REPLACE_PENDING_UPDATES_KEY));
+                                                    SHOULD_REPLACE_PENDING_UPDATES_KEY),
+                                            ScheduledCustomAudienceUpdateScheduleAttemptedStats
+                                                    .builder());
                                     return null;
                                 },
                                 mBackgroundExecutor));

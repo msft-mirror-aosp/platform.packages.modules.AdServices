@@ -113,6 +113,7 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ScheduledCustomAudienceUpdateBackgroundJobStats;
 import com.android.adservices.service.stats.ScheduledCustomAudienceUpdatePerformedFailureStats;
 import com.android.adservices.service.stats.ScheduledCustomAudienceUpdatePerformedStats;
+import com.android.adservices.service.stats.ScheduledCustomAudienceUpdateScheduleAttemptedStats;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FluentFuture;
@@ -210,6 +211,10 @@ public final class ScheduledUpdatesHandlerTest {
     private ScheduledUpdatesHandler mHandler;
     @Mock private ScheduleCustomAudienceUpdateStrategy mStrategyMock;
     @Mock private AdServicesLogger mAdServicesLoggerMock;
+
+    @Mock
+    private ScheduledCustomAudienceUpdateScheduleAttemptedStats.Builder mScheduleAttemptedBuilder;
+
     private AdServicesHttpsClient mAdServicesHttpsClient;
     private HttpCache mCache;
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
@@ -2152,7 +2157,11 @@ public final class ScheduledUpdatesHandlerTest {
                         .map(DBPartialCustomAudience::getPartialCustomAudience)
                         .collect(Collectors.toList());
         mCustomAudienceDao.insertScheduledCustomAudienceUpdate(
-                updateWithCorrectUri, dbPartialCustomAudienceList, Collections.emptyList(), false);
+                updateWithCorrectUri,
+                dbPartialCustomAudienceList,
+                Collections.emptyList(),
+                false,
+                mScheduleAttemptedBuilder);
         mCustomAudienceDao.insertScheduledCustomAudienceUpdate(updateWithCorrectUri2);
 
         Void ignored =
@@ -2695,7 +2704,11 @@ public final class ScheduledUpdatesHandlerTest {
                         .map(DBPartialCustomAudience::getPartialCustomAudience)
                         .collect(Collectors.toList());
         mCustomAudienceDao.insertScheduledCustomAudienceUpdate(
-                UPDATE, dbPartialCustomAudienceList, Collections.emptyList(), false);
+                UPDATE,
+                dbPartialCustomAudienceList,
+                Collections.emptyList(),
+                false,
+                mScheduleAttemptedBuilder);
 
         String responsePayload =
                 createJsonResponsePayloadInvalidJoinCA(
@@ -2807,7 +2820,11 @@ public final class ScheduledUpdatesHandlerTest {
                         .map(DBPartialCustomAudience::getPartialCustomAudience)
                         .collect(Collectors.toList());
         mCustomAudienceDao.insertScheduledCustomAudienceUpdate(
-                UPDATE, dbPartialCustomAudienceList, Collections.emptyList(), false);
+                UPDATE,
+                dbPartialCustomAudienceList,
+                Collections.emptyList(),
+                false,
+                mScheduleAttemptedBuilder);
 
         String responsePayload =
                 createJsonResponsePayloadWithoutLeaveCA(

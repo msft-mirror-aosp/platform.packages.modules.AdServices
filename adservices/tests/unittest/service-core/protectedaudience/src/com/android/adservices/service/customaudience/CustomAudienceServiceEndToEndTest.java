@@ -55,6 +55,9 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REMOVE_CUSTOM_AUDIENCE_REMOTE_INFO_OVERRIDE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_DID_OVERWRITE_EXISTING_UPDATE;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_NO_EXISTING_UPDATE;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_REJECTED_BY_EXISTING_UPDATE;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
@@ -135,6 +138,7 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.ScheduledCustomAudienceUpdateScheduleAttemptedStats;
 import com.android.adservices.shared.testing.concurrency.FailableOnResultSyncCallback;
 import com.android.adservices.testutils.FetchCustomAudienceTestSyncCallback;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
@@ -151,6 +155,8 @@ import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
@@ -158,6 +164,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -237,6 +244,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     private static final String BIDDING_LOGIC_JS = "function test() { return \"hello world\"; }";
     private static final AdSelectionSignals TRUSTED_BIDDING_DATA =
             AdSelectionSignals.fromString("{\"trusted_bidding_data\":1}");
+    private static final AdSelectionSignals USER_BIDDING_SIGNALS_1 =
+            AdSelectionSignals.fromString("{\"ExampleBiddingSignal1\":1}");
 
     private static final FrequencyCapAdDataValidator FREQUENCY_CAP_AD_DATA_VALIDATOR_NO_OP =
             new FrequencyCapAdDataValidatorNoOpImpl();
@@ -272,6 +281,10 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     private CustomAudienceValidator mCustomAudienceValidator;
 
     private ScheduleCustomAudienceUpdateStrategy mStrategy;
+
+    @Captor
+    private ArgumentCaptor<ScheduledCustomAudienceUpdateScheduleAttemptedStats>
+            mScheduleCAUpdateAttemptedStats;
 
     private static final Flags COMMON_FLAGS_WITH_FILTERS_ENABLED =
             new CustomAudienceServiceE2ETestFlags() {
@@ -2982,6 +2995,99 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     }
 
     @Test
+    public void testScheduleCustomAudienceUpdate_withPartialCaAndNoPendingUpdates_Success()
+            throws Exception {
+        MockWebServer mockWebServer = mMockWebServerRule.startMockWebServer(Collections.EMPTY_LIST);
+        Uri updateUri = mMockWebServerRule.uriForPath(UPDATE_URI_PATH);
+        String partialCaName1 = "partial_ca_1";
+        String partialCaName2 = "partial_ca_2";
+        PartialCustomAudience partialCustomAudience1 =
+                new PartialCustomAudience.Builder(partialCaName1)
+                        .setActivationTime(CommonFixture.FIXED_NOW)
+                        .setExpirationTime(CommonFixture.FIXED_NEXT_ONE_DAY)
+                        .setUserBiddingSignals(USER_BIDDING_SIGNALS_1)
+                        .build();
+        PartialCustomAudience partialCustomAudience2 =
+                new PartialCustomAudience.Builder(partialCaName2)
+                        .setActivationTime(CommonFixture.FIXED_NOW)
+                        .setExpirationTime(CommonFixture.FIXED_NEXT_ONE_DAY)
+                        .setUserBiddingSignals(USER_BIDDING_SIGNALS_1)
+                        .build();
+        List<PartialCustomAudience> partialCustomAudienceList =
+                Arrays.asList(partialCustomAudience1, partialCustomAudience2);
+
+        // Make a request to the API with empty overrides
+        Duration negativeDelayForTest = Duration.of(-20, ChronoUnit.MINUTES);
+        ScheduleCustomAudienceUpdateInput input =
+                new ScheduleCustomAudienceUpdateInput.Builder(
+                                updateUri,
+                                VALID_OWNER,
+                                negativeDelayForTest,
+                                partialCustomAudienceList)
+                        .build();
+        CountDownLatch resultLatch = new CountDownLatch(1);
+        ScheduleUpdateTestCallback callback = new ScheduleUpdateTestCallback(resultLatch);
+        mService.scheduleCustomAudienceUpdate(input, callback);
+        resultLatch.await();
+
+        // Validate response of API is complete
+        assertTrue(callback.isSuccess());
+
+        verify(mAdServicesLoggerMock)
+                .logScheduledCustomAudienceUpdateScheduleAttemptedStats(
+                        mScheduleCAUpdateAttemptedStats.capture());
+        ScheduledCustomAudienceUpdateScheduleAttemptedStats actualStats =
+                mScheduleCAUpdateAttemptedStats.getValue();
+        assertWithMessage("Minimum delay in minutes")
+                .that(actualStats.getMinimumDelayInMinutes())
+                .isEqualTo(input.getMinDelay().toMinutes());
+        assertWithMessage("Number of partial custom audiences")
+                .that(actualStats.getNumberOfPartialCustomAudiences())
+                .isEqualTo(partialCustomAudienceList.size());
+        assertWithMessage("Existing update status")
+                .that(actualStats.getExistingUpdateStatus())
+                .isEqualTo(SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_NO_EXISTING_UPDATE);
+    }
+
+    @Test
+    public void testScheduleCustomAudienceUpdate_noPendingUpdates_Success() throws Exception {
+        MockWebServer mockWebServer = mMockWebServerRule.startMockWebServer(Collections.EMPTY_LIST);
+        Uri updateUri = mMockWebServerRule.uriForPath(UPDATE_URI_PATH);
+
+        // Make a request to the API with empty overrides
+        Duration negativeDelayForTest = Duration.of(-20, ChronoUnit.MINUTES);
+        ScheduleCustomAudienceUpdateInput input =
+                new ScheduleCustomAudienceUpdateInput.Builder(
+                                updateUri,
+                                VALID_OWNER,
+                                negativeDelayForTest,
+                                Collections.EMPTY_LIST)
+                        .build();
+        CountDownLatch resultLatch = new CountDownLatch(1);
+        ScheduleUpdateTestCallback callback = new ScheduleUpdateTestCallback(resultLatch);
+        mService.scheduleCustomAudienceUpdate(input, callback);
+        resultLatch.await();
+
+        // Validate response of API is complete
+        assertTrue(callback.isSuccess());
+
+        verify(mAdServicesLoggerMock)
+                .logScheduledCustomAudienceUpdateScheduleAttemptedStats(
+                        mScheduleCAUpdateAttemptedStats.capture());
+        ScheduledCustomAudienceUpdateScheduleAttemptedStats actualStats =
+                mScheduleCAUpdateAttemptedStats.getValue();
+        assertWithMessage("Minimum delay in minutes")
+                .that(actualStats.getMinimumDelayInMinutes())
+                .isEqualTo(input.getMinDelay().toMinutes());
+        assertWithMessage("Number of partial custom audiences")
+                .that(actualStats.getNumberOfPartialCustomAudiences())
+                .isEqualTo(0);
+        assertWithMessage("Existing update status")
+                .that(actualStats.getExistingUpdateStatus())
+                .isEqualTo(SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_NO_EXISTING_UPDATE);
+    }
+
+    @Test
     public void testScheduleCAUpdate_withPendingUpdatesAndRemoveUpdatesFalse_fails()
             throws Exception {
         MockWebServer mockWebServer = mMockWebServerRule.startMockWebServer(Collections.EMPTY_LIST);
@@ -3018,6 +3124,21 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         assertEquals(
                 AdServicesStatusUtils.STATUS_UPDATE_ALREADY_PENDING_ERROR,
                 callback.mFledgeErrorResponse.getStatusCode());
+
+        verify(mAdServicesLoggerMock)
+                .logScheduledCustomAudienceUpdateScheduleAttemptedStats(
+                        mScheduleCAUpdateAttemptedStats.capture());
+        ScheduledCustomAudienceUpdateScheduleAttemptedStats actualStats =
+                mScheduleCAUpdateAttemptedStats.getValue();
+        assertWithMessage("Minimum delay in minutes")
+                .that(actualStats.getMinimumDelayInMinutes())
+                .isEqualTo(input.getMinDelay().toMinutes());
+        assertWithMessage("Number of partial custom audiences")
+                .that(actualStats.getNumberOfPartialCustomAudiences())
+                .isEqualTo(0);
+        assertWithMessage("Existing update status")
+                .that(actualStats.getExistingUpdateStatus())
+                .isEqualTo(SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_REJECTED_BY_EXISTING_UPDATE);
     }
 
     @Test
@@ -3058,6 +3179,21 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                 mCustomAudienceDao.getCustomAudienceUpdatesScheduledByOwner(VALID_OWNER);
         expect.that(newScheduledCAUpdates).doesNotContain(oldScheduledCA);
         assertEquals(1, newScheduledCAUpdates.size());
+
+        verify(mAdServicesLoggerMock)
+                .logScheduledCustomAudienceUpdateScheduleAttemptedStats(
+                        mScheduleCAUpdateAttemptedStats.capture());
+        ScheduledCustomAudienceUpdateScheduleAttemptedStats actualStats =
+                mScheduleCAUpdateAttemptedStats.getValue();
+        assertWithMessage("Minimum delay in minutes")
+                .that(actualStats.getMinimumDelayInMinutes())
+                .isEqualTo(input.getMinDelay().toMinutes());
+        assertWithMessage("Number of partial custom audiences")
+                .that(actualStats.getNumberOfPartialCustomAudiences())
+                .isEqualTo(0);
+        assertWithMessage("Existing update status")
+                .that(actualStats.getExistingUpdateStatus())
+                .isEqualTo(SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_DID_OVERWRITE_EXISTING_UPDATE);
     }
 
     @Test
