@@ -201,10 +201,8 @@ public class ConsentNotificationTrigger {
         if (isUxStatesReady(context)) {
             switch (UxUtil.getUx(context)) {
                 case GA_UX:
-                    if (isPasRenotifyUser(consentManager)
-                            && !isOtaRvcMsmtEnabledUser(consentManager)) {
-                        // Is PAS renotify user AND Not adult user from Rvc with measurement
-                        // enabled, respect previous consents.
+                    if (isPasRenotifyUser(consentManager)) {
+                        // Is PAS renotify user, respect previous consents.
                         break;
                     }
                     setUpGaConsent(context, isEuDevice, consentManager);
@@ -247,11 +245,6 @@ public class ConsentNotificationTrigger {
                 && (isFledgeOrMsmtEnabled(consentManager)
                         || consentManager.getUserManualInteractionWithConsent()
                                 == MANUAL_INTERACTIONS_RECORDED);
-    }
-
-    private static boolean isOtaRvcMsmtEnabledUser(ConsentManager consentManager) {
-        return consentManager.isOtaAdultUserFromRvc()
-                && consentManager.getConsent(AdServicesApiType.MEASUREMENTS).isGiven();
     }
 
     private static Notification getGaV2ConsentNotification(

@@ -67,6 +67,13 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_AGGR
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_AGGREGATE_REPORTING_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_AGGREGATE_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_AGGREGATE_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_SOURCES_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_STATUS_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_REQUIRED_BATTERY_NOT_LOW;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_REQUIRED_NETWORK_TYPE;
@@ -79,6 +86,9 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTR
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_NAVIGATION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEBUG_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
@@ -88,6 +98,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELE
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_FAKE_REPORT_TRIGGER_TIME;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT;
@@ -97,6 +108,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENAB
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_SEPARATE_DEBUG_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_TRIGGER_DEBUG_SIGNAL;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCES;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
@@ -106,17 +119,35 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVEN
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_AGGREGATABLE_BUCKETS_PER_SOURCE_REGISTRATION;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_IS_CLICK_DEDUPLICATION_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_IS_CLICK_DEDUPLICATION_ENFORCED;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_IS_CLICK_VERIFIED_BY_INPUT_EVENT;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPES_PER_SOURCE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_LENGTH_PER_AGGREGATABLE_BUCKET;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_LENGTH_PER_BUDGET_NAME;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_NAMED_BUDGETS_PER_SOURCE_REGISTRATION;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_SOURCES_PER_CLICK;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REPORTING_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REPORTING_JOB_SERVICE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REPORTING_JOB_SERVICE_MIN_EXECUTION_WINDOW_MILLIS;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_THROW_UNKNOWN_EXCEPTION_SAMPLING_RATE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_TRIGGER_DEBUG_SIGNAL_PROBABILITY_FOR_FAKE_REPORTS;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_ENCODING_JOB_IMPROVEMENTS_ENABLED;
@@ -1409,6 +1440,14 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED,
                 FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED);
+    }
+
+    @Override
+    public boolean getFledgeEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests() {
+        return getDeviceConfigFlag(
+                FlagsConstants
+                        .KEY_FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS,
+                FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS);
     }
 
     @Override
@@ -3046,13 +3085,6 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getRvcPostOtaNotifAgeCheck() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_RVC_POST_OTA_NOTIF_AGE_CHECK,
-                DEFAULT_RVC_POST_OTA_NOTIF_AGE_CHECK);
-    }
-
-    @Override
     public int getConsentSourceOfTruth() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH, DEFAULT_CONSENT_SOURCE_OF_TRUTH);
@@ -3167,10 +3199,10 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getMeasurementEnableAggregateContributionBudgetCapacity() {
+    public boolean getMeasurementEnableAggregatableNamedBudgets() {
         return getDeviceConfigFlag(
-                FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATE_CONTRIBUTION_BUDGET_CAPACITY,
-                MEASUREMENT_ENABLE_AGGREGATE_CONTRIBUTION_BUDGET_CAPACITY);
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATABLE_NAMED_BUDGETS,
+                MEASUREMENT_ENABLE_AGGREGATABLE_NAMED_BUDGETS);
     }
 
     @Override
@@ -3479,17 +3511,16 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public int getMeasurementMaxLengthPerAggregatableBucket() {
+    public int getMeasurementMaxLengthPerBudgetName() {
         return getDeviceConfigFlag(
-                KEY_MEASUREMENT_MAX_LENGTH_PER_AGGREGATABLE_BUCKET,
-                MEASUREMENT_MAX_LENGTH_PER_AGGREGATABLE_BUCKET);
+                KEY_MEASUREMENT_MAX_LENGTH_PER_BUDGET_NAME, MEASUREMENT_MAX_LENGTH_PER_BUDGET_NAME);
     }
 
     @Override
-    public int getMeasurementMaxAggregatableBucketsPerSourceRegistration() {
+    public int getMeasurementMaxNamedBudgetsPerSourceRegistration() {
         return getDeviceConfigFlag(
-                KEY_MEASUREMENT_MAX_AGGREGATABLE_BUCKETS_PER_SOURCE_REGISTRATION,
-                MEASUREMENT_MAX_AGGREGATABLE_BUCKETS_PER_SOURCE_REGISTRATION);
+                KEY_MEASUREMENT_MAX_NAMED_BUDGETS_PER_SOURCE_REGISTRATION,
+                MEASUREMENT_MAX_NAMED_BUDGETS_PER_SOURCE_REGISTRATION);
     }
 
     @Override
@@ -3578,11 +3609,6 @@ public final class PhFlags implements Flags {
                         + " = "
                         + getEnableAdServicesSystemApi());
         writer.println("\t" + FlagsConstants.KEY_U18_UX_ENABLED + " = " + getU18UxEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_RVC_POST_OTA_NOTIF_AGE_CHECK
-                        + " = "
-                        + getRvcPostOtaNotifAgeCheck());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_CONSENT_NOTIFICATION_RESET_TOKEN
@@ -4100,10 +4126,9 @@ public final class PhFlags implements Flags {
 
         writer.println(
                 "\t"
-                        + FlagsConstants
-                                .KEY_MEASUREMENT_ENABLE_AGGREGATE_CONTRIBUTION_BUDGET_CAPACITY
+                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATABLE_NAMED_BUDGETS
                         + " = "
-                        + getMeasurementEnableAggregateContributionBudgetCapacity());
+                        + getMeasurementEnableAggregatableNamedBudgets());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA
@@ -5146,6 +5171,12 @@ public final class PhFlags implements Flags {
                         + getFledgeScheduleCustomAudienceUpdateEnabled());
         writer.println(
                 "\t"
+                        + FlagsConstants
+                                .KEY_FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS
+                        + " = "
+                        + getFledgeEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests());
+        writer.println(
+                "\t"
                         + FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_PERIOD_MS
                         + " = "
                         + getFledgeScheduleCustomAudienceUpdateJobPeriodMs());
@@ -5711,14 +5742,14 @@ public final class PhFlags implements Flags {
                         + getMeasurementMaxAttributionScopesPerSource());
         writer.println(
                 "\t"
-                        + KEY_MEASUREMENT_MAX_LENGTH_PER_AGGREGATABLE_BUCKET
+                        + KEY_MEASUREMENT_MAX_LENGTH_PER_BUDGET_NAME
                         + " = "
-                        + getMeasurementMaxLengthPerAggregatableBucket());
+                        + getMeasurementMaxLengthPerBudgetName());
         writer.println(
                 "\t"
-                        + KEY_MEASUREMENT_MAX_AGGREGATABLE_BUCKETS_PER_SOURCE_REGISTRATION
+                        + KEY_MEASUREMENT_MAX_NAMED_BUDGETS_PER_SOURCE_REGISTRATION
                         + " = "
-                        + getMeasurementMaxAggregatableBucketsPerSourceRegistration());
+                        + getMeasurementMaxNamedBudgetsPerSourceRegistration());
         writer.println(
                 "\t"
                         + KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION
@@ -5744,6 +5775,157 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_ENABLE_FAKE_REPORT_TRIGGER_TIME
                         + " = "
                         + getMeasurementEnableFakeReportTriggerTime());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH
+                        + " = "
+                        + getMeasurementApiDeleteRegistrationsKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_API_REGISTER_SOURCES_KILL_SWITCH
+                        + " = "
+                        + getMeasurementApiRegisterSourcesKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH
+                        + " = "
+                        + getMeasurementApiRegisterSourceKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH
+                        + " = "
+                        + getMeasurementApiRegisterTriggerKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH
+                        + " = "
+                        + getMeasurementApiRegisterWebSourceKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH
+                        + " = "
+                        + getMeasurementApiRegisterWebTriggerKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_API_STATUS_KILL_SWITCH
+                        + " = "
+                        + getMeasurementApiStatusKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST
+                        + " = "
+                        + getMeasurementDebugJoinKeyEnrollmentAllowlist());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH
+                        + " = "
+                        + getMeasurementDebugReportingFallbackJobKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS
+                        + " = "
+                        + getMeasurementDebugReportingFallbackJobPeriodMs());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK
+                        + " = "
+                        + getMsmtEnableApiStatusAllowListCheck());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT
+                        + " = "
+                        + getMeasurementEnableUpdateTriggerHeaderLimit());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCES
+                        + " = "
+                        + getEnforceForegroundStatusForMeasurementRegisterSources());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_IS_CLICK_DEDUPLICATION_ENABLED
+                        + " = "
+                        + getMeasurementIsClickDeduplicationEnabled());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_IS_CLICK_DEDUPLICATION_ENFORCED
+                        + " = "
+                        + getMeasurementIsClickDeduplicationEnforced());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_IS_CLICK_VERIFIED_BY_INPUT_EVENT
+                        + " = "
+                        + getMeasurementIsClickVerifiedByInputEvent());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH
+                        + " = "
+                        + getMeasurementJobAggregateFallbackReportingKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH
+                        + " = "
+                        + getMeasurementJobAggregateReportingKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH
+                        + " = "
+                        + getMeasurementJobAttributionKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH
+                        + " = "
+                        + getMeasurementJobDeleteExpiredKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH
+                        + " = "
+                        + getMeasurementJobDeleteUninstalledKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH
+                        + " = "
+                        + getMeasurementJobEventFallbackReportingKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH
+                        + " = "
+                        + getMeasurementJobEventReportingKillSwitch());
+        writer.println("\t" + KEY_MEASUREMENT_KILL_SWITCH + " = " + getMeasurementEnabled());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES
+                        + " = "
+                        + getMeasurementMaxFilteringIdMaxBytes());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_MAX_SOURCES_PER_CLICK
+                        + " = "
+                        + getMeasurementMaxSourcesPerClick());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH
+                        + " = "
+                        + getMeasurementReceiverDeletePackagesKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH
+                        + " = "
+                        + getMeasurementReceiverInstallAttributionKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_THROW_UNKNOWN_EXCEPTION_SAMPLING_RATE
+                        + " = "
+                        + getMeasurementThrowUnknownExceptionSamplingRate());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH
+                        + " = "
+                        + getMeasurementVerboseDebugReportingFallbackJobKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS
+                        + " = "
+                        + getMeasurementVerboseDebugReportingFallbackJobPeriodMs());
         writer.println("\t" + KEY_APPSEARCH_WRITE_TIMEOUT_MS + " = " + getAppSearchWriteTimeout());
         writer.println("\t" + KEY_APPSEARCH_READ_TIMEOUT_MS + " = " + getAppSearchReadTimeout());
         writer.println(

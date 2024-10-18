@@ -15,8 +15,6 @@
  */
 package com.android.adservices.common;
 
-import com.android.adservices.shared.testing.SdkSandbox;
-import com.android.adservices.shared.testing.device.DeviceConfig;
 import com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest;
 import com.android.adservices.shared.testing.flags.HostSideFlagsPreparerClassRule;
 
@@ -35,8 +33,7 @@ public final class AdServicesHostSideFlagsPreparerClassRule
         super();
     }
 
-    public AdServicesHostSideFlagsPreparerClassRule(
-            SdkSandbox sdkSandbox, DeviceConfig deviceConfig, SyncDisabledModeForTest mode) {
-        super(sdkSandbox, deviceConfig, mode);
+    public AdServicesHostSideFlagsPreparerClassRule(SyncDisabledModeForTest mode) {
+        super(mode);
     }
 }

@@ -33,6 +33,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Process;
 import android.util.Log;
 
 import androidx.test.filters.FlakyTest;
@@ -151,7 +152,7 @@ public final class AppUpdateTest extends CtsAdServicesTopicsAppUpdateTestCase {
 
     @Before
     public void setup() throws Exception {
-        mUserId = mContext.getUser().getIdentifier();
+        mUserId = Process.myUserHandle().getIdentifier();
         Log.v(mTag, "Running as user " + mUserId);
 
         // Kill AdServices process so that background jobs don't get skipped due to starting
@@ -224,7 +225,6 @@ public final class AppUpdateTest extends CtsAdServicesTopicsAppUpdateTestCase {
         Thread.sleep(EXECUTION_WAITING_TIME);
 
         // Unregistered the receiver and uninstall the test app1
-        // Note aosp_x86 requires --user 0 to uninstall though arm doesn't.
         sContext.unregisterReceiver(mTopicsResponseReceiver);
         uninstallTestSampleApp();
 
@@ -290,7 +290,6 @@ public final class AppUpdateTest extends CtsAdServicesTopicsAppUpdateTestCase {
         assertThat(installMessage).contains("Success");
     }
 
-    // Note aosp_x86 requires --user 0 to uninstall though arm doesn't.
     private void uninstallTestSampleApp() {
         runShellCommand("pm uninstall --user %d %s", mUserId, TEST_PKG_NAME);
     }
