@@ -17,6 +17,9 @@ package com.android.adservices.shared.testing;
 
 import com.android.adservices.shared.testing.Logger.RealLogger;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
+
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
@@ -31,8 +34,18 @@ import java.util.Objects;
  */
 public abstract class ActionBasedRule<R extends ActionBasedRule<R>> extends AbstractRule {
 
-    private final List<Action> mActions = new ArrayList<>();
+    /** Actions added by {@link #addAction(Action)} and executed on all tests. */
+    private final List<Action> mFixedActions = new ArrayList<>();
+
+    /**
+     * Actions added by {@link #createActionsForTest(Statement, Description)}, they're reset before
+     * each test.
+     */
+    private final List<Action> mActionsToBeExecuted = new ArrayList<>();
+
+    /** Actions to be reverted after each test. */
     private final List<Action> mActionsToBeReverted = new ArrayList<>();
+
     private boolean mIsRunning;
 
     protected ActionBasedRule(RealLogger logger) {
@@ -60,13 +73,13 @@ public abstract class ActionBasedRule<R extends ActionBasedRule<R>> extends Abst
     }
 
     private void cacheAction(Action action) {
-        if (mActions.contains(action)) {
+        if (mFixedActions.contains(action)) {
             // NOTE: in theory it should be fine to add duplicated actions, as it would be up to the
             // action itself to throw if executed twice. But it's probably better to fail earlier...
             throw new IllegalStateException("action already added: " + action);
         }
         mLog.d("Caching %s as test is not running yet", action);
-        mActions.add(action);
+        mFixedActions.add(action);
     }
 
     /**
@@ -102,16 +115,34 @@ public abstract class ActionBasedRule<R extends ActionBasedRule<R>> extends Abst
     }
 
     /**
-     * Hook to let subclass perform additional checks before the actions are executed.
-     *
-     * <p>Do nothing by default
+     * Hook to let subclass create the actions specific to the test (i.e., not those added by {@link
+     * #addAction(Action)}) - typically by scanning the test annotations.
      */
-    protected void preExecuteActions(Statement base, Description description) throws Throwable {}
+    @Nullable
+    protected abstract List<Action> createActionsForTest(Statement base, Description description)
+            throws Throwable;
+
+    /** Gets the action that will be executed during the test. */
+    @VisibleForTesting
+    ImmutableList<Action> getActionsToBeExecuted() {
+        return ImmutableList.copyOf(mActionsToBeExecuted);
+    }
 
     @Override
     protected final void evaluate(Statement base, Description description) throws Throwable {
+        mActionsToBeExecuted.clear();
+        mActionsToBeReverted.clear();
+
+        // First execute per-test actions, which most likely will come from annotations
+        List<Action> pertestActions = createActionsForTest(base, description);
+        mLog.v("per-test-actions: %s", pertestActions);
+        if (pertestActions != null) {
+            mActionsToBeExecuted.addAll(pertestActions);
+        }
+        // Then the "fixed" ones added by addAction()
+        mActionsToBeExecuted.addAll(mFixedActions);
+
         resetActions();
-        preExecuteActions(base, description);
         executeActions();
         mIsRunning = true;
         try {
@@ -136,18 +167,18 @@ public abstract class ActionBasedRule<R extends ActionBasedRule<R>> extends Abst
     }
 
     private void resetActions() throws Throwable {
-        mLog.d("resetActions(): resetting %d actions", mActions.size());
-        mActions.forEach(Action::reset);
+        mLog.d("resetActions(): resetting %d actions", mActionsToBeExecuted.size());
+        mActionsToBeExecuted.forEach(Action::reset);
     }
 
     private void executeActions() throws Throwable {
-        int size = mActions.size();
+        int size = mActionsToBeExecuted.size();
         mLog.i("executeActions(): executing %d actions", size);
         Action action = null;
         int i = 0;
         try {
             for (; i < size; i++) {
-                action = mActions.get(i);
+                action = mActionsToBeExecuted.get(i);
                 mLog.d("Executing %s", action);
                 boolean revert = action.execute();
                 if (revert) {
@@ -168,7 +199,9 @@ public abstract class ActionBasedRule<R extends ActionBasedRule<R>> extends Abst
 
     private void revertActions() throws Exception {
         int size = mActionsToBeReverted.size();
-        mLog.i("revertActions(): reverting %d actions (out of %d total)", size, mActions.size());
+        mLog.i(
+                "revertActions(): reverting %d actions (out of %d total)",
+                size, mActionsToBeExecuted.size());
         for (int i = size - 1; i >= 0; i--) {
             Action action = mActionsToBeReverted.get(i);
             try {

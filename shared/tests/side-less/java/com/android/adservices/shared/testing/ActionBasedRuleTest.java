@@ -26,6 +26,11 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public final class ActionBasedRuleTest extends SharedSidelessTestCase {
@@ -174,8 +179,8 @@ public final class ActionBasedRuleTest extends SharedSidelessTestCase {
     }
 
     @Test
-    public void testPreExecuteActionsWorkflow_throws() throws Throwable {
-        mRule.onPreExecuteActionsException = mException1;
+    public void testCreateActionsForTest_throws() throws Throwable {
+        mRule.onCreateActionsForTest = mException1;
         mRule.addAction(mFakeAction1);
 
         runRuleAndExpectTestFailed(mException1);
@@ -183,6 +188,41 @@ public final class ActionBasedRuleTest extends SharedSidelessTestCase {
         mTest.assertNotEvaluated();
         expect.withMessage("action executed()").that(mFakeAction1.isExecuted()).isFalse();
         expect.withMessage("action reverted()").that(mFakeAction1.isReverted()).isFalse();
+    }
+
+    @Test
+    public void testCreateActionsForTest_ok() throws Throwable {
+        List<Action> actionsOnTest1 = new ArrayList<>();
+        SimpleStatement test1 =
+                new SimpleStatement()
+                        .onEvaluate(() -> actionsOnTest1.addAll(mRule.getActionsToBeExecuted()));
+        List<Action> actionsOnTest2 = new ArrayList<>();
+        SimpleStatement test2 =
+                new SimpleStatement()
+                        .onEvaluate(() -> actionsOnTest2.addAll(mRule.getActionsToBeExecuted()));
+        mRule.addAction(mFakeAction1);
+        mRule.setActionsForTest(test1, mFakeAction2);
+        mRule.setActionsForTest(test2, mFakeAction3, mFakeAction2);
+
+        // Run against first test
+        runRule(test1);
+
+        test1.assertEvaluated();
+        assertActionsExecutedAndReverted("on test1", mFakeAction1, mFakeAction2);
+        expect.withMessage("actions on test1")
+                .that(actionsOnTest1)
+                .containsExactly(mFakeAction2, mFakeAction1)
+                .inOrder();
+
+        // Run against second test
+        runRule(test2);
+
+        test2.assertEvaluated();
+        assertActionsExecutedAndReverted("on test2", mFakeAction1, mFakeAction2, mFakeAction3);
+        expect.withMessage("actions on test2")
+                .that(actionsOnTest2)
+                .containsExactly(mFakeAction3, mFakeAction2, mFakeAction1)
+                .inOrder();
     }
 
     @Test
@@ -404,7 +444,11 @@ public final class ActionBasedRuleTest extends SharedSidelessTestCase {
     }
 
     private void runRule() throws Throwable {
-        mRule.apply(mTest, mTestDescription).evaluate();
+        runRule(mTest);
+    }
+
+    private void runRule(Statement test) throws Throwable {
+        mRule.apply(test, mTestDescription).evaluate();
     }
 
     private void runRuleAndExpectTestFailed(Throwable expected) {
@@ -412,19 +456,37 @@ public final class ActionBasedRuleTest extends SharedSidelessTestCase {
         expect.withMessage("exception thrown by test").that(actual).isSameInstanceAs(expected);
     }
 
-    public final class ConcreteActionBasedRule extends ActionBasedRule<ConcreteActionBasedRule> {
-        @Nullable public Throwable onPreExecuteActionsException;
+    private void assertActionsExecutedAndReverted(String when, Action... actions) {
+        for (Action action : actions) {
+            expect.withMessage("%s %s was executed", action, when)
+                    .that(action.isExecuted())
+                    .isTrue();
+            expect.withMessage("%s %s was reverted", action, when)
+                    .that(action.isReverted())
+                    .isTrue();
+        }
+    }
+
+    private final class ConcreteActionBasedRule extends ActionBasedRule<ConcreteActionBasedRule> {
+        @Nullable public Throwable onCreateActionsForTest;
+        private final Map<Statement, List<Action>> mActionsForTest = new HashMap<>();
 
         public ConcreteActionBasedRule() {
             super(mFakeRealLogger);
         }
 
+        void setActionsForTest(Statement base, Action... actions) {
+            mActionsForTest.put(base, Arrays.asList(actions));
+        }
+
         @Override
-        protected void preExecuteActions(Statement base, Description description) throws Throwable {
-            if (onPreExecuteActionsException != null) {
-                mLog.e("preExecuteActions(): trowing %s", onPreExecuteActionsException);
-                throw onPreExecuteActionsException;
+        protected List<Action> createActionsForTest(Statement base, Description description)
+                throws Throwable {
+            if (onCreateActionsForTest != null) {
+                mLog.e("preExecuteActions(): trowing %s", onCreateActionsForTest);
+                throw onCreateActionsForTest;
             }
+            return mActionsForTest.get(base);
         }
 
         @Override
