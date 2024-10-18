@@ -59,14 +59,13 @@ public abstract class AbstractFlagsPreparerClassRuleTestCase<
     protected final Description mSuite =
             Description.createSuiteDescription(AClassHasNoNothingAtAll.class);
 
-    private FakeDeviceConfig mFakeDeviceConfig = new FakeDeviceConfig();
-    private FakeSdkSandbox mFakeSdkSandbox = new FakeSdkSandbox();
+    private final FakeDeviceConfig mFakeDeviceConfig =
+            new FakeDeviceConfig().setSyncDisabledMode(NONE);
+    private final FakeSdkSandbox mFakeSdkSandbox = new FakeSdkSandbox().setState(DISABLED);
 
     @Before
     public final void setTestFixtures() {
         mSuite.addChild(mTest);
-        mFakeDeviceConfig.setSyncDisabledMode(NONE);
-        mFakeSdkSandbox.setState(DISABLED);
     }
 
     /** Gets a new concrete implementation of the rule. */

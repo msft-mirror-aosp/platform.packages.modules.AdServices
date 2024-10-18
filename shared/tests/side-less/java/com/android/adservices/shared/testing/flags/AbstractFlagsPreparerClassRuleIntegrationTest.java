@@ -58,14 +58,8 @@ public final class AbstractFlagsPreparerClassRuleIntegrationTest
 
     protected FakeFlagsPreparerClassRule newRule(
             SdkSandboxWrapper sdkSandbox, DeviceConfigWrapper deviceConfig) {
-        // TODO(b/362977985): change interface methods to return self so setters below could be
-        // inlined (like fake = new Fake().setSomething())
-        FakeSdkSandbox fakeSdkSandbox = new FakeSdkSandbox();
-        fakeSdkSandbox.setState(DISABLED);
-        sdkSandbox.setWrapped(fakeSdkSandbox);
-        FakeDeviceConfig fakeDeviceConfig = new FakeDeviceConfig();
-        fakeDeviceConfig.setSyncDisabledMode(PERSISTENT);
-        deviceConfig.setWrapped(fakeDeviceConfig);
+        sdkSandbox.setWrapped(new FakeSdkSandbox().setState(DISABLED));
+        deviceConfig.setWrapped(new FakeDeviceConfig().setSyncDisabledMode(PERSISTENT));
         return new FakeFlagsPreparerClassRule(sdkSandbox, deviceConfig);
     }
 

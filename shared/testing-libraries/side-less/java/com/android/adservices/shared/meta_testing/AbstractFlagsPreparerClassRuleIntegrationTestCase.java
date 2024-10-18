@@ -356,9 +356,10 @@ public abstract class AbstractFlagsPreparerClassRuleIntegrationTestCase<
         }
 
         @Override
-        public void setSyncDisabledMode(SyncDisabledModeForTest mode) {
+        public MyDeviceConfigWrapper setSyncDisabledMode(SyncDisabledModeForTest mode) {
             mCalls.add(mode);
             super.setSyncDisabledMode(mode);
+            return this;
         }
     }
 
@@ -369,9 +370,10 @@ public abstract class AbstractFlagsPreparerClassRuleIntegrationTestCase<
         }
 
         @Override
-        public void setState(State state) {
+        public MySdkSandboxWrapper setState(State state) {
             mCalls.add(state);
             super.setState(state);
+            return this;
         }
     }
 
