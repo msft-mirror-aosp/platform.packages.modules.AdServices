@@ -1,0 +1,36 @@
+/*
+* Copyright (C) 2024 The Android Open Source Project
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+
+syntax = "proto3";
+
+package com.android.adservices.service.proto;
+option java_multiple_files = true;
+
+// The list of apis/groups that deny the calling package
+// These are groups which apis are part of like Global, topics, measurement, pa or ux
+// Example measurement and topics apis want to deny app xyz
+message ApiGroupsCache {
+  repeated string apiGroup = 1;
+}
+
+// Represents a mapping of packages to their corresponding API deny groups, categorized by package type.
+// This message is used for efficient caching and lookup of API deny group information.
+message PackageToApiDenyGroupsCacheMap {
+  // Map of app package names to their associated API deny groups, represented as ApiGroupsCache objects.
+  map<string, ApiGroupsCache> appToApiDenyGroupsCacheMap = 1;
+  // Map of SDK package names to their associated API deny groups, represented as ApiGroupsCache objects.
+  map<string, ApiGroupsCache> sdkToApiDenyGroupsCacheMap = 2;
+}
