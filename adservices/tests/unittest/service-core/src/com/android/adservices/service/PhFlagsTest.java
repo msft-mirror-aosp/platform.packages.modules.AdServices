@@ -68,6 +68,7 @@ import static com.android.adservices.service.Flags.DEFAULT_DEVELOPER_MODE_FEATUR
 import static com.android.adservices.service.Flags.DEFAULT_EEA_PAS_UX_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_ADEXT_DATA_SERVICE_APIS;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API;
+import static com.android.adservices.service.Flags.DEFAULT_ENABLE_ATOMIC_FILE_DATASTORE_BATCH_UPDATE_API;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_BACK_COMPAT_INIT;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_CONSENT_MANAGER_V2;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_PACKAGE_DENY_BG_JOB;
@@ -603,6 +604,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_EEA_PAS_UX_ENABL
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_APIS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_AD_SERVICES_SYSTEM_API;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ATOMIC_FILE_DATASTORE_BATCH_UPDATE_API;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_BACK_COMPAT;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_BACK_COMPAT_INIT;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_COMPUTE_VERSION_FROM_MAPPINGS;
@@ -5850,6 +5852,14 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     public void testGetAdIdCacheTtl() {
         mFlagsTestHelper.testConfigFlag(
                 KEY_AD_ID_CACHE_TTL_MS, DEFAULT_ADID_CACHE_TTL_MS, Flags::getAdIdCacheTtlMs);
+    }
+
+    @Test
+    public void testGetEnableAtomicFileDatastoreUpdateApi() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_ENABLE_ATOMIC_FILE_DATASTORE_BATCH_UPDATE_API,
+                DEFAULT_ENABLE_ATOMIC_FILE_DATASTORE_BATCH_UPDATE_API,
+                Flags::getEnableAtomicFileDatastoreBatchUpdateApi);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
