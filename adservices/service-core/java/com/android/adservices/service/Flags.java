@@ -3831,12 +3831,12 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_ADSERVICES_VERSION_MAPPINGS;
     }
 
-    /** Default value for Measurement aggregate contribution budget capacity */
-    @FeatureFlag boolean MEASUREMENT_ENABLE_AGGREGATE_CONTRIBUTION_BUDGET_CAPACITY = false;
+    /** Default value for Measurement aggregatable named budgets */
+    @FeatureFlag boolean MEASUREMENT_ENABLE_AGGREGATABLE_NAMED_BUDGETS = false;
 
-    /** Returns whether to enable Measurement aggregate contribution budget capacity */
-    default boolean getMeasurementEnableAggregateContributionBudgetCapacity() {
-        return MEASUREMENT_ENABLE_AGGREGATE_CONTRIBUTION_BUDGET_CAPACITY;
+    /** Returns whether to enable Measurement aggregatable named budgets */
+    default boolean getMeasurementEnableAggregatableNamedBudgets() {
+        return MEASUREMENT_ENABLE_AGGREGATABLE_NAMED_BUDGETS;
     }
 
     /** Default value for Measurement V1 source trigger data */
@@ -4614,18 +4614,18 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH;
     }
 
-    @ConfigFlag int MEASUREMENT_MAX_LENGTH_PER_AGGREGATABLE_BUCKET = 25;
+    @ConfigFlag int MEASUREMENT_MAX_LENGTH_PER_BUDGET_NAME = 25;
 
-    /** Returns max length of an attribution source's aggregatable bucket budget's key. */
-    default int getMeasurementMaxLengthPerAggregatableBucket() {
-        return MEASUREMENT_MAX_LENGTH_PER_AGGREGATABLE_BUCKET;
+    /** Returns max length of an attribution source's named budget's name. */
+    default int getMeasurementMaxLengthPerBudgetName() {
+        return MEASUREMENT_MAX_LENGTH_PER_BUDGET_NAME;
     }
 
-    @ConfigFlag int MEASUREMENT_MAX_AGGREGATABLE_BUCKETS_PER_SOURCE_REGISTRATION = 25;
+    @ConfigFlag int MEASUREMENT_MAX_NAMED_BUDGETS_PER_SOURCE_REGISTRATION = 25;
 
-    /** Returns max size of an attribution source's aggregatable attribution bucket budget list. */
-    default int getMeasurementMaxAggregatableBucketsPerSourceRegistration() {
-        return MEASUREMENT_MAX_AGGREGATABLE_BUCKETS_PER_SOURCE_REGISTRATION;
+    /** Returns max size of an attribution source's named budget list. */
+    default int getMeasurementMaxNamedBudgetsPerSourceRegistration() {
+        return MEASUREMENT_MAX_NAMED_BUDGETS_PER_SOURCE_REGISTRATION;
     }
 
     /** Default value of flag for logging consent migration metrics when OTA from S to T+. */
