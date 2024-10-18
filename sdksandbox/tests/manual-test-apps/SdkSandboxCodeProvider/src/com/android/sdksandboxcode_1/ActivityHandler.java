@@ -16,10 +16,6 @@
 
 package com.android.sdksandboxcode_1;
 
-import static android.widget.LinearLayout.VERTICAL;
-
-import static com.android.sdksandbox.flags.Flags.sandboxActivitySdkBasedContext;
-
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.app.Activity;
@@ -37,7 +33,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
-import android.widget.LinearLayout.LayoutParams;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.window.OnBackInvokedCallback;
@@ -80,13 +75,7 @@ public class ActivityHandler implements SensorEventListener {
 
     public void buildLayout() {
         final LinearLayout mediaViewContainer;
-        if (sandboxActivitySdkBasedContext() && mIsCustomizedSdkContextEnabled) {
-            makeToast("Context flags are enabled, building layout from resources");
-            mediaViewContainer = buildLayoutFromResources();
-        } else {
-            makeToast("Context flags are disabled, building layout programmatically");
-            mediaViewContainer = buildLayoutProgrammatically();
-        }
+        mediaViewContainer = buildLayoutFromResources();
 
         if (mView.getParent() != null) {
             ((ViewGroup) mView.getParent()).removeView(mView);
@@ -133,44 +122,6 @@ public class ActivityHandler implements SensorEventListener {
         mOpenLandingPage = mActivity.findViewById(R.id.landing_page_button);
         mAxisX = mActivity.findViewById(R.id.x_axis_button);
         return mActivity.findViewById(R.id.media_view_container);
-    }
-
-    /**
-     * Building the activity layout programmatically.
-     *
-     * @return the container layout for the media view (WebView or media)
-     */
-    public LinearLayout buildLayoutProgrammatically() {
-        LinearLayout mainLayout = new LinearLayout(mActivity);
-        mainLayout.setOrientation(VERTICAL);
-        mainLayout.setLayoutParams(
-                new ViewGroup.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
-
-        mBackButton = new Button(mActivity);
-        mBackButton.setText(DISABLE_BACK_NAVIGATION);
-        mainLayout.addView(mBackButton);
-
-        mOrientationPortraitButton = new Button(mActivity);
-        mOrientationPortraitButton.setText(ORIENTATION_PORTRAIT);
-        mainLayout.addView(mOrientationPortraitButton);
-
-        mOrientationLandscapeButton = new Button(mActivity);
-        mOrientationLandscapeButton.setText(ORIENTATION_LANDSCAPE);
-        mainLayout.addView(mOrientationLandscapeButton);
-
-        mDestroyButton = new Button(mActivity);
-        mDestroyButton.setText(DESTROY_ACTIVITY);
-        mainLayout.addView(mDestroyButton);
-
-        mOpenLandingPage = new Button(mActivity);
-        mOpenLandingPage.setText(OPEN_LANDING_PAGE);
-        mainLayout.addView(mOpenLandingPage);
-
-        mAxisX = new TextView(mActivity);
-        mainLayout.addView(mAxisX);
-
-        mActivity.setContentView(mainLayout);
-        return mainLayout;
     }
 
     private void registerBackEnableButton() {

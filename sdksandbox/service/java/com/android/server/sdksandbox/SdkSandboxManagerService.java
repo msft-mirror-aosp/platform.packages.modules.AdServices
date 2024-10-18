@@ -30,7 +30,6 @@ import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_SERVICE;
 import static com.android.adservices.flags.Flags.sdksandboxDumpEffectiveTargetSdkVersion;
 import static com.android.adservices.flags.Flags.sdksandboxInvalidateEffectiveTargetSdkVersionCache;
 import static com.android.adservices.flags.Flags.sdksandboxUseEffectiveTargetSdkVersionForRestrictions;
-import static com.android.sdksandbox.flags.Flags.sandboxActivitySdkBasedContext;
 import static com.android.sdksandbox.flags.Flags.serviceRestrictionPackageNameLogicUpdated;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__FAILURE_SECURITY_EXCEPTION;
 import static com.android.server.sdksandbox.SdkSandboxStorageManager.StorageDirInfo;
@@ -1988,28 +1987,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 == PackageManager.PERMISSION_GRANTED;
     }
 
-    // TODO(b/300059435): remove once the {@link
-    // SdkSandboxActivityAuthority#isSdkSandboxActivityIntent} API is stable.
-    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
-    boolean isSdkSandboxActivity(Intent intent) {
-        if (intent == null) {
-            return false;
-        }
-        if (intent.getAction() != null
-                && intent.getAction().equals(ACTION_START_SANDBOXED_ACTIVITY)) {
-            return true;
-        }
-        final String sandboxPackageName = mContext.getPackageManager().getSdkSandboxPackageName();
-        if (intent.getPackage() != null && intent.getPackage().equals(sandboxPackageName)) {
-            return true;
-        }
-        if (intent.getComponent() != null
-                && intent.getComponent().getPackageName().equals(sandboxPackageName)) {
-            return true;
-        }
-        return false;
-    }
-
     /** @hide */
     public static class Lifecycle extends SystemService {
         @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
@@ -2051,10 +2028,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
 
             boolean isSdkSandboxActivity =
-                    (sandboxActivitySdkBasedContext())
-                            ? SdkSandboxActivityAuthority.isSdkSandboxActivityIntent(
-                                    mContext, intent)
-                            : isSdkSandboxActivity(intent);
+                    SdkSandboxActivityAuthority.isSdkSandboxActivityIntent(mContext, intent);
             if (isSdkSandboxActivity) {
                 final String sdkSandboxPackageName =
                         mContext.getPackageManager().getSdkSandboxPackageName();
