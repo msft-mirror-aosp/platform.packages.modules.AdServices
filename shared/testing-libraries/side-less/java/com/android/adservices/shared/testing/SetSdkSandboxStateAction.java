@@ -19,6 +19,8 @@ import static com.android.adservices.shared.testing.SdkSandbox.State.UNSUPPORTED
 
 import com.android.adservices.shared.testing.SdkSandbox.State;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import java.util.Objects;
 
 /** Action used to set {@code SdkSandbox}'s state. */
@@ -39,7 +41,7 @@ public final class SetSdkSandboxStateAction extends AbstractAction {
     }
 
     @Override
-    protected boolean onExecute() throws Exception {
+    protected boolean onExecuteLocked() throws Exception {
         try {
             mPreviousState = mSdkSandbox.getState();
         } catch (Exception e) {
@@ -59,11 +61,35 @@ public final class SetSdkSandboxStateAction extends AbstractAction {
     }
 
     @Override
-    protected void onRevert() throws Exception {
+    protected void onRevertLocked() throws Exception {
         if (mPreviousState == null || !mPreviousState.isValid()) {
             throw new IllegalStateException("should not have been called when it didn't change");
         }
         mSdkSandbox.setState(mPreviousState);
+    }
+
+    @VisibleForTesting
+    State getPreviousState() {
+        return mPreviousState;
+    }
+
+    @Override
+    protected void onResetLocked() {
+        mPreviousState = null;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(mState);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null) return false;
+        if (getClass() != obj.getClass()) return false;
+        SetSdkSandboxStateAction other = (SetSdkSandboxStateAction) obj;
+        return mState == other.mState;
     }
 
     @Override

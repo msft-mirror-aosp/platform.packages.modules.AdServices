@@ -25,7 +25,8 @@
       "response": {
         "body": "ScoringSignals.json",
         "header": {
-          "Data-Version": 300
+          "Data-Version": 300,
+          "x-fledge-scoring-signals-format-version": 2 // Deprecated, maintained for backward compatibility only.
         }
       },
       "verify_called": true
@@ -37,7 +38,8 @@
       "response": {
         "body": "BiddingSignals.json",
         "header": {
-          "Data-Version": 1
+          "Data-Version": 1,
+          "x-fledge-bidding-signals-format-version": 1 // Deprecated, maintained for backward compatibility only.
         }
       },
       "verify_called": true
