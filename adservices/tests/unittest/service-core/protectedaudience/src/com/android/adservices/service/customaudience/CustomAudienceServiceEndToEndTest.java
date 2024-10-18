@@ -103,6 +103,8 @@ import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
 import com.android.adservices.data.customaudience.DBPartialCustomAudience;
 import com.android.adservices.data.customaudience.DBScheduledCustomAudienceUpdate;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.data.signals.ProtectedSignalsDao;
+import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -125,6 +127,7 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.shared.testing.concurrency.FailableOnResultSyncCallback;
+import com.android.adservices.testutils.DevSessionHelper;
 import com.android.adservices.testutils.FetchCustomAudienceTestSyncCallback;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -156,6 +159,7 @@ import java.util.stream.Collectors;
 @SpyStatic(ScheduleCustomAudienceUpdateJobService.class)
 @MockStatic(BackgroundFetchJob.class)
 public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedMockitoTestCase {
+
     @Rule(order = 11)
     public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
 
@@ -254,6 +258,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     private CustomAudienceQuantityChecker mCustomAudienceQuantityChecker;
     private CustomAudienceValidator mCustomAudienceValidator;
 
+    public DevSessionHelper mDevSessionHelper;
+
     private static final Flags COMMON_FLAGS_WITH_FILTERS_ENABLED =
             new CustomAudienceServiceE2ETestFlags() {
                 @Override
@@ -287,6 +293,13 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         mCustomAudienceQuantityChecker =
                 new CustomAudienceQuantityChecker(
                         mCustomAudienceDao, COMMON_FLAGS_WITH_FILTERS_ENABLED);
+
+        ProtectedSignalsDao protectedSignalsDao =
+                Room.inMemoryDatabaseBuilder(mContext, ProtectedSignalsDatabase.class)
+                        .build()
+                        .protectedSignalsDao();
+        mDevSessionHelper = new DevSessionHelper(mCustomAudienceDao,
+                mAppInstallDao, mFrequencyCapDao, protectedSignalsDao);
 
         mCustomAudienceValidator =
                 new CustomAudienceValidator(
@@ -466,6 +479,46 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         otherOwnerPackageName,
                         AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
                         AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE);
+    }
+
+    @Test
+    public void testJoinCustomAudience_inDevSession_customAudienceClearedAfterSession() {
+        ResultCapturingCallback callback = new ResultCapturingCallback();
+        mDevSessionHelper.startDevSession();
+
+        mService.joinCustomAudience(
+                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1).build(),
+                MY_APP_PACKAGE_NAME,
+                callback);
+
+        assertTrue(callback.isSuccess());
+        assertNotNull(
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, CommonFixture.VALID_BUYER_1, VALID_NAME));
+        mDevSessionHelper.endDevSession();
+        assertNull(
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, CommonFixture.VALID_BUYER_1, VALID_NAME));
+    }
+
+    @Test
+    public void testJoinCustomAudience_beforeDevSession_customAudienceClearedEnteringSession() {
+        ResultCapturingCallback callback = new ResultCapturingCallback();
+
+        mService.joinCustomAudience(
+                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1).build(),
+                MY_APP_PACKAGE_NAME,
+                callback);
+
+        assertTrue(callback.isSuccess());
+        assertNotNull(
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, CommonFixture.VALID_BUYER_1, VALID_NAME));
+        mDevSessionHelper.startDevSession();
+        assertNull(
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, CommonFixture.VALID_BUYER_1, VALID_NAME));
+        mDevSessionHelper.endDevSession();
     }
 
     @Test
