@@ -109,7 +109,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
         assertNull(source.getAttributedTriggers());
         assertNull(source.getAggregateDebugReportingString());
         assertEquals(0, source.getAggregateDebugReportContributions());
-        assertNull(source.getAggregateContributionBuckets());
+        assertNull(source.getAggregatableNamedBudgets());
     }
 
     @Test
@@ -137,7 +137,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
         String aggregateDebugReportingString =
                 SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT;
         int aggregateDebugReportContributions = 1024;
-        AggregateContributionBuckets aggregateContribution = new AggregateContributionBuckets();
+        AggregatableNamedBudgets aggregatableNamedBudgets = new AggregatableNamedBudgets();
         assertEquals(
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
@@ -198,7 +198,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                         .setEventLevelEpsilon(event_level_epsilon)
                         .setAggregateDebugReportingString(aggregateDebugReportingString)
                         .setAggregateDebugReportContributions(aggregateDebugReportContributions)
-                        .setAggregateContributionBuckets(aggregateContribution)
+                        .setAggregatableNamedBudgets(aggregatableNamedBudgets)
                         .build(),
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
@@ -259,7 +259,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                         .setEventLevelEpsilon(event_level_epsilon)
                         .setAggregateDebugReportingString(aggregateDebugReportingString)
                         .setAggregateDebugReportContributions(aggregateDebugReportContributions)
-                        .setAggregateContributionBuckets(aggregateContribution)
+                        .setAggregatableNamedBudgets(aggregatableNamedBudgets)
                         .build());
     }
 
@@ -2472,94 +2472,81 @@ public final class SourceTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void testGetAggregateContribution() {
+    public void testGetNamedBudgets() {
         Source source =
                 SourceFixture.getMinimalValidSourceBuilder()
-                        .setAggregateContributionBuckets(new AggregateContributionBuckets())
+                        .setAggregatableNamedBudgets(new AggregatableNamedBudgets())
                         .build();
-        AggregateContributionBuckets aggregateContribution = new AggregateContributionBuckets();
-        aggregateContribution.createCapacityBucket("bucket1", 50);
-        aggregateContribution.createCapacityBucket("bucket2", 40);
-        aggregateContribution.setBucketContribution("bucket1", 5);
+        AggregatableNamedBudgets aggregatableNamedBudgets = new AggregatableNamedBudgets();
+        aggregatableNamedBudgets.createContributionBudget("name1", 50);
+        aggregatableNamedBudgets.createContributionBudget("name2", 40);
+        aggregatableNamedBudgets.setContribution("name1", 5);
 
-        source.getAggregateContributionBuckets().createCapacityBucket("bucket1", 50);
-        source.getAggregateContributionBuckets().createCapacityBucket("bucket2", 40);
-        source.getAggregateContributionBuckets().setBucketContribution("bucket1", 5);
+        source.getAggregatableNamedBudgets().createContributionBudget("name1", 50);
+        source.getAggregatableNamedBudgets().createContributionBudget("name2", 40);
+        source.getAggregatableNamedBudgets().setContribution("name1", 5);
 
-        assertThat(source.getAggregateContributionBuckets()).isEqualTo(aggregateContribution);
+        assertThat(source.getAggregatableNamedBudgets()).isEqualTo(aggregatableNamedBudgets);
     }
 
     @Test
-    public void testCreateAndMaybeGetBucketCapacity() {
-        AggregateContributionBuckets aggregateContributionBuckets =
-                new AggregateContributionBuckets();
-        aggregateContributionBuckets.createCapacityBucket("bucket1", 10);
-        aggregateContributionBuckets.createCapacityBucket("bucket2", 20);
-        aggregateContributionBuckets.createCapacityBucket("bucket3", 5);
+    public void testCreateAndMaybeGetBudget() {
+        AggregatableNamedBudgets aggregatableNamedBudgets = new AggregatableNamedBudgets();
+        aggregatableNamedBudgets.createContributionBudget("name1", 10);
+        aggregatableNamedBudgets.createContributionBudget("name2", 20);
+        aggregatableNamedBudgets.createContributionBudget("name3", 5);
 
-        assertThat(aggregateContributionBuckets.maybeGetBucketCapacity("bucket1").get())
-                .isEqualTo(10);
-        assertThat(aggregateContributionBuckets.maybeGetBucketCapacity("bucket2").get())
-                .isEqualTo(20);
-        assertThat(aggregateContributionBuckets.maybeGetBucketCapacity("bucket3").get())
-                .isEqualTo(5);
+        assertThat(aggregatableNamedBudgets.maybeGetBudget("name1").get()).isEqualTo(10);
+        assertThat(aggregatableNamedBudgets.maybeGetBudget("name2").get()).isEqualTo(20);
+        assertThat(aggregatableNamedBudgets.maybeGetBudget("name3").get()).isEqualTo(5);
     }
 
     @Test
-    public void testMaybeGetBucketCapacity_bucketDoesNotExist() {
-        AggregateContributionBuckets aggregateContributionBuckets =
-                new AggregateContributionBuckets();
+    public void testMaybeGetBudget_namedBudgetDoesNotExist() {
+        AggregatableNamedBudgets aggregatableNamedBudgets = new AggregatableNamedBudgets();
 
-        assertThat(aggregateContributionBuckets.maybeGetBucketCapacity("bucket1"))
+        assertThat(aggregatableNamedBudgets.maybeGetBudget("name1")).isEqualTo(Optional.empty());
+    }
+
+    @Test
+    public void testSetContribution_success() {
+        AggregatableNamedBudgets aggregatableNamedBudgets = new AggregatableNamedBudgets();
+        aggregatableNamedBudgets.createContributionBudget("name1", 100);
+
+        assertThat(aggregatableNamedBudgets.setContribution("name1", 90)).isTrue();
+    }
+
+    @Test
+    public void testSetContribution_contributionOverCapacity_fail() {
+        AggregatableNamedBudgets aggregatableNamedBudgets = new AggregatableNamedBudgets();
+        aggregatableNamedBudgets.createContributionBudget("name1", 100);
+        aggregatableNamedBudgets.setContribution("name1", 65);
+
+        assertThat(aggregatableNamedBudgets.setContribution("name1", 105)).isFalse();
+    }
+
+    @Test
+    public void testMaybeGetContributions() {
+        AggregatableNamedBudgets aggregatableNamedBudgets = new AggregatableNamedBudgets();
+        aggregatableNamedBudgets.createContributionBudget("name1", 100);
+
+        aggregatableNamedBudgets.setContribution("name1", 60);
+        assertThat(aggregatableNamedBudgets.maybeGetContribution("name1").get()).isEqualTo(60);
+    }
+
+    @Test
+    public void testMaybeGetContributions_bucketDoesNotExist() {
+        AggregatableNamedBudgets aggregatableNamedBudgets = new AggregatableNamedBudgets();
+
+        assertThat(aggregatableNamedBudgets.maybeGetContribution("name1"))
                 .isEqualTo(Optional.empty());
     }
 
     @Test
-    public void testAddToBucket_success() {
-        AggregateContributionBuckets aggregateContributionBuckets =
-                new AggregateContributionBuckets();
-        aggregateContributionBuckets.createCapacityBucket("bucket1", 100);
+    public void testMaybeGetContributions_bucketHasNoContributions() {
+        AggregatableNamedBudgets aggregatableNamedBudgets = new AggregatableNamedBudgets();
+        aggregatableNamedBudgets.createContributionBudget("name1", 100);
 
-        assertThat(aggregateContributionBuckets.setBucketContribution("bucket1", 90)).isTrue();
-    }
-
-    @Test
-    public void testAddToBucket_contributionOverCapacity_fail() {
-        AggregateContributionBuckets aggregateContributionBuckets =
-                new AggregateContributionBuckets();
-        aggregateContributionBuckets.createCapacityBucket("bucket1", 100);
-        aggregateContributionBuckets.setBucketContribution("bucket1", 65);
-
-        assertThat(aggregateContributionBuckets.setBucketContribution("bucket1", 105)).isFalse();
-    }
-
-    @Test
-    public void testMaybeGetBucketContributions() {
-        AggregateContributionBuckets aggregateContributionBuckets =
-                new AggregateContributionBuckets();
-        aggregateContributionBuckets.createCapacityBucket("bucket1", 100);
-
-        aggregateContributionBuckets.setBucketContribution("bucket1", 60);
-        assertThat(aggregateContributionBuckets.maybeGetBucketContribution("bucket1").get())
-                .isEqualTo(60);
-    }
-
-    @Test
-    public void testMaybeGetBucketContributions_bucketDoesNotExist() {
-        AggregateContributionBuckets aggregateContributionBuckets =
-                new AggregateContributionBuckets();
-
-        assertThat(aggregateContributionBuckets.maybeGetBucketContribution("bucket1"))
-                .isEqualTo(Optional.empty());
-    }
-
-    @Test
-    public void testMaybeGetBucketContributions_bucketHasNoContributions() {
-        AggregateContributionBuckets aggregateContributionBuckets =
-                new AggregateContributionBuckets();
-        aggregateContributionBuckets.createCapacityBucket("bucket1", 100);
-
-        assertThat(aggregateContributionBuckets.maybeGetBucketContribution("bucket1").get())
-                .isEqualTo(0);
+        assertThat(aggregatableNamedBudgets.maybeGetContribution("name1").get()).isEqualTo(0);
     }
 }

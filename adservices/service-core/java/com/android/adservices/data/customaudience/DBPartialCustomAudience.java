@@ -116,6 +116,21 @@ public abstract class DBPartialCustomAudience {
                 .build();
     }
 
+    /**
+     * Creates an instance of {@link DBPartialCustomAudience} from a {@link PartialCustomAudience}
+     */
+    @NonNull
+    public static DBPartialCustomAudience fromPartialCustomAudience(
+            Long updateId, @NonNull PartialCustomAudience partialCa) {
+        return DBPartialCustomAudience.builder()
+                .setUpdateId(updateId)
+                .setName(partialCa.getName())
+                .setActivationTime(partialCa.getActivationTime())
+                .setExpirationTime(partialCa.getExpirationTime())
+                .setUserBiddingSignals(partialCa.getUserBiddingSignals())
+                .build();
+    }
+
     /** Builder for convenient creation of an object of type {@link DBPartialCustomAudience} */
     @AutoValue.Builder
     public abstract static class Builder {
