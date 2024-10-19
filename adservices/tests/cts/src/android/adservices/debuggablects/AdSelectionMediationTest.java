@@ -19,6 +19,7 @@ package android.adservices.debuggablects;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_HTTP_CACHE_ENABLE;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -35,6 +36,7 @@ import android.net.Uri;
 
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -129,14 +131,10 @@ public final class AdSelectionMediationTest extends FledgeDebuggableScenarioTest
      * using unified tables.
      */
     @Test
+    @SetFlagEnabled(KEY_FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES)
     public void testSelectAdsWithUnifiedTable_withImpressionReporting_eventsAreReceived()
             throws Exception {
-        overrideShouldUseUnifiedTable(true);
-        try {
-            testSelectAds_withImpressionReporting_eventsAreReceived();
-        } finally {
-            overrideShouldUseUnifiedTable(false);
-        }
+        testSelectAds_withImpressionReporting_eventsAreReceived();
     }
 
     /** Test buyers must be enrolled in order to participate in waterfall mediation. For CUJ 080. */

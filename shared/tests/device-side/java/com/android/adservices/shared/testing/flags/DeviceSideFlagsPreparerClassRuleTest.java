@@ -16,6 +16,7 @@
 package com.android.adservices.shared.testing.flags;
 
 import com.android.adservices.shared.meta_testing.DeviceSideFlagsPreparerClassRuleTestCase;
+import com.android.adservices.shared.testing.SdkSandbox;
 import com.android.adservices.shared.testing.device.DeviceConfig;
 import com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest;
 import com.android.adservices.shared.testing.flags.DeviceSideFlagsPreparerClassRuleTest.ConcreteDeviceSideFlagsPreparerClassRule;
@@ -30,8 +31,8 @@ public final class DeviceSideFlagsPreparerClassRuleTest
 
     @Override
     protected ConcreteDeviceSideFlagsPreparerClassRule newRule(
-            DeviceConfig deviceConfig, SyncDisabledModeForTest syncMode) {
-        return new ConcreteDeviceSideFlagsPreparerClassRule(deviceConfig, syncMode);
+            SdkSandbox sdkSandbox, DeviceConfig deviceConfig, SyncDisabledModeForTest syncMode) {
+        return new ConcreteDeviceSideFlagsPreparerClassRule(sdkSandbox, deviceConfig, syncMode);
     }
 
     public static final class ConcreteDeviceSideFlagsPreparerClassRule
@@ -42,8 +43,10 @@ public final class DeviceSideFlagsPreparerClassRuleTest
         }
 
         public ConcreteDeviceSideFlagsPreparerClassRule(
-                DeviceConfig deviceConfig, SyncDisabledModeForTest syncMode) {
-            super(deviceConfig, syncMode);
+                SdkSandbox sdkSandbox,
+                DeviceConfig deviceConfig,
+                SyncDisabledModeForTest syncMode) {
+            super(sdkSandbox, deviceConfig, syncMode);
         }
     }
 }

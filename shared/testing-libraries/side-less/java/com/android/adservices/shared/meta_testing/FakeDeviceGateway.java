@@ -84,10 +84,15 @@ public final class FakeDeviceGateway extends AbstractDeviceGateway {
         expect.withMessage("calls so far").that(mCalls).isEmpty();
     }
 
-    /** Sets the SDK Level of the device. */
-    public void setSdkLevel(Level level) {
+    /**
+     * Sets the SDK Level of the device.
+     *
+     * @return itself, so it can be nested
+     */
+    public FakeDeviceGateway setSdkLevel(Level level) {
         Objects.requireNonNull(level, "level cannot be null");
         mSdkLevel = level;
+        return this;
     }
 
     @Override

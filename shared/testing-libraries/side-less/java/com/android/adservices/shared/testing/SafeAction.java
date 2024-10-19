@@ -40,9 +40,28 @@ public final class SafeAction implements Action {
     }
 
     @Override
+    public boolean isExecuted() {
+        return mAction.isExecuted();
+    }
+
+    @Override
     public void revert() {
         try {
             mAction.revert();
+        } catch (Exception e) {
+            mLog.e(e, "Failed to revert action %s", mAction);
+        }
+    }
+
+    @Override
+    public boolean isReverted() {
+        return mAction.isReverted();
+    }
+
+    @Override
+    public void reset() {
+        try {
+            mAction.reset();
         } catch (Exception e) {
             mLog.e(e, "Failed to revert action %s", mAction);
         }

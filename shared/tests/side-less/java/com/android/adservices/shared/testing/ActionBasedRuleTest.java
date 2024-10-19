@@ -53,12 +53,19 @@ public final class ActionBasedRuleTest extends SharedSidelessTestCase {
     private final ConcreteActionBasedRule mRule = new ConcreteActionBasedRule();
 
     @Test
+    public void testActionlessRule() throws Throwable {
+        runRule();
+
+        mTest.assertEvaluated();
+    }
+
+    @Test
     public void testAddAction_null() {
         assertThrows(NullPointerException.class, () -> mRule.addAction(null));
     }
 
     @Test
-    public void testAddAction_sameCommand() {
+    public void testAddAction_sameAction() {
         mRule.addAction(mFakeAction1);
 
         assertThrows(IllegalArgumentException.class, () -> mRule.addAction(mFakeAction1));
@@ -73,11 +80,84 @@ public final class ActionBasedRuleTest extends SharedSidelessTestCase {
 
     @Test
     public void testAddAction_doesNotExecuteAction() {
-        mFakeAction1.onExecuteThrows(mException1);
-
         mRule.addAction(mFakeAction1);
 
-        // nothing to assert - addAction() would throw if execute() was called
+        expect.withMessage("%s was executed", mFakeAction1)
+                .that(mFakeAction1.isExecuted())
+                .isFalse();
+    }
+
+    @Test
+    public void testAddAction_duringTest_throws() {
+        mTest.onEvaluate(() -> mRule.addAction(mFakeAction1));
+
+        assertThrows(IllegalStateException.class, () -> runRule());
+    }
+
+    @Test
+    public void testExecuteOrCache_null() {
+        assertThrows(NullPointerException.class, () -> mRule.executeOrCache(null));
+    }
+
+    @Test
+    public void testExecuteOrCache_returnSelf() throws Exception {
+        ConcreteActionBasedRule rule = mRule.executeOrCache(mFakeAction1);
+
+        expect.withMessage("value returned by addAction()").that(rule).isSameInstanceAs(mRule);
+    }
+
+    @Test
+    public void testExecuteOrCache_beforeTest_sameAction() throws Exception {
+        mRule.executeOrCache(mFakeAction1);
+
+        assertThrows(IllegalArgumentException.class, () -> mRule.executeOrCache(mFakeAction1));
+    }
+
+    @Test
+    public void testExecuteOrCache_beforeTest_caches() throws Exception {
+        mRule.executeOrCache(mFakeAction1);
+
+        expect.withMessage("%s was executed", mFakeAction1)
+                .that(mFakeAction1.isExecuted())
+                .isFalse();
+    }
+
+    @Test
+    public void testExecuteOrCache_duringTest_executeAction() throws Throwable {
+        mTest.onEvaluate(() -> mRule.executeOrCache(mFakeAction1));
+
+        runRule();
+
+        expect.withMessage("%s was executed", mFakeAction1)
+                .that(mFakeAction1.isExecuted())
+                .isTrue();
+        expect.withMessage("number of times %s was executed", mFakeAction1)
+                .that(mFakeAction1.getNumberTimesExecuteCalled())
+                .isEqualTo(1);
+        expect.withMessage("%s was reverted", mFakeAction1)
+                .that(mFakeAction1.isReverted())
+                .isFalse();
+    }
+
+    @Test
+    public void testExecuteOrCache_durings_sameAction() throws Throwable {
+        mTest.onEvaluate(
+                () -> {
+                    mRule.executeOrCache(mFakeAction1);
+                    mRule.executeOrCache(mFakeAction1);
+                });
+
+        runRule();
+
+        expect.withMessage("%s was executed", mFakeAction1)
+                .that(mFakeAction1.isExecuted())
+                .isTrue();
+        expect.withMessage("number of times %s was executed", mFakeAction1)
+                .that(mFakeAction1.getNumberTimesExecuteCalled())
+                .isEqualTo(2);
+        expect.withMessage("%s was reverted", mFakeAction1)
+                .that(mFakeAction1.isReverted())
+                .isFalse();
     }
 
     @Test
@@ -88,8 +168,8 @@ public final class ActionBasedRuleTest extends SharedSidelessTestCase {
         runRuleAndExpectTestFailed(mException1);
 
         mTest.assertNotEvaluated();
-        expect.withMessage("action executed()").that(mFakeAction1.executed()).isFalse();
-        expect.withMessage("action reverted()").that(mFakeAction1.reverted()).isFalse();
+        expect.withMessage("action executed()").that(mFakeAction1.isExecuted()).isFalse();
+        expect.withMessage("action reverted()").that(mFakeAction1.isReverted()).isFalse();
     }
 
     @Test
@@ -107,10 +187,10 @@ public final class ActionBasedRuleTest extends SharedSidelessTestCase {
                 .isEqualTo(2);
         expect.withMessage("reversion order of action1")
                 .that(mFakeAction1.getReversionOrder())
-                .isEqualTo(1);
+                .isEqualTo(2);
         expect.withMessage("reversion order of action2")
                 .that(mFakeAction2.getReversionOrder())
-                .isEqualTo(2);
+                .isEqualTo(1);
     }
 
     @Test
@@ -127,7 +207,7 @@ public final class ActionBasedRuleTest extends SharedSidelessTestCase {
         expect.withMessage("execution order of action2")
                 .that(mFakeAction2.getExecutionOrder())
                 .isEqualTo(2);
-        expect.withMessage("action 1 reverted").that(mFakeAction1.reverted()).isFalse();
+        expect.withMessage("action 1 reverted").that(mFakeAction1.isReverted()).isFalse();
         expect.withMessage("reversion order of action2")
                 .that(mFakeAction2.getReversionOrder())
                 .isEqualTo(1);
@@ -147,12 +227,12 @@ public final class ActionBasedRuleTest extends SharedSidelessTestCase {
         expect.withMessage("execution order of action2")
                 .that(mFakeAction2.getExecutionOrder())
                 .isEqualTo(2);
-        expect.withMessage("action 3 executed").that(mFakeAction3.executed()).isFalse();
+        expect.withMessage("action 3 executed").that(mFakeAction3.isExecuted()).isFalse();
         expect.withMessage("reversion order of action1")
                 .that(mFakeAction1.getReversionOrder())
                 .isEqualTo(1);
-        expect.withMessage("action 2 reverted").that(mFakeAction2.reverted()).isFalse();
-        expect.withMessage("action 3 reverted").that(mFakeAction3.reverted()).isFalse();
+        expect.withMessage("action 2 reverted").that(mFakeAction2.isReverted()).isFalse();
+        expect.withMessage("action 3 reverted").that(mFakeAction3.isReverted()).isFalse();
     }
 
     @Test
@@ -174,13 +254,13 @@ public final class ActionBasedRuleTest extends SharedSidelessTestCase {
                 .isEqualTo(3);
         expect.withMessage("reversion order of action1")
                 .that(mFakeAction1.getReversionOrder())
-                .isEqualTo(1);
+                .isEqualTo(3);
         expect.withMessage("reversion order of action2")
                 .that(mFakeAction2.getReversionOrder())
                 .isEqualTo(2);
         expect.withMessage("reversion order of action3")
                 .that(mFakeAction3.getReversionOrder())
-                .isEqualTo(3);
+                .isEqualTo(1);
     }
 
     @Test
@@ -203,11 +283,11 @@ public final class ActionBasedRuleTest extends SharedSidelessTestCase {
                 .isEqualTo(3);
         expect.withMessage("reversion order of action1")
                 .that(mFakeAction1.getReversionOrder())
-                .isEqualTo(1);
+                .isEqualTo(2);
         expect.withMessage("reversion order of action2")
                 .that(mFakeAction2.getReversionOrder())
-                .isEqualTo(2);
-        expect.withMessage("action 3 reverted").that(mFakeAction3.reverted()).isFalse();
+                .isEqualTo(1);
+        expect.withMessage("action 3 reverted").that(mFakeAction3.isReverted()).isFalse();
     }
 
     @Test
@@ -226,10 +306,10 @@ public final class ActionBasedRuleTest extends SharedSidelessTestCase {
                 .isEqualTo(2);
         expect.withMessage("reversion order of action1")
                 .that(mFakeAction1.getReversionOrder())
-                .isEqualTo(1);
+                .isEqualTo(2);
         expect.withMessage("reversion order of action2")
                 .that(mFakeAction2.getReversionOrder())
-                .isEqualTo(2);
+                .isEqualTo(1);
     }
 
     @Test
@@ -247,7 +327,7 @@ public final class ActionBasedRuleTest extends SharedSidelessTestCase {
         expect.withMessage("execution order of action2")
                 .that(mFakeAction2.getExecutionOrder())
                 .isEqualTo(2);
-        expect.withMessage("action 1 reverted").that(mFakeAction1.reverted()).isFalse();
+        expect.withMessage("action 1 reverted").that(mFakeAction1.isReverted()).isFalse();
         expect.withMessage("reversion order of action2")
                 .that(mFakeAction2.getReversionOrder())
                 .isEqualTo(1);
@@ -273,13 +353,34 @@ public final class ActionBasedRuleTest extends SharedSidelessTestCase {
                 .isEqualTo(3);
         expect.withMessage("reversion order of action1")
                 .that(mFakeAction1.getReversionOrder())
-                .isEqualTo(1);
+                .isEqualTo(3);
         expect.withMessage("reversion order of action2")
                 .that(mFakeAction2.getReversionOrder())
                 .isEqualTo(2);
         expect.withMessage("reversion order of action3")
                 .that(mFakeAction3.getReversionOrder())
-                .isEqualTo(3);
+                .isEqualTo(1);
+    }
+
+    @Test
+    public void testResetActionsForReuse() throws Throwable {
+        mFakeAction1.throwIfExecuteCalledMultipleTime();
+        mRule.addAction(mFakeAction1);
+
+        runRule();
+        expect.withMessage("number of times %s was executed", mFakeAction1)
+                .that(mFakeAction1.getNumberTimesExecuteCalled())
+                .isEqualTo(1);
+
+        runRule();
+        expect.withMessage("number of times %s was executed", mFakeAction1)
+                .that(mFakeAction1.getNumberTimesExecuteCalled())
+                .isEqualTo(1);
+    }
+
+    @Test
+    public void testDecorateToString() {
+        expect.withMessage("toString()").that(mRule.toString()).contains(", concrete=I am!");
     }
 
     private void setTestToFail() {
@@ -311,6 +412,11 @@ public final class ActionBasedRuleTest extends SharedSidelessTestCase {
                 mLog.e("preExecuteActions(): trowing %s", onPreExecuteActionsException);
                 throw onPreExecuteActionsException;
             }
+        }
+
+        @Override
+        protected void decorateToString(StringBuilder string) {
+            string.append(", concrete=I am!");
         }
     }
 

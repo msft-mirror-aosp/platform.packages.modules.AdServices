@@ -25,5 +25,5 @@ android_test_helper_app {
     resource_dirs: ["res"],
     manifest: "AndroidManifest_Client.xml",
     min_sdk_version: "33",
-    target_sdk_version: "33",
+    target_sdk_version: "34",
 }

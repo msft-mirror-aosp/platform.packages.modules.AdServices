@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.common;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
@@ -72,12 +74,13 @@ public final class DatabaseClearerTest extends AdServicesMockitoTestCase {
 
     @Test
     public void testDeleteAllProtectedAudienceAndAppSignals_Data_success() throws Exception {
-        ListenableFuture<Void> future =
+        ListenableFuture<Boolean> future =
                 mDatabaseClearer.deleteProtectedAudienceAndAppSignalsData(
                         /* deleteCustomAudienceUpdate= */ true,
                         /* deleteAppInstallFiltering= */ true,
                         /* deleteProtectedSignals= */ true);
-        future.get(); // Wait for the future to complete
+
+        assertThat(future.get()).isTrue(); // Wait for the future to complete
 
         verify(mCustomAudienceDao, times(1)).deleteAllCustomAudienceData(true);
         verify(mFrequencyCapDao, times(1)).deleteAllHistogramData();
@@ -91,15 +94,16 @@ public final class DatabaseClearerTest extends AdServicesMockitoTestCase {
                 .when(mCustomAudienceDao)
                 .deleteAllCustomAudienceData(true);
 
+        ListenableFuture<Boolean> future =
+                mDatabaseClearer.deleteProtectedAudienceAndAppSignalsData(
+                        /* deleteCustomAudienceUpdate= */ true,
+                        /* deleteAppInstallFiltering= */ true,
+                        /* deleteProtectedSignals= */ true);
+
         assertThrows(
                 ExecutionException.class,
                 () -> {
-                    ListenableFuture<Void> future =
-                            mDatabaseClearer.deleteProtectedAudienceAndAppSignalsData(
-                                    /* deleteCustomAudienceUpdate= */ true,
-                                    /* deleteAppInstallFiltering= */ true,
-                                    /* deleteProtectedSignals= */ true);
-                    future.get(); // Wait for the future to complete
+                    assertThat(future.get()).isTrue(); // Wait for the future to complete
                 });
     }
 
@@ -109,16 +113,13 @@ public final class DatabaseClearerTest extends AdServicesMockitoTestCase {
                 .when(mFrequencyCapDao)
                 .deleteAllHistogramData();
 
-        assertThrows(
-                ExecutionException.class,
-                () -> {
-                    ListenableFuture<Void> future =
-                            mDatabaseClearer.deleteProtectedAudienceAndAppSignalsData(
-                                    /* deleteCustomAudienceUpdate= */ true,
-                                    /* deleteAppInstallFiltering= */ true,
-                                    /* deleteProtectedSignals= */ true);
-                    future.get();
-                });
+        ListenableFuture<Boolean> future =
+                mDatabaseClearer.deleteProtectedAudienceAndAppSignalsData(
+                        /* deleteCustomAudienceUpdate= */ true,
+                        /* deleteAppInstallFiltering= */ true,
+                        /* deleteProtectedSignals= */ true);
+
+        assertThrows(ExecutionException.class, () -> assertThat(future.get()).isTrue());
     }
 
     @Test
@@ -127,16 +128,13 @@ public final class DatabaseClearerTest extends AdServicesMockitoTestCase {
                 .when(mAppInstallDao)
                 .deleteAllAppInstallData();
 
-        assertThrows(
-                ExecutionException.class,
-                () -> {
-                    ListenableFuture<Void> future =
-                            mDatabaseClearer.deleteProtectedAudienceAndAppSignalsData(
-                                    /* deleteCustomAudienceUpdate= */ true,
-                                    /* deleteAppInstallFiltering= */ true,
-                                    /* deleteProtectedSignals= */ true);
-                    future.get();
-                });
+        ListenableFuture<Boolean> future =
+                mDatabaseClearer.deleteProtectedAudienceAndAppSignalsData(
+                        /* deleteCustomAudienceUpdate= */ true,
+                        /* deleteAppInstallFiltering= */ true,
+                        /* deleteProtectedSignals= */ true);
+
+        assertThrows(ExecutionException.class, () -> assertThat(future.get()).isTrue());
     }
 
     @Test
@@ -145,16 +143,13 @@ public final class DatabaseClearerTest extends AdServicesMockitoTestCase {
                 .when(mProtectedSignalsDao)
                 .deleteAllSignals();
 
-        assertThrows(
-                ExecutionException.class,
-                () -> {
-                    ListenableFuture<Void> future =
-                            mDatabaseClearer.deleteProtectedAudienceAndAppSignalsData(
-                                    /* deleteCustomAudienceUpdate= */ true,
-                                    /* deleteAppInstallFiltering= */ true,
-                                    /* deleteProtectedSignals= */ true);
-                    future.get();
-                });
+        ListenableFuture<Boolean> future =
+                mDatabaseClearer.deleteProtectedAudienceAndAppSignalsData(
+                        /* deleteCustomAudienceUpdate= */ true,
+                        /* deleteAppInstallFiltering= */ true,
+                        /* deleteProtectedSignals= */ true);
+
+        assertThrows(ExecutionException.class, () -> assertThat(future.get()).isTrue());
     }
 
     @Test
@@ -172,15 +167,12 @@ public final class DatabaseClearerTest extends AdServicesMockitoTestCase {
                 .when(mProtectedSignalsDao)
                 .deleteAllSignals();
 
-        assertThrows(
-                ExecutionException.class,
-                () -> {
-                    ListenableFuture<Void> future =
-                            mDatabaseClearer.deleteProtectedAudienceAndAppSignalsData(
-                                    /* deleteCustomAudienceUpdate= */ true,
-                                    /* deleteAppInstallFiltering= */ true,
-                                    /* deleteProtectedSignals= */ true);
-                    future.get();
-                });
+        ListenableFuture<Boolean> future =
+                mDatabaseClearer.deleteProtectedAudienceAndAppSignalsData(
+                        /* deleteCustomAudienceUpdate= */ true,
+                        /* deleteAppInstallFiltering= */ true,
+                        /* deleteProtectedSignals= */ true);
+
+        assertThrows(ExecutionException.class, () -> assertThat(future.get()).isTrue());
     }
 }

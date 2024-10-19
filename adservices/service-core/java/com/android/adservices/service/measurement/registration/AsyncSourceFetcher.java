@@ -35,7 +35,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.WebAddresses;
-import com.android.adservices.service.measurement.AggregateContributionBuckets;
+import com.android.adservices.service.measurement.AggregatableNamedBudgets;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.MeasurementHttpClient;
 import com.android.adservices.service.measurement.Source;
@@ -600,23 +600,22 @@ public class AsyncSourceFetcher {
                         .d("parseSource: aggregatable debug reporting is invalid.");
             }
         }
-        if (mFlags.getMeasurementEnableAggregateContributionBudgetCapacity()
-                && !json.isNull(SourceHeaderContract.AGGREGATABLE_BUCKET_MAX_BUDGET)) {
-            Optional<AggregateContributionBuckets> maybeAggregateContributionBuckets =
-                    parseAggregatableBucketBudget(
-                            json.getJSONObject(
-                                    SourceHeaderContract.AGGREGATABLE_BUCKET_MAX_BUDGET));
-            if (maybeAggregateContributionBuckets.isEmpty()) {
+        if (mFlags.getMeasurementEnableAggregatableNamedBudgets()
+                && !json.isNull(SourceHeaderContract.NAMED_BUDGETS)) {
+            Optional<AggregatableNamedBudgets> maybeAggregatableNamedBudgets =
+                    parseAggregatableNamedBudgets(
+                            json.getJSONObject(SourceHeaderContract.NAMED_BUDGETS));
+            if (maybeAggregatableNamedBudgets.isEmpty()) {
                 LoggerFactory.getMeasurementLogger()
                         .e(
                                 String.format(
                                         "parseValidateSource: Invalid"
-                                                + " aggregatable_bucket_max_budget in %s header.",
+                                                + " named_budgets in %s header.",
                                         SourceHeaderContract
                                                 .HEADER_ATTRIBUTION_REPORTING_REGISTER_SOURCE));
                 return false;
             }
-            builder.setAggregateContributionBuckets(maybeAggregateContributionBuckets.get());
+            builder.setAggregatableNamedBudgets(maybeAggregatableNamedBudgets.get());
         }
         return true;
     }
@@ -695,62 +694,49 @@ public class AsyncSourceFetcher {
         return true;
     }
 
-    private Optional<AggregateContributionBuckets> parseAggregatableBucketBudget(
-            JSONObject aggregationBucketBudget) {
-        if (aggregationBucketBudget.length()
-                > mFlags.getMeasurementMaxAggregatableBucketsPerSourceRegistration()) {
+    private Optional<AggregatableNamedBudgets> parseAggregatableNamedBudgets(
+            JSONObject namedBudgetObj) {
+        if (namedBudgetObj.length() > mFlags.getMeasurementMaxNamedBudgetsPerSourceRegistration()) {
             LoggerFactory.getMeasurementLogger()
                     .d(
-                            "parseAggregatableBucketBudget: more buckets than permitted. %s",
-                            aggregationBucketBudget.length());
+                            "parseAggregatableNamedBudgets: more named budgets than permitted. %s",
+                            namedBudgetObj.length());
             return Optional.empty();
         }
-        AggregateContributionBuckets aggregateContributionBuckets =
-                new AggregateContributionBuckets();
+        AggregatableNamedBudgets aggregatableNamedBudgets = new AggregatableNamedBudgets();
 
-        Iterator<String> keys = aggregationBucketBudget.keys();
+        Iterator<String> keys = namedBudgetObj.keys();
         while (keys.hasNext()) {
-            String id = keys.next();
-            if (id.length() > mFlags.getMeasurementMaxLengthPerAggregatableBucket()) {
+            String name = keys.next();
+            if (name.length() > mFlags.getMeasurementMaxLengthPerBudgetName()) {
                 LoggerFactory.getMeasurementLogger()
-                        .d(
-                                "parseAggregatableBucketBudget: aggregation bucket ID is invalid."
-                                        + " %s",
-                                id);
+                        .d("parseAggregatableNamedBudgets: budget name is invalid." + " %s", name);
                 return Optional.empty();
             }
-            Optional<Integer> maybeIntBudget =
-                    FetcherUtil.extractIntegralInt(aggregationBucketBudget, id);
+            Optional<Integer> maybeIntBudget = FetcherUtil.extractIntegralInt(namedBudgetObj, name);
             if (maybeIntBudget.isEmpty()) {
                 LoggerFactory.getMeasurementLogger()
-                        .d(
-                                "parseAggregatableBucketBudget: aggregation bucket budget"
-                                        + " isn't an integer. %s",
-                                id);
+                        .d("parseAggregatableNamedBudgets: budget isn't an integer. %s", name);
                 return Optional.empty();
             }
             int intBudget = maybeIntBudget.get();
             if (intBudget <= 0) {
                 LoggerFactory.getMeasurementLogger()
-                        .d(
-                                "parseAggregatableBucketBudget: aggregation bucket budget"
-                                        + " is non positive. %s",
-                                intBudget);
+                        .d("parseAggregatableNamedBudgets: budget is non positive. %s", intBudget);
                 return Optional.empty();
             }
             if (intBudget > mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()) {
                 LoggerFactory.getMeasurementLogger()
                         .d(
-                                "parseAggregatableBucketBudget: aggregation bucket budget"
-                                        + " is over budget. %s",
+                                "parseAggregatableNamedBudgets: budget is over max capacity. %s",
                                 intBudget);
                 return Optional.empty();
             }
 
-            aggregateContributionBuckets.createCapacityBucket(id, intBudget);
+            aggregatableNamedBudgets.createContributionBudget(name, intBudget);
         }
 
-        return Optional.of(aggregateContributionBuckets);
+        return Optional.of(aggregatableNamedBudgets);
     }
 
     private boolean isValidTriggerDataSet(Set<UnsignedLong> triggerDataSet,
@@ -1316,7 +1302,7 @@ public class AsyncSourceFetcher {
         String DESTINATION_LIMIT_ALGORITHM = "destination_limit_algorithm";
         String EVENT_LEVEL_EPSILON = "event_level_epsilon";
         String AGGREGATABLE_DEBUG_REPORTING = "aggregatable_debug_reporting";
-        String AGGREGATABLE_BUCKET_MAX_BUDGET = "aggregatable_bucket_max_budget";
+        String NAMED_BUDGETS = "named_budgets";
     }
 
     private interface SourceRequestContract {

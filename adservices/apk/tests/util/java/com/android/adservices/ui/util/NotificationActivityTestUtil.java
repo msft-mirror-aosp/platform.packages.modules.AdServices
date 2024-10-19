@@ -51,8 +51,10 @@ public final class NotificationActivityTestUtil {
     private NotificationActivityTestUtil() {}
 
     public static void setupBeforeTests() throws InterruptedException {
-        // sleep for 1 min for bootCompleteReceiver to get invoked on S-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+        // Check intent component enabled, if not, sleep for 1 min for bootCompleteReceiver to get
+        // invoked on S-
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU
+                && !isNotificationIntentInstalled(true)) {
             TimeUnit.SECONDS.sleep(60);
         }
     }
@@ -121,6 +123,6 @@ public final class NotificationActivityTestUtil {
     /** Check if intent has package and activity installed. */
     public static boolean isNotificationIntentInstalled(boolean isEUActivity) {
         Intent intent = getNotificationIntent(isEUActivity);
-        return ApkTestUtil.isIntentInstalled(intent);
+        return ApkTestUtil.isIntentInstalled(sContext, intent);
     }
 }

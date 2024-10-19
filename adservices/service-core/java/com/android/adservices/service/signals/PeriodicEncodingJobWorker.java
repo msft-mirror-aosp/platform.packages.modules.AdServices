@@ -198,7 +198,6 @@ public final class PeriodicEncodingJobWorker {
                         ? new EncodingJobRunStatsLoggerImpl(
                         mAdServicesLogger, EncodingJobRunStats.builder())
                         : new EncodingJobRunStatsLoggerNoLoggingImpl();
-
         FluentFuture<List<DBEncoderLogicMetadata>> buyersWithRegisteredEncoders =
                 FluentFuture.from(
                         mBackgroundExecutor.submit(mEncoderLogicHandler::getAllRegisteredEncoders));
@@ -298,6 +297,7 @@ public final class PeriodicEncodingJobWorker {
 
     // TODO(b/294900119) We should do the update of encoding logic in a separate job, & remove this
     FluentFuture<Void> doUpdateEncodersForBuyers(List<AdTechIdentifier> buyers) {
+        sLogger.d("Updating encoders for buyers");
         int traceCookie = Tracing.beginAsyncSection(Tracing.UPDATE_ENCODERS_FOR_BUYERS);
 
         List<ListenableFuture<Boolean>> encoderUpdates =

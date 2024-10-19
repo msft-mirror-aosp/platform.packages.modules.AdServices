@@ -29,7 +29,6 @@ import android.adservices.customaudience.CustomAudience;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-import android.util.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
@@ -43,8 +42,10 @@ import com.android.adservices.data.customaudience.AdDataConversionStrategyFactor
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.data.customaudience.DBCustomAudienceToLeave;
 import com.android.adservices.data.customaudience.DBPartialCustomAudience;
 import com.android.adservices.data.customaudience.DBScheduledCustomAudienceUpdate;
+import com.android.adservices.data.customaudience.DBScheduledCustomAudienceUpdateRequest;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
@@ -231,35 +232,35 @@ public final class ScheduledUpdatesHandler {
 
     /** Performs Custom Audience Updates for delayed events in the schedule */
     public FluentFuture<Void> performScheduledUpdates(@NonNull Instant beforeTime) {
-        FluentFuture<List<Pair<DBScheduledCustomAudienceUpdate, List<DBPartialCustomAudience>>>>
-                scheduledUpdates =
-                        FluentFuture.from(
-                                mBackgroundExecutor.submit(
-                                        () -> {
-                                            mCustomAudienceDao
-                                                    .deleteScheduledCustomAudienceUpdatesCreatedBeforeTime(
-                                                            beforeTime.minus(
-                                                                    STALE_DELAYED_UPDATE_AGE));
+        FluentFuture<List<DBScheduledCustomAudienceUpdateRequest>> scheduledUpdateRequests =
+                FluentFuture.from(
+                        mBackgroundExecutor.submit(
+                                () -> {
+                                    mCustomAudienceDao
+                                            .deleteScheduledCustomAudienceUpdatesCreatedBeforeTime(
+                                                    beforeTime.minus(STALE_DELAYED_UPDATE_AGE));
 
-                                            return mCustomAudienceDao
-                                                    .getScheduledUpdatesAndOverridesBeforeTime(
-                                                            beforeTime);
-                                        }));
-        return scheduledUpdates.transformAsync(su -> handleUpdates(su), mLightWeightExecutor);
+                                    return mCustomAudienceDao
+                                            .getScheduledCustomAudienceUpdateRequests(beforeTime);
+                                }));
+        return scheduledUpdateRequests.transformAsync(this::handleUpdates, mLightWeightExecutor);
     }
 
     private FluentFuture<Void> handleUpdates(
-            List<Pair<DBScheduledCustomAudienceUpdate, List<DBPartialCustomAudience>>>
-                    scheduledUpdates) {
+            List<DBScheduledCustomAudienceUpdateRequest> scheduledUpdateRequests) {
         List<ListenableFuture<Void>> handledUpdates = new ArrayList<>();
 
         ExecutionSequencer sequencer = ExecutionSequencer.create();
 
-        for (Pair<DBScheduledCustomAudienceUpdate, List<DBPartialCustomAudience>> scheduledUpdate :
-                scheduledUpdates) {
+        for (DBScheduledCustomAudienceUpdateRequest scheduledUpdateRequest :
+                scheduledUpdateRequests) {
             handledUpdates.add(
                     sequencer.submitAsync(
-                            () -> handleSingleUpdate(scheduledUpdate.first, scheduledUpdate.second),
+                            () ->
+                                    handleSingleUpdate(
+                                            scheduledUpdateRequest.getUpdate(),
+                                            scheduledUpdateRequest.getPartialCustomAudienceList(),
+                                            scheduledUpdateRequest.getCustomAudienceToLeaveList()),
                             mBackgroundExecutor));
         }
         return FluentFuture.from(Futures.successfulAsList(handledUpdates))
@@ -273,7 +274,8 @@ public final class ScheduledUpdatesHandler {
 
     private FluentFuture<Void> handleSingleUpdate(
             @NonNull DBScheduledCustomAudienceUpdate update,
-            List<DBPartialCustomAudience> customAudienceOverrides) {
+            List<DBPartialCustomAudience> customAudienceOverrides,
+            List<DBCustomAudienceToLeave> customAudienceToLeaveList) {
         List<CustomAudienceBlob> validatedPartialCustomAudienceBlobs = new ArrayList<>();
 
         for (DBPartialCustomAudience partialCustomAudience : customAudienceOverrides) {
@@ -302,11 +304,14 @@ public final class ScheduledUpdatesHandler {
         sLogger.v(
                 "Override blobs validation complete: %s",
                 validatedPartialCustomAudienceBlobs.size());
-        return fetchUpdate(update, validatedPartialCustomAudienceBlobs);
+        return fetchUpdate(update, validatedPartialCustomAudienceBlobs, customAudienceToLeaveList);
     }
 
+    // TODO(b/373588637): customAudienceToLeaveList will be used by the strategies
     private FluentFuture<Void> fetchUpdate(
-            DBScheduledCustomAudienceUpdate update, List<CustomAudienceBlob> validBlobs) {
+            DBScheduledCustomAudienceUpdate update,
+            List<CustomAudienceBlob> validBlobs,
+            List<DBCustomAudienceToLeave> customAudienceToLeaveList) {
         JSONArray jsonArray = new JSONArray();
 
         for (int i = 0; i < validBlobs.size(); i++) {

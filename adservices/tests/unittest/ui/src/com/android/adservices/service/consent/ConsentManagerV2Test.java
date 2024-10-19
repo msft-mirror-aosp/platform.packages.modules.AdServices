@@ -216,7 +216,7 @@ import java.util.stream.Collectors;
 @SmallTest
 public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCase {
     public static final int UX_TYPE_COUNT = PrivacySandboxUxCollection.values().length;
-    public static final int ENROLLMENT_CHANNEL_COUNT = 18;
+    public static final int ENROLLMENT_CHANNEL_COUNT = 17;
 
     private AtomicFileDatastore mDatastore;
     private AtomicFileDatastore mConsentDatastore;

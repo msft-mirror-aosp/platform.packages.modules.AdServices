@@ -55,6 +55,9 @@ import java.util.Set;
 public final class AggregatableAttributionTriggerTest {
     @Mock Flags mFlags;
 
+    private static final String BUDGET_NAME1 = "BUDGET1";
+    private static final String BUDGET_NAME2 = "BUDGET2";
+
     private List<AggregateTriggerData> createAggregateTriggerData() {
         AggregateTriggerData attributionTriggerData1 =
                 new AggregateTriggerData.Builder()
@@ -95,7 +98,7 @@ public final class AggregatableAttributionTriggerTest {
 
     private AggregatableAttributionTrigger createExampleWithValues(
             List<AggregateDeduplicationKey> aggregateDeduplicationKeys,
-            List<AggregatableBucket> aggregatableBuckets) {
+            List<AggregatableNamedBudget> aggregatableNamedBudgets) {
         List<AggregateTriggerData> aggregateTriggerDataList = createAggregateTriggerData();
         AggregateTriggerData attributionTriggerData1 = aggregateTriggerDataList.get(0);
         AggregateTriggerData attributionTriggerData2 = aggregateTriggerDataList.get(1);
@@ -112,8 +115,8 @@ public final class AggregatableAttributionTriggerTest {
         if (aggregateDeduplicationKeys != null) {
             builder.setAggregateDeduplicationKeys(aggregateDeduplicationKeys);
         }
-        if (aggregatableBuckets != null) {
-            builder.setAggregatableBuckets(aggregatableBuckets);
+        if (aggregatableNamedBudgets != null) {
+            builder.setNamedBudgets(aggregatableNamedBudgets);
         }
         return builder.build();
     }
@@ -210,39 +213,45 @@ public final class AggregatableAttributionTriggerTest {
     }
 
     @Test
-    public void testGetAggregatableBuckets() throws JSONException {
+    public void testGetNamedBudgets() throws JSONException {
         JSONObject filterMap1 = new JSONObject();
         filterMap1.put("2", new JSONArray(Arrays.asList("1234", "234")));
         JSONArray filterSet1 = new JSONArray();
         filterSet1.put(filterMap1);
-        JSONObject bucketObj1 = new JSONObject();
-        bucketObj1.put(AggregatableBucket.AggregatableBucketContract.BUCKET, "biddable");
-        bucketObj1.put(Filter.FilterContract.FILTERS, filterSet1);
-        AggregatableBucket aggregatableBucket1 = new AggregatableBucket(bucketObj1, mFlags);
+        JSONObject budgetObj1 = new JSONObject();
+        budgetObj1.put(AggregatableNamedBudget.NamedBudgetContract.NAME, "biddable");
+        budgetObj1.put(Filter.FilterContract.FILTERS, filterSet1);
+        AggregatableNamedBudget aggregatableNamedBudget1 =
+                new AggregatableNamedBudget(budgetObj1, mFlags);
 
         JSONObject filterMap2 = new JSONObject();
         filterMap2.put("2", new JSONArray(Arrays.asList("5678", "678")));
         JSONArray filterSet2 = new JSONArray();
         filterSet2.put(filterMap2);
-        JSONObject bucketObj2 = new JSONObject();
-        bucketObj2.put(AggregatableBucket.AggregatableBucketContract.BUCKET, "nonbiddable");
-        bucketObj2.put(Filter.FilterContract.FILTERS, filterSet2);
-        AggregatableBucket aggregatableBucket2 = new AggregatableBucket(bucketObj2, mFlags);
+        JSONObject budgetObj2 = new JSONObject();
+        budgetObj2.put(AggregatableNamedBudget.NamedBudgetContract.NAME, "nonbiddable");
+        budgetObj2.put(Filter.FilterContract.FILTERS, filterSet2);
+        AggregatableNamedBudget aggregatableNamedBudget2 =
+                new AggregatableNamedBudget(budgetObj2, mFlags);
 
-        List<AggregatableBucket> aggregatableBuckets =
+        List<AggregatableNamedBudget> aggregatableNamedBudgets =
                 createExampleWithValues(
-                                null, Arrays.asList(aggregatableBucket1, aggregatableBucket2))
-                        .getAggregatableBuckets();
-        assertThat(aggregatableBuckets).isNotNull();
-        assertThat(aggregatableBuckets)
-                .isEqualTo(List.of(aggregatableBucket1, aggregatableBucket2));
+                                /* aggregateDeduplicationKeys= */ null,
+                                Arrays.asList(aggregatableNamedBudget1, aggregatableNamedBudget2))
+                        .getNamedBudgets();
+        assertThat(aggregatableNamedBudgets).isNotNull();
+        assertThat(aggregatableNamedBudgets)
+                .isEqualTo(List.of(aggregatableNamedBudget1, aggregatableNamedBudget2));
     }
 
     @Test
-    public void testGetAggregatableBuckets_nullBucket() {
-        AggregatableAttributionTrigger attributionTrigger = createExampleWithValues(null, null);
+    public void testGetNamedBudgets_nullNamedBudget() {
+        AggregatableAttributionTrigger attributionTrigger =
+                createExampleWithValues(
+                        /* aggregateDeduplicationKeys= */ null,
+                        /* aggregatableNamedBudgets= */ null);
 
-        assertThat(attributionTrigger.getAggregatableBuckets()).isNull();
+        assertThat(attributionTrigger.getNamedBudgets()).isNull();
     }
 
     @Test
@@ -637,5 +646,255 @@ public final class AggregatableAttributionTriggerTest {
                                         aggregateDeduplicationKey1, aggregateDeduplicationKey2))
                         .maybeExtractDedupKey(sourceFilter, mFlags);
         assertTrue(aggregateDeduplicationKey.isEmpty());
+    }
+
+    @Test
+    public void testExtractNamedBudget_bothNamedBudgetsHaveMatchingFilters() throws JSONException {
+        // Set up
+        JSONObject budgetObj1 = new JSONObject();
+        budgetObj1.put(AggregatableNamedBudget.NamedBudgetContract.NAME, BUDGET_NAME1);
+        JSONObject filterMap1 = new JSONObject();
+        filterMap1.put("1", new JSONArray(Arrays.asList("1234", "234")));
+        JSONArray filterSet1 = new JSONArray();
+        filterSet1.put(filterMap1);
+        budgetObj1.put(Filter.FilterContract.FILTERS, filterSet1);
+        AggregatableNamedBudget aggregatableNamedBudget1 =
+                new AggregatableNamedBudget(budgetObj1, mFlags);
+
+        JSONObject budgetObj2 = new JSONObject();
+        budgetObj2.put(AggregatableNamedBudget.NamedBudgetContract.NAME, BUDGET_NAME2);
+        JSONObject filterMap2 = new JSONObject();
+        filterMap2.put("1", new JSONArray(Arrays.asList("1234", "234")));
+        JSONArray filterSet2 = new JSONArray();
+        filterSet2.put(filterMap2);
+        budgetObj2.put(Filter.FilterContract.FILTERS, filterSet2);
+        AggregatableNamedBudget aggregatableNamedBudget2 =
+                new AggregatableNamedBudget(budgetObj2, mFlags);
+
+        Map<String, List<String>> sourceFilterMap = new HashMap<>();
+        sourceFilterMap.put("1", Arrays.asList("1234", "234"));
+        FilterMap sourceFilter =
+                new FilterMap.Builder().setAttributionFilterMap(sourceFilterMap).build();
+
+        // Execution
+        Optional<String> matchedNamedBudget =
+                createExampleWithValues(
+                                /* aggregateDeduplicationKeys= */ null,
+                                Arrays.asList(aggregatableNamedBudget1, aggregatableNamedBudget2))
+                        .maybeExtractNamedBudget(sourceFilter, mFlags);
+
+        // Assertion
+        assertThat(matchedNamedBudget).isPresent();
+        assertThat(matchedNamedBudget.get()).isEqualTo(BUDGET_NAME1);
+    }
+
+    @Test
+    public void testExtractNamedBudget_firstNamedBudgetHasUnmatchedFilters() throws JSONException {
+        // Set up
+        JSONObject budgetObj1 = new JSONObject();
+        budgetObj1.put(AggregatableNamedBudget.NamedBudgetContract.NAME, BUDGET_NAME1);
+        JSONObject filterMap1 = new JSONObject();
+        filterMap1.put("1", new JSONArray(Arrays.asList("78")));
+        filterMap1.put("2", new JSONArray(Arrays.asList("1234", "234")));
+        JSONArray filterSet1 = new JSONArray();
+        filterSet1.put(filterMap1);
+        budgetObj1.put(Filter.FilterContract.FILTERS, filterSet1);
+        JSONObject notFilterMap1 = new JSONObject();
+        notFilterMap1.put("1", new JSONArray(Arrays.asList("91")));
+        notFilterMap1.put("2", new JSONArray(Arrays.asList("856", "23")));
+        JSONArray notFilterSet1 = new JSONArray();
+        notFilterSet1.put(notFilterMap1);
+        budgetObj1.put(Filter.FilterContract.NOT_FILTERS, notFilterSet1);
+        AggregatableNamedBudget aggregatableNamedBudget1 =
+                new AggregatableNamedBudget(budgetObj1, mFlags);
+
+        JSONObject budgetObj2 = new JSONObject();
+        budgetObj2.put(AggregatableNamedBudget.NamedBudgetContract.NAME, BUDGET_NAME2);
+        JSONObject filterMap2 = new JSONObject();
+        filterMap2.put("1", new JSONArray(Arrays.asList("91")));
+        filterMap2.put("2", new JSONArray(Arrays.asList("1234", "234")));
+        JSONArray filterSet2 = new JSONArray();
+        filterSet2.put(filterMap2);
+        budgetObj2.put(Filter.FilterContract.FILTERS, filterSet2);
+        JSONObject notFilterMap2 = new JSONObject();
+        notFilterMap2.put("1", new JSONArray(Arrays.asList("78")));
+        notFilterMap2.put("2", new JSONArray(Arrays.asList("856", "23")));
+        JSONArray notFilterSet2 = new JSONArray();
+        notFilterSet2.put(notFilterMap2);
+        budgetObj2.put(Filter.FilterContract.NOT_FILTERS, notFilterSet2);
+        AggregatableNamedBudget aggregatableNamedBudget2 =
+                new AggregatableNamedBudget(budgetObj2, mFlags);
+
+        Map<String, List<String>> sourceFilterMap = new HashMap<>();
+        sourceFilterMap.put("1", Collections.singletonList("91"));
+        sourceFilterMap.put("2", Arrays.asList("1234", "234"));
+        FilterMap sourceFilter =
+                new FilterMap.Builder().setAttributionFilterMap(sourceFilterMap).build();
+
+        // Execution
+        Optional<String> matchedNamedBudget =
+                createExampleWithValues(
+                                /* aggregateDeduplicationKeys= */ null,
+                                Arrays.asList(aggregatableNamedBudget1, aggregatableNamedBudget2))
+                        .maybeExtractNamedBudget(sourceFilter, mFlags);
+
+        // Assertion
+        assertThat(matchedNamedBudget).isPresent();
+        assertThat(matchedNamedBudget.get()).isEqualTo(BUDGET_NAME2);
+    }
+
+    @Test
+    public void testExtractNamedBudget_firstNamedBudgetHasUnmatchedNotFilters()
+            throws JSONException {
+        // Set up
+        JSONObject budgetObj1 = new JSONObject();
+        budgetObj1.put(AggregatableNamedBudget.NamedBudgetContract.NAME, BUDGET_NAME1);
+        JSONObject filterMap1 = new JSONObject();
+        filterMap1.put("1", new JSONArray(Arrays.asList("1234", "234")));
+        JSONArray filterSet1 = new JSONArray();
+        filterSet1.put(filterMap1);
+        budgetObj1.put(Filter.FilterContract.FILTERS, filterSet1);
+        JSONObject notFilterMap1 = new JSONObject();
+        notFilterMap1.put("2", new JSONArray(Arrays.asList("56")));
+        JSONArray notFilterSet1 = new JSONArray();
+        notFilterSet1.put(notFilterMap1);
+        budgetObj1.put(Filter.FilterContract.NOT_FILTERS, notFilterSet1);
+        AggregatableNamedBudget aggregatableNamedBudget1 =
+                new AggregatableNamedBudget(budgetObj1, mFlags);
+
+        JSONObject budgetObj2 = new JSONObject();
+        budgetObj2.put(AggregatableNamedBudget.NamedBudgetContract.NAME, BUDGET_NAME2);
+        JSONObject filterMap2 = new JSONObject();
+        filterMap2.put("2", new JSONArray(Arrays.asList("56")));
+        filterMap2.put("1", new JSONArray(Arrays.asList("1234", "234")));
+        JSONArray filterSet2 = new JSONArray();
+        filterSet2.put(filterMap2);
+        budgetObj2.put(Filter.FilterContract.FILTERS, filterSet2);
+        JSONObject notFilterMap2 = new JSONObject();
+        notFilterMap2.put("2", new JSONArray(Arrays.asList("78")));
+        notFilterMap2.put("1", new JSONArray(Arrays.asList("856", "23")));
+        JSONArray notFilterSet2 = new JSONArray();
+        notFilterSet2.put(notFilterMap2);
+        budgetObj2.put(Filter.FilterContract.NOT_FILTERS, notFilterSet2);
+        AggregatableNamedBudget aggregatableNamedBudget2 =
+                new AggregatableNamedBudget(budgetObj2, mFlags);
+
+        Map<String, List<String>> sourceFilterMap = new HashMap<>();
+        sourceFilterMap.put("2", Collections.singletonList("56"));
+        sourceFilterMap.put("1", Arrays.asList("1234", "234"));
+        FilterMap sourceFilter =
+                new FilterMap.Builder().setAttributionFilterMap(sourceFilterMap).build();
+
+        // Execution
+        Optional<String> matchedNamedBudget =
+                createExampleWithValues(
+                                /* aggregateDeduplicationKeys= */ null,
+                                Arrays.asList(aggregatableNamedBudget1, aggregatableNamedBudget2))
+                        .maybeExtractNamedBudget(sourceFilter, mFlags);
+
+        // Assertion
+        assertThat(matchedNamedBudget).isPresent();
+        assertThat(matchedNamedBudget.get()).isEqualTo(BUDGET_NAME2);
+    }
+
+    @Test
+    public void testExtractNamedBudget_noFiltersInFirstNamedBudget() throws JSONException {
+        JSONObject budgetObj1 = new JSONObject();
+        budgetObj1.put(AggregatableNamedBudget.NamedBudgetContract.NAME, BUDGET_NAME1);
+        AggregatableNamedBudget aggregatableNamedBudget1 =
+                new AggregatableNamedBudget(budgetObj1, mFlags);
+
+        JSONObject budgetObj2 = new JSONObject();
+        budgetObj2.put(AggregatableNamedBudget.NamedBudgetContract.NAME, BUDGET_NAME2);
+        JSONObject filterMap2 = new JSONObject();
+        filterMap2.put("1", new JSONArray(Arrays.asList("789")));
+        filterMap2.put("2", new JSONArray(Arrays.asList("1234", "234")));
+        JSONArray filterSet2 = new JSONArray();
+        filterSet2.put(filterMap2);
+        budgetObj2.put(Filter.FilterContract.FILTERS, filterSet2);
+        AggregatableNamedBudget aggregatableNamedBudget2 =
+                new AggregatableNamedBudget(budgetObj2, mFlags);
+
+        Map<String, List<String>> sourceFilterMap = new HashMap<>();
+        sourceFilterMap.put("1", Collections.singletonList("789"));
+        sourceFilterMap.put("2", Arrays.asList("1234", "234"));
+        FilterMap sourceFilter =
+                new FilterMap.Builder().setAttributionFilterMap(sourceFilterMap).build();
+
+        Optional<String> matchedNamedBudget =
+                createExampleWithValues(
+                                /* aggregateDeduplicationKeys= */ null,
+                                Arrays.asList(aggregatableNamedBudget1, aggregatableNamedBudget2))
+                        .maybeExtractNamedBudget(sourceFilter, mFlags);
+        assertThat(matchedNamedBudget).isPresent();
+        assertThat(matchedNamedBudget.get()).isEqualTo(BUDGET_NAME1);
+    }
+
+    @Test
+    public void testExtractNamedBudget_noNamedBudgetsMatch() throws JSONException {
+        JSONObject budgetObj1 = new JSONObject();
+        budgetObj1.put(AggregatableNamedBudget.NamedBudgetContract.NAME, BUDGET_NAME1);
+        JSONObject filterMap1 = new JSONObject();
+        filterMap1.put("1", new JSONArray(Arrays.asList("78")));
+        filterMap1.put("2", new JSONArray(Arrays.asList("4321", "432")));
+        JSONArray filterSet1 = new JSONArray();
+        filterSet1.put(filterMap1);
+        budgetObj1.put(Filter.FilterContract.FILTERS, filterSet1);
+        AggregatableNamedBudget aggregatableNamedBudget1 =
+                new AggregatableNamedBudget(budgetObj1, mFlags);
+
+        JSONObject budgetObj2 = new JSONObject();
+        budgetObj2.put(AggregatableNamedBudget.NamedBudgetContract.NAME, BUDGET_NAME2);
+        JSONObject filterMap2 = new JSONObject();
+        filterMap2.put("1", new JSONArray(Arrays.asList("26")));
+        filterMap2.put("2", new JSONArray(Arrays.asList("9876", "654")));
+        JSONArray filterSet2 = new JSONArray();
+        filterSet2.put(filterMap2);
+        budgetObj2.put(Filter.FilterContract.FILTERS, filterSet2);
+        AggregatableNamedBudget aggregatableNamedBudget2 =
+                new AggregatableNamedBudget(budgetObj2, mFlags);
+
+        Map<String, List<String>> sourceFilterMap = new HashMap<>();
+        sourceFilterMap.put("1", Collections.singletonList("509"));
+        sourceFilterMap.put("2", Arrays.asList("1234", "234"));
+        FilterMap sourceFilter =
+                new FilterMap.Builder().setAttributionFilterMap(sourceFilterMap).build();
+
+        Optional<String> matchedNamedBudget =
+                createExampleWithValues(
+                                /* aggregateDeduplicationKeys= */ null,
+                                Arrays.asList(aggregatableNamedBudget1, aggregatableNamedBudget2))
+                        .maybeExtractNamedBudget(sourceFilter, mFlags);
+        assertThat(matchedNamedBudget).isEmpty();
+    }
+
+    @Test
+    public void testExtractNamedBudget_nullNamedBudgets() {
+        Map<String, List<String>> sourceFilterMap = new HashMap<>();
+        sourceFilterMap.put("1", Collections.singletonList("509"));
+        sourceFilterMap.put("2", Arrays.asList("1234", "234"));
+        FilterMap sourceFilter =
+                new FilterMap.Builder().setAttributionFilterMap(sourceFilterMap).build();
+
+        Optional<String> matchedNamedBudget =
+                createExampleWithValues(
+                                /* aggregateDeduplicationKeys= */ null,
+                                /* aggregatableBuckets= */ null)
+                        .maybeExtractNamedBudget(sourceFilter, mFlags);
+        assertThat(matchedNamedBudget).isEmpty();
+    }
+
+    @Test
+    public void testExtractNamedBudget_emptyNamedBudgets() {
+        Map<String, List<String>> sourceFilterMap = new HashMap<>();
+        sourceFilterMap.put("1", Collections.singletonList("509"));
+        sourceFilterMap.put("2", Arrays.asList("1234", "234"));
+        FilterMap sourceFilter =
+                new FilterMap.Builder().setAttributionFilterMap(sourceFilterMap).build();
+
+        Optional<String> matchedNamedBudget =
+                createExampleWithValues(/* aggregateDeduplicationKeys= */ null, Arrays.asList())
+                        .maybeExtractNamedBudget(sourceFilter, mFlags);
+        assertThat(matchedNamedBudget).isEmpty();
     }
 }

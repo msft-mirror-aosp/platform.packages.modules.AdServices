@@ -107,13 +107,9 @@ public class ConsentNotificationPasFragment extends Fragment {
                 !mIsRenotify
                         && consentManager.getUserManualInteractionWithConsent()
                                 != MANUAL_INTERACTIONS_RECORDED;
-        boolean isAdultFromRvcMsmtEnabled =
-                consentManager.isOtaAdultUserFromRvc()
-                        && consentManager.getConsent(AdServicesApiType.MEASUREMENTS).isGiven();
         if (UxStatesManager.getInstance().getFlag(KEY_EEA_PAS_UX_ENABLED)) {
             consentManager.recordPasNotificationOpened(true);
-            if (mIsStrictConsentBehavior
-                    && (isNotRenotifyNoManualInteraction || isAdultFromRvcMsmtEnabled)) {
+            if (mIsStrictConsentBehavior && isNotRenotifyNoManualInteraction) {
                 consentManager.enable(requireContext(), AdServicesApiType.FLEDGE);
                 consentManager.enable(requireContext(), AdServicesApiType.MEASUREMENTS);
             }

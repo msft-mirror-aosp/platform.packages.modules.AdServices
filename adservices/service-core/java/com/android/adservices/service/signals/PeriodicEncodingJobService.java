@@ -27,6 +27,7 @@ import android.app.job.JobScheduler;
 import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Build;
 
 import androidx.annotation.RequiresApi;
@@ -34,12 +35,14 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.LogUtil;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.profiling.Tracing;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -54,6 +57,8 @@ public class PeriodicEncodingJobService extends JobService {
 
     private static final int PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID =
             PERIODIC_SIGNALS_ENCODING_JOB.getJobId();
+    private static final String ACTION_PERIODIC_ENCODING_JOB_COMPLETE =
+            "ACTION_PERIODIC_ENCODING_JOB_COMPLETE";
 
     @Override
     public boolean onStartJob(JobParameters params) {
@@ -123,6 +128,7 @@ public class PeriodicEncodingJobService extends JobService {
 
                                 Tracing.endAsyncSection(Tracing.START_JOB, traceCookie);
                                 jobFinished(params, shouldRetry);
+                                sendBroadcastIntentIfEnabled(true);
                             }
 
                             @Override
@@ -136,6 +142,7 @@ public class PeriodicEncodingJobService extends JobService {
 
                                 Tracing.endAsyncSection(Tracing.START_JOB, traceCookie);
                                 jobFinished(params, shouldRetry);
+                                sendBroadcastIntentIfEnabled(false);
                             }
                         },
                         AdServicesExecutors.getLightWeightExecutor());
@@ -232,5 +239,17 @@ public class PeriodicEncodingJobService extends JobService {
 
         jobFinished(params, false);
         return false;
+    }
+
+    private void sendBroadcastIntentIfEnabled(boolean successful) {
+        if (DebugFlags.getInstance().getPeriodicEncodingJobCompleteBroadcastEnabled()) {
+            Context context = ApplicationContextSingleton.get();
+            LogUtil.d(
+                    "Sending a broadcast intent with intent action: "
+                            + ACTION_PERIODIC_ENCODING_JOB_COMPLETE);
+            context.sendBroadcast(
+                    new Intent(ACTION_PERIODIC_ENCODING_JOB_COMPLETE)
+                            .putExtra("status", successful));
+        }
     }
 }

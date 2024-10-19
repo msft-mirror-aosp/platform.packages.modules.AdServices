@@ -16,10 +16,15 @@
 package com.android.adservices.shared.testing.flags;
 
 import com.android.adservices.shared.testing.ConsoleLogger;
+import com.android.adservices.shared.testing.SdkSandbox;
+import com.android.adservices.shared.testing.SdkSandboxShellCmdImpl;
 import com.android.adservices.shared.testing.device.DeviceConfig;
 import com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest;
 import com.android.adservices.shared.testing.device.DeviceConfigShellCmdImpl;
+import com.android.adservices.shared.testing.device.DeviceGateway;
 import com.android.adservices.shared.testing.device.HostSideDeviceGateway;
+
+import com.google.common.annotations.VisibleForTesting;
 
 /**
  * Default implementation of {@link AbstractFlagsPreparerClassRule} for device-side tests.
@@ -33,13 +38,24 @@ public abstract class HostSideFlagsPreparerClassRule<R extends HostSideFlagsPrep
         extends AbstractFlagsPreparerClassRule<R> {
 
     public HostSideFlagsPreparerClassRule() {
-        this(
-                new DeviceConfigShellCmdImpl(
-                        ConsoleLogger.getInstance(), new HostSideDeviceGateway()),
-                SyncDisabledModeForTest.PERSISTENT);
+        this(SyncDisabledModeForTest.PERSISTENT);
     }
 
-    public HostSideFlagsPreparerClassRule(DeviceConfig deviceConfig, SyncDisabledModeForTest mode) {
-        super(ConsoleLogger.getInstance(), deviceConfig, mode);
+    public HostSideFlagsPreparerClassRule(SyncDisabledModeForTest mode) {
+        this(new HostSideDeviceGateway(), mode);
+    }
+
+    private HostSideFlagsPreparerClassRule(
+            DeviceGateway deviceGateway, SyncDisabledModeForTest mode) {
+        this(
+                new SdkSandboxShellCmdImpl(ConsoleLogger.getInstance(), deviceGateway),
+                new DeviceConfigShellCmdImpl(ConsoleLogger.getInstance(), deviceGateway),
+                mode);
+    }
+
+    @VisibleForTesting
+    protected HostSideFlagsPreparerClassRule(
+            SdkSandbox sdkSandbox, DeviceConfig deviceConfig, SyncDisabledModeForTest syncMode) {
+        super(ConsoleLogger.getInstance(), sdkSandbox, deviceConfig, syncMode);
     }
 }

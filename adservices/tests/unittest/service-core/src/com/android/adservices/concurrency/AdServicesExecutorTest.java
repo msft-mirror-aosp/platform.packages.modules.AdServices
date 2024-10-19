@@ -16,12 +16,12 @@
 
 package com.android.adservices.concurrency;
 
+import android.os.Build;
 import android.os.Process;
 import android.os.StrictMode;
 import android.os.StrictMode.ThreadPolicy;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.service.common.compat.BuildCompatUtils;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.Assume;
@@ -38,8 +38,7 @@ public final class AdServicesExecutorTest extends AdServicesUnitTestCase {
 
     @Before
     public void setup() {
-        // TODO(b/265113689) Unsuppress the test for user builds post removing the `su` utility
-        Assume.assumeTrue(BuildCompatUtils.isDebuggable());
+        Assume.assumeTrue(Build.isDebuggable());
         ShellUtils.runShellCommand(KILL_ADSERVICES_CMD);
     }
 

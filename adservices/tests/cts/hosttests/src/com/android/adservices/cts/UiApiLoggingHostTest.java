@@ -25,6 +25,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_KILL_SWIT
 import static com.android.os.adservices.AdservicesExtensionAtoms.AD_SERVICES_SETTINGS_USAGE_REPORTED_FIELD_NUMBER;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -126,7 +127,9 @@ public final class UiApiLoggingHostTest extends AdServicesHostSideTestCase {
         List<EventMetricData> data = ReportUtils.getEventMetricDataList(device, registry);
 
         // We trigger only one event from activity, should only see one event in the list
-        assertThat(data).hasSize(1);
+        assertWithMessage("number of logs generated for the activity is not correct")
+                .that(data)
+                .hasSize(1);
 
         // Verify the log event data
         AdServicesSettingsUsageReported adServicesSettingsUsageReported =

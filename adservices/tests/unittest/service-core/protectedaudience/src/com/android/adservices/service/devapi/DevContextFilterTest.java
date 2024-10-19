@@ -38,12 +38,12 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Process;
 import android.provider.Settings;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.devapi.DevSessionFixture;
-import com.android.adservices.service.common.compat.BuildCompatUtils;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
 import org.junit.Before;
@@ -53,7 +53,7 @@ import org.mockito.Mock;
 import java.util.concurrent.TimeUnit;
 
 @MockStatic(Settings.Global.class)
-@MockStatic(BuildCompatUtils.class)
+@MockStatic(Build.class)
 public final class DevContextFilterTest extends AdServicesExtendedMockitoTestCase {
     private static final int APP_UID = 100;
     private static final String APP_PACKAGE = "com.test.myapp";
@@ -166,7 +166,7 @@ public final class DevContextFilterTest extends AdServicesExtendedMockitoTestCas
         // No need to call disableDeveloperOptions since they wouldn't be checked because we are
         // in a debuggable build and Mockito would complain of the not necesasry mock.
         // Not preparing the mock would anyway cause the check method to return false.
-        when(BuildCompatUtils.isDebuggable()).thenReturn(true);
+        when(Build.isDebuggable()).thenReturn(true);
         when(mMockDevSessionDataStore.get()).thenReturn(immediateFuture(IN_PROD));
 
         mockPackageNameForUid(APP_UID, APP_PACKAGE);

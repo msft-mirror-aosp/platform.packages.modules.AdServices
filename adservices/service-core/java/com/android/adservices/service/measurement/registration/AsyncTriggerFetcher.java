@@ -40,8 +40,8 @@ import com.android.adservices.service.measurement.MeasurementHttpClient;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.TriggerSpecs;
 import com.android.adservices.service.measurement.XNetworkData;
-import com.android.adservices.service.measurement.aggregation.AggregatableBucket.AggregatableBucketContract;
 import com.android.adservices.service.measurement.aggregation.AggregatableKeyValue.AggregatableKeyValueContract;
+import com.android.adservices.service.measurement.aggregation.AggregatableNamedBudget.NamedBudgetContract;
 import com.android.adservices.service.measurement.aggregation.AggregatableValuesConfig.AggregatableValuesConfigContract;
 import com.android.adservices.service.measurement.ondevicepersonalization.IOdpDelegationWrapper;
 import com.android.adservices.service.measurement.ondevicepersonalization.NoOdpDelegationWrapper;
@@ -693,34 +693,32 @@ public class AsyncTriggerFetcher {
             }
         }
 
-        if (mFlags.getMeasurementEnableAggregateContributionBudgetCapacity()
-                && !json.isNull(AggregatableBucketContract.AGGREGATABLE_BUCKETS)) {
-            Object aggregatableBucketsObject =
-                    json.get(AggregatableBucketContract.AGGREGATABLE_BUCKETS);
-            if (!(aggregatableBucketsObject instanceof JSONArray)) {
+        if (mFlags.getMeasurementEnableAggregatableNamedBudgets()
+                && !json.isNull(NamedBudgetContract.NAMED_BUDGETS)) {
+            Object namedBudgetsObj = json.get(NamedBudgetContract.NAMED_BUDGETS);
+            if (!(namedBudgetsObj instanceof JSONArray)) {
                 LoggerFactory.getMeasurementLogger()
                         .e(
                                 String.format(
-                                        "parseValidateTrigger: Aggregatable buckets are not an"
+                                        "parseValidateTrigger: Named budgets are not an"
                                                 + " array in %s header",
                                         TriggerHeaderContract
                                                 .HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER));
                 return false;
             }
-            JSONArray aggregatableBucketsArray = (JSONArray) aggregatableBucketsObject;
-            Optional<String> maybeAggregatableBuckets =
-                    parseAggregatableBuckets(aggregatableBucketsArray);
-            if (maybeAggregatableBuckets.isEmpty()) {
+            JSONArray namedBudgetsArray = (JSONArray) namedBudgetsObj;
+            Optional<String> maybeNamedBudgets = parseNamedBudgets(namedBudgetsArray);
+            if (maybeNamedBudgets.isEmpty()) {
                 LoggerFactory.getMeasurementLogger()
                         .e(
                                 String.format(
-                                        "parseValidateTrigger: Invalid aggregatable buckets in"
+                                        "parseValidateTrigger: Invalid named budgets in"
                                                 + " %s header",
                                         TriggerHeaderContract
                                                 .HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER));
                 return false;
             }
-            builder.setAggregatableBucketsString(maybeAggregatableBuckets.get());
+            builder.setNamedBudgetsString(maybeNamedBudgets.get());
         }
 
         return true;
@@ -753,37 +751,35 @@ public class AsyncTriggerFetcher {
                         mFlags);
     }
 
-    private Optional<String> parseAggregatableBuckets(JSONArray aggregatableBuckets)
-            throws JSONException {
+    private Optional<String> parseNamedBudgets(JSONArray namedBudgetsArray) throws JSONException {
         boolean shouldCheckFilterSize = !mFlags.getMeasurementEnableUpdateTriggerHeaderLimit();
-        JSONArray validAggregatableBuckets = new JSONArray();
+        JSONArray validNamedBudgets = new JSONArray();
 
-        for (int i = 0; i < aggregatableBuckets.length(); i++) {
-            JSONObject aggregateBucket = new JSONObject();
-            Object maybeBucketObj = aggregatableBuckets.get(i);
+        for (int i = 0; i < namedBudgetsArray.length(); i++) {
+            JSONObject namedBudget = new JSONObject();
+            Object maybeBudgetObj = namedBudgetsArray.get(i);
 
-            if (!(maybeBucketObj instanceof JSONObject)) {
+            if (!(maybeBudgetObj instanceof JSONObject)) {
                 LoggerFactory.getMeasurementLogger()
-                        .d("parseAggregatableBuckets: Bucket " + i + " is not a JSON object.");
+                        .d("parseNamedBudgets: named budget " + i + " is not a JSON object.");
                 return Optional.empty();
             }
-            JSONObject bucketObj = (JSONObject) maybeBucketObj;
+            JSONObject budgetObj = (JSONObject) maybeBudgetObj;
 
-            if (!bucketObj.isNull(AggregatableBucketContract.BUCKET)) {
-                if (!(bucketObj.get(AggregatableBucketContract.BUCKET) instanceof String)) {
+            if (!budgetObj.isNull(NamedBudgetContract.NAME)) {
+                if (!(budgetObj.get(NamedBudgetContract.NAME) instanceof String)) {
                     LoggerFactory.getMeasurementLogger()
                             .d(
-                                    "parseAggregatableBuckets: Value for bucket "
+                                    "parseNamedBudgets: Value for named budget "
                                             + i
-                                            + " \"bucket\" is not a string.");
+                                            + " \"name\" is not a string.");
                     return Optional.empty();
                 }
-                aggregateBucket.put(
-                        AggregatableBucketContract.BUCKET,
-                        bucketObj.getString(AggregatableBucketContract.BUCKET));
+                namedBudget.put(
+                        NamedBudgetContract.NAME, budgetObj.getString(NamedBudgetContract.NAME));
             }
-            if (!bucketObj.isNull(FilterContract.FILTERS)) {
-                JSONArray filters = Filter.maybeWrapFilters(bucketObj, FilterContract.FILTERS);
+            if (!budgetObj.isNull(FilterContract.FILTERS)) {
+                JSONArray filters = Filter.maybeWrapFilters(budgetObj, FilterContract.FILTERS);
                 if (!FetcherUtil.areValidAttributionFilters(
                         filters,
                         mFlags,
@@ -791,16 +787,16 @@ public class AsyncTriggerFetcher {
                         shouldCheckFilterSize)) {
                     LoggerFactory.getMeasurementLogger()
                             .d(
-                                    "parseAggregatableBuckets: Aggregatable bucket "
+                                    "parseNamedBudgets: Named budget "
                                             + i
                                             + " contains invalid filters.");
                     return Optional.empty();
                 }
-                aggregateBucket.put(FilterContract.FILTERS, filters);
+                namedBudget.put(FilterContract.FILTERS, filters);
             }
-            if (!bucketObj.isNull(FilterContract.NOT_FILTERS)) {
+            if (!budgetObj.isNull(FilterContract.NOT_FILTERS)) {
                 JSONArray notFilters =
-                        Filter.maybeWrapFilters(bucketObj, FilterContract.NOT_FILTERS);
+                        Filter.maybeWrapFilters(budgetObj, FilterContract.NOT_FILTERS);
                 if (!FetcherUtil.areValidAttributionFilters(
                         notFilters,
                         mFlags,
@@ -808,16 +804,16 @@ public class AsyncTriggerFetcher {
                         shouldCheckFilterSize)) {
                     LoggerFactory.getMeasurementLogger()
                             .d(
-                                    "parseAggregatableBuckets: Aggregatable bucket "
+                                    "parseNamedBudgets: Named budget "
                                             + i
                                             + " contains invalid not_filters.");
                     return Optional.empty();
                 }
-                aggregateBucket.put(FilterContract.NOT_FILTERS, notFilters);
+                namedBudget.put(FilterContract.NOT_FILTERS, notFilters);
             }
-            validAggregatableBuckets.put(aggregateBucket);
+            validNamedBudgets.put(namedBudget);
         }
-        return Optional.of(validAggregatableBuckets.toString());
+        return Optional.of(validNamedBudgets.toString());
     }
 
     private Optional<String> getValidEventTriggerData(JSONArray eventTriggerDataArr) {

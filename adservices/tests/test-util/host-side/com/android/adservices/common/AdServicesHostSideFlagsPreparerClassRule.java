@@ -15,7 +15,6 @@
  */
 package com.android.adservices.common;
 
-import com.android.adservices.shared.testing.device.DeviceConfig;
 import com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest;
 import com.android.adservices.shared.testing.flags.HostSideFlagsPreparerClassRule;
 
@@ -34,8 +33,7 @@ public final class AdServicesHostSideFlagsPreparerClassRule
         super();
     }
 
-    public AdServicesHostSideFlagsPreparerClassRule(
-            DeviceConfig deviceConfig, SyncDisabledModeForTest mode) {
-        super(deviceConfig, mode);
+    public AdServicesHostSideFlagsPreparerClassRule(SyncDisabledModeForTest mode) {
+        super(mode);
     }
 }

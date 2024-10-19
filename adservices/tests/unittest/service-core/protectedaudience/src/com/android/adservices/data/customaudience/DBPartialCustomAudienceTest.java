@@ -18,6 +18,7 @@ package com.android.adservices.data.customaudience;
 
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.CommonFixture;
+import android.adservices.customaudience.PartialCustomAudience;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
 
@@ -89,6 +90,35 @@ public class DBPartialCustomAudienceTest extends AdServicesUnitTestCase {
         expect.withMessage("Partial Custom Audience User Bidding Signals")
                 .that(dbPartialCustomAudience.getUserBiddingSignals())
                 .isEqualTo(VALID_BIDDING_SIGNALS);
+    }
+
+    @Test
+    public void testBuildDBPartialCustomAudience_FromPartialCustomAudienceSuccess() {
+        PartialCustomAudience partialCA =
+                new PartialCustomAudience.Builder(VALID_CA_NAME)
+                        .setExpirationTime(VALID_EXPIRATION_TIME)
+                        .setActivationTime(VALID_ACTIVATION_TIME)
+                        .setUserBiddingSignals(VALID_BIDDING_SIGNALS)
+                        .build();
+
+        DBPartialCustomAudience dbPartialCustomAudience =
+                DBPartialCustomAudience.fromPartialCustomAudience(VALID_UPDATE_ID, partialCA);
+
+        expect.withMessage("Partial Custom Audience Update Id")
+                .that(dbPartialCustomAudience.getUpdateId())
+                .isEqualTo(VALID_UPDATE_ID);
+        expect.withMessage("Partial Custom Audience Name")
+                .that(dbPartialCustomAudience.getName())
+                .isEqualTo(partialCA.getName());
+        expect.withMessage("Partial Custom Audience Activation Time")
+                .that(dbPartialCustomAudience.getActivationTime())
+                .isEqualTo(partialCA.getActivationTime());
+        expect.withMessage("Partial Custom Audience Expiration Time")
+                .that(dbPartialCustomAudience.getExpirationTime())
+                .isEqualTo(partialCA.getExpirationTime());
+        expect.withMessage("Partial Custom Audience User Bidding Signals")
+                .that(dbPartialCustomAudience.getUserBiddingSignals())
+                .isEqualTo(partialCA.getUserBiddingSignals());
     }
 
     @Test

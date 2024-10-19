@@ -20,8 +20,11 @@ import static com.android.adservices.devapi.DevSessionFixture.IN_DEV;
 import static com.android.adservices.devapi.DevSessionFixture.IN_PROD;
 import static com.android.adservices.devapi.DevSessionFixture.TRANSITIONING_DEV_TO_PROD;
 import static com.android.adservices.devapi.DevSessionFixture.TRANSITIONING_PROD_TO_DEV;
+import static com.android.adservices.service.devapi.DevSessionControllerResult.FAILURE;
 import static com.android.adservices.service.devapi.DevSessionControllerResult.NO_OP;
 import static com.android.adservices.service.devapi.DevSessionControllerResult.SUCCESS;
+
+import static com.google.common.util.concurrent.Futures.immediateFuture;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
@@ -31,8 +34,6 @@ import static org.mockito.Mockito.when;
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.common.DatabaseClearer;
-
-import com.google.common.util.concurrent.Futures;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -57,7 +58,7 @@ public class DevSessionControllerImplTest extends AdServicesMockitoTestCase {
                         mMockDevSessionDataStore,
                         AdServicesExecutors.getLightWeightExecutor());
 
-        doReturn(Futures.immediateVoidFuture())
+        doReturn(immediateFuture(true))
                 .when(mMockDatabaseClearer)
                 .deleteProtectedAudienceAndAppSignalsData(
                         /* deleteCustomAudienceUpdate= */ true,
@@ -67,10 +68,10 @@ public class DevSessionControllerImplTest extends AdServicesMockitoTestCase {
 
     @Test
     public void startDevSession_withDevSessionDisabled_returnsSuccess() throws Exception {
-        when(mMockDevSessionDataStore.get()).thenReturn(Futures.immediateFuture(IN_PROD));
+        when(mMockDevSessionDataStore.get()).thenReturn(immediateFuture(IN_PROD));
         when(mMockDevSessionDataStore.set(any(DevSession.class)))
-                .thenReturn(Futures.immediateFuture(TRANSITIONING_PROD_TO_DEV))
-                .thenReturn(Futures.immediateFuture(IN_DEV));
+                .thenReturn(immediateFuture(TRANSITIONING_PROD_TO_DEV))
+                .thenReturn(immediateFuture(IN_DEV));
 
         Future<DevSessionControllerResult> resultFuture = mDevSessionController.startDevSession();
 
@@ -78,13 +79,29 @@ public class DevSessionControllerImplTest extends AdServicesMockitoTestCase {
     }
 
     @Test
+    public void startDevSession_withFailingDatabaseClear_returnsFailure() throws Exception {
+        when(mMockDevSessionDataStore.get()).thenReturn(immediateFuture(IN_PROD));
+        when(mMockDevSessionDataStore.set(any(DevSession.class)))
+                .thenReturn(immediateFuture(TRANSITIONING_PROD_TO_DEV))
+                .thenReturn(immediateFuture(IN_DEV));
+        when(mMockDatabaseClearer.deleteProtectedAudienceAndAppSignalsData(
+                        /* deleteCustomAudienceUpdate= */ true,
+                        /* deleteAppInstallFiltering= */ true,
+                        /* deleteProtectedSignals= */ true))
+                .thenThrow(new RuntimeException());
+
+        Future<DevSessionControllerResult> resultFuture = mDevSessionController.startDevSession();
+
+        expect.withMessage("DevSession future").that(wait(resultFuture)).isEqualTo(FAILURE);
+    }
+
+    @Test
     public void startDevSession_withDevSessionTransitioningToProd_returnsSuccess()
             throws Exception {
-        when(mMockDevSessionDataStore.get())
-                .thenReturn(Futures.immediateFuture(TRANSITIONING_DEV_TO_PROD));
+        when(mMockDevSessionDataStore.get()).thenReturn(immediateFuture(TRANSITIONING_DEV_TO_PROD));
         when(mMockDevSessionDataStore.set(any(DevSession.class)))
-                .thenReturn(Futures.immediateFuture(TRANSITIONING_DEV_TO_PROD))
-                .thenReturn(Futures.immediateFuture(IN_PROD));
+                .thenReturn(immediateFuture(TRANSITIONING_DEV_TO_PROD))
+                .thenReturn(immediateFuture(IN_PROD));
 
         Future<DevSessionControllerResult> resultFuture = mDevSessionController.startDevSession();
 
@@ -93,11 +110,10 @@ public class DevSessionControllerImplTest extends AdServicesMockitoTestCase {
 
     @Test
     public void startDevSession_withDevSessionTransitioningToDev_returnsSuccess() throws Exception {
-        when(mMockDevSessionDataStore.get())
-                .thenReturn(Futures.immediateFuture(TRANSITIONING_PROD_TO_DEV));
+        when(mMockDevSessionDataStore.get()).thenReturn(immediateFuture(TRANSITIONING_PROD_TO_DEV));
         when(mMockDevSessionDataStore.set(any(DevSession.class)))
-                .thenReturn(Futures.immediateFuture(TRANSITIONING_PROD_TO_DEV))
-                .thenReturn(Futures.immediateFuture(IN_DEV));
+                .thenReturn(immediateFuture(TRANSITIONING_PROD_TO_DEV))
+                .thenReturn(immediateFuture(IN_DEV));
 
         Future<DevSessionControllerResult> resultFuture = mDevSessionController.startDevSession();
 
@@ -106,7 +122,7 @@ public class DevSessionControllerImplTest extends AdServicesMockitoTestCase {
 
     @Test
     public void startDevSession_withDevSessionActive_returnsNoOp() throws Exception {
-        when(mMockDevSessionDataStore.get()).thenReturn(Futures.immediateFuture(IN_DEV));
+        when(mMockDevSessionDataStore.get()).thenReturn(immediateFuture(IN_DEV));
 
         Future<DevSessionControllerResult> resultFuture = mDevSessionController.startDevSession();
 
@@ -116,7 +132,7 @@ public class DevSessionControllerImplTest extends AdServicesMockitoTestCase {
 
     @Test
     public void startDevSession_withDevSessionActiveButExpired_returnsNoOp() throws Exception {
-        when(mMockDevSessionDataStore.get()).thenReturn(Futures.immediateFuture(IN_DEV));
+        when(mMockDevSessionDataStore.get()).thenReturn(immediateFuture(IN_DEV));
 
         Future<DevSessionControllerResult> resultFuture = mDevSessionController.startDevSession();
 
@@ -126,10 +142,10 @@ public class DevSessionControllerImplTest extends AdServicesMockitoTestCase {
 
     @Test
     public void endDevSession_withDevSessionActive_returnsSuccess() throws Exception {
-        when(mMockDevSessionDataStore.get()).thenReturn(Futures.immediateFuture(IN_DEV));
+        when(mMockDevSessionDataStore.get()).thenReturn(immediateFuture(IN_DEV));
         when(mMockDevSessionDataStore.set(any(DevSession.class)))
-                .thenReturn(Futures.immediateFuture(TRANSITIONING_DEV_TO_PROD))
-                .thenReturn(Futures.immediateFuture(IN_PROD));
+                .thenReturn(immediateFuture(TRANSITIONING_DEV_TO_PROD))
+                .thenReturn(immediateFuture(IN_PROD));
 
         Future<DevSessionControllerResult> resultFuture = mDevSessionController.endDevSession();
 
@@ -138,11 +154,10 @@ public class DevSessionControllerImplTest extends AdServicesMockitoTestCase {
 
     @Test
     public void endDevSession_withDevSessionTransitioningToProd_returnsSuccess() throws Exception {
-        when(mMockDevSessionDataStore.get())
-                .thenReturn(Futures.immediateFuture(TRANSITIONING_DEV_TO_PROD));
+        when(mMockDevSessionDataStore.get()).thenReturn(immediateFuture(TRANSITIONING_DEV_TO_PROD));
         when(mMockDevSessionDataStore.set(any(DevSession.class)))
-                .thenReturn(Futures.immediateFuture(TRANSITIONING_DEV_TO_PROD))
-                .thenReturn(Futures.immediateFuture(IN_PROD));
+                .thenReturn(immediateFuture(TRANSITIONING_DEV_TO_PROD))
+                .thenReturn(immediateFuture(IN_PROD));
 
         Future<DevSessionControllerResult> resultFuture = mDevSessionController.endDevSession();
 
@@ -151,11 +166,10 @@ public class DevSessionControllerImplTest extends AdServicesMockitoTestCase {
 
     @Test
     public void endDevSession_withDevSessionTransitioningToDev_returnsSuccess() throws Exception {
-        when(mMockDevSessionDataStore.get())
-                .thenReturn(Futures.immediateFuture(TRANSITIONING_PROD_TO_DEV));
+        when(mMockDevSessionDataStore.get()).thenReturn(immediateFuture(TRANSITIONING_PROD_TO_DEV));
         when(mMockDevSessionDataStore.set(any(DevSession.class)))
-                .thenReturn(Futures.immediateFuture(TRANSITIONING_DEV_TO_PROD))
-                .thenReturn(Futures.immediateFuture(IN_DEV));
+                .thenReturn(immediateFuture(TRANSITIONING_DEV_TO_PROD))
+                .thenReturn(immediateFuture(IN_DEV));
 
         Future<DevSessionControllerResult> resultFuture = mDevSessionController.endDevSession();
 
@@ -164,7 +178,7 @@ public class DevSessionControllerImplTest extends AdServicesMockitoTestCase {
 
     @Test
     public void endDevSession_withDevSessionDisabled_returnsNoOp() throws Exception {
-        when(mMockDevSessionDataStore.get()).thenReturn(Futures.immediateFuture(IN_PROD));
+        when(mMockDevSessionDataStore.get()).thenReturn(immediateFuture(IN_PROD));
 
         Future<DevSessionControllerResult> resultFuture = mDevSessionController.endDevSession();
 

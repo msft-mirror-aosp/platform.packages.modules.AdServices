@@ -34,7 +34,7 @@ android_test_helper_app {
     plugins: ["androidx.room_room-compiler-plugin"],
     resource_dirs: ["res"],
     min_sdk_version: "33",
-    target_sdk_version: "33",
+    target_sdk_version: "34",
 }
 
 java_library {
@@ -56,5 +56,5 @@ android_test_helper_app {
     },
     test_suites: ["general-tests"],
     min_sdk_version: "33",
-    target_sdk_version: "33",
+    target_sdk_version: "34",
 }

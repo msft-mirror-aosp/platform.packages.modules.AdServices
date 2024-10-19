@@ -160,7 +160,7 @@ public abstract class FledgeScenarioTest extends AdServicesCtsTestCase {
     }
 
     @After
-    public final void tearDown() throws Exception {
+    public void tearDown() throws Exception {
         try {
             leaveCustomAudience(SHOES_CA);
             leaveCustomAudience(SHIRTS_CA);
@@ -323,6 +323,7 @@ public abstract class FledgeScenarioTest extends AdServicesCtsTestCase {
         Log.d(TAG, "Started default MockWebServer.");
         return scenarioDispatcher;
     }
+
 
     private JoinCustomAudienceRequest makeJoinCustomAudienceRequest(String customAudienceName) {
         return new JoinCustomAudienceRequest.Builder()

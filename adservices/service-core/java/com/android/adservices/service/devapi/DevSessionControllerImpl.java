@@ -24,14 +24,14 @@ import static com.android.adservices.service.devapi.DevSessionState.IN_PROD;
 import static com.android.adservices.service.devapi.DevSessionState.TRANSITIONING_DEV_TO_PROD;
 import static com.android.adservices.service.devapi.DevSessionState.TRANSITIONING_PROD_TO_DEV;
 
+import static com.google.common.util.concurrent.Futures.immediateFuture;
+
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.common.DatabaseClearer;
 
 import com.google.common.util.concurrent.FluentFuture;
-import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
-import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
@@ -80,7 +80,7 @@ public final class DevSessionControllerImpl implements DevSessionController {
                             DevSessionState state = devSession.getState();
                             if ((!setDevSessionEnabled && state == IN_PROD)
                                     || (setDevSessionEnabled && state == IN_DEV)) {
-                                return Futures.immediateFuture(NO_OP);
+                                return immediateFuture(NO_OP);
                             }
                             // Note that transitory states can go in either direction, so we ignore
                             // them when doing the check below.
@@ -98,15 +98,16 @@ public final class DevSessionControllerImpl implements DevSessionController {
     @SuppressWarnings("FutureReturnValueIgnored") // TODO(b/331285831): fix this
     private ListenableFuture<DevSessionControllerResult> handleDevToProd() {
         return FluentFuture.from(setDevSessionState(TRANSITIONING_DEV_TO_PROD))
-                .transform(this::clearDatabase, mLightWeightExecutor)
-                .transform(
-                        unused -> {
-                            setDevSessionState(IN_PROD);
-                            return SUCCESS;
+                .transformAsync(this::clearDatabase, mLightWeightExecutor)
+                .transformAsync(success -> setDevSessionState(IN_PROD), mLightWeightExecutor)
+                .transformAsync(
+                        state -> {
+                            sLogger.v("completed transition to IN_PROD");
+                            return immediateFuture(SUCCESS);
                         },
                         mLightWeightExecutor)
                 .catching(
-                        IOException.class,
+                        Exception.class,
                         e -> {
                             sLogger.e(e, "failed to move from IN_DEV to IN_PROD");
                             return FAILURE;
@@ -117,15 +118,16 @@ public final class DevSessionControllerImpl implements DevSessionController {
     @SuppressWarnings("FutureReturnValueIgnored") // TODO(b/331285831): fix this
     private ListenableFuture<DevSessionControllerResult> handleProdOrRecoveryToDev() {
         return FluentFuture.from(setDevSessionState(TRANSITIONING_PROD_TO_DEV))
-                .transform(this::clearDatabase, mLightWeightExecutor)
-                .transform(
-                        unused -> {
-                            setDevSessionState(IN_DEV);
-                            return SUCCESS;
+                .transformAsync(this::clearDatabase, mLightWeightExecutor)
+                .transformAsync(success -> setDevSessionState(IN_DEV), mLightWeightExecutor)
+                .transformAsync(
+                        state -> {
+                            sLogger.v("completed transition to IN_DEV");
+                            return immediateFuture(SUCCESS);
                         },
                         mLightWeightExecutor)
                 .catching(
-                        IOException.class,
+                        Exception.class,
                         e -> {
                             sLogger.e(e, "failed to move from IN_PROD to IN_DEV");
                             return FAILURE;
@@ -138,7 +140,7 @@ public final class DevSessionControllerImpl implements DevSessionController {
         return mDevSessionDataStore.set(DevSession.builder().setState(desiredState).build());
     }
 
-    private ListenableFuture<Void> clearDatabase(DevSession unused) {
+    private ListenableFuture<Boolean> clearDatabase(DevSession unused) {
         sLogger.d("Beginning clearDatabase()");
         return mDatabaseClearer.deleteProtectedAudienceAndAppSignalsData(
                 /* deleteCustomAudienceUpdate= */ true,

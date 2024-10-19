@@ -674,6 +674,9 @@ public final class FlagsConstants {
     // FLEDGE Schedule Custom Audience Update keys
     public static final String KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED =
             "fledge_schedule_custom_audience_update_enabled";
+    public static final String
+            KEY_FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS =
+                    "Fledge__enable_schedule_custom_audience_update_additional_schedule_requests";
     public static final String KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_PERIOD_MS =
             "fledge_schedule_custom_audience_update_job_period_ms";
     public static final String KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_FLEX_MS =
@@ -1052,10 +1055,6 @@ public final class FlagsConstants {
     public static final String KEY_CONSENT_MANAGER_LAZY_ENABLE_MODE =
             "consent_manager_lazy_enable_mode";
 
-    // Rvc post ota notification age check keys.
-    public static final String KEY_RVC_POST_OTA_NOTIF_AGE_CHECK =
-            "rvc_post_ota_notification_age_check";
-
     // Source of truth to get consent for PPAPI
     public static final String KEY_CONSENT_SOURCE_OF_TRUTH = "consent_source_of_truth";
 
@@ -1214,8 +1213,8 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_DEBUG_KEY_AD_ID_MATCHING_ENROLLMENT_BLOCKLIST =
             "measurement_debug_key_ad_id_matching_enrollment_blocklist";
 
-    public static final String KEY_MEASUREMENT_ENABLE_AGGREGATE_CONTRIBUTION_BUDGET_CAPACITY =
-            "Measurement__enable_aggregate_contribution_budget_capacity";
+    public static final String KEY_MEASUREMENT_ENABLE_AGGREGATABLE_NAMED_BUDGETS =
+            "Measurement__enable_aggregatable_named_budgets";
 
     public static final String KEY_MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA =
             "measurement_enable_v1_source_trigger_data";
@@ -1382,11 +1381,11 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH =
             "measurement_max_attribution_scope_length";
 
-    public static final String KEY_MEASUREMENT_MAX_LENGTH_PER_AGGREGATABLE_BUCKET =
-            "Measurement__max_length_per_aggregatable_bucket";
+    public static final String KEY_MEASUREMENT_MAX_LENGTH_PER_BUDGET_NAME =
+            "Measurement__max_length_per_budget_name";
 
-    public static final String KEY_MEASUREMENT_MAX_AGGREGATABLE_BUCKETS_PER_SOURCE_REGISTRATION =
-            "Measurement__max_aggregatable_buckets_per_source_registration";
+    public static final String KEY_MEASUREMENT_MAX_NAMED_BUDGETS_PER_SOURCE_REGISTRATION =
+            "Measurement__max_named_budgets_per_source_registration";
 
     public static final String KEY_MEASUREMENT_EVENT_API_DEFAULT_EPSILON =
             "measurement_event_api_default_epsilon";
@@ -1433,9 +1432,6 @@ public final class FlagsConstants {
             "notification_dmsmissed_on_click";
 
     public static final String KEY_U18_UX_ENABLED = "u18_ux_enabled";
-
-    public static final String KEY_RVC_POST_OTA_NOTIFICATION_ENABLED =
-            "rvc_post_ota_notification_enabled";
 
     public static final String KEY_ENABLE_AD_SERVICES_SYSTEM_API = "enable_ad_services_system_api";
 

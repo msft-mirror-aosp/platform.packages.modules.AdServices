@@ -41,11 +41,21 @@ public final class EqualsTester {
         Objects.requireNonNull(obj1, "1st arg cannot be null");
         Objects.requireNonNull(obj2, "2nd arg cannot be null");
 
-        mExpect.withMessage("1st obj (%s)", obj1).that(obj1).isEqualTo(obj2);
-        mExpect.withMessage("2nd obj (%s)", obj2).that(obj2).isEqualTo(obj1);
-        mExpect.withMessage("hashCode of %s", obj1)
-                .that(obj1.hashCode())
-                .isEqualTo(obj2.hashCode());
+        if (!obj1.equals(obj2)) {
+            mExpect.withMessage("1st obj (%s) is not equal to 2nd (%s)", obj1, obj2).fail();
+        }
+        if (!obj2.equals(obj1)) {
+            mExpect.withMessage("2nd obj (%s) is not equal to 1st (%s)", obj2, obj1).fail();
+        }
+        int hashCode1 = obj1.hashCode();
+        int hashCode2 = obj2.hashCode();
+        if (hashCode1 != hashCode2) {
+            mExpect.withMessage(
+                            "hashcode (%s) of 1st object (%s) is not equal to hashcode (%s) of 2nd"
+                                    + " object (%s)",
+                            hashCode1, obj1, hashCode2, obj2)
+                    .fail();
+        }
     }
 
     // TODO(b/336615269): refactor to take Object... instead

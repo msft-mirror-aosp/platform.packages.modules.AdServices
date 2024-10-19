@@ -522,16 +522,6 @@ public class ConsentManager {
     }
 
     /**
-     * Returns whether the user is adult user who OTA from R.
-     *
-     * @return true if user is adult user who OTA from R, otherwise false.
-     */
-    public boolean isOtaAdultUserFromRvc() {
-        // TODO: b/364295966 REMOVE
-        return false;
-    }
-
-    /**
      * Proxy call to {@link TopicsWorker} to get {@link ImmutableList} of {@link Topic}s which could
      * be returned to the {@link TopicsWorker} clients.
      *

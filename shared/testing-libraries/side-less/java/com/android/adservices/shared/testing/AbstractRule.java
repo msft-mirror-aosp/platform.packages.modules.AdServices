@@ -31,7 +31,8 @@ public abstract class AbstractRule implements TestRule, TestNamer {
     @Nullable private String mTestName = DEFAULT_TEST_NAME;
 
     protected AbstractRule(RealLogger logger) {
-        mLog = new Logger(Objects.requireNonNull(logger), getClass());
+        Objects.requireNonNull(logger, "logger cannot be null");
+        mLog = new Logger(logger, getClass());
     }
 
     @Override

@@ -24,7 +24,7 @@ import android.net.Uri;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
-import com.android.adservices.service.measurement.aggregation.AggregatableBucket;
+import com.android.adservices.service.measurement.aggregation.AggregatableNamedBudget;
 import com.android.adservices.service.measurement.aggregation.AggregatableValuesConfig;
 import com.android.adservices.service.measurement.aggregation.AggregateDebugReporting;
 import com.android.adservices.service.measurement.aggregation.AggregateDeduplicationKey;
@@ -87,7 +87,7 @@ public class Trigger {
     @Nullable private Integer mAggregatableFilteringIdMaxBytes;
     @Nullable private String mAggregateDebugReportingString;
     @Nullable private AggregateDebugReporting mAggregateDebugReporting;
-    @Nullable private String mAggregatableBucketsString;
+    @Nullable private String mNamedBudgetsString;
 
     @IntDef(value = {Status.PENDING, Status.IGNORED, Status.ATTRIBUTED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -149,7 +149,7 @@ public class Trigger {
                         mAggregatableFilteringIdMaxBytes, trigger.mAggregatableFilteringIdMaxBytes)
                 && Objects.equals(
                         mAggregateDebugReportingString, trigger.mAggregateDebugReportingString)
-                && Objects.equals(mAggregatableBucketsString, trigger.mAggregatableBucketsString);
+                && Objects.equals(mNamedBudgetsString, trigger.mNamedBudgetsString);
     }
 
     @Override
@@ -182,7 +182,7 @@ public class Trigger {
                 mAttributionScopesString,
                 mAggregatableFilteringIdMaxBytes,
                 mAggregateDebugReportingString,
-                mAggregatableBucketsString);
+                mNamedBudgetsString);
     }
 
     /** Unique identifier for the {@link Trigger}. */
@@ -283,13 +283,13 @@ public class Trigger {
     }
 
     /**
-     * Returns the JSON representation of the list of aggregatable buckets. aggregatable bucket is a
-     * JSONObject. example: {"bucket": "biddable", "filters": { "2": ["11102626635",
-     * "11081876753"]}, "not_filters": { "2": ["11102626635", "11081876753"]}}
+     * Returns the JSON representation of the list of named budgets. named budget is a JSONObject.
+     * example: {"name": "biddable", "filters": { "2": ["11102626635", "11081876753"]},
+     * "not_filters": { "2": ["11102626635", "11081876753"]}}
      */
     @Nullable
-    public String getAggregatableBucketsString() {
-        return mAggregatableBucketsString;
+    public String getNamedBudgetsString() {
+        return mNamedBudgetsString;
     }
 
     /**
@@ -529,15 +529,15 @@ public class Trigger {
                     List.of(aggregatableValuesConfig));
         }
 
-        if (flags.getMeasurementEnableAggregateContributionBudgetCapacity()
-                && getAggregatableBucketsString() != null) {
-            JSONArray bucketObjects = new JSONArray(getAggregatableBucketsString());
-            List<AggregatableBucket> aggregatableBuckets = new ArrayList<>();
-            for (int i = 0; i < bucketObjects.length(); i++) {
-                aggregatableBuckets.add(
-                        new AggregatableBucket(bucketObjects.getJSONObject(i), flags));
+        if (flags.getMeasurementEnableAggregatableNamedBudgets()
+                && getNamedBudgetsString() != null) {
+            JSONArray budgetObjects = new JSONArray(getNamedBudgetsString());
+            List<AggregatableNamedBudget> aggregatableNamedBudgets = new ArrayList<>();
+            for (int i = 0; i < budgetObjects.length(); i++) {
+                aggregatableNamedBudgets.add(
+                        new AggregatableNamedBudget(budgetObjects.getJSONObject(i), flags));
             }
-            aggregatableAttributionTriggerBuilder.setAggregatableBuckets(aggregatableBuckets);
+            aggregatableAttributionTriggerBuilder.setNamedBudgets(aggregatableNamedBudgets);
         }
 
         return Optional.of(aggregatableAttributionTriggerBuilder.build());
@@ -772,9 +772,9 @@ public class Trigger {
             return this;
         }
 
-        /** See {@link Trigger#getAggregatableBucketsString()} */
-        public Builder setAggregatableBucketsString(String aggregatableBucketsString) {
-            mBuilding.mAggregatableBucketsString = aggregatableBucketsString;
+        /** See {@link Trigger#getNamedBudgetsString()} ()} */
+        public Builder setNamedBudgetsString(String namedBudgetsString) {
+            mBuilding.mNamedBudgetsString = namedBudgetsString;
             return this;
         }
 

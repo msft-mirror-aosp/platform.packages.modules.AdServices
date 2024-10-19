@@ -952,6 +952,7 @@ public class AbstractSdkLevelSupportedRuleTest extends SharedSidelessTestCase {
         return Description.createTestDescription(clazz, TEST_METHOD_BEING_EXECUTED, annotations);
     }
 
+    // TODO(b/297085722): replace by rule from meta_testing
     /**
      * Bogus implementation of {@link AbstractSdkLevelSupported}.
      *

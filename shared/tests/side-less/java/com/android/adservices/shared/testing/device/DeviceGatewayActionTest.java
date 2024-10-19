@@ -62,11 +62,14 @@ public final class DeviceGatewayActionTest extends SharedSidelessTestCase {
         }
 
         @Override
-        public boolean onExecute() {
+        public boolean onExecuteLocked() {
             return true;
         }
 
         @Override
-        public void onRevert() {}
+        public void onRevertLocked() {}
+
+        @Override
+        public void onResetLocked() {}
     }
 }

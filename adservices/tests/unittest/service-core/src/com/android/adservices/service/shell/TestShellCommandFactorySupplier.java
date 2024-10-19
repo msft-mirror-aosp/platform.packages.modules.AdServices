@@ -28,6 +28,7 @@ import com.android.adservices.service.adselection.BuyerInputGenerator;
 import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGenerator;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
 import com.android.adservices.service.devapi.DevSessionController;
+import com.android.adservices.service.devapi.DevSessionDataStore;
 import com.android.adservices.service.shell.adselection.AdSelectionShellCommandFactory;
 import com.android.adservices.service.shell.adservicesapi.AdServicesApiShellCommandFactory;
 import com.android.adservices.service.shell.customaudience.CustomAudienceShellCommandFactory;
@@ -64,7 +65,8 @@ public class TestShellCommandFactorySupplier extends ShellCommandFactorySupplier
     private final EncoderLogicMetadataDao mEncoderLogicMetadataDao;
     private final ConsentedDebugConfigurationGenerator mConsentedDebugConfigurationGenerator;
     private final AdSelectionEntryDao mAdSelectionEntryDao;
-    private final DevSessionController mDevSessionSetter;
+    private final DevSessionController mDevSessionController;
+    private final DevSessionDataStore mDevSessionDataStore;
 
     TestShellCommandFactorySupplier(
             boolean isCustomAudienceCLiEnabled,
@@ -83,7 +85,8 @@ public class TestShellCommandFactorySupplier extends ShellCommandFactorySupplier
             EncoderLogicMetadataDao encoderLogicMetadataDao,
             ConsentedDebugConfigurationGenerator consentedDebugConfigurationGenerator,
             AdSelectionEntryDao adSelectionEntryDao,
-            DevSessionController devSessionSetter) {
+            DevSessionController devSessionSetter,
+            DevSessionDataStore devSessionDataStore) {
         mIsCustomAudienceCliEnabled = isCustomAudienceCLiEnabled;
         mIsConsentedDebugCliEnabled = isConsentedDebugCliEnabled;
         mIsSignalsCliEnabled = isSignalsCliEnabled;
@@ -123,8 +126,10 @@ public class TestShellCommandFactorySupplier extends ShellCommandFactorySupplier
                         "ConsentedDebugConfigurationGenerator cannot be null");
         mAdSelectionEntryDao =
                 Objects.requireNonNull(adSelectionEntryDao, "AdSelectionEntryDao cannot be null");
-        mDevSessionSetter =
-                Objects.requireNonNull(devSessionSetter, "DevSessionSetter cannot be null");
+        mDevSessionController =
+                Objects.requireNonNull(devSessionSetter, "DevSessionController cannot be null");
+        mDevSessionDataStore =
+                Objects.requireNonNull(devSessionDataStore, "DevSessionDataStore cannot be null");
     }
 
     @Override
@@ -143,7 +148,8 @@ public class TestShellCommandFactorySupplier extends ShellCommandFactorySupplier
                         mBuyerInputGenerator,
                         mAuctionServerDataCompressor,
                         mConsentedDebugConfigurationGenerator,
-                        mAdSelectionEntryDao),
+                        mAdSelectionEntryDao,
+                        mDevSessionDataStore),
                 new SignalsShellCommandFactory(
                         mIsSignalsCliEnabled,
                         mSignalsProviderAndArgumentFactory,
@@ -153,6 +159,6 @@ public class TestShellCommandFactorySupplier extends ShellCommandFactorySupplier
                         mEncodingJobRunStatsLogger,
                         mEncoderLogicMetadataDao),
                 new AdServicesApiShellCommandFactory(
-                        mDevSessionSetter, /* developerModeFeatureEnabled= */ true));
+                        mDevSessionController, /* developerModeFeatureEnabled= */ true));
     }
 }

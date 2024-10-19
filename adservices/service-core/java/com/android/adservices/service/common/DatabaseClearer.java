@@ -67,12 +67,13 @@ public final class DatabaseClearer {
      * @return A future indicating completion of all DAO operations. If any of the DAO operations
      *     fail, the future will fail with the exception from the first failing DAO operation.
      */
-    public ListenableFuture<Void> deleteProtectedAudienceAndAppSignalsData(
+    public ListenableFuture<Boolean> deleteProtectedAudienceAndAppSignalsData(
             boolean deleteCustomAudienceUpdate,
             boolean deleteAppInstallFiltering,
             boolean deleteProtectedSignals) {
         return mBackgroundExecutor.submit(
                 () -> {
+                    sLogger.v("DatabaseClearer: Beginning database clearing");
                     mCustomAudienceDao.deleteAllCustomAudienceData(deleteCustomAudienceUpdate);
                     int numClearedEvents = mFrequencyCapDataClearer.clear();
                     sLogger.v("DatabaseClearer: Cleared %d frequency cap events", numClearedEvents);
@@ -82,7 +83,8 @@ public final class DatabaseClearer {
                     if (deleteProtectedSignals) {
                         mProtectedSignalsDao.deleteAllSignals();
                     }
-                    return null;
+                    sLogger.v("DatabaseClearer: Completed DB clear operation");
+                    return true;
                 });
     }
 }

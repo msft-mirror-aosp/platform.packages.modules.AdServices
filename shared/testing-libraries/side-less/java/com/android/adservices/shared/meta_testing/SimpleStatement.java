@@ -19,6 +19,7 @@ import com.android.adservices.shared.testing.DynamicLogger;
 import com.android.adservices.shared.testing.Logger;
 import com.android.adservices.shared.testing.Nullable;
 
+import org.junit.function.ThrowingRunnable;
 import org.junit.runners.model.Statement;
 
 import java.util.Objects;
@@ -31,7 +32,7 @@ public final class SimpleStatement extends Statement {
     private boolean mEvaluated;
 
     @Nullable private Throwable mThrowable;
-    @Nullable private Runnable mRunnable;
+    @Nullable private ThrowingRunnable mRunnable;
 
     @Override
     public void evaluate() throws Throwable {
@@ -50,9 +51,10 @@ public final class SimpleStatement extends Statement {
     }
 
     /** Runs the given {@code runnable} at the beginning of the {@link #evaluate()} method. */
-    public void onEvaluate(Runnable runnable) {
+    public SimpleStatement onEvaluate(ThrowingRunnable runnable) {
         mLog.d("onEvaluate(%s)", runnable);
         mRunnable = Objects.requireNonNull(runnable, "Runnable cannto be run");
+        return this;
     }
 
     /** Throws the given exception in the {@link #evaluate()} method. */

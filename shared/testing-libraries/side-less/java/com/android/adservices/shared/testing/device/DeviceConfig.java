@@ -15,8 +15,6 @@
  */
 package com.android.adservices.shared.testing.device;
 
-import java.util.Locale;
-
 /** Side-agnostic abstraction to interact with the {@code DeviceConfig}. */
 public interface DeviceConfig {
 
@@ -28,14 +26,26 @@ public interface DeviceConfig {
 
     /* Synchronization mode */
     enum SyncDisabledModeForTest {
-        UNSUPPORTED,
-        NONE,
-        PERSISTENT,
-        UNTIL_REBOOT;
+        /** Only used on Android R. */
+        UNSUPPORTED(false),
+        /** Only used on Android S, as getter returns {@code true}, not until when */
+        DISABLED_SOMEHOW(false),
+        /** Not disabled. */
+        NONE(true),
+        /** Persistent even after reboot. */
+        PERSISTENT(true),
+        /** Persistent until next reboot. */
+        UNTIL_REBOOT(true);
 
-        /** Gets the value of the mode used on {@code cmd device_config} parameters. */
-        String getShellCommandString() {
-            return toString().toLowerCase(Locale.ENGLISH);
+        /** Whether it can be used on methods that sets the mode. */
+        public boolean isSettable() {
+            return mSettable;
+        }
+
+        private final boolean mSettable;
+
+        SyncDisabledModeForTest(boolean settable) {
+            mSettable = settable;
         }
     }
 }

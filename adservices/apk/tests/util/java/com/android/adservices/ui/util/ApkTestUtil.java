@@ -289,4 +289,18 @@ public class ApkTestUtil {
         }
         return info != null;
     }
+
+    /** union format for assertion message that object is not null. */
+    public static void assertNotNull(UiObject2 object, int resId) {
+        assertWithMessage("object with text %s ", getString(resId)).that(object).isNotNull();
+    }
+
+    /** union format for assertion message of toggle state. */
+    public static void assertToggleState(UiObject2 toggleSwitch, boolean checked) {
+        if (checked) {
+            assertWithMessage("Toggle switch checked").that(toggleSwitch.isChecked()).isTrue();
+        } else {
+            assertWithMessage("Toggle switch checked").that(toggleSwitch.isChecked()).isFalse();
+        }
+    }
 }
