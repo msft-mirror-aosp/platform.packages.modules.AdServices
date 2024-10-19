@@ -65,7 +65,7 @@ public abstract class ActionBasedRule<R extends ActionBasedRule<R>> extends Abst
             // action itself to throw if executed twice. But it's probably better to fail earlier...
             throw new IllegalArgumentException("action already added: " + action);
         }
-        mLog.d("Caching %s as test (%s) is not running yet", action, getTestName());
+        mLog.d("Caching %s as test is not running yet", action);
         mActions.add(action);
     }
 
@@ -105,6 +105,11 @@ public abstract class ActionBasedRule<R extends ActionBasedRule<R>> extends Abst
 
     @Override
     protected final void evaluate(Statement base, Description description) throws Throwable {
+        resetActions();
+        // TODO(b/297085722): preExecuteActions() is currently used to let subclasses scan
+        // annotations, but in reality we'll need a custom method for that specifically purpose,
+        // as the rule could be used as a static class rule and then annotations from each test
+        // would be added, but not removed...
         preExecuteActions(base, description);
         executeActions();
         mIsRunning = true;
@@ -129,11 +134,18 @@ public abstract class ActionBasedRule<R extends ActionBasedRule<R>> extends Abst
         return string.append(']').toString();
     }
 
+    private void resetActions() throws Throwable {
+        mLog.d("resetActions(): resetting %d actions", mActions.size());
+        mActions.forEach(Action::reset);
+    }
+
     private void executeActions() throws Throwable {
+        int size = mActions.size();
+        mLog.i("executeActions(): executing %d actions", size);
         Action action = null;
         int i = 0;
         try {
-            for (; i < mActions.size(); i++) {
+            for (; i < size; i++) {
                 action = mActions.get(i);
                 mLog.d("Executing %s", action);
                 boolean revert = action.execute();
@@ -154,7 +166,10 @@ public abstract class ActionBasedRule<R extends ActionBasedRule<R>> extends Abst
     }
 
     private void revertActions() throws Exception {
-        for (Action action : mActionsToBeReverted) {
+        int size = mActionsToBeReverted.size();
+        mLog.i("revertActions(): reverting %d actions (out of %d total)", size, mActions.size());
+        for (int i = size - 1; i >= 0; i--) {
+            Action action = mActionsToBeReverted.get(i);
             try {
                 action.revert();
             } catch (Throwable t) {
@@ -165,8 +180,9 @@ public abstract class ActionBasedRule<R extends ActionBasedRule<R>> extends Abst
         }
     }
 
+    /** Returns a cast reference to this rule */
     @SuppressWarnings("unchecked")
-    private R getSelf() {
+    protected R getSelf() {
         return (R) this;
     }
 }

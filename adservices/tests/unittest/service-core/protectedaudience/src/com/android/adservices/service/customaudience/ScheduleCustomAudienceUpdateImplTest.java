@@ -72,7 +72,8 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
     private static final String PACKAGE = CommonFixture.TEST_PACKAGE_NAME_1;
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("example.com");
     @Captor private ArgumentCaptor<DBScheduledCustomAudienceUpdate> mUpdateCaptor;
-    @Captor private ArgumentCaptor<List<PartialCustomAudience>> mListArgumentCaptor;
+    @Captor private ArgumentCaptor<List<PartialCustomAudience>> mPartialCaListArgumentCaptor;
+    @Captor private ArgumentCaptor<List<String>> mCaToLeaveListArgumentCaptor;
     private ListeningExecutorService mBackgroundExecutorService;
     private int mCallingAppUid;
     @Mock private ConsentManager mConsentManagerMock;
@@ -153,10 +154,12 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
                         eq(mDevContext));
 
         verify(mCustomAudienceDaoMock)
-                .insertScheduledUpdateAndPartialCustomAudienceList(
-                        mUpdateCaptor.capture(), mListArgumentCaptor.capture(), eq(false));
+                .insertScheduledCustomAudienceUpdate(
+                        mUpdateCaptor.capture(), mPartialCaListArgumentCaptor.capture(),
+                        mCaToLeaveListArgumentCaptor.capture(), eq(false));
         assertEquals(BUYER, mUpdateCaptor.getValue().getBuyer());
-        assertTrue(mListArgumentCaptor.getValue().isEmpty());
+        assertTrue(mPartialCaListArgumentCaptor.getValue().isEmpty());
+        assertTrue(mCaToLeaveListArgumentCaptor.getValue().isEmpty());
         assertTrue(callback.isSuccess());
     }
 
@@ -205,10 +208,12 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
                         eq(mDevContext));
 
         verify(mCustomAudienceDaoMock)
-                .insertScheduledUpdateAndPartialCustomAudienceList(
-                        mUpdateCaptor.capture(), mListArgumentCaptor.capture(), eq(false));
+                .insertScheduledCustomAudienceUpdate(
+                        mUpdateCaptor.capture(), mPartialCaListArgumentCaptor.capture(),
+                        mCaToLeaveListArgumentCaptor.capture(), eq(false));
         assertEquals(BUYER, mUpdateCaptor.getValue().getBuyer());
-        assertTrue(mListArgumentCaptor.getValue().isEmpty());
+        assertTrue(mPartialCaListArgumentCaptor.getValue().isEmpty());
+        assertTrue(mCaToLeaveListArgumentCaptor.getValue().isEmpty());
         assertTrue(callback.isSuccess());
     }
 
@@ -241,10 +246,12 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
                         eq(mDevContext));
 
         verify(mCustomAudienceDaoMock)
-                .insertScheduledUpdateAndPartialCustomAudienceList(
-                        mUpdateCaptor.capture(), mListArgumentCaptor.capture(), eq(true));
+                .insertScheduledCustomAudienceUpdate(
+                        mUpdateCaptor.capture(), mPartialCaListArgumentCaptor.capture(),
+                        mCaToLeaveListArgumentCaptor.capture(), eq(true));
         assertEquals(BUYER, mUpdateCaptor.getValue().getBuyer());
-        assertTrue(mListArgumentCaptor.getValue().isEmpty());
+        assertTrue(mPartialCaListArgumentCaptor.getValue().isEmpty());
+        assertTrue(mCaToLeaveListArgumentCaptor.getValue().isEmpty());
         assertTrue(callback.isSuccess());
     }
 

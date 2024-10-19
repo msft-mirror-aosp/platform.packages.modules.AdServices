@@ -160,7 +160,7 @@ public abstract class FledgeScenarioTest extends AdServicesCtsTestCase {
     }
 
     @After
-    public final void tearDown() throws Exception {
+    public void tearDown() throws Exception {
         try {
             leaveCustomAudience(SHOES_CA);
             leaveCustomAudience(SHIRTS_CA);
