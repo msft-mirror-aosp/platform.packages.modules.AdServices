@@ -1444,10 +1444,11 @@ public final class PhFlags implements Flags {
 
     @Override
     public boolean getFledgeEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests() {
-        return getDeviceConfigFlag(
-                FlagsConstants
-                        .KEY_FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS,
-                FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS);
+        return getFledgeScheduleCustomAudienceUpdateEnabled()
+                && getDeviceConfigFlag(
+                        FlagsConstants
+                                .KEY_FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS,
+                        FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS);
     }
 
     @Override
