@@ -41,6 +41,8 @@ import androidx.test.uiautomator.Until;
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 
+import java.util.concurrent.TimeUnit;
+
 /** Util class for Settings tests. */
 public final class SettingsTestUtil {
 
@@ -72,26 +74,6 @@ public final class SettingsTestUtil {
         assertNotNull(appButton, R.string.settingsUI_apps_ga_title);
     }
 
-    public static void settingsRemoveMainToggleAndMeasurementEntryTestRvcUxUtil(UiDevice device) {
-        ApkTestUtil.launchSettingView(device, LAUNCH_TIMEOUT);
-
-        UiObject2 appButton =
-                ApkTestUtil.scrollTo(device, R.string.settingsUI_measurement_view_title);
-        assertNotNull(appButton, R.string.settingsUI_measurement_view_title);
-
-        // make sure we are on the main settings page
-        ApkTestUtil.scrollToAndClick(device, R.string.settingsUI_measurement_view_title);
-
-        // verify have entered to measurement page
-        UiObject2 measurementSwitch =
-                ApkTestUtil.getElement(device, R.string.settingsUI_measurement_switch_title);
-        assertNotNull(measurementSwitch, R.string.settingsUI_measurement_switch_title);
-
-        pressBack(device);
-        // verify back to the main page
-        assertNotNull(appButton, R.string.settingsUI_measurement_view_title);
-    }
-
     public static void measurementDialogTestUtil(UiDevice device, AdServicesFlagsSetterRule flags)
             throws RemoteException {
         flags.setFlag(KEY_UI_DIALOGS_FEATURE_ENABLED, true);
@@ -101,13 +83,13 @@ public final class SettingsTestUtil {
         ApkTestUtil.scrollToAndClick(device, R.string.settingsUI_measurement_view_title);
 
         // click reset
-        SettingsTestUtil.clickResetButton(device);
+        ApkTestUtil.scrollToAndClick(device, R.string.settingsUI_measurement_view_reset_title);
         UiObject2 resetButton =
                 ApkTestUtil.getElement(device, R.string.settingsUI_measurement_view_reset_title);
         assertNotNull(resetButton, R.string.settingsUI_measurement_view_reset_title);
 
         // click reset again
-        SettingsTestUtil.clickResetButton(device);
+        ApkTestUtil.scrollToAndClick(device, R.string.settingsUI_measurement_view_reset_title);
         resetButton =
                 ApkTestUtil.getElement(device, R.string.settingsUI_measurement_view_reset_title);
         assertNotNull(resetButton, R.string.settingsUI_measurement_view_reset_title);
@@ -520,15 +502,6 @@ public final class SettingsTestUtil {
         }
     }
 
-    public static void clickResetButton(UiDevice device) {
-        // R Msmt UI is not scrollable
-        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.R) {
-            ApkTestUtil.click(device, R.string.settingsUI_measurement_view_reset_title);
-        } else {
-            ApkTestUtil.scrollToAndClick(device, R.string.settingsUI_measurement_view_reset_title);
-        }
-    }
-
     /** Presses the Back button. */
     public static void pressBack(UiDevice device) {
         Log.d(TAG, "pressBack()");
@@ -539,5 +512,14 @@ public final class SettingsTestUtil {
     public static boolean isSettingsIntentInstalled() {
         Intent intent = ApkTestUtil.getIntent(PRIVACY_SANDBOX_UI);
         return ApkTestUtil.isIntentInstalled(intent);
+    }
+
+    /** check component enabled and wait for it before tests start */
+    public static void setupBeforeTests() throws InterruptedException {
+        // Check intent component enabled, if not, sleep for 1 min for bootCompleteReceiver to get
+        // invoked on S
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU && !isSettingsIntentInstalled()) {
+            TimeUnit.SECONDS.sleep(60);
+        }
     }
 }

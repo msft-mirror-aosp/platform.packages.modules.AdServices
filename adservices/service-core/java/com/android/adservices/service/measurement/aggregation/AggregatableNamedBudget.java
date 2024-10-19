@@ -28,69 +28,69 @@ import org.json.JSONObject;
 import java.util.List;
 import java.util.Objects;
 
-/** Aggregatable Bucket containing the bucket name and filters info. */
-public class AggregatableBucket {
-    @Nullable private final String mBucket;
+/** Named Budget containing the budget name and filters info. */
+public class AggregatableNamedBudget {
+    @Nullable private final String mName;
     @Nullable private final List<FilterMap> mFilterSet;
     @Nullable private final List<FilterMap> mNotFilterSet;
 
-    public AggregatableBucket(JSONObject bucketObj, Flags flags) throws JSONException {
-        mBucket =
-                !bucketObj.isNull(AggregatableBucketContract.BUCKET)
-                        ? bucketObj.getString(AggregatableBucketContract.BUCKET)
+    public AggregatableNamedBudget(JSONObject budgetObj, Flags flags) throws JSONException {
+        mName =
+                !budgetObj.isNull(NamedBudgetContract.NAME)
+                        ? budgetObj.getString(NamedBudgetContract.NAME)
                         : null;
         Filter filter = new Filter(flags);
 
         mFilterSet =
-                !bucketObj.isNull(Filter.FilterContract.FILTERS)
+                !budgetObj.isNull(Filter.FilterContract.FILTERS)
                         ? filter.deserializeFilterSet(
-                                bucketObj.getJSONArray(Filter.FilterContract.FILTERS))
+                                budgetObj.getJSONArray(Filter.FilterContract.FILTERS))
                         : null;
 
         mNotFilterSet =
-                !bucketObj.isNull(Filter.FilterContract.NOT_FILTERS)
+                !budgetObj.isNull(Filter.FilterContract.NOT_FILTERS)
                         ? filter.deserializeFilterSet(
-                                bucketObj.getJSONArray(Filter.FilterContract.NOT_FILTERS))
+                                budgetObj.getJSONArray(Filter.FilterContract.NOT_FILTERS))
                         : null;
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof AggregatableBucket)) {
+        if (!(obj instanceof AggregatableNamedBudget)) {
             return false;
         }
-        AggregatableBucket bucketObj = (AggregatableBucket) obj;
-        return Objects.equals(mBucket, bucketObj.mBucket)
-                && Objects.equals(mFilterSet, bucketObj.mFilterSet)
-                && Objects.equals(mNotFilterSet, bucketObj.mNotFilterSet);
+        AggregatableNamedBudget budgetObj = (AggregatableNamedBudget) obj;
+        return Objects.equals(mName, budgetObj.mName)
+                && Objects.equals(mFilterSet, budgetObj.mFilterSet)
+                && Objects.equals(mNotFilterSet, budgetObj.mNotFilterSet);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mBucket, mFilterSet, mNotFilterSet);
+        return Objects.hash(mName, mFilterSet, mNotFilterSet);
     }
 
-    /** Bucket id to match with source. */
+    /** Budget name to match with source. */
     @Nullable
-    public String getBucket() {
-        return mBucket;
+    public String getName() {
+        return mName;
     }
 
-    /** Returns AggregatableBucket filters. */
+    /** Returns NamedBudget filters. */
     @Nullable
     public List<FilterMap> getFilterSet() {
         return mFilterSet;
     }
 
-    /** Returns AggregatableBucket not_filters, the reverse of filter. */
+    /** Returns NamedBudget not_filters, the reverse of filter. */
     @Nullable
     public List<FilterMap> getNotFilterSet() {
         return mNotFilterSet;
     }
 
-    /** Aggregatable Bucket field keys. */
-    public interface AggregatableBucketContract {
-        String AGGREGATABLE_BUCKETS = "aggregatable_buckets";
-        String BUCKET = "bucket";
+    /** NamedBudget field keys. */
+    public interface NamedBudgetContract {
+        String NAMED_BUDGETS = "named_budgets";
+        String NAME = "name";
     }
 }

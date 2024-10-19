@@ -56,7 +56,6 @@ import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.annotation.NonNull;
 import android.net.Uri;
-import android.util.Pair;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
@@ -71,6 +70,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBPartialCustomAudience;
 import com.android.adservices.data.customaudience.DBScheduledCustomAudienceUpdate;
+import com.android.adservices.data.customaudience.DBScheduledCustomAudienceUpdateRequest;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
@@ -194,10 +194,14 @@ public final class ScheduledUpdatesHandlerTest {
         List<DBPartialCustomAudience> partialCustomAudienceList =
                 List.of(PARTIAL_CUSTOM_AUDIENCE_1, PARTIAL_CUSTOM_AUDIENCE_2);
 
-        Pair<DBScheduledCustomAudienceUpdate, List<DBPartialCustomAudience>>
-                updateAndOverridesPair = new Pair(UPDATE, partialCustomAudienceList);
-        when(mCustomAudienceDaoMock.getScheduledUpdatesAndOverridesBeforeTime(any(Instant.class)))
-                .thenReturn(List.of(updateAndOverridesPair));
+        DBScheduledCustomAudienceUpdateRequest updateRequest =
+                DBScheduledCustomAudienceUpdateRequest.builder()
+                        .setUpdate(UPDATE)
+                        .setPartialCustomAudienceList(partialCustomAudienceList)
+                        .build();
+
+        when(mCustomAudienceDaoMock.getScheduledCustomAudienceUpdateRequests(any(Instant.class)))
+                .thenReturn(List.of(updateRequest));
 
         byte[] expectedRequestBody =
                 createJsonRequestPayloadFromPartialCustomAudience(partialCustomAudienceList);
@@ -520,10 +524,13 @@ public final class ScheduledUpdatesHandlerTest {
         List<DBPartialCustomAudience> partialCustomAudienceList =
                 List.of(PARTIAL_CUSTOM_AUDIENCE_1, PARTIAL_CUSTOM_AUDIENCE_2);
 
-        Pair<DBScheduledCustomAudienceUpdate, List<DBPartialCustomAudience>>
-                updateAndOverridesPair = new Pair(UPDATE, partialCustomAudienceList);
-        when(mCustomAudienceDaoMock.getScheduledUpdatesAndOverridesBeforeTime(any(Instant.class)))
-                .thenReturn(List.of(updateAndOverridesPair));
+        DBScheduledCustomAudienceUpdateRequest scheduledUpdateRequest =
+                DBScheduledCustomAudienceUpdateRequest.builder()
+                        .setUpdate(UPDATE)
+                        .setPartialCustomAudienceList(partialCustomAudienceList)
+                        .build();
+        when(mCustomAudienceDaoMock.getScheduledCustomAudienceUpdateRequests(any(Instant.class)))
+                .thenReturn(List.of(scheduledUpdateRequest));
 
         byte[] expectedRequestBody =
                 createJsonRequestPayloadFromPartialCustomAudience(partialCustomAudienceList);
@@ -603,10 +610,13 @@ public final class ScheduledUpdatesHandlerTest {
         List<DBPartialCustomAudience> partialCustomAudienceList =
                 List.of(PARTIAL_CUSTOM_AUDIENCE_1, PARTIAL_CUSTOM_AUDIENCE_2);
 
-        Pair<DBScheduledCustomAudienceUpdate, List<DBPartialCustomAudience>>
-                updateAndOverridesPair = new Pair(UPDATE, partialCustomAudienceList);
-        when(mCustomAudienceDaoMock.getScheduledUpdatesAndOverridesBeforeTime(any(Instant.class)))
-                .thenReturn(List.of(updateAndOverridesPair));
+        DBScheduledCustomAudienceUpdateRequest scheduledUpdateRequest =
+                DBScheduledCustomAudienceUpdateRequest.builder()
+                        .setUpdate(UPDATE)
+                        .setPartialCustomAudienceList(partialCustomAudienceList)
+                        .build();
+        when(mCustomAudienceDaoMock.getScheduledCustomAudienceUpdateRequests(any(Instant.class)))
+                .thenReturn(List.of(scheduledUpdateRequest));
 
         byte[] expectedRequestBody =
                 createJsonRequestPayloadFromPartialCustomAudience(partialCustomAudienceList);
@@ -692,10 +702,13 @@ public final class ScheduledUpdatesHandlerTest {
         List<DBPartialCustomAudience> partialCustomAudienceList =
                 List.of(PARTIAL_CUSTOM_AUDIENCE_1, PARTIAL_CUSTOM_AUDIENCE_2);
 
-        Pair<DBScheduledCustomAudienceUpdate, List<DBPartialCustomAudience>>
-                updateAndOverridesPair = new Pair(UPDATE, partialCustomAudienceList);
-        when(mCustomAudienceDaoMock.getScheduledUpdatesAndOverridesBeforeTime(any(Instant.class)))
-                .thenReturn(List.of(updateAndOverridesPair));
+        DBScheduledCustomAudienceUpdateRequest scheduledUpdateRequest =
+                DBScheduledCustomAudienceUpdateRequest.builder()
+                        .setUpdate(UPDATE)
+                        .setPartialCustomAudienceList(partialCustomAudienceList)
+                        .build();
+        when(mCustomAudienceDaoMock.getScheduledCustomAudienceUpdateRequests(any(Instant.class)))
+                .thenReturn(List.of(scheduledUpdateRequest));
 
         byte[] expectedRequestBody =
                 createJsonRequestPayloadFromPartialCustomAudience(partialCustomAudienceList);
@@ -774,10 +787,13 @@ public final class ScheduledUpdatesHandlerTest {
         List<DBPartialCustomAudience> partialCustomAudienceList =
                 List.of(PARTIAL_CUSTOM_AUDIENCE_1, PARTIAL_CUSTOM_AUDIENCE_2);
 
-        Pair<DBScheduledCustomAudienceUpdate, List<DBPartialCustomAudience>>
-                updateAndOverridesPair = new Pair(UPDATE, partialCustomAudienceList);
-        when(mCustomAudienceDaoMock.getScheduledUpdatesAndOverridesBeforeTime(any(Instant.class)))
-                .thenReturn(List.of(updateAndOverridesPair));
+        DBScheduledCustomAudienceUpdateRequest scheduledUpdateRequest =
+                DBScheduledCustomAudienceUpdateRequest.builder()
+                        .setUpdate(UPDATE)
+                        .setPartialCustomAudienceList(partialCustomAudienceList)
+                        .build();
+        when(mCustomAudienceDaoMock.getScheduledCustomAudienceUpdateRequests(any(Instant.class)))
+                .thenReturn(List.of(scheduledUpdateRequest));
 
         JSONObject responsePayloadJSON =
                 createJsonResponsePayload(
@@ -819,10 +835,13 @@ public final class ScheduledUpdatesHandlerTest {
         List<DBPartialCustomAudience> partialCustomAudienceList =
                 List.of(PARTIAL_CUSTOM_AUDIENCE_1, PARTIAL_CUSTOM_AUDIENCE_2);
 
-        Pair<DBScheduledCustomAudienceUpdate, List<DBPartialCustomAudience>>
-                updateAndOverridesPair = new Pair(UPDATE, partialCustomAudienceList);
-        when(mCustomAudienceDaoMock.getScheduledUpdatesAndOverridesBeforeTime(any(Instant.class)))
-                .thenReturn(List.of(updateAndOverridesPair));
+        DBScheduledCustomAudienceUpdateRequest scheduledUpdateRequest =
+                DBScheduledCustomAudienceUpdateRequest.builder()
+                        .setUpdate(UPDATE)
+                        .setPartialCustomAudienceList(partialCustomAudienceList)
+                        .build();
+        when(mCustomAudienceDaoMock.getScheduledCustomAudienceUpdateRequests(any(Instant.class)))
+                .thenReturn(List.of(scheduledUpdateRequest));
 
         JSONObject responsePayloadJSON =
                 createJsonResponsePayload(
@@ -862,10 +881,13 @@ public final class ScheduledUpdatesHandlerTest {
         List<DBPartialCustomAudience> partialCustomAudienceList =
                 List.of(PARTIAL_CUSTOM_AUDIENCE_1, PARTIAL_CUSTOM_AUDIENCE_2);
 
-        Pair<DBScheduledCustomAudienceUpdate, List<DBPartialCustomAudience>>
-                updateAndOverridesPair = new Pair(UPDATE, partialCustomAudienceList);
-        when(mCustomAudienceDaoMock.getScheduledUpdatesAndOverridesBeforeTime(any(Instant.class)))
-                .thenReturn(List.of(updateAndOverridesPair));
+        DBScheduledCustomAudienceUpdateRequest scheduledUpdateRequest =
+                DBScheduledCustomAudienceUpdateRequest.builder()
+                        .setUpdate(UPDATE)
+                        .setPartialCustomAudienceList(partialCustomAudienceList)
+                        .build();
+        when(mCustomAudienceDaoMock.getScheduledCustomAudienceUpdateRequests(any(Instant.class)))
+                .thenReturn(List.of(scheduledUpdateRequest));
 
         byte[] expectedRequestBody =
                 createJsonRequestPayloadFromPartialCustomAudience(partialCustomAudienceList);
@@ -947,10 +969,13 @@ public final class ScheduledUpdatesHandlerTest {
         List<DBPartialCustomAudience> partialCustomAudienceList =
                 List.of(PARTIAL_CUSTOM_AUDIENCE_1, PARTIAL_CUSTOM_AUDIENCE_2);
 
-        Pair<DBScheduledCustomAudienceUpdate, List<DBPartialCustomAudience>>
-                updateAndOverridesPair = new Pair(UPDATE, partialCustomAudienceList);
-        when(mCustomAudienceDaoMock.getScheduledUpdatesAndOverridesBeforeTime(any(Instant.class)))
-                .thenReturn(List.of(updateAndOverridesPair));
+        DBScheduledCustomAudienceUpdateRequest scheduledUpdateRequest =
+                DBScheduledCustomAudienceUpdateRequest.builder()
+                        .setUpdate(UPDATE)
+                        .setPartialCustomAudienceList(partialCustomAudienceList)
+                        .build();
+        when(mCustomAudienceDaoMock.getScheduledCustomAudienceUpdateRequests(any(Instant.class)))
+                .thenReturn(List.of(scheduledUpdateRequest));
 
         byte[] expectedRequestBody =
                 createJsonRequestPayloadFromPartialCustomAudience(partialCustomAudienceList);
@@ -1037,10 +1062,13 @@ public final class ScheduledUpdatesHandlerTest {
         List<DBPartialCustomAudience> partialCustomAudienceList =
                 List.of(PARTIAL_CUSTOM_AUDIENCE_1, PARTIAL_CUSTOM_AUDIENCE_2);
 
-        Pair<DBScheduledCustomAudienceUpdate, List<DBPartialCustomAudience>>
-                updateAndOverridesPair = new Pair(UPDATE, partialCustomAudienceList);
-        when(mCustomAudienceDaoMock.getScheduledUpdatesAndOverridesBeforeTime(any(Instant.class)))
-                .thenReturn(List.of(updateAndOverridesPair));
+        DBScheduledCustomAudienceUpdateRequest scheduledUpdateRequest =
+                DBScheduledCustomAudienceUpdateRequest.builder()
+                        .setUpdate(UPDATE)
+                        .setPartialCustomAudienceList(partialCustomAudienceList)
+                        .build();
+        when(mCustomAudienceDaoMock.getScheduledCustomAudienceUpdateRequests(any(Instant.class)))
+                .thenReturn(List.of(scheduledUpdateRequest));
 
         byte[] expectedRequestBody =
                 createJsonRequestPayloadFromPartialCustomAudience(partialCustomAudienceList);
@@ -1123,10 +1151,13 @@ public final class ScheduledUpdatesHandlerTest {
         List<DBPartialCustomAudience> partialCustomAudienceList =
                 List.of(PARTIAL_CUSTOM_AUDIENCE_1, PARTIAL_CUSTOM_AUDIENCE_2);
 
-        Pair<DBScheduledCustomAudienceUpdate, List<DBPartialCustomAudience>>
-                updateAndOverridesPair = new Pair(UPDATE, partialCustomAudienceList);
-        when(mCustomAudienceDaoMock.getScheduledUpdatesAndOverridesBeforeTime(any(Instant.class)))
-                .thenReturn(List.of(updateAndOverridesPair));
+        DBScheduledCustomAudienceUpdateRequest scheduledUpdateRequest =
+                DBScheduledCustomAudienceUpdateRequest.builder()
+                        .setUpdate(UPDATE)
+                        .setPartialCustomAudienceList(partialCustomAudienceList)
+                        .build();
+        when(mCustomAudienceDaoMock.getScheduledCustomAudienceUpdateRequests(any(Instant.class)))
+                .thenReturn(List.of(scheduledUpdateRequest));
 
         String nonOverriddenCaName = "non_overridden_ca";
 
@@ -1202,10 +1233,13 @@ public final class ScheduledUpdatesHandlerTest {
         List<DBPartialCustomAudience> partialCustomAudienceList =
                 List.of(PARTIAL_CUSTOM_AUDIENCE_1, invalidPartialCustomAudience2);
 
-        Pair<DBScheduledCustomAudienceUpdate, List<DBPartialCustomAudience>>
-                updateAndOverridesPair = new Pair(UPDATE, partialCustomAudienceList);
-        when(mCustomAudienceDaoMock.getScheduledUpdatesAndOverridesBeforeTime(any(Instant.class)))
-                .thenReturn(List.of(updateAndOverridesPair));
+        DBScheduledCustomAudienceUpdateRequest scheduledUpdateRequest =
+                DBScheduledCustomAudienceUpdateRequest.builder()
+                        .setUpdate(UPDATE)
+                        .setPartialCustomAudienceList(partialCustomAudienceList)
+                        .build();
+        when(mCustomAudienceDaoMock.getScheduledCustomAudienceUpdateRequests(any(Instant.class)))
+                .thenReturn(List.of(scheduledUpdateRequest));
 
         String responsePayload =
                 createJsonResponsePayload(
@@ -1271,10 +1305,13 @@ public final class ScheduledUpdatesHandlerTest {
             throws JSONException, ExecutionException, InterruptedException, TimeoutException {
         List<DBPartialCustomAudience> partialCustomAudienceList = Collections.emptyList();
 
-        Pair<DBScheduledCustomAudienceUpdate, List<DBPartialCustomAudience>>
-                updateAndOverridesPair = new Pair(UPDATE, partialCustomAudienceList);
-        when(mCustomAudienceDaoMock.getScheduledUpdatesAndOverridesBeforeTime(any(Instant.class)))
-                .thenReturn(List.of(updateAndOverridesPair));
+        DBScheduledCustomAudienceUpdateRequest scheduledUpdateRequest =
+                DBScheduledCustomAudienceUpdateRequest.builder()
+                        .setUpdate(UPDATE)
+                        .setPartialCustomAudienceList(partialCustomAudienceList)
+                        .build();
+        when(mCustomAudienceDaoMock.getScheduledCustomAudienceUpdateRequests(any(Instant.class)))
+                .thenReturn(List.of(scheduledUpdateRequest));
 
         byte[] expectedRequestBody =
                 createJsonRequestPayloadFromPartialCustomAudience(partialCustomAudienceList);
@@ -1340,10 +1377,13 @@ public final class ScheduledUpdatesHandlerTest {
         List<DBPartialCustomAudience> partialCustomAudienceList =
                 List.of(PARTIAL_CUSTOM_AUDIENCE_1, PARTIAL_CUSTOM_AUDIENCE_2);
 
-        Pair<DBScheduledCustomAudienceUpdate, List<DBPartialCustomAudience>>
-                updateAndOverridesPair = new Pair(UPDATE, partialCustomAudienceList);
-        when(mCustomAudienceDaoMock.getScheduledUpdatesAndOverridesBeforeTime(any(Instant.class)))
-                .thenReturn(List.of(updateAndOverridesPair));
+        DBScheduledCustomAudienceUpdateRequest scheduledUpdateRequest =
+                DBScheduledCustomAudienceUpdateRequest.builder()
+                        .setUpdate(UPDATE)
+                        .setPartialCustomAudienceList(partialCustomAudienceList)
+                        .build();
+        when(mCustomAudienceDaoMock.getScheduledCustomAudienceUpdateRequests(any(Instant.class)))
+                .thenReturn(List.of(scheduledUpdateRequest));
 
         String responsePayload =
                 createJsonResponsePayload(
@@ -1398,10 +1438,14 @@ public final class ScheduledUpdatesHandlerTest {
             throws ExecutionException, InterruptedException, TimeoutException {
 
         List<DBPartialCustomAudience> partialCustomAudienceList = Collections.emptyList();
-        Pair<DBScheduledCustomAudienceUpdate, List<DBPartialCustomAudience>>
-                updateAndOverridesPair = new Pair(UPDATE, partialCustomAudienceList);
-        when(mCustomAudienceDaoMock.getScheduledUpdatesAndOverridesBeforeTime(any(Instant.class)))
-                .thenReturn(List.of(updateAndOverridesPair));
+
+        DBScheduledCustomAudienceUpdateRequest scheduledUpdateRequest =
+                DBScheduledCustomAudienceUpdateRequest.builder()
+                        .setUpdate(UPDATE)
+                        .setPartialCustomAudienceList(partialCustomAudienceList)
+                        .build();
+        when(mCustomAudienceDaoMock.getScheduledCustomAudienceUpdateRequests(any(Instant.class)))
+                .thenReturn(List.of(scheduledUpdateRequest));
 
         String emptyResponsePayload = "{}";
         ListenableFuture<AdServicesHttpClientResponse> response =

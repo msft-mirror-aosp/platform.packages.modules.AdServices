@@ -51,9 +51,10 @@ public final class SimpleStatement extends Statement {
     }
 
     /** Runs the given {@code runnable} at the beginning of the {@link #evaluate()} method. */
-    public void onEvaluate(ThrowingRunnable runnable) {
+    public SimpleStatement onEvaluate(ThrowingRunnable runnable) {
         mLog.d("onEvaluate(%s)", runnable);
         mRunnable = Objects.requireNonNull(runnable, "Runnable cannto be run");
+        return this;
     }
 
     /** Throws the given exception in the {@link #evaluate()} method. */

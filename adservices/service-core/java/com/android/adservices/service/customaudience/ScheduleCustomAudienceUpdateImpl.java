@@ -57,6 +57,7 @@ import java.io.InvalidObjectException;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 
 /**
  * Schedules a delayed update for Custom Audience. Calling apps provide and update uri on behalf of
@@ -233,11 +234,11 @@ public class ScheduleCustomAudienceUpdateImpl {
         return (ListenableFuture<Void>)
                 mBackgroundExecutorService.submit(
                         () ->
-                                mCustomAudienceDao
-                                        .insertScheduledUpdateAndPartialCustomAudienceList(
-                                                scheduledUpdate,
-                                                input.getPartialCustomAudienceList(),
-                                                input.shouldReplacePendingUpdates()));
+                                mCustomAudienceDao.insertScheduledCustomAudienceUpdate(
+                                        scheduledUpdate,
+                                        input.getPartialCustomAudienceList(),
+                                        Collections.emptyList(),
+                                        input.shouldReplacePendingUpdates()));
     }
 
     private void notifyFailure(ScheduleCustomAudienceUpdateCallback callback, Throwable t) {
