@@ -26,7 +26,7 @@
         "body": "ScoringSignals.json",
         "header": {
           "Data-Version": 300,
-          "x-fledge-scoring-signals-format-version": 2 // Deprecated, maintained for backward compatibility only.
+          "x-fledge-scoring-signals-format-version": 300 // Deprecated, maintained for backward compatibility only.
         }
       },
       "verify_called": true

@@ -1534,7 +1534,8 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     default boolean getFledgeEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests() {
-        return FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS;
+        return getFledgeScheduleCustomAudienceUpdateEnabled()
+                && FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS;
     }
 
     default long getFledgeScheduleCustomAudienceUpdateJobPeriodMs() {

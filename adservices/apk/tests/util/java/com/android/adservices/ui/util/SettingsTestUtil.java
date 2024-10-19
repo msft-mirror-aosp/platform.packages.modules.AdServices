@@ -83,13 +83,13 @@ public final class SettingsTestUtil {
         ApkTestUtil.scrollToAndClick(device, R.string.settingsUI_measurement_view_title);
 
         // click reset
-        SettingsTestUtil.clickResetButton(device);
+        ApkTestUtil.scrollToAndClick(device, R.string.settingsUI_measurement_view_reset_title);
         UiObject2 resetButton =
                 ApkTestUtil.getElement(device, R.string.settingsUI_measurement_view_reset_title);
         assertNotNull(resetButton, R.string.settingsUI_measurement_view_reset_title);
 
         // click reset again
-        SettingsTestUtil.clickResetButton(device);
+        ApkTestUtil.scrollToAndClick(device, R.string.settingsUI_measurement_view_reset_title);
         resetButton =
                 ApkTestUtil.getElement(device, R.string.settingsUI_measurement_view_reset_title);
         assertNotNull(resetButton, R.string.settingsUI_measurement_view_reset_title);
@@ -502,15 +502,6 @@ public final class SettingsTestUtil {
         }
     }
 
-    public static void clickResetButton(UiDevice device) {
-        // R Msmt UI is not scrollable
-        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.R) {
-            ApkTestUtil.click(device, R.string.settingsUI_measurement_view_reset_title);
-        } else {
-            ApkTestUtil.scrollToAndClick(device, R.string.settingsUI_measurement_view_reset_title);
-        }
-    }
-
     /** Presses the Back button. */
     public static void pressBack(UiDevice device) {
         Log.d(TAG, "pressBack()");
@@ -526,7 +517,7 @@ public final class SettingsTestUtil {
     /** check component enabled and wait for it before tests start */
     public static void setupBeforeTests() throws InterruptedException {
         // Check intent component enabled, if not, sleep for 1 min for bootCompleteReceiver to get
-        // invoked on S-
+        // invoked on S
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU && !isSettingsIntentInstalled()) {
             TimeUnit.SECONDS.sleep(60);
         }
