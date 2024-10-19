@@ -32,10 +32,12 @@ public final class FakeSdkSandbox implements SdkSandbox {
 
     private final Logger mLog;
 
+    /** Default constructor, sets logger. */
     public FakeSdkSandbox() {
         this(DynamicLogger.getInstance());
     }
 
+    /** Constructor with a custom logger. */
     public FakeSdkSandbox(RealLogger realLogger) {
         mLog = new Logger(realLogger, getClass());
     }

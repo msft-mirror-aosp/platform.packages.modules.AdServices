@@ -3403,9 +3403,11 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void testGetFledgeEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests() {
-        mFlagsTestHelper.testConfigFlag(
+        mFlagsTestHelper.testGuardedFeatureFlag(
                 KEY_FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS,
                 FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS,
+                FeatureFlagType.FEATURE_FLAG,
+                this::setGetFledgeScheduleCustomAudienceUpdateEnabledFlag,
                 Flags::getFledgeEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests);
     }
 
@@ -5874,6 +5876,10 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     private void setAuctionServerBaseFlag(boolean value) {
         mockGetAdServicesFlag(KEY_FLEDGE_AUCTION_SERVER_ENABLED, value);
+    }
+
+    private void setGetFledgeScheduleCustomAudienceUpdateEnabledFlag(boolean value) {
+        mockGetAdServicesFlag(KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED, value);
     }
 
     private void setErrorCodeLoggingDenyList(String errorCodeLoggingDenyList) {
