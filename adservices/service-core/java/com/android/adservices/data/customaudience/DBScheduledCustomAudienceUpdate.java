@@ -84,12 +84,18 @@ public abstract class DBScheduledCustomAudienceUpdate {
     @ColumnInfo(name = "is_debuggable", defaultValue = "false")
     public abstract boolean getIsDebuggable();
 
+    /** Tracks if schedule in response is allowed */
+    @AutoValue.CopyAnnotations
+    @ColumnInfo(name = "allow_schedule_in_response", defaultValue = "false")
+    public abstract boolean getAllowScheduleInResponse();
+
     /** Provides a {@link DBScheduledCustomAudienceUpdate.Builder} */
     @NonNull
     public static DBScheduledCustomAudienceUpdate.Builder builder() {
         return new AutoValue_DBScheduledCustomAudienceUpdate.Builder()
                 .setUpdateId(null)
-                .setIsDebuggable(false);
+                .setIsDebuggable(false)
+                .setAllowScheduleInResponse(false);
     }
 
     /** Creates an instance of {@link DBScheduledCustomAudienceUpdate} */
@@ -101,7 +107,8 @@ public abstract class DBScheduledCustomAudienceUpdate {
             @NonNull Uri updateUri,
             @NonNull Instant scheduledTime,
             @NonNull Instant creationTime,
-            boolean isDebuggable) {
+            boolean isDebuggable,
+            boolean allowScheduleInResponse) {
         return builder()
                 .setUpdateId(updateId)
                 .setOwner(owner)
@@ -110,6 +117,7 @@ public abstract class DBScheduledCustomAudienceUpdate {
                 .setScheduledTime(scheduledTime)
                 .setCreationTime(creationTime)
                 .setIsDebuggable(isDebuggable)
+                .setAllowScheduleInResponse(allowScheduleInResponse)
                 .build();
     }
 
@@ -142,6 +150,10 @@ public abstract class DBScheduledCustomAudienceUpdate {
         /** see {@link #getIsDebuggable()} */
         @NonNull
         public abstract Builder setIsDebuggable(boolean value);
+
+        /** see {@link #getAllowScheduleInResponse()} */
+        @NonNull
+        public abstract Builder setAllowScheduleInResponse(boolean value);
 
         /** Builds a {@link DBScheduledCustomAudienceUpdate.Builder} */
         @NonNull

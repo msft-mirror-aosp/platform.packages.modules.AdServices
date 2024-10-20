@@ -16,6 +16,8 @@
 package com.android.adservices.shared.meta_testing;
 
 import com.android.adservices.shared.testing.Action;
+import com.android.adservices.shared.testing.DynamicLogger;
+import com.android.adservices.shared.testing.Logger;
 import com.android.adservices.shared.testing.Nullable;
 
 import java.util.Objects;
@@ -29,10 +31,14 @@ public final class FakeAction implements Action {
     @Nullable private final AtomicInteger mReversionOrderCounter;
     @Nullable private Exception mOnExecuteException;
     @Nullable private Exception mOnRevertException;
+    @Nullable private RuntimeException mOnResetException;
     @Nullable private Boolean mOnExecute;
 
-    private boolean mExecuted;
+    private final AtomicInteger mNumberTimesExecuteCalled = new AtomicInteger();
+    private final Logger mLog = new Logger(DynamicLogger.getInstance(), FakeAction.class);
+
     private boolean mReverted;
+    private boolean mThrowIfExecuteCalledMultipleTimes;
     private int mExecutionOrder;
     private int mReversionOrder;
 
@@ -73,11 +79,29 @@ public final class FakeAction implements Action {
     }
 
     @Override
+    public void reset() {
+        if (mOnResetException != null) {
+            throw mOnResetException;
+        }
+        mNumberTimesExecuteCalled.set(0);
+        mReverted = false;
+        mExecutionOrder = 0;
+        mReversionOrder = 0;
+    }
+
+    @Override
     public boolean execute() throws Exception {
-        mExecuted = true;
+        int callNumber = mNumberTimesExecuteCalled.incrementAndGet();
+        if (mThrowIfExecuteCalledMultipleTimes && callNumber > 1) {
+            throw new IllegalArgumentException(
+                    "Should be called just once, but this is call #" + callNumber);
+        }
         if (mExecutionOrderCounter != null) {
             mExecutionOrder = mExecutionOrderCounter.incrementAndGet();
         }
+        mLog.v(
+                "execute(): call #%d, mExecutionOrder=%d, mOnExecuteException=%s",
+                callNumber, mExecutionOrder, mOnExecuteException);
         if (mOnExecuteException != null) {
             throw mOnExecuteException;
         }
@@ -90,6 +114,9 @@ public final class FakeAction implements Action {
         if (mReversionOrderCounter != null) {
             mReversionOrder = mReversionOrderCounter.incrementAndGet();
         }
+        mLog.v(
+                "revert(): mReversionOrder=%d, mOnRevertException=%s",
+                mReversionOrder, mOnRevertException);
         if (mOnRevertException != null) {
             throw mOnRevertException;
         }
@@ -105,9 +132,22 @@ public final class FakeAction implements Action {
         mOnExecuteException = Objects.requireNonNull(exception, "exception cannot be null");
     }
 
-    /** Checks whether {@link #execute()} was called. */
-    public boolean executed() {
-        return mExecuted;
+    /**
+     * When called, {@link #execute()} will throw if called again (without calling {@link
+     * #reset()}).
+     */
+    public void throwIfExecuteCalledMultipleTime() {
+        mThrowIfExecuteCalledMultipleTimes = true;
+    }
+
+    @Override
+    public boolean isExecuted() {
+        return mNumberTimesExecuteCalled.get() > 0;
+    }
+
+    /** Returns how many times {@link #execute()} was called. */
+    public int getNumberTimesExecuteCalled() {
+        return mNumberTimesExecuteCalled.get();
     }
 
     /**
@@ -128,8 +168,8 @@ public final class FakeAction implements Action {
         mOnRevertException = Objects.requireNonNull(exception, "exception cannot be null");
     }
 
-    /** Checks whether {@link #revert()} was called. */
-    public boolean reverted() {
+    @Override
+    public boolean isReverted() {
         return mReverted;
     }
 
@@ -146,6 +186,11 @@ public final class FakeAction implements Action {
         return mReversionOrder;
     }
 
+    /** Sets an exception to be thrown by {@link #reset()}. */
+    public void onResetThrows(RuntimeException exception) {
+        mOnResetException = Objects.requireNonNull(exception, "exception cannot be null");
+    }
+
     @Override
     public String toString() {
         StringBuilder string = new StringBuilder("FakeAction[");
@@ -153,11 +198,15 @@ public final class FakeAction implements Action {
             string.append("name=").append(mName).append(", ");
         }
         string.append("mExecuted=")
-                .append(mExecuted)
+                .append(isExecuted())
+                .append(", mNumberTimesExecuteCalled=")
+                .append(mNumberTimesExecuteCalled.get())
                 .append(", mReverted=")
                 .append(mReverted)
                 .append(", mOnExecute=")
-                .append(mOnExecute);
+                .append(mOnExecute)
+                .append(",  mThrowIfExecuteCalledMultipleTimes")
+                .append(mThrowIfExecuteCalledMultipleTimes);
         if (mExecutionOrderCounter != null) {
             string.append(", mExecutionOrder=")
                     .append(mExecutionOrder)
@@ -166,6 +215,12 @@ public final class FakeAction implements Action {
         }
         if (mOnExecuteException != null) {
             string.append(", mOnExecuteException=").append(mOnExecuteException);
+        }
+        if (mOnRevertException != null) {
+            string.append(", mOnRevertException=").append(mOnRevertException);
+        }
+        if (mOnResetException != null) {
+            string.append(", mOnResetException=").append(mOnResetException);
         }
         return string.append(']').toString();
     }

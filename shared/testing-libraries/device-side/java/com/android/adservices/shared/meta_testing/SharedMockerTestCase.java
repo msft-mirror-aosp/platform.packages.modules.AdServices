@@ -34,12 +34,12 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.mockito.quality.Strictness;
 
-@SuppressWarnings("VisibleForTests") // TODO(b/343741206): Remove suppress warning once fixed.
 /**
  * Base class for all {@link SharedMocker} implementations.
  *
  * @param <T> mocker implementation
  */
+@SuppressWarnings("VisibleForTests") // TODO(b/343741206): Remove suppress warning once fixed.
 public abstract class SharedMockerTestCase<T extends SharedMocker> extends DeviceSideTestCase {
 
     @Mock private Clock mMockClock;
@@ -98,7 +98,7 @@ public abstract class SharedMockerTestCase<T extends SharedMocker> extends Devic
     public final void testMockCurrentTimeMillis_null() {
         assertThrows(
                 NullPointerException.class,
-                () -> getMocker().mockCurrentTimeMillis(mMockClock, /* mockedValues= */ null));
+                () -> getMocker().mockCurrentTimeMillis(mMockClock, /* mockedValues...= */ null));
         assertThrows(
                 NullPointerException.class,
                 () -> getMocker().mockCurrentTimeMillis(/* mockClock= */ null, 42));
@@ -141,7 +141,7 @@ public abstract class SharedMockerTestCase<T extends SharedMocker> extends Devic
     public final void testMockElapsedRealtime_null() {
         assertThrows(
                 NullPointerException.class,
-                () -> getMocker().mockElapsedRealtime(mMockClock, /* mockedValues= */ null));
+                () -> getMocker().mockElapsedRealtime(mMockClock, /* mockedValues...= */ null));
         assertThrows(
                 NullPointerException.class,
                 () -> getMocker().mockElapsedRealtime(/* mockClock= */ null, 42));
