@@ -29,6 +29,7 @@ import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_BACK
 import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_SCHEDULE_CA_COMPLETE_BROADCAST_ENABLED;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_PERIODIC_ENCODING_JOB_COMPLETE_BROADCAST_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_PROTECTED_APP_SIGNALS_CLI_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_PROTECTED_APP_SIGNALS_ENCODER_LOGIC_REGISTERED_BROADCAST_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_RECORD_TOPICS_COMPLETE_BROADCAST_ENABLED;
@@ -84,6 +85,10 @@ public final class DebugFlags extends CommonDebugFlags {
     /** Default value for sending a broadcast when background key fetch is completed. */
     @VisibleForTesting
     static final boolean DEFAULT_FLEDGE_BACKGROUND_KEY_FETCH_COMPLETE_BROADCAST_ENABLED = false;
+
+    /** Default value for sending a broadcast when periodic encoding is completed. */
+    @VisibleForTesting
+    static final boolean DEFAULT_PERIODIC_ENCODING_JOB_COMPLETE_BROADCAST_ENABLED = false;
 
     static final boolean CONSENT_NOTIFICATION_DEBUG_MODE = false;
     static final boolean CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE = false;
@@ -191,6 +196,13 @@ public final class DebugFlags extends CommonDebugFlags {
                 DEFAULT_FLEDGE_BACKGROUND_KEY_FETCH_COMPLETE_BROADCAST_ENABLED);
     }
 
+    /** Returns whether sending a broadcast when Periodic encoding job is completed is enabled. */
+    public boolean getPeriodicEncodingJobCompleteBroadcastEnabled() {
+        return getBoolean(
+                KEY_PERIODIC_ENCODING_JOB_COMPLETE_BROADCAST_ENABLED,
+                DEFAULT_PERIODIC_ENCODING_JOB_COMPLETE_BROADCAST_ENABLED);
+    }
+
     /**
      * Returns a boolean to indicate if console messages from js isolate should be available in
      * logcat or not.
@@ -251,5 +263,9 @@ public final class DebugFlags extends CommonDebugFlags {
                 pw,
                 KEY_FLEDGE_BACKGROUND_KEY_FETCH_COMPLETE_BROADCAST_ENABLED,
                 getFledgeBackgroundKeyFetchCompleteBroadcastEnabled());
+        dump(
+                pw,
+                KEY_PERIODIC_ENCODING_JOB_COMPLETE_BROADCAST_ENABLED,
+                getPeriodicEncodingJobCompleteBroadcastEnabled());
     }
 }

@@ -45,6 +45,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 import java.util.Collection;
+import java.util.Locale;
 
 @SetErrorLogUtilDefaultParams(
         throwable = ExpectErrorLogUtilWithExceptionCall.Any.class,
@@ -94,7 +95,7 @@ public class AuctionResultValidatorTest extends AdServicesExtendedMockitoTestCas
                 mAuctionResultValidator.getValidationViolations(
                         getValidAuctionResultBuilder().setBid(negativeBid).build());
         ValidatorTestUtil.assertViolationContainsOnly(
-                violations, String.format(String.format(NEGATIVE_BID, negativeBid)));
+                violations, String.format(Locale.US, NEGATIVE_BID, negativeBid));
     }
 
     @Test
@@ -104,7 +105,7 @@ public class AuctionResultValidatorTest extends AdServicesExtendedMockitoTestCas
                 mAuctionResultValidator.getValidationViolations(
                         getValidAuctionResultBuilder().setScore(negativeScore).build());
         ValidatorTestUtil.assertViolationContainsOnly(
-                violations, String.format(String.format(NEGATIVE_SCORE, negativeScore)));
+                violations, String.format(Locale.US, NEGATIVE_SCORE, negativeScore));
     }
 
     @Test

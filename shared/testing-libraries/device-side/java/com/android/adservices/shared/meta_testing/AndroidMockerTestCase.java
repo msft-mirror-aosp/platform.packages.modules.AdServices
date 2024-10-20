@@ -181,7 +181,7 @@ public abstract class AndroidMockerTestCase<T extends AndroidMocker> extends Dev
     @DisabledOnRavenwood(blockedBy = Context.class)
     @Test
     public final void testMockGetApplicationContext_nullAppContext() {
-        getMocker().mockGetApplicationContext(mMockContext, /* appContex= */ null);
+        getMocker().mockGetApplicationContext(mMockContext, /* appContext= */ null);
 
         var actual = mMockContext.getApplicationContext();
 

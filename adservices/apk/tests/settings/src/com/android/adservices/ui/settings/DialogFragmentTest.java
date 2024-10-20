@@ -17,7 +17,7 @@ package com.android.adservices.ui.settings;
 
 import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.GA_UX;
 
-import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
@@ -156,7 +156,7 @@ public final class DialogFragmentTest extends AdServicesExtendedMockitoTestCase 
 
         // Wait for launcher
         final String launcherPackage = sDevice.getLauncherPackageName();
-        assertThat(launcherPackage).isNotNull();
+        assertWithMessage("launch package should not be null").that(launcherPackage).isNotNull();
         sDevice.wait(Until.hasObject(By.pkg(launcherPackage).depth(0)), LAUNCH_TIMEOUT);
 
         // launch app
@@ -183,7 +183,7 @@ public final class DialogFragmentTest extends AdServicesExtendedMockitoTestCase 
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_topics_ga_title);
         UiObject2 blockTopicText =
                 ApkTestUtil.getElement(sDevice, R.string.settingsUI_block_topic_title, 0);
-        assertThat(blockTopicText).isNotNull();
+        ApkTestUtil.assertNotNull(blockTopicText, R.string.settingsUI_block_topic_title);
 
         // click block
         blockTopicText.click();
@@ -192,14 +192,15 @@ public final class DialogFragmentTest extends AdServicesExtendedMockitoTestCase 
         UiObject2 positiveText =
                 ApkTestUtil.getElement(
                         sDevice, R.string.settingsUI_dialog_block_topic_positive_text);
-        assertThat(dialogTitle).isNotNull();
-        assertThat(positiveText).isNotNull();
+        ApkTestUtil.assertNotNull(dialogTitle, R.string.settingsUI_dialog_block_topic_message);
+        ApkTestUtil.assertNotNull(
+                positiveText, R.string.settingsUI_dialog_block_topic_positive_text);
 
         // confirm
         positiveText.click();
         verify(mConsentManager, timeout(1000)).revokeConsentForTopic(any(Topic.class));
         blockTopicText = ApkTestUtil.getElement(sDevice, R.string.settingsUI_block_topic_title, 0);
-        assertThat(blockTopicText).isNotNull();
+        ApkTestUtil.assertNotNull(blockTopicText, R.string.settingsUI_block_topic_title);
 
         // click block again
         blockTopicText.click();
@@ -207,8 +208,8 @@ public final class DialogFragmentTest extends AdServicesExtendedMockitoTestCase 
                 ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_block_topic_message);
         UiObject2 negativeText =
                 ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_negative_text);
-        assertThat(dialogTitle).isNotNull();
-        assertThat(negativeText).isNotNull();
+        ApkTestUtil.assertNotNull(dialogTitle, R.string.settingsUI_dialog_block_topic_message);
+        ApkTestUtil.assertNotNull(negativeText, R.string.settingsUI_dialog_negative_text);
 
         // cancel and verify it has still only been called once
         negativeText.click();
@@ -225,7 +226,7 @@ public final class DialogFragmentTest extends AdServicesExtendedMockitoTestCase 
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_blocked_topics_ga_title);
         UiObject2 unblockTopicText =
                 ApkTestUtil.getElement(sDevice, R.string.settingsUI_unblock_topic_title, 0);
-        assertThat(unblockTopicText).isNotNull();
+        ApkTestUtil.assertNotNull(unblockTopicText, R.string.settingsUI_unblock_topic_title);
 
         // click unblock
         unblockTopicText.click();
@@ -234,15 +235,16 @@ public final class DialogFragmentTest extends AdServicesExtendedMockitoTestCase 
         UiObject2 positiveText =
                 ApkTestUtil.getElement(
                         sDevice, R.string.settingsUI_dialog_unblock_topic_positive_text);
-        assertThat(dialogTitle).isNotNull();
-        assertThat(positiveText).isNotNull();
+        ApkTestUtil.assertNotNull(dialogTitle, R.string.settingsUI_dialog_unblock_topic_message);
+        ApkTestUtil.assertNotNull(
+                positiveText, R.string.settingsUI_dialog_unblock_topic_positive_text);
 
         // confirm
         positiveText.click();
         verify(mConsentManager).restoreConsentForTopic(any(Topic.class));
         unblockTopicText =
                 ApkTestUtil.getElement(sDevice, R.string.settingsUI_unblock_topic_title, 0);
-        assertThat(unblockTopicText).isNotNull();
+        ApkTestUtil.assertNotNull(unblockTopicText, R.string.settingsUI_unblock_topic_title);
     }
 
     @Test
@@ -258,8 +260,9 @@ public final class DialogFragmentTest extends AdServicesExtendedMockitoTestCase 
         UiObject2 positiveText =
                 ApkTestUtil.getElement(
                         sDevice, R.string.settingsUI_dialog_reset_topic_positive_text);
-        assertThat(dialogTitle).isNotNull();
-        assertThat(positiveText).isNotNull();
+        ApkTestUtil.assertNotNull(dialogTitle, R.string.settingsUI_dialog_reset_topic_message);
+        ApkTestUtil.assertNotNull(
+                positiveText, R.string.settingsUI_dialog_reset_topic_positive_text);
 
         // confirm
         positiveText.click();
@@ -271,8 +274,8 @@ public final class DialogFragmentTest extends AdServicesExtendedMockitoTestCase 
                 ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_reset_topic_message);
         UiObject2 negativeText =
                 ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_negative_text);
-        assertThat(dialogTitle).isNotNull();
-        assertThat(negativeText).isNotNull();
+        ApkTestUtil.assertNotNull(dialogTitle, R.string.settingsUI_dialog_reset_topic_message);
+        ApkTestUtil.assertNotNull(negativeText, R.string.settingsUI_dialog_negative_text);
 
         // cancel and verify it has still only been called once
         negativeText.click();
@@ -293,7 +296,7 @@ public final class DialogFragmentTest extends AdServicesExtendedMockitoTestCase 
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_apps_ga_title);
         UiObject2 blockAppText =
                 ApkTestUtil.getElement(sDevice, R.string.settingsUI_block_app_title, 0);
-        assertThat(blockAppText).isNotNull();
+        ApkTestUtil.assertNotNull(blockAppText, R.string.settingsUI_block_app_title);
 
         // click block
         blockAppText.click();
@@ -301,22 +304,22 @@ public final class DialogFragmentTest extends AdServicesExtendedMockitoTestCase 
                 ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_block_app_message);
         UiObject2 positiveText =
                 ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_block_app_positive_text);
-        assertThat(dialogTitle).isNotNull();
-        assertThat(positiveText).isNotNull();
+        ApkTestUtil.assertNotNull(dialogTitle, R.string.settingsUI_dialog_block_app_message);
+        ApkTestUtil.assertNotNull(positiveText, R.string.settingsUI_dialog_block_app_positive_text);
 
         // confirm
         positiveText.click();
         verify(mConsentManager, timeout(1000)).revokeConsentForApp(any(App.class));
         blockAppText = ApkTestUtil.getElement(sDevice, R.string.settingsUI_block_app_title, 0);
-        assertThat(blockAppText).isNotNull();
+        ApkTestUtil.assertNotNull(blockAppText, R.string.settingsUI_block_app_title);
 
         // click block again
         blockAppText.click();
         dialogTitle = ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_block_app_message);
         UiObject2 negativeText =
                 ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_negative_text);
-        assertThat(dialogTitle).isNotNull();
-        assertThat(negativeText).isNotNull();
+        ApkTestUtil.assertNotNull(dialogTitle, R.string.settingsUI_dialog_block_app_message);
+        ApkTestUtil.assertNotNull(negativeText, R.string.settingsUI_dialog_negative_text);
 
         // cancel and verify it has still only been called once
         negativeText.click();
@@ -342,7 +345,7 @@ public final class DialogFragmentTest extends AdServicesExtendedMockitoTestCase 
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_blocked_apps_ga_title);
         UiObject2 unblockAppText =
                 ApkTestUtil.getElement(sDevice, R.string.settingsUI_unblock_app_title, 0);
-        assertThat(unblockAppText).isNotNull();
+        ApkTestUtil.assertNotNull(unblockAppText, R.string.settingsUI_unblock_app_title);
 
         // click unblock
         unblockAppText.click();
@@ -351,14 +354,15 @@ public final class DialogFragmentTest extends AdServicesExtendedMockitoTestCase 
         UiObject2 positiveText =
                 ApkTestUtil.getElement(
                         sDevice, R.string.settingsUI_dialog_unblock_app_positive_text);
-        assertThat(dialogTitle).isNotNull();
-        assertThat(positiveText).isNotNull();
+        ApkTestUtil.assertNotNull(dialogTitle, R.string.settingsUI_dialog_unblock_app_message);
+        ApkTestUtil.assertNotNull(
+                positiveText, R.string.settingsUI_dialog_unblock_app_positive_text);
 
         // confirm
         positiveText.click();
         verify(mConsentManager).restoreConsentForApp(any(App.class));
         unblockAppText = ApkTestUtil.getElement(sDevice, R.string.settingsUI_unblock_app_title, 0);
-        assertThat(unblockAppText).isNotNull();
+        ApkTestUtil.assertNotNull(unblockAppText, R.string.settingsUI_unblock_app_title);
     }
 
     @Test
@@ -378,8 +382,8 @@ public final class DialogFragmentTest extends AdServicesExtendedMockitoTestCase 
                 ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_reset_app_message);
         UiObject2 positiveText =
                 ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_reset_app_positive_text);
-        assertThat(dialogTitle).isNotNull();
-        assertThat(positiveText).isNotNull();
+        ApkTestUtil.assertNotNull(dialogTitle, R.string.settingsUI_dialog_reset_app_message);
+        ApkTestUtil.assertNotNull(positiveText, R.string.settingsUI_dialog_reset_app_positive_text);
 
         // confirm
         positiveText.click();
@@ -390,8 +394,8 @@ public final class DialogFragmentTest extends AdServicesExtendedMockitoTestCase 
         dialogTitle = ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_reset_app_message);
         UiObject2 negativeText =
                 ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_negative_text);
-        assertThat(dialogTitle).isNotNull();
-        assertThat(negativeText).isNotNull();
+        ApkTestUtil.assertNotNull(dialogTitle, R.string.settingsUI_dialog_reset_app_message);
+        ApkTestUtil.assertNotNull(negativeText, R.string.settingsUI_dialog_negative_text);
 
         // cancel and verify it has still only been called once
         negativeText.click();
