@@ -21,6 +21,8 @@ import com.android.adservices.shared.testing.SafeAction;
 import com.android.adservices.shared.testing.SdkSandbox;
 import com.android.adservices.shared.testing.SetSdkSandboxStateAction;
 import com.android.adservices.shared.testing.TestHelper;
+import com.android.adservices.shared.testing.annotations.SetSdkSandboxStateEnabled;
+import com.android.adservices.shared.testing.annotations.SetSyncDisabledModeForTest;
 import com.android.adservices.shared.testing.device.DeviceConfig;
 import com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest;
 
@@ -54,12 +56,35 @@ public abstract class AbstractFlagsPreparerClassRule<R extends AbstractFlagsPrep
         mSdkSandbox = Objects.requireNonNull(sdkSandbox, "sdkSandbox cannot be null");
 
         // TODO(b/297085722): remove SafeAction wrapper once tests don't run on R anymore
-        addAction(new SafeAction(mLog, new SetSyncModeAction(mLog, deviceConfig, mode)));
+        addAction(new SafeAction(mLog, new SetSyncModeAction(mLog, mDeviceConfig, mode)));
     }
 
     @Override
     protected final void preExecuteActions(Statement base, Description description) {
         TestHelper.throwIfTest(description);
+
+        // TODO(b/362977985): add a new method on TestHelper (or a new class) to convert annotations
+        // into Actions
+        var setSdkSandboxStateEnabledAnnotation =
+                TestHelper.getAnnotation(description, SetSdkSandboxStateEnabled.class);
+        if (setSdkSandboxStateEnabledAnnotation != null) {
+            mLog.d("Found %s", setSdkSandboxStateEnabledAnnotation);
+            addAction(
+                    new SetSdkSandboxStateAction(
+                            mLog,
+                            mSdkSandbox,
+                            setSdkSandboxStateEnabledAnnotation.value()
+                                    ? SdkSandbox.State.ENABLED
+                                    : SdkSandbox.State.DISABLED));
+        }
+        var setSyncDisabledModeForTestAnnotation =
+                TestHelper.getAnnotation(description, SetSyncDisabledModeForTest.class);
+        if (setSyncDisabledModeForTestAnnotation != null) {
+            mLog.d("Found %s", setSyncDisabledModeForTestAnnotation);
+            addAction(
+                    new SetSyncModeAction(
+                            mLog, mDeviceConfig, setSyncDisabledModeForTestAnnotation.value()));
+        }
     }
 
     @Override

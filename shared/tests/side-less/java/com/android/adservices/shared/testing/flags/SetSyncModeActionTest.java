@@ -15,6 +15,7 @@
  */
 package com.android.adservices.shared.testing.flags;
 
+import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest.DISABLED_SOMEHOW;
 import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest.PERSISTENT;
 import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest.UNSUPPORTED;
 import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest.UNTIL_REBOOT;
@@ -23,6 +24,8 @@ import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.shared.meta_testing.FakeDeviceConfig;
 import com.android.adservices.shared.meta_testing.SharedSidelessTestCase;
+import com.android.adservices.shared.testing.EqualsTester;
+import com.android.adservices.shared.testing.Logger;
 
 import org.junit.Test;
 
@@ -44,10 +47,14 @@ public final class SetSyncModeActionTest extends SharedSidelessTestCase {
     }
 
     @Test
-    public void testConstructor_unsupported() {
+    public void testConstructor_notSettable() {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new SetSyncModeAction(mFakeLogger, mFakeDeviceConfig, UNSUPPORTED));
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new SetSyncModeAction(mFakeLogger, mFakeDeviceConfig, DISABLED_SOMEHOW));
     }
 
     @Test
@@ -165,6 +172,25 @@ public final class SetSyncModeActionTest extends SharedSidelessTestCase {
     }
 
     @Test
+    public void testExecuteAndRevert_changedFromDisabledSomehow() throws Exception {
+        mFakeDeviceConfig.setSyncDisabledMode(DISABLED_SOMEHOW);
+        SetSyncModeAction action =
+                new SetSyncModeAction(mFakeLogger, mFakeDeviceConfig, UNTIL_REBOOT);
+
+        boolean result = action.execute();
+
+        expect.withMessage("execute()").that(result).isTrue();
+        expect.withMessage("device config mode after execute")
+                .that(mFakeDeviceConfig.getSyncDisabledMode())
+                .isEqualTo(UNTIL_REBOOT);
+
+        action.revert();
+        expect.withMessage("device config mode after revert")
+                .that(mFakeDeviceConfig.getSyncDisabledMode())
+                .isEqualTo(PERSISTENT);
+    }
+
+    @Test
     public void testExecuteTwice() throws Exception {
         SetSyncModeAction action =
                 new SetSyncModeAction(mFakeLogger, mFakeDeviceConfig, UNTIL_REBOOT);
@@ -192,7 +218,41 @@ public final class SetSyncModeActionTest extends SharedSidelessTestCase {
 
         action.execute();
 
-        assertThrows(IllegalStateException.class, () -> action.onRevert());
+        assertThrows(IllegalStateException.class, () -> action.onRevertLocked());
+    }
+
+    @Test
+    public void testOnReset() throws Exception {
+        mFakeDeviceConfig.setSyncDisabledMode(PERSISTENT);
+        SetSyncModeAction action =
+                new SetSyncModeAction(mFakeLogger, mFakeDeviceConfig, UNTIL_REBOOT);
+        expect.withMessage("previous mode initially ").that(action.getPreviousMode()).isNull();
+        action.execute();
+        expect.withMessage("previous mode after execute")
+                .that(action.getPreviousMode())
+                .isEqualTo(PERSISTENT);
+
+        action.onResetLocked();
+
+        expect.withMessage("previous mode before reset").that(action.getPreviousMode()).isNull();
+    }
+
+    @Test
+    public void testEqualsAndHashCode() {
+        var baseline = new SetSyncModeAction(mFakeLogger, mFakeDeviceConfig, UNTIL_REBOOT);
+        var equal2 = new SetSyncModeAction(mFakeLogger, mFakeDeviceConfig, UNTIL_REBOOT);
+        var equal3 =
+                new SetSyncModeAction(
+                        new Logger(mFakeRealLogger, "whatever"), mFakeDeviceConfig, UNTIL_REBOOT);
+        var equal4 = new SetSyncModeAction(mFakeLogger, new FakeDeviceConfig(), UNTIL_REBOOT);
+        var different = new SetSyncModeAction(mFakeLogger, mFakeDeviceConfig, PERSISTENT);
+
+        var et = new EqualsTester(expect);
+
+        et.expectObjectsAreEqual(baseline, equal2);
+        et.expectObjectsAreEqual(baseline, equal3);
+        et.expectObjectsAreEqual(baseline, equal4);
+        et.expectObjectsAreNotEqual(baseline, different);
     }
 
     @Test

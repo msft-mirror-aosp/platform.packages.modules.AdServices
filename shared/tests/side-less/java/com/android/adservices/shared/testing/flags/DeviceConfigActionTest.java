@@ -61,11 +61,14 @@ public final class DeviceConfigActionTest extends SharedSidelessTestCase {
         }
 
         @Override
-        public boolean onExecute() {
+        public boolean onExecuteLocked() {
             return true;
         }
 
         @Override
-        public void onRevert() {}
+        public void onRevertLocked() {}
+
+        @Override
+        protected void onResetLocked() {}
     }
 }

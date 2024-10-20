@@ -106,7 +106,7 @@ android_test_helper_app {
     ],
     certificate: ":sdksandbox-test",
     min_sdk_version: "33",
-    target_sdk_version: "33",
+    target_sdk_version: "34",
 }
 
 java_library {

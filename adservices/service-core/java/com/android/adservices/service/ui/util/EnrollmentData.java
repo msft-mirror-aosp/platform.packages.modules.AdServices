@@ -27,10 +27,15 @@ import android.adservices.common.Module.ModuleCode;
 
 import com.android.adservices.LogUtil;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
+import com.google.common.base.Strings;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -50,7 +55,14 @@ public class EnrollmentData implements Serializable {
      * @return Serialized string.
      */
     public static String serialize(EnrollmentData data) {
-        return new Gson().toJson(data);
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+            oos.writeObject(data);
+            return Base64.getEncoder().encodeToString(bos.toByteArray());
+        } catch (IOException e) {
+            LogUtil.e("Enrollment Data serializing error:" + e);
+            return "";
+        }
     }
 
     /**
@@ -60,12 +72,14 @@ public class EnrollmentData implements Serializable {
      * @return Object with enrollment data.
      */
     public static EnrollmentData deserialize(String string) {
-        try {
-            EnrollmentData data = new Gson().fromJson(string, EnrollmentData.class);
-            if (data != null) {
-                return data;
-            }
-        } catch (JsonSyntaxException e) {
+        if (Strings.isNullOrEmpty(string)) {
+            return new EnrollmentData();
+        }
+        byte[] decodedBytes = Base64.getDecoder().decode(string);
+        try (ByteArrayInputStream bis = new ByteArrayInputStream(decodedBytes);
+                ObjectInputStream ois = new ObjectInputStream(bis)) {
+            return (EnrollmentData) ois.readObject();
+        } catch (IOException | ClassNotFoundException e) {
             LogUtil.e("Enrollment Data deserializing error:" + e);
         }
         return new EnrollmentData();
