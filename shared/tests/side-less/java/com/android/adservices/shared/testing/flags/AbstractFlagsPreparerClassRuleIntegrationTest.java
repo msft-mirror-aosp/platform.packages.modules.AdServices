@@ -21,8 +21,12 @@ import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisa
 import com.android.adservices.shared.meta_testing.AbstractFlagsPreparerClassRuleIntegrationTestCase;
 import com.android.adservices.shared.meta_testing.DeviceConfigWrapper;
 import com.android.adservices.shared.meta_testing.FakeDeviceConfig;
+import com.android.adservices.shared.meta_testing.FakeDeviceGateway;
+import com.android.adservices.shared.meta_testing.FakeSdkLevelSupportedRule;
 import com.android.adservices.shared.meta_testing.FakeSdkSandbox;
 import com.android.adservices.shared.meta_testing.SdkSandboxWrapper;
+import com.android.adservices.shared.testing.AbstractSdkLevelSupportedRule;
+import com.android.adservices.shared.testing.AndroidSdk.Level;
 import com.android.adservices.shared.testing.DynamicLogger;
 import com.android.adservices.shared.testing.SdkSandbox;
 import com.android.adservices.shared.testing.device.DeviceConfig;
@@ -63,6 +67,11 @@ public final class AbstractFlagsPreparerClassRuleIntegrationTest
         fakeDeviceConfig.setSyncDisabledMode(PERSISTENT);
         deviceConfig.setWrapped(fakeDeviceConfig);
         return new FakeFlagsPreparerClassRule(sdkSandbox, deviceConfig, PERSISTENT);
+    }
+
+    @Override
+    protected AbstractSdkLevelSupportedRule getSdkLevelSupportRule() {
+        return new FakeSdkLevelSupportedRule(new FakeDeviceGateway().setSdkLevel(Level.T));
     }
 
     public static final class FakeFlagsPreparerClassRule

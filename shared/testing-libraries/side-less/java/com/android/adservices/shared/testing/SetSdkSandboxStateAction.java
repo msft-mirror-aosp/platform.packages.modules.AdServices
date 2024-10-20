@@ -35,7 +35,7 @@ public final class SetSdkSandboxStateAction extends AbstractAction {
         super(logger);
         mSdkSandbox = Objects.requireNonNull(sandbox, "sandbox cannot be null");
         mState = Objects.requireNonNull(state, "state cannot be null");
-        if (!state.isValid()) {
+        if (!state.isSettable()) {
             throw new IllegalArgumentException("Invalid state: " + state);
         }
     }
@@ -57,12 +57,12 @@ public final class SetSdkSandboxStateAction extends AbstractAction {
             return false;
         }
         mSdkSandbox.setState(mState);
-        return mPreviousState != null && mPreviousState.isValid();
+        return mPreviousState != null && mPreviousState.isSettable();
     }
 
     @Override
     protected void onRevertLocked() throws Exception {
-        if (mPreviousState == null || !mPreviousState.isValid()) {
+        if (mPreviousState == null || !mPreviousState.isSettable()) {
             throw new IllegalStateException("should not have been called when it didn't change");
         }
         mSdkSandbox.setState(mPreviousState);
