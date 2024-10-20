@@ -23,13 +23,11 @@ import static com.android.adservices.shared.testing.SdkSandbox.State.UNSUPPORTED
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
-import com.android.adservices.shared.testing.AbstractSdkLevelSupportedRule;
 import com.android.adservices.shared.testing.SdkSandbox;
 import com.android.adservices.shared.testing.SdkSandbox.State;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.testing.annotations.RequiresSdkRange;
 
-import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -41,14 +39,7 @@ import org.junit.Test;
  * @param <T> implementation type
  */
 public abstract class SdkSandboxIntegrationTestCase<T extends SdkSandbox>
-        extends SharedSidelessTestCase {
-
-    // TODO(b/342639109): make sure it's the right order
-    @Rule(order = 0)
-    public final AbstractSdkLevelSupportedRule sdkLevel = getSdkLevelSupportRule();
-
-    /** Gets the side-specific {@code SdkLevelSupportedRule}. */
-    protected abstract AbstractSdkLevelSupportedRule getSdkLevelSupportRule();
+        extends IntegrationTestCase {
 
     /** Creates a new instance of the {@link SdkSandbox} implementation being tested */
     protected abstract T newFixture();

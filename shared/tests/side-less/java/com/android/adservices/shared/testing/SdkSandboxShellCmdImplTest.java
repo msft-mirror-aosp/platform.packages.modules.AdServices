@@ -95,7 +95,7 @@ public final class SdkSandboxShellCmdImplTest extends SharedSidelessTestCase {
         mFakeGateway.setSdkLevel(S);
 
         for (State state : State.values()) {
-            if (state.isValid()) {
+            if (state.isSettable()) {
                 mImpl.setState(state);
             } else {
                 assertThrows(IllegalArgumentException.class, () -> mImpl.setState(state));
@@ -105,9 +105,9 @@ public final class SdkSandboxShellCmdImplTest extends SharedSidelessTestCase {
     }
 
     @Test
-    public void testSetState_invalidValue() {
+    public void testSetState_notSettable() {
         for (State state : State.values()) {
-            if (!state.isValid()) {
+            if (!state.isSettable()) {
                 assertThrows(IllegalArgumentException.class, () -> mImpl.setState(state));
             }
         }

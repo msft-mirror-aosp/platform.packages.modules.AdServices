@@ -26,21 +26,26 @@ public interface DeviceConfig {
 
     /* Synchronization mode */
     enum SyncDisabledModeForTest {
-        // TODO(b/297085722): remove UNSUPPORTED once tests don't run on R anymore
+        /** Only used on Android R. */
         UNSUPPORTED(false),
+        /** Only used on Android S, as getter returns {@code true}, not until when */
+        DISABLED_SOMEHOW(false),
+        /** Not disabled. */
         NONE(true),
+        /** Persistent even after reboot. */
         PERSISTENT(true),
+        /** Persistent until next reboot. */
         UNTIL_REBOOT(true);
 
-        /** Whether the state is a valid one. */
-        public boolean isValid() {
-            return mValid;
+        /** Whether it can be used on methods that sets the mode. */
+        public boolean isSettable() {
+            return mSettable;
         }
 
-        private final boolean mValid;
+        private final boolean mSettable;
 
-        SyncDisabledModeForTest(boolean valid) {
-            mValid = valid;
+        SyncDisabledModeForTest(boolean settable) {
+            mSettable = settable;
         }
     }
 }
