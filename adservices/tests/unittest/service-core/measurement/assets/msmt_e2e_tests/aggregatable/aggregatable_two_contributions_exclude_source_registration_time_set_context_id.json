@@ -1,8 +1,5 @@
 {
   "description": "Given a trigger with aggregatable data that has two contributions, and that is configured to exclude the source registration time, and has a context id set, generate an aggregate report with two contributions and excludes source registration time",
-  "phflags_override": {
-    "measurement_enable_trigger_context_id": "true"
-  },
   "input": {
     "sources": [{
       "registration_request": {

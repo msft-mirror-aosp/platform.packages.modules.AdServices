@@ -4915,7 +4915,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
             throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
-        when(mMockFlags.getMeasurementEnableTriggerContextId()).thenReturn(true);
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -4946,7 +4945,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     public void basicTriggerRequest_triggerContextIdNotAString_fails() throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
-        when(mMockFlags.getMeasurementEnableTriggerContextId()).thenReturn(true);
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -4972,7 +4970,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         String triggerContextId = "a".repeat(MEASUREMENT_MAX_LENGTH_OF_TRIGGER_CONTEXT_ID + 1);
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
-        when(mMockFlags.getMeasurementEnableTriggerContextId()).thenReturn(true);
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -5007,7 +5004,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         String triggerContextId = "test_context_id";
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
-        when(mMockFlags.getMeasurementEnableTriggerContextId()).thenReturn(true);
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -5045,7 +5041,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         String triggerContextId = "test_context_id";
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
-        when(mMockFlags.getMeasurementEnableTriggerContextId()).thenReturn(true);
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(

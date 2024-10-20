@@ -241,7 +241,6 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                     entry(
                             FlagsConstants.KEY_MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED,
                             "true"),
-                    entry(FlagsConstants.KEY_MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID, "true"),
                     entry(
                             FlagsConstants
                                     .KEY_MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING,

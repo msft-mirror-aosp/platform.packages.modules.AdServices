@@ -4907,14 +4907,6 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_ENABLE_INSTALL_ATTRIBUTION_ON_S;
     }
 
-    /** Flag to enable context id for triggers */
-    boolean MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID = false;
-
-    /** Returns true if trigger context id is enabled. */
-    default boolean getMeasurementEnableTriggerContextId() {
-        return MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID;
-    }
-
     /** The maximum allowable length of a trigger context id. */
     int MEASUREMENT_MAX_LENGTH_OF_TRIGGER_CONTEXT_ID = 64;
 

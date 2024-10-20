@@ -1236,7 +1236,6 @@ public class AttributionJobHandlerTest {
                 .thenReturn(5L);
         when(mMeasurementDao.getSourceDestinations(source.getId()))
                 .thenReturn(Pair.create(source.getAppDestinations(), source.getWebDestinations()));
-        when(mFlags.getMeasurementEnableTriggerContextId()).thenReturn(true);
 
         mHandler.performPendingAttributions();
 

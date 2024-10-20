@@ -4099,11 +4099,6 @@ public final class PhFlags implements Flags {
                         + getMeasurementNullAggReportRateExclSourceRegistrationTime());
         writer.println(
                 "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID
-                        + " = "
-                        + getMeasurementEnableTriggerContextId());
-        writer.println(
-                "\t"
                         + FlagsConstants.KEY_MEASUREMENT_MAX_LENGTH_OF_TRIGGER_CONTEXT_ID
                         + " = "
                         + getMeasurementMaxLengthOfTriggerContextId());
@@ -6904,13 +6899,6 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME,
                 MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME);
-    }
-
-    @Override
-    public boolean getMeasurementEnableTriggerContextId() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID,
-                MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID);
     }
 
     @Override

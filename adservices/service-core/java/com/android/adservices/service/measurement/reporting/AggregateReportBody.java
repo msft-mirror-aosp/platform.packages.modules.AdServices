@@ -117,7 +117,7 @@ public class AggregateReportBody {
                     PayloadBodyKeys.AGGREGATION_COORDINATOR_ORIGIN,
                     mAggregationCoordinatorOrigin.toString());
         }
-        if (flags.getMeasurementEnableTriggerContextId() && mTriggerContextId != null) {
+        if (mTriggerContextId != null) {
             aggregateBodyJson.put(PayloadBodyKeys.TRIGGER_CONTEXT_ID, mTriggerContextId);
         }
 

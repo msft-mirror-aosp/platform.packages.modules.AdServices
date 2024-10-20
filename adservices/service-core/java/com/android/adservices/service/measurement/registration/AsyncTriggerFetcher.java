@@ -624,8 +624,7 @@ public class AsyncTriggerFetcher {
 
         builder.setAggregatableSourceRegistrationTimeConfig(sourceRegistrationTimeConfig);
 
-        if (mFlags.getMeasurementEnableTriggerContextId()
-                && !json.isNull(TriggerHeaderContract.TRIGGER_CONTEXT_ID)) {
+        if (!json.isNull(TriggerHeaderContract.TRIGGER_CONTEXT_ID)) {
             if (Trigger.SourceRegistrationTimeConfig.INCLUDE.equals(sourceRegistrationTimeConfig)) {
                 LoggerFactory.getMeasurementLogger()
                         .e(
