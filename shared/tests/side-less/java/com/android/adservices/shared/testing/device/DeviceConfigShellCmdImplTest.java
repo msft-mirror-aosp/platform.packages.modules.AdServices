@@ -266,7 +266,7 @@ public final class DeviceConfigShellCmdImplTest extends SharedSidelessTestCase {
 
     private void onRealMode(Consumer<SyncDisabledModeForTest> consumer) {
         for (var mode : SyncDisabledModeForTest.values()) {
-            if (mode.isValid()) {
+            if (mode.isSettable()) {
                 consumer.accept(mode);
             }
         }

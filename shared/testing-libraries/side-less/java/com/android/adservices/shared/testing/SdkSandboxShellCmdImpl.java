@@ -75,7 +75,7 @@ public final class SdkSandboxShellCmdImpl implements SdkSandbox {
     @Override
     public void setState(State state) {
         Objects.requireNonNull(state, "state cannot be null");
-        if (!state.isValid()) {
+        if (!state.isSettable()) {
             throw new IllegalArgumentException("invalid state: " + state);
         }
         if (!isSupported()) {
