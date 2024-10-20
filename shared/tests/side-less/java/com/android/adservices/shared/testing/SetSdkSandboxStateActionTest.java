@@ -48,9 +48,9 @@ public final class SetSdkSandboxStateActionTest extends SharedSidelessTestCase {
     }
 
     @Test
-    public void testConstructor_invalidModes() {
+    public void testConstructor_notSettable() {
         for (State state : State.values()) {
-            if (!state.isValid()) {
+            if (!state.isSettable()) {
                 assertThrows(
                         IllegalArgumentException.class,
                         () -> new SetSdkSandboxStateAction(mFakeLogger, mFakeSdkSandbox, state));
