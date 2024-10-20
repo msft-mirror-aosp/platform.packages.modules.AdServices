@@ -502,14 +502,8 @@ public class AggregateReportingJobHandler {
                     aggregateReport.getApi())) {
                 return null;
             }
-            if (mFlags.getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled()) {
-                // A null source registration time implies the source registration time was not set.
-                // We normally include this in the JSON serialization anyway, but when the feature
-                // flag for making source registration time optional is enabled, send a value
-                // indicating exclusion.
-                return EXCLUDED_SOURCE_REGISTRATION_TIME;
-            }
-            return null;
+
+            return EXCLUDED_SOURCE_REGISTRATION_TIME;
         }
 
         return String.valueOf(

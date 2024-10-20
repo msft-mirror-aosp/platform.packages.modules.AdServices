@@ -1,7 +1,6 @@
 {
   "description": "Given an app source with aggregatable_report_window specified and an app trigger configured to exclude source registration time and that has aggregatable data and that occurs after the aggregatable report window, create a null aggregatable report with source registration time excluded",
   "phflags_override": {
-    "measurement_source_registration_time_optional_for_agg_reports_enabled": "true",
     "measurement_null_agg_report_rate_excl_source_registration_time": "1.0"
   },
   "input": {

@@ -4442,14 +4442,6 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME;
     }
 
-    /** Default value for Optional Source Registration Time feature flag. */
-    boolean MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED = false;
-
-    /** Returns true if source registration time is optional for aggregatable reports. */
-    default boolean getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled() {
-        return MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED;
-    }
-
     /** Default U18 UX feature flag. */
     boolean DEFAULT_U18_UX_ENABLED = false;
 

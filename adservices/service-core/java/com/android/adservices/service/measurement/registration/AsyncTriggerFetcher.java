@@ -278,19 +278,16 @@ public class AsyncTriggerFetcher {
 
     private Trigger.SourceRegistrationTimeConfig getSourceRegistrationTimeConfig(JSONObject json) {
         Trigger.SourceRegistrationTimeConfig sourceRegistrationTimeConfig =
-                Trigger.SourceRegistrationTimeConfig.INCLUDE;
-
-        if (mFlags.getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled()) {
-            sourceRegistrationTimeConfig = Trigger.SourceRegistrationTimeConfig.EXCLUDE;
-            if (!json.isNull(TriggerHeaderContract.AGGREGATABLE_SOURCE_REGISTRATION_TIME)) {
-                String sourceRegistrationTimeConfigString =
-                        json.optString(TriggerHeaderContract.AGGREGATABLE_SOURCE_REGISTRATION_TIME)
-                                .toUpperCase(Locale.ENGLISH);
-                sourceRegistrationTimeConfig =
-                        Trigger.SourceRegistrationTimeConfig.valueOf(
-                                sourceRegistrationTimeConfigString);
-            }
+                Trigger.SourceRegistrationTimeConfig.EXCLUDE;
+        if (!json.isNull(TriggerHeaderContract.AGGREGATABLE_SOURCE_REGISTRATION_TIME)) {
+            String sourceRegistrationTimeConfigString =
+                    json.optString(TriggerHeaderContract.AGGREGATABLE_SOURCE_REGISTRATION_TIME)
+                            .toUpperCase(Locale.ENGLISH);
+            sourceRegistrationTimeConfig =
+                    Trigger.SourceRegistrationTimeConfig.valueOf(
+                            sourceRegistrationTimeConfigString);
         }
+
 
         return sourceRegistrationTimeConfig;
     }

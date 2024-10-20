@@ -1642,8 +1642,6 @@ public class AggregateReportingJobHandlerTest {
     @Test
     public void createReportJsonPayload_normalAggregateReport_OverridesNullSRTWithZero()
             throws JSONException {
-        when(mMockFlags.getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled())
-                .thenReturn(true);
         String debugCleartextPayload =
                 "{\"operation\":\"histogram\","
                         + "\"data\":[{\"bucket\":\"1369\",\"value\":32768},{\"bucket\":\"3461\","

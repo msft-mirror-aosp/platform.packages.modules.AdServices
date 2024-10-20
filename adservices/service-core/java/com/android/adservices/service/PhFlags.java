@@ -4094,12 +4094,6 @@ public final class PhFlags implements Flags {
         writer.println(
                 "\t"
                         + FlagsConstants
-                                .KEY_MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED
-                        + " = "
-                        + getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants
                                 .KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME
                         + " = "
                         + getMeasurementNullAggReportRateExclSourceRegistrationTime());
@@ -6910,14 +6904,6 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME,
                 MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME);
-    }
-
-    @Override
-    public boolean getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled() {
-        return getDeviceConfigFlag(
-                FlagsConstants
-                        .KEY_MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED,
-                MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED);
     }
 
     @Override
