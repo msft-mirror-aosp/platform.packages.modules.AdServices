@@ -619,8 +619,7 @@ class AttributionJobHandler {
 
             AggregateReport aggregateReport = aggregateReportBuilder.build();
 
-            if (mFlags.getMeasurementNullAggregateReportEnabled()
-                    && Trigger.SourceRegistrationTimeConfig.INCLUDE.equals(
+            if (Trigger.SourceRegistrationTimeConfig.INCLUDE.equals(
                             trigger.getAggregatableSourceRegistrationTimeConfig())) {
                 generateNullAggregateReportsIncludingSourceRegistrationTime(
                         trigger, aggregateReport, measurementDao, attributionStatus);
@@ -673,8 +672,7 @@ class AttributionJobHandler {
             IMeasurementDao measurementDao, Trigger trigger, AttributionStatus attributionStatus)
             throws DatastoreException {
         try {
-            if (!mFlags.getMeasurementNullAggregateReportEnabled()
-                    || !getTriggerHasAggregatableData(trigger)) {
+            if (!getTriggerHasAggregatableData(trigger)) {
                 return;
             }
             if (Trigger.SourceRegistrationTimeConfig.EXCLUDE.equals(

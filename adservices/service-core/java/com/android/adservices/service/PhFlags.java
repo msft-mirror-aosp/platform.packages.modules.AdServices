@@ -3950,11 +3950,6 @@ public final class PhFlags implements Flags {
                         + getMeasurementAggregateFallbackReportingJobPeriodMs());
         writer.println(
                 "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED
-                        + " = "
-                        + getMeasurementNullAggregateReportEnabled());
-        writer.println(
-                "\t"
                         + FlagsConstants
                                 .KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME
                         + " = "
@@ -6883,13 +6878,6 @@ public final class PhFlags implements Flags {
     public long getAdIdFetcherTimeoutMs() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_AD_ID_FETCHER_TIMEOUT_MS, DEFAULT_AD_ID_FETCHER_TIMEOUT_MS);
-    }
-
-    @Override
-    public boolean getMeasurementNullAggregateReportEnabled() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED,
-                MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED);
     }
 
     @Override

@@ -1027,7 +1027,6 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(new ArrayList<>());
 
-        when(mFlags.getMeasurementNullAggregateReportEnabled()).thenReturn(true);
         when(mFlags.getMeasurementNullAggReportRateExclSourceRegistrationTime()).thenReturn(1.0f);
 
         mHandler.performPendingAttributions();
@@ -1060,7 +1059,6 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(new ArrayList<>());
 
-        when(mFlags.getMeasurementNullAggregateReportEnabled()).thenReturn(true);
         when(mFlags.getMeasurementNullAggReportRateExclSourceRegistrationTime()).thenReturn(1.0f);
 
         mHandler.performPendingAttributions();
@@ -1277,7 +1275,6 @@ public class AttributionJobHandlerTest {
                 anyInt(), any(), any())).thenReturn(5L);
         when(mMeasurementDao.getSourceDestinations(source.getId()))
                 .thenReturn(Pair.create(source.getAppDestinations(), source.getWebDestinations()));
-        when(mFlags.getMeasurementNullAggregateReportEnabled()).thenReturn(true);
         when(mFlags.getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled())
                 .thenReturn(true);
         when(mFlags.getMeasurementNullAggReportRateInclSourceRegistrationTime()).thenReturn(1.0f);
@@ -1349,7 +1346,6 @@ public class AttributionJobHandlerTest {
                 anyInt(), any(), any())).thenReturn(5L);
         when(mMeasurementDao.getSourceDestinations(source.getId()))
                 .thenReturn(Pair.create(source.getAppDestinations(), source.getWebDestinations()));
-        when(mFlags.getMeasurementNullAggregateReportEnabled()).thenReturn(true);
         when(mFlags.getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled())
                 .thenReturn(true);
         // A rate of 1 would guarantee a null report was generated if we were not checking the
@@ -8643,7 +8639,6 @@ public class AttributionJobHandlerTest {
                 .thenReturn(Collections.singletonList(trigger.getId()));
         when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(new ArrayList<>());
-        when(mFlags.getMeasurementNullAggregateReportEnabled()).thenReturn(true);
         when(flagSupplier.get()).thenReturn(flagValue);
 
         // Execution
@@ -8693,7 +8688,6 @@ public class AttributionJobHandlerTest {
                 .thenReturn(Collections.singletonList(trigger.getId()));
         when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
-        when(mFlags.getMeasurementNullAggregateReportEnabled()).thenReturn(true);
         when(flagSupplier.get()).thenReturn(flagValue);
 
         // Execution
@@ -8741,7 +8735,6 @@ public class AttributionJobHandlerTest {
                 .thenReturn(Collections.singletonList(trigger.getId()));
         when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
-        when(mFlags.getMeasurementNullAggregateReportEnabled()).thenReturn(true);
         when(flagSupplier.get()).thenReturn(flagValue);
 
         // Execution
@@ -8787,7 +8780,6 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getNumAggregateReportsPerDestination(
                         trigger.getAttributionDestination(), trigger.getDestinationType()))
                 .thenReturn(excessiveReportCount);
-        when(mFlags.getMeasurementNullAggregateReportEnabled()).thenReturn(true);
         when(flagSupplier.get()).thenReturn(flagValue);
 
         // Execution
@@ -8837,7 +8829,6 @@ public class AttributionJobHandlerTest {
                 .thenReturn(Collections.singletonList(trigger.getId()));
         when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
-        when(mFlags.getMeasurementNullAggregateReportEnabled()).thenReturn(true);
         when(flagSupplier.get()).thenReturn(flagValue);
 
         // Execution
@@ -8880,7 +8871,6 @@ public class AttributionJobHandlerTest {
                 .thenReturn(Collections.singletonList(trigger.getId()));
         when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
-        when(mFlags.getMeasurementNullAggregateReportEnabled()).thenReturn(true);
         when(flagSupplier.get()).thenReturn(flagValue);
 
         // Execution
@@ -8931,7 +8921,6 @@ public class AttributionJobHandlerTest {
                 .thenReturn(Collections.singletonList(trigger.getId()));
         when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
-        when(mFlags.getMeasurementNullAggregateReportEnabled()).thenReturn(true);
         when(flagSupplier.get()).thenReturn(flagValue);
 
         // Execution
@@ -8962,7 +8951,6 @@ public class AttributionJobHandlerTest {
                 .thenReturn(Collections.singletonList(trigger.getId()));
         when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(new ArrayList<>());
-        when(mFlags.getMeasurementNullAggregateReportEnabled()).thenReturn(true);
         // Despite a 100% null rate for inclusion and exclusion of source registration time, there
         // should still be no null aggregate report since there is no aggregatable data.
         when(mFlags.getMeasurementNullAggReportRateExclSourceRegistrationTime()).thenReturn(1.0f);
@@ -9015,7 +9003,6 @@ public class AttributionJobHandlerTest {
                 .thenReturn(Collections.singletonList(trigger.getId()));
         when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
         when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
-        when(mFlags.getMeasurementNullAggregateReportEnabled()).thenReturn(true);
         when(mFlags.getMeasurementMaxDistinctReportingOriginsInAttribution()).thenReturn(0);
         when(flagSupplier.get()).thenReturn(flagValue);
 
@@ -9233,7 +9220,6 @@ public class AttributionJobHandlerTest {
                 anyInt(), any(), any())).thenReturn(5L);
         when(mMeasurementDao.getSourceDestinations(source.getId()))
                 .thenReturn(Pair.create(source.getAppDestinations(), source.getWebDestinations()));
-        when(mFlags.getMeasurementNullAggregateReportEnabled()).thenReturn(true);
         when(mFlags.getMeasurementNullAggReportRateInclSourceRegistrationTime()).thenReturn(1.0f);
     }
 
