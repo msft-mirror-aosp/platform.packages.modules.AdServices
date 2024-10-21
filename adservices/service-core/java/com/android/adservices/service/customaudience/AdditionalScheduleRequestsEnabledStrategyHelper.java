@@ -25,6 +25,9 @@ import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.PartialCustomAudience;
 import android.net.Uri;
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.customaudience.DBScheduledCustomAudienceUpdate;
@@ -39,10 +42,10 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+@RequiresApi(Build.VERSION_CODES.S)
 public class AdditionalScheduleRequestsEnabledStrategyHelper {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 

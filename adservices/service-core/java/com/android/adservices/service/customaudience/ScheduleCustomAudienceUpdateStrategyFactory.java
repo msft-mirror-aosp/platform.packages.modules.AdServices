@@ -16,11 +16,16 @@
 
 package com.android.adservices.service.customaudience;
 
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
+
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 /** Factory for {@link ScheduleCustomAudienceUpdateStrategy}s */
+@RequiresApi(Build.VERSION_CODES.S)
 public class ScheduleCustomAudienceUpdateStrategyFactory {
 
     /**

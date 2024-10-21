@@ -43,8 +43,10 @@ import android.adservices.exceptions.AdServicesNetworkException;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.annotation.VisibleForTesting;
 
 import com.android.adservices.LoggerFactory;
@@ -105,6 +107,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+@RequiresApi(Build.VERSION_CODES.S)
 public final class ScheduledUpdatesHandler {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
