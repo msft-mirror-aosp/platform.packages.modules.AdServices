@@ -175,6 +175,44 @@ public class AdsRelevanceStatusUtils {
     /** The topics epoch job battery constraint is battery not low. */
     public static final int TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_REQUIRES_BATTERY_NOT_LOW = 2;
 
+    /** Schedule ca update failure during http call. */
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_HTTP_CALL = 0;
+
+    /** Schedule ca update failure during join custom audience. */
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_JOIN_CA = 1;
+
+    /** Schedule ca update failure during leaving custom audience. */
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_LEAVE_CA = 2;
+
+    /** Schedule ca update failure during scheduling ca update for second hop. */
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_SCHEDULE_CA_UPDATE = 3;
+
+    /** Unknown failure during schedule custom audience update by the background job. */
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_UNKNOWN = 0;
+
+    /** Http error during schedule custom audience update by the background job. */
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_ERROR = 1;
+
+    /** Json error during schedule custom audience update by the background job. */
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_JSON_ERROR = 2;
+
+    /** Internal error during schedule custom audience update by the background job. */
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_INTERNAL_ERROR = 3;
+
+    /** Schedule custom audience request overwriting an already existing update in the database. */
+    public static final int
+            SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_DID_OVERWRITE_EXISTING_UPDATE = 1;
+
+    /** No existing update in the database present in the database. */
+    public static final int SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_NO_EXISTING_UPDATE = 2;
+
+    /**
+     * Schedule custom audience request rejected because of an already existing update in the
+     * database.
+     */
+    public static final int SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_REJECTED_BY_EXISTING_UPDATE =
+            3;
+
     /** The kind of winner did the beacon come from. */
     @IntDef(
             prefix = {"BEACON_SOURCE_"},
@@ -279,6 +317,38 @@ public class AdsRelevanceStatusUtils {
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface ServerAuctionCoordinatorSource {}
+
+    @IntDef(
+            prefix = {"SCHEDULE_CUSTOM_AUDIENCE_UPDATE_EXISTING_UPDATE_STATUS_"},
+            value = {
+                SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_DID_OVERWRITE_EXISTING_UPDATE,
+                SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_NO_EXISTING_UPDATE,
+                SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_REJECTED_BY_EXISTING_UPDATE
+            })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface ScheduleCustomAudienceUpdateExistingUpdateStatus {}
+
+    @IntDef(
+            prefix = {"SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION"},
+            value = {
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_HTTP_CALL,
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_JOIN_CA,
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_LEAVE_CA,
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_SCHEDULE_CA_UPDATE
+            })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface ScheduleCustomAudienceUpdatePerformedFailureAction {}
+
+    @IntDef(
+            prefix = {"SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE"},
+            value = {
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_UNKNOWN,
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_ERROR,
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_INTERNAL_ERROR,
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_JSON_ERROR
+            })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface ScheduleCustomAudienceUpdatePerformedFailureType {}
 
     /** Returns the size bucket for a raw value. */
     @Size
