@@ -15,8 +15,6 @@
  */
 package com.android.adservices.common;
 
-import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest.PERSISTENT;
-
 import com.android.adservices.shared.meta_testing.AbstractFlagsPreparerClassRuleIntegrationTestCase;
 import com.android.adservices.shared.meta_testing.DeviceConfigWrapper;
 import com.android.adservices.shared.meta_testing.SdkSandboxWrapper;
@@ -37,8 +35,7 @@ public final class AdservicesFlagsPreparerClassRuleIntegrationTest
             SdkSandboxWrapper sdkSandboxWrapper, DeviceConfigWrapper deviceConfigWrapper) {
         sdkSandboxWrapper.setWrapped(new SdkSandboxShellCmdImpl(mRealLogger, mDeviceGateway));
         deviceConfigWrapper.setWrapped(new DeviceConfigShellCmdImpl(mRealLogger, mDeviceGateway));
-        return new AdServicesFlagsPreparerClassRule(
-                sdkSandboxWrapper, deviceConfigWrapper, PERSISTENT);
+        return new AdServicesFlagsPreparerClassRule(sdkSandboxWrapper, deviceConfigWrapper);
     }
 
     @Override

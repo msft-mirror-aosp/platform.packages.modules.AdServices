@@ -22,8 +22,11 @@ import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisa
 import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest.UNSUPPORTED;
 import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest.UNTIL_REBOOT;
 
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import static org.junit.Assert.assertThrows;
 
+import com.android.adservices.shared.testing.ActionExecutionException;
 import com.android.adservices.shared.testing.SdkSandbox;
 import com.android.adservices.shared.testing.device.DeviceConfig;
 import com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest;
@@ -56,63 +59,57 @@ public abstract class AbstractFlagsPreparerClassRuleTestCase<
     protected final Description mSuite =
             Description.createSuiteDescription(AClassHasNoNothingAtAll.class);
 
-    private FakeDeviceConfig mFakeDeviceConfig = new FakeDeviceConfig();
-    private FakeSdkSandbox mFakeSdkSandbox = new FakeSdkSandbox();
+    private final FakeDeviceConfig mFakeDeviceConfig =
+            new FakeDeviceConfig().setSyncDisabledMode(NONE);
+    private final FakeSdkSandbox mFakeSdkSandbox = new FakeSdkSandbox().setState(DISABLED);
 
     @Before
     public final void setTestFixtures() {
         mSuite.addChild(mTest);
-        mFakeDeviceConfig.setSyncDisabledMode(NONE);
-        mFakeSdkSandbox.setState(DISABLED);
     }
 
     /** Gets a new concrete implementation of the rule. */
-    protected abstract R newRule(
-            SdkSandbox sdkSandbox, DeviceConfig deviceConfig, SyncDisabledModeForTest syncMode);
+    protected abstract R newRule(SdkSandbox sdkSandbox, DeviceConfig deviceConfig);
 
+    // NOTE: this method was originally building a rule that set the mode right away, in the
+    // constructor. The rule doesn't do it anymore, so some of these tests are redundant (as there
+    // are tests specifics for calling setSyncDisabledModeForTest()), but they're kept to make sure
+    // the refactoring didn't break anything...
     private R newRule(DeviceConfig deviceConfig, SyncDisabledModeForTest syncMode) {
-        return newRule(mFakeSdkSandbox, deviceConfig, syncMode);
+        return newRule(deviceConfig).setSyncDisabledModeForTest(syncMode);
+    }
+
+    private R newRule(DeviceConfig deviceConfig) {
+        return newRule(mFakeSdkSandbox, deviceConfig);
     }
 
     @Test
     public final void testConstructor_nullArgs() {
         assertThrows(
                 NullPointerException.class,
-                () -> newRule(mFakeSdkSandbox, /* deviceConfig= */ null, PERSISTENT));
+                () -> newRule(mFakeSdkSandbox, /* deviceConfig= */ null));
         assertThrows(
                 NullPointerException.class,
-                () -> newRule(/* sdkSandbox= */ null, mFakeDeviceConfig, PERSISTENT));
-        assertThrows(
-                NullPointerException.class,
-                () -> newRule(mFakeSdkSandbox, mFakeDeviceConfig, /* syncMode= */ null));
+                () -> newRule(/* sdkSandbox= */ null, mFakeDeviceConfig));
     }
 
     @Test
-    public final void testConstructor_unsupported() throws Throwable {
-        assertThrows(IllegalArgumentException.class, () -> newRule(mFakeDeviceConfig, UNSUPPORTED));
-    }
-
-    @Test
-    public final void testThrowsIfNotUsedAsClassRule() {
-        var rule = newRule(mFakeDeviceConfig, PERSISTENT);
+    public final void testThrowsIfNotUsedAsClassRule() throws Exception {
+        var rule = newRule(mFakeDeviceConfig);
 
         assertThrows(IllegalStateException.class, () -> runRule(rule, mTest));
     }
 
     @Test
     public final void testWhenGetModeReturnsUnsupported() throws Throwable {
+        var realException = new IllegalStateException("Supported I'm Not!");
         mFakeDeviceConfig.setSyncDisabledMode(UNSUPPORTED);
-        mFakeDeviceConfig.onSetSyncDisabledModeCallback(failWith("Supported I'm Not!"));
-
-        AtomicReference<SyncDisabledModeForTest> modeSetDuringTest = new AtomicReference<>();
-        mTestBody.onEvaluate(() -> modeSetDuringTest.set(mFakeDeviceConfig.getSyncDisabledMode()));
+        mFakeDeviceConfig.onSetSyncDisabledModeCallback(failWith(realException));
         var rule = newRule(mFakeDeviceConfig, PERSISTENT);
+
         runRule(rule);
 
-        expect.withMessage("mode during test").that(modeSetDuringTest.get()).isEqualTo(UNSUPPORTED);
-        expect.withMessage("mode after test")
-                .that(mFakeDeviceConfig.getSyncDisabledMode())
-                .isEqualTo(UNSUPPORTED);
+        mTestBody.assertEvaluated();
     }
 
     @Test
@@ -173,15 +170,15 @@ public abstract class AbstractFlagsPreparerClassRuleTestCase<
 
     @Test
     public final void testWhenSetSyncModeFails() throws Throwable {
-        mFakeDeviceConfig.onSetSyncDisabledModeCallback(failWith("Ready, Set, Throw!"));
-        AtomicReference<SyncDisabledModeForTest> modeSetDuringTest = new AtomicReference<>();
-        mTestBody.onEvaluate(() -> modeSetDuringTest.set(mFakeDeviceConfig.getSyncDisabledMode()));
-
+        var realException = new IllegalStateException("Ready, Set, Throw!");
+        mFakeDeviceConfig.onSetSyncDisabledModeCallback(failWith(realException));
         var rule = newRule(mFakeDeviceConfig, PERSISTENT);
-        runRule(rule);
 
-        // Was not changed at all
-        expect.withMessage("mode during test").that(modeSetDuringTest.get()).isEqualTo(NONE);
+        Throwable thrown = assertThrows(Throwable.class, () -> runRule(rule));
+
+        expect.withMessage("exception").that(thrown).isSameInstanceAs(realException);
+
+        mTestBody.assertNotEvaluated();
         expect.withMessage("mode after test")
                 .that(mFakeDeviceConfig.getSyncDisabledMode())
                 .isEqualTo(NONE);
@@ -220,14 +217,14 @@ public abstract class AbstractFlagsPreparerClassRuleTestCase<
 
     @Test
     public final void testSetSyncDisabledModeForTest_null() throws Throwable {
-        var rule = newRule(mFakeDeviceConfig, PERSISTENT);
+        var rule = newRule(mFakeDeviceConfig);
 
         assertThrows(NullPointerException.class, () -> rule.setSyncDisabledModeForTest(null));
     }
 
     @Test
     public final void testSetSyncDisabledModeForTest_returnsSelf() throws Throwable {
-        var rule = newRule(mFakeDeviceConfig, PERSISTENT);
+        var rule = newRule(mFakeDeviceConfig);
 
         expect.withMessage("return of setSyncDisabledModeForTest()")
                 .that(rule.setSyncDisabledModeForTest(UNTIL_REBOOT))
@@ -252,7 +249,7 @@ public abstract class AbstractFlagsPreparerClassRuleTestCase<
     }
 
     @Test
-    public final void testSetyncDisabledModeForTest_duringTest() throws Throwable {
+    public final void testSetSyncDisabledModeForTest_duringTest() throws Throwable {
         var rule = newRule(mFakeDeviceConfig, PERSISTENT);
         AtomicReference<SyncDisabledModeForTest> modeSetDuringTest = new AtomicReference<>();
         mTestBody.onEvaluate(
@@ -272,8 +269,38 @@ public abstract class AbstractFlagsPreparerClassRuleTestCase<
     }
 
     @Test
+    public final void testSetSyncDisabledModeForTest_duringTest_deviceConfigThrows()
+            throws Throwable {
+        var realException = new IllegalStateException("Set? Why not get?");
+        mFakeDeviceConfig.onSetSyncDisabledModeCallback(failWith(realException));
+        var rule = newRule(mFakeDeviceConfig);
+
+        AtomicReference<Exception> exceptionThrownDuringTest = new AtomicReference<>();
+        mTestBody.onEvaluate(
+                () -> {
+                    try {
+                        rule.setSyncDisabledModeForTest(UNTIL_REBOOT);
+                    } catch (Exception e) {
+                        exceptionThrownDuringTest.set(e);
+                    }
+                });
+
+        runRule(rule);
+
+        Exception thrown = exceptionThrownDuringTest.get();
+        assertWithMessage("exception thrown during test").that(thrown).isNotNull();
+        assertWithMessage("exception thrown during test")
+                .that(thrown)
+                .isInstanceOf(ActionExecutionException.class);
+        assertWithMessage("real exception")
+                .that(thrown)
+                .hasCauseThat()
+                .isSameInstanceAs(realException);
+    }
+
+    @Test
     public final void testSetSdkSandboxState_returnsSelf() throws Throwable {
-        var rule = newRule(mFakeDeviceConfig, PERSISTENT);
+        var rule = newRule(mFakeDeviceConfig);
 
         expect.withMessage("return of setSdkSandboxState()")
                 .that(rule.setSdkSandboxState(/* enabled= */ true))
@@ -282,7 +309,7 @@ public abstract class AbstractFlagsPreparerClassRuleTestCase<
 
     @Test
     public final void testSetSdkSandboxState_beforeTest() throws Throwable {
-        var rule = newRule(mFakeSdkSandbox, mFakeDeviceConfig, PERSISTENT);
+        var rule = newRule(mFakeSdkSandbox, mFakeDeviceConfig);
         AtomicReference<SdkSandbox.State> stateSetDuringTest = new AtomicReference<>();
         mTestBody.onEvaluate(() -> stateSetDuringTest.set(mFakeSdkSandbox.getState()));
 
@@ -299,7 +326,7 @@ public abstract class AbstractFlagsPreparerClassRuleTestCase<
 
     @Test
     public final void testSetSdkSandboxState_duringTest() throws Throwable {
-        var rule = newRule(mFakeSdkSandbox, mFakeDeviceConfig, PERSISTENT);
+        var rule = newRule(mFakeSdkSandbox, mFakeDeviceConfig);
         AtomicReference<SdkSandbox.State> stateSetDuringTest = new AtomicReference<>();
         mTestBody.onEvaluate(
                 () -> {
@@ -317,6 +344,35 @@ public abstract class AbstractFlagsPreparerClassRuleTestCase<
                 .isEqualTo(ENABLED);
     }
 
+    @Test
+    public final void testSetSdkSandboxState_duringTest_sdkSandboxThrows() throws Throwable {
+        var realException = new IllegalStateException("Set? Why not get?");
+        mFakeSdkSandbox.onSetStateThrows(realException);
+        // set it
+        var rule = newRule(mFakeSdkSandbox, mFakeDeviceConfig);
+        AtomicReference<Exception> exceptionThrownDuringTest = new AtomicReference<>();
+        mTestBody.onEvaluate(
+                () -> {
+                    try {
+                        rule.setSdkSandboxState(true);
+                    } catch (Exception e) {
+                        exceptionThrownDuringTest.set(e);
+                    }
+                });
+
+        runRule(rule);
+
+        Exception thrown = exceptionThrownDuringTest.get();
+        assertWithMessage("exception thrown during test").that(thrown).isNotNull();
+        assertWithMessage("exception thrown during test")
+                .that(thrown)
+                .isInstanceOf(ActionExecutionException.class);
+        assertWithMessage("real exception")
+                .that(thrown)
+                .hasCauseThat()
+                .isSameInstanceAs(realException);
+    }
+
     private void runRule(R rule) throws Throwable {
         runRule(rule, mSuite);
     }
@@ -326,8 +382,12 @@ public abstract class AbstractFlagsPreparerClassRuleTestCase<
     }
 
     private Runnable failWith(String message) {
+        return failWith(new IllegalStateException(message));
+    }
+
+    private Runnable failWith(RuntimeException exception) {
         return () -> {
-            throw new IllegalStateException(message);
+            throw exception;
         };
     }
 

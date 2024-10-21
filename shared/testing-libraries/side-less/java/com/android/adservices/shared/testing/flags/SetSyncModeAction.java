@@ -17,6 +17,7 @@ package com.android.adservices.shared.testing.flags;
 
 import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest.DISABLED_SOMEHOW;
 import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest.PERSISTENT;
+import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest.UNSUPPORTED;
 
 import com.android.adservices.shared.testing.Logger;
 import com.android.adservices.shared.testing.Nullable;
@@ -57,6 +58,13 @@ public final class SetSyncModeAction extends DeviceConfigAction {
             mPreviousMode = null;
             return false;
         }
+        if (UNSUPPORTED.equals(mPreviousMode)) {
+            mLog.d(
+                    "%s: not setting sync mode (%s) because device_config doesn't support it",
+                    this, mMode);
+            mPreviousMode = null;
+            return false;
+        }
 
         if (DISABLED_SOMEHOW.equals(mPreviousMode)) {
             // We don't know which mode it is, but most like is PERSISTENT...
@@ -85,20 +93,6 @@ public final class SetSyncModeAction extends DeviceConfigAction {
     @Nullable
     SyncDisabledModeForTest getPreviousMode() {
         return mPreviousMode;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(mMode);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null) return false;
-        if (getClass() != obj.getClass()) return false;
-        SetSyncModeAction other = (SetSyncModeAction) obj;
-        return mMode == other.mMode;
     }
 
     @Override

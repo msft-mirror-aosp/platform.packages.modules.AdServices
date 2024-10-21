@@ -15,6 +15,8 @@
  */
 package com.android.adservices.common;
 
+import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest.PERSISTENT;
+
 import com.android.adservices.shared.testing.HostSideSdkLevelSupportRule;
 import com.android.adservices.shared.testing.HostSideTestCase;
 import com.android.tradefed.testtype.IDeviceTest;
@@ -34,7 +36,7 @@ public abstract class AdServicesHostSideTestCase extends HostSideTestCase {
 
     @ClassRule
     public static final AdServicesHostSideFlagsPreparerClassRule sFlagsPreparer =
-            new AdServicesHostSideFlagsPreparerClassRule();
+            new AdServicesHostSideFlagsPreparerClassRule().setSyncDisabledModeForTest(PERSISTENT);
 
     @Rule(order = 0)
     public final HostSideSdkLevelSupportRule sdkLevel = HostSideSdkLevelSupportRule.forAnyLevel();
