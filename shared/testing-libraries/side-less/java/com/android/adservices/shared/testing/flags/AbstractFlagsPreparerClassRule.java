@@ -16,6 +16,7 @@
 package com.android.adservices.shared.testing.flags;
 
 import com.android.adservices.shared.testing.ActionBasedRule;
+import com.android.adservices.shared.testing.ActionExecutionException;
 import com.android.adservices.shared.testing.Logger.RealLogger;
 import com.android.adservices.shared.testing.SdkSandbox;
 import com.android.adservices.shared.testing.SetSdkSandboxStateAction;
@@ -45,16 +46,11 @@ public abstract class AbstractFlagsPreparerClassRule<R extends AbstractFlagsPrep
     private final SdkSandbox mSdkSandbox;
 
     protected AbstractFlagsPreparerClassRule(
-            RealLogger logger,
-            SdkSandbox sdkSandbox,
-            DeviceConfig deviceConfig,
-            SyncDisabledModeForTest mode) {
+            RealLogger logger, SdkSandbox sdkSandbox, DeviceConfig deviceConfig) {
         super(logger);
 
         mDeviceConfig = Objects.requireNonNull(deviceConfig, "deviceConfig cannot be null");
         mSdkSandbox = Objects.requireNonNull(sdkSandbox, "sdkSandbox cannot be null");
-
-        addAction(new SetSyncModeAction(mLog, mDeviceConfig, mode));
     }
 
     @Override
@@ -114,8 +110,10 @@ public abstract class AbstractFlagsPreparerClassRule<R extends AbstractFlagsPrep
      *
      * <p>If the test is running it's set right away and not reset at the end; if the test is not
      * running yet, it's set after the test starts and reset after it finishes.
+     *
+     * @throws ActionExecutionException if set right away and fails.
      */
-    public final R setSyncDisabledModeForTest(SyncDisabledModeForTest mode) throws Exception {
+    public final R setSyncDisabledModeForTest(SyncDisabledModeForTest mode) {
         mLog.d("setSyncDisabledModeForTest(%s)", mode);
         Objects.requireNonNull(mode, "mode cannot be null");
         executeOrCache(new SetSyncModeAction(mLog, mDeviceConfig, mode));
@@ -127,6 +125,8 @@ public abstract class AbstractFlagsPreparerClassRule<R extends AbstractFlagsPrep
      *
      * <p>If the test is running it's set right away and not reset at the end; if the test is not
      * running yet, it's set after the test starts and reset after it finishes.
+     *
+     * @throws ActionExecutionException if set right away and fails.
      */
     public final R setSdkSandboxState(boolean enabled) throws Exception {
         mLog.d("setSdkSandboxState(%b)", enabled);

@@ -140,7 +140,20 @@ public final class ActionBasedRuleTest extends SharedSidelessTestCase {
     }
 
     @Test
-    public void testExecuteOrCache_durings_sameAction() throws Throwable {
+    public void testExecuteOrCache_duringTest_actionThrows() throws Throwable {
+        mFakeAction1.onExecuteThrows(mException1);
+        mTest.onEvaluate(() -> mRule.executeOrCache(mFakeAction1));
+
+        var thrown = assertThrows(ActionExecutionException.class, () -> runRule());
+
+        expect.withMessage("exception cause")
+                .that(thrown)
+                .hasCauseThat()
+                .isSameInstanceAs(mException1);
+    }
+
+    @Test
+    public void testExecuteOrCache_duringTest_sameAction() throws Throwable {
         mTest.onEvaluate(
                 () -> {
                     mRule.executeOrCache(mFakeAction1);
