@@ -85,6 +85,7 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adid.AdIdCacheManager;
 import com.android.adservices.service.adid.AdIdWorker;
@@ -122,12 +123,14 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
 
     private final AdServicesLogger mAdServicesLogger;
     private final Flags mFlags;
+    private final DebugFlags mDebugFlags;
     private final AdIdWorker mAdIdWorker;
     private final Clock mClock;
 
     public AdServicesCommonServiceImpl(
             Context context,
             Flags flags,
+            DebugFlags debugFlags,
             UxEngine uxEngine,
             UxStatesManager uxStatesManager,
             AdIdWorker adIdWorker,
@@ -135,6 +138,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
             @NonNull Clock clock) {
         mContext = context;
         mFlags = flags;
+        mDebugFlags = debugFlags;
         mUxEngine = uxEngine;
         mUxStatesManager = uxStatesManager;
         mAdIdWorker = adIdWorker;
@@ -298,7 +302,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
         ConsentManager consentManager = ConsentManager.getInstance();
         return (!consentManager.wasGaUxNotificationDisplayed()
                         && !consentManager.wasNotificationDisplayed())
-                || mFlags.getConsentNotificationDebugMode();
+                || mDebugFlags.getConsentNotificationDebugMode();
     }
 
     /** Check ROW device and see if it fit reconsent */
