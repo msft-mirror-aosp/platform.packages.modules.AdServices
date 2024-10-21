@@ -27,6 +27,9 @@ import org.junit.Rule;
 /**
  * Base class for host-side tests, it contains just the bare minimum setup needed by all tests (like
  * implementing {@link IDeviceTest}).
+ *
+ * <p><b>Note: </b> when using it, you must also add the {@link
+ * com.android.adservices.common.AdServicesHostTestsTargetPreparer} in the {@code AndroidText.xml}.
  */
 public abstract class AdServicesHostSideTestCase extends HostSideTestCase {
 
