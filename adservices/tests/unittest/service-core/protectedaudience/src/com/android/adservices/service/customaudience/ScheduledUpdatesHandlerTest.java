@@ -107,6 +107,7 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpUtil;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.ScheduledCustomAudienceUpdateBackgroundJobStats;
 import com.android.adservices.service.stats.ScheduledCustomAudienceUpdatePerformedFailureStats;
 
 import com.google.common.collect.ImmutableList;
@@ -179,6 +180,10 @@ public final class ScheduledUpdatesHandlerTest {
     @Captor
     ArgumentCaptor<ScheduledCustomAudienceUpdatePerformedFailureStats>
             mScheduleCAFailureStatsCaptor;
+
+    @Captor
+    ArgumentCaptor<ScheduledCustomAudienceUpdateBackgroundJobStats>
+            mScheduleCABackgroundJobStatsCaptor;
 
     private boolean mFledgeFrequencyCapFilteringEnabled;
     private boolean mFledgeAppInstallFilteringEnabled;
@@ -1820,7 +1825,6 @@ public final class ScheduledUpdatesHandlerTest {
         verify(mCustomAudienceDaoMock)
                 .deleteScheduledCustomAudienceUpdatesCreatedBeforeTime(
                         invocationTime.minus(STALE_DELAYED_UPDATE_AGE));
-
     }
 
     @Test
@@ -2003,6 +2007,225 @@ public final class ScheduledUpdatesHandlerTest {
         assertWithMessage("Failure type")
                 .that(loggedStats.getFailureType())
                 .isEqualTo(SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_TOO_MANY_REQUESTS);
+    }
+
+    @Test
+    public void
+            testPerformScheduledUpdates_oneSuccessfulOneUnsuccessfulUpdate_logsBGJobStatsCorrectly()
+                    throws Exception {
+        List<DBPartialCustomAudience> partialCustomAudienceList =
+                List.of(DB_PARTIAL_CUSTOM_AUDIENCE_1, DB_PARTIAL_CUSTOM_AUDIENCE_2);
+        String invalidUrl = "/invalid";
+        String correctUrl = "/correct";
+        mHandler =
+                new ScheduledUpdatesHandler(
+                        mCustomAudienceDao,
+                        mAdServicesHttpsClient,
+                        mFlags,
+                        Clock.systemUTC(),
+                        AdServicesExecutors.getBackgroundExecutor(),
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
+                        mAdRenderIdValidator,
+                        AD_DATA_CONVERSION_STRATEGY,
+                        mCustomAudienceImplMock,
+                        mCustomAudienceQuantityCheckerMock,
+                        new AdditionalScheduleRequestsDisabledStrategy(mCustomAudienceDao),
+                        mAdServicesLoggerMock);
+
+        String responsePayload =
+                createJsonResponsePayload(
+                                UPDATE.getBuyer(),
+                                UPDATE.getOwner(),
+                                partialCustomAudienceList.stream()
+                                        .map(ca -> ca.getName())
+                                        .collect(Collectors.toList()),
+                                List.of(LEAVE_CA_1, LEAVE_CA_2),
+                                true,
+                                /* sellerConfigurationEnabled= */ false)
+                        .toString();
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        request -> {
+                            if (request.getPath().equals(invalidUrl)) {
+                                return new MockResponse().setResponseCode(429);
+                            }
+                            if (request.getPath().equals(correctUrl)) {
+                                return new MockResponse().setBody(responsePayload);
+                            }
+                            return new MockResponse().setResponseCode(404);
+                        });
+
+        DBScheduledCustomAudienceUpdate updateWithCorrectUri =
+                DBScheduledCustomAudienceUpdate.builder()
+                        .setUpdateId(UPDATE_ID)
+                        .setUpdateUri(Uri.parse(server.getUrl(correctUrl).toString()))
+                        .setCreationTime(CREATION_TIME)
+                        .setScheduledTime(SCHEDULED_TIME)
+                        .setOwner(OWNER)
+                        .setBuyer(BUYER)
+                        .build();
+        DBScheduledCustomAudienceUpdate updateWithInvalidUri =
+                DBScheduledCustomAudienceUpdate.builder()
+                        .setUpdateId(UPDATE_ID + 1)
+                        .setUpdateUri(Uri.parse(server.getUrl(invalidUrl).toString()))
+                        .setCreationTime(CREATION_TIME)
+                        .setScheduledTime(SCHEDULED_TIME)
+                        .setOwner(OWNER)
+                        .setBuyer(BUYER)
+                        .build();
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(updateWithCorrectUri);
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(updateWithInvalidUri);
+
+        Void ignored =
+                mHandler.performScheduledUpdates(UPDATE.getScheduledTime().plusSeconds(1000))
+                        .get(10, TimeUnit.SECONDS);
+
+        verify(mAdServicesLoggerMock)
+                .logScheduledCustomAudienceUpdateBackgroundJobStats(
+                        mScheduleCABackgroundJobStatsCaptor.capture());
+        ScheduledCustomAudienceUpdateBackgroundJobStats loggedStats =
+                mScheduleCABackgroundJobStatsCaptor.getValue();
+
+        assertWithMessage("Number of updates found")
+                .that(loggedStats.getNumberOfUpdatesFound())
+                .isEqualTo(2);
+        assertWithMessage("Number of successful updates")
+                .that(loggedStats.getNumberOfSuccessfulUpdates())
+                .isEqualTo(1);
+    }
+
+    @Test
+    public void testPerformScheduledUpdates_withMultipleSuccessfulUpdates_logsBGJobStatsCorrectly()
+            throws Exception {
+        String correctUrl = "/correct";
+        String correctUrl2 = "/correct2";
+        mHandler =
+                new ScheduledUpdatesHandler(
+                        mCustomAudienceDao,
+                        mAdServicesHttpsClient,
+                        mFlags,
+                        Clock.systemUTC(),
+                        AdServicesExecutors.getBackgroundExecutor(),
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
+                        mAdRenderIdValidator,
+                        AD_DATA_CONVERSION_STRATEGY,
+                        mCustomAudienceImplMock,
+                        mCustomAudienceQuantityCheckerMock,
+                        new AdditionalScheduleRequestsDisabledStrategy(mCustomAudienceDao),
+                        mAdServicesLoggerMock);
+
+        String responsePayload =
+                createJsonResponsePayload(
+                                UPDATE.getBuyer(),
+                                UPDATE.getOwner(),
+                                List.of(DB_PARTIAL_CUSTOM_AUDIENCE_1.getName()),
+                                List.of(LEAVE_CA_1, LEAVE_CA_2),
+                                true,
+                                /* sellerConfigurationEnabled= */ false)
+                        .toString();
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        request -> {
+                            if (request.getPath().equals(correctUrl)) {
+                                return new MockResponse().setBody(responsePayload);
+                            }
+                            if (request.getPath().equals(correctUrl2)) {
+                                return new MockResponse().setBody(responsePayload);
+                            }
+                            return new MockResponse().setResponseCode(404);
+                        });
+
+        DBScheduledCustomAudienceUpdate updateWithCorrectUri =
+                DBScheduledCustomAudienceUpdate.builder()
+                        .setUpdateId(UPDATE_ID)
+                        .setUpdateUri(Uri.parse(server.getUrl(correctUrl).toString()))
+                        .setCreationTime(CREATION_TIME)
+                        .setScheduledTime(SCHEDULED_TIME)
+                        .setOwner(OWNER)
+                        .setBuyer(BUYER)
+                        .build();
+        DBScheduledCustomAudienceUpdate updateWithInvalidUri =
+                DBScheduledCustomAudienceUpdate.builder()
+                        .setUpdateId(UPDATE_ID + 1)
+                        .setUpdateUri(Uri.parse(server.getUrl(correctUrl2).toString()))
+                        .setCreationTime(CREATION_TIME)
+                        .setScheduledTime(SCHEDULED_TIME)
+                        .setOwner(OWNER)
+                        .setBuyer(BUYER)
+                        .build();
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(updateWithCorrectUri);
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(updateWithInvalidUri);
+
+        Void ignored =
+                mHandler.performScheduledUpdates(UPDATE.getScheduledTime().plusSeconds(1000))
+                        .get(10, TimeUnit.SECONDS);
+
+        verify(mAdServicesLoggerMock)
+                .logScheduledCustomAudienceUpdateBackgroundJobStats(
+                        mScheduleCABackgroundJobStatsCaptor.capture());
+        ScheduledCustomAudienceUpdateBackgroundJobStats loggedStats =
+                mScheduleCABackgroundJobStatsCaptor.getValue();
+
+        assertWithMessage("Number of updates found")
+                .that(loggedStats.getNumberOfUpdatesFound())
+                .isEqualTo(2);
+        assertWithMessage("Number of successful updates")
+                .that(loggedStats.getNumberOfSuccessfulUpdates())
+                .isEqualTo(2);
+    }
+
+    @Test
+    public void testPerformScheduledUpdates_httpError_logsBackgroundJobStatsCorrectly()
+            throws Exception {
+        mHandler =
+                new ScheduledUpdatesHandler(
+                        mCustomAudienceDao,
+                        mAdServicesHttpsClient,
+                        mFlags,
+                        Clock.systemUTC(),
+                        AdServicesExecutors.getBackgroundExecutor(),
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
+                        mAdRenderIdValidator,
+                        AD_DATA_CONVERSION_STRATEGY,
+                        mCustomAudienceImplMock,
+                        mCustomAudienceQuantityCheckerMock,
+                        new AdditionalScheduleRequestsDisabledStrategy(mCustomAudienceDao),
+                        mAdServicesLoggerMock);
+
+        MockResponse mockResponse = new MockResponse().setResponseCode(429);
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(ImmutableList.of(mockResponse));
+        URL updateUri = server.getUrl("/update");
+        DBScheduledCustomAudienceUpdate updateWithCorrectUri =
+                DBScheduledCustomAudienceUpdate.builder()
+                        .setUpdateId(UPDATE_ID)
+                        .setUpdateUri(Uri.parse(updateUri.toString()))
+                        .setCreationTime(CREATION_TIME)
+                        .setScheduledTime(SCHEDULED_TIME)
+                        .setOwner(OWNER)
+                        .setBuyer(BUYER)
+                        .build();
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(updateWithCorrectUri);
+
+        Void ignored =
+                mHandler.performScheduledUpdates(UPDATE.getScheduledTime().plusSeconds(1000))
+                        .get(10, TimeUnit.SECONDS);
+
+        verify(mAdServicesLoggerMock)
+                .logScheduledCustomAudienceUpdateBackgroundJobStats(
+                        mScheduleCABackgroundJobStatsCaptor.capture());
+        ScheduledCustomAudienceUpdateBackgroundJobStats loggedStats =
+                mScheduleCABackgroundJobStatsCaptor.getValue();
+
+        assertWithMessage("Number of updates found")
+                .that(loggedStats.getNumberOfUpdatesFound())
+                .isEqualTo(1);
+        assertWithMessage("Number of successful updates")
+                .that(loggedStats.getNumberOfSuccessfulUpdates())
+                .isEqualTo(0);
     }
 
     @Test

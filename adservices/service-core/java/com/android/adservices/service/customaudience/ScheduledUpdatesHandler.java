@@ -78,6 +78,7 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
+import com.android.adservices.service.stats.ScheduledCustomAudienceUpdateBackgroundJobStats;
 import com.android.adservices.service.stats.ScheduledCustomAudienceUpdatePerformedFailureStats;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 
@@ -101,6 +102,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 public final class ScheduledUpdatesHandler {
@@ -285,6 +287,7 @@ public final class ScheduledUpdatesHandler {
     private FluentFuture<Void> handleUpdates(
             List<DBScheduledCustomAudienceUpdateRequest> scheduledCustomAudienceUpdateRequests) {
         List<ListenableFuture<Void>> handledUpdates = new ArrayList<>();
+        AtomicInteger numberOfSuccessfulUpdates = new AtomicInteger(0);
 
         ExecutionSequencer sequencer = ExecutionSequencer.create();
 
@@ -296,12 +299,22 @@ public final class ScheduledUpdatesHandler {
                                     handleSingleUpdate(
                                             updateRequest.getUpdate(),
                                             updateRequest.getPartialCustomAudienceList(),
-                                            updateRequest.getCustomAudienceToLeaveList()),
+                                            updateRequest.getCustomAudienceToLeaveList(),
+                                            numberOfSuccessfulUpdates),
                             mBackgroundExecutor));
         }
         return FluentFuture.from(Futures.successfulAsList(handledUpdates))
                 .transform(
                         ignored -> {
+                            ScheduledCustomAudienceUpdateBackgroundJobStats stats =
+                                    ScheduledCustomAudienceUpdateBackgroundJobStats.builder()
+                                            .setNumberOfUpdatesFound(
+                                                    scheduledCustomAudienceUpdateRequests.size())
+                                            .setNumberOfSuccessfulUpdates(
+                                                    numberOfSuccessfulUpdates.intValue())
+                                            .build();
+                            mAdServicesLogger.logScheduledCustomAudienceUpdateBackgroundJobStats(
+                                    stats);
                             sendBroadcastIntentIfEnabled();
                             return null;
                         },
@@ -311,7 +324,8 @@ public final class ScheduledUpdatesHandler {
     private FluentFuture<Void> handleSingleUpdate(
             @NonNull DBScheduledCustomAudienceUpdate update,
             List<DBPartialCustomAudience> customAudienceOverrides,
-            List<DBCustomAudienceToLeave> customAudienceToLeaveList) {
+            List<DBCustomAudienceToLeave> customAudienceToLeaveList,
+            AtomicInteger numberOfSuccessfulUpdates) {
         List<CustomAudienceBlob> validatedPartialCustomAudienceBlobs = new ArrayList<>();
 
         for (DBPartialCustomAudience partialCustomAudience : customAudienceOverrides) {
@@ -340,7 +354,13 @@ public final class ScheduledUpdatesHandler {
         sLogger.v(
                 "Override blobs validation complete: %s",
                 validatedPartialCustomAudienceBlobs.size());
-        return fetchUpdate(update, validatedPartialCustomAudienceBlobs, customAudienceToLeaveList);
+        return fetchUpdate(update, validatedPartialCustomAudienceBlobs, customAudienceToLeaveList)
+                .transformAsync(
+                        ignored -> {
+                            numberOfSuccessfulUpdates.getAndIncrement();
+                            return immediateVoidFuture();
+                        },
+                        mLightWeightExecutor);
     }
 
     private FluentFuture<Void> fetchUpdate(
@@ -394,6 +414,7 @@ public final class ScheduledUpdatesHandler {
                 .catchingAsync(
                         Throwable.class,
                         e -> {
+                            sLogger.e(e, "Error while fetching scheduled CA update.");
                             logHttpError(e);
                             return immediateFailedFuture(e);
                         },
@@ -453,7 +474,7 @@ public final class ScheduledUpdatesHandler {
                                 () ->
                                         mCustomAudienceDao.deleteScheduledCustomAudienceUpdate(
                                                 handledUpdate)))
-                .transformAsync(ignored -> null, mLightWeightExecutor);
+                .transformAsync(ignored -> immediateVoidFuture(), mLightWeightExecutor);
     }
 
     private FluentFuture<Void> joinCustomAudiences(
