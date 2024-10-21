@@ -75,7 +75,6 @@
           "attribution_destination": "android-app://example.2d1.test",
           "reporting_origin": "https://www.ad-tech1.test",
           "scheduled_report_time": "800000600",
-          "source_registration_time": "0",
           "version": "0.1"
         },
         "aggregation_coordinator_origin": "https://coordinator.test",

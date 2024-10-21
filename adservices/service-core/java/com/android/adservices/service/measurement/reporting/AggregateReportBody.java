@@ -135,8 +135,10 @@ public class AggregateReportBody {
         sharedInfoJson.put(SharedInfoKeys.REPORTING_ORIGIN, mReportingOrigin);
         sharedInfoJson.put(SharedInfoKeys.SCHEDULED_REPORT_TIME, mScheduledReportTime);
 
-        String sourceRegistrationTime = mSourceRegistrationTime;
-        sharedInfoJson.put(SharedInfoKeys.SOURCE_REGISTRATION_TIME, sourceRegistrationTime);
+        if (mSourceRegistrationTime != null) {
+            sharedInfoJson.put(SharedInfoKeys.SOURCE_REGISTRATION_TIME, mSourceRegistrationTime);
+        }
+
         sharedInfoJson.put(SharedInfoKeys.API_VERSION, mApiVersion);
 
         if (mDebugMode != null) {

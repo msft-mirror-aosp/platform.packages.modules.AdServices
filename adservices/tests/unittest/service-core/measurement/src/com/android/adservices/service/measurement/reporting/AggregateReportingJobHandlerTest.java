@@ -18,6 +18,8 @@ package com.android.adservices.service.measurement.reporting;
 
 import static com.android.adservices.service.measurement.util.Time.roundDownToDay;
 
+import static junit.framework.Assert.assertFalse;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -1593,7 +1595,7 @@ public class AggregateReportingJobHandlerTest {
     }
 
     @Test
-    public void createReportJsonPayload_normalAggregateReport_OverridesNullSRTWithZero()
+    public void createReportJsonPayload_normalAggregateReport_doesNotIncludeSRTIfNotSpecified()
             throws JSONException {
         String debugCleartextPayload =
                 "{\"operation\":\"histogram\","
@@ -1622,9 +1624,7 @@ public class AggregateReportingJobHandlerTest {
                 new JSONObject(
                         reportJson.getString(AggregateReportBody.PayloadBodyKeys.SHARED_INFO));
 
-        assertEquals(
-                AggregateReportingJobHandler.EXCLUDED_SOURCE_REGISTRATION_TIME,
-                sharedInfo.getString(AggregateReportBody.SharedInfoKeys.SOURCE_REGISTRATION_TIME));
+        assertFalse(sharedInfo.has(AggregateReportBody.SharedInfoKeys.SOURCE_REGISTRATION_TIME));
     }
 
     @Test

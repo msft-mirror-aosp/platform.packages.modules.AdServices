@@ -90,9 +90,6 @@ public class AggregateReportingJobHandler {
     public static final String AGGREGATE_DEBUG_REPORT_URI_PATH =
             ".well-known/attribution-reporting/debug/report-aggregate-debug";
 
-    /** "0" is the convention for indicating an excluded source registration time. */
-    public static final String EXCLUDED_SOURCE_REGISTRATION_TIME = "0";
-
     private final DatastoreManager mDatastoreManager;
     private final AggregateEncryptionKeyManager mAggregateEncryptionKeyManager;
     private boolean mIsDebugInstance;
@@ -498,12 +495,7 @@ public class AggregateReportingJobHandler {
 
     private String getSourceRegistrationTimeStr(AggregateReport aggregateReport) {
         if (aggregateReport.getSourceRegistrationTime() == null) {
-            if (AggregateDebugReportApi.AGGREGATE_DEBUG_REPORT_API.equals(
-                    aggregateReport.getApi())) {
-                return null;
-            }
-
-            return EXCLUDED_SOURCE_REGISTRATION_TIME;
+            return null;
         }
 
         return String.valueOf(
