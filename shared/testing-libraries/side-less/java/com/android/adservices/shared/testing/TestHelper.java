@@ -31,46 +31,68 @@ public final class TestHelper {
     @Nullable
     public static <T extends Annotation> T getAnnotation(
             Description test, Class<T> annotationClass) {
-        T annotation =
-                Objects.requireNonNull(test, "test cannot be null")
-                        .getAnnotation(
-                                Objects.requireNonNull(
-                                        annotationClass, "annotationClass cannot be null"));
+        Objects.requireNonNull(test, "test (Description) cannot be null");
+        Objects.requireNonNull(annotationClass, "annotationClass cannot be null");
+
+        T annotation = test.getAnnotation(annotationClass);
         if (annotation != null) {
             if (VERBOSE) {
                 sLogger.v(
-                        "getAnnotation(%s): returning annotation (%s) from test itself (%s)",
-                        test, annotation, getTestName(test));
+                        "getAnnotation(%s, %s): returning annotation (%s) from test itself (%s)",
+                        test, annotationClass, annotation, getTestName(test));
             }
             return annotation;
         }
         Class<?> testClass = test.getTestClass();
+        annotation = getAnnotationInternal(testClass, annotationClass);
+        if (VERBOSE) {
+            sLogger.v("getAnnotation(%s, %s): returning %s", test, annotationClass, annotation);
+        }
+        return annotation;
+    }
+
+    // TODO(b/315339283): use in other places
+    /** Gets the given annotation from the a test class or its ancestors. */
+    @Nullable
+    public static <T extends Annotation> T getAnnotation(
+            Class<?> testClass, Class<T> annotationClass) {
+        Objects.requireNonNull(testClass, "test class cannot be null");
+        Objects.requireNonNull(annotationClass, "annotationClass cannot be null");
+        T annotation = getAnnotationInternal(testClass, annotationClass);
+        if (VERBOSE) {
+            sLogger.v(
+                    "getAnnotation(%s, %s): returning %s", testClass, annotationClass, annotation);
+        }
+        return annotation;
+    }
+
+    @Nullable
+    private static <T extends Annotation> T getAnnotationInternal(
+            Class<?> testClass, Class<T> annotationClass) {
+        T annotation = null;
         while (testClass != null) {
             annotation = testClass.getAnnotation(annotationClass);
             if (annotation != null) {
                 if (VERBOSE) {
                     sLogger.v(
-                            "getAnnotation(%s): returning annotation (%s) from test class (%s)",
-                            test, annotation, testClass.getSimpleName());
+                            "getAnnotationInternal(%s): returning annotation (%s) from (%s)",
+                            annotationClass.getSimpleName(), annotation, testClass);
                 }
                 return annotation;
             }
             if (VERBOSE) {
                 sLogger.v(
-                        "getAnnotation(%s): not found on class %s, will try superclass (%s)",
-                        test, testClass, testClass.getSuperclass());
+                        "getAnnotationInternal(%s): not found on class %s, will try superclass"
+                                + " (%s)",
+                        annotationClass.getSimpleName(), testClass, testClass.getSuperclass());
             }
             testClass = testClass.getSuperclass();
-        }
-        if (VERBOSE) {
-            sLogger.v("getAnnotation(%s): returning null", test);
         }
         return null;
     }
 
     // TODO(b/315339283): use in other places
-
-    /** Gests a user-friendly name for the test. */
+    /** Gets a user-friendly name for the test. */
     public static String getTestName(Description test) {
         StringBuilder testName = new StringBuilder(test.getTestClass().getSimpleName());
         String methodName = test.getMethodName();

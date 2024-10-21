@@ -119,8 +119,8 @@ public abstract class ActionBasedRule<R extends ActionBasedRule<R>> extends Abst
      * #addAction(Action)}) - typically by scanning the test annotations.
      */
     @Nullable
-    protected abstract List<Action> createActionsForTest(Statement base, Description description)
-            throws Throwable;
+    protected abstract ImmutableList<Action> createActionsForTest(
+            Statement base, Description description) throws Throwable;
 
     /** Gets the action that will be executed during the test. */
     @VisibleForTesting

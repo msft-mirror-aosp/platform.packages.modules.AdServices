@@ -25,6 +25,7 @@ import static org.junit.Assert.assertThrows;
 import com.android.adservices.shared.meta_testing.FakeDeviceConfig;
 import com.android.adservices.shared.meta_testing.SharedSidelessTestCase;
 import com.android.adservices.shared.testing.EqualsTester;
+import com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest;
 
 import org.junit.Test;
 
@@ -54,6 +55,16 @@ public final class SetSyncModeActionTest extends SharedSidelessTestCase {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new SetSyncModeAction(mFakeLogger, mFakeDeviceConfig, DISABLED_SOMEHOW));
+    }
+
+    @Test
+    public void testGetMode() {
+        for (SyncDisabledModeForTest mode : SyncDisabledModeForTest.values()) {
+            if (mode.isSettable()) {
+                var action = new SetSyncModeAction(mFakeLogger, mFakeDeviceConfig, mode);
+                expect.withMessage("getMode()").that(action.getMode()).isEqualTo(mode);
+            }
+        }
     }
 
     @Test
