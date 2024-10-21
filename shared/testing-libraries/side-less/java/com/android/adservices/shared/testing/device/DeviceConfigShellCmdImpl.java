@@ -15,6 +15,11 @@
  */
 package com.android.adservices.shared.testing.device;
 
+import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest.DISABLED_SOMEHOW;
+import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest.NONE;
+import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest.PERSISTENT;
+import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest.UNTIL_REBOOT;
+
 import com.android.adservices.shared.testing.AndroidSdk.Level;
 import com.android.adservices.shared.testing.Logger;
 import com.android.adservices.shared.testing.Logger.RealLogger;
@@ -81,15 +86,27 @@ public final class DeviceConfigShellCmdImpl implements DeviceConfig {
         String result = null;
         try {
             result = output.getOut();
-            return DeviceConfig.SyncDisabledModeForTest.valueOf(result.toUpperCase(Locale.ENGLISH));
         } catch (Exception e) {
             throw new InvalidShellCommandResultException(input, output);
+        }
+        switch (result) {
+            case "none":
+            case "false":
+                return NONE;
+            case "true":
+                return DISABLED_SOMEHOW;
+            case "persistent":
+                return PERSISTENT;
+            case "until_reboot":
+                return UNTIL_REBOOT;
+            default:
+                throw new InvalidShellCommandResultException(input, output);
         }
     }
 
     @VisibleForTesting
     static String asDeviceConfigArg(SyncDisabledModeForTest mode) {
-        if (mode.isValid()) {
+        if (mode.isSettable()) {
             return mode.name().toLowerCase(Locale.ENGLISH);
         }
         throw new IllegalArgumentException("invalid mode: " + mode);
