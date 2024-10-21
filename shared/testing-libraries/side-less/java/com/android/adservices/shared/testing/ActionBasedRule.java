@@ -45,7 +45,7 @@ public abstract class ActionBasedRule<R extends ActionBasedRule<R>> extends Abst
      * <p>This method is mostly useful to add actions based on annotations present in the test.
      *
      * @return self
-     * @throws IllegalStateException if the test already started.
+     * @throws IllegalStateException if the test already started or if the action was already added.
      */
     protected R addAction(Action action) {
         Objects.requireNonNull(action, "action cannot be null");
@@ -63,7 +63,7 @@ public abstract class ActionBasedRule<R extends ActionBasedRule<R>> extends Abst
         if (mActions.contains(action)) {
             // NOTE: in theory it should be fine to add duplicated actions, as it would be up to the
             // action itself to throw if executed twice. But it's probably better to fail earlier...
-            throw new IllegalArgumentException("action already added: " + action);
+            throw new IllegalStateException("action already added: " + action);
         }
         mLog.d("Caching %s as test is not running yet", action);
         mActions.add(action);
@@ -106,10 +106,6 @@ public abstract class ActionBasedRule<R extends ActionBasedRule<R>> extends Abst
     @Override
     protected final void evaluate(Statement base, Description description) throws Throwable {
         resetActions();
-        // TODO(b/297085722): preExecuteActions() is currently used to let subclasses scan
-        // annotations, but in reality we'll need a custom method for that specifically purpose,
-        // as the rule could be used as a static class rule and then annotations from each test
-        // would be added, but not removed...
         preExecuteActions(base, description);
         executeActions();
         mIsRunning = true;

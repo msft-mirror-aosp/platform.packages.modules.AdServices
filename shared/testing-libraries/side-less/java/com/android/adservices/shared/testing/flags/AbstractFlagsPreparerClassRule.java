@@ -17,7 +17,6 @@ package com.android.adservices.shared.testing.flags;
 
 import com.android.adservices.shared.testing.ActionBasedRule;
 import com.android.adservices.shared.testing.Logger.RealLogger;
-import com.android.adservices.shared.testing.SafeAction;
 import com.android.adservices.shared.testing.SdkSandbox;
 import com.android.adservices.shared.testing.SetSdkSandboxStateAction;
 import com.android.adservices.shared.testing.TestHelper;
@@ -55,35 +54,48 @@ public abstract class AbstractFlagsPreparerClassRule<R extends AbstractFlagsPrep
         mDeviceConfig = Objects.requireNonNull(deviceConfig, "deviceConfig cannot be null");
         mSdkSandbox = Objects.requireNonNull(sdkSandbox, "sdkSandbox cannot be null");
 
-        // TODO(b/297085722): remove SafeAction wrapper once tests don't run on R anymore
-        addAction(new SafeAction(mLog, new SetSyncModeAction(mLog, mDeviceConfig, mode)));
+        addAction(new SetSyncModeAction(mLog, mDeviceConfig, mode));
     }
 
     @Override
     protected final void preExecuteActions(Statement base, Description description) {
         TestHelper.throwIfTest(description);
 
-        // TODO(b/362977985): add a new method on TestHelper (or a new class) to convert annotations
-        // into Actions
+        // TODO(b/362977985, 297085722): add a new method on TestHelper, ActionBasedRule, or a new
+        // class to convert annotations into Actions. In fact preExecuteActions() is currently used
+        // to let subclasses scan annotations, but in reality we'll need a custom method for that
+        // specifically purpose, as the rule could be used as a static class rule and then
+        // annotations from each test would be added, but not removed...
+
         var setSdkSandboxStateEnabledAnnotation =
                 TestHelper.getAnnotation(description, SetSdkSandboxStateEnabled.class);
         if (setSdkSandboxStateEnabledAnnotation != null) {
             mLog.d("Found %s", setSdkSandboxStateEnabledAnnotation);
-            addAction(
-                    new SetSdkSandboxStateAction(
-                            mLog,
-                            mSdkSandbox,
-                            setSdkSandboxStateEnabledAnnotation.value()
-                                    ? SdkSandbox.State.ENABLED
-                                    : SdkSandbox.State.DISABLED));
+            try {
+                addAction(
+                        new SetSdkSandboxStateAction(
+                                mLog,
+                                mSdkSandbox,
+                                setSdkSandboxStateEnabledAnnotation.value()
+                                        ? SdkSandbox.State.ENABLED
+                                        : SdkSandbox.State.DISABLED));
+            } catch (IllegalStateException e) {
+                // No need to unit test this scenario as it will be removed / refactored
+                mLog.w("Failed to add action from annotation: %s", e);
+            }
         }
         var setSyncDisabledModeForTestAnnotation =
                 TestHelper.getAnnotation(description, SetSyncDisabledModeForTest.class);
         if (setSyncDisabledModeForTestAnnotation != null) {
             mLog.d("Found %s", setSyncDisabledModeForTestAnnotation);
+            try {
             addAction(
                     new SetSyncModeAction(
                             mLog, mDeviceConfig, setSyncDisabledModeForTestAnnotation.value()));
+            } catch (IllegalStateException e) {
+                // No need to unit test this scenario as it will be removed / refactored
+                mLog.w("Failed to add action from annotation: %s", e);
+            }
         }
     }
 

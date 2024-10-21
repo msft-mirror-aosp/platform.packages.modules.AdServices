@@ -173,18 +173,16 @@ public abstract class AbstractFlagsPreparerClassRuleTestCase<
 
     @Test
     public final void testWhenSetSyncModeFails() throws Throwable {
-        mFakeDeviceConfig.onSetSyncDisabledModeCallback(failWith("Ready, Set, Throw!"));
+        RuntimeException deviceConfigFailure = new RuntimeException("Ready, Set, Throw!");
+        mFakeDeviceConfig.onSetSyncDisabledModeCallback(failWith(deviceConfigFailure));
         AtomicReference<SyncDisabledModeForTest> modeSetDuringTest = new AtomicReference<>();
         mTestBody.onEvaluate(() -> modeSetDuringTest.set(mFakeDeviceConfig.getSyncDisabledMode()));
 
         var rule = newRule(mFakeDeviceConfig, PERSISTENT);
-        runRule(rule);
+        Throwable thrown = assertThrows(Throwable.class, () -> runRule(rule));
 
-        // Was not changed at all
-        expect.withMessage("mode during test").that(modeSetDuringTest.get()).isEqualTo(NONE);
-        expect.withMessage("mode after test")
-                .that(mFakeDeviceConfig.getSyncDisabledMode())
-                .isEqualTo(NONE);
+        expect.withMessage("thrown exception ").that(thrown).isSameInstanceAs(deviceConfigFailure);
+        mTestBody.assertNotEvaluated();
     }
 
     @Test
@@ -326,8 +324,12 @@ public abstract class AbstractFlagsPreparerClassRuleTestCase<
     }
 
     private Runnable failWith(String message) {
+        return failWith(new IllegalStateException(message));
+    }
+
+    private Runnable failWith(RuntimeException exception) {
         return () -> {
-            throw new IllegalStateException(message);
+            throw exception;
         };
     }
 
