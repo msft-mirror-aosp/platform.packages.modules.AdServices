@@ -972,6 +972,60 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
         verify(mStatsdLoggerMock).logTopicsScheduleEpochJobSettingReportedStats(eq(stats));
     }
 
+    @Test
+    public void testLogScheduledCustomAudienceUpdateScheduleAttemptedStats() {
+        ScheduledCustomAudienceUpdateScheduleAttemptedStats stats =
+                ScheduledCustomAudienceUpdateScheduleAttemptedStats.builder()
+                        .setExistingUpdateStatus(1)
+                        .setMinimumDelayInMinutes(1)
+                        .setNumberOfLeaveCustomAudiences(1)
+                        .setNumberOfPartialCustomAudiences(1)
+                        .setInitialHop(true)
+                        .build();
+        mAdservicesLogger.logScheduledCustomAudienceUpdateScheduleAttemptedStats(stats);
+        verify(mStatsdLoggerMock).logScheduledCustomAudienceUpdateScheduleAttemptedStats(eq(stats));
+    }
+
+    @Test
+    public void testLogScheduledCustomAudienceUpdateBackgroundJobStats() {
+        ScheduledCustomAudienceUpdateBackgroundJobStats stats =
+                ScheduledCustomAudienceUpdateBackgroundJobStats.builder()
+                        .setNumberOfUpdatesFound(1)
+                        .setNumberOfSuccessfulUpdates(2)
+                        .build();
+        mAdservicesLogger.logScheduledCustomAudienceUpdateBackgroundJobStats(stats);
+        verify(mStatsdLoggerMock).logScheduledCustomAudienceUpdateBackgroundJobStats(eq(stats));
+    }
+
+    @Test
+    public void testLogScheduledCustomAudienceUpdatePerformedFailureStats() {
+        ScheduledCustomAudienceUpdatePerformedFailureStats stats =
+                ScheduledCustomAudienceUpdatePerformedFailureStats.builder()
+                        .setFailureAction(1)
+                        .setFailureType(2)
+                        .build();
+        mAdservicesLogger.logScheduledCustomAudienceUpdatePerformedFailureStats(stats);
+        verify(mStatsdLoggerMock).logScheduledCustomAudienceUpdatePerformedFailureStats(eq(stats));
+    }
+
+    @Test
+    public void testLogScheduledCustomAudienceUpdatePerformedStats() {
+        ScheduledCustomAudienceUpdatePerformedStats stats =
+                ScheduledCustomAudienceUpdatePerformedStats.builder()
+                        .setNumberOfPartialCustomAudienceInRequest(1)
+                        .setNumberOfLeaveCustomAudienceInRequest(2)
+                        .setNumberOfJoinCustomAudienceInResponse(3)
+                        .setNumberOfLeaveCustomAudienceInResponse(4)
+                        .setNumberOfCustomAudienceJoined(5)
+                        .setNumberOfCustomAudienceLeft(6)
+                        .setWasInitialHop(true)
+                        .setNumberOfScheduleUpdatesInResponse(7)
+                        .setNumberOfUpdatesScheduled(8)
+                        .build();
+        mAdservicesLogger.logScheduledCustomAudienceUpdatePerformedStats(stats);
+        verify(mStatsdLoggerMock).logScheduledCustomAudienceUpdatePerformedStats(eq(stats));
+    }
+
     private void mockAppNameApiErrorLogger() {
         when(mMockFlags.getCobaltLoggingEnabled()).thenReturn(true);
         when(mMockFlags.getAppNameApiErrorCobaltLoggingEnabled()).thenReturn(true);

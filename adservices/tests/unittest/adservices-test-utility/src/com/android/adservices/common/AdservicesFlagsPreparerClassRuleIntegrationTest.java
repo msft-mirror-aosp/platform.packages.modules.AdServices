@@ -20,6 +20,8 @@ import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisa
 import com.android.adservices.shared.meta_testing.AbstractFlagsPreparerClassRuleIntegrationTestCase;
 import com.android.adservices.shared.meta_testing.DeviceConfigWrapper;
 import com.android.adservices.shared.meta_testing.SdkSandboxWrapper;
+import com.android.adservices.shared.testing.AbstractSdkLevelSupportedRule;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.adservices.shared.testing.SdkSandboxShellCmdImpl;
 import com.android.adservices.shared.testing.device.DeviceConfigShellCmdImpl;
 import com.android.adservices.shared.testing.device.DeviceGatewayImpl;
@@ -37,5 +39,10 @@ public final class AdservicesFlagsPreparerClassRuleIntegrationTest
         deviceConfigWrapper.setWrapped(new DeviceConfigShellCmdImpl(mRealLogger, mDeviceGateway));
         return new AdServicesFlagsPreparerClassRule(
                 sdkSandboxWrapper, deviceConfigWrapper, PERSISTENT);
+    }
+
+    @Override
+    protected AbstractSdkLevelSupportedRule getSdkLevelSupportRule() {
+        return SdkLevelSupportRule.forAnyLevel();
     }
 }

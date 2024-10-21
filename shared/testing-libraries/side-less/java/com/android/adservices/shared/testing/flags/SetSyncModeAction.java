@@ -15,6 +15,9 @@
  */
 package com.android.adservices.shared.testing.flags;
 
+import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest.DISABLED_SOMEHOW;
+import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest.PERSISTENT;
+
 import com.android.adservices.shared.testing.Logger;
 import com.android.adservices.shared.testing.Nullable;
 import com.android.adservices.shared.testing.device.DeviceConfig;
@@ -36,7 +39,7 @@ public final class SetSyncModeAction extends DeviceConfigAction {
             Logger logger, DeviceConfig deviceConfig, SyncDisabledModeForTest mode) {
         super(logger, deviceConfig);
         mMode = Objects.requireNonNull(mode, "mode cannot be null");
-        if (!mode.isValid()) {
+        if (!mode.isSettable()) {
             throw new IllegalArgumentException("invalid mode: " + mode);
         }
     }
@@ -55,14 +58,19 @@ public final class SetSyncModeAction extends DeviceConfigAction {
             return false;
         }
 
+        if (DISABLED_SOMEHOW.equals(mPreviousMode)) {
+            // We don't know which mode it is, but most like is PERSISTENT...
+            mPreviousMode = PERSISTENT;
+        }
+
         mDeviceConfig.setSyncDisabledMode(mMode);
 
-        return mPreviousMode != null && mPreviousMode.isValid();
+        return mPreviousMode != null && mPreviousMode.isSettable();
     }
 
     @Override
     protected void onRevertLocked() throws Exception {
-        if (mPreviousMode == null || !mPreviousMode.isValid()) {
+        if (mPreviousMode == null || !mPreviousMode.isSettable()) {
             throw new IllegalStateException("should not have been called when it didn't change");
         }
         mDeviceConfig.setSyncDisabledMode(mPreviousMode);
