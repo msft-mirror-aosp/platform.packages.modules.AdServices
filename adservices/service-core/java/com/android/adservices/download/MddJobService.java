@@ -42,6 +42,7 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.AdPackageDenyResolver;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.adservices.shared.spe.JobServiceConstants.JobSchedulingResultCode;
@@ -170,6 +171,15 @@ public class MddJobService extends JobService {
                                             unused =
                                                     EncryptionDataDownloadManager.getInstance()
                                                             .readAndInsertEncryptionDataFromMdd();
+                                    if (FlagsFactory.getFlags()
+                                            .getEnablePackageDenyJobOnMddDownload()) {
+                                        ListenableFuture<
+                                                        AdPackageDenyResolver
+                                                                .PackageDenyMddProcessStatus>
+                                                unusedFuturePackageDenyMddProcessStatus =
+                                                        AdPackageDenyResolver.getInstance()
+                                                                .loadDenyDataFromMdd();
+                                    }
 
                                     // Logging has to happen before jobFinished() is called. Due to
                                     // JobScheduler infra, the JobService instance will end its
