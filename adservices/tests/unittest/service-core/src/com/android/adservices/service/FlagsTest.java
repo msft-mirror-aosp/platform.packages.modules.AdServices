@@ -1041,6 +1041,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
         testFlag("getAdIdCacheTtl()", DEFAULT_ADID_CACHE_TTL_MS, Flags::getAdIdCacheTtlMs);
     }
 
+    @Test
+    public void testGetEnableAtomicFileDatastoreBatchUpdateApi() {
+        testFeatureFlag(
+                "DEFAULT_ENABLE_ATOMIC_FILE_DATASTORE_BATCH_UPDATE_API",
+                Flags::getEnableAtomicFileDatastoreBatchUpdateApi);
+    }
+
     private boolean hasAnnotation(Field field, Class<? extends Annotation> annotationClass) {
         String name = field.getName();
         Annotation annotation = field.getAnnotation(annotationClass);
