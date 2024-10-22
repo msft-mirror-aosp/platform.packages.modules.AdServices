@@ -121,6 +121,10 @@ public final class EpochJobServiceTest extends AdServicesJobServiceTestCase {
 
         // By default, do not set requiresBatteryNotLow to true in EpochJobService.
         when(mMockFlags.getTopicsEpochJobBatteryNotLowInsteadOfCharging()).thenReturn(false);
+
+        // By default, enables clean DB when Topics kill switch on
+        // or epoch job's configuration is changed.
+        when(mMockFlags.getTopicsCleanDBWhenEpochJobSettingsChanged()).thenReturn(true);
     }
 
     @After
@@ -182,6 +186,8 @@ public final class EpochJobServiceTest extends AdServicesJobServiceTestCase {
         // Initializes the argumentCaptor to collect topics epoch job setting metrics.
         ArgumentCaptor<TopicsScheduleEpochJobSettingReportedStats> argumentCaptor =
                 ArgumentCaptor.forClass(TopicsScheduleEpochJobSettingReportedStats.class);
+        // Mock not to run actual execution logic.
+        doReturn(mMockTopicsWorker).when(TopicsWorker::getInstance);
         when(mMockFlags.getTopicsEpochJobBatteryConstraintLoggingEnabled()).thenReturn(true);
 
         when(mMockFlags.getTopicsKillSwitch()).thenReturn(false);
@@ -222,6 +228,8 @@ public final class EpochJobServiceTest extends AdServicesJobServiceTestCase {
         assertThat(pendingJobInfo2.isRequireCharging()).isFalse();
         assertThat(pendingJobInfo2.isRequireBatteryNotLow()).isTrue();
         callback.assertCalled();
+
+        verify(mMockTopicsWorker).clearAllTopicsData(any());
 
         // Verifies the topics epoch job setting metric is logged 2 times.
         verify(mSpyAdServicesLogger, times(2))
@@ -353,6 +361,9 @@ public final class EpochJobServiceTest extends AdServicesJobServiceTestCase {
                 .getTopicsEpochJobPeriodMs();
         doReturn(TEST_FLAGS.getTopicsEpochJobFlexMs()).when(mMockFlags).getTopicsEpochJobFlexMs();
 
+        // Mock not to run actual execution logic.
+        doReturn(mMockTopicsWorker).when(TopicsWorker::getInstance);
+
         // The first invocation of scheduleIfNeeded() schedules the job.
         assertThat(EpochJobService.scheduleIfNeeded(/* forceSchedule */ false))
                 .isEqualTo(SCHEDULING_RESULT_CODE_SUCCESSFUL);
@@ -365,6 +376,8 @@ public final class EpochJobServiceTest extends AdServicesJobServiceTestCase {
                 .getTopicsEpochJobFlexMs();
         assertThat(EpochJobService.scheduleIfNeeded(/* forceSchedule */ false))
                 .isEqualTo(SCHEDULING_RESULT_CODE_SUCCESSFUL);
+
+        verify(mMockTopicsWorker).clearAllTopicsData(any());
     }
 
     @Test
@@ -432,11 +445,15 @@ public final class EpochJobServiceTest extends AdServicesJobServiceTestCase {
         boolean topics_epoch_job_battery_not_low_instead_of_charging = false;
 
         EpochJobService.schedule(
-                mContext,
                 mMockJobScheduler,
-                epoch_period,
-                flex_period,
-                topics_epoch_job_battery_not_low_instead_of_charging);
+                new JobInfo.Builder(
+                        TOPICS_EPOCH_JOB_ID,
+                        new ComponentName(mContext, EpochJobService.class))
+                        .setPersisted(true)
+                        .setPeriodic(epoch_period, flex_period)
+                        .setRequiresBatteryNotLow(
+                                topics_epoch_job_battery_not_low_instead_of_charging)
+                        .build());
 
         verify(mMockJobScheduler).schedule(argumentCaptor.capture());
         assertThat(argumentCaptor.getValue()).isNotNull();
@@ -453,11 +470,15 @@ public final class EpochJobServiceTest extends AdServicesJobServiceTestCase {
         boolean topics_epoch_job_battery_not_low_instead_of_charging = true;
 
         EpochJobService.schedule(
-                mContext,
                 mMockJobScheduler,
-                epoch_period,
-                flex_period,
-                topics_epoch_job_battery_not_low_instead_of_charging);
+                new JobInfo.Builder(
+                        TOPICS_EPOCH_JOB_ID,
+                        new ComponentName(mContext, EpochJobService.class))
+                        .setPersisted(true)
+                        .setPeriodic(epoch_period, flex_period)
+                        .setRequiresBatteryNotLow(
+                                topics_epoch_job_battery_not_low_instead_of_charging)
+                        .build());
 
         // Verify the JobScheduler has scheduled a new background job with new JobInfo.
         verify(mMockJobScheduler).schedule(argumentCaptor.capture());
@@ -498,6 +519,9 @@ public final class EpochJobServiceTest extends AdServicesJobServiceTestCase {
     public void testOnStartJob_killSwitchOn() throws Exception {
         JobServiceLoggingCallback callback = syncLogExecutionStats(mSpyLogger);
 
+        // Mock not to run actual execution logic.
+        doReturn(mMockTopicsWorker).when(TopicsWorker::getInstance);
+
         // Kill switch is on.
         doReturn(true).when(mMockFlags).getTopicsKillSwitch();
 
@@ -513,6 +537,9 @@ public final class EpochJobServiceTest extends AdServicesJobServiceTestCase {
     @Test
     public void testOnStartJob_shouldDisableJobTrue() {
         doReturn(true).when(() -> ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(any()));
+
+        // Mock not to run actual execution logic.
+        doReturn(mMockTopicsWorker).when(TopicsWorker::getInstance);
 
         doNothing().when(mSpyEpochJobService).jobFinished(mMockJobParameters, false);
 
@@ -671,8 +698,8 @@ public final class EpochJobServiceTest extends AdServicesJobServiceTestCase {
     private void scheduleJobWithMinimumLatency() {
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
-                                TOPICS_EPOCH_JOB_ID,
-                                new ComponentName(mContext, EpochJobService.class))
+                        TOPICS_EPOCH_JOB_ID,
+                        new ComponentName(mContext, EpochJobService.class))
                         .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
                         .build();
         mJobScheduler.schedule(existingJobInfo);

@@ -18,6 +18,7 @@ package com.android.adservices.shared.meta_testing;
 import static android.provider.DeviceConfig.SYNC_DISABLED_MODE_PERSISTENT;
 import static android.provider.DeviceConfig.SYNC_DISABLED_MODE_UNTIL_REBOOT;
 
+import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest.PERSISTENT;
 import static com.android.compatibility.common.util.SystemUtil.runWithShellPermissionIdentity;
 
 import android.app.UiAutomation;
@@ -53,7 +54,7 @@ public abstract class DeviceSideFlagsPreparerClassRuleTestCase<
     @Test
     @RequiresSdkLevelAtLeastT(reason = "DeviceConfig.getSyncDisabledMode() is not available on S")
     public void testDeviceConfigIntegration() throws Throwable {
-        R rule = newRule();
+        R rule = newRule().setSyncDisabledModeForTest(PERSISTENT);
         int modeBefore = getDeviceConfigSyncMode("before");
         AtomicInteger modeInside = new AtomicInteger();
         mTestBody.onEvaluate(() -> modeInside.set(getDeviceConfigSyncMode("inside")));

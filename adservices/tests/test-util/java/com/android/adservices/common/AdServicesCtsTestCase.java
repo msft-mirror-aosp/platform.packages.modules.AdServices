@@ -15,6 +15,8 @@
  */
 package com.android.adservices.common;
 
+import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest.PERSISTENT;
+
 import com.android.adservices.common.annotations.SetDefaultLogcatTags;
 import com.android.adservices.shared.testing.CallSuper;
 
@@ -45,7 +47,7 @@ public abstract class AdServicesCtsTestCase extends AdServicesTestCase {
 
     @ClassRule
     public static final AdServicesFlagsPreparerClassRule sFlagsPreparer =
-            new AdServicesFlagsPreparerClassRule();
+            new AdServicesFlagsPreparerClassRule().setSyncDisabledModeForTest(PERSISTENT);
 
     @Rule(order = 5)
     public final AdServicesFlagsSetterRule flags = getAdServicesFlagsSetterRule();
