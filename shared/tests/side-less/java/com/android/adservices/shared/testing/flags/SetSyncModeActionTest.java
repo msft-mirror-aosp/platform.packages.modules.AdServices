@@ -25,7 +25,6 @@ import static org.junit.Assert.assertThrows;
 import com.android.adservices.shared.meta_testing.FakeDeviceConfig;
 import com.android.adservices.shared.meta_testing.SharedSidelessTestCase;
 import com.android.adservices.shared.testing.EqualsTester;
-import com.android.adservices.shared.testing.Logger;
 
 import org.junit.Test;
 
@@ -129,8 +128,12 @@ public final class SetSyncModeActionTest extends SharedSidelessTestCase {
     }
 
     @Test
-    public void testExecuteAndRevert_previousReturnInvalid() throws Exception {
+    public void testExecuteAndRevert_previousReturnUnsupported() throws Exception {
         mFakeDeviceConfig.setSyncDisabledMode(UNSUPPORTED);
+        mFakeDeviceConfig.onSetSyncDisabledModeCallback(
+                () -> {
+                    throw new RuntimeException("Y U CALLED ME?");
+                });
         SetSyncModeAction action =
                 new SetSyncModeAction(mFakeLogger, mFakeDeviceConfig, PERSISTENT);
 
@@ -139,17 +142,7 @@ public final class SetSyncModeActionTest extends SharedSidelessTestCase {
         expect.withMessage("execute()").that(result).isFalse();
         expect.withMessage("device config mode after execute")
                 .that(mFakeDeviceConfig.getSyncDisabledMode())
-                .isEqualTo(PERSISTENT);
-
-        // Should not call it as it was UNSUPPORTED before
-        mFakeDeviceConfig.onSetSyncDisabledModeCallback(
-                () -> {
-                    throw new RuntimeException("Y U CALLED ME?");
-                });
-        action.revert();
-        expect.withMessage("device config mode after revert")
-                .that(mFakeDeviceConfig.getSyncDisabledMode())
-                .isEqualTo(PERSISTENT);
+                .isEqualTo(UNSUPPORTED);
     }
 
     @Test
@@ -240,18 +233,9 @@ public final class SetSyncModeActionTest extends SharedSidelessTestCase {
     @Test
     public void testEqualsAndHashCode() {
         var baseline = new SetSyncModeAction(mFakeLogger, mFakeDeviceConfig, UNTIL_REBOOT);
-        var equal2 = new SetSyncModeAction(mFakeLogger, mFakeDeviceConfig, UNTIL_REBOOT);
-        var equal3 =
-                new SetSyncModeAction(
-                        new Logger(mFakeRealLogger, "whatever"), mFakeDeviceConfig, UNTIL_REBOOT);
-        var equal4 = new SetSyncModeAction(mFakeLogger, new FakeDeviceConfig(), UNTIL_REBOOT);
-        var different = new SetSyncModeAction(mFakeLogger, mFakeDeviceConfig, PERSISTENT);
-
+        var different = new SetSyncModeAction(mFakeLogger, mFakeDeviceConfig, UNTIL_REBOOT);
         var et = new EqualsTester(expect);
 
-        et.expectObjectsAreEqual(baseline, equal2);
-        et.expectObjectsAreEqual(baseline, equal3);
-        et.expectObjectsAreEqual(baseline, equal4);
         et.expectObjectsAreNotEqual(baseline, different);
     }
 

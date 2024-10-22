@@ -79,20 +79,6 @@ public final class SetSdkSandboxStateAction extends AbstractAction {
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(mState);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null) return false;
-        if (getClass() != obj.getClass()) return false;
-        SetSdkSandboxStateAction other = (SetSdkSandboxStateAction) obj;
-        return mState == other.mState;
-    }
-
-    @Override
     public String toString() {
         return "SetSdkSandboxStateAction[state="
                 + mState
