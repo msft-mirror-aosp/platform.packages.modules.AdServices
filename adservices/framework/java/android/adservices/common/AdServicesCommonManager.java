@@ -377,20 +377,21 @@ public class AdServicesCommonManager {
      * etc). The user consent controls whether the PPAPIs associated with that module can operate or
      * not.
      *
-     * @param adServicesModuleUserChoiceList parcel containing user choices for modules.
+     * @param updateParams object containing user choices for modules.
      * @param executor the executor for the callback.
      * @param callback callback function to confirm module user choice is set up correctly.
      * @hide
      */
+    @SystemApi
     @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
     @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
     public void requestAdServicesModuleUserChoices(
-            @NonNull List<AdServicesModuleUserChoice> adServicesModuleUserChoiceList,
+            @NonNull UpdateAdServicesUserChoicesParams updateParams,
             @NonNull @CallbackExecutor Executor executor,
             @NonNull AdServicesOutcomeReceiver<Void, Exception> callback) {
-        Objects.requireNonNull(adServicesModuleUserChoiceList);
-        Objects.requireNonNull(executor);
-        Objects.requireNonNull(callback);
+        Objects.requireNonNull(updateParams, "updateParams cannot be null");
+        Objects.requireNonNull(executor, "executor cannot be null");
+        Objects.requireNonNull(callback, "callback cannot be null");
 
         if (invokeCallbackOnErrorOnRvc(callback)) {
             return;
@@ -398,8 +399,16 @@ public class AdServicesCommonManager {
 
         final IAdServicesCommonService service = getService();
         try {
+            // TODO(b/375672670): pass param directly to Impl
+            List<AdServicesModuleUserChoice> adServicesUserChoiceList =
+                    updateParams.getUserChoiceMap().entrySet().stream()
+                            .map(
+                                    entry ->
+                                            new AdServicesModuleUserChoice(
+                                                    entry.getKey(), entry.getValue()))
+                            .collect(Collectors.toList());
             service.requestAdServicesModuleUserChoices(
-                    adServicesModuleUserChoiceList,
+                    adServicesUserChoiceList,
                     new IRequestAdServicesModuleUserChoicesCallback.Stub() {
                         @Override
                         public void onSuccess() throws RemoteException {
