@@ -261,6 +261,9 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
 
     @Before
     public void setup() throws IOException {
+        mocker.mockGetFlags(mMockFlags);
+        mockEnableAtomicFileDatastoreBatchUpdateApi(/* enable= */ false);
+
         mDatastore =
                 new AtomicFileDatastore(
                         mSpyContext,
@@ -282,7 +285,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
 
         // Default to use PPAPI consent to test migration-irrelevant logics.
         mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.PPAPI_ONLY);
-        mocker.mockGetFlags(mMockFlags);
+
         doReturn(true).when(mMockFlags).getFledgeFrequencyCapFilteringEnabled();
         doReturn(true).when(mMockFlags).getFledgeAppInstallFilteringEnabled();
         doReturn(true).when(mMockFlags).getProtectedSignalsCleanupEnabled();
@@ -3707,6 +3710,60 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
+    public void testCreateAndInitializeDatastore() throws Exception {
+        mConsentDatastore.clear();
+        mockEnableAtomicFileDatastoreBatchUpdateApi(/* enable= */ true);
+
+        mConsentDatastore =
+                ConsentManager.createAndInitializeDataStore(
+                        mSpyContext, mMockAdServicesErrorLogger);
+
+        expect.withMessage("getBoolean(%s)", ConsentConstants.NOTIFICATION_DISPLAYED_ONCE)
+                .that(mConsentDatastore.getBoolean(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE))
+                .isFalse();
+        expect.withMessage("getBoolean(%s)", ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE)
+                .that(
+                        mConsentDatastore.getBoolean(
+                                ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE))
+                .isFalse();
+        expect.withMessage("getBoolean(%s)", ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED)
+                .that(mConsentDatastore.getBoolean(ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED))
+                .isFalse();
+        expect.withMessage("getBoolean(%s)", ConsentConstants.PAS_NOTIFICATION_DISPLAYED_ONCE)
+                .that(
+                        mConsentDatastore.getBoolean(
+                                ConsentConstants.PAS_NOTIFICATION_DISPLAYED_ONCE))
+                .isFalse();
+        expect.withMessage("getBoolean(%s)", ConsentConstants.PAS_NOTIFICATION_OPENED)
+                .that(mConsentDatastore.getBoolean(ConsentConstants.PAS_NOTIFICATION_OPENED))
+                .isFalse();
+    }
+
+    @Test
+    public void testSetPrivacySandboxFeatureTypeInApp_updateAPIEnabled() throws Exception {
+        mockEnableAtomicFileDatastoreBatchUpdateApi(/* enable= */ true);
+
+        runAndVerifyPrivacySandboxFeatureTypeInApp(
+                PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED);
+        runAndVerifyPrivacySandboxFeatureTypeInApp(
+                PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT);
+        runAndVerifyPrivacySandboxFeatureTypeInApp(
+                PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT);
+        runAndVerifyPrivacySandboxFeatureTypeInApp(
+                PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT_FF);
+        runAndVerifyPrivacySandboxFeatureTypeInApp(
+                PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT_FF);
+    }
+
+    private void runAndVerifyPrivacySandboxFeatureTypeInApp(PrivacySandboxFeatureType featureType)
+            throws Exception {
+        mConsentManager.setPrivacySandboxFeatureTypeInApp(featureType);
+        expect.withMessage("PrivacySandboxFeatureType: %s", featureType)
+                .that(mConsentManager.getCurrentPrivacySandboxFeature())
+                .isEqualTo(featureType);
+    }
+
+    @Test
     public void testCurrentPrivacySandboxFeature_ppapiOnly() throws RemoteException {
         int consentSourceOfTruth = Flags.PPAPI_ONLY;
         ConsentManager spyConsentManager =
@@ -4877,5 +4934,9 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                 .isEqualTo(AdServicesModuleState.MODULE_STATE_ENABLED);
         assertThat(spyConsentManager.getUserChoice(Module.PROTECTED_APP_SIGNALS))
                 .isEqualTo(AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN);
+    }
+
+    private void mockEnableAtomicFileDatastoreBatchUpdateApi(boolean enable) {
+        when(mMockFlags.getEnableAtomicFileDatastoreBatchUpdateApi()).thenReturn(enable);
     }
 }
