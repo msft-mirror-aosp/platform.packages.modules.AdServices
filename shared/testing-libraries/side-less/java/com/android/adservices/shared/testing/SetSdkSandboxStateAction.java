@@ -40,6 +40,11 @@ public final class SetSdkSandboxStateAction extends AbstractAction {
         }
     }
 
+    /** Gets the state that will be set by the action. */
+    public State getState() {
+        return mState;
+    }
+
     @Override
     protected boolean onExecuteLocked() throws Exception {
         try {

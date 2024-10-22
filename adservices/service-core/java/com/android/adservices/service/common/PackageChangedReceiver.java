@@ -53,6 +53,7 @@ import com.android.modules.utils.build.SdkLevel;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Future;
 
 /**
  * Receiver to receive a com.android.adservices.PACKAGE_CHANGED broadcast from the AdServices system
@@ -192,6 +193,16 @@ public class PackageChangedReceiver extends BroadcastReceiver {
     private void handlePackageAdded(Context context, Uri packageUri) {
         measurementOnPackageAdded(context, packageUri);
         topicsOnPackageAdded(packageUri);
+        packageDenyPreProcessOnPackageAdded();
+    }
+
+    @VisibleForTesting
+    void packageDenyPreProcessOnPackageAdded() {
+        if (FlagsFactory.getFlags().getEnablePackageDenyJobOnPackageAdd()) {
+            Future<AdPackageDenyResolver.PackageDenyMddProcessStatus>
+                    packageDenyMddProcessStatusFuture =
+                            AdPackageDenyResolver.getInstance().loadDenyDataFromMdd();
+        }
     }
 
     private void handlePackageDataCleared(Context context, Uri packageUri) {
