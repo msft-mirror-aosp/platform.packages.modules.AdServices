@@ -39,7 +39,7 @@
         "body": "BiddingSignals.json",
         "header": {
           "Data-Version": 1,
-          "x-fledge-scoring-signals-format-version": 1 // Deprecated, maintained for backward compatibility only.
+          "x-fledge-bidding-signals-format-version": 1 // Deprecated, maintained for backward compatibility only.
         }
       },
       "verify_called": true
