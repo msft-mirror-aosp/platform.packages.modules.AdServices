@@ -96,7 +96,6 @@ java_library {
     min_sdk_version: "30",
     max_sdk_version: "32",
     visibility: [
-        "//device/google:__subpackages__",
         "//external/chromium-webview:__subpackages__",
         "//packages/modules/AdServices:__subpackages__",
         "//packages/modules/ExtServices:__subpackages__",
