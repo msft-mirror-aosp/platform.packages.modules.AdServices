@@ -309,24 +309,26 @@ public abstract class AbstractFlagsPreparerClassRuleIntegrationTestCase<
     }
 
     @Test
-    public final void testAnnotationOrderPrevails() throws Throwable {
+    public final void testAnnotationsAreExecutedFirst() throws Throwable {
         assumeDeviceConfigSyncModeIsSupportedAndInitialModeIsNot(NONE);
         assumeSdkSandboxStateIsSupportedAndInitialStateIs(DISABLED);
 
         Description test =
                 newTestMethodForClassRule(
                         AClassHasNoNothingAtAll.class,
-                        new SetSdkSandboxStateEnabledAnnotation(true),
+                        new SetSdkSandboxStateEnabledAnnotation(false),
                         new SetSyncDisabledModeForTestAnnotation(NONE));
 
+        // These will be executed last, so they will define the state in the test - what really
+        // matters from this test point of view is the order, asserted at the end
         mRule.setSyncDisabledModeForTest(PERSISTENT);
-        mRule.setSdkSandboxState(false);
+        mRule.setSdkSandboxState(true);
 
         mRule.apply(mStatement, test).evaluate();
 
         expect.withMessage("deviceConfig.getSyncDisabledMode() on test")
                 .that(mSyncModeOnTest.get())
-                .isEqualTo(NONE);
+                .isEqualTo(PERSISTENT);
         expect.withMessage("deviceConfig.getSyncDisabledMode() after test")
                 .that(mDeviceConfig.getSyncDisabledMode())
                 .isEqualTo(mSyncModeBefore);
@@ -336,9 +338,9 @@ public abstract class AbstractFlagsPreparerClassRuleIntegrationTestCase<
                 .isEqualTo(ENABLED);
         expect.withMessage("sdkSandbox.getState() after test")
                 .that(mSdkSandbox.getState())
-                .isEqualTo(DISABLED);
+                .isEqualTo(mSdkSandboxStateBefore);
 
-        expectCalls(ENABLED, NONE, mSyncModeBefore, DISABLED);
+        expectCalls(ENABLED, NONE, mSyncModeBefore, mSdkSandboxStateBefore);
     }
 
     private void expectCalls(Object... calls) {
@@ -356,9 +358,10 @@ public abstract class AbstractFlagsPreparerClassRuleIntegrationTestCase<
         }
 
         @Override
-        public void setSyncDisabledMode(SyncDisabledModeForTest mode) {
+        public MyDeviceConfigWrapper setSyncDisabledMode(SyncDisabledModeForTest mode) {
             mCalls.add(mode);
             super.setSyncDisabledMode(mode);
+            return this;
         }
     }
 
@@ -369,9 +372,10 @@ public abstract class AbstractFlagsPreparerClassRuleIntegrationTestCase<
         }
 
         @Override
-        public void setState(State state) {
+        public MySdkSandboxWrapper setState(State state) {
             mCalls.add(state);
             super.setState(state);
+            return this;
         }
     }
 

@@ -15,9 +15,10 @@
  */
 package com.android.adservices.shared.testing.flags;
 
+import com.android.adservices.shared.testing.Action;
 import com.android.adservices.shared.testing.ActionBasedRule;
+import com.android.adservices.shared.testing.ActionExecutionException;
 import com.android.adservices.shared.testing.Logger.RealLogger;
-import com.android.adservices.shared.testing.SafeAction;
 import com.android.adservices.shared.testing.SdkSandbox;
 import com.android.adservices.shared.testing.SetSdkSandboxStateAction;
 import com.android.adservices.shared.testing.TestHelper;
@@ -29,6 +30,8 @@ import com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledMod
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -46,30 +49,25 @@ public abstract class AbstractFlagsPreparerClassRule<R extends AbstractFlagsPrep
     private final SdkSandbox mSdkSandbox;
 
     protected AbstractFlagsPreparerClassRule(
-            RealLogger logger,
-            SdkSandbox sdkSandbox,
-            DeviceConfig deviceConfig,
-            SyncDisabledModeForTest mode) {
+            RealLogger logger, SdkSandbox sdkSandbox, DeviceConfig deviceConfig) {
         super(logger);
 
         mDeviceConfig = Objects.requireNonNull(deviceConfig, "deviceConfig cannot be null");
         mSdkSandbox = Objects.requireNonNull(sdkSandbox, "sdkSandbox cannot be null");
-
-        // TODO(b/297085722): remove SafeAction wrapper once tests don't run on R anymore
-        addAction(new SafeAction(mLog, new SetSyncModeAction(mLog, mDeviceConfig, mode)));
     }
 
     @Override
-    protected final void preExecuteActions(Statement base, Description description) {
+    protected final List<Action> createActionsForTest(Statement base, Description description) {
         TestHelper.throwIfTest(description);
 
+        List<Action> actions = new ArrayList<Action>();
         // TODO(b/362977985): add a new method on TestHelper (or a new class) to convert annotations
         // into Actions
         var setSdkSandboxStateEnabledAnnotation =
                 TestHelper.getAnnotation(description, SetSdkSandboxStateEnabled.class);
         if (setSdkSandboxStateEnabledAnnotation != null) {
             mLog.d("Found %s", setSdkSandboxStateEnabledAnnotation);
-            addAction(
+            actions.add(
                     new SetSdkSandboxStateAction(
                             mLog,
                             mSdkSandbox,
@@ -81,10 +79,11 @@ public abstract class AbstractFlagsPreparerClassRule<R extends AbstractFlagsPrep
                 TestHelper.getAnnotation(description, SetSyncDisabledModeForTest.class);
         if (setSyncDisabledModeForTestAnnotation != null) {
             mLog.d("Found %s", setSyncDisabledModeForTestAnnotation);
-            addAction(
+            actions.add(
                     new SetSyncModeAction(
                             mLog, mDeviceConfig, setSyncDisabledModeForTestAnnotation.value()));
         }
+        return actions;
     }
 
     @Override
@@ -102,8 +101,10 @@ public abstract class AbstractFlagsPreparerClassRule<R extends AbstractFlagsPrep
      *
      * <p>If the test is running it's set right away and not reset at the end; if the test is not
      * running yet, it's set after the test starts and reset after it finishes.
+     *
+     * @throws ActionExecutionException if set right away and fails.
      */
-    public final R setSyncDisabledModeForTest(SyncDisabledModeForTest mode) throws Exception {
+    public final R setSyncDisabledModeForTest(SyncDisabledModeForTest mode) {
         mLog.d("setSyncDisabledModeForTest(%s)", mode);
         Objects.requireNonNull(mode, "mode cannot be null");
         executeOrCache(new SetSyncModeAction(mLog, mDeviceConfig, mode));
@@ -115,6 +116,8 @@ public abstract class AbstractFlagsPreparerClassRule<R extends AbstractFlagsPrep
      *
      * <p>If the test is running it's set right away and not reset at the end; if the test is not
      * running yet, it's set after the test starts and reset after it finishes.
+     *
+     * @throws ActionExecutionException if set right away and fails.
      */
     public final R setSdkSandboxState(boolean enabled) throws Exception {
         mLog.d("setSdkSandboxState(%b)", enabled);

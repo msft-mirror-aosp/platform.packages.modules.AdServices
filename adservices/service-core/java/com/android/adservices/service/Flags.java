@@ -61,8 +61,12 @@ public interface Flags extends ModuleSharedFlags {
         return TOPICS_EPOCH_JOB_PERIOD_MS;
     }
 
-    /** Topics Epoch Job Flex. Note the minimum value system allows is +8h24m0s0ms */
-    @ConfigFlag long TOPICS_EPOCH_JOB_FLEX_MS = 9 * 60 * 60 * 1000; // 5 hours.
+    /**
+     * Topics Epoch Job Flex. Note the minimum value system allows is 5 minutes
+     * or 5% of background job interval time, whichever is greater.
+     * Topics epoch job interval time is 7 days, so the minimum flex time should be 8.4 hours.
+     */
+    @ConfigFlag long TOPICS_EPOCH_JOB_FLEX_MS = 9 * 60 * 60 * 1000; // 9 hours.
 
     /** Returns flex for the Epoch computation job in Millisecond. */
     default long getTopicsEpochJobFlexMs() {
@@ -197,6 +201,19 @@ public interface Flags extends ModuleSharedFlags {
      * Topics API job execution.  */
     default boolean getTopicsEpochJobBatteryNotLowInsteadOfCharging() {
         return TOPICS_EPOCH_JOB_BATTERY_NOT_LOW_INSTEAD_OF_CHARGING;
+    }
+
+    /**
+     * Flag to enable cleaning Topics database when the settings of Topics epoch job
+     * is changed from server side.
+     */
+    @FeatureFlag boolean TOPICS_CLEAN_DB_WHEN_EPOCH_JOB_SETTINGS_CHANGED = false;
+
+    /**
+     * Returns the feature flag to enable cleaning Topics database when epoch job settings changed.
+     */
+    default boolean getTopicsCleanDBWhenEpochJobSettingsChanged() {
+        return TOPICS_CLEAN_DB_WHEN_EPOCH_JOB_SETTINGS_CHANGED;
     }
 
     /** Available types of classifier behaviours for the Topics API. */
