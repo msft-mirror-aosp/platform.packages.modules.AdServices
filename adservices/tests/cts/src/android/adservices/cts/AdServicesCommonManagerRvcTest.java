@@ -20,17 +20,17 @@ import static android.adservices.common.AdServicesModuleState.MODULE_STATE_ENABL
 import static android.adservices.common.AdServicesModuleUserChoice.USER_CHOICE_OPTED_OUT;
 import static android.adservices.common.Module.MEASUREMENT;
 import static android.adservices.common.Module.TOPICS;
-import static android.adservices.common.NotificationType.NOTIFICATION_ONGOING;
 
 import static com.android.adservices.shared.testing.AndroidSdk.RVC;
 
 import android.adservices.adid.AdId;
 import android.adservices.common.AdServicesCommonManager;
 import android.adservices.common.AdServicesCommonStatesResponse;
-import android.adservices.common.AdServicesModuleState;
 import android.adservices.common.AdServicesModuleUserChoice;
 import android.adservices.common.AdServicesStates;
+import android.adservices.common.NotificationType;
 import android.adservices.common.UpdateAdIdRequest;
+import android.adservices.common.UpdateAdServicesModuleStatesParams;
 import android.adservices.exceptions.AdServicesException;
 
 import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
@@ -71,12 +71,13 @@ public final class AdServicesCommonManagerRvcTest extends CtsAdServicesDeviceTes
     public void testSetAdServicesModuleOverrides_onR_invokesCallbackOnError() throws Exception {
         AdServicesOutcomeReceiverForTests<Void> receiver =
                 new AdServicesOutcomeReceiverForTests<>();
-        AdServicesModuleState moduleState =
-                new AdServicesModuleState(MEASUREMENT, MODULE_STATE_ENABLED);
-        List<AdServicesModuleState> adServicesModuleStateList = Arrays.asList(moduleState);
+        UpdateAdServicesModuleStatesParams params =
+                new UpdateAdServicesModuleStatesParams.Builder()
+                        .setModuleState(MEASUREMENT, MODULE_STATE_ENABLED)
+                        .setNotificationType(NotificationType.NOTIFICATION_ONGOING)
+                        .build();
 
-        mCommonManager.requestAdServicesModuleOverrides(
-                adServicesModuleStateList, NOTIFICATION_ONGOING, CALLBACK_EXECUTOR, receiver);
+        mCommonManager.requestAdServicesModuleOverrides(params, CALLBACK_EXECUTOR, receiver);
 
         receiver.assertFailure(AdServicesException.class);
     }
