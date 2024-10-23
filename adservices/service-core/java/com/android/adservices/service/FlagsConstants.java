@@ -1423,6 +1423,9 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE =
             "Measurement__max_adr_count_per_source";
 
+    public static final String KEY_MEASUREMENT_ENABLE_BOTH_SIDE_DEBUG_KEYS_IN_REPORTS =
+            "Measurement__enable_both_side_debug_keys_in_reports";
+
     // Database Schema Version Flags
     public static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_8 =
             "enable_database_schema_version_8";
