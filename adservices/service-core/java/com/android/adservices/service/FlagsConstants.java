@@ -1668,4 +1668,8 @@ public final class FlagsConstants {
     /** Key for MDD Package Deny registry manifest file url */
     public static final String KEY_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL =
             "DownloadConfig__default_mdd_package_deny_manifest_file_url";
+
+    /** Key to enable AtomicFileDataStore update API for adservices apk. */
+    public static final String KEY_ENABLE_ATOMIC_FILE_DATASTORE_BATCH_UPDATE_API =
+            "AtomicFileDatastore__enable_batch_update_api_in_adservices_process";
 }

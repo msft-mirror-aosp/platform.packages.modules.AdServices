@@ -45,6 +45,11 @@ public final class SetSyncModeAction extends DeviceConfigAction {
         }
     }
 
+    /** Gets the mode that will be set by the action. */
+    public SyncDisabledModeForTest getMode() {
+        return mMode;
+    }
+
     @Override
     protected boolean onExecuteLocked() throws Exception {
         try {

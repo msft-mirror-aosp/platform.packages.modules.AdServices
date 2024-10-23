@@ -30,12 +30,12 @@ import static android.adservices.customaudience.CustomAudienceFixture.VALID_USER
 import static com.android.adservices.service.customaudience.FetchCustomAudienceFixture.getFullSuccessfulJsonResponse;
 import static com.android.adservices.service.customaudience.FetchCustomAudienceFixture.getFullSuccessfulJsonResponseString;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.ACTIVATION_TIME;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.DB_PARTIAL_CUSTOM_AUDIENCE_1;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.DB_PARTIAL_CUSTOM_AUDIENCE_2;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.LEAVE_CA_1;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.LEAVE_CA_2;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.PARTIAL_CA_1;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.PARTIAL_CA_2;
-import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.PARTIAL_CUSTOM_AUDIENCE_1;
-import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.PARTIAL_CUSTOM_AUDIENCE_2;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.ScheduleUpdateTestCallback;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.UPDATE_ID;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.VALID_BIDDING_SIGNALS;
@@ -254,6 +254,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     private CustomAudienceQuantityChecker mCustomAudienceQuantityChecker;
     private CustomAudienceValidator mCustomAudienceValidator;
 
+    private ScheduleCustomAudienceUpdateStrategy mStrategy;
+
     private static final Flags COMMON_FLAGS_WITH_FILTERS_ENABLED =
             new CustomAudienceServiceE2ETestFlags() {
                 @Override
@@ -303,6 +305,14 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 mContext.getPackageManager(),
                                 EnrollmentDao.getInstance(),
                                 mAdServicesLoggerMock));
+
+        mStrategy =
+                ScheduleCustomAudienceUpdateStrategyFactory.createStrategy(
+                        mCustomAudienceDao,
+                        AdServicesExecutors.getBackgroundExecutor(),
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        mMockFlags.getFledgeScheduleCustomAudienceMinDelayMinsOverride(),
+                        false);
 
         mService =
                 new CustomAudienceServiceImpl(
@@ -363,7 +373,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 mCustomAudienceValidator,
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 COMMON_FLAGS_WITH_FILTERS_ENABLED),
-                        mCustomAudienceQuantityChecker);
+                        mCustomAudienceQuantityChecker,
+                        mStrategy);
     }
 
     @Test
@@ -1534,9 +1545,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 negativeDelayForTest,
                                 List.of(
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_1),
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_1),
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_2)))
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_2)))
                         .build();
         CountDownLatch resultLatch = new CountDownLatch(1);
         ScheduleUpdateTestCallback callback = new ScheduleUpdateTestCallback(resultLatch);
@@ -1645,7 +1656,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 mCustomAudienceValidator,
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 flagsWithAuctionServerRequestFlagsEnabled),
-                        mCustomAudienceQuantityChecker);
+                        mCustomAudienceQuantityChecker,
+                        mStrategy);
 
         // Wire the mock web server
         String responsePayload =
@@ -1696,9 +1708,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 negativeDelayForTest,
                                 List.of(
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_1),
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_1),
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_2)))
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_2)))
                         .build();
         CountDownLatch resultLatch = new CountDownLatch(1);
         ScheduleUpdateTestCallback callback = new ScheduleUpdateTestCallback(resultLatch);
@@ -1813,7 +1825,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 mCustomAudienceValidator,
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 flagsWithSellerConfigurationFlagEnabled),
-                        mCustomAudienceQuantityChecker);
+                        mCustomAudienceQuantityChecker,
+                        mStrategy);
 
         // Wire the mock web server
         String responsePayload =
@@ -1865,9 +1878,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 negativeDelayForTest,
                                 List.of(
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_1),
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_1),
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_2)))
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_2)))
                         .build();
         CountDownLatch resultLatch = new CountDownLatch(1);
         ScheduleUpdateTestCallback callback = new ScheduleUpdateTestCallback(resultLatch);
@@ -1994,9 +2007,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 negativeDelayForTest,
                                 List.of(
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_1),
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_1),
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_2)))
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_2)))
                         .build();
         CountDownLatch resultLatch1 = new CountDownLatch(1);
         ScheduleUpdateTestCallback callback1 = new ScheduleUpdateTestCallback(resultLatch1);
@@ -2011,9 +2024,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 negativeDelayForTest,
                                 List.of(
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_1),
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_1),
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_2)))
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_2)))
                         .build();
         CountDownLatch resultLatch2 = new CountDownLatch(1);
         ScheduleUpdateTestCallback callback2 = new ScheduleUpdateTestCallback(resultLatch2);
@@ -2127,9 +2140,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 negativeDelayForTest,
                                 List.of(
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_1),
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_1),
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_2)))
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_2)))
                         .build();
         CountDownLatch resultLatch1 = new CountDownLatch(1);
         ScheduleUpdateTestCallback callback1 = new ScheduleUpdateTestCallback(resultLatch1);
@@ -2216,7 +2229,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 flagsWithCAQuantityCheckerFlags),
                         new CustomAudienceQuantityChecker(
-                                mCustomAudienceDao, flagsWithCAQuantityCheckerFlags));
+                                mCustomAudienceDao, flagsWithCAQuantityCheckerFlags),
+                        mStrategy);
 
         // Wire the mock web server
         String responsePayload =
@@ -2261,9 +2275,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 negativeDelayForTest,
                                 List.of(
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_1),
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_1),
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_2)))
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_2)))
                         .build();
         CountDownLatch resultLatch1 = new CountDownLatch(1);
         ScheduleUpdateTestCallback callback1 = new ScheduleUpdateTestCallback(resultLatch1);
@@ -2349,7 +2363,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 flagsWithCAQuantityCheckerFlags),
                         new CustomAudienceQuantityChecker(
-                                mCustomAudienceDao, flagsWithCAQuantityCheckerFlags));
+                                mCustomAudienceDao, flagsWithCAQuantityCheckerFlags),
+                        mStrategy);
 
         // Wire the mock web server
         String responsePayload =
@@ -2400,9 +2415,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 negativeDelayForTest,
                                 List.of(
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_1),
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_1),
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_2)))
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_2)))
                         .build();
         CountDownLatch resultLatch = new CountDownLatch(1);
         ScheduleUpdateTestCallback callback = new ScheduleUpdateTestCallback(resultLatch);
@@ -2500,9 +2515,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 negativeDelayForTest,
                                 List.of(
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_1),
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_1),
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_2)))
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_2)))
                         .build();
         CountDownLatch resultLatch1 = new CountDownLatch(1);
         ScheduleUpdateTestCallback callback1 = new ScheduleUpdateTestCallback(resultLatch1);
@@ -2657,7 +2672,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 negativeDelayForTest,
                                 List.of(
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_1)))
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_1)))
                         .build();
         CountDownLatch resultLatch = new CountDownLatch(1);
         ScheduleUpdateTestCallback callback = new ScheduleUpdateTestCallback(resultLatch);
@@ -2760,7 +2775,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 negativeDelayForTest,
                                 List.of(
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_1),
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_1),
                                         DBPartialCustomAudience.getPartialCustomAudience(
                                                 invalidPartialCustomAudience2)))
                         .build();

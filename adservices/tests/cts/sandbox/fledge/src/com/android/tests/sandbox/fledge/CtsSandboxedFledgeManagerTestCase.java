@@ -31,7 +31,9 @@ import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
+import com.android.adservices.shared.testing.annotations.SetSdkSandboxStateEnabled;
 
+@SetSdkSandboxStateEnabled
 @DisableGlobalKillSwitch
 @EnableDebugFlag(KEY_CONSENT_MANAGER_DEBUG_MODE)
 @SetAllLogcatTags

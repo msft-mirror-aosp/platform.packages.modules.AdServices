@@ -48,7 +48,6 @@ import org.junit.runner.Description;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -64,9 +63,6 @@ import java.util.concurrent.atomic.AtomicReference;
 public abstract class AbstractFlagsPreparerClassRuleIntegrationTestCase<
                 R extends AbstractFlagsPreparerClassRule<R>>
         extends IntegrationTestCase {
-
-    // TODO(b/361771436): remove after final refactorings
-    private static final boolean CHECK_ORDER = false;
 
     private final AtomicReference<SyncDisabledModeForTest> mSyncModeOnTest =
             new AtomicReference<>();
@@ -157,23 +153,24 @@ public abstract class AbstractFlagsPreparerClassRuleIntegrationTestCase<
 
     @Test
     public final void testMethodAnnotation_setSdkSandboxStateEnabledAnnotation() throws Throwable {
-        assumeInitialSdkSandboxStateIsNot(SdkSandbox.State.UNSUPPORTED);
+        assumeSdkSandboxStateIsSupportedAndInitialStateIs(DISABLED);
 
         Description test =
                 newTestMethodForClassRule(
                         AClassHasNoNothingAtAll.class,
+                        // Should be ignored
                         new SetSdkSandboxStateEnabledAnnotation(true));
 
         mRule.apply(mStatement, test).evaluate();
 
         expect.withMessage("sdkSandbox.getState() on test")
                 .that(mSdkSandboxStateOnTest.get())
-                .isEqualTo(ENABLED);
+                .isEqualTo(DISABLED);
         expect.withMessage("sdkSandbox.getState() after test")
                 .that(mSdkSandbox.getState())
                 .isEqualTo(DISABLED);
 
-        expectCalls(ENABLED, DISABLED);
+        expectCalls();
     }
 
     @Test
@@ -184,18 +181,19 @@ public abstract class AbstractFlagsPreparerClassRuleIntegrationTestCase<
         Description test =
                 newTestMethodForClassRule(
                         AClassHasNoNothingAtAll.class,
+                        // Should be ignored
                         new SetSdkSandboxStateEnabledAnnotation(false));
 
         mRule.apply(mStatement, test).evaluate();
 
         expect.withMessage("sdkSandbox.getState() on test")
                 .that(mSdkSandboxStateOnTest.get())
-                .isEqualTo(DISABLED);
+                .isEqualTo(ENABLED);
         expect.withMessage("sdkSandbox.getState() after test")
                 .that(mSdkSandbox.getState())
                 .isEqualTo(ENABLED);
 
-        expectCalls(DISABLED, ENABLED);
+        expectCalls();
     }
 
     @Test
@@ -205,19 +203,21 @@ public abstract class AbstractFlagsPreparerClassRuleIntegrationTestCase<
         Description test =
                 newTestMethodForClassRule(
                         AClassHasNoNothingAtAll.class,
+                        // Should be ignored
                         new SetSyncDisabledModeForTestAnnotation(newMode));
 
         mRule.apply(mStatement, test).evaluate();
 
         expect.withMessage("deviceConfig.getSyncDisabledMode() on test")
                 .that(mSyncModeOnTest.get())
-                .isEqualTo(newMode);
+                .isEqualTo(mSyncModeBefore);
         expect.withMessage("deviceConfig.getSyncDisabledMode() after test")
                 .that(mDeviceConfig.getSyncDisabledMode())
                 .isEqualTo(mSyncModeBefore);
 
-        expectCalls(newMode, mSyncModeBefore);
+        expectCalls();
     }
+
 
     @Test
     public final void testClassAnnotation_setSdkSandboxStateEnabled() throws Throwable {
@@ -283,52 +283,47 @@ public abstract class AbstractFlagsPreparerClassRuleIntegrationTestCase<
 
         expectCalls(UNTIL_REBOOT, mSyncModeBefore);
     }
+
     @Test
     public final void
             testClassAndMethodAnnotation_setSyncDisabledModeForTestAnnotation_untilRebootThenNone()
                     throws Throwable {
-        assumeDeviceConfigSyncModeIsSupportedAndInitialModeIsNot(UNTIL_REBOOT, NONE);
-
+        assumeDeviceConfigSyncModeIsSupportedAndInitialModeIsNot(UNTIL_REBOOT);
         // NOTE: ideally it should test PERSISTENT, but somehow tradefed is setting that mode before
         // the test is executed
         Description test =
                 newTestMethodForClassRule(
                         AClassDisablesDeviceConfigUntilReboot.class,
+                        // should be ignored
                         new SetSyncDisabledModeForTestAnnotation(NONE));
 
         mRule.apply(mStatement, test).evaluate();
 
         expect.withMessage("deviceConfig.getSyncDisabledMode() on test")
                 .that(mSyncModeOnTest.get())
-                .isEqualTo(NONE);
+                .isEqualTo(UNTIL_REBOOT);
         expect.withMessage("deviceConfig.getSyncDisabledMode() after test")
                 .that(mDeviceConfig.getSyncDisabledMode())
                 .isEqualTo(mSyncModeBefore);
 
-        expectCalls(NONE, mSyncModeBefore);
+        expectCalls(UNTIL_REBOOT, mSyncModeBefore);
     }
 
     @Test
-    public final void testAnnotationsAreExecutedFirst() throws Throwable {
+    public final void testAnnotationsFromSubclassAreExecutedFirstAndInOrder_sdkSandboxFirst()
+            throws Throwable {
         assumeDeviceConfigSyncModeIsSupportedAndInitialModeIsNot(NONE);
         assumeSdkSandboxStateIsSupportedAndInitialStateIs(DISABLED);
 
         Description test =
                 newTestMethodForClassRule(
-                        AClassHasNoNothingAtAll.class,
-                        new SetSdkSandboxStateEnabledAnnotation(false),
-                        new SetSyncDisabledModeForTestAnnotation(NONE));
-
-        // These will be executed last, so they will define the state in the test - what really
-        // matters from this test point of view is the order, asserted at the end
-        mRule.setSyncDisabledModeForTest(PERSISTENT);
-        mRule.setSdkSandboxState(true);
+                        ASubClassEnablesSdkSandboxAndAlsoDisablesDeviceConfigUntilReboot.class);
 
         mRule.apply(mStatement, test).evaluate();
 
         expect.withMessage("deviceConfig.getSyncDisabledMode() on test")
                 .that(mSyncModeOnTest.get())
-                .isEqualTo(PERSISTENT);
+                .isEqualTo(UNTIL_REBOOT);
         expect.withMessage("deviceConfig.getSyncDisabledMode() after test")
                 .that(mDeviceConfig.getSyncDisabledMode())
                 .isEqualTo(mSyncModeBefore);
@@ -340,14 +335,48 @@ public abstract class AbstractFlagsPreparerClassRuleIntegrationTestCase<
                 .that(mSdkSandbox.getState())
                 .isEqualTo(mSdkSandboxStateBefore);
 
-        expectCalls(ENABLED, NONE, mSyncModeBefore, mSdkSandboxStateBefore);
+        expectCalls(ENABLED, UNTIL_REBOOT, mSyncModeBefore, mSdkSandboxStateBefore);
     }
 
+    @Test
+    public final void testAnnotationsFromSubclassAreExecutedFirstAndInOrder_deviceConfigFirst()
+            throws Throwable {
+        assumeDeviceConfigSyncModeIsSupportedAndInitialModeIsNot(NONE);
+        assumeSdkSandboxStateIsSupportedAndInitialStateIs(DISABLED);
+
+        Description test =
+                newTestMethodForClassRule(
+                        ASubClassDisablesDeviceConfigUntilRebootAndAlsoEnablesSdkSandbox.class);
+
+        mRule.apply(mStatement, test).evaluate();
+
+        expect.withMessage("deviceConfig.getSyncDisabledMode() on test")
+                .that(mSyncModeOnTest.get())
+                .isEqualTo(UNTIL_REBOOT);
+        expect.withMessage("deviceConfig.getSyncDisabledMode() after test")
+                .that(mDeviceConfig.getSyncDisabledMode())
+                .isEqualTo(mSyncModeBefore);
+
+        expect.withMessage("sdkSandbox.getState() on test")
+                .that(mSdkSandboxStateOnTest.get())
+                .isEqualTo(ENABLED);
+        expect.withMessage("sdkSandbox.getState() after test")
+                .that(mSdkSandbox.getState())
+                .isEqualTo(mSdkSandboxStateBefore);
+
+        // NOTE: ideally it should follow the annotations order and be:
+        // UNTIL_REBOOT, ENABLED, mSdkSandboxStateBefore, mSyncModeBefore);
+        // but we cannot guarantee the order (see comment on AbstractFlagsPreparerClassRule)
+        expectCalls(ENABLED, UNTIL_REBOOT, mSyncModeBefore, mSdkSandboxStateBefore);
+    }
+
+    /**
+     * Asserts calls received by the test, in sequence.
+     *
+     * <p>Usually called with an even number of calls - the calls from execute() and the calls from
+     * revert()
+     */
     private void expectCalls(Object... calls) {
-        if (!CHECK_ORDER) {
-            mLog.w("expectCalls(%s): temporarily ignoring", Arrays.toString(calls));
-            return;
-        }
         expect.withMessage("calls").that(mCalls).containsExactly(calls).inOrder();
     }
 
@@ -380,11 +409,9 @@ public abstract class AbstractFlagsPreparerClassRuleIntegrationTestCase<
     }
 
     private void assumeDeviceConfigSyncModeIsSupportedAndInitialModeIsNot(
-            SyncDisabledModeForTest... modes) {
+            SyncDisabledModeForTest mode) {
         assumeInitialDeviceConfigSyncModeIsNot(SyncDisabledModeForTest.UNSUPPORTED);
-        for (var mode : modes) {
-            assumeInitialDeviceConfigSyncModeIsNot(mode);
-        }
+        assumeInitialDeviceConfigSyncModeIsNot(mode);
     }
 
     private void assumeInitialDeviceConfigSyncModeIsNot(SyncDisabledModeForTest mode) {
@@ -428,4 +455,14 @@ public abstract class AbstractFlagsPreparerClassRuleIntegrationTestCase<
 
     @SetSyncDisabledModeForTest(UNTIL_REBOOT)
     private static class AClassDisablesDeviceConfigUntilReboot {}
+
+    @SetSdkSandboxStateEnabled(true)
+    @SetSyncDisabledModeForTest(UNTIL_REBOOT)
+    private static class ASubClassEnablesSdkSandboxAndAlsoDisablesDeviceConfigUntilReboot
+            extends AClassDisablesDeviceConfigUntilReboot {}
+
+    @SetSyncDisabledModeForTest(UNTIL_REBOOT)
+    @SetSdkSandboxStateEnabled(true)
+    private static class ASubClassDisablesDeviceConfigUntilRebootAndAlsoEnablesSdkSandbox
+            extends AClassDisablesDeviceConfigUntilReboot {}
 }

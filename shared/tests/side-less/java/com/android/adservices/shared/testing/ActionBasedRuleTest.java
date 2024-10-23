@@ -21,6 +21,8 @@ import com.android.adservices.shared.meta_testing.FakeAction;
 import com.android.adservices.shared.meta_testing.SharedSidelessTestCase;
 import com.android.adservices.shared.meta_testing.SimpleStatement;
 
+import com.google.common.collect.ImmutableList;
+
 import org.junit.Test;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -480,13 +482,14 @@ public final class ActionBasedRuleTest extends SharedSidelessTestCase {
         }
 
         @Override
-        protected List<Action> createActionsForTest(Statement base, Description description)
-                throws Throwable {
+        protected ImmutableList<Action> createActionsForTest(
+                Statement base, Description description) throws Throwable {
             if (onCreateActionsForTest != null) {
                 mLog.e("preExecuteActions(): trowing %s", onCreateActionsForTest);
                 throw onCreateActionsForTest;
             }
-            return mActionsForTest.get(base);
+            var actions = mActionsForTest.get(base);
+            return actions == null ? null : ImmutableList.copyOf(actions);
         }
 
         @Override

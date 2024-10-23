@@ -59,6 +59,16 @@ public final class SetSdkSandboxStateActionTest extends SharedSidelessTestCase {
     }
 
     @Test
+    public void testGetState() {
+        for (State state : State.values()) {
+            if (state.isSettable()) {
+                var action = new SetSdkSandboxStateAction(mFakeLogger, mFakeSdkSandbox, state);
+                expect.withMessage("getState()").that(action.getState()).isEqualTo(state);
+            }
+        }
+    }
+
+    @Test
     public void testExecuteAndRevert_getPreviousFail() throws Exception {
         mFakeSdkSandbox.onGetStateThrows(new RuntimeException("D'OH!"));
 

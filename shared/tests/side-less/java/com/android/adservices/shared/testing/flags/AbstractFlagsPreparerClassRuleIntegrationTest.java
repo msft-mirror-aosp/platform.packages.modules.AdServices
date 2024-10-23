@@ -59,6 +59,8 @@ public final class AbstractFlagsPreparerClassRuleIntegrationTest
     protected FakeFlagsPreparerClassRule newRule(
             SdkSandboxWrapper sdkSandbox, DeviceConfigWrapper deviceConfig) {
         sdkSandbox.setWrapped(new FakeSdkSandbox().setState(DISABLED));
+        // NOTE: ideally initial mode should be NONE, but somehow tradefed / atest set it to
+        // PERSISTENT, and this class should mimic the real flag as much as possible
         deviceConfig.setWrapped(new FakeDeviceConfig().setSyncDisabledMode(PERSISTENT));
         return new FakeFlagsPreparerClassRule(sdkSandbox, deviceConfig);
     }
