@@ -4638,6 +4638,11 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE
                         + " = "
                         + getMeasurementMaxAdrCountPerSource());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_BOTH_SIDE_DEBUG_KEYS_IN_REPORTS
+                        + " = "
+                        + getMeasurementEnableBothSideDebugKeysInReports());
 
         writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
         writer.println(
@@ -6976,6 +6981,13 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE,
                 MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE);
+    }
+
+    @Override
+    public boolean getMeasurementEnableBothSideDebugKeysInReports() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_BOTH_SIDE_DEBUG_KEYS_IN_REPORTS,
+                MEASUREMENT_ENABLE_BOTH_SIDE_DEBUG_KEYS_IN_REPORTS);
     }
 
     @Override

@@ -922,6 +922,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetMeasurementEnableBothSideDebugKeysInReports() {
+        testFeatureFlag(
+                "MEASUREMENT_ENABLE_BOTH_SIDE_DEBUG_KEYS_IN_REPORTS",
+                Flags::getMeasurementEnableBothSideDebugKeysInReports);
+    }
+
+    @Test
     public void testGetFledgeGetAdSelectionDataBuyerInputCreatorVersion() {
         testFlag(
                 "getFledgeGetAdSelectionDataBuyerInputCreatorVersion",

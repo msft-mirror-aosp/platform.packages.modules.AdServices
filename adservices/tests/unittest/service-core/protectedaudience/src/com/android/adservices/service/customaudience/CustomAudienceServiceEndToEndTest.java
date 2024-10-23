@@ -374,7 +374,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 COMMON_FLAGS_WITH_FILTERS_ENABLED),
                         mCustomAudienceQuantityChecker,
-                        mStrategy);
+                        mStrategy,
+                        mAdServicesLoggerMock);
     }
 
     @Test
@@ -1657,7 +1658,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 flagsWithAuctionServerRequestFlagsEnabled),
                         mCustomAudienceQuantityChecker,
-                        mStrategy);
+                        mStrategy,
+                        mAdServicesLoggerMock);
 
         // Wire the mock web server
         String responsePayload =
@@ -1826,7 +1828,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 flagsWithSellerConfigurationFlagEnabled),
                         mCustomAudienceQuantityChecker,
-                        mStrategy);
+                        mStrategy,
+                        mAdServicesLoggerMock);
 
         // Wire the mock web server
         String responsePayload =
@@ -2230,7 +2233,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 flagsWithCAQuantityCheckerFlags),
                         new CustomAudienceQuantityChecker(
                                 mCustomAudienceDao, flagsWithCAQuantityCheckerFlags),
-                        mStrategy);
+                        mStrategy,
+                        mAdServicesLoggerMock);
 
         // Wire the mock web server
         String responsePayload =
@@ -2364,7 +2368,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 flagsWithCAQuantityCheckerFlags),
                         new CustomAudienceQuantityChecker(
                                 mCustomAudienceDao, flagsWithCAQuantityCheckerFlags),
-                        mStrategy);
+                        mStrategy,
+                        mAdServicesLoggerMock);
 
         // Wire the mock web server
         String responsePayload =

@@ -236,6 +236,120 @@ public class ScheduleCustomAudienceUpdateTestUtils {
         responseJson.put(SHOULD_REPLACE_PENDING_UPDATES_KEY, true);
         responseJson.put(PARTIAL_CUSTOM_AUDIENCES_KEY, getPartialCustomAudienceJsonArray());
         responseJson.put(LEAVE_CUSTOM_AUDIENCE_KEY, CUSTOM_AUDIENCE_TO_LEAVE_JSON_ARRAY);
+        return responseJson;
+    }
+
+    /**
+     * Creates a JSON response that is expected to be returned from the server for update without
+     * Leave CA fields
+     */
+    public static JSONObject createJsonResponsePayloadWithoutLeaveCA(
+            AdTechIdentifier buyer,
+            String owner,
+            List<String> joinCustomAudienceNames,
+            List<String> leaveCustomAudienceNames,
+            boolean auctionServerRequestFlagsEnabled,
+            boolean sellerConfigurationEnabled)
+            throws JSONException {
+
+        JSONObject responseJson = new JSONObject();
+
+        JSONArray joinCustomAudienceArray = new JSONArray();
+        for (int i = 0; i < joinCustomAudienceNames.size(); i++) {
+            JSONObject generatedCa =
+                    generateCustomAudienceWithName(buyer, owner, joinCustomAudienceNames.get(i));
+            if (auctionServerRequestFlagsEnabled) {
+                // Add auction server request flags
+                generatedCa =
+                        addAuctionServerRequestFlags(
+                                generatedCa,
+                                ImmutableList.of(CustomAudienceBlob.OMIT_ADS_VALUE),
+                                false);
+            }
+            if (sellerConfigurationEnabled) {
+                // give every CA a priority of 1.0
+                generatedCa =
+                        addPriority(
+                                /* jsonObject */ generatedCa,
+                                CustomAudienceFixture.VALID_PRIORITY_1,
+                                /* shouldAddHarmlessJunk= */ false);
+            }
+            joinCustomAudienceArray.put(i, generatedCa);
+        }
+
+        responseJson.put(JOIN_CUSTOM_AUDIENCE_KEY, joinCustomAudienceArray);
+
+        return responseJson;
+    }
+
+    /**
+     * Creates a JSON response that with invalid join ca json object. The last CA in the JSON
+     * response will be invalid, the first N - 1 will be valid.
+     */
+    public static JSONObject createJsonResponsePayloadInvalidJoinCA(
+            AdTechIdentifier buyer,
+            String owner,
+            List<String> joinCustomAudienceNames,
+            List<String> leaveCustomAudienceNames,
+            boolean auctionServerRequestFlagsEnabled,
+            boolean sellerConfigurationEnabled)
+            throws JSONException {
+        JSONObject responseJson = new JSONObject();
+
+        JSONArray joinCustomAudienceArray = new JSONArray();
+        // Inserting N - 1 valid join custom audience JSON
+        for (int i = 0; i < joinCustomAudienceNames.size() - 1; i++) {
+            JSONObject generatedCa =
+                    generateCustomAudienceWithName(buyer, owner, joinCustomAudienceNames.get(i));
+            if (auctionServerRequestFlagsEnabled) {
+                // Add auction server request flags
+                generatedCa =
+                        addAuctionServerRequestFlags(
+                                generatedCa,
+                                ImmutableList.of(CustomAudienceBlob.OMIT_ADS_VALUE),
+                                false);
+            }
+            if (sellerConfigurationEnabled) {
+                // give every CA a priority of 1.0
+                generatedCa =
+                        addPriority(
+                                /* jsonObject */ generatedCa,
+                                CustomAudienceFixture.VALID_PRIORITY_1,
+                                /* shouldAddHarmlessJunk= */ false);
+            }
+            joinCustomAudienceArray.put(i, generatedCa);
+        }
+
+        // Inserting invalid join CA JSON. This will insert the name as an array instead of a string
+        JSONObject generatedCa = new JSONObject();
+        generatedCa.append("name", "garbageName");
+        joinCustomAudienceArray.put(joinCustomAudienceNames.size() - 1, generatedCa);
+
+        responseJson.put(JOIN_CUSTOM_AUDIENCE_KEY, joinCustomAudienceArray);
+
+        return responseJson;
+    }
+
+    /**
+     * Creates a JSON response that is expected to be returned from the server for update without
+     * join ca fields
+     */
+    public static JSONObject createJsonResponsePayloadWithoutJoinCA(
+            AdTechIdentifier buyer,
+            String owner,
+            List<String> joinCustomAudienceNames,
+            List<String> leaveCustomAudienceNames,
+            boolean auctionServerRequestFlagsEnabled,
+            boolean sellerConfigurationEnabled)
+            throws JSONException {
+
+        JSONObject responseJson = new JSONObject();
+
+        JSONArray leaveCustomAudienceArray = new JSONArray();
+        for (int i = 0; i < leaveCustomAudienceNames.size(); i++) {
+            leaveCustomAudienceArray.put(i, leaveCustomAudienceNames.get(i));
+        }
+        responseJson.put(LEAVE_CUSTOM_AUDIENCE_KEY, leaveCustomAudienceArray);
 
         return responseJson;
     }
