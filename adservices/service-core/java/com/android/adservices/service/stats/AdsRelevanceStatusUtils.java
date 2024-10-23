@@ -191,13 +191,38 @@ public class AdsRelevanceStatusUtils {
     public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_UNKNOWN = 0;
 
     /** Http error during schedule custom audience update by the background job. */
-    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_ERROR = 1;
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_UNKNOWN_ERROR = 1;
+
+    /**
+     * Http server error during schedule custom audience update by the background job. Error code
+     * indicating that the user has sent too many requests in a given amount of time and the service
+     * received an HTTP 429 status code
+     */
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_TOO_MANY_REQUESTS = 2;
+
+    /**
+     * Http server error during schedule custom audience update by the background job. Error code
+     * indicating that the service received an HTTP 3xx status code
+     */
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_REDIRECTION = 3;
+
+    /**
+     * Http server error during schedule custom audience update by the background job. Error code
+     * indicating that the service received an HTTP 4xx status code
+     */
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_CLIENT_ERROR = 4;
+
+    /**
+     * Http server error during schedule custom audience update by the background job. Error code
+     * indicating that the service received an HTTP 5xx.
+     */
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_SERVER_ERROR = 5;
 
     /** Json error during schedule custom audience update by the background job. */
-    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_JSON_ERROR = 2;
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_JSON_ERROR = 6;
 
     /** Internal error during schedule custom audience update by the background job. */
-    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_INTERNAL_ERROR = 3;
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_INTERNAL_ERROR = 7;
 
     /** Schedule custom audience request overwriting an already existing update in the database. */
     public static final int
@@ -343,9 +368,13 @@ public class AdsRelevanceStatusUtils {
             prefix = {"SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE"},
             value = {
                 SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_UNKNOWN,
-                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_ERROR,
-                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_INTERNAL_ERROR,
-                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_JSON_ERROR
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_UNKNOWN_ERROR,
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_TOO_MANY_REQUESTS,
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_REDIRECTION,
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_CLIENT_ERROR,
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_SERVER_ERROR,
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_JSON_ERROR,
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_INTERNAL_ERROR
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface ScheduleCustomAudienceUpdatePerformedFailureType {}
