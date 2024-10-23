@@ -16,14 +16,17 @@
 
 package com.android.adservices.service.customaudience;
 
+import static com.android.adservices.service.common.AppManifestConfigCall.API_CUSTOM_AUDIENCES;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.USER_BIDDING_SIGNALS_KEY;
 import static com.android.adservices.service.customaudience.FetchCustomAudienceReader.ACTIVATION_TIME_KEY;
 import static com.android.adservices.service.customaudience.FetchCustomAudienceReader.EXPIRATION_TIME_KEY;
 import static com.android.adservices.service.customaudience.FetchCustomAudienceReader.NAME_KEY;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE;
 
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.PartialCustomAudience;
+import android.content.Context;
 import android.net.Uri;
 import android.os.Build;
 
@@ -31,6 +34,7 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.customaudience.DBScheduledCustomAudienceUpdate;
+import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.internal.util.Preconditions;
 
@@ -59,10 +63,22 @@ public class AdditionalScheduleRequestsEnabledStrategyHelper {
     protected static final String UPDATE_URI_KEY = "update_uri";
     protected static final String SHOULD_REPLACE_PENDING_UPDATES_KEY =
             "should_replace_pending_updates";
-    private final int mFledgeScheduleCustomAudienceMinDelayMinsOverride;
 
-    AdditionalScheduleRequestsEnabledStrategyHelper(int minDelayMinsOverride) {
+    private final int mFledgeScheduleCustomAudienceMinDelayMinsOverride;
+    private final boolean mDisableFledgeEnrollmentCheck;
+
+    private final Context mContext;
+    private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
+
+    AdditionalScheduleRequestsEnabledStrategyHelper(
+            Context context,
+            FledgeAuthorizationFilter fledgeAuthorizationFilter,
+            int minDelayMinsOverride,
+            boolean disableFledgeEnrollmentCheck) {
+        mContext = context;
+        mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
         mFledgeScheduleCustomAudienceMinDelayMinsOverride = minDelayMinsOverride;
+        mDisableFledgeEnrollmentCheck = disableFledgeEnrollmentCheck;
     }
 
     /**
@@ -72,7 +88,9 @@ public class AdditionalScheduleRequestsEnabledStrategyHelper {
      */
     DBScheduledCustomAudienceUpdate validateAndConvertScheduleRequest(
             String owner, JSONObject scheduleRequest, Instant now, DevContext devContext)
-            throws IllegalArgumentException, JSONException {
+            throws IllegalArgumentException,
+                    JSONException,
+                    FledgeAuthorizationFilter.AdTechNotAllowedException {
 
         try {
             Uri updateUri = Uri.parse(scheduleRequest.getString(UPDATE_URI_KEY));
@@ -80,19 +98,18 @@ public class AdditionalScheduleRequestsEnabledStrategyHelper {
             Instant scheduledTime = now.plus(minDelay.toMinutes(), ChronoUnit.MINUTES);
 
             validateDelayTime(minDelay);
+            AdTechIdentifier buyer = validateAndExtractIdentifier(updateUri, owner);
 
             return DBScheduledCustomAudienceUpdate.builder()
                     .setUpdateUri(updateUri)
                     .setOwner(owner)
-                    .setBuyer(
-                            AdTechIdentifier.fromString(
-                                    Objects.requireNonNull(updateUri.getHost())))
+                    .setBuyer(buyer)
                     .setCreationTime(now)
                     .setScheduledTime(scheduledTime)
                     .setIsDebuggable(devContext.getDeviceDevOptionsEnabled())
                     .setAllowScheduleInResponse(false)
                     .build();
-        } catch (JSONException | NullPointerException e) {
+        } catch (JSONException e) {
             sLogger.e(e, "Cannot convert schedule request json to DBScheduledCustomAudienceUpdate");
             throw new JSONException(e);
         }
@@ -106,6 +123,7 @@ public class AdditionalScheduleRequestsEnabledStrategyHelper {
                             .getJSONObject(SCHEDULE_REQUESTS_KEY)
                             .getJSONArray(REQUESTS_KEY);
         } catch (JSONException e) {
+            sLogger.d(e, "There are no schedule requests in the request");
             return new ArrayList<>();
         }
 
@@ -130,7 +148,7 @@ public class AdditionalScheduleRequestsEnabledStrategyHelper {
         try {
             jsonArray = requestJson.getJSONArray(PARTIAL_CUSTOM_AUDIENCES_KEY);
         } catch (JSONException e) {
-            sLogger.d(e, "Unable to parse any Partial Custom Audiences from request");
+            sLogger.d(e, "There are no partial custom audiences in the request");
             return new ArrayList<>();
         }
 
@@ -155,7 +173,7 @@ public class AdditionalScheduleRequestsEnabledStrategyHelper {
         try {
             jsonArray = scheduleRequest.getJSONArray(LEAVE_CUSTOM_AUDIENCE_KEY);
         } catch (JSONException e) {
-            sLogger.e(e, "Unable to parse any custom audiences to leave from request");
+            sLogger.e(e, "There are no custom audiences to leave in the request");
             return new ArrayList<>();
         }
 
@@ -199,7 +217,7 @@ public class AdditionalScheduleRequestsEnabledStrategyHelper {
         return builder.build();
     }
 
-    void validateDelayTime(Duration delayTime) throws IllegalArgumentException {
+    private void validateDelayTime(Duration delayTime) throws IllegalArgumentException {
         int minTimeDelayMinutes =
                 Math.min(MIN_DELAY_TIME_MINUTES, mFledgeScheduleCustomAudienceMinDelayMinsOverride);
         if (delayTime.toMinutes() < minTimeDelayMinutes
@@ -207,5 +225,25 @@ public class AdditionalScheduleRequestsEnabledStrategyHelper {
             sLogger.e("Delay Time not within permissible limits");
             throw new IllegalArgumentException("Delay Time not within permissible limits");
         }
+    }
+
+    private AdTechIdentifier validateAndExtractIdentifier(
+            Uri uriForAdTech, String callerPackageName)
+            throws FledgeAuthorizationFilter.AdTechNotAllowedException, NullPointerException {
+        AdTechIdentifier adTech;
+        if (mDisableFledgeEnrollmentCheck) {
+            sLogger.v("Using URI host as ad tech's identifier.");
+            adTech = AdTechIdentifier.fromString(Objects.requireNonNull(uriForAdTech.getHost()));
+        } else {
+            sLogger.v("Extracting ad tech's eTLD+1 identifier.");
+            adTech =
+                    mFledgeAuthorizationFilter.getAndAssertAdTechFromUriAllowed(
+                            mContext,
+                            callerPackageName,
+                            uriForAdTech,
+                            AD_SERVICES_API_CALLED__API_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE,
+                            API_CUSTOM_AUDIENCES);
+        }
+        return adTech;
     }
 }

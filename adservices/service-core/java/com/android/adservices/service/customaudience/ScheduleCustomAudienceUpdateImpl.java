@@ -68,7 +68,7 @@ import java.util.Collections;
 @RequiresApi(Build.VERSION_CODES.S)
 public class ScheduleCustomAudienceUpdateImpl {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
-    private static final int API_NAME =
+    public static final int API_NAME =
             AD_SERVICES_API_CALLED__API_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE;
     public static final int MIN_DELAY_TIME_MINUTES = 30;
     public static final int MAX_DELAY_TIME_MINUTES = 300;

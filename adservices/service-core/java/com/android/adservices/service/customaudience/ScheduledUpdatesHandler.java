@@ -69,6 +69,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
 import com.android.adservices.service.common.AdRenderIdValidator;
 import com.android.adservices.service.common.AdTechIdentifierValidator;
+import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.FrequencyCapAdDataValidator;
 import com.android.adservices.service.common.JsonValidator;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
@@ -260,13 +261,17 @@ public final class ScheduledUpdatesHandler {
                         CustomAudienceDatabase.getInstance().customAudienceDao(),
                         FlagsFactory.getFlags()),
                 ScheduleCustomAudienceUpdateStrategyFactory.createStrategy(
+                        context,
                         CustomAudienceDatabase.getInstance().customAudienceDao(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
+                        FledgeAuthorizationFilter.create(
+                                context, AdServicesLoggerImpl.getInstance()),
                         FlagsFactory.getFlags()
                                 .getFledgeScheduleCustomAudienceMinDelayMinsOverride(),
                         FlagsFactory.getFlags()
-                                .getFledgeEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests()),
+                                .getFledgeEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests(),
+                        FlagsFactory.getFlags().getDisableFledgeEnrollmentCheck()),
                 AdServicesLoggerImpl.getInstance());
     }
 

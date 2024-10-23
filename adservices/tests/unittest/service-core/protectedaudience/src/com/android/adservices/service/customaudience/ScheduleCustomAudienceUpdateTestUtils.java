@@ -283,17 +283,6 @@ public class ScheduleCustomAudienceUpdateTestUtils {
         return updateResponseJson;
     }
 
-    /** Creates a Schedule Request JSONObject without an update uri */
-    public static JSONObject generateScheduleRequestMissingUpdateUriKey() throws JSONException {
-        JSONObject responseJson = new JSONObject();
-
-        responseJson.put(MIN_DELAY_KEY, MIN_DELAY);
-        responseJson.put(SHOULD_REPLACE_PENDING_UPDATES_KEY, true);
-        responseJson.put(PARTIAL_CUSTOM_AUDIENCES_KEY, getPartialCustomAudienceJsonArray());
-        responseJson.put(LEAVE_CUSTOM_AUDIENCE_KEY, CUSTOM_AUDIENCE_TO_LEAVE_JSON_ARRAY);
-        return responseJson;
-    }
-
     /**
      * Creates a JSON response that is expected to be returned from the server for update without
      * Leave CA fields
@@ -472,7 +461,6 @@ public class ScheduleCustomAudienceUpdateTestUtils {
         responseJson.put(PARTIAL_CUSTOM_AUDIENCES_KEY, partialCustomAudiences);
         responseJson.put(LEAVE_CUSTOM_AUDIENCE_KEY, customAudiencesToLeave);
 
-        LogUtil.e("createScheduleRequestReturn: " + responseJson);
         return responseJson;
     }
 

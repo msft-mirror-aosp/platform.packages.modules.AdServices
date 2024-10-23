@@ -107,7 +107,7 @@ public class AdditionalScheduleRequestsEnabledStrategy
                                     return null;
                                 },
                                 mBackgroundExecutor));
-            } catch (JSONException | IllegalArgumentException e) {
+            } catch (Exception e) {
                 sLogger.e(e, "Invalid schedule request, skipping scheduling for this request");
             }
         }

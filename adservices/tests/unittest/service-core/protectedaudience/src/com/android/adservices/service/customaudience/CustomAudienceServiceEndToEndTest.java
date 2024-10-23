@@ -135,6 +135,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.shared.testing.concurrency.FailableOnResultSyncCallback;
 import com.android.adservices.testutils.FetchCustomAudienceTestSyncCallback;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
@@ -172,9 +173,6 @@ import java.util.stream.Collectors;
 public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedMockitoTestCase {
     @Rule(order = 11)
     public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
-
-    @Rule(order = 12)
-    public MockWebServerRule mMockWebServerRule2 = MockWebServerRuleFactory.createForHttps();
 
     private static final CustomAudience CUSTOM_AUDIENCE_PK1_1 =
             getValidBuilderForBuyerFilters(CommonFixture.VALID_BUYER_1).build();
@@ -328,12 +326,16 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
 
         mStrategy =
                 ScheduleCustomAudienceUpdateStrategyFactory.createStrategy(
+                        mContext,
                         mCustomAudienceDao,
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
+                        FledgeAuthorizationFilter.create(
+                                mContext, AdServicesLoggerImpl.getInstance()),
                         COMMON_FLAGS_WITH_FILTERS_ENABLED
                                 .getFledgeScheduleCustomAudienceMinDelayMinsOverride(),
-                        false);
+                        /* additionalScheduleRequestsEnabled= */ false,
+                        COMMON_FLAGS_WITH_FILTERS_ENABLED.getDisableFledgeEnrollmentCheck());
 
         mService =
                 new CustomAudienceServiceImpl(
@@ -4803,11 +4805,15 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
 
         mStrategy =
                 ScheduleCustomAudienceUpdateStrategyFactory.createStrategy(
+                        mContext,
                         mCustomAudienceDao,
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
+                        FledgeAuthorizationFilter.create(
+                                mContext, AdServicesLoggerImpl.getInstance()),
                         flags.getFledgeScheduleCustomAudienceMinDelayMinsOverride(),
-                        true);
+                        /* additionalScheduleRequestsEnabled= */ true,
+                        COMMON_FLAGS_WITH_FILTERS_ENABLED.getDisableFledgeEnrollmentCheck());
 
         mService =
                 new CustomAudienceServiceImpl(
