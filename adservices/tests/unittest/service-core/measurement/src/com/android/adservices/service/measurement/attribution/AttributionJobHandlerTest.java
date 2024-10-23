@@ -43,6 +43,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.util.Pair;
 
@@ -84,6 +87,9 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.MeasurementAttributionStats;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.build.SdkLevel;
+import com.android.modules.utils.testing.ExtendedMockitoRule;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import org.json.JSONArray;
@@ -114,9 +120,8 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-/**
- * Unit test for {@link AttributionJobHandler}
- */
+/** Unit test for {@link AttributionJobHandler} */
+@ExtendedMockitoRule.SpyStatic(SdkLevel.class)
 @RunWith(MockitoJUnitRunner.class)
 public class AttributionJobHandlerTest {
     public static final String TEST_TRIGGER_CONTEXT_ID = "test_trigger_context_id";
@@ -131,7 +136,6 @@ public class AttributionJobHandlerTest {
     private static final long TRIGGER_TIME = 1690000001000L;
     private static final long EXPIRY_TIME = 1692592000000L;
     private static final long LOOKBACK_WINDOW = 1000L;
-    private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Uri APP_DESTINATION = Uri.parse("android-app://com.example.app");
     private static final Uri WEB_DESTINATION = WebUtil.validUri("https://web.example.test");
     private static final Uri PUBLISHER = Uri.parse("android-app://publisher.app");
@@ -167,6 +171,8 @@ public class AttributionJobHandlerTest {
                 .build();
     }
 
+    private static Context sContext;
+
     DatastoreManager mDatastoreManager;
 
     AttributionJobHandler mHandler;
@@ -187,6 +193,7 @@ public class AttributionJobHandlerTest {
     @Mock AdServicesErrorLogger mErrorLogger;
     @Mock DebugReportApi mDebugReportApi;
     @Mock AggregateDebugReportApi mAdrApi;
+    @Mock PackageManager mPackageManager;
 
     class FakeDatastoreManager extends DatastoreManager {
 
@@ -216,6 +223,7 @@ public class AttributionJobHandlerTest {
         mEventReportWindowCalcDelegate = spy(new EventReportWindowCalcDelegate(mFlags));
         mSourceNoiseHandler = spy(new SourceNoiseHandler(mFlags));
         mLogger = spy(AdServicesLoggerImpl.getInstance());
+        sContext = spy(ApplicationProvider.getApplicationContext());
         mHandler =
                 new AttributionJobHandler(
                         mDatastoreManager,
@@ -225,7 +233,8 @@ public class AttributionJobHandlerTest {
                         mSourceNoiseHandler,
                         mLogger,
                         new XnaSourceCreator(mFlags),
-                        mAdrApi);
+                        mAdrApi,
+                        sContext);
         when(mFlags.getMeasurementEnableXNA()).thenReturn(false);
         when(mFlags.getMeasurementMaxEventAttributionPerRateLimitWindow())
                 .thenReturn(Flags.MEASUREMENT_MAX_EVENT_ATTRIBUTION_PER_RATE_LIMIT_WINDOW);
@@ -9094,6 +9103,104 @@ public class AttributionJobHandlerTest {
         verify(mMeasurementDao)
                 .updateTriggerStatus(
                         eq(Collections.singletonList(trigger.getId())), eq(Trigger.Status.IGNORED));
+    }
+
+    @Test
+    public void performAttribution_InstallAttributionOnSEnabled_doInstallAttribution()
+            throws DatastoreException, PackageManager.NameNotFoundException {
+        ExtendedMockito.doReturn(false).when(() -> SdkLevel.isAtLeastT());
+
+        long installTimeStamp = 0L;
+        long triggerTime = 1000L;
+
+        Uri destination1 = Uri.parse("android-app://com.destination1");
+
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAggregateTriggerData(null)
+                        .setAggregateValuesString(null)
+                        .setEventTriggers(EVENT_TRIGGERS)
+                        .setId(UUID.randomUUID().toString())
+                        .setAttributionDestination(destination1)
+                        .setTriggerTime(triggerTime)
+                        .build();
+
+        ApplicationInfo applicationInfo1 = new ApplicationInfo();
+        applicationInfo1.packageName = destination1.getHost();
+
+        PackageInfo packageInfo = new PackageInfo();
+        packageInfo.firstInstallTime = installTimeStamp;
+
+        when(mFlags.getMeasurementEnableInstallAttributionOnS()).thenReturn(true);
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(new ArrayList<>());
+
+        when(mMeasurementDao.existsActiveSourcesWithDestination(destination1, triggerTime))
+                .thenReturn(true);
+
+        when(sContext.getPackageManager()).thenReturn(mPackageManager);
+        when(mPackageManager.getApplicationInfo(destination1.getHost(), 0))
+                .thenReturn(applicationInfo1);
+        when(mPackageManager.getApplicationInfo(destination1.getHost(), 0))
+                .thenReturn(applicationInfo1);
+        when(mPackageManager.getPackageInfo(destination1.getHost(), 0)).thenReturn(packageInfo);
+
+        // Execution
+        mHandler.performPendingAttributions();
+
+        // Assertion
+        verify(mMeasurementDao, times(1)).doInstallAttribution(destination1, installTimeStamp);
+    }
+
+    @Test
+    public void performAttribution_InstallAttributionOnSDisabled_doInstallAttribution()
+            throws DatastoreException, PackageManager.NameNotFoundException {
+        ExtendedMockito.doReturn(false).when(() -> SdkLevel.isAtLeastT());
+
+        long installTimeStamp = 0L;
+        long triggerTime = 1000L;
+
+        Uri destination1 = Uri.parse("android-app://com.destination1");
+
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAggregateTriggerData(null)
+                        .setAggregateValuesString(null)
+                        .setEventTriggers(EVENT_TRIGGERS)
+                        .setId(UUID.randomUUID().toString())
+                        .setAttributionDestination(destination1)
+                        .setTriggerTime(triggerTime)
+                        .build();
+
+        ApplicationInfo applicationInfo1 = new ApplicationInfo();
+        applicationInfo1.packageName = destination1.getHost();
+
+        PackageInfo packageInfo = new PackageInfo();
+        packageInfo.firstInstallTime = installTimeStamp;
+
+        when(mFlags.getMeasurementEnableInstallAttributionOnS()).thenReturn(false);
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(new ArrayList<>());
+
+        when(mMeasurementDao.existsActiveSourcesWithDestination(destination1, triggerTime))
+                .thenReturn(true);
+
+        when(sContext.getPackageManager()).thenReturn(mPackageManager);
+        when(mPackageManager.getApplicationInfo(destination1.getHost(), 0))
+                .thenReturn(applicationInfo1);
+        when(mPackageManager.getApplicationInfo(destination1.getHost(), 0))
+                .thenReturn(applicationInfo1);
+        when(mPackageManager.getPackageInfo(destination1.getHost(), 0)).thenReturn(packageInfo);
+
+        // Execution
+        mHandler.performPendingAttributions();
+
+        // Assertion
+        verify(mMeasurementDao, times(0)).doInstallAttribution(destination1, installTimeStamp);
     }
 
     @Test
