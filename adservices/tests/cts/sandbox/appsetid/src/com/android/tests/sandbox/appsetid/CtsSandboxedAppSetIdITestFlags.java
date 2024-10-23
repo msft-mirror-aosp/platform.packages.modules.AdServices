@@ -21,8 +21,10 @@ import static com.android.adservices.service.FlagsConstants.KEY_APPSETID_KILL_SW
 import com.android.adservices.common.annotations.SetAllLogcatTags;
 import com.android.adservices.common.annotations.SetPpapiAppAllowList;
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
+import com.android.adservices.shared.testing.annotations.SetSdkSandboxStateEnabled;
 
 @SetAllLogcatTags
+@SetSdkSandboxStateEnabled
 @SetFlagDisabled(KEY_APPSETID_KILL_SWITCH)
 @SetPpapiAppAllowList
 interface CtsSandboxedAppSetIdITestFlags {}
