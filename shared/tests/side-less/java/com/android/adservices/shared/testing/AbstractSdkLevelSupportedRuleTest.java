@@ -28,6 +28,8 @@ import static com.android.adservices.shared.testing.AndroidSdk.Level.U;
 
 import static org.junit.Assert.assertThrows;
 
+import com.android.adservices.shared.meta_testing.FakeDeviceGateway;
+import com.android.adservices.shared.meta_testing.FakeSdkLevelSupportedRule;
 import com.android.adservices.shared.meta_testing.SharedSidelessTestCase;
 import com.android.adservices.shared.meta_testing.SimpleStatement;
 import com.android.adservices.shared.testing.AbstractSdkLevelSupportedRule.RequiredRange;
@@ -205,7 +207,7 @@ public class AbstractSdkLevelSupportedRuleTest extends SharedSidelessTestCase {
     }
 
     private void assertGetRequiredRangeForUnannotatedTest(Range ruleRange) {
-        var rule = new FakeSdkLevelSupportedRule(ruleRange);
+        var rule = newRule(ruleRange);
         var expectedRequiredRange = new RequiredRange(ruleRange, DEFAULT_REASON);
 
         assertGetRequiredRange(expectedRequiredRange, rule, newTestMethod());
@@ -313,7 +315,7 @@ public class AbstractSdkLevelSupportedRuleTest extends SharedSidelessTestCase {
             String expectedReason,
             Range ruleRange,
             Annotation... annotations) {
-        var rule = new FakeSdkLevelSupportedRule(ruleRange);
+        var rule = newRule(ruleRange);
         var expectedRequiredRange = new RequiredRange(expectedRange, expectedReason);
 
         assertGetRequiredRange(expectedRequiredRange, rule, newTestMethod(annotations));
@@ -322,7 +324,7 @@ public class AbstractSdkLevelSupportedRuleTest extends SharedSidelessTestCase {
     @Test
     public void testGetRequiredRange_annotatedTestClass_unannotatedTest() throws Throwable {
         // Test with any-range constructor first
-        var ruleForAnyLevel = new FakeSdkLevelSupportedRule(Range.forAnyLevel());
+        var ruleForAnyLevel = newRule(Range.forAnyLevel());
         assertGetRequiredRange(
                 new RequiredRange(Range.forAtLeast(R.getLevel()), REASON_R),
                 ruleForAnyLevel,
@@ -349,8 +351,7 @@ public class AbstractSdkLevelSupportedRuleTest extends SharedSidelessTestCase {
                 newTestMethod(ClassThatRequiresLessThanT.class));
 
         // Then for well-defined range (min and max)
-        var ruleForClosedRange =
-                new FakeSdkLevelSupportedRule(Range.forRange(R.getLevel(), U.getLevel()));
+        var ruleForClosedRange = newRule(Range.forRange(R.getLevel(), U.getLevel()));
         assertGetRequiredRange(
                 new RequiredRange(Range.forRange(R.getLevel(), U.getLevel()), REASON_R),
                 ruleForClosedRange,
@@ -380,7 +381,7 @@ public class AbstractSdkLevelSupportedRuleTest extends SharedSidelessTestCase {
     @Test
     public void testGetRequiredRange_annotatedTestClass_annotatedTest() throws Throwable {
         // Test with any-range constructor first
-        var ruleForAnyLevel = new FakeSdkLevelSupportedRule(Range.forAnyLevel());
+        var ruleForAnyLevel = newRule(Range.forAnyLevel());
         assertGetRequiredRange(
                 new RequiredRange(Range.forAtLeast(S.getLevel()), REASON, REASON_R),
                 ruleForAnyLevel,
@@ -409,8 +410,7 @@ public class AbstractSdkLevelSupportedRuleTest extends SharedSidelessTestCase {
                 newTestMethod(
                         ClassThatRequiresLessThanT.class, newAnnotationForAtLeast(S, REASON)));
 
-        var ruleForClosedRange =
-                new FakeSdkLevelSupportedRule(Range.forRange(R.getLevel(), U.getLevel()));
+        var ruleForClosedRange = newRule(Range.forRange(R.getLevel(), U.getLevel()));
         assertGetRequiredRange(
                 new RequiredRange(Range.forRange(S.getLevel(), U.getLevel()), REASON, REASON_R),
                 ruleForClosedRange,
@@ -448,7 +448,7 @@ public class AbstractSdkLevelSupportedRuleTest extends SharedSidelessTestCase {
 
         assertGetRequiredRange(
                 new RequiredRange(Range.forAtLeast(U.getLevel()), REASON_R, REASON_T, REASON_U),
-                new FakeSdkLevelSupportedRule(Range.forAtLeast(S.getLevel())),
+                newRule(Range.forAtLeast(S.getLevel())),
                 newTestMethod(
                         ClassThatRequiresAtLeastTWhenSuperClassRequiresAtLeastU.class,
                         newAnnotationForAtLeast(R, REASON_R)));
@@ -853,7 +853,7 @@ public class AbstractSdkLevelSupportedRuleTest extends SharedSidelessTestCase {
      * {@link AbstractSdkLevelSupportedRule#getDeviceApiLevel()} to return {@code level}.
      */
     protected AbstractSdkLevelSupportedRule newRuleForDeviceLevelAndRuleAtLeastLevel(Level level) {
-        return new FakeSdkLevelSupportedRule(/* ruleLevel= */ level, /* deviceLevel= */ level);
+        return newRule(Range.forAtLeast(level.getLevel()), level);
     }
 
     /**
@@ -861,15 +861,24 @@ public class AbstractSdkLevelSupportedRuleTest extends SharedSidelessTestCase {
      * {@link AbstractSdkLevelSupportedRule#getDeviceApiLevel()} to return {@code deviceLevel}.
      */
     protected AbstractSdkLevelSupportedRule newRule(Level ruleLevel, Level deviceLevel) {
-        return new FakeSdkLevelSupportedRule(ruleLevel, deviceLevel);
+        return newRule(Range.forAtLeast(ruleLevel.getLevel()), deviceLevel);
     }
 
     /**
      * Creates a rule that is constructed for the given {@code ruleRange} and also mocks that rule's
      * {@link AbstractSdkLevelSupportedRule#getDeviceApiLevel()} to return {@code deviceLevel}.
      */
-    protected AbstractSdkLevelSupportedRule newRule(Range ruleRange, Level deviceLevel) {
-        return new FakeSdkLevelSupportedRule(ruleRange, deviceLevel);
+    protected AbstractSdkLevelSupportedRule newRule(Range ruleRange, @Nullable Level deviceLevel) {
+        FakeDeviceGateway fakeDeviceGateway = new FakeDeviceGateway();
+        if (deviceLevel != null) {
+            fakeDeviceGateway.setSdkLevel(deviceLevel);
+        }
+        return new FakeSdkLevelSupportedRule(
+                DynamicLogger.getInstance(), fakeDeviceGateway, ruleRange);
+    }
+
+    private AbstractSdkLevelSupportedRule newRule(Range range) {
+        return newRule(range, /* deviceLevel= */ null);
     }
 
     // NOTE: eventually there will be releases X, Y, Z, but other names would make these methods
@@ -950,48 +959,6 @@ public class AbstractSdkLevelSupportedRuleTest extends SharedSidelessTestCase {
 
     private static Description newTestMethod(Class<?> clazz, Annotation... annotations) {
         return Description.createTestDescription(clazz, TEST_METHOD_BEING_EXECUTED, annotations);
-    }
-
-    // TODO(b/297085722): replace by rule from meta_testing
-    /**
-     * Bogus implementation of {@link AbstractSdkLevelSupported}.
-     *
-     * <p>It's returned by default by {@link AbstractSdkLevelSupportedRuleTest#newRule(Level,
-     * Level)} and {@link
-     * AbstractSdkLevelSupportedRuleTest#newRuleForDeviceLevelAndRuleAtLeastLevel(Level)}, so this
-     * test class can run independently of the real implementation, which makes it possible to run
-     * this test directly from an IDE.
-     */
-    private static final class FakeSdkLevelSupportedRule extends AbstractSdkLevelSupportedRule {
-
-        @Nullable private final Level mDeviceLevel;
-
-        private FakeSdkLevelSupportedRule(Level ruleLevel, Level deviceLevel) {
-            this(Range.forAtLeast(ruleLevel.getLevel()), deviceLevel);
-        }
-
-        private FakeSdkLevelSupportedRule(Range ruleRange) {
-            this(ruleRange, /* deviceLevel= */ null);
-        }
-
-        private FakeSdkLevelSupportedRule(Range ruleRange, Level deviceLevel) {
-            super(DynamicLogger.getInstance(), ruleRange);
-            mDeviceLevel = deviceLevel;
-        }
-
-        @Override
-        public Level getRawDeviceApiLevel() {
-            if (mDeviceLevel == null) {
-                throw new UnsupportedOperationException(
-                        "Rule created with constructor that doesn't provide the device level");
-            }
-            return mDeviceLevel;
-        }
-
-        @Override
-        public String toString() {
-            return super.toString() + "[mDeviceLevel=" + mDeviceLevel + "]";
-        }
     }
 
     @RequiresSdkLevelAtLeastR(reason = REASON_R)
