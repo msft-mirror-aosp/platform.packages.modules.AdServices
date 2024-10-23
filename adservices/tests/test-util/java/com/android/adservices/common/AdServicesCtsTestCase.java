@@ -15,10 +15,9 @@
  */
 package com.android.adservices.common;
 
-import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest.PERSISTENT;
-
 import com.android.adservices.common.annotations.SetDefaultLogcatTags;
 import com.android.adservices.shared.testing.CallSuper;
+import com.android.adservices.shared.testing.annotations.SetSyncDisabledModeForTest;
 
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -33,6 +32,7 @@ import org.junit.Rule;
  * {@code SdkLevelSupportRule}, as that rule cannot be defined here yet.
  */
 @SetDefaultLogcatTags
+@SetSyncDisabledModeForTest
 public abstract class AdServicesCtsTestCase extends AdServicesTestCase {
 
     // TODO(b/295321663): move these constants (and those from LogFactory
@@ -47,7 +47,7 @@ public abstract class AdServicesCtsTestCase extends AdServicesTestCase {
 
     @ClassRule
     public static final AdServicesFlagsPreparerClassRule sFlagsPreparer =
-            new AdServicesFlagsPreparerClassRule().setSyncDisabledModeForTest(PERSISTENT);
+            new AdServicesFlagsPreparerClassRule();
 
     @Rule(order = 5)
     public final AdServicesFlagsSetterRule flags = getAdServicesFlagsSetterRule();
