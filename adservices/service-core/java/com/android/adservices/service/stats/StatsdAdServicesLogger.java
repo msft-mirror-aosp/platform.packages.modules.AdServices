@@ -60,6 +60,10 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BID
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BIDDING_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_SCORING_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_SELECTION_PROCESS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.SCHEDULED_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_RAN;
+import static com.android.adservices.service.stats.AdServicesStatsLog.SCHEDULED_CUSTOM_AUDIENCE_UPDATE_PERFORMED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.SCHEDULED_CUSTOM_AUDIENCE_UPDATE_PERFORMED_ATTEMPTED_FAILURE_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.SCHEDULED_CUSTOM_AUDIENCE_UPDATE_SCHEDULE_ATTEMPTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.SELECT_ADS_FROM_OUTCOMES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.SERVER_AUCTION_BACKGROUND_KEY_FETCH_ENABLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.SERVER_AUCTION_KEY_FETCH_CALLED;
@@ -980,25 +984,47 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
     @Override
     public void logScheduledCustomAudienceUpdatePerformedStats(
             ScheduledCustomAudienceUpdatePerformedStats stats) {
-        // Implement this method after atoms are merged.
+        AdServicesStatsLog.write(
+                SCHEDULED_CUSTOM_AUDIENCE_UPDATE_PERFORMED,
+                stats.getNumberOfPartialCustomAudienceInRequest(),
+                stats.getNumberOfJoinCustomAudienceInResponse(),
+                stats.getNumberOfCustomAudienceJoined(),
+                stats.getNumberOfLeaveCustomAudienceInRequest(),
+                stats.getNumberOfLeaveCustomAudienceInResponse(),
+                stats.getNumberOfCustomAudienceLeft(),
+                stats.getWasInitialHop(),
+                stats.getNumberOfScheduleUpdatesInResponse(),
+                stats.getNumberOfUpdatesScheduled());
     }
 
     @Override
     public void logScheduledCustomAudienceUpdateBackgroundJobStats(
             ScheduledCustomAudienceUpdateBackgroundJobStats stats) {
-        // Implement this method after atoms are merged.
+        AdServicesStatsLog.write(
+                SCHEDULED_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_RAN,
+                stats.getNumberOfUpdatesFound(),
+                stats.getNumberOfSuccessfulUpdates());
     }
 
     @Override
     public void logScheduledCustomAudienceUpdateScheduleAttemptedStats(
             ScheduledCustomAudienceUpdateScheduleAttemptedStats stats) {
-        // Implement this method after atoms are merged.
+        AdServicesStatsLog.write(
+                SCHEDULED_CUSTOM_AUDIENCE_UPDATE_SCHEDULE_ATTEMPTED,
+                stats.getNumberOfPartialCustomAudiences(),
+                stats.getMinimumDelayInMinutes(),
+                stats.getExistingUpdateStatus(),
+                stats.getNumberOfLeaveCustomAudiences(),
+                stats.isInitialHop());
     }
 
     @Override
     public void logScheduledCustomAudienceUpdatePerformedFailureStats(
             ScheduledCustomAudienceUpdatePerformedFailureStats stats) {
-        // Implement this method after atoms are merged.
+        AdServicesStatsLog.write(
+                SCHEDULED_CUSTOM_AUDIENCE_UPDATE_PERFORMED_ATTEMPTED_FAILURE_REPORTED,
+                stats.getFailureType(),
+                stats.getFailureAction());
     }
 
     @NonNull
