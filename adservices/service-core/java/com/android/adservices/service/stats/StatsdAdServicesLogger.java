@@ -977,6 +977,30 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 stats.getScheduleIfNeededEpochJobStatus());
     }
 
+    @Override
+    public void logScheduledCustomAudienceUpdatePerformedStats(
+            ScheduledCustomAudienceUpdatePerformedStats stats) {
+        // Implement this method after atoms are merged.
+    }
+
+    @Override
+    public void logScheduledCustomAudienceUpdateBackgroundJobStats(
+            ScheduledCustomAudienceUpdateBackgroundJobStats stats) {
+        // Implement this method after atoms are merged.
+    }
+
+    @Override
+    public void logScheduledCustomAudienceUpdateScheduleAttemptedStats(
+            ScheduledCustomAudienceUpdateScheduleAttemptedStats stats) {
+        // Implement this method after atoms are merged.
+    }
+
+    @Override
+    public void logScheduledCustomAudienceUpdatePerformedFailureStats(
+            ScheduledCustomAudienceUpdatePerformedFailureStats stats) {
+        // Implement this method after atoms are merged.
+    }
+
     @NonNull
     private byte[] toBytes(long fieldId, @NonNull int[] values) {
         ProtoOutputStream protoOutputStream = new ProtoOutputStream();

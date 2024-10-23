@@ -28,10 +28,13 @@ import android.app.job.JobInfo;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.cobalt.AppNameApiErrorLogger;
 import com.android.adservices.cobalt.CobaltConstants;
+import com.android.adservices.service.measurement.attribution.AttributionJobService;
 import com.android.adservices.shared.common.flags.ConfigFlag;
 import com.android.adservices.shared.common.flags.FeatureFlag;
 import com.android.adservices.shared.common.flags.ModuleSharedFlags;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -61,8 +64,12 @@ public interface Flags extends ModuleSharedFlags {
         return TOPICS_EPOCH_JOB_PERIOD_MS;
     }
 
-    /** Topics Epoch Job Flex. Note the minimum value system allows is +8h24m0s0ms */
-    @ConfigFlag long TOPICS_EPOCH_JOB_FLEX_MS = 9 * 60 * 60 * 1000; // 5 hours.
+    /**
+     * Topics Epoch Job Flex. Note the minimum value system allows is 5 minutes
+     * or 5% of background job interval time, whichever is greater.
+     * Topics epoch job interval time is 7 days, so the minimum flex time should be 8.4 hours.
+     */
+    @ConfigFlag long TOPICS_EPOCH_JOB_FLEX_MS = 9 * 60 * 60 * 1000; // 9 hours.
 
     /** Returns flex for the Epoch computation job in Millisecond. */
     default long getTopicsEpochJobFlexMs() {
@@ -131,8 +138,10 @@ public interface Flags extends ModuleSharedFlags {
     /** Flag to enable Topics epoch job battery constraint logging for Topics API. */
     @FeatureFlag boolean TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_LOGGING_ENABLED = false;
 
-    /** Returns the feature flag to enable Topics epoch job battery constraint logging
-     * for Topics API. */
+    /**
+     * Returns the feature flag to enable Topics epoch job battery constraint logging for Topics
+     * API.
+     */
     default boolean getTopicsEpochJobBatteryConstraintLoggingEnabled() {
         return TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_LOGGING_ENABLED;
     }
@@ -174,8 +183,8 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     /**
-     * Flag to enable rescheduling of Topics job scheduler tasks when modifications are made
-     * to the configuration of the background job.
+     * Flag to enable rescheduling of Topics job scheduler tasks when modifications are made to the
+     * configuration of the background job.
      */
     @FeatureFlag boolean TOPICS_JOB_SCHEDULER_RESCHEDULE_ENABLED = false;
 
@@ -186,17 +195,33 @@ public interface Flags extends ModuleSharedFlags {
 
     /**
      * This flag allows you to execute the job regardless of the device's charging status.
-     * By default, the Topics API background job scheduler requires the device to be in charging
+     *
+     * <p>By default, the Topics API background job scheduler requires the device to be in charging
      * mode for job execution. The default value for this flag is false, indicating that the job
      * should only be executed when the device is charging. By enabling this flag, the job can be
      * executed when the battery level is not low.
      */
     @FeatureFlag boolean TOPICS_EPOCH_JOB_BATTERY_NOT_LOW_INSTEAD_OF_CHARGING = false;
 
-    /** Returns the feature flag to enable the device to be in batter not low mode for
-     * Topics API job execution.  */
+    /**
+     * Returns the feature flag to enable the device to be in batter not low mode for Topics API job
+     * execution.
+     */
     default boolean getTopicsEpochJobBatteryNotLowInsteadOfCharging() {
         return TOPICS_EPOCH_JOB_BATTERY_NOT_LOW_INSTEAD_OF_CHARGING;
+    }
+
+    /**
+     * Flag to enable cleaning Topics database when the settings of Topics epoch job
+     * is changed from server side.
+     */
+    @FeatureFlag boolean TOPICS_CLEAN_DB_WHEN_EPOCH_JOB_SETTINGS_CHANGED = false;
+
+    /**
+     * Returns the feature flag to enable cleaning Topics database when epoch job settings changed.
+     */
+    default boolean getTopicsCleanDBWhenEpochJobSettingsChanged() {
+        return TOPICS_CLEAN_DB_WHEN_EPOCH_JOB_SETTINGS_CHANGED;
     }
 
     /** Available types of classifier behaviours for the Topics API. */
@@ -805,8 +830,7 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW;
     }
 
-    @ConfigFlag
-    long MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW = TimeUnit.MINUTES.toMillis(1);
+    @ConfigFlag long MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW = TimeUnit.MINUTES.toMillis(1);
 
     /** Returns the duration that controls the rate-limiting window for destinations per minute. */
     default long getMeasurementDestinationRateLimitWindow() {
@@ -3322,7 +3346,6 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCES;
     }
 
-
     /** Returns true if Topics API should require that the calling API is running in foreground. */
     default boolean getEnforceForegroundStatusForTopics() {
         return ENFORCE_FOREGROUND_STATUS_TOPICS;
@@ -5823,6 +5846,14 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns MDD package deny registry manifest url. */
     default String getMddPackageDenyRegistryManifestFileUrl() {
         return DEFAULT_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL;
+    }
+
+    /** Feature flag to enable AtomicFileDataStore update API for adservices apk. */
+    @FeatureFlag boolean DEFAULT_ENABLE_ATOMIC_FILE_DATASTORE_BATCH_UPDATE_API = false;
+
+    /** Returns whether atomic file datastore batch update Api is enabled. */
+    default boolean getEnableAtomicFileDatastoreBatchUpdateApi() {
+        return DEFAULT_ENABLE_ATOMIC_FILE_DATASTORE_BATCH_UPDATE_API;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
