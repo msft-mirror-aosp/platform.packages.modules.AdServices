@@ -115,7 +115,11 @@
             {
               "key": "0xd",
               "value": 123
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ]
         }
       },
@@ -132,10 +136,11 @@
           },
           "aggregation_coordinator_origin": "https://coordinator.com",
           "histograms": [
-            {
-              "key": "0x0",
-              "value": 0
-            }
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ]
         }
       }

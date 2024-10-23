@@ -367,7 +367,6 @@ import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_PER_D
 import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW_IN_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_AGGREGATABLE_NAMED_BUDGETS;
-import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_AGGREGATE_DEBUG_REPORTING;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_AGGREGATE_VALUE_FILTERS;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK;
@@ -870,7 +869,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEST
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW_IN_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATABLE_NAMED_BUDGETS;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATE_DEBUG_REPORTING;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATE_VALUE_FILTERS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK;
@@ -2082,14 +2080,6 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_MEASUREMENT_MAX_DISTINCT_REPORTING_ORIGINS_IN_SOURCE,
                 MEASUREMENT_MAX_DISTINCT_REP_ORIG_PER_PUBLISHER_X_DEST_IN_SOURCE,
                 Flags::getMeasurementMaxDistinctRepOrigPerPublXDestInSource);
-    }
-
-    @Test
-    public void testGetMeasurementEnableAggregatableReportPayloadPadding() {
-        mFlagsTestHelper.testConfigFlag(
-                KEY_MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING,
-                MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING,
-                Flags::getMeasurementEnableAggregatableReportPayloadPadding);
     }
 
     @Test

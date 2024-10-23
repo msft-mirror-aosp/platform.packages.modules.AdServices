@@ -486,7 +486,11 @@
             {
               "key": "0x9",
               "value": 65536
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ]
         }
       },
@@ -507,7 +511,11 @@
             {
               "key": "0x36",
               "value": 65536
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ]
         }
       }
@@ -529,7 +537,11 @@
             {
               "key": "0xd",
               "value": 123
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ]
         }
       },
@@ -549,7 +561,11 @@
             {
               "key": "0x0",
               "value": 0
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ]
         }
       },
@@ -569,7 +585,11 @@
             {
               "key": "0x1f",
               "value": 65536
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ]
         }
       },
@@ -589,7 +609,11 @@
             {
               "key": "0x7",
               "value": 666
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ]
         }
       },
@@ -609,7 +633,11 @@
             {
               "key": "0x133",
               "value": 678
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ]
         }
       },
@@ -626,10 +654,11 @@
           },
           "aggregation_coordinator_origin": "https://coordinator.com",
           "histograms": [
-            {
-              "key": "0x0",
-              "value": 0
-            }
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ]
         }
       },
@@ -649,7 +678,11 @@
             {
               "key": "0x33f",
               "value": 65536
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ]
         }
       },
@@ -669,7 +702,11 @@
             {
               "key": "0x7",
               "value": 666
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ]
         }
       }

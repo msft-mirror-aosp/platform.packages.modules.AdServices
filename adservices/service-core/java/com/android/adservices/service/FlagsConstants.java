@@ -511,9 +511,6 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_REPORTING_JOB_PERSISTED =
             "measurement_reporting_job_persisted";
 
-    public static final String KEY_MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING =
-            "measurement_enable_aggregatable_report_payload_padding";
-
     public static final String KEY_MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES =
             "key_measurement_enable_session_stable_kill_switches";
 

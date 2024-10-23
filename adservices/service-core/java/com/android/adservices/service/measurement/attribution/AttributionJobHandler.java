@@ -772,7 +772,6 @@ class AttributionJobHandler {
                                 API,
                                 mFlags);
 
-        if (mFlags.getMeasurementEnableAggregatableReportPayloadPadding()) {
             AggregateHistogramContribution paddingContribution =
                     new AggregateHistogramContribution.Builder().setPaddingContribution().build();
             List<AggregateHistogramContribution> contributions = new ArrayList<>();
@@ -781,7 +780,6 @@ class AttributionJobHandler {
             generator.padContributions(contributions, paddingContribution);
             nullReportBuilder.setDebugCleartextPayload(
                     AggregateReport.generateDebugPayload(contributions));
-        }
 
         return nullReportBuilder.build();
     }
