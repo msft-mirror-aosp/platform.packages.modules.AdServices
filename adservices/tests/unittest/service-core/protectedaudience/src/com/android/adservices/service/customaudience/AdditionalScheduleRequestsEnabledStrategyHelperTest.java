@@ -169,11 +169,13 @@ public class AdditionalScheduleRequestsEnabledStrategyHelperTest
                         CUSTOM_AUDIENCE_TO_LEAVE_JSON_ARRAY,
                         true);
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                        mHelper.validateAndConvertScheduleRequest(
-                                OWNER, scheduleRequest, NOW, mDevContext));
+        Throwable error =
+                assertThrows(
+                        JSONException.class,
+                        () ->
+                                mHelper.validateAndConvertScheduleRequest(
+                                        OWNER, scheduleRequest, NOW, mDevContext));
+        assertThat(error).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -187,12 +189,14 @@ public class AdditionalScheduleRequestsEnabledStrategyHelperTest
                         CUSTOM_AUDIENCE_TO_LEAVE_JSON_ARRAY,
                         true);
 
-        assertThrows(
-                NullPointerException.class,
-                () -> {
-                    mHelper.validateAndConvertScheduleRequest(
-                            OWNER, scheduleRequest, NOW, mDevContext);
-                });
+        Throwable errorThrown =
+                assertThrows(
+                        JSONException.class,
+                        () -> {
+                            mHelper.validateAndConvertScheduleRequest(
+                                    OWNER, scheduleRequest, NOW, mDevContext);
+                        });
+        assertThat(errorThrown).hasCauseThat().isInstanceOf(NullPointerException.class);
     }
 
     @Test
@@ -249,12 +253,17 @@ public class AdditionalScheduleRequestsEnabledStrategyHelperTest
                         CUSTOM_AUDIENCE_TO_LEAVE_JSON_ARRAY,
                         true);
 
-        assertThrows(
-                FledgeAuthorizationFilter.AdTechNotAllowedException.class,
-                () -> {
-                    mHelper.validateAndConvertScheduleRequest(
-                            OWNER, scheduleRequest, NOW, mDevContext);
-                });
+        Throwable error =
+                assertThrows(
+                        JSONException.class,
+                        () -> {
+                            mHelper.validateAndConvertScheduleRequest(
+                                    OWNER, scheduleRequest, NOW, mDevContext);
+                        });
+
+        assertThat(error)
+                .hasCauseThat()
+                .isInstanceOf(FledgeAuthorizationFilter.AdTechNotAllowedException.class);
     }
 
     @Test
@@ -332,12 +341,9 @@ public class AdditionalScheduleRequestsEnabledStrategyHelperTest
                         partialCustomAudiences,
                         CUSTOM_AUDIENCE_TO_LEAVE_JSON_ARRAY,
                         true);
-
-        List<PartialCustomAudience> result =
-                mHelper.extractPartialCustomAudiencesFromRequest(scheduleRequest);
-
-        assertThat(result.stream().map(ca -> ca.getName()).collect(Collectors.toList()))
-                .containsExactly(PARTIAL_CA_1);
+        assertThrows(
+                JSONException.class,
+                () -> mHelper.extractPartialCustomAudiencesFromRequest(scheduleRequest));
     }
 
     @Test
@@ -353,11 +359,9 @@ public class AdditionalScheduleRequestsEnabledStrategyHelperTest
                         partialCustomAudiences,
                         CUSTOM_AUDIENCE_TO_LEAVE_JSON_ARRAY,
                         true);
-
-        List<PartialCustomAudience> result =
-                mHelper.extractPartialCustomAudiencesFromRequest(scheduleRequest);
-
-        assertThat(result).isEmpty();
+        assertThrows(
+                JSONException.class,
+                () -> mHelper.extractPartialCustomAudiencesFromRequest(scheduleRequest));
     }
 
     @Test
@@ -388,9 +392,9 @@ public class AdditionalScheduleRequestsEnabledStrategyHelperTest
                         customAudiencesToLeave,
                         true);
 
-        List<String> result = mHelper.extractCustomAudiencesToLeaveFromRequest(scheduleRequest);
-
-        assertThat(result).containsExactly(LEAVE_CA_1);
+        assertThrows(
+                JSONException.class,
+                () -> mHelper.extractCustomAudiencesToLeaveFromRequest(scheduleRequest));
     }
 
     @Test
@@ -407,9 +411,9 @@ public class AdditionalScheduleRequestsEnabledStrategyHelperTest
                         customAudiencesToLeave,
                         true);
 
-        List<String> result = mHelper.extractCustomAudiencesToLeaveFromRequest(scheduleRequest);
-
-        assertThat(result).isEmpty();
+        assertThrows(
+                JSONException.class,
+                () -> mHelper.extractCustomAudiencesToLeaveFromRequest(scheduleRequest));
     }
 
     @Test
