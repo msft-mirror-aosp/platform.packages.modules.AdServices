@@ -419,6 +419,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getTopicsCleanDBWhenEpochJobSettingsChanged() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_TOPICS_CLEAN_DB_WHEN_EPOCH_JOB_SETTINGS_CHANGED,
+                TOPICS_CLEAN_DB_WHEN_EPOCH_JOB_SETTINGS_CHANGED);
+    }
+
+    @Override
     public boolean getMsmtRegistrationCobaltLoggingEnabled() {
         return getCobaltLoggingEnabled()
                 && getDeviceConfigFlag(
@@ -7444,5 +7451,12 @@ public final class PhFlags implements Flags {
     @Override
     public boolean getConsentNotificationDebugMode() {
         return DebugFlags.getInstance().getConsentNotificationDebugMode();
+    }
+
+    @Override
+    public boolean getEnableAtomicFileDatastoreBatchUpdateApi() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_ENABLE_ATOMIC_FILE_DATASTORE_BATCH_UPDATE_API,
+                DEFAULT_ENABLE_ATOMIC_FILE_DATASTORE_BATCH_UPDATE_API);
     }
 }

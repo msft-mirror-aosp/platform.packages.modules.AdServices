@@ -30,9 +30,10 @@ public class SdkSandboxWrapper extends Wrapper<SdkSandbox> implements SdkSandbox
     }
 
     @Override
-    public void setState(State state) {
+    public SdkSandboxWrapper setState(State state) {
         mLog.v("setState(%s)", state);
         getWrapped().setState(state);
+        return this;
     }
 
     @Override

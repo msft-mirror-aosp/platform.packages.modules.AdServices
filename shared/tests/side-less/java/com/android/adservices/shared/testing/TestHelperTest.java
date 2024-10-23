@@ -70,7 +70,7 @@ public final class TestHelperTest extends SharedMockitoTestCase {
                 NullPointerException.class, () -> getAnnotation(test, /* annotationClass= */ null));
         assertThrows(
                 NullPointerException.class,
-                () -> getAnnotation(/* test= */ null, DaRealAnnotation.class));
+                () -> getAnnotation((Description) null, DaRealAnnotation.class));
     }
 
     @Test
@@ -133,6 +133,61 @@ public final class TestHelperTest extends SharedMockitoTestCase {
 
         assertWithMessage("getAnnotation(%s)", test).that(annotation).isNotNull();
         expect.withMessage("getAnnotation(%s).value()", test)
+                .that(annotation.value())
+                .isEqualTo("A class has an annotation!");
+    }
+
+    @Test
+    public void testGetAnnotationFromTestClass_null() {
+        assertThrows(
+                NullPointerException.class,
+                () -> getAnnotation(AClassHasNoNothingAtAll.class, /* annotationClass= */ null));
+        assertThrows(
+                NullPointerException.class,
+                () -> getAnnotation(/* testClass= */ (Class<?>) null, DaRealAnnotation.class));
+    }
+
+    @Test
+    public void testGetAnnotationFromTestClass_notSetAnywhere() {
+        Class<?> testClass = AClassHasNoNothingAtAll.class;
+
+        expect.withMessage("getAnnotation(%s)", testClass)
+                .that(getAnnotation(testClass, DaRealAnnotation.class))
+                .isNull();
+    }
+
+    @Test
+    public void testGetAnnotationFromTestClass_fromClass() {
+        Class<?> testClass = AClassHasAnAnnotationAndAParent.class;
+
+        DaRealAnnotation annotation = getAnnotation(testClass, DaRealAnnotation.class);
+
+        assertWithMessage("getAnnotation(%s)", testClass).that(annotation).isNotNull();
+        expect.withMessage("getAnnotation(%s).value()", testClass)
+                .that(annotation.value())
+                .isEqualTo("A class has an annotation and a parent!");
+    }
+
+    @Test
+    public void testGetAnnotationFromTestClass_fromParentClass() {
+        Class<?> testClass = AClassHasNoAnnotationButItsParentDoes.class;
+
+        DaRealAnnotation annotation = getAnnotation(testClass, DaRealAnnotation.class);
+
+        assertWithMessage("getAnnotation(%s)", testClass).that(annotation).isNotNull();
+        expect.withMessage("getAnnotation(%s).value()", testClass)
+                .that(annotation.value())
+                .isEqualTo("A class has an annotation!");
+    }
+
+    @Test
+    public void testGetAnnotationFromTestClass_fromGrandParentClass() {
+        Class<?> testClass = AClassHasNoAnnotationButItsGrandParentDoes.class;
+
+        DaRealAnnotation annotation = getAnnotation(testClass, DaRealAnnotation.class);
+
+        assertWithMessage("getAnnotation(%s)", testClass).that(annotation).isNotNull();
+        expect.withMessage("getAnnotation(%s).value()", testClass)
                 .that(annotation.value())
                 .isEqualTo("A class has an annotation!");
     }

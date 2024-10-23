@@ -25,10 +25,12 @@ import android.platform.test.annotations.DisabledOnRavenwood;
 
 import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
+import com.android.adservices.shared.testing.annotations.SetSyncDisabledModeForTest;
 import com.android.adservices.shared.testing.flags.DeviceSideFlagsPreparerClassRule;
 
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.Description;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -59,8 +61,11 @@ public abstract class DeviceSideFlagsPreparerClassRuleTestCase<
         mTestBody.onEvaluate(() -> modeInside.set(getDeviceConfigSyncMode("inside")));
 
         setDeviceConfigSyncMode("before", SYNC_DISABLED_MODE_UNTIL_REBOOT);
+        Description testSuite =
+                Description.createSuiteDescription(AClassWithSetSyncDisabledModeForTest.class);
+        testSuite.addChild(mTest);
         try {
-            rule.apply(mTestBody, mSuite).evaluate();
+            rule.apply(mTestBody, testSuite).evaluate();
         } finally {
             // Restore it
             setDeviceConfigSyncMode("after", modeBefore);
@@ -85,4 +90,10 @@ public abstract class DeviceSideFlagsPreparerClassRuleTestCase<
         runWithShellPermissionIdentity(
                 () -> android.provider.DeviceConfig.setSyncDisabledMode(mode));
     }
+
+    // TODO(b/297085722): get from commom place
+
+    // Use to create the Description fixtures
+    @SetSyncDisabledModeForTest
+    private static class AClassWithSetSyncDisabledModeForTest {}
 }

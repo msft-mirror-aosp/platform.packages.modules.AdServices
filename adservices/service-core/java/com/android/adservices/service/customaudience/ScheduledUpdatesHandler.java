@@ -136,6 +136,9 @@ public final class ScheduledUpdatesHandler {
     private final boolean mSellerConfigurationEnabled;
     private final long mFledgeAuctionServerAdRenderIdMaxLength;
 
+    @NonNull
+    private final ScheduleCustomAudienceUpdateStrategy mScheduleCustomAudienceUpdateStrategy;
+
     @VisibleForTesting
     protected ScheduledUpdatesHandler(
             @NonNull CustomAudienceDao customAudienceDao,
@@ -148,7 +151,8 @@ public final class ScheduledUpdatesHandler {
             @NonNull AdRenderIdValidator adRenderIdValidator,
             @NonNull AdDataConversionStrategy adDataConversionStrategy,
             @NonNull CustomAudienceImpl customAudienceImpl,
-            @NonNull CustomAudienceQuantityChecker customAudienceQuantityChecker) {
+            @NonNull CustomAudienceQuantityChecker customAudienceQuantityChecker,
+            @NonNull ScheduleCustomAudienceUpdateStrategy scheduleCustomAudienceUpdateStrategy) {
         mCustomAudienceDao = customAudienceDao;
         mHttpClient = adServicesHttpsClient;
         mFlags = flags;
@@ -202,6 +206,7 @@ public final class ScheduledUpdatesHandler {
                                 mFledgeCustomAudienceMaxAdsSizeB,
                                 mFledgeCustomAudienceMaxNumAds));
         mCustomAudienceImpl = customAudienceImpl;
+        mScheduleCustomAudienceUpdateStrategy = scheduleCustomAudienceUpdateStrategy;
     }
 
     public ScheduledUpdatesHandler(@NonNull Context context) {
@@ -227,12 +232,20 @@ public final class ScheduledUpdatesHandler {
                 CustomAudienceImpl.getInstance(),
                 new CustomAudienceQuantityChecker(
                         CustomAudienceDatabase.getInstance().customAudienceDao(),
-                        FlagsFactory.getFlags()));
+                        FlagsFactory.getFlags()),
+                ScheduleCustomAudienceUpdateStrategyFactory.createStrategy(
+                        CustomAudienceDatabase.getInstance().customAudienceDao(),
+                        AdServicesExecutors.getBackgroundExecutor(),
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        FlagsFactory.getFlags()
+                                .getFledgeScheduleCustomAudienceMinDelayMinsOverride(),
+                        FlagsFactory.getFlags()
+                                .getFledgeEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests()));
     }
 
     /** Performs Custom Audience Updates for delayed events in the schedule */
     public FluentFuture<Void> performScheduledUpdates(@NonNull Instant beforeTime) {
-        FluentFuture<List<DBScheduledCustomAudienceUpdateRequest>> scheduledUpdateRequests =
+        FluentFuture<List<DBScheduledCustomAudienceUpdateRequest>> updateRequests =
                 FluentFuture.from(
                         mBackgroundExecutor.submit(
                                 () -> {
@@ -240,27 +253,28 @@ public final class ScheduledUpdatesHandler {
                                             .deleteScheduledCustomAudienceUpdatesCreatedBeforeTime(
                                                     beforeTime.minus(STALE_DELAYED_UPDATE_AGE));
 
-                                    return mCustomAudienceDao
-                                            .getScheduledCustomAudienceUpdateRequests(beforeTime);
+                                    return mScheduleCustomAudienceUpdateStrategy
+                                            .getScheduledCustomAudienceUpdateRequestList(
+                                                    beforeTime);
                                 }));
-        return scheduledUpdateRequests.transformAsync(this::handleUpdates, mLightWeightExecutor);
+        return updateRequests.transformAsync(this::handleUpdates, mLightWeightExecutor);
     }
 
     private FluentFuture<Void> handleUpdates(
-            List<DBScheduledCustomAudienceUpdateRequest> scheduledUpdateRequests) {
+            List<DBScheduledCustomAudienceUpdateRequest> scheduledCustomAudienceUpdateRequests) {
         List<ListenableFuture<Void>> handledUpdates = new ArrayList<>();
 
         ExecutionSequencer sequencer = ExecutionSequencer.create();
 
-        for (DBScheduledCustomAudienceUpdateRequest scheduledUpdateRequest :
-                scheduledUpdateRequests) {
+        for (DBScheduledCustomAudienceUpdateRequest updateRequest :
+                scheduledCustomAudienceUpdateRequests) {
             handledUpdates.add(
                     sequencer.submitAsync(
                             () ->
                                     handleSingleUpdate(
-                                            scheduledUpdateRequest.getUpdate(),
-                                            scheduledUpdateRequest.getPartialCustomAudienceList(),
-                                            scheduledUpdateRequest.getCustomAudienceToLeaveList()),
+                                            updateRequest.getUpdate(),
+                                            updateRequest.getPartialCustomAudienceList(),
+                                            updateRequest.getCustomAudienceToLeaveList()),
                             mBackgroundExecutor));
         }
         return FluentFuture.from(Futures.successfulAsList(handledUpdates))
@@ -307,22 +321,34 @@ public final class ScheduledUpdatesHandler {
         return fetchUpdate(update, validatedPartialCustomAudienceBlobs, customAudienceToLeaveList);
     }
 
-    // TODO(b/373588637): customAudienceToLeaveList will be used by the strategies
     private FluentFuture<Void> fetchUpdate(
             DBScheduledCustomAudienceUpdate update,
             List<CustomAudienceBlob> validBlobs,
             List<DBCustomAudienceToLeave> customAudienceToLeaveList) {
-        JSONArray jsonArray = new JSONArray();
+        JSONArray partialCustomAudienceJsonArray = new JSONArray();
 
         for (int i = 0; i < validBlobs.size(); i++) {
             try {
-                jsonArray.put(i, validBlobs.get(i).asJSONObject());
+                partialCustomAudienceJsonArray.put(i, validBlobs.get(i).asJSONObject());
             } catch (JSONException e) {
                 sLogger.w(e, "Invalid Partial Custom Audience Object, skipping join");
             }
         }
 
-        sLogger.v("Request payload: %s", jsonArray.toString());
+        String bodyInString;
+
+        try {
+            bodyInString =
+                    mScheduleCustomAudienceUpdateStrategy.prepareFetchUpdateRequestBody(
+                            partialCustomAudienceJsonArray, customAudienceToLeaveList);
+        } catch (JSONException e) {
+            sLogger.w(
+                    e,
+                    "Exception found when preparing the request body, skipping the update request");
+            throw new RuntimeException(e);
+        }
+
+        sLogger.v("Request payload: %s", bodyInString);
 
         // If an Update was created in a debuggable context, set the developer context to assume
         // developer options are enabled (as they were at the time of Update creation).
@@ -338,7 +364,7 @@ public final class ScheduledUpdatesHandler {
                         .setUri(update.getUpdateUri())
                         .setRequestProperties(JSON_REQUEST_PROPERTIES)
                         .setHttpMethodType(AdServicesHttpUtil.HttpMethodType.POST)
-                        .setBodyInBytes(jsonArray.toString().getBytes(UTF_8))
+                        .setBodyInBytes(bodyInString.getBytes(UTF_8))
                         .setDevContext(devContext)
                         .build();
         sLogger.v("Making scheduled update POST request");
@@ -373,6 +399,14 @@ public final class ScheduledUpdatesHandler {
                                 joinCustomAudiences(
                                         overrideCustomAudienceBlobs,
                                         extractJoinCustomAudiencesFromResponse(jsonResponse),
+                                        devContext),
+                        mLightWeightExecutor)
+                .transformAsync(
+                        ignoredVoid ->
+                                mScheduleCustomAudienceUpdateStrategy.scheduleRequests(
+                                        update.getOwner(),
+                                        update.getAllowScheduleInResponse(),
+                                        jsonResponse,
                                         devContext),
                         mLightWeightExecutor)
                 .transformAsync(ignoredVoid -> removeHandledUpdate(update), mLightWeightExecutor);
