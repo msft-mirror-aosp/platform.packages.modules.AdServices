@@ -22,6 +22,7 @@ import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_
 import android.annotation.IntDef;
 import android.annotation.Nullable;
 import android.annotation.RequiresPermission;
+import android.annotation.SuppressLint;
 import android.app.adservices.consent.ConsentParcel;
 import android.app.adservices.topics.TopicParcel;
 import android.app.sdksandbox.SdkSandboxManager;
@@ -55,6 +56,7 @@ public final class AdServicesManager {
     private static final Object SINGLETON_LOCK = new Object();
 
     // TODO(b/366313883): get rid of this reference (and remove the Context arg from getInstance())
+    @SuppressLint("StaticFieldLeak")
     @GuardedBy("SINGLETON_LOCK")
     private static Context sContext;
 
