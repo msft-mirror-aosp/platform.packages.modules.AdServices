@@ -39,6 +39,7 @@ import static com.android.adservices.service.customaudience.ScheduleCustomAudien
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadWithoutJoinCA;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadWithoutLeaveCA;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createRequestBody;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createRequestBodyWithOnlyPartialCustomAudiences;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.eqJsonArray;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.eqJsonObject;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.generateCustomAudienceWithName;
@@ -288,7 +289,8 @@ public final class ScheduledUpdatesHandlerTest {
         JSONArray partialCustomAudienceJsonArray =
                 createJsonArrayFromPartialCustomAudienceList(partialCustomAudienceList);
 
-        String expectedRequestBody = partialCustomAudienceJsonArray.toString();
+        String expectedRequestBody =
+                createRequestBodyWithOnlyPartialCustomAudiences(partialCustomAudienceJsonArray);
 
         when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(any()))
                 .thenReturn(response);
@@ -778,7 +780,8 @@ public final class ScheduledUpdatesHandlerTest {
         JSONArray partialCustomAudienceJsonArray =
                 createJsonArrayFromPartialCustomAudienceList(partialCustomAudienceList);
 
-        String expectedRequestBody = partialCustomAudienceJsonArray.toString();
+        String expectedRequestBody =
+                createRequestBodyWithOnlyPartialCustomAudiences(partialCustomAudienceJsonArray);
 
         JSONObject responseJson =
                 createJsonResponsePayload(
@@ -870,7 +873,8 @@ public final class ScheduledUpdatesHandlerTest {
         JSONArray partialCustomAudienceJsonArray =
                 createJsonArrayFromPartialCustomAudienceList(partialCustomAudienceList);
 
-        String expectedRequestBody = partialCustomAudienceJsonArray.toString();
+        String expectedRequestBody =
+                createRequestBodyWithOnlyPartialCustomAudiences(partialCustomAudienceJsonArray);
 
         JSONObject responseJson =
                 createJsonResponsePayload(
@@ -968,7 +972,8 @@ public final class ScheduledUpdatesHandlerTest {
         JSONArray partialCustomAudienceJsonArray =
                 createJsonArrayFromPartialCustomAudienceList(partialCustomAudienceList);
 
-        String expectedRequestBody = partialCustomAudienceJsonArray.toString();
+        String expectedRequestBody =
+                createRequestBodyWithOnlyPartialCustomAudiences(partialCustomAudienceJsonArray);
 
         JSONObject responseJson =
                 createJsonResponsePayload(
@@ -1181,7 +1186,8 @@ public final class ScheduledUpdatesHandlerTest {
         JSONArray partialCustomAudienceJsonArray =
                 createJsonArrayFromPartialCustomAudienceList(partialCustomAudienceList);
 
-        String expectedRequestBody = partialCustomAudienceJsonArray.toString();
+        String expectedRequestBody =
+                createRequestBodyWithOnlyPartialCustomAudiences(partialCustomAudienceJsonArray);
 
         ListenableFuture<AdServicesHttpClientResponse> response =
                 Futures.immediateFuture(
@@ -1276,7 +1282,8 @@ public final class ScheduledUpdatesHandlerTest {
         JSONArray partialCustomAudienceJsonArray =
                 createJsonArrayFromPartialCustomAudienceList(partialCustomAudienceList);
 
-        String expectedRequestBody = partialCustomAudienceJsonArray.toString();
+        String expectedRequestBody =
+                createRequestBodyWithOnlyPartialCustomAudiences(partialCustomAudienceJsonArray);
 
         ListenableFuture<AdServicesHttpClientResponse> response =
                 Futures.immediateFuture(
@@ -1299,7 +1306,7 @@ public final class ScheduledUpdatesHandlerTest {
                 mRequestCaptor.getValue().getHttpMethodType());
         assertEquals(
                 "Sent payload mismatch",
-                expectedRequestBody.toString(),
+                expectedRequestBody,
                 new String(mRequestCaptor.getValue().getBodyInBytes()));
 
         verify(mCustomAudienceImplMock)
@@ -1378,7 +1385,8 @@ public final class ScheduledUpdatesHandlerTest {
         JSONArray partialCustomAudienceJsonArray =
                 createJsonArrayFromPartialCustomAudienceList(partialCustomAudienceList);
 
-        String expectedRequestBody = partialCustomAudienceJsonArray.toString();
+        String expectedRequestBody =
+                createRequestBodyWithOnlyPartialCustomAudiences(partialCustomAudienceJsonArray);
 
         ListenableFuture<AdServicesHttpClientResponse> response =
                 Futures.immediateFuture(
@@ -1402,7 +1410,7 @@ public final class ScheduledUpdatesHandlerTest {
                 mRequestCaptor.getValue().getHttpMethodType());
         assertEquals(
                 "Sent payload mismatch",
-                expectedRequestBody.toString(),
+                expectedRequestBody,
                 new String(mRequestCaptor.getValue().getBodyInBytes()));
 
         verify(mCustomAudienceImplMock)
@@ -1645,7 +1653,8 @@ public final class ScheduledUpdatesHandlerTest {
         JSONArray partialCustomAudienceJsonArray =
                 createJsonArrayFromPartialCustomAudienceList(partialCustomAudienceList);
 
-        String expectedRequestBody = partialCustomAudienceJsonArray.toString();
+        String expectedRequestBody =
+                createRequestBodyWithOnlyPartialCustomAudiences(partialCustomAudienceJsonArray);
 
         ListenableFuture<AdServicesHttpClientResponse> response =
                 Futures.immediateFuture(
@@ -1668,7 +1677,7 @@ public final class ScheduledUpdatesHandlerTest {
                 mRequestCaptor.getValue().getHttpMethodType());
         assertEquals(
                 "Sent payload should have been empty",
-                expectedRequestBody.toString(),
+                expectedRequestBody,
                 new String(mRequestCaptor.getValue().getBodyInBytes()));
 
         verify(mCustomAudienceImplMock)
@@ -2797,7 +2806,9 @@ public final class ScheduledUpdatesHandlerTest {
                 .thenReturn(FluentFuture.from(immediateVoidFuture()));
         when(mStrategyMock.prepareFetchUpdateRequestBody(
                         eqJsonArray(partialCustomAudienceJsonArray), eq(Collections.emptyList())))
-                .thenReturn(partialCustomAudienceJsonArray.toString());
+                .thenReturn(
+                        createRequestBodyWithOnlyPartialCustomAudiences(
+                                partialCustomAudienceJsonArray));
     }
 
     private void verifyDisabledStrategy(

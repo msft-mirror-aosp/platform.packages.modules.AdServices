@@ -541,28 +541,6 @@ public class ScheduleCustomAudienceUpdateTestUtils {
         String requestBodyString = new String(requestBody);
         List<CustomAudienceBlob> overrideCustomAudienceBlobs = new ArrayList<>();
         try {
-            JSONArray jsonArray = new JSONArray(requestBodyString);
-
-            for (int i = 0; i < jsonArray.length(); i++) {
-                CustomAudienceBlob blob = new CustomAudienceBlob();
-                blob.overrideFromJSONObject(jsonArray.getJSONObject(i));
-                overrideCustomAudienceBlobs.add(blob);
-            }
-        } catch (JSONException e) {
-            sLogger.e(e, "Unable to extract partial CAs from request");
-        }
-        return overrideCustomAudienceBlobs;
-    }
-
-    /**
-     * Extracts the Partial Custom Audience objects sent in the update request. Helps validate that
-     * the request to server had expected payload.
-     */
-    public static List<CustomAudienceBlob> extractPartialCustomAudiencesFromScheduleRequest(
-            byte[] requestBody) {
-        String requestBodyString = new String(requestBody);
-        List<CustomAudienceBlob> overrideCustomAudienceBlobs = new ArrayList<>();
-        try {
             JSONObject jsonObject = new JSONObject(requestBodyString);
             JSONArray jsonArray = jsonObject.getJSONArray(PARTIAL_CUSTOM_AUDIENCES_KEY);
 
@@ -616,6 +594,16 @@ public class ScheduleCustomAudienceUpdateTestUtils {
                 jsonArray);
 
         return jsonObject;
+    }
+
+    /** Create request body with only partial custom audiences, this should only be used for v1 */
+    public static String createRequestBodyWithOnlyPartialCustomAudiences(
+            JSONArray partialCustomAudienceJsonArray) throws JSONException {
+        JSONObject jsonObject = new JSONObject();
+
+        jsonObject.put(PARTIAL_CUSTOM_AUDIENCES_KEY, partialCustomAudienceJsonArray);
+
+        return jsonObject.toString();
     }
 
     /** Converts list of PartialCustomAudience to JSONArray */

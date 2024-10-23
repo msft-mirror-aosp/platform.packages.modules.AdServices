@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.customaudience;
 
+import static com.android.adservices.service.customaudience.AdditionalScheduleRequestsEnabledStrategyHelper.PARTIAL_CUSTOM_AUDIENCES_KEY;
+
 import static com.google.common.util.concurrent.Futures.immediateVoidFuture;
 
 import com.android.adservices.data.customaudience.CustomAudienceDao;
@@ -26,6 +28,7 @@ import com.android.adservices.service.devapi.DevContext;
 import com.google.common.util.concurrent.FluentFuture;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.time.Instant;
@@ -51,8 +54,13 @@ public class AdditionalScheduleRequestsDisabledStrategy
     @Override
     public String prepareFetchUpdateRequestBody(
             JSONArray partialCustomAudienceJsonArray,
-            List<DBCustomAudienceToLeave> customAudienceToLeaveList) {
-        return partialCustomAudienceJsonArray.toString();
+            List<DBCustomAudienceToLeave> customAudienceToLeaveList)
+            throws JSONException {
+        JSONObject jsonObject = new JSONObject();
+
+        jsonObject.put(PARTIAL_CUSTOM_AUDIENCES_KEY, partialCustomAudienceJsonArray);
+
+        return jsonObject.toString();
     }
 
     @Override

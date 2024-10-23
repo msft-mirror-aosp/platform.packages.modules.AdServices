@@ -49,7 +49,6 @@ import static com.android.adservices.service.customaudience.ScheduleCustomAudien
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createScheduleRequestWithUpdateUri;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.extractCustomAudiencesToLeaveFromScheduleRequest;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.extractPartialCustomAudiencesFromRequest;
-import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.extractPartialCustomAudiencesFromScheduleRequest;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.partialCustomAudienceListToJsonArray;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE;
@@ -3104,7 +3103,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                     public MockResponse dispatch(RecordedRequest request) {
                         if (Objects.equals(request.getPath(), UPDATE_URI_PATH_2)) {
                             assertThat(
-                                            extractPartialCustomAudiencesFromScheduleRequest(
+                                            extractPartialCustomAudiencesFromRequest(
                                                             request.getBody())
                                                     .stream()
                                                     .map(b -> b.getName())
@@ -3210,8 +3209,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                     @Override
                     public MockResponse dispatch(RecordedRequest request) {
                         assertThat(
-                                        extractPartialCustomAudiencesFromScheduleRequest(
-                                                        request.getBody())
+                                        extractPartialCustomAudiencesFromRequest(request.getBody())
                                                 .stream()
                                                 .map(b -> b.getName())
                                                 .collect(Collectors.toList()))
@@ -3342,7 +3340,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                     public MockResponse dispatch(RecordedRequest request) {
                         if (Objects.equals(request.getPath(), UPDATE_URI_PATH_2)) {
                             assertThat(
-                                            extractPartialCustomAudiencesFromScheduleRequest(
+                                            extractPartialCustomAudiencesFromRequest(
                                                             request.getBody())
                                                     .stream()
                                                     .map(b -> b.getName())
@@ -3485,7 +3483,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                     public MockResponse dispatch(RecordedRequest request) {
                         if (Objects.equals(request.getPath(), UPDATE_URI_PATH_2)) {
                             assertThat(
-                                            extractPartialCustomAudiencesFromScheduleRequest(
+                                            extractPartialCustomAudiencesFromRequest(
                                                             request.getBody())
                                                     .stream()
                                                     .map(b -> b.getName())
@@ -3499,8 +3497,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                             return new MockResponse().setBody(responsePayload_SecondHop);
                         } else {
                             List<CustomAudienceBlob> caBlobs =
-                                    extractPartialCustomAudiencesFromScheduleRequest(
-                                            request.getBody());
+                                    extractPartialCustomAudiencesFromRequest(request.getBody());
                             assertThat(
                                             caBlobs.stream()
                                                     .map(b -> b.getName())
@@ -3655,7 +3652,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                     public MockResponse dispatch(RecordedRequest request) {
                         if (Objects.equals(request.getPath(), UPDATE_URI_PATH_2)) {
                             assertThat(
-                                            extractPartialCustomAudiencesFromScheduleRequest(
+                                            extractPartialCustomAudiencesFromRequest(
                                                             request.getBody())
                                                     .stream()
                                                     .map(b -> b.getName())
@@ -3818,7 +3815,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                     public MockResponse dispatch(RecordedRequest request) {
                         if (Objects.equals(request.getPath(), UPDATE_URI_PATH_3)) {
                             assertThat(
-                                            extractPartialCustomAudiencesFromScheduleRequest(
+                                            extractPartialCustomAudiencesFromRequest(
                                                             request.getBody())
                                                     .stream()
                                                     .map(b -> b.getName())
@@ -3832,7 +3829,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                             return new MockResponse().setBody(responsePayload_ThirdHop);
                         } else if (Objects.equals(request.getPath(), UPDATE_URI_PATH_2)) {
                             assertThat(
-                                            extractPartialCustomAudiencesFromScheduleRequest(
+                                            extractPartialCustomAudiencesFromRequest(
                                                             request.getBody())
                                                     .stream()
                                                     .map(b -> b.getName())
