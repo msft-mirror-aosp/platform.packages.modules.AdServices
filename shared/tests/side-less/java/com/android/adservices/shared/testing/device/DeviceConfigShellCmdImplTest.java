@@ -73,7 +73,10 @@ public final class DeviceConfigShellCmdImplTest extends SharedSidelessTestCase {
 
         onRealMode(
                 mode -> {
-                    mImpl.setSyncDisabledMode(mode);
+                    var self = mImpl.setSyncDisabledMode(mode);
+                    expect.withMessage("result of setSyncDisabledMode()")
+                            .that(self)
+                            .isSameInstanceAs(mImpl);
 
                     mFakeGateway.expectNothingCalled(expect);
                 });
@@ -90,7 +93,10 @@ public final class DeviceConfigShellCmdImplTest extends SharedSidelessTestCase {
                                     "device_config set_sync_disabled_for_tests %s",
                                     asDeviceConfigArg(mode));
                     mFakeGateway.onCommand(input, EMPTY_RESULT);
-                    mImpl.setSyncDisabledMode(mode);
+                    var self = mImpl.setSyncDisabledMode(mode);
+                    expect.withMessage("result of setSyncDisabledMode()")
+                            .that(self)
+                            .isSameInstanceAs(mImpl);
                     mFakeGateway.expectCalled(expect, input);
                 });
     }
@@ -266,7 +272,7 @@ public final class DeviceConfigShellCmdImplTest extends SharedSidelessTestCase {
 
     private void onRealMode(Consumer<SyncDisabledModeForTest> consumer) {
         for (var mode : SyncDisabledModeForTest.values()) {
-            if (mode.isValid()) {
+            if (mode.isSettable()) {
                 consumer.accept(mode);
             }
         }

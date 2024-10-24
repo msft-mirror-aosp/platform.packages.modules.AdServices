@@ -48,12 +48,22 @@ public final class SetSdkSandboxStateActionTest extends SharedSidelessTestCase {
     }
 
     @Test
-    public void testConstructor_invalidModes() {
+    public void testConstructor_notSettable() {
         for (State state : State.values()) {
-            if (!state.isValid()) {
+            if (!state.isSettable()) {
                 assertThrows(
                         IllegalArgumentException.class,
                         () -> new SetSdkSandboxStateAction(mFakeLogger, mFakeSdkSandbox, state));
+            }
+        }
+    }
+
+    @Test
+    public void testGetState() {
+        for (State state : State.values()) {
+            if (state.isSettable()) {
+                var action = new SetSdkSandboxStateAction(mFakeLogger, mFakeSdkSandbox, state);
+                expect.withMessage("getState()").that(action.getState()).isEqualTo(state);
             }
         }
     }
@@ -164,7 +174,31 @@ public final class SetSdkSandboxStateActionTest extends SharedSidelessTestCase {
 
         action.execute();
 
-        assertThrows(IllegalStateException.class, () -> action.onRevert());
+        assertThrows(IllegalStateException.class, () -> action.onRevertLocked());
+    }
+
+    @Test
+    public void testOnReset() throws Exception {
+        mFakeSdkSandbox.setState(DISABLED);
+        var action = new SetSdkSandboxStateAction(mFakeLogger, mFakeSdkSandbox, ENABLED);
+        expect.withMessage("previous mode initially ").that(action.getPreviousState()).isNull();
+        action.execute();
+        expect.withMessage("previous mode after execute")
+                .that(action.getPreviousState())
+                .isEqualTo(DISABLED);
+
+        action.onResetLocked();
+
+        expect.withMessage("previous mode before reset").that(action.getPreviousState()).isNull();
+    }
+
+    @Test
+    public void testEqualsAndHashCode() {
+        var baseline = new SetSdkSandboxStateAction(mFakeLogger, mFakeSdkSandbox, ENABLED);
+        var different = new SetSdkSandboxStateAction(mFakeLogger, mFakeSdkSandbox, ENABLED);
+        var et = new EqualsTester(expect);
+
+        et.expectObjectsAreNotEqual(baseline, different);
     }
 
     @Test

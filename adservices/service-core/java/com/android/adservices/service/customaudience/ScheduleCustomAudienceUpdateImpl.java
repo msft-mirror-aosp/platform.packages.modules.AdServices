@@ -57,6 +57,7 @@ import java.io.InvalidObjectException;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 
 /**
  * Schedules a delayed update for Custom Audience. Calling apps provide and update uri on behalf of
@@ -82,6 +83,7 @@ public class ScheduleCustomAudienceUpdateImpl {
     @NonNull private final boolean mDisableFledgeEnrollmentCheck;
     @NonNull private final boolean mEnforceForegroundStatus;
     @NonNull private final boolean mScheduleCustomAudienceUpdateEnabled;
+    private final boolean mEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests;
     int mCallingAppUid;
     @NonNull private String mCallerAppPackageName;
 
@@ -104,6 +106,8 @@ public class ScheduleCustomAudienceUpdateImpl {
         mDisableFledgeEnrollmentCheck = flags.getDisableFledgeEnrollmentCheck();
         mEnforceForegroundStatus = flags.getEnforceForegroundStatusForFledgeCustomAudience();
         mScheduleCustomAudienceUpdateEnabled = flags.getFledgeScheduleCustomAudienceUpdateEnabled();
+        mEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests =
+                flags.getFledgeEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests();
         mFlags = flags;
     }
 
@@ -224,6 +228,8 @@ public class ScheduleCustomAudienceUpdateImpl {
                         .setCreationTime(Instant.now())
                         .setScheduledTime(scheduledTime)
                         .setIsDebuggable(devContext.getDeviceDevOptionsEnabled())
+                        .setAllowScheduleInResponse(
+                                mEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests)
                         .build();
 
         sLogger.d(
@@ -233,11 +239,11 @@ public class ScheduleCustomAudienceUpdateImpl {
         return (ListenableFuture<Void>)
                 mBackgroundExecutorService.submit(
                         () ->
-                                mCustomAudienceDao
-                                        .insertScheduledUpdateAndPartialCustomAudienceList(
-                                                scheduledUpdate,
-                                                input.getPartialCustomAudienceList(),
-                                                input.shouldReplacePendingUpdates()));
+                                mCustomAudienceDao.insertScheduledCustomAudienceUpdate(
+                                        scheduledUpdate,
+                                        input.getPartialCustomAudienceList(),
+                                        Collections.emptyList(),
+                                        input.shouldReplacePendingUpdates()));
     }
 
     private void notifyFailure(ScheduleCustomAudienceUpdateCallback callback, Throwable t) {

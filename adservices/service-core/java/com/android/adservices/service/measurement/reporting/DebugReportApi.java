@@ -97,8 +97,7 @@ public class DebugReportApi {
         TRIGGER_EVENT_REPORT_WINDOW_NOT_STARTED("trigger-event-report-window-not-started"),
         TRIGGER_EVENT_NO_MATCHING_TRIGGER_DATA("trigger-event-no-matching-trigger-data"),
         HEADER_PARSING_ERROR("header-parsing-error"),
-        TRIGGER_AGGREGATE_INSUFFICIENT_BUCKET_BUDGET(
-                "trigger-aggregate-insufficient-bucket-budget");
+        TRIGGER_AGGREGATE_INSUFFICIENT_NAMED_BUDGET("trigger-aggregate-insufficient-named-budget");
 
         private final String mValue;
 
@@ -126,7 +125,7 @@ public class DebugReportApi {
     public interface Body {
         String ATTRIBUTION_DESTINATION = "attribution_destination";
         String LIMIT = "limit";
-        String BUCKET = "bucket";
+        String NAME = "name";
         String RANDOMIZED_TRIGGER_RATE = "randomized_trigger_rate";
         String SCHEDULED_REPORT_TIME = "scheduled_report_time";
         String SOURCE_DEBUG_KEY = "source_debug_key";
@@ -293,14 +292,14 @@ public class DebugReportApi {
             Source source,
             Trigger trigger,
             String limit,
-            String bucket,
+            String budgetName,
             IMeasurementDao dao,
             DebugReportApi.Type type)
             throws DatastoreException {
         Objects.requireNonNull(source, "source cannot be null");
         Objects.requireNonNull(trigger, "trigger cannot be null");
         Objects.requireNonNull(limit, "limit cannot be null");
-        Objects.requireNonNull(bucket, "bucket cannot be null");
+        Objects.requireNonNull(budgetName, "budgetName cannot be null");
         Objects.requireNonNull(dao, "dao cannot be null");
         Objects.requireNonNull(type, "type cannot be null");
         if (!isTriggerReportAllowed(trigger, type, source)) {
@@ -314,7 +313,7 @@ public class DebugReportApi {
                         source,
                         trigger,
                         limit,
-                        bucket,
+                        budgetName,
                         debugKeyPair,
                         /* is TriggerNoMatchingSource= */ false),
                 source.getEnrollmentId(),
@@ -668,7 +667,7 @@ public class DebugReportApi {
             Source source,
             Trigger trigger,
             String limit,
-            String bucket,
+            String budgetName,
             Pair<UnsignedLong, UnsignedLong> debugKeyPair,
             boolean isTriggerNoMatchingSource) {
         JSONObject body = new JSONObject();
@@ -679,7 +678,7 @@ public class DebugReportApi {
                 return body;
             }
             body.put(Body.LIMIT, limit);
-            body.put(Body.BUCKET, bucket);
+            body.put(Body.NAME, budgetName);
             body.put(Body.SOURCE_DEBUG_KEY, debugKeyPair.first);
             body.put(Body.SOURCE_EVENT_ID, source.getEventId().toString());
             body.put(Body.SOURCE_SITE, generateSourceSite(source));

@@ -49,9 +49,9 @@ import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_PER_D
 import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW;
 import static com.android.adservices.service.Flags.MEASUREMENT_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE;
-import static com.android.adservices.service.Flags.MEASUREMENT_MAX_AGGREGATABLE_BUCKETS_PER_SOURCE_REGISTRATION;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES;
-import static com.android.adservices.service.Flags.MEASUREMENT_MAX_LENGTH_PER_AGGREGATABLE_BUCKET;
+import static com.android.adservices.service.Flags.MEASUREMENT_MAX_LENGTH_PER_BUDGET_NAME;
+import static com.android.adservices.service.Flags.MEASUREMENT_MAX_NAMED_BUDGETS_PER_SOURCE_REGISTRATION;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_REINSTALL_REATTRIBUTION_WINDOW_SECONDS;
 import static com.android.adservices.service.Flags.MEASUREMENT_MIN_REPORT_LIFESPAN_FOR_UNINSTALL_SECONDS;
 import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_PERSISTED;
@@ -385,19 +385,19 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
-    public void testGetMeasurementMaxLengthPerAggregatableBucket() {
+    public void testGetMeasurementMaxLengthPerBudgetName() {
         testFlag(
-                "getMeasurementMaxLengthPerAggregatableBucket()",
-                MEASUREMENT_MAX_LENGTH_PER_AGGREGATABLE_BUCKET,
-                Flags::getMeasurementMaxLengthPerAggregatableBucket);
+                "getMeasurementMaxLengthPerBudgetName()",
+                MEASUREMENT_MAX_LENGTH_PER_BUDGET_NAME,
+                Flags::getMeasurementMaxLengthPerBudgetName);
     }
 
     @Test
-    public void testGetMeasurementMaxAggregatableBucketsPerSourceRegistration() {
+    public void testGetMeasurementMaxNamedBudgetsPerSourceRegistration() {
         testFlag(
-                "getMeasurementMaxAggregatableBucketsPerSourceRegistration()",
-                MEASUREMENT_MAX_AGGREGATABLE_BUCKETS_PER_SOURCE_REGISTRATION,
-                Flags::getMeasurementMaxAggregatableBucketsPerSourceRegistration);
+                "getMeasurementMaxNamedBudgetsPerSourceRegistration()",
+                MEASUREMENT_MAX_NAMED_BUDGETS_PER_SOURCE_REGISTRATION,
+                Flags::getMeasurementMaxNamedBudgetsPerSourceRegistration);
     }
 
     @Test
@@ -449,6 +449,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetMeasurementEnableInstallAttributionOnS() {
+        testFeatureFlag(
+                "MEASUREMENT_ENABLE_INSTALL_ATTRIBUTION_ON_S",
+                Flags::getMeasurementEnableInstallAttributionOnS);
+    }
+
+    @Test
     public void testGetMeasurementEnableDestinationLimitPriority() {
         testFeatureFlag(
                 "MEASUREMENT_ENABLE_DESTINATION_LIMIT_PRIORITY",
@@ -484,10 +491,10 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
-    public void testGetMeasurementEnableAggregateContributionBudgetCapacity() {
+    public void testGetMeasurementEnableAggregatableNamedBudgets() {
         testFeatureFlag(
-                "MEASUREMENT_ENABLE_AGGREGATE_CONTRIBUTION_BUDGET_CAPACITY",
-                Flags::getMeasurementEnableAggregateContributionBudgetCapacity);
+                "MEASUREMENT_ENABLE_AGGREGATABLE_NAMED_BUDGETS",
+                Flags::getMeasurementEnableAggregatableNamedBudgets);
     }
 
     @Test
@@ -602,6 +609,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_LOGGING_ENABLED",
                 /* defaultValue */ false,
                 Flags::getTopicsEpochJobBatteryConstraintLoggingEnabled);
+    }
+
+    @Test
+    public void testGetTopicsCleanDBWhenEpochJobSettingsChanged() {
+        testFlag(
+                "TOPICS_CLEAN_DB_WHEN_EPOCH_JOB_SETTINGS_CHANGED",
+                /* defaultValue */ false,
+                Flags::getTopicsCleanDBWhenEpochJobSettingsChanged);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -914,6 +929,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetMeasurementEnableBothSideDebugKeysInReports() {
+        testFeatureFlag(
+                "MEASUREMENT_ENABLE_BOTH_SIDE_DEBUG_KEYS_IN_REPORTS",
+                Flags::getMeasurementEnableBothSideDebugKeysInReports);
+    }
+
+    @Test
     public void testGetFledgeGetAdSelectionDataBuyerInputCreatorVersion() {
         testFlag(
                 "getFledgeGetAdSelectionDataBuyerInputCreatorVersion",
@@ -1031,6 +1053,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     @Test
     public void testGetAdIdCacheTtl() {
         testFlag("getAdIdCacheTtl()", DEFAULT_ADID_CACHE_TTL_MS, Flags::getAdIdCacheTtlMs);
+    }
+
+    @Test
+    public void testGetEnableAtomicFileDatastoreBatchUpdateApi() {
+        testFeatureFlag(
+                "DEFAULT_ENABLE_ATOMIC_FILE_DATASTORE_BATCH_UPDATE_API",
+                Flags::getEnableAtomicFileDatastoreBatchUpdateApi);
     }
 
     private boolean hasAnnotation(Field field, Class<? extends Annotation> annotationClass) {

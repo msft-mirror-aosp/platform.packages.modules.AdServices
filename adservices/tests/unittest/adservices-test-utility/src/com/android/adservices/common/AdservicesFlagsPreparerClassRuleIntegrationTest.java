@@ -16,9 +16,11 @@
 package com.android.adservices.common;
 
 import com.android.adservices.shared.meta_testing.AbstractFlagsPreparerClassRuleIntegrationTestCase;
-import com.android.adservices.shared.testing.SdkSandbox;
+import com.android.adservices.shared.meta_testing.DeviceConfigWrapper;
+import com.android.adservices.shared.meta_testing.SdkSandboxWrapper;
+import com.android.adservices.shared.testing.AbstractSdkLevelSupportedRule;
+import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.adservices.shared.testing.SdkSandboxShellCmdImpl;
-import com.android.adservices.shared.testing.device.DeviceConfig;
 import com.android.adservices.shared.testing.device.DeviceConfigShellCmdImpl;
 import com.android.adservices.shared.testing.device.DeviceGatewayImpl;
 
@@ -29,17 +31,15 @@ public final class AdservicesFlagsPreparerClassRuleIntegrationTest
     private final DeviceGatewayImpl mDeviceGateway = new DeviceGatewayImpl();
 
     @Override
-    protected AdServicesFlagsPreparerClassRule newRule() {
-        return new AdServicesFlagsPreparerClassRule();
+    protected AdServicesFlagsPreparerClassRule newRule(
+            SdkSandboxWrapper sdkSandboxWrapper, DeviceConfigWrapper deviceConfigWrapper) {
+        sdkSandboxWrapper.setWrapped(new SdkSandboxShellCmdImpl(mRealLogger, mDeviceGateway));
+        deviceConfigWrapper.setWrapped(new DeviceConfigShellCmdImpl(mRealLogger, mDeviceGateway));
+        return new AdServicesFlagsPreparerClassRule(sdkSandboxWrapper, deviceConfigWrapper);
     }
 
     @Override
-    protected SdkSandbox newSdkSandbox() {
-        return new SdkSandboxShellCmdImpl(mRealLogger, mDeviceGateway);
-    }
-
-    @Override
-    protected DeviceConfig newDeviceConfig() {
-        return new DeviceConfigShellCmdImpl(mRealLogger, mDeviceGateway);
+    protected AbstractSdkLevelSupportedRule getSdkLevelSupportRule() {
+        return SdkLevelSupportRule.forAnyLevel();
     }
 }

@@ -49,6 +49,7 @@ import com.android.adservices.flags.Flags;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executor;
+import java.util.stream.Collectors;
 
 /**
  * AdServicesCommonManager contains APIs common across the various AdServices. It provides two
@@ -317,22 +318,21 @@ public class AdServicesCommonManager {
      * shown to the user to notify them of these changes. The NotificationType can be Ongoing,
      * Regular, or None.
      *
-     * @param adServicesModuleStateList parcel containing state information for modules.
-     * @param notificationType parcel containing notification type.
+     * @param updateParams object containing state information for modules and notification type.
      * @param executor the executor for the callback.
      * @param callback callback function to confirm modules overrides is set up correctly.
      * @hide
      */
+    @SystemApi
     @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
     @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
     public void requestAdServicesModuleOverrides(
-            @NonNull List<AdServicesModuleState> adServicesModuleStateList,
-            @NotificationType.NotificationTypeCode int notificationType,
+            @NonNull UpdateAdServicesModuleStatesParams updateParams,
             @NonNull @CallbackExecutor Executor executor,
             @NonNull AdServicesOutcomeReceiver<Void, Exception> callback) {
-        Objects.requireNonNull(adServicesModuleStateList);
-        Objects.requireNonNull(executor);
-        Objects.requireNonNull(callback);
+        Objects.requireNonNull(updateParams, "updateParams cannot be null");
+        Objects.requireNonNull(executor, "executor cannot be null");
+        Objects.requireNonNull(callback, "callback cannot be null");
 
         if (invokeCallbackOnErrorOnRvc(callback)) {
             return;
@@ -340,9 +340,16 @@ public class AdServicesCommonManager {
 
         final IAdServicesCommonService service = getService();
         try {
+            List<AdServicesModuleState> adServicesModuleStateList =
+                    updateParams.getModuleStateMap().entrySet().stream()
+                            .map(
+                                    entry ->
+                                            new AdServicesModuleState(
+                                                    entry.getKey(), entry.getValue()))
+                            .collect(Collectors.toList());
             service.requestAdServicesModuleOverrides(
                     adServicesModuleStateList,
-                    notificationType,
+                    updateParams.getNotificationType(),
                     new IRequestAdServicesModuleOverridesCallback.Stub() {
                         @Override
                         public void onSuccess() throws RemoteException {

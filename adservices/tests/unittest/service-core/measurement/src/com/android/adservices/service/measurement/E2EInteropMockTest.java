@@ -56,7 +56,7 @@ import java.util.function.Supplier;
  *
  * <p>Tests in assets/msmt_interop_tests/ directory were copied from Chromium
  * src/content/test/data/attribution_reporting/interop GitHub commit
- * 3f65fe7a1a9ea5d7c0e2403f5200ab6652a3667e.
+ * c0f2cf42fa9c1463a1c6d9d1a5ed547bc4b4e972.
  */
 @RunWith(Parameterized.class)
 public class E2EInteropMockTest extends E2EAbstractMockTest {
@@ -219,7 +219,10 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                             FlagsConstants.KEY_MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE),
                     entry(
                             "max_aggregatable_debug_budget_per_context_site",
-                            FlagsConstants.KEY_MEASUREMENT_ADR_BUDGET_PER_PUBLISHER_WINDOW));
+                            FlagsConstants.KEY_MEASUREMENT_ADR_BUDGET_PER_PUBLISHER_WINDOW),
+                    entry(
+                            "max_aggregatable_reports_per_source",
+                            FlagsConstants.KEY_MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE));
 
     private static String preprocessor(String json) {
         // In a header response provided in string format, .test could also be surrounded by escaped

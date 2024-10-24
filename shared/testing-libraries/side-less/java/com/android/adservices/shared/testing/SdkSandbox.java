@@ -24,26 +24,31 @@ public interface SdkSandbox {
     /**
      * Sets the state, or no-op if not supported..
      *
+     * @return self
      * @throws IllegalArgumentException if state is not {@code ENABLED} or {@code DISABLED}.
      */
-    void setState(State state);
+    SdkSandbox setState(State state);
 
     /* State of the {@code SdkSandbox}. */
     enum State {
+        /** Failed to parse state. */
         UNKNOWN(false),
+        /** Device doesn't support it. */
         UNSUPPORTED(false),
+        /** Enabled! */
         ENABLED(true),
+        /* Disabled :-( */
         DISABLED(true);
 
-        private final boolean mValid;
+        private final boolean mSettable;
 
-        State(boolean valid) {
-            mValid = valid;
+        State(boolean settable) {
+            mSettable = settable;
         }
 
-        /** Whether the state is a valid one. */
-        public boolean isValid() {
-            return mValid;
+        /** Whether it can be used on methods that sets the state. */
+        public boolean isSettable() {
+            return mSettable;
         }
     }
 }

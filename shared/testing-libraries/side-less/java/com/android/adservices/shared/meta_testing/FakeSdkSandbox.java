@@ -32,10 +32,12 @@ public final class FakeSdkSandbox implements SdkSandbox {
 
     private final Logger mLog;
 
+    /** Default constructor, sets logger. */
     public FakeSdkSandbox() {
         this(DynamicLogger.getInstance());
     }
 
+    /** Constructor with a custom logger. */
     public FakeSdkSandbox(RealLogger realLogger) {
         mLog = new Logger(realLogger, getClass());
     }
@@ -52,7 +54,7 @@ public final class FakeSdkSandbox implements SdkSandbox {
     }
 
     @Override
-    public void setState(@Nullable State state) {
+    public FakeSdkSandbox setState(@Nullable State state) {
         if (mOnSetStateException != null) {
             mLog.i(
                     "setState(%s): throwing exception set by onSetStateThrows(): %s",
@@ -60,6 +62,7 @@ public final class FakeSdkSandbox implements SdkSandbox {
             throw mOnSetStateException;
         }
         mState = state;
+        return this;
     }
 
     /** When called, {@link #getState()} will throw the given exception. */
