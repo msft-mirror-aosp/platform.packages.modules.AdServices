@@ -130,6 +130,23 @@ public abstract class ActionBasedRule<R extends ActionBasedRule<R>> extends Abst
 
     @Override
     protected final void evaluate(Statement base, Description description) throws Throwable {
+        int toBeExecutedSize = mActionsToBeExecuted.size();
+        int toBeRevertedSize = mActionsToBeReverted.size();
+        if (toBeExecutedSize == 0 && toBeRevertedSize == 0) {
+            mLog.i(
+                    "Starting %s; no actions to be cleared (and %d fixed actions)",
+                    TestHelper.getTestName(description), mFixedActions.size());
+        } else {
+            mLog.i(
+                    "Starting %s; will clear state from previous test (%d actions to be executed"
+                            + " and %d to be reverted)",
+                    TestHelper.getTestName(description), toBeExecutedSize, toBeRevertedSize);
+        }
+
+        mLog.v(
+                "Before clearing mActionsToBeExecuted and mActionsToBeReverted: mFixedActions=%s"
+                        + " mActionsToBeExecuted=%s, mActionsToBeReverted=%s",
+                mFixedActions, mActionsToBeExecuted, mActionsToBeReverted);
         mActionsToBeExecuted.clear();
         mActionsToBeReverted.clear();
 
