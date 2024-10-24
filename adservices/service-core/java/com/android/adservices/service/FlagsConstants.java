@@ -1371,6 +1371,9 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_MIN_REPORT_LIFESPAN_FOR_UNINSTALL_SECONDS =
             "Measurement__min_report_lifespan_for_uninstall_seconds";
 
+    public static final String KEY_MEASUREMENT_ENABLE_INSTALL_ATTRIBUTION_ON_S =
+            "Measurement__enable_install_attribution_on_s";
+
     public static final String KEY_MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK =
             "measurement_enable_navigation_reporting_origin_check";
 
@@ -1422,6 +1425,9 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE =
             "Measurement__max_adr_count_per_source";
+
+    public static final String KEY_MEASUREMENT_ENABLE_BOTH_SIDE_DEBUG_KEYS_IN_REPORTS =
+            "Measurement__enable_both_side_debug_keys_in_reports";
 
     // Database Schema Version Flags
     public static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_8 =

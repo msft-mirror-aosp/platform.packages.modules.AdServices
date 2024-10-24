@@ -31,7 +31,7 @@ public class ScheduledCustomAudienceUpdateScheduleAttemptedStatsTest {
                 ScheduledCustomAudienceUpdateScheduleAttemptedStats.builder()
                         .setNumberOfPartialCustomAudiences(1)
                         .setNumberOfLeaveCustomAudiences(2)
-                        .setMinimumDelayInMinutes(12345L)
+                        .setMinimumDelayInMinutes(12345)
                         .setInitialHop(true)
                         .setExistingUpdateStatus(
                                 SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_NO_EXISTING_UPDATE)
@@ -45,7 +45,7 @@ public class ScheduledCustomAudienceUpdateScheduleAttemptedStatsTest {
                 .isEqualTo(2);
         assertWithMessage("Minimum delay in seconds")
                 .that(stats.getMinimumDelayInMinutes())
-                .isEqualTo(12345L);
+                .isEqualTo(12345);
         assertWithMessage("Is second hop").that(stats.isInitialHop()).isTrue();
         assertWithMessage("Existing update status")
                 .that(stats.getExistingUpdateStatus())
@@ -58,7 +58,7 @@ public class ScheduledCustomAudienceUpdateScheduleAttemptedStatsTest {
                 ScheduledCustomAudienceUpdateScheduleAttemptedStats.builder()
                         .setNumberOfPartialCustomAudiences(1)
                         .setNumberOfLeaveCustomAudiences(2)
-                        .setMinimumDelayInMinutes(12345L)
+                        .setMinimumDelayInMinutes(12345)
                         .setInitialHop(true)
                         .setExistingUpdateStatus(
                                 SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_NO_EXISTING_UPDATE)
@@ -67,7 +67,7 @@ public class ScheduledCustomAudienceUpdateScheduleAttemptedStatsTest {
                 ScheduledCustomAudienceUpdateScheduleAttemptedStats.builder()
                         .setNumberOfPartialCustomAudiences(1)
                         .setNumberOfLeaveCustomAudiences(2)
-                        .setMinimumDelayInMinutes(12345L)
+                        .setMinimumDelayInMinutes(12345)
                         .setInitialHop(true)
                         .setExistingUpdateStatus(
                                 SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_NO_EXISTING_UPDATE)
