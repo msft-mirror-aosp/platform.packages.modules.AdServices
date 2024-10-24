@@ -37,6 +37,7 @@ import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.cache.DBCacheEntry;
 import com.android.adservices.service.common.cache.HttpCache;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.exception.HttpContentSizeException;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.FetchProcessLogger;
 import com.android.adservices.service.stats.FetchProcessLoggerNoLoggingImpl;
@@ -890,7 +891,7 @@ public class AdServicesHttpsClient {
     private String streamToString(@NonNull InputStream in, long size) throws IOException {
         Objects.requireNonNull(in);
         if (size > mMaxBytes) {
-            throw new IOException(CONTENT_SIZE_ERROR);
+            throw new HttpContentSizeException(CONTENT_SIZE_ERROR);
         }
         return new String(ByteStreams.toByteArray(in), Charsets.UTF_8);
     }
@@ -907,7 +908,7 @@ public class AdServicesHttpsClient {
                 into.write(buf, 0, n);
             } else {
                 into.close();
-                throw new IOException(CONTENT_SIZE_ERROR);
+                throw new HttpContentSizeException(CONTENT_SIZE_ERROR);
             }
         }
         into.close();
